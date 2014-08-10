@@ -159,8 +159,12 @@ class S3ReusableField(object):
 
         ia = Storage(self.attr)
 
+        DEFAULT = "default"
+        widgets = ia.pop("widgets", {})
+
         if attr:
-            if not attr.get("empty", True):
+            empty = attr.pop("empty", True)
+            if not empty:
                 requires = ia.requires
                 if requires:
                     if not isinstance(requires, (list, tuple)):
@@ -170,9 +174,22 @@ class S3ReusableField(object):
                         if isinstance(r, IS_EMPTY_OR):
                             requires = r.other
                             ia.update(requires=requires)
-            if "empty" in attr:
-                del attr["empty"]
+            widget = attr.pop("widget", DEFAULT)
             ia.update(**attr)
+        else:
+            widget = DEFAULT
+
+        if isinstance(widget, basestring):
+            if widget == DEFAULT and "widget" in ia:
+                widget = ia.widget
+            else:
+                if not isinstance(widgets, dict):
+                    widgets = {DEFAULT: widgets}
+                if widget != DEFAULT and widget not in widgets:
+                    raise NameError("Undefined widget: %s" % widget)
+                else:
+                    widget = widgets.get(widget)
+        ia.widget = widget
 
         if "script" in ia:
             if ia.script:
@@ -634,8 +651,10 @@ class S3Represent(object):
             if h.config:
                 def lookup_parent(node_id):
                     parent = h.parent(node_id)
-                    if parent and parent not in theset:
-                        lookup[parent] = True
+                    if parent and \
+                       parent not in theset and \
+                       parent not in lookup:
+                        lookup[parent] = False
                         lookup_parent(parent)
                     return
                 for node_id in lookup.keys():
@@ -685,8 +704,11 @@ class S3Represent(object):
             if h:
                 represent_path = self._represent_path
                 for k, row in rows.items():
-                    lookup.pop(k, None)
-                    items[keys.get(k, k)] = represent_path(k, row, rows=rows, hierarchy=h)
+                    if lookup.pop(k, None):
+                        items[keys.get(k, k)] = represent_path(k,
+                                                               row,
+                                                               rows=rows,
+                                                               hierarchy=h)
             else:
                 for k, row in rows.items():
                     lookup.pop(k, None)

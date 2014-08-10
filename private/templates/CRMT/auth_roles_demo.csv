@@ -4,7 +4,6 @@ ANONYMOUS,Anonymous,,"cms","page",,,"READ","READ",,,,Allow display of Map Layer 
 ANONYMOUS,Anonymous,,,,"s3_audit",,"READ",,,,,Allow display of Site Activity on Homepage
 ANONYMOUS,Anonymous,,"default","person",,,"READ|CREATE|UPDATE",,,,,
 ANONYMOUS,Anonymous,,"default","person","gis_location",,"READ|CREATE|UPDATE",,,,,
-ANONYMOUS,Anonymous,,"default","person","pr_saved_search",,,"READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"gis","config",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"gis","index",,,"READ|CREATE","READ|CREATE|UPDATE",,,,
 ANONYMOUS,Anonymous,,"gis","geocode",,,"READ",,,,,

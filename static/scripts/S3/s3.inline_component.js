@@ -370,7 +370,8 @@ $(function() {
             element,
             input,
             text,
-            value;
+            value,
+            i;
         for (i=0; i < fields.length; i++) {
             fieldname = fields[i]['name'];
             value = row[fieldname]['value'];
@@ -637,9 +638,10 @@ $(function() {
 
                 if (multiple) {
                     // Update read-row in the table, clear edit-row
-                    var read_row = '';
-                    var fields = data['fields'];
-                    var default_value;
+                    var read_row = '',
+                        fields = data['fields'],
+                        default_value,
+                        i;
                     for (i=0; i < fields.length; i++) {
                         var field = fields[i]['name'];
                         read_row += '<td>' + new_row[field]['text'] + '</td>';
@@ -754,15 +756,33 @@ $(function() {
         if (changed.length) {
             changed.each(function() {
                 var $this = $(this);
-                var formname = $this.attr('id').split('-').pop();
-                if ($this.hasClass('add-row')) {
-                    _success = inline_add(formname);
+                var empty = true;
+                if (!$this.hasClass('required')) {
+                    // Check that the row contains data
+                    var inputs = $this.find('input, select, textarea');
+                    for (var input, i=0, len=inputs.length; i<len; i++) {
+                        input = $(inputs[i]);
+                        if ((input.attr('type') != 'checkbox' && input.val()) || input.prop('checked')) {
+                            empty = false;
+                            break;
+                        }
+                    }
                 } else {
-                    var rowindex = $this.data('rowindex');
-                    _success = inline_update(formname, rowindex);
+                    // Treat required rows as non-empty
+                    empty = false;
                 }
-                if (!_success) {
-                    success = false;
+                // Skip empty rows
+                if (!empty) {
+                    var formname = $this.attr('id').split('-').pop();
+                    if ($this.hasClass('add-row')) {
+                        _success = inline_add(formname);
+                    } else {
+                        var rowindex = $this.data('rowindex');
+                        _success = inline_update(formname, rowindex);
+                    }
+                    if (!_success) {
+                        success = false;
+                    }
                 }
             });
         }
@@ -789,15 +809,19 @@ $(function() {
             inline_catch_submit(this);
         });
         $('.edit-row input[type!="text"], .edit-row select').bind('focusin', function() {
-            $('.edit-row input[type!="text"], .edit-row select').one('change', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('focusout', function() {
+                $(this).unbind('change.inline');
             });
         });
-        $('.edit-row select.multiselect-widget').bind('multiselectopen', function() {
-            $('.edit-row select.multiselect-widget').one('change', function() {
+        $('.edit-row select.multiselect-widget').bind('open.multiselect', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('close.multiselect', function() {
+                $(this).unbind('change.inline');
             });
         });
         $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
@@ -805,15 +829,19 @@ $(function() {
             inline_catch_submit(this);
         });
         $('.add-row input[type!="text"], .add-row select').bind('focusin', function() {
-            $('.add-row input[type!="text"], .add-row select').one('change', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('focusout', function() {
+                $(this).unbind('change.inline');
             });
         });
-        $('.add-row select.multiselect-widget').bind('multiselectopen', function() {
-            $('.add-row select.multiselect-widget').one('change', function() {
+        $('.add-row select.multiselect-widget').bind('open.multiselect', function() {
+            $(this).one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
+            }).one('close.multiselect', function() {
+                $(this).unbind('change.inline');
             });
         });
         // Chrome doesn't mark row as changed when just file input added
@@ -993,6 +1021,61 @@ $(function() {
         });
     };
 
+    // Used by S3LocationSelectorWidget2
+    var inline_locationselector_events = function() {
+        // Listen for changes on all Inline S3LocationSelectorWidget2s
+        $('.inline-locationselector-widget').change(function() {
+            var $this = $(this);
+            var names = $this.attr('id').split('_');
+            var formname = names[1];
+            // @ToDo: Handle multiple=True
+            // - add-row always visible
+            // - delete
+            // - represent
+            if ($('#add-row-' + formname).is(':visible')) {
+                // Don't do anything if we're in a Create row as we'll be processed on form submission
+                return;
+            }
+            var fieldname = names[4] + '_' + names[5];
+            // Read current data from real input
+            var data = inline_deserialize(formname);
+            var _data = data['data'],
+                new_value = $this.val(),
+                old_value,
+                item,
+                found = false;
+            for (var prop in _data) {
+                item = _data[prop];
+                if (item.hasOwnProperty(fieldname)) {
+                    found = true;
+                    old_value = item[fieldname].value;
+                    if (old_value) {
+                        old_value = old_value.toString();
+                    }
+                    break;
+                }
+            }
+            if (found && (new_value != old_value)) {
+                // Modify the Data
+                item[fieldname].value = new_value;
+                var represent = 'todo'; // Calculate represent from Street Address or lowest-Lx. Only needed when we support multiple=True
+                item[fieldname].text = represent;
+                item['_changed'] = true;
+            } else if (new_value) {
+                // Add a New Item
+                var item = {};
+                var represent = 'todo';
+                item[fieldname] = {'text': represent,
+                                   'value': new_value
+                                   };
+                item['_changed'] = true;
+                _data.push(item);
+            }
+            // Write data back to real input
+            inline_serialize(formname);
+        });
+    };
+
     $(document).ready(function() {
         if ($('.error_wrapper').length) {
             // Used by S3SQLInlineComponentCheckbox
@@ -1036,9 +1119,10 @@ $(function() {
             inline_edit(formname, rowindex);
         });
         $('.inline-form.add-row.single').each(function() {
+            var $this = $(this);
             var defaults = false;
-            $(this).find('input, select').each(function() {
-                if ($(this).val()) {
+            $this.find('input, select').each(function() {
+                if (($this.val()) && ($this.attr('type') != 'checkbox')) {
                     defaults = true;
                 }
             });
@@ -1061,5 +1145,6 @@ $(function() {
         inline_button_events();
         inline_checkbox_events();
         inline_multiselect_events();
+        inline_locationselector_events();
     });
 });

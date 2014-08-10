@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3WarehouseModel",
+__all__ = ("S3WarehouseModel",
            "S3InventoryModel",
            "S3InventoryTrackingModel",
            "S3InventoryAdjustModel",
@@ -42,7 +42,7 @@ __all__ = ["S3WarehouseModel",
            "inv_adj_rheader",
            "depends",
            "inv_InvItemRepresent",
-           ]
+           )
 
 import itertools
 
@@ -125,9 +125,9 @@ SEPARATORS = (",", ":")
 # =============================================================================
 class S3WarehouseModel(S3Model):
 
-    names = ["inv_warehouse",
+    names = ("inv_warehouse",
              #"inv_warehouse_type",
-             ]
+             )
 
     def model(self):
 
@@ -380,12 +380,12 @@ class S3InventoryModel(S3Model):
         A module to record inventories of items at a location (site)
     """
 
-    names = ["inv_inv_item",
+    names = ("inv_inv_item",
              "inv_remove",
              "inv_item_id",
              "inv_item_represent",
              "inv_prep",
-             ]
+             )
 
     def model(self):
 
@@ -420,18 +420,19 @@ class S3InventoryModel(S3Model):
                           # This is a component, so needs to be a super_link
                           # - can't override field name, ondelete or requires
                           self.super_link("site_id", "org_site",
-                                          label = WAREHOUSE,
                                           default = auth.user.site_id if auth.is_logged_in() else None,
+                                          empty = False,
+                                          label = WAREHOUSE,
+                                          ondelete = "RESTRICT",
+                                          represent = self.org_site_represent,
                                           readable = True,
                                           writable = True,
-                                          empty = False,
-                                          ondelete = "RESTRICT",
                                           # Comment these to use a Dropdown & not an Autocomplete
                                           #widget = S3SiteAutocompleteWidget(),
                                           #comment = DIV(_class="tooltip",
                                           #              _title="%s|%s" % (WAREHOUSE,
                                           #                                messages.AUTOCOMPLETE_HELP)),
-                                          represent=self.org_site_represent),
+                                          ),
                           self.supply_item_entity_id,
                           self.supply_item_id(ondelete = "RESTRICT",
                                               required = True),
@@ -861,7 +862,7 @@ class S3InventoryTrackingModel(S3Model):
         - And audit trail of the shipment process
     """
 
-    names = ["inv_send",
+    names = ("inv_send",
              "inv_send_represent",
              "inv_send_ref_represent",
              "inv_send_controller",
@@ -873,7 +874,7 @@ class S3InventoryTrackingModel(S3Model):
              "inv_kit",
              "inv_track_item",
              "inv_track_item_onaccept",
-             ]
+             )
 
     def model(self):
 
@@ -2344,6 +2345,7 @@ S3OptionsFilter({
             list_fields + ["currency",
                            "pack_value",
                            ]
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request = r,
@@ -2484,6 +2486,7 @@ S3OptionsFilter({
                        "pack_value",
                        "bin"
                        ]
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request = r,
@@ -2520,6 +2523,7 @@ S3OptionsFilter({
         site_id = record.site_id
         site = field.represent(site_id, False)
 
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r.resource,
                         request=r,
@@ -3796,10 +3800,10 @@ class S3InventoryAdjustModel(S3Model):
         - And audit trail of the shipment process
     """
 
-    names = ["inv_adj",
+    names = ("inv_adj",
              "inv_adj_item",
              "inv_adj_item_id",
-             ]
+             )
 
     def model(self):
 

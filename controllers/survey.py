@@ -42,6 +42,16 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
+def create():
+    """
+        Enter a new assessment.
+        - provides a simpler URL to access from mobile devices...
+    """
+    
+    redirect(URL(f="newAssessment.iframe",
+                 vars={"viewing": "survey_series.%s" % request.args[0]}))
+
+# -----------------------------------------------------------------------------
 def template():
     """ RESTful CRUD controller """
 
@@ -1111,8 +1121,8 @@ def question_metadata():
 # -----------------------------------------------------------------------------
 def newAssessment():
     """
-        RESTful CRUD controller
-        @ToDo: Why is this a specialised function?
+        RESTful CRUD controller to create a new 'complete' survey
+        - although the created form is a fully custom one
     """
 
     # Load Model
@@ -1182,8 +1192,8 @@ def newAssessment():
     s3.postp = postp
 
     output = s3_rest_controller(module, "complete",
-                                method="create",
-                                rheader=s3db.survey_series_rheader
+                                method = "create",
+                                rheader = s3db.survey_series_rheader
                                 )
     return output
 

@@ -171,7 +171,7 @@ class S3MembersModel(S3Model):
                       *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Add Member"),
+            label_create = T("Create Member"),
             title_display = T("Member Details"),
             title_list = T("Members"),
             title_update = T("Edit Member"),
@@ -201,15 +201,7 @@ class S3MembersModel(S3Model):
             return dict((row.id, row.name) for row in rows)
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            try:
-                levels.remove("L0")
-            except ValueError:
-                # Already removed
-                pass
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         list_fields = ["person_id",
                        "organisation_id",

@@ -8,10 +8,10 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
-from gluon.html import *
+from gluon.html import A, URL
 from gluon.storage import Storage
 
-from s3.s3utils import s3_fullname
+from s3 import s3_fullname
 
 T = current.T
 settings = current.deployment_settings
@@ -21,7 +21,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["NYC"]
+settings.base.prepopulate = ("NYC",)
 
 settings.base.system_name = T("NYC Prepared")
 settings.base.system_name_short = T("NYC Prepared")
@@ -58,7 +58,7 @@ settings.base.paper_size = T("Letter")
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-settings.gis.countries = ["US"]
+settings.gis.countries = ("US",)
 
 settings.fin.currencies = {
     "USD" : T("United States Dollars"),
@@ -97,8 +97,10 @@ settings.auth.registration_link_user_to_default = "staff"
 
 settings.security.policy = 5 # Controller, Function & Table ACLs
 
-settings.ui.update_label = "Edit"
+# Enable this to have Open links in IFrames open a full page in a new tab
+settings.ui.iframe_opens_full = True
 settings.ui.label_attachments = "Media"
+settings.ui.update_label = "Edit"
 
 # Uncomment to disable checking that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False
@@ -297,9 +299,6 @@ def org_facility_onvalidation(form):
 
 # -----------------------------------------------------------------------------
 def customise_org_facility_controller(**attr):
-    """
-        Customise org_facility controller
-    """
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -320,7 +319,7 @@ def customise_org_facility_controller(**attr):
             types = r.get_vars.get("site_facility_type.facility_type_id__belongs", None)
             if not types:
                 # Hide Private Residences
-                from s3.s3query import FS
+                from s3 import FS
                 s3.filter = FS("site_facility_type.facility_type_id$name") != "Private Residence"
 
         if r.interactive:
@@ -328,8 +327,7 @@ def customise_org_facility_controller(**attr):
             table = s3db[tablename]
 
             if not r.component and r.method in (None, "create", "update"):
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
                 field = table.location_id
                 if r.method in ("create", "update"):
                     field.label = "" # Gets replaced by widget
@@ -346,7 +344,7 @@ def customise_org_facility_controller(**attr):
             if r.get_vars.get("format", None) == "popup":
                 # Coming from req/create form
                 # Hide most Fields
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 # We default this onvalidation
                 table.name.notnull = False
                 table.name.requires = None
@@ -373,10 +371,244 @@ def customise_org_facility_controller(**attr):
 settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
+def customise_org_organisation_resource(r, tablename):
+
+    from gluon.html import DIV, INPUT
+    from s3 import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+
+    s3db = current.s3db
+
+    if r.tablename == "org_organisation":
+        if r.id:
+            # Update form
+            ctable = s3db.pr_contact
+            query = (ctable.pe_id == r.record.pe_id) & \
+                    (ctable.contact_method == "RSS") & \
+                    (ctable.deleted == False)
+            rss = current.db(query).select(ctable.poll,
+                                           limitby=(0, 1)
+                                           ).first()
+            if rss and not rss.poll:
+                # Remember that we don't wish to import
+                rss_import = "on"
+            else:
+                # Default
+                rss_import = None
+        else:
+            # Create form: Default
+            rss_import = None
+    else:
+        # Component
+        if r.component_id:
+            # Update form
+            db = current.db
+            otable = s3db.org_organisation
+            org = db(otable.id == r.component_id).select(otable.pe_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+            try:
+                pe_id = org.pe_id
+            except:
+                current.log.error("Org %s not found: cannot set rss_import correctly" % r.component_id)
+                # Default
+                rss_import = None
+            else:
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == pe_id) & \
+                        (ctable.contact_method == "RSS") & \
+                        (ctable.deleted == False)
+                rss = db(query).select(ctable.poll,
+                                       limitby=(0, 1)
+                                       ).first()
+                if rss and not rss.poll:
+                    # Remember that we don't wish to import
+                    rss_import = "on"
+                else:
+                    # Default
+                    rss_import = None
+        else:
+            # Create form: Default
+            rss_import = None
+    
+    crud_form = S3SQLCustomForm(
+        "name",
+        "acronym",
+        S3SQLInlineLink(
+            "organisation_type",
+            field = "organisation_type_id",
+            label = T("Type"),
+            multiple = False,
+            #widget = "hierarchy",
+        ),
+        S3SQLInlineComponentMultiSelectWidget(
+        # activate hierarchical org_service:
+        #S3SQLInlineLink(
+            "service",
+            label = T("Services"),
+            field = "service_id",
+            # activate hierarchical org_service:
+            #leafonly = False,
+            #widget = "hierarchy",
+        ),
+        S3SQLInlineComponentMultiSelectWidget(
+            "group",
+            label = T("Network"),
+            field = "group_id",
+            #cols = 3,
+        ),
+        S3SQLInlineComponent(
+            "address",
+            label = T("Address"),
+            multiple = False,
+            # This is just Text - put into the Comments box for now
+            # Ultimately should go into location_id$addr_street
+            fields = [("", "comments")],
+        ),
+        S3SQLInlineComponentMultiSelectWidget(
+            "location",
+            label = T("Neighborhoods Served"),
+            field = "location_id",
+            filterby = dict(field = "level",
+                            options = "L4"
+                            ),
+            # @ToDo: GroupedCheckbox Widget or Hierarchical MultiSelectWidget
+            #cols = 5,
+        ),
+        "phone",
+        S3SQLInlineComponent(
+            "contact",
+            name = "phone2",
+            label = T("Phone2"),
+            multiple = False,
+            fields = [("", "value")],
+            filterby = dict(field = "contact_method",
+                            options = "WORK_PHONE"
+                            )
+        ),
+        S3SQLInlineComponent(
+            "contact",
+            name = "email",
+            label = T("Email"),
+            multiple = False,
+            fields = [("", "value")],
+            filterby = dict(field = "contact_method",
+                            options = "EMAIL"
+                            )
+        ),
+        "website",
+        S3SQLInlineComponent(
+            "contact",
+            comment = DIV(INPUT(_type="checkbox",
+                                _name="rss_no_import",
+                                value = rss_import,
+                                ),
+                          T("Don't Import Feed")),
+            name = "rss",
+            label = T("RSS"),
+            multiple = False,
+            fields = [("", "value"),
+                      #(T("Don't Import Feed"), "poll"),
+                      ],
+            filterby = dict(field = "contact_method",
+                            options = "RSS"
+                            )
+        ),
+        S3SQLInlineComponent(
+            "document",
+            name = "iCal",
+            label = "iCAL",
+            multiple = False,
+            fields = [("", "url")],
+            filterby = dict(field = "name",
+                            options="iCal"
+                            )
+        ),
+        S3SQLInlineComponent(
+            "document",
+            name = "data",
+            label = T("Data"),
+            multiple = False,
+            fields = [("", "url")],
+            filterby = dict(field = "name",
+                            options="Data"
+                            )
+        ),
+        S3SQLInlineComponent(
+            "contact",
+            name = "twitter",
+            label = T("Twitter"),
+            multiple = False,
+            fields = [("", "value")],
+            filterby = dict(field = "contact_method",
+                            options = "TWITTER"
+                            )
+        ),
+        S3SQLInlineComponent(
+            "contact",
+            name = "facebook",
+            label = T("Facebook"),
+            multiple = False,
+            fields = [("", "value")],
+            filterby = dict(field = "contact_method",
+                            options = "FACEBOOK"
+                            )
+        ),
+        "comments",
+        postprocess = pr_contact_postprocess,
+    )
+
+    from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+    # activate hierarchical org_service:
+    #from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, S3HierarchyFilter
+    filter_widgets = [
+        S3TextFilter(["name", "acronym"],
+                     label = T("Name"),
+                     _class = "filter-search",
+                     ),
+        S3OptionsFilter("group_membership.group_id",
+                        label = T("Network"),
+                        represent = "%(name)s",
+                        #hidden = True,
+                        ),
+        S3LocationFilter("organisation_location.location_id",
+                         label = T("Neighborhood"),
+                         levels = ("L3", "L4"),
+                         #hidden = True,
+                         ),
+        S3OptionsFilter("service_organisation.service_id",
+                        #label = T("Service"),
+                        #hidden = True,
+                        ),
+        # activate hierarchical org_service:
+        #S3HierarchyFilter("service_organisation.service_id",
+        #                  #label = T("Service"),
+        #                  #hidden = True,
+        #                  ),
+        S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                        label = T("Type"),
+                        #hidden = True,
+                        ),
+        ]
+
+    list_fields = ["name",
+                   (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                   (T("Services"), "service.name"),
+                   "phone",
+                   (T("Email"), "email.value"),
+                   "website"
+                   #(T("Neighborhoods Served"), "location.name"),
+                   ]
+
+    s3db.configure("org_organisation",
+                   crud_form = crud_form,
+                   filter_widgets = filter_widgets,
+                   list_fields = list_fields,
+                   )
+    
+settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+# -----------------------------------------------------------------------------
 def customise_org_organisation_controller(**attr):
-    """
-        Customise org_organisation controller
-    """
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -390,173 +622,10 @@ def customise_org_organisation_controller(**attr):
         else:
             result = True
 
-        if r.interactive or r.representation == "aadata":
-            list_fields = ["id",
-                           "name",
-                           "acronym",
-                           "organisation_type_id",
-                           (T("Services"), "service.name"),
-                           (T("Neighborhoods Served"), "location.name"),
-                           ]
-
-            s3db.configure("org_organisation",
-                           list_fields = list_fields)
-            
         if r.interactive:
-            if not r.component:
-                from gluon.html import DIV, INPUT
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
-                crud_form = S3SQLCustomForm(
-                    "name",
-                    "acronym",
-                    "organisation_type_id",
-                    S3SQLInlineComponentMultiSelectWidget(
-                        "service",
-                        label = T("Services"),
-                        field = "service_id",
-                        #cols = 4,
-                    ),
-                    S3SQLInlineComponentMultiSelectWidget(
-                        "group",
-                        label = T("Network"),
-                        field = "group_id",
-                        #cols = 3,
-                    ),
-                    S3SQLInlineComponent(
-                        "address",
-                        label = T("Address"),
-                        multiple = False,
-                        # This is just Text - put into the Comments box for now
-                        # Ultimately should go into location_id$addr_street
-                        fields = [("", "comments")],
-                    ),
-                    S3SQLInlineComponentMultiSelectWidget(
-                        "location",
-                        label = T("Neighborhoods Served"),
-                        field = "location_id",
-                        filterby = dict(field = "level",
-                                        options = "L4"
-                                        ),
-                        # @ToDo: GroupedCheckbox Widget or Hierarchical MultiSelectWidget
-                        #cols = 5,
-                    ),
-                    "phone",
-                    S3SQLInlineComponent(
-                        "contact",
-                        name = "phone2",
-                        label = T("Phone2"),
-                        multiple = False,
-                        fields = [("", "value")],
-                        filterby = dict(field = "contact_method",
-                                        options = "WORK_PHONE"
-                                        )
-                    ),
-                    S3SQLInlineComponent(
-                        "contact",
-                        name = "email",
-                        label = T("Email"),
-                        multiple = False,
-                        fields = [("", "value")],
-                        filterby = dict(field = "contact_method",
-                                        options = "EMAIL"
-                                        )
-                    ),
-                    "website",
-                    S3SQLInlineComponent(
-                        "contact",
-                        comment = DIV(INPUT(_type="checkbox",
-                                            _name="rss_no_import"),
-                                      T("Don't Import Feed")),
-                        name = "rss",
-                        label = T("RSS"),
-                        multiple = False,
-                        fields = [("", "value")],
-                        filterby = dict(field = "contact_method",
-                                        options = "RSS"
-                                        )
-                    ),
-                    S3SQLInlineComponent(
-                        "document",
-                        name = "iCal",
-                        label = "iCAL",
-                        multiple = False,
-                        fields = [("", "url")],
-                        filterby = dict(field = "name",
-                                        options="iCal"
-                                        )
-                    ),                                                                
-                    S3SQLInlineComponent(
-                        "document",
-                        name = "data",
-                        label = T("Data"),
-                        multiple = False,
-                        fields = [("", "url")],
-                        filterby = dict(field = "name",
-                                        options="Data"
-                                        )
-                    ),                                                                
-                    S3SQLInlineComponent(
-                        "contact",
-                        name = "twitter",
-                        label = T("Twitter"),
-                        multiple = False,
-                        fields = [("", "value")],
-                        filterby = dict(field = "contact_method",
-                                        options = "TWITTER"
-                                        )
-                    ),
-                    S3SQLInlineComponent(
-                        "contact",
-                        name = "facebook",
-                        label = T("Facebook"),
-                        multiple = False,
-                        fields = [("", "value")],
-                        filterby = dict(field = "contact_method",
-                                        options = "FACEBOOK"
-                                        )
-                    ),
-                    "comments",
-                )
-                
-                from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
-                filter_widgets = [
-                    S3TextFilter(["name", "acronym"],
-                                 label = T("Name"),
-                                 _class = "filter-search",
-                                 ),
-                    S3OptionsFilter("group_membership.group_id",
-                                    label = T("Network"),
-                                    represent = "%(name)s",
-                                    #hidden = True,
-                                    ),
-                    S3LocationFilter("organisation_location.location_id",
-                                     label = T("Neighborhood"),
-                                     levels = ("L3", "L4"),
-                                     #hidden = True,
-                                     ),
-                    S3OptionsFilter("service_organisation.service_id",
-                                    #label = T("Service"),
-                                    #hidden = True,
-                                    ),
-                    S3OptionsFilter("organisation_type_id",
-                                    label = T("Type"),
-                                    #hidden = True,
-                                    ),
-                    ]
-
-                s3db.configure("org_organisation",
-                               crud_form = crud_form,
-                               filter_widgets = filter_widgets,
-                               )
-
-                s3db.configure("pr_contact",
-                               onaccept = pr_contact_onaccept,
-                               )
-
-            elif r.component_name == "facility":
+            if r.component_name == "facility":
                 if r.method in (None, "create", "update"):
-                    from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2
+                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
                     table = s3db.org_facility
                     field = table.location_id
                     if r.method in ("create", "update"):
@@ -602,9 +671,6 @@ settings.customise_org_organisation_controller = customise_org_organisation_cont
 
 # -----------------------------------------------------------------------------
 def customise_org_group_controller(**attr):
-    """
-        Customise org_group controller
-    """
 
     s3db = current.s3db
     s3 = current.response.s3
@@ -618,22 +684,35 @@ def customise_org_group_controller(**attr):
         else:
             result = True
 
-        if r.interactive:
-            if not r.component:
+        if not r.component:
+
+            table = s3db.org_group
+
+            list_fields = ["name",
+                           "mission",
+                           "website",
+                           "meetings",
+                           ]
+
+            s3db.configure("org_group",
+                           list_fields = list_fields,
+                           )
+
+            if r.interactive:
                 from gluon.html import DIV, INPUT
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 if r.method != "read":
                     from gluon.validators import IS_EMPTY_OR
-                    from s3.s3validators import IS_LOCATION_SELECTOR2
-                    from s3.s3widgets import S3LocationSelectorWidget2
-                    field = s3db.org_group.location_id
+                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+                    field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    #field.requires = IS_LOCATION_SELECTOR2(levels=("L2",))
+                    #field.requires = IS_LOCATION_SELECTOR2(levels = ("L2",))
                     field.requires = IS_EMPTY_OR(
-                                        IS_LOCATION_SELECTOR2(levels=("L2",))
+                                        IS_LOCATION_SELECTOR2(levels = ("L2",))
                                         )
-                    field.widget = S3LocationSelectorWidget2(levels=("L2",),
-                                                             polygons=True,
+                    field.widget = S3LocationSelectorWidget2(levels = ("L2",),
+                                                             points = True,
+                                                             polygons = True,
                                                              )
                     # Default location to Manhattan
                     db = current.db
@@ -645,9 +724,32 @@ def customise_org_group_controller(**attr):
                     if manhattan:
                         field.default = manhattan.id
 
+                table.mission.readable = table.mission.writable = True
+                table.meetings.readable = table.meetings.writable = True
+
+                if r.id:
+                    # Update form
+                    ctable = s3db.pr_contact
+                    query = (ctable.pe_id == r.record.pe_id) & \
+                            (ctable.contact_method == "RSS") & \
+                            (ctable.deleted == False)
+                    rss = current.db(query).select(ctable.poll,
+                                                   limitby=(0, 1)
+                                                   ).first()
+                    if rss and not rss.poll:
+                        # Remember that we don't wish to import
+                        rss_import = "on"
+                    else:
+                        # Default
+                        rss_import = None
+                else:
+                    # Create form: Default
+                    rss_import = None
+
                 crud_form = S3SQLCustomForm(
                     "name",
                     "location_id",
+                    "mission",
                     S3SQLInlineComponent(
                         "contact",
                         name = "phone",
@@ -672,7 +774,9 @@ def customise_org_group_controller(**attr):
                     S3SQLInlineComponent(
                         "contact",
                         comment = DIV(INPUT(_type="checkbox",
-                                            _name="rss_no_import"),
+                                            _name="rss_no_import",
+                                            value = rss_import,
+                                            ),
                                       T("Don't Import Feed")),
                         name = "rss",
                         label = T("RSS"),
@@ -722,27 +826,21 @@ def customise_org_group_controller(**attr):
                                         options = "FACEBOOK"
                                         )
                     ),
+                    "meetings",
                     "comments",
+                    postprocess = pr_contact_postprocess,
                 )
 
                 s3db.configure("org_group",
                                crud_form = crud_form,
                                )
 
-                s3db.configure("pr_contact",
-                               onaccept = pr_contact_onaccept,
-                               )
-
-            elif r.component_name == "pr_group":
-                field = s3db.pr_group.group_type
-                field.default = 3 # Relief Team, to show up in hrm/group
-                field.readable = field.writable = False
-
         return result
     s3.prep = custom_prep
 
-    # Allow components with components (such as org/group) to breakout from tabs
-    attr["native"] = True
+    if current.auth.s3_logged_in():
+        # Allow components with components (such as org/group) to breakout from tabs
+        attr["native"] = True
 
     return attr
 
@@ -759,9 +857,6 @@ settings.pr.request_gender = False
 # -----------------------------------------------------------------------------
 # Persons
 def customise_pr_person_controller(**attr):
-    """
-        Customise pr_person controller
-    """
 
     s3 = current.response.s3
 
@@ -803,6 +898,8 @@ def customise_pr_person_controller(**attr):
                         field.default = site_id
                         field.readable = field.writable = False
                         hr_fields.remove("site_id")
+                    else:
+                        s3db.hrm_human_resource.site_id.default = None
 
                 # ImageCrop widget doesn't currently work within an Inline Form
                 #image_field = s3db.pr_image.image
@@ -810,7 +907,7 @@ def customise_pr_person_controller(**attr):
                 #image_field.requires = IS_IMAGE()
                 #image_field.widget = None
 
-                from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 s3_sql_custom_fields = ["first_name",
                                         #"middle_name",
                                         "last_name",
@@ -918,8 +1015,7 @@ def chairperson(row):
         return current.messages["NONE"]
 
     db = current.db
-    s3db = current.s3db
-    mtable = s3db.pr_group_membership
+    mtable = current.s3db.pr_group_membership
     ptable = db.pr_person
     query = (mtable.group_id == group_id) & \
             (mtable.group_head == True) & \
@@ -936,10 +1032,8 @@ def chairperson(row):
     else:
         return current.messages["NONE"]
 
+# -----------------------------------------------------------------------------
 def customise_pr_group_controller(**attr):
-    """
-        Customise pr_group controller
-    """
 
     s3 = current.response.s3
 
@@ -956,11 +1050,10 @@ def customise_pr_group_controller(**attr):
 
         # Format for filter_widgets & imports
         s3db.add_components("pr_group",
-                            org_group_team = "group_id")
+                            org_group_team = "group_id",
+                            )
 
-        from s3.s3fields import S3Represent
-        from s3.s3filter import S3TextFilter, S3OptionsFilter
-        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        from s3 import S3Represent, S3TextFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent
 
         s3db.org_group_team.org_group_id.represent = S3Represent(lookup="org_group",
                                                                  show_link=True)
@@ -972,6 +1065,7 @@ def customise_pr_group_controller(**attr):
                                                          # @ToDo: Make this optional?
                                                          multiple = False,
                                                          ),
+                                    "meetings",
                                     "comments",
                                     )
 
@@ -1022,23 +1116,30 @@ def customise_pr_group_resource(r, tablename):
             - but runs before prep
     """
 
-    from gluon import Field, URL
-    from gluon.sqlhtml import TextWidget
-
     s3db = current.s3db
 
     table = s3db.pr_group
 
-    # Increase size of widget
-    table.description.widget = TextWidget.widget
+    field = table.group_type
+    field.default = 3 # Relief Team, to show up in hrm/group
+    field.readable = field.writable = False
 
+    table.name.label = T("Name")
+    table.description.label = T("Description")
+    table.meetings.readable = table.meetings.writable = True
+
+    # Increase size of widget
+    from s3 import s3_comments_widget
+    table.description.widget = s3_comments_widget
+
+    from gluon import Field
     table.chairperson = Field.Method("chairperson", chairperson)
 
-    list_fields = ["id",
-                   (T("Network"), "group_team.org_group_id"),
+    list_fields = [(T("Network"), "group_team.org_group_id"),
                    "name",
                    "description",
-                   (T("Chairperson"), "chairperson"),
+                   "meetings",
+                   #(T("Chairperson"), "chairperson"),
                    "comments",
                    ]
 
@@ -1052,46 +1153,77 @@ def customise_pr_group_resource(r, tablename):
 settings.customise_pr_group_resource = customise_pr_group_resource
 
 # -----------------------------------------------------------------------------
-def pr_contact_onaccept(form):
+def pr_contact_postprocess(form):
     """
         Import Organisation/Network RSS Feeds
     """
 
-    form_vars = form.vars
-    contact_method = form_vars.contact_method
-    if not contact_method or contact_method != "RSS":
-        return
-    no_import = current.request.post_vars.get("rss_no_import", None)
-    if no_import:
-        return
-    url = form_vars.value
-    db = current.db
     s3db = current.s3db
+
+    form_vars = form.vars
+
+    rss_url = form_vars.rsscontact_i_value_edit_0 or \
+              form_vars.rsscontact_i_value_edit_none
+    if not rss_url:
+        if form.record:
+            # Update form
+            old_rss = form.record.sub_rsscontact
+            import json
+            old_rss = json.loads(old_rss)["data"][0]["value"]["value"]
+            if old_rss:
+                # RSS feed is being deleted, so we should disable it
+                table = s3db.msg_rss_channel
+                old = current.db(table.url == old_rss).select(table.channel_id,
+                                                              table.enabled,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if old and old.enabled:
+                    s3db.msg_channel_disable("msg_rss_channel", old.channel_id)
+                return
+        else:
+            # Nothing to do :)
+            return
+
+    no_import = current.request.post_vars.get("rss_no_import", None)
+
     table = s3db.msg_rss_channel
-    exists  = db(table.url == url).select(table.id, limitby=(0, 1))
+    exists = current.db(table.url == rss_url).select(table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
     if exists:
+        if no_import:
+            if exists.enabled:
+                # Disable channel (& associated parsers)
+                s3db.msg_channel_disable("msg_rss_channel", exists.channel_id)
+            return
+        elif exists.enabled:
+            # Nothing to do :)
+            return
+        else:
+            # Enable channel (& associated parsers)
+            s3db.msg_channel_enable("msg_rss_channel", exists.channel_id)
+            return
+    elif no_import:
+        # Nothing to do :)
         return
-    # Lookup name of Org/Network
-    pe_id = form_vars.pe_id
-    etable = db.pr_pentity
-    instance_type = db(etable.pe_id == pe_id).select(etable.instance_type,
-                                                     limitby=(0, 1)
-                                                     ).first().instance_type
-    otable = db[instance_type]
-    name = db(otable.pe_id == pe_id).select(otable.name,
-                                            limitby=(0, 1)
-                                            ).first().name
+
     # Add RSS Channel
-    _id = table.insert(name=name, enabled=True, url=url)
+    _id = table.insert(name=form_vars.name, enabled=True, url=rss_url)
     record = dict(id=_id)
     s3db.update_super(table, record)
+
     # Enable
     channel_id = record["channel_id"]
     s3db.msg_channel_enable("msg_rss_channel", channel_id)
+
     # Setup Parser
     table = s3db.msg_parser
-    _id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
+    _id = table.insert(channel_id=channel_id,
+                       function_name="parse_rss",
+                       enabled=True)
     s3db.msg_parser_enable(_id)
+
     # Check Now
     async = current.s3task.async
     async("msg_poll", args=["msg_rss_channel", channel_id])
@@ -1129,9 +1261,6 @@ settings.hrm.organisation_label = "Organization"
 
 # -----------------------------------------------------------------------------
 def customise_hrm_human_resource_controller(**attr):
-    """
-        Customise hrm_human_resource controller
-    """
 
     s3 = current.response.s3
 
@@ -1146,7 +1275,7 @@ def customise_hrm_human_resource_controller(**attr):
 
         if r.interactive or r.representation == "aadata":
             if not r.component:
-                from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
+                from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [
                     S3TextFilter(["person_id$first_name",
                                   "person_id$middle_name",
@@ -1221,7 +1350,7 @@ def customise_hrm_human_resource_resource(r, tablename):
     """
 
     s3db = current.s3db
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_form = S3SQLCustomForm("person_id",
                                 "organisation_id",
                                 "site_id",
@@ -1256,9 +1385,6 @@ settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_re
 
 # -----------------------------------------------------------------------------
 def customise_hrm_job_title_controller(**attr):
-    """
-        Customise hrm_job_title controller
-    """
 
     s3 = current.response.s3
 
@@ -1312,7 +1438,7 @@ def customise_project_project_controller(**attr):
             result = True
 
         if not r.component and (r.interactive or r.representation == "aadata"):
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
             s3db = current.s3db
 
             table = r.table
@@ -1381,7 +1507,7 @@ def customise_project_project_controller(**attr):
                 "comments",
             )
             
-            from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
+            from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
             filter_widgets = [
                 S3TextFilter(["name",
                               "code",
@@ -1723,6 +1849,12 @@ settings.modules = OrderedDict([
             restricted = True,
             module_type = 5,
         )),
+    ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+            restricted = True,
+            module_type = 10,
+        )),
     ("survey", Storage(
             name_nice = T("Surveys"),
             #description = "Create, enter, and manage surveys.",
@@ -1735,93 +1867,18 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10
     #    )),
-    #("hms", Storage(
-    #        name_nice = T("Hospitals"),
-    #        #description = "Helps to monitor status of hospitals",
-    #        restricted = True,
-    #        module_type = 1
-    #    )),
-    #("irs", Storage(
-    #        name_nice = T("Incidents"),
-    #        #description = "Incident Reporting System",
-    #        restricted = False,
-    #        module_type = 10
-    #    )),
-    #("dvi", Storage(
-    #       name_nice = T("Disaster Victim Identification"),
-    #       #description = "Disaster Victim Identification",
-    #       restricted = True,
-    #       module_type = 10,
-    #       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    #   )),
-    #("mpr", Storage(
-    #       name_nice = T("Missing Person Registry"),
-    #       #description = "Helps to report and search for missing persons",
-    #       restricted = False,
-    #       module_type = 10,
-    #   )),
     #("dvr", Storage(
     #       name_nice = T("Disaster Victim Registry"),
     #       #description = "Allow affected individuals & households to register to receive compensation and distributions",
     #       restricted = False,
     #       module_type = 10,
     #   )),
-    #("scenario", Storage(
-    #        name_nice = T("Scenarios"),
-    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    #("event", Storage(
-    #        name_nice = T("Events"),
-    #        #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    #("fire", Storage(
-    #       name_nice = T("Fire Stations"),
-    #       #description = "Fire Station Management",
-    #       restricted = True,
-    #       module_type = 1,
-    #   )),
-    #("flood", Storage(
-    #        name_nice = T("Flood Warnings"),
-    #        #description = "Flood Gauges show water levels in various parts of the country",
-    #        restricted = False,
-    #        module_type = 10
-    #    )),
     #("member", Storage(
     #       name_nice = T("Members"),
     #       #description = "Membership Management System",
     #       restricted = True,
     #       module_type = 10,
     #   )),
-    #("patient", Storage(
-    #        name_nice = T("Patient Tracking"),
-    #        #description = "Tracking of Patients",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
-    #("security", Storage(
-    #       name_nice = T("Security"),
-    #       #description = "Security Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    # These are specialist modules
-    # Requires RPy2
-    #("climate", Storage(
-    #        name_nice = T("Climate"),
-    #        #description = "Climate data portal",
-    #        restricted = True,
-    #        module_type = 10,
-    #)),
-    #("delphi", Storage(
-    #        name_nice = T("Delphi Decision Maker"),
-    #        #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
     # @ToDo: Rewrite in a modern style
     #("budget", Storage(
     #        name_nice = T("Budgeting Module"),
@@ -1836,16 +1893,4 @@ settings.modules = OrderedDict([
     #        restricted = True,
     #        module_type = 10,
     #    )),
-    #("impact", Storage(
-    #        name_nice = T("Impacts"),
-    #        #description = "Used by Assess",
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
-    #("ocr", Storage(
-    #       name_nice = T("Optical Character Recognition"),
-    #       #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
-    #       restricted = False,
-    #       module_type = None
-    #   )),
 ])

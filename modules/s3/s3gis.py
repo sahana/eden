@@ -29,11 +29,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["GIS",
+__all__ = ("GIS",
            "S3Map",
            "S3ExportPOI",
            "S3ImportPOI",
-           ]
+           )
 
 import datetime         # Needed for Feed Refresh checks
 import os
@@ -76,6 +76,7 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
 from gluon.dal import Rows
+from gluon.languages import lazyT
 from gluon.storage import Storage
 
 from s3fields import s3_all_meta_field_names
@@ -258,6 +259,8 @@ class GIS(object):
         self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4", "L5"]
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
+
+        self.relevant_hierarchy_levels = None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -719,6 +722,7 @@ class GIS(object):
                         results[row.level] = row.id
                 else:
                     # Oh dear, this is going to be slow :/
+                    # Filter to the BBOX initially
                     query &= (table.lat_min < lat) & \
                              (table.lat_max > lat) & \
                              (table.lon_min < lon) & \
@@ -1567,6 +1571,26 @@ class GIS(object):
             return all_levels
 
     # -------------------------------------------------------------------------
+    def get_relevant_hierarchy_levels(self, as_dict=False):
+        """
+            Get current location hierarchy levels relevant for the user
+        """
+
+        levels = self.relevant_hierarchy_levels
+
+        if not levels:
+            levels = OrderedDict(self.get_location_hierarchy())
+            if len(current.deployment_settings.get_gis_countries()) == 1 or \
+               current.response.s3.gis.config.region_location_id:
+                levels.pop("L0", None)
+            self.relevant_hierarchy_levels = levels
+
+        if not as_dict:
+            return levels.keys()
+        else:
+            return levels
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def get_countries(key_type="id"):
         """
@@ -1857,6 +1881,90 @@ class GIS(object):
         return output
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def get_polygon_from_bounds(bbox):
+        """
+            Given a gis_location record or a bounding box dict with keys
+            lon_min, lon_max, lat_min, lat_max, construct a WKT polygon with
+            points at the corners.
+        """
+
+        lon_min = bbox["lon_min"]
+        lon_max = bbox["lon_max"]
+        lat_min = bbox["lat_min"]
+        lat_max = bbox["lat_max"]
+        # Take the points in a counterclockwise direction.
+        points = [(lon_min, lat_min),
+                  (lon_min, lat_max),
+                  (lon_max, lat_max),
+                  (lon_min, lat_max),
+                  (lon_min, lat_min)]
+        pairs = ["%s %s" % (p[0], p[1]) for p in points]
+        wkt = "POLYGON ((%s))" % ", ".join(pairs)
+        return wkt
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_bounds_from_radius(lat, lon, radius):
+        """
+            Compute a bounding box given a Radius (in km) of a LatLon Location
+            
+            Note the order of the parameters.
+            
+            @return a dict containing the bounds with keys min_lon, max_lon,
+            min_lat, max_lat
+            
+            See:
+            http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
+        """
+
+        import math
+
+        radians = math.radians
+        degrees = math.degrees
+
+        MIN_LAT = radians(-90)     # -PI/2
+        MAX_LAT = radians(90)      # PI/2
+        MIN_LON = radians(-180)    # -PI
+        MAX_LON = radians(180)     #  PI
+
+        # Convert to radians for the calculation
+        r = float(radius) / RADIUS_EARTH
+        radLat = radians(lat)
+        radLon = radians(lon)
+
+        # Calculate the bounding box
+        minLat = radLat - r
+        maxLat = radLat + r
+
+        if (minLat > MIN_LAT) and (maxLat < MAX_LAT):
+            deltaLon = math.asin(math.sin(r) / math.cos(radLat))
+            minLon = radLon - deltaLon
+            if (minLon < MIN_LON):
+                minLon += 2 * math.pi
+            maxLon = radLon + deltaLon
+            if (maxLon > MAX_LON):
+                maxLon -= 2 * math.pi
+        else:
+            # Special care for Poles & 180 Meridian:
+            # http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
+            minLat = max(minLat, MIN_LAT)
+            maxLat = min(maxLat, MAX_LAT)
+            minLon = MIN_LON
+            maxLon = MAX_LON
+
+        # Convert back to degrees
+        minLat = degrees(minLat)
+        minLon = degrees(minLon)
+        maxLat = degrees(maxLat)
+        maxLon = degrees(maxLon)
+        
+        return dict(lat_min = minLat,
+                    lat_max = maxLat,
+                    lon_min = minLon,
+                    lon_max = maxLon)
+    
+    # -------------------------------------------------------------------------
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
             Returns Features within a Radius (in km) of a LatLon Location
@@ -1951,50 +2059,15 @@ class GIS(object):
 
             # @ToDo: Support optional Category (make this a generic filter?)
 
-            # shortcuts
-            radians = math.radians
-            degrees = math.degrees
-
-            MIN_LAT = radians(-90)     # -PI/2
-            MAX_LAT = radians(90)      # PI/2
-            MIN_LON = radians(-180)    # -PI
-            MAX_LON = radians(180)     #  PI
-
-            # Convert to radians for the calculation
-            r = float(radius) / RADIUS_EARTH
-            radLat = radians(lat)
-            radLon = radians(lon)
-
-            # Calculate the bounding box
-            minLat = radLat - r
-            maxLat = radLat + r
-
-            if (minLat > MIN_LAT) and (maxLat < MAX_LAT):
-                deltaLon = math.asin(math.sin(r) / math.cos(radLat))
-                minLon = radLon - deltaLon
-                if (minLon < MIN_LON):
-                    minLon += 2 * math.pi
-                maxLon = radLon + deltaLon
-                if (maxLon > MAX_LON):
-                    maxLon -= 2 * math.pi
-            else:
-                # Special care for Poles & 180 Meridian:
-                # http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates#PolesAnd180thMeridian
-                minLat = max(minLat, MIN_LAT)
-                maxLat = min(maxLat, MAX_LAT)
-                minLon = MIN_LON
-                maxLon = MAX_LON
-
-            # Convert back to degrees
-            minLat = degrees(minLat)
-            minLon = degrees(minLon)
-            maxLat = degrees(maxLat)
-            maxLon = degrees(maxLon)
-
+            bbox = get_bounds_from_radius(lat, lon, radius)
+            
             # shortcut
             locations = db.gis_location
 
-            query = (locations.lat > minLat) & (locations.lat < maxLat) & (locations.lon > minLon) & (locations.lon < maxLon)
+            query = (locations.lat > bbox["lat_min"]) & \
+                    (locations.lat < bbox["lat_max"]) & \
+                    (locations.lon > bbox["lon_min"]) & \
+                    (locations.lon < bbox["lon_max"])
             deleted = (locations.deleted == False)
             empty = (locations.lat != None) & (locations.lon != None)
             query = deleted & empty & query
@@ -2145,6 +2218,11 @@ class GIS(object):
             @param: resource - S3Resource instance (required)
         """
 
+        tablename = resource.tablename
+        if tablename == "gis_feature_query":
+            # Requires no special handling: XSLT uses normal fields
+            return dict()
+
         NONE = current.messages["NONE"]
         #if DEBUG:
         #    start = datetime.datetime.now()
@@ -2164,8 +2242,7 @@ class GIS(object):
             # e.g. Search results loaded as a Feature Resource layer
             layer = db(ftable.id == layer_id).select(ftable.trackable,
                                                      ftable.polygons,
-                                                     ftable.popup_label,
-                                                     ftable.popup_fields,
+                                                     ftable.popup_fields, # @ToDo: Deprecate
                                                      ftable.attr_fields,
                                                      limitby=(0, 1)).first()
 
@@ -2179,8 +2256,7 @@ class GIS(object):
             layers = db(query).select(ftable.style_default,
                                       ftable.trackable,
                                       ftable.polygons,
-                                      ftable.popup_label,
-                                      ftable.popup_fields,
+                                      ftable.popup_fields, # @ToDo: Deprecate
                                       ftable.attr_fields,
                                       )
             if len(layers) > 1:
@@ -2198,7 +2274,6 @@ class GIS(object):
         if popup_fields:
             popup_fields = popup_fields.split(",")
         if layer:
-            popup_label = layer.popup_label
             if not popup_fields:
                 popup_fields = layer.popup_fields or []
             if not attr_fields:
@@ -2206,53 +2281,45 @@ class GIS(object):
             trackable = layer.trackable
             polygons = layer.polygons
         else:
-            popup_label = ""
-            popup_fields = ["name"]
+            if not popup_fields:
+                popup_fields = ["name"]
             trackable = False
             polygons = False
-        
+
         table = resource.table
-        tablename = resource.tablename
         pkey = table._id.name
 
         markers = {}
-        tooltips = {}
         attributes = {}
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
         geojson = current.auth.permission.format == "geojson"
         if geojson:
-            if popup_fields or attr_fields:
-                # Build the Attributes &/Popup Tooltips now so that representations can be
-                # looked-up in bulk rather than as a separate lookup per record
-                if popup_fields:
-                    tips = {}
-                    label_off = get_vars.get("label_off", None)
-                    if popup_label and not label_off:
-                        _tooltip = " (%s)" % current.T(popup_label)
-                    else:
-                        _tooltip = ""
+            # Build the Attributes now so that representations can be
+            # looked-up in bulk rather than as a separate lookup per record
+            if popup_fields:
+                # Old-style
+                attr_fields = list(set(popup_fields + attr_fields))
+            if attr_fields:
                 attr = {}
 
-                fields = list(set(popup_fields + attr_fields))
+                # Make a copy for the pkey insertion
+                fields = list(attr_fields)
+
                 if pkey not in fields:
                     fields.insert(0, pkey)
 
                 data = resource.select(fields,
-                                       limit=None,
-                                       represent=True)
+                                       limit = None,
+                                       represent = True,
+                                       show_links = False)
 
                 rfields = data["rfields"]
                 attr_cols = {}
-                _popup_cols = {}
                 for f in rfields:
                     fname = f.fname
                     selector = f.selector
-                    if fname in popup_fields:
-                        _popup_cols[fname] = f.colname
-                    elif selector in popup_fields:
-                        _popup_cols[selector] = f.colname
                     if fname in attr_fields or selector in attr_fields:
                         fieldname = f.colname
                         tname, fname = fieldname.split(".")
@@ -2262,13 +2329,6 @@ class GIS(object):
                             # FieldMethod
                             ftype = None
                         attr_cols[fieldname] = (ftype, fname)
-
-                # Want to control sort order
-                popup_cols = []
-                for f in popup_fields:
-                    colname = _popup_cols.get(f, None)
-                    if colname:
-                        popup_cols.append(colname)
 
                 rows = data["rows"]
                 _pkey = str(_pkey)
@@ -2283,14 +2343,18 @@ class GIS(object):
                                 _attr = attr_cols[fieldname]
                                 ftype = _attr[0]
                                 if ftype == "integer":
-                                    # Attributes should be numbers not strings
-                                    # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
-                                    try:
-                                        represent = int(represent.replace(",", ""))
-                                    except:
-                                        # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
-                                        #        (although we *do* want the represent in the tooltips!)
-                                        pass
+                                    if isinstance(represent, lazyT):
+                                        # Integer is just a lookup key
+                                        represent = s3_unicode(represent)
+                                    else:
+                                        # Attributes should be numbers not strings
+                                        # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
+                                        try:
+                                            represent = int(represent.replace(",", ""))
+                                        except:
+                                            # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
+                                            #        (although we *do* want the represent in the tooltips!)
+                                            pass
                                 elif ftype == "double":
                                     # Attributes should be numbers not strings
                                     try:
@@ -2309,25 +2373,7 @@ class GIS(object):
                                 attribute[_attr[1]] = represent
                         attr[record_id] = attribute
 
-                    if popup_cols:
-                        tooltip = s3_unicode(_tooltip)
-                        first = True
-                        for fieldname in popup_cols:
-                            represent = row[fieldname]
-                            if represent and represent != NONE:
-                                represent = s3_unicode(represent)
-                                # Skip empty fields
-                                if first:
-                                    tooltip = "%s%s" % (represent, tooltip)
-                                    first = False
-                                else:
-                                    tooltip = "%s<br />%s" % (tooltip, represent)
-                        tips[record_id] = tooltip
-
-                if attr_fields:
-                    attributes[tablename] = attr
-                if popup_fields:
-                    tooltips[tablename] = tips
+                attributes[tablename] = attr
 
                 #if DEBUG:
                 #    end = datetime.datetime.now()
@@ -2339,7 +2385,7 @@ class GIS(object):
                 #                                                      ).first().name
                 #    else:
                 #        layer_name = "Unknown"
-                #    _debug("Attributes/Tooltip lookup of layer %s completed in %s seconds" % \
+                #    _debug("Attributes lookup of layer %s completed in %s seconds" % \
                 #            (layer_name, duration))
 
             _markers = get_vars.get("markers", None)
@@ -2535,7 +2581,6 @@ class GIS(object):
                     wkts = _wkts,
                     geojsons = _geojsons,
                     markers = markers,
-                    tooltips = tooltips,
                     attributes = attributes,
                     )
 
@@ -2564,13 +2609,15 @@ class GIS(object):
 
         driver = webdriver.PhantomJS()
 
-        # Set the size of the browser
-        # @ToDo: Make Configurable
-        driver.set_window_size(1980, 1080)
+        # Set the size of the browser to match the map
+        settings = current.deployment_settings
+        height = settings.get_gis_map_height()
+        width = settings.get_gis_map_width()
+        driver.set_window_size(width, height)
 
         # Load the homepage
         # (Cookie needs to be set on same domain as it takes effect)
-        public_url = current.deployment_settings.get_base_public_url()
+        public_url = settings.get_base_public_url()
         appname = request.application
         url = "%s/%s" % (public_url, appname)
         driver.get(url)
@@ -2585,7 +2632,7 @@ class GIS(object):
         current.session._unlock(response)
 
         # Load the map
-        url = "%s/%s/gis/index?config=%s" % (public_url, appname, config_id)
+        url = "%s/%s/gis/map_viewing_client?print=1&config=%s" % (public_url, appname, config_id)
         driver.get(url)
 
         # Wait for map to load
@@ -2616,6 +2663,20 @@ class GIS(object):
                 redirect(URL(c="gis", f="index", vars={"config_id": config_id}))
 
         driver.save_screenshot(os.path.join(cachepath, "%s.png" % session_id))
+        driver.quit()
+
+        # If this was a temporary config for creating the screenshot, then delete it now
+        ctable = current.s3db.gis_config
+        set = current.db(ctable.id == config_id)
+        config = set.select(ctable.temp,
+                            limitby=(0, 1)
+                            ).first()
+        try:
+            if config.temp:
+                set.delete()
+        except:
+            # Record not found?
+            pass
 
         # Pass the result back to the User
         redirect(URL(c="static", f="cache", args=["png", "%s.png" % session_id]))
@@ -4269,7 +4330,10 @@ class GIS(object):
                         _vars.update(inherited = False)
                     if spatial:
                         _vars.update(the_geom = wkt)
-                db(table.id == feature.id).update(**_vars)
+                try:
+                    db(table.id == feature.id).update(**_vars)
+                except MemoryError:
+                    current.log.error("S3GIS: Unable to set bounds & centroid for feature %s: MemoryError" % feature.id)
 
         if not feature:
             # Do the whole database
@@ -4283,16 +4347,20 @@ class GIS(object):
             update_location_tree = GIS.update_location_tree
             for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
                 query = (table.level == level) & (table.deleted == False)
-                features = db(query).select(*fields)
-                for feature in features:
-                    feature["level"] = level
-                    wkt = feature["wkt"]
-                    if wkt and not wkt.startswith("POI"):
-                        # Polygons aren't inherited
-                        feature["inherited"] = False
-                    update_location_tree(feature)
-                    # Also do the Bounds/Centroid/WKT
-                    bounds_centroid_wkt(feature)
+                try:
+                    features = db(query).select(*fields)
+                except MemoryError:
+                    current.log.error("S3GIS: Unable to update Location Tree for level %s: MemoryError" % level)
+                else:
+                    for feature in features:
+                        feature["level"] = level
+                        wkt = feature["wkt"]
+                        if wkt and not wkt.startswith("POI"):
+                            # Polygons aren't inherited
+                            feature["inherited"] = False
+                        update_location_tree(feature)
+                        # Also do the Bounds/Centroid/WKT
+                        bounds_centroid_wkt(feature)
             return
 
         # Single Feature
@@ -5531,28 +5599,38 @@ class GIS(object):
 
         if form_vars.get("gis_feature_type", None) == "1":
             # Point
-            if (form_vars.lon is None and form_vars.lat is None) or \
-               (form_vars.lon == "" and form_vars.lat == ""):
+            lat = form_vars.get("lat", None)
+            lon = form_vars.get("lon", None)
+            if (lon is None and lat is None) or \
+               (lon == "" and lat == ""):
                 # No Geometry available
                 # Don't clobber existing records (e.g. in Prepop)
                 #form_vars.gis_feature_type = "0"
                 # Cannot create WKT, so Skip
                 return
-            elif form_vars.lat is None or form_vars.lat == "":
+            elif lat is None or lat == "":
                 # Can't just have lon without lat
                 form.errors["lat"] = messages.lat_empty
-            elif form_vars.lon is None or form_vars.lon == "":
+            elif lon is None or lon == "":
                 form.errors["lon"] = messages.lon_empty
             else:
                 form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
-                if "lon_min" not in form_vars or form_vars.lon_min is None:
-                    form_vars.lon_min = form_vars.lon
-                if "lon_max" not in form_vars or form_vars.lon_max is None:
-                    form_vars.lon_max = form_vars.lon
-                if "lat_min" not in form_vars or form_vars.lat_min is None:
-                    form_vars.lat_min = form_vars.lat
-                if "lat_max" not in form_vars or form_vars.lat_max is None:
-                    form_vars.lat_max = form_vars.lat
+                radius = form_vars.get("radius", None)
+                if radius:
+                    bbox = GIS.get_bounds_from_radius(lat, lon, radius)
+                    form_vars.lat_min = bbox["lat_min"]
+                    form_vars.lon_min = bbox["lon_min"]
+                    form_vars.lat_max = bbox["lat_max"]
+                    form_vars.lon_max = bbox["lon_max"]
+                else:
+                    if "lon_min" not in form_vars or form_vars.lon_min is None:
+                        form_vars.lon_min = lon
+                    if "lon_max" not in form_vars or form_vars.lon_max is None:
+                        form_vars.lon_max = lon
+                    if "lat_min" not in form_vars or form_vars.lat_min is None:
+                        form_vars.lat_min = lat
+                    if "lat_max" not in form_vars or form_vars.lat_max is None:
+                        form_vars.lat_max = lat
 
         elif form_vars.get("wkt", None):
             # Parse WKT for LineString, Polygon, etc
@@ -5896,7 +5974,6 @@ class GIS(object):
                  scaleline = None,
                  zoomcontrol = None,
                  zoomWheelEnabled = True,
-                 print_tool = {},
                  mgrs = {},
                  window = False,
                  window_hide = False,
@@ -5968,7 +6045,7 @@ class GIS(object):
                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
-            @param legend: True: Show the GeoExt Legend panel, False: No Panel, "floating": New floating Legend Panel
+            @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param area: Show the Area tool on the Toolbar
             @param nav: Show the Navigation controls on the Toolbar
@@ -5979,11 +6056,6 @@ class GIS(object):
             @param permalink: Show the Permalink control (defaults to checking deployment_settings, which defaults to True)
             @param scaleline: Show the ScaleLine control (defaults to checking deployment_settings, which defaults to True)
             @param zoomcontrol: Show the Zoom control (defaults to checking deployment_settings, which defaults to True)
-            @param print_tool: Show a print utility (NB This requires server-side support: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting)
-                {"url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
-                 "mapTitle": string,       # Title for the Printed Map (optional)
-                 "subTitle": string        # subTitle for the Printed Map (optional)
-                }
             @param mgrs: Use the MGRS Control to select PDFs
                 {"name": string,           # Name for the Control
                  "url": string             # URL of PDF server
@@ -6033,7 +6105,6 @@ class GIS(object):
                    scaleline = scaleline,
                    zoomcontrol = zoomcontrol,
                    zoomWheelEnabled = zoomWheelEnabled,
-                   print_tool = print_tool,
                    mgrs = mgrs,
                    window = window,
                    window_hide = window_hide,
@@ -6204,6 +6275,12 @@ class MAP(DIV):
 
         options["numZoomLevels"] = config.zoom_levels
 
+        options["restrictedExtent"] = [config.lon_min,
+                                       config.lat_min,
+                                       config.lon_max,
+                                       config.lat_max,
+                                       ]
+
         ############
         # Projection
         ############
@@ -6360,6 +6437,20 @@ class MAP(DIV):
                 options["area"] = True
                 i18n["gis_area_message"] = T("The area is")
                 i18n["gis_area_tooltip"] = T("Measure Area: Click the points around the polygon & end with a double-click")
+
+            # Show Print control?
+            print_control = settings.get_gis_print()
+            if print_control:
+                # @ToDo: Use internal Printing or External Service
+                # http://eden.sahanafoundation.org/wiki/BluePrint/GIS/Printing
+                #print_service = settings.get_gis_print_service()
+                #if print_service:
+                #    print_tool = {"url": string,            # URL of print service (e.g. http://localhost:8080/geoserver/pdf/)
+                #                  "mapTitle": string,       # Title for the Printed Map (optional)
+                #                  "subTitle": string        # subTitle for the Printed Map (optional)
+                #                  }
+                options["print"] = True
+                i18n["gis_print"] = T("Take a screenshot of the map which can be printed")
 
             # Show Save control?
             # e.g. removed within S3LocationSelectorWidget[2]
@@ -6686,7 +6777,8 @@ class MAP(DIV):
         dumps = json.dumps
         s3 = current.response.s3
 
-        js_global_append = s3.js_global.append
+        js_global = s3.js_global
+        js_global_append = js_global.append
 
         i18n_dict = self.i18n
         i18n = []
@@ -6696,7 +6788,8 @@ class MAP(DIV):
             if line not in i18n:
                 i18n_append(line)
         i18n = '''\n'''.join(i18n)
-        js_global_append(i18n)
+        if i18n not in js_global:
+            js_global_append(i18n)
 
         globals_dict = self.globals
         js_globals = []
@@ -6705,9 +6798,23 @@ class MAP(DIV):
             if line not in js_globals:
                 js_globals.append(line)
         js_globals = '''\n'''.join(js_globals)
-        js_global_append(js_globals)
+        if js_globals not in js_global:
+            js_global_append(js_globals)
 
         scripts = s3.scripts
+        if s3.cdn:
+            if s3.debug:
+                script = "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"
+            else:
+                script = "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"
+        else:
+            if s3.debug:
+                script = URL(c="static", f="scripts/underscore.js")
+            else:
+                script = URL(c="static", f="scripts/underscore-min.js")
+        if script not in scripts:
+            scripts.append(script)
+
         script = URL(c="static", f="scripts/S3/s3.gis.loader.js")
         if script not in scripts:
             scripts.append(script)
@@ -6749,7 +6856,9 @@ class MAP(DIV):
                    callback = callback,
                    scripts = self.scripts
                    )
-        s3.jquery_ready.append(loader)
+        jquery_ready = s3.jquery_ready
+        if loader not in jquery_ready:
+            jquery_ready.append(loader)
 
         # Return the HTML
         return super(MAP, self).xml()
@@ -6940,6 +7049,9 @@ def addFeatureResources(feature_resources):
                                    ftable.trackable,
                                    ftable.use_site,
                                    ftable.opacity,
+                                   ftable.popup_format,
+                                   ftable.popup_fields, # @ToDo: Deprecate Legacy
+                                   ftable.popup_label,  # @ToDo: Deprecate Legacy
                                    ftable.cluster_attribute,
                                    ftable.cluster_distance,
                                    ftable.cluster_threshold,
@@ -6980,12 +7092,26 @@ def addFeatureResources(feature_resources):
             if not style:
                 marker = layer.get("marker",
                                    Marker(layer_id=layer_id).as_dict())
+
+            popup_format = row["popup_format"]
+            if not popup_format:
+                # Old-style
+                popup_fields = row["popup_fields"]
+                if popup_fields:
+                    popup_label = row["popup_label"]
+                    if popup_label:
+                        popup_format = "{%s} (%s)" % (popup_fields[0], current.T(popup_label))
+                    else:
+                        popup_format = "%s" % popup_fields[0]
+                    for f in popup_fields[1:]:
+                        popup_format = "%s<br />{%s}" % (popup_format, f)
+
         else:
             # URL to retrieve the data
             url = layer["url"]
             tablename = layer["tablename"]
             table = s3db[tablename]
-            # Optimise the query & tell back-end not to add the type to the tooltips
+            # Optimise the query
             if "location_id" in table.fields:
                 maxdepth = 0
                 show_ids = ""
@@ -6998,8 +7124,7 @@ def addFeatureResources(feature_resources):
             else:
                 # Not much we can do!
                 continue
-            options = "components=None&maxdepth=%s%s&label_off=1" % \
-                        (maxdepth, show_ids)
+            options = "components=None&maxdepth=%s%s" % (maxdepth, show_ids)
             if "?" in url:
                 url = "%s&%s" % (url, options)
             else:
@@ -7021,11 +7146,14 @@ def addFeatureResources(feature_resources):
                     style = None
             if not style:
                 marker = layer.get("marker", None)
+            popup_format = layer.get("popup_format")
 
         if "active" in layer and not layer["active"]:
             _layer["visibility"] = False
         if opacity != 1:
             _layer["opacity"] = "%.1f" % opacity
+        if popup_format:
+            _layer["popup_format"] = popup_format
         if cluster_attribute != CLUSTER_ATTRIBUTE:
             _layer["cluster_attribute"] = cluster_attribute
         if cluster_distance != CLUSTER_DISTANCE:
@@ -7579,10 +7707,27 @@ class LayerFeature(Layer):
                       "url": url,
                       }
 
+            popup_format = self.popup_format
+            if popup_format:
+                # New-style
+                output["popup_format"] = popup_format
+            else:
+                popup_fields = self.popup_fields
+                if popup_fields:
+                    # Old-style
+                    popup_label = self.popup_label
+                    if popup_label:
+                        popup_format = "{%s} (%s)" % (popup_fields[0], current.T(popup_label))
+                    else:
+                        popup_format = "%s" % popup_fields[0]
+                    for f in popup_fields[1:]:
+                        popup_format = "%s<br/>{%s}" % (popup_format, f)
+                    output["popup_format"] = popup_format
+
             # Attributes which are defaulted client-side if not set
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
-            if not self.popup_fields:
+            if not popup_format:
                 output["no_popups"] = 1
             style = self.style
             if style:
@@ -8585,7 +8730,7 @@ class S3ExportPOI(S3Method):
             resources = r.get_vars["resources"]
         else:
             # Fallback to deployment_setting
-            resources = current.deployment_settings.get_gis_poi_resources()
+            resources = current.deployment_settings.get_gis_poi_export_resources()
         if not isinstance(resources, list):
             resources = [resources]
         [tables.extend(t.split(",")) for t in resources]
@@ -8730,7 +8875,7 @@ class S3ExportPOI(S3Method):
                 (FS("location_id$path").like("%s/%%" % lx))
         resource.add_filter(query)
 
-# -----------------------------------------------------------------------------
+# =============================================================================
 class S3ImportPOI(S3Method):
     """
         Import point-of-interest resources for a location
@@ -8758,7 +8903,7 @@ class S3ImportPOI(S3Method):
             # @ToDo: use settings.get_ui_formstyle()
             res_select = [TR(TD(B("%s: " % T("Select resources to import")),
                                 _colspan=3))]
-            for resource in current.deployment_settings.get_gis_poi_resources():
+            for resource in current.deployment_settings.get_gis_poi_export_resources():
                 _id = "res_" + resource
                 res_select.append(TR(TD(LABEL(resource, _for=_id)),
                                      TD(INPUT(_type="checkbox",

@@ -432,7 +432,7 @@ def organisation():
                         echo)
     else:
         from gluon.http import HTTP
-        raise HTTP(501, current.ERROR.BAD_FORMAT)
+        raise HTTP(501, ERROR.BAD_FORMAT)
     return items
 
 # -----------------------------------------------------------------------------
@@ -690,18 +690,6 @@ def person():
                     table.other_details.writable = True
                     table.other_details.readable = True
 
-                elif r.component_name == "saved_search":
-                    if r.method == "load":
-                        if r.component_id:
-                            table = db.pr_saved_search
-                            record = db(table.id == r.component_id).select(table.url,
-                                                                           limitby=(0, 1)
-                                                                           ).first()
-                            if record:
-                                redirect(record.url)
-                            else:
-                                raise HTTP(404)
-
                 elif r.component_name == "config":
                     ctable = s3db.gis_config
                     s3db.gis_config_form_setup()
@@ -780,13 +768,6 @@ def person():
                     dict(url=URL(c="gis", f="index",
                                  vars={"config":"[id]"}),
                          label=str(T("Show")),
-                         _class="action-btn")
-                )
-            elif r.component_name == "saved_search" and r.method in (None, "search"):
-                s3_action_buttons(r)
-                s3.actions.append(
-                    dict(url=URL(args=r.args + ["[id]", "load"]),
-                         label=str(T("Load")),
                          _class="action-btn")
                 )
             elif r.component_name == "asset":
@@ -919,11 +900,13 @@ def skill():
 def facebook():
     """ Login using Facebook """
 
-    if not auth.settings.facebook:
+    channel = s3db.msg_facebook_login()
+
+    if not channel:
         redirect(URL(f="user", args=request.args, vars=get_vars))
 
     from s3oauth import FaceBookAccount
-    auth.settings.login_form = FaceBookAccount()
+    auth.settings.login_form = FaceBookAccount(channel)
     form = auth()
 
     return dict(form=form)
@@ -932,11 +915,13 @@ def facebook():
 def google():
     """ Login using Google """
 
-    if not auth.settings.google:
+    channel = settings.get_auth_google()
+
+    if not channel:
         redirect(URL(f="user", args=request.args, vars=get_vars))
 
     from s3oauth import GooglePlusAccount
-    auth.settings.login_form = GooglePlusAccount()
+    auth.settings.login_form = GooglePlusAccount(channel)
     form = auth()
 
     return dict(form=form)

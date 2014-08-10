@@ -1,3 +1,0 @@
-"Name","Code","Controller","Function","Autostart","Role"
-"Welcome Tour","welcome_01","default","index","T","AUTHENTICATED"
-"Welcome Tour","welcome_02","default","index","F",""

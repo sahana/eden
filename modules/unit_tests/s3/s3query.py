@@ -43,9 +43,9 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         self.assertEqual(fields[1].colname, "project_project.name")
         self.assertEqual(fields[2].colname, "org_organisation.name")
 
-        self.assertEqual(joins, Storage())
+        self.assertEqual(joins, {})
 
-        self.assertTrue(isinstance(left, Storage))
+        self.assertTrue(isinstance(left, dict))
         self.assertEqual(left.keys(), ["org_organisation"])
         self.assertEqual(len(left["org_organisation"]), 1)
         self.assertEqual(str(left["org_organisation"][0]), str(expected))
@@ -87,9 +87,9 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         self.assertEqual(fields[2].colname, "org_organisation.name")
         self.assertEqual(fields[3].colname, "project_task.description")
 
-        self.assertEqual(joins, Storage())
+        self.assertEqual(joins, {})
 
-        self.assertTrue(isinstance(left, Storage))
+        self.assertTrue(isinstance(left, dict))
         self.assertEqual(left.keys(), [ "org_organisation", "project_task"])
         self.assertEqual(len(left["org_organisation"]), 1)
         self.assertEqual(str(left["org_organisation"][0]), str(expected))
@@ -116,13 +116,13 @@ class ResourceFilterJoinTests(unittest.TestCase):
         q = FS("first_name") == "test"
 
         # Test joins
-        joins, distinct = q.joins(resource)
-        self.assertEqual(joins, Storage())
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
         self.assertFalse(distinct)
 
         # Test left joins
-        joins, distinct = q.joins(resource, left=True)
-        self.assertEqual(joins, Storage())
+        joins, distinct = q._joins(resource, left=True)
+        self.assertEqual(joins, {})
         self.assertFalse(distinct)
 
     # -------------------------------------------------------------------------
@@ -136,8 +136,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         q = FS("organisation_id$name") == "test"
 
         # Test joins
-        joins, distinct = q.joins(resource)
-        self.assertEqual(joins, Storage())
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
         self.assertTrue(distinct)
 
         # Test left joins
@@ -146,8 +146,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
 
-        joins, distinct = q.joins(resource, left=True)
-        self.assertTrue(isinstance(joins, Storage))
+        joins, distinct = q._joins(resource, left=True)
+        self.assertTrue(isinstance(joins, dict))
         self.assertEqual(joins.keys(), ["org_organisation"])
         self.assertTrue(isinstance(joins["org_organisation"], list))
         self.assertEqual(len(joins["org_organisation"]), 1)
@@ -164,8 +164,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         q = FS("identity.value") == "test"
 
         # Test joins
-        joins, distinct = q.joins(resource)
-        self.assertEqual(joins, Storage())
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
         self.assertTrue(distinct)
 
         pr_person = resource.table
@@ -175,7 +175,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         (pr_identity.deleted != True))
 
         # Test left joins
-        joins, distinct = q.joins(resource, left=True)
+        joins, distinct = q._joins(resource, left=True)
         self.assertEqual(joins.keys(), ["pr_identity"])
         self.assertTrue(isinstance(joins["pr_identity"], list))
         self.assertEqual(str(joins["pr_identity"][0]), str(expected))
@@ -191,8 +191,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         q = FS("contact.value") == "test"
 
         # Test joins
-        joins, distinct = q.joins(resource)
-        self.assertEqual(joins, Storage())
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
         self.assertTrue(distinct)
 
         # Test left joins
@@ -202,7 +202,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
                         (pr_person.pe_id == pr_contact.pe_id) &
                         (pr_contact.deleted != True))
 
-        joins, distinct = q.joins(resource, left=True)
+        joins, distinct = q._joins(resource, left=True)
         self.assertEqual(joins.keys(), ["pr_contact"])
         self.assertTrue(isinstance(joins["pr_contact"], list))
         self.assertEqual(str(joins["pr_contact"][0]), str(expected))
@@ -222,8 +222,8 @@ class ResourceFilterJoinTests(unittest.TestCase):
         q = FS("task.description") == "test"
 
         # Test joins
-        joins, distinct = q.joins(resource)
-        self.assertEqual(joins, Storage())
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
         self.assertTrue(distinct)
 
         # Test left joins
@@ -238,7 +238,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
 
-        joins, distinct = q.joins(resource, left=True)
+        joins, distinct = q._joins(resource, left=True)
         self.assertEqual(joins.keys(), ["project_task"])
         self.assertTrue(isinstance(joins["project_task"], list))
         self.assertEqual(len(joins["project_task"]), 2)
@@ -258,7 +258,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
             (FS("task.description") == "test")
 
         # Test joins
-        joins, distinct = q.joins(resource)
+        joins, distinct = q._joins(resource)
         self.assertEqual(joins.keys(), [])
 
         # Test left joins
@@ -277,7 +277,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
 
-        joins, distinct = q.joins(resource, left=True)
+        joins, distinct = q._joins(resource, left=True)
         self.assertEqual(joins.keys(), ["org_organisation", "project_task"])
 
         self.assertTrue(isinstance(joins["org_organisation"], list))
@@ -288,6 +288,90 @@ class ResourceFilterJoinTests(unittest.TestCase):
         self.assertEqual(str(joins["project_task"][0]), str(expected_l))
         self.assertEqual(str(joins["project_task"][1]), str(expected_r))
         self.assertTrue(distinct)
+
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testGetQueryMixedQueryType(self):
+        """ Test combinations of web2py Queries with S3ResourceQueries """
+
+        s3db = current.s3db
+
+        resource = s3db.resource("project_project")
+        q = (FS("organisation_id$name") == "test") & \
+            (resource.table.name == "test")
+
+        # Test joins
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins.keys(), [])
+
+        # Test left joins
+        project_project = resource.table
+        project_task_project = s3db.project_task_project
+        project_task = s3db.project_task
+        org_organisation = s3db.org_organisation
+
+        expected = org_organisation.on(
+                        project_project.organisation_id == org_organisation.id)
+
+        joins, distinct = q._joins(resource, left=True)
+        self.assertEqual(joins.keys(), ["org_organisation"])
+
+        self.assertTrue(isinstance(joins["org_organisation"], list))
+        self.assertEqual(len(joins["org_organisation"]), 1)
+        self.assertEqual(str(joins["org_organisation"][0]), str(expected))
+        self.assertTrue(distinct)
+
+        # Test split and query
+        qq, qf = q.split(resource)
+        self.assertEqual(qf, None)
+        query = qq.query(resource)
+        expected = ((org_organisation.name == "test") & \
+                    (project_project.name == "test"))
+        self.assertEqual(str(query), str(expected))
+
+        # Test get_query
+        resource.add_filter(q)
+        query = resource.get_query()
+        expected = (((project_project.deleted != True) & \
+                     (project_project.id > 0)) & \
+                    ((org_organisation.name == "test") & \
+                     (project_project.name == "test")))
+        self.assertEqual(str(query), str(expected))
+        
+    # -------------------------------------------------------------------------
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testGetQueryMixedQueryTypeVirtual(self):
+        """ Test combinations of web2py Queries with virtual field filter """
+
+        s3db = current.s3db
+
+        resource = s3db.resource("project_project")
+        q = (FS("virtualfield") == "test") & \
+            (resource.table.name == "test")
+
+        project_project = resource.table
+
+        # Test joins
+        joins, distinct = q._joins(resource)
+        self.assertEqual(joins, {})
+
+        # Test left joins
+        joins, distinct = q._joins(resource, left=True)
+        self.assertEqual(joins, {})
+
+        # Test split and query
+        qq, qf = q.split(resource)
+        expected = (project_project.name == "test")
+        self.assertEqual(str(qq), str(expected))
+        self.assertTrue(isinstance(qf, S3ResourceQuery))
+
+        # Test get_query
+        resource.add_filter(q)
+        query = resource.get_query()
+        expected =  (((project_project.deleted != True) & \
+                    (project_project.id > 0)) & \
+                    (project_project.name == "test"))
+        self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
     @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
@@ -315,7 +399,7 @@ class ResourceFilterJoinTests(unittest.TestCase):
 
         expected3 = project_task.on(project_task_project.task_id == project_task.id)
 
-        joins = resource.rfilter.get_left_joins()
+        joins = resource.rfilter.get_joins(left=True)
         self.assertTrue(isinstance(joins, list))
         self.assertEqual(len(joins), 3)
 
@@ -404,8 +488,8 @@ class ResourceFilterQueryTests(unittest.TestCase):
         self.assertEqual(str(query), str(expected))
 
         # Check joins
-        joins = rfilter.joins
-        self.assertEqual(joins.keys(), [])
+        join = rfilter.get_joins(left=False, as_list=False)
+        self.assertEqual(join, {})
 
         # Check left joins
         expected = org_organisation.on(
@@ -418,7 +502,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         expected_r = project_task.on(
                         project_task_project.task_id == project_task.id)
 
-        left = rfilter.get_left_joins(as_list=False)
+        left = rfilter.get_joins(left=True, as_list=False)
         self.assertEqual(left.keys(), ["org_organisation", "project_task"])
         self.assertTrue(isinstance(left["org_organisation"], list))
         self.assertEqual(len(left["org_organisation"]), 1)
@@ -450,19 +534,21 @@ class ResourceFilterQueryTests(unittest.TestCase):
         rfilter = component.rfilter
         query = rfilter.get_query()
 
-        expected = ((((project_task.deleted != True) &
+        expected = (((project_task.deleted != True) &
                    (project_task.id > 0)) &
                    (((project_project.deleted != True) &
                    (project_project.id > 0)) &
                    ((org_organisation.name == "test") &
-                   (project_task.description == "test")))) &
-                   ((project_task_project.deleted != True) &
-                   ((project_task_project.project_id == project_project.id) &
-                   (project_task_project.task_id == project_task.id))))
+                   (project_task.description == "test"))))
 
         self.assertEqual(query, expected)
 
-        left = rfilter.get_left_joins(as_list=False)
+        # No inner joins
+        join = rfilter.get_joins(left=False, as_list=False)
+        self.assertEqual(join, {})
+
+        # Left joins for cross-component filters
+        left = rfilter.get_joins(left=True, as_list=False)
         tablenames = left.keys()
         self.assertEqual(len(tablenames), 2)
         self.assertTrue("org_organisation" in tablenames)
@@ -508,18 +594,20 @@ class ResourceFilterQueryTests(unittest.TestCase):
         rfilter = component.rfilter
         query = rfilter.get_query()
 
-        expected = ((((pr_identity.deleted != True) &
+        expected = (((pr_identity.deleted != True) &
                    (pr_identity.id > 0)) &
                    (((pr_person.deleted != True) &
                    (pr_person.id > 0)) &
                    ((org_organisation.name == "test") &
-                   (pr_identity.value == "test")))) &
-                   ((pr_identity.person_id == pr_person.id) &
-                   (pr_identity.deleted != True))) # Duplicated!
+                   (pr_identity.value == "test"))))
 
         self.assertEqual(query, expected)
 
-        # Check left joins
+        # No inner joins
+        join = rfilter.get_joins(left=False, as_list=False)
+        self.assertEqual(join, {})
+
+        # Left joins for cross-component filters
         expected_h = hrm_human_resource.on(
                         (hrm_human_resource.person_id == pr_person.id) &
                         (hrm_human_resource.deleted != True))
@@ -527,7 +615,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
                         hrm_human_resource.organisation_id == org_organisation.id)
         expected_p = pr_person.on(pr_identity.person_id == pr_person.id)
 
-        left = rfilter.get_left_joins(as_list=False)
+        left = rfilter.get_joins(left=True, as_list=False)
         tablenames = left.keys()
         self.assertEqual(len(tablenames), 3)
         self.assertTrue("hrm_human_resource" in tablenames)
@@ -565,16 +653,30 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         # This will fail in 1st run as there is no ADMIN role yet
 
-        expected = ((((project_activity.deleted != True) &
-                      (project_activity.id > 0)) &
-                     (((project_project.deleted != True) &
-                       (project_project.id > 0)) &
-                      (project_project.id == 1))) &
-                    ((project_activity.project_id == project_project.id) &
-                     (project_activity.deleted != True)))
+        expected = (((project_activity.deleted != True) &
+                     (project_activity.id > 0)) &
+                    (((project_project.deleted != True) &
+                      (project_project.id > 0)) &
+                     (project_project.id == 1)))
 
         self.assertEqual(str(query), str(expected))
-        self.assertEqual(rfilter.get_left_joins(as_list=False), Storage())
+
+        join = rfilter.get_joins(left=False, as_list=False)
+        
+        expected = project_project.on(
+                    project_activity.project_id == project_project.id)
+                    
+        tablenames = join.keys()
+        self.assertEqual(len(tablenames), 1)
+        self.assertTrue("project_project" in tablenames)
+
+
+        self.assertTrue(isinstance(join["project_project"], list))
+        self.assertEqual(len(join["project_project"]), 1)
+        self.assertEqual(str(join["project_project"][0]), str(expected))
+
+        left = rfilter.get_joins(left=True, as_list=False)
+        self.assertEqual(left, {})
 
         # Try to select rows
         rows = component.select(None, limit=1, as_rows=True)
@@ -597,17 +699,33 @@ class ResourceFilterQueryTests(unittest.TestCase):
         component = resource.components["competency"]
         query = component.get_query()
 
-        expected = ((((hrm_competency.deleted != True) &
-                      (hrm_competency.id > 0)) &
-                     ((((pr_person.deleted != True) &
-                        (pr_person.id > 0)) &
-                       (pr_person.id == 1)) &
-                     (hrm_competency.id == 1))) &
-                    ((hrm_competency.person_id == pr_person.id) &
-                     (hrm_competency.deleted != True)))
+        expected = (((hrm_competency.deleted != True) &
+                     (hrm_competency.id > 0)) &
+                    ((((pr_person.deleted != True) &
+                       (pr_person.id > 0)) &
+                      (pr_person.id == 1)) &
+                    (hrm_competency.id == 1)))
 
         self.assertEqual(str(query), str(expected))
 
+        rfilter = component.rfilter
+
+        # No inner joins
+        join = rfilter.get_joins(left=False, as_list=False)
+        self.assertEqual(join, {})
+
+        # Reverse left join for the filter of the master table
+        left = rfilter.get_joins(left=True, as_list=False)
+        tablenames = left.keys()
+        self.assertEqual(len(tablenames), 1)
+        self.assertTrue("pr_person" in tablenames)
+        expected = pr_person.on(
+                    (pr_person.id == hrm_competency.person_id))
+        self.assertTrue(isinstance(left["pr_person"], list))
+        self.assertEqual(len(left["pr_person"]), 1)
+        self.assertEqual(str(left["pr_person"][0]), str(expected))
+
+        
     # -------------------------------------------------------------------------
     def testAnyOf(self):
         """ Test filter construction with containment methods (contains vs anyof) """
@@ -617,14 +735,14 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         q = FS("skill_id").contains([1, 2])
         query = q.query(resource)
-        expected = ((req_req_skill.skill_id.like("%|1|%")) &
-                    (req_req_skill.skill_id.like("%|2|%")))
+        expected = ((req_req_skill.skill_id.lower().like("%|1|%")) &
+                    (req_req_skill.skill_id.lower().like("%|2|%")))
         self.assertEqual(str(query), str(expected))
 
         q = FS("skill_id").anyof([1, 2])
         query = q.query(resource)
-        expected = ((req_req_skill.skill_id.like("%|1|%")) |
-                    (req_req_skill.skill_id.like("%|2|%")))
+        expected = ((req_req_skill.skill_id.lower().like("%|1|%")) |
+                    (req_req_skill.skill_id.lower().like("%|2|%")))
         self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
@@ -1005,14 +1123,14 @@ class ResourceFieldTests(unittest.TestCase):
 
         # Check join
         join = f.join
-        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(isinstance(join, dict))
         self.assertTrue(tname in join)
         expected = (org_office.organisation_id == org_organisation.id)
         self.assertEqual(str(join[tname]), str(expected))
 
         # Check left join
         left = f.left
-        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(isinstance(left, dict))
         self.assertTrue(tname in left)
         self.assertTrue(isinstance(left[tname], list))
 
@@ -1049,14 +1167,14 @@ class ResourceFieldTests(unittest.TestCase):
 
         # Check join
         join = f.join
-        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(isinstance(join, dict))
         self.assertTrue(tname in join)
         expected = (hrm_human_resource.organisation_id == org_organisation.id)
         self.assertEqual(str(join[tname]), str(expected))
 
         # Check left join
         left = f.left
-        self.assertTrue(isinstance(join, Storage))
+        self.assertTrue(isinstance(left, dict))
         self.assertTrue(tname in left)
         self.assertTrue(isinstance(left[tname], list))
 
@@ -1216,9 +1334,10 @@ class ResourceFieldTests(unittest.TestCase):
         self.assertEqual(str(f.left["project_task"][0]), str(expected_l))
         self.assertEqual(str(f.left["project_task"][1]), str(expected_r))
 
-        expected = ((project_task_project.deleted != True) &
-                    ((project_task_project.project_id == project_project.id) &
-                     (project_task_project.task_id == project_task.id)))
+        expected = (((project_task_project.project_id == project_project.id) &
+                     (project_task_project.deleted != True)) & 
+                    (project_task_project.task_id == project_task.id))
+
         self.assertEqual(str(f.join["project_task"]), str(expected))
 
         # Check distinct
@@ -1583,7 +1702,7 @@ class URLQueryParserTests(unittest.TestCase):
         rfilter = resource.rfilter
 
         # Check joins
-        joins = rfilter.get_left_joins()
+        joins = rfilter.get_joins(left=True)
         self.assertNotEqual(joins, None)
         self.assertTrue(isinstance(joins, list))
 
@@ -1626,7 +1745,7 @@ class URLQueryParserTests(unittest.TestCase):
         rfilter = resource.rfilter
 
         # Check joins
-        joins = rfilter.get_left_joins()
+        joins = rfilter.get_joins(left=True)
         self.assertTrue(isinstance(joins, list))
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
@@ -1658,7 +1777,7 @@ class URLQueryParserTests(unittest.TestCase):
         rfilter = resource.rfilter
 
         # Check joins
-        joins = rfilter.get_left_joins()
+        joins = rfilter.get_joins(left=True)
         self.assertTrue(isinstance(joins, list))
         expected = org_organisation.on(
                         project_project.organisation_id == org_organisation.id)
@@ -1690,7 +1809,7 @@ class URLQueryParserTests(unittest.TestCase):
         rfilter = resource.rfilter
 
         # Check joins
-        joins = rfilter.get_left_joins()
+        joins = rfilter.get_joins(left=True)
         self.assertTrue(isinstance(joins, list))
 
         expected = org_organisation.on(
@@ -1714,35 +1833,164 @@ class URLQueryParserTests(unittest.TestCase):
         self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
-    def testBBOXFilter(self):
-        """ Test URL query with BBOX filter """
+    def testBBOXFilterDirectLink(self):
+        """ Test URL query with BBOX filter, location_id """
 
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
 
         org_office = s3db.org_office
         gis_location = s3db.gis_location
 
-        url_query = {"bbox": "119.80485082193,12.860457717185,122.27677462907,15.107136411359"}
+        # Remove any location context
+        context = s3db.get_config("org_office", "context")
+        s3db.configure("org_office", context={})
 
-        resource = s3db.resource("org_office", vars=url_query)
-        rfilter = resource.rfilter
+        try:
+            url_query = {"bbox": "119.80,12.86,122.27,15.10"}
 
-        # Check the query
-        query = rfilter.get_query()
-        expected = (((org_office.deleted != True) &
-                     (org_office.id > 0)) &
-                    ((org_office.location_id == gis_location.id) &
-                     ((((gis_location.lon > 119.80485082193) &
-                        (gis_location.lon < 122.27677462907)) &
-                       (gis_location.lat > 12.860457717185)) &
-                      (gis_location.lat < 15.107136411359))))
+            resource = s3db.resource("org_office", vars=url_query)
+            rfilter = resource.rfilter
 
-        self.assertEqual(str(query), str(expected))
+            # Parse the bbox
+            bbox, joins = rfilter.parse_bbox_query(resource, url_query)
+
+            expected_bbox = ((((gis_location.lon > 119.8) & \
+                            (gis_location.lon < 122.27)) & \
+                            (gis_location.lat > 12.86)) & \
+                            (gis_location.lat < 15.1))
+            assertEqual(bbox, expected_bbox)
+
+            # Check the joins
+            assertTrue(isinstance(joins, dict))
+            assertEqual(len(joins), 1)
+
+            subjoins = joins.get("gis_location")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = gis_location.on(org_office.location_id == gis_location.id)
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            # Check the query
+            query = rfilter.get_query()
+            expected = (((org_office.deleted != True) & (org_office.id > 0)) & expected_bbox)
+            assertEqual(str(query), str(expected))
+            
+        finally:
+            # Restore context configuration
+            resource.configure(context=context)
+
+    # -------------------------------------------------------------------------
+    def testBBOXFilterLocationContext(self):
+        """ Test URL query with BBOX filter, location context """
+
+        s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
+        org_office = s3db.org_office
+        gis_location = s3db.gis_location
+        org_organisation = s3db.org_organisation
+        org_organisation_location = s3db.org_organisation_location
+
+        # Define a location context
+        context = s3db.get_config("org_office", "context")
+        s3db.configure("org_office",
+                       context={"location": "organisation_id$organisation_location.location_id"})
+
+        try:
+            url_query = {"bbox": "119.80,12.86,122.27,15.10"}
+
+            resource = s3db.resource("org_office", vars=url_query)
+            rfilter = resource.rfilter
+
+            # Parse the bbox
+            bbox, joins = rfilter.parse_bbox_query(resource, url_query)
+
+            expected_bbox = ((((gis_location.lon > 119.8) & \
+                            (gis_location.lon < 122.27)) & \
+                            (gis_location.lat > 12.86)) & \
+                            (gis_location.lat < 15.1))
+            assertEqual(bbox, expected_bbox)
+
+            # Check the joins
+            assertTrue(isinstance(joins, dict))
+            assertEqual(len(joins), 3)
+
+            subjoins = joins.get("gis_location")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = gis_location.on(org_organisation_location.location_id == gis_location.id)
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            subjoins = joins.get("org_organisation")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = org_organisation.on(org_office.organisation_id == org_organisation.id)
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            subjoins = joins.get("org_organisation_location")
+            assertNotEqual(subjoins, None)
+            assertEqual(len(subjoins), 1)
+            expected_join = org_organisation_location.on(
+                                (org_organisation_location.organisation_id == org_organisation.id) &
+                                (org_organisation_location.deleted != True)
+                            )
+            assertEqual(str(subjoins[0]), str(expected_join))
+
+            # Check the query
+            query = rfilter.get_query()
+            expected = (((org_office.deleted != True) & (org_office.id > 0)) & expected_bbox)
+            assertEqual(str(query), str(expected))
+            
+        finally:
+            # Restore context configuration
+            resource.configure(context=context)
 
     # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.auth.override = False
+
+# =============================================================================
+class JoinResolutionTests(unittest.TestCase):
+
+    @unittest.skipIf(not current.deployment_settings.has_module("project"), "project module disabled")
+    def testPreferredSet(self):
+        """ Test resolution of duplicate inner/left joins """
+
+        s3db = current.s3db
+        ptable = s3db.project_project
+        ltable = s3db.project_task_project
+        ttable = s3db.project_task
+
+        ptable_join = ptable.on(ltable.project_id == ptable.id)
+        ltable_join = ltable.on(ltable.task_id == ttable.id)
+
+        # Define a set of inner joins for one table
+        ijoins = S3Joins("project_task")
+        ijoins.extend({"project_project": [ptable_join, ltable_join]})
+
+        # Define a sub-join of the inner joins as a left join
+        ljoins = S3Joins("project_task")
+        ljoins.extend({"project_task_project": [ltable_join]})
+
+        # Request joins for both tables from both sets, prefer the left joins
+        tablenames = ["project_project", "project_task_project"]
+        join = ijoins.as_list(tablenames=tablenames, prefer=ljoins)
+        left = ljoins.as_list(tablenames=tablenames)
+
+        # Joins should be moved to the left joins set
+        self.assertEqual(join, [])
+        self.assertEqual(len(left), 2)
+        # Mind the order! (must be ordered by dependency)
+        self.assertEqual(str(left[0]), str(ltable_join))
+        self.assertEqual(str(left[1]), str(ptable_join))
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -1765,6 +2013,7 @@ if __name__ == "__main__":
         ResourceFilterJoinTests,
         ResourceFilterQueryTests,
         ResourceContextFilterTests,
+        JoinResolutionTests,
 
         URLQueryParserTests,
 

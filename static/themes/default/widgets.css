@@ -270,7 +270,7 @@ textarea.richtext {
     font-weight: bold;
 }
 
-.list_formats {
+.dt-export-options {
     float: right;
     padding-top: 5px;
 }
@@ -281,6 +281,14 @@ textarea.richtext {
     width: 16px;
     float: right;
     background-repeat: no-repeat;
+}
+.export_cap_large {
+    background-image: url(../../img/icon-cap.jpg);
+    height: 36px;
+    width: 99px;
+}
+.export_cap {
+    background-image: url(../../img/cap_16.png);
 }
 .export_have {
     background-image: url(../../img/have_16.png);
@@ -532,6 +540,9 @@ div.dl {
     text-overflow: none;
     overflow: hidden;
 }
+.card_1_line i {
+    margin-right: 5px;
+}
 
 /* Display view */
 .item-container {
@@ -594,11 +605,11 @@ ul.ui-autocomplete {
 
 /* Form Popup */
 body.popup {
+    background-color: #fbfbfb;
     min-width: auto;
     height: auto;
 }
 #popup {
-    background: #fff;
     max-width: 750px;
     width: 100%;
 }
@@ -609,7 +620,10 @@ body.popup {
     /* Form initially hidden until resized to fit modal */
     display: none;
 }
-
+#popup .form-container {
+    /* Ensure scrollbars are all on the Modal, not inside */
+    overflow: inherit;
+}
 #popup .control-group {
     padding-right: 20px;
 }
@@ -868,7 +882,10 @@ span.tab_next_inactive a {
 }
 .action-btn:hover,
 .delete-btn-ajax:hover,
-.delete-btn:hover {
+.delete-btn:hover,
+.action-btn:focus,
+.delete-btn-ajax:focus,
+.delete-btn:focus  {
     text-decoration: none;
     color: #fff;
     background-color: #164b8b;
@@ -891,6 +908,13 @@ span.tab_next_inactive a {
 }
 .action-lnk:first-child {
     margin-left: 0;
+}
+.form-toggle,
+.form-toggle:hover {
+    text-decoration: none;
+}
+.form-toggle i {
+    margin-left: 3px;
 }
 
 .sublabels {
@@ -1487,6 +1511,10 @@ div.fm-cancel {
     /* Ensure maximal space for iframe within Dialog */
     padding: 0 !important;
 }
+.ui-dialog {
+    padding: 0;
+    width: 750px !important;
+}
 
 /* UI Multiselect */
 body.ltr label.ui-corner-all span {
@@ -1500,6 +1528,12 @@ body.rtl label.ui-corner-all span {
 .s3-hierarchy-tree.jstree {
     border: 1px solid #ccc;
     padding: 2px 3px 4px 3px;
+/*  @todo: make this work - currently overflow:auto conflicts with
+           bootstrap popovers (because they are inside the box and
+           become inaccessible when overflowing)
+*/
+/*  max-height: 360px;
+    overflow-y: auto;*/
 }
 
 /* Saved Filters Page - Inline Editor for Filter Titles */
@@ -1515,6 +1549,7 @@ form.jeditable-input input {
 button.toggle-text {
     font-size: 10px !important;
     margin-left: 12px !important;
+    line-height: 1.0;
 }
 
 /* Action Toolbar */

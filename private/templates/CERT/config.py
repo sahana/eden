@@ -14,15 +14,11 @@ settings = current.deployment_settings
 T = current.T
 
 """
-    Template settings for US
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Template settings for CERT
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["CERT"]
+settings.base.prepopulate = ["CERT", "demo/users"]
 
 # Theme
 settings.base.theme = "CERT"

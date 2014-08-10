@@ -9,3 +9,8 @@
 .map_loader {
     background-image: url(../../img/sunflower_spin_throbber.gif);
 }
+#logo {
+	width: 55px;
+	position: relative;
+	top:-19px;
+}

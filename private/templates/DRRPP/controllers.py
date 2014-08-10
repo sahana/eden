@@ -673,34 +673,35 @@ class mypage():
     """
         Custom page for a User to manage their Saved Search & Subscriptions
 
-        @todo: pr_saved_search no longer supported (S3Search deprecated)
+        @todo: SavedSearch deprecated,
+               re-implement with saved filters / S3Notify
     """
 
     def __call__(self):
         auth = current.auth
 
-        if not auth.is_logged_in():
-            response = current.response
-            request = current.request
-            T = current.T
+        #if not auth.is_logged_in():
+        response = current.response
+        request = current.request
+        T = current.T
 
-            view = path.join(request.folder, "private", "templates",
-                             THEME, "views", "mypage.html")
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP(404, "Unable to open Custom View: %s" % view)
+        view = path.join(request.folder, "private", "templates",
+                            THEME, "views", "mypage.html")
+        try:
+            # Pass view as file not str to work in compiled mode
+            response.view = open(view, "rb")
+        except IOError:
+            from gluon.http import HTTP
+            raise HTTP(404, "Unable to open Custom View: %s" % view)
 
-            response.title = T("My Page")
+        response.title = T("My Page")
 
-            return dict(
-                title=T("My Page"),
-            )
-        else:
-            person_id = auth.s3_logged_in_person()
-            redirect(URL(c="pr", f="person", args=[person_id, "saved_search"]))
+        return dict(
+            title=T("My Page"),
+        )
+        #else:
+        #    person_id = auth.s3_logged_in_person()
+        #    redirect(URL(c="pr", f="person", args=[person_id, "saved_search"]))
 
 # =============================================================================
 class organisations():
@@ -745,18 +746,18 @@ class organisations():
                 s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.multi.min.js" % request.application)
 
             s3.js_global.append('''S3.dataTablesInstances=[]''')
-            s3request, field_list = self._regional()
-            tables.append(self._table("regional", s3request.resource, field_list))
-            s3request, field_list = self._groups()
-            tables.append(self._table("groups", s3request.resource, field_list))
+            s3request, list_fields = self._regional()
+            tables.append(self._table("regional", s3request.resource, list_fields))
+            s3request, list_fields = self._groups()
+            tables.append(self._table("groups", s3request.resource, list_fields))
         else:
             # AJAX call
             if table == "groups":
-                s3request, field_list = self._groups()
+                s3request, list_fields = self._groups()
             elif table == "regional":
-                s3request, field_list = self._regional()
+                s3request, list_fields = self._regional()
             current.s3db.configure(s3request.resource.tablename,
-                                   list_fields = field_list)
+                                   list_fields = list_fields)
             return s3request()
 
         return dict(tables=tables)
@@ -773,22 +774,21 @@ class organisations():
 
         s3request = s3_request("org", "organisation", extension="aadata")
         # (FS("project.id") != None) & \
-        f = (FS("organisation_type_id$name").anyof(["Regional Organisation",
-                                                                 "Regional Office",
-                                                                 "Regional Center"]))
+        f = (FS("organisation_type.name").anyof(["Regional Organisation",
+                                                 "Regional Office",
+                                                 "Regional Center"]))
         s3request.resource.add_filter(f)
 
-        field_list = [
-            "id",
-            "name",
-            "acronym",
-            (T("Type"), "organisation_type_id"),
-            "website",
-            "region_id",
-            "year",
-            (T("Notes"), "comments"),
-        ]
-        return (s3request, field_list)
+        list_fields = ["id",
+                       "name",
+                       "acronym",
+                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                       "website",
+                       "region_id",
+                       "year",
+                       (T("Notes"), "comments"),
+                       ]
+        return (s3request, list_fields)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -807,19 +807,19 @@ class organisations():
 
         s3request = s3_request("org", "organisation", extension="aadata")
         #(FS("project.id") != None) & \
-        f = (FS("organisation_type_id$name").anyof(["Committees/Mechanism/Forum",
-                                                                 "Network"]))
+        f = (FS("organisation_type.name").anyof(["Committees/Mechanism/Forum",
+                                                 "Network"]))
         s3request.resource.add_filter(f)
 
-        field_list = ["id",
-                      "name",
-                      "acronym",
-                      (T("Type"), "organisation_type_id"),
-                      "year",
-                      (T("Address"), "address"),
-                      (T("Notes"), "comments"),
-                      ]
-        return (s3request, field_list)
+        list_fields = ["id",
+                       "name",
+                       "acronym",
+                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                       "year",
+                       (T("Address"), "address"),
+                       (T("Notes"), "comments"),
+                       ]
+        return (s3request, list_fields)
 
     # -------------------------------------------------------------------------
     @staticmethod

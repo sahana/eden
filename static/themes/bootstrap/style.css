@@ -136,18 +136,6 @@ div.dl {
     margin-left: 10px;
 }
 
-/* Match .btn.btn-primary */
-.delete-btn {
-    background-color: #006dcc;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    border-width: 1px;
-    border-radius: 4px 4px 4px 4px;
-    color: #fff;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-    line-height: 20px;
-    padding: 4px 12px;
-}
-
 /* Push down below Nav  */
 #alert-space {
     position: fixed;
@@ -188,6 +176,12 @@ a.btn.btn-primary.main-add {
     top: 24px;
 }
 
+/* GeoNames Search Results */
+.x-combo-list h1 {
+    font: 12px tahoma,arial,helvetica,sans-serif;
+    margin: 0;
+}
+
 /* Add button on Updates page & Disaster selection screen */
 a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
@@ -223,10 +217,11 @@ a i.icon.icon-plus-sign.big-add:hover {
     border-right: none;
 }
 
+/* in widgets.css
 .ui-dialog {
 	width: 750px !important;
 	padding: 0;
-}
+} */
 
 .popup .form-container form.form-horizontal {
     border: none;
@@ -251,6 +246,10 @@ a i.icon.icon-plus-sign.big-add:hover {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
+}
+
+div.form-container {
+    margin-bottom: 0;
 }
 
 div.form-container form.form-horizontal,
@@ -329,10 +328,16 @@ body.rtl .form-horizontal .control-label {
     margin-top: 5px;
 }
 
-.form-container .help-block div {
-    position: relative;
-    top: -8px;
-    margin-bottom: -12px;
+.s3_add_resource_link {
+    float: left;
+    margin: 8px 0 -8px 5px;
+}
+
+.form-container div.tooltip  {
+    float: left;
+    margin: 10px 0 -10px 5px;
+    background: url("../../img/help_on.gif") no-repeat scroll;
+    width: 20px;
 }
 
 /* Don't apply if s3.cancel=True */
@@ -347,37 +352,57 @@ body.rtl .form-horizontal .control-label {
     margin-right: -15px;
 }
 
+a.cancel-form-btn,
 #submit_record__row .btn-primary {
     padding: 5px 20px;
-    margin-left: 240px;
-    margin-right: 240px;
+    margin-left: 10px;
+    float: left;
+}
+
+a.cancel-form-btn {
+    margin-left: 40px;
+    margin-top: 6px;
+    text-decoration: none;
 }
 
 #delete-btn, 
 #edit-btn.btn.btn-primary,
 #show-add-btn {
-    padding: 1px 6px;
-    font-size: 10.5px;
+    padding: 2px 8px;
     -webkit-border-radius: 3px;
        -moz-border-radius: 3px;
             border-radius: 3px;
 }
 
-a.action-btn {
+/* Match .btn.btn-primary */
+a.cancel-form-btn,
+.action-btn,
+a.delete-btn {
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-radius: 4px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
     display: inline-block;
     *display: inline;
     padding: 1px 6px;
     margin-bottom: 0;
     *margin-left: .3em;
-    margin-right: -2px;
     font-size: 10.5px;
     line-height: 20px;
     *line-height: 20px;
-    color: #333333;
-    text-align: center;
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     vertical-align: middle;
     cursor: pointer;
+}
+.action-btn i.icon,
+a.delete-btn i.icon {
+    font-size: 13px;
+}
+
+.action-btn {
+    text-align: center;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     background-color: #f5f5f5;
     *background-color: #e6e6e6;
     background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
@@ -386,14 +411,8 @@ a.action-btn {
     background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
     background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
     background-repeat: repeat-x;
-    border: 1px solid #bbbbbb;
     *border: 0;
-    border-color: #e6e6e6 #e6e6e6 #bfbfbf;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
     border-bottom-color: #a2a2a2;
-    -webkit-border-radius: 4px;
-     -moz-border-radius: 4px;
-          border-radius: 4px;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
     *zoom: 1;
@@ -401,8 +420,9 @@ a.action-btn {
      -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
- 
-a.action-btn:hover {
+
+.action-btn:hover,
+.action-btn:focus {
     color: #333333;
     text-decoration: none;
     background-color: #e6e6e6;
@@ -415,11 +435,26 @@ a.action-btn:hover {
           transition: background-position 0.1s linear;
 }
 
+a.cancel-form-btn,
+a.delete-btn,
 #delete-btn {
     color: #ffffff;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-color: #da4f49;
     *background-color: #bd362f;
+}
+
+a.cancel-form-btn:hover,
+a.delete-btn:hover,
+#delete-btn:hover{
+    color: #ffffff;
+    background-color: #bd362f;
+    *background-color: #a9302a;
+}
+
+a.cancel-form-btn,
+#delete-btn {
+    font-size: 13px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-image: -moz-linear-gradient(top, #ee5f5b, #bd362f);
     background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#bd362f));
     background-image: -webkit-linear-gradient(top, #ee5f5b, #bd362f);
@@ -432,12 +467,6 @@ a.action-btn:hover {
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 
-#delete-btn:hover{
-    color: #ffffff;
-    background-color: #bd362f;
-    *background-color: #a9302a;
-}
-
 /* Required Fields */
 /* Better solution will be to use inline 'Optional' hints:
 http://www.usabilitycounts.com/2009/11/18/form-design-and-the-fallacy-of-the-required-field/
@@ -445,12 +474,11 @@ http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ 
 .req_key {
     position: absolute;
     z-index: 1;
-    margin-left: 7px;
-    /* This pushed it 'out of the way' on NYC so not easy to see (CRMT just pads it down a little, still looking worse, DRMP looks awful with this)
-    float: right;
-    margin-right: 7px;*/
-    margin-top: 5px;
+    margin: 7px 0 0 7px;
     font-size: 12px;
+}
+#component .req_key {
+    margin-top: 25px;
 }
 
 #last_update {
@@ -520,8 +548,6 @@ form.form-horizontal .map_wrapper {
 table.embeddedComponent {
     border: 0;
     display: inline-block;
-    margin-bottom: 10px;
-    margin-top: 1px;
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -544,8 +570,9 @@ table.embeddedComponent td {
 }
 
 table.embeddedComponent .add-row td {
-    padding-top: 5px;
+    padding: 0 10px 0 0;
 }
+
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);
 }
@@ -731,10 +758,9 @@ label.ui-corner-all span {
 #datatable_filter label {
     position: relative;
     padding-right: 25px;
-    margin-bottom: -37px;
     font-weight: bold;
-    margin-top: 7px;
-    margin-left: 13px;
+    margin-left: 10px;
+    margin-bottom: -5px;
 }
 
 .dataTables_info {
@@ -757,6 +783,7 @@ label.ui-corner-all span {
 
 .dataTables_length label select {
     width: auto;
+    margin-bottom: 0;
 }
 
 .dataTables_info,
@@ -771,20 +798,19 @@ label.ui-corner-all span {
 }
 
 .dataTables_info {
-    margin-top: 7px;
+    margin: 5px 30px 0px 5px;
 }
 
 .dataTables_wrapper {
     clear: none;
 }
 
-.list_formats {
-    margin-right: 20px;
-    top: 10px;
+.dt-export-options {
+    margin-right: 5px;
     font-size: 12px;
     padding: 0;
     position: relative;
-    z-index: 1000;
+    z-index: 1;
 }
 
 .dataTable thead tr {
@@ -810,7 +836,7 @@ label.ui-corner-all span {
 #table-container tr.odd td {
     border: 1px solid #d9d8d8;
     border-left: none;
-    padding: 10px 10px 10px 7px;
+    padding: 7px 0 7px 5px;
     font-size: 13px;
 }
 
@@ -895,12 +921,17 @@ label.ui-corner-all span {
 
 #auth_user_remember__row label {
     margin-left: 28px;
-    margin-top: -21px;
+    margin-top: -19px;
 }
 
-.auth_login #submit_record__row .btn-primary {
+.form-container .auth_login #submit_record__row .btn-primary {
     margin-left: -70px;
     margin-right: 0;
+}
+
+.dropdown-menu #register-btn {
+    /* Layout on page needs fixing */
+    display: none;
 }
 
 #email__error,
@@ -914,6 +945,23 @@ label.ui-corner-all span {
     color: #b84947;
     background-color: #f2dedd;
 }
+
+.dropdown-menu input.btn {
+    /* Make appear on same row */
+    position: relative;
+    left: 150px;
+    top: -58px;
+}
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    /* IE 10 */
+    .dropdown-menu form {
+        height: 100px;
+    }
+    .dropdown-menu input.btn {
+        left: 268px;
+    }
+}
+
 
 /* Registration Page */
 .auth_change_password .control-label,

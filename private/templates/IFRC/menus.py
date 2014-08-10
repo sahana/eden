@@ -9,7 +9,7 @@ except ImportError:
     pass
 import s3menus as default
 
-red_cross_filter = {"organisation.organisation_type_id$name" : "Red Cross / Red Crescent"}
+red_cross_filter = {"organisation_type.name" : "Red Cross / Red Crescent"}
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
@@ -284,7 +284,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
             return super(S3OptionsMenu, self).gis()
 
     # -------------------------------------------------------------------------
-    def hrm(self):
+    @staticmethod
+    def hrm():
         """ HRM Human Resource Management """
 
         session = current.session
@@ -311,7 +312,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Staff", c="hrm", f=("staff", "person"), m="summary",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", f="person", m="import",
                           vars=staff, p="create"),
                     ),
@@ -321,7 +321,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Teams", c="hrm", f="group",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
@@ -332,38 +331,30 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create",
                           vars=red_cross_filter
                           ),
-                        #M("Search",
-                          #vars=red_cross_filter
-                          #),
                         M("Import", m="import", p="create", check=is_org_admin)
                     ),
                     M("Offices", c="org", f="office",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Department Catalog", c="hrm", f="department",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Job Title Catalog", c="hrm", f="job_title",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
                     #M("Skill Catalog", f="skill",
                     #  check=manager_mode)(
                     #    M("Create", m="create"),
-                    #    #M("Search"),
                     #    #M("Skill Provisions", f="skill_provision"),
                     #),
                     M("Training Events", c="hrm", f="training_event",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
@@ -377,14 +368,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Training Course Catalog", c="hrm", f="course",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", c="hrm", f="certificate",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
@@ -392,19 +381,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN],
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Office Types", c="org", f="office_type",
                       restrict=[ADMIN],
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     #M("Facility Types", c="org", f="facility_type",
                     #  restrict=[ADMIN],
                     #  check=manager_mode)(
                     #    M("Create", m="create"),
-                    #    #M("Search"),
                     #),
                     #M("My Profile", c="hrm", f="person",
                     #  check=personal_mode, vars=dict(mode="personal")),
@@ -424,7 +410,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.hrm()
     
     # -------------------------------------------------------------------------
-    def vol(self):
+    @staticmethod
+    def vol():
         """ Volunteer Management """
 
         auth = current.auth
@@ -461,7 +448,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Volunteers", f="volunteer", m="summary",
                       check=[manager_mode])(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
@@ -471,74 +457,62 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
                     ),
                     #M("Department Catalog", f="department",
                     #  check=manager_mode)(
                     #    M("Create", m="create"),
-                    #    #M("Search"),
                     #),
                     M("Volunteer Role Catalog", f="job_title",
                       check=[manager_mode, not_vnrc])(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
                     M("Skill Catalog", f="skill",
                       check=[manager_mode, skills_menu])(
                         M("Create", m="create"),
-                        #M("Search"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        #M("Search"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
                     M("Programs", f="programme",
                       check=[manager_mode, show_programmes])(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
                     M("Awards", f="award",
                       check=[manager_mode, is_org_admin])(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Volunteer Cluster Type", f="cluster_type",
                       check = check_org_dependent_field("vol_volunteer_cluster",
                                                         "vol_cluster_type_id"))(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Volunteer Cluster", f="cluster",
                       check = check_org_dependent_field("vol_volunteer_cluster",
                                                         "vol_cluster_id"))(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Volunteer Cluster Position", f="cluster_position",
                       check = check_org_dependent_field("vol_volunteer_cluster",
                                                         "vol_cluster_position_id"))(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(
@@ -570,7 +544,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def inv(self):
+    @staticmethod
+    def inv():
         """ INV / Inventory """
 
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -603,11 +578,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #M("Home", f="index"),
                     M("Warehouses", c="inv", f="warehouse")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
-                        #M("Search", f="inv_item"),
                         M("Search Shipped Items", f="track_item"),
                         M("Adjust Stock Levels", f="adj", check=use_adjust),
                         #M("Kitting", f="kit"),
@@ -628,58 +601,46 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M(inv_recv_list, c="inv", f="recv")(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Sent Shipments", c="inv", f="send")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Search Shipped Items", f="track_item"),
                     ),
                     M("Items", c="supply", f="item", m="summary")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
                     # Catalog Items moved to be next to the Item Categories
                     #M("Catalog Items", c="supply", f="catalog_item")(
                     #   M("Create", m="create"),
-                    #   #M("Search"),
                     #),
                     #M("Brands", c="supply", f="brand",
                     #  restrict=[ADMIN])(
                     #    M("Create", m="create"),
-                    #    #M("Search"),
                     #),
                     M("Catalogs", c="supply", f="catalog")(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Suppliers", c="inv", f="supplier")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Facilities", c="inv", f="facility")(
                         M("Create", m="create", t="org_facility"),
-                        #M("Search"),
                     ),
                     M("Facility Types", c="inv", f="facility_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Requests", c="req", f="req")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Requested Items", f="req_item"),
                     ),
                     M("Commitments", c="req", f="commit", check=use_commit)(
-                        #M("Search")
                     ),
                 )
 
@@ -691,17 +652,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.inv()
 
     # -------------------------------------------------------------------------
-    def irs(self):
+    @staticmethod
+    def irs():
         """ IRS Incident Reporting """
 
         return M()(
                     M("Events", c="event", f="event")(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Incident Reports", c="irs", f="ireport")(
                         M("Create", m="create"),
-                        #M("Search"),
                         M("Open Incidents", vars={"open": 1}),
                         M("Map", m="map"),
                         M("Timeline", args="timeline"),
@@ -710,7 +670,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Incident Categories", c="irs", f="icategory",
                       check=current.auth.s3_has_role(current.session.s3.system_roles.ADMIN))(
                         M("Create", m="create"),
-                        #M("Search"),
                     ),
                     M("Reports", c="irs", f="ireport",  m="report")(
                         M("Incidents", m="report"),
@@ -725,7 +684,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return self.irs()
 
     # -------------------------------------------------------------------------
-    def deploy(self):
+    @staticmethod
+    def deploy():
         """ RDRT Alerting and Deployments """
 
         return M()(M("Missions",
@@ -742,7 +702,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                         M("Settings",
                           c="deploy", f="email_channel",
-                        ),
+                          p="update", t="msg_email_channel",
+                          ),
                    ),
                    M("Deployments",
                      c="deploy", f="assignment", m="summary"
@@ -752,7 +713,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    ),
                    M("RDRT Members",
                      c="deploy", f="human_resource", m="summary")(
-                        M("Add Member", c="deploy", f="application", m="select"),
+                        M("Add Member",
+                          c="deploy", f="application", m="select",
+                          p="create", t="deploy_application",
+                          ),
                         M("Import Members", c="deploy", f="person", m="import"),
                    ),
                )

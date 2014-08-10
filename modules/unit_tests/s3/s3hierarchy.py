@@ -13,6 +13,7 @@ from lxml import etree
 
 # =============================================================================
 class S3HierarchyTests(unittest.TestCase):
+    """ Tests for standard hierarchies """
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -20,19 +21,11 @@ class S3HierarchyTests(unittest.TestCase):
 
         s3db = current.s3db
 
-        s3db.define_table("test_nonhierarchy",
-                          Field("name"),
-                          *s3_uid())
-
         s3db.define_table("test_hierarchy",
                           Field("name"),
                           Field("category"),
                           Field("type"),
                           Field("parent", "reference test_hierarchy"),
-                          Field("test_nonhierarchy_id", "reference test_nonhierarchy"),
-                          Field("test_nonhierarchy_multi_id", "list:reference test_nonhierarchy"),
-                          Field.Method("vsfield", lambda row: "test"),
-                          Field.Method("vmfield", lambda row: ["test1", "test2", "test3"]),
                           *s3_uid())
 
         s3db.define_table("test_hierarchy_reference",
@@ -42,12 +35,6 @@ class S3HierarchyTests(unittest.TestCase):
 
         xmlstr = """
 <s3xml>
-    <resource name="test_nonhierarchy" uuid="NONHIERARCHY1">
-        <data field="name">NonHierarchy1</data>
-    </resource>
-    <resource name="test_nonhierarchy" uuid="NONHIERARCHY2">
-        <data field="name">NonHierarchy2</data>
-    </resource>
     <resource name="test_hierarchy" uuid="HIERARCHY1">
         <data field="name">Type 1</data>
         <data field="category">Cat 0</data>
@@ -58,7 +45,6 @@ class S3HierarchyTests(unittest.TestCase):
         <data field="category">Cat 1</data>
         <data field="type">C</data>
         <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1"/>
-        <reference field="test_nonhierarchy_id" resource="test_nonhierarchy" uuid="NONHIERARCHY1"/>
     </resource>
     <resource name="test_hierarchy" uuid="HIERARCHY1-1-1">
         <data field="name">Type 1-1-1</data>
@@ -99,8 +85,6 @@ class S3HierarchyTests(unittest.TestCase):
         <data field="name">Type 2-1</data>
         <data field="category">Cat 1</data>
         <data field="type">A</data>
-        <reference field="test_nonhierarchy_multi_id" resource="test_nonhierarchy"
-                   uuid="[&quot;NONHIERARCHY1&quot;,&quot;NONHIERARCHY2&quot;]"/>
         <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY2"/>
     </resource>
     <resource name="test_hierarchy" uuid="HIERARCHY2-1-1">
@@ -128,9 +112,8 @@ class S3HierarchyTests(unittest.TestCase):
     def tearDownClass(cls):
 
         db = current.db
-        db.test_hierarchy.drop()
+        db.test_hierarchy.drop(mode="cascade")
         db.test_hierarchy_reference.drop()
-        db.test_nonhierarchy.drop()
 
     # -------------------------------------------------------------------------
     def setUp(self):
@@ -150,13 +133,6 @@ class S3HierarchyTests(unittest.TestCase):
                 self.uids[uid] = row.id
                 self.ids[row.id] = uid
 
-        if not hasattr(self, "lookup_uids"):
-            rows = db(db.test_nonhierarchy.id>0).select()
-            self.lookup_uids = {}
-            for row in rows:
-                uid = row.uuid
-                self.lookup_uids[uid] = row.id
-
         current.s3db.configure("test_hierarchy",
                                hierarchy=("parent", "category"))
 
@@ -171,15 +147,18 @@ class S3HierarchyTests(unittest.TestCase):
 
         uids = self.uids
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         h = S3Hierarchy("test_hierarchy")
         roots = h.roots
-        self.assertEqual(len(roots), 2)
-        self.assertTrue(uids["HIERARCHY1"] in roots)
-        self.assertTrue(uids["HIERARCHY2"] in roots)
+        assertEqual(len(roots), 2)
+        assertTrue(uids["HIERARCHY1"] in roots)
+        assertTrue(uids["HIERARCHY2"] in roots)
 
         nodes = h.nodes
-        self.assertEqual(len(nodes), len(uids))
-        self.assertTrue(all(node_id in nodes for node_id in uids.values()))
+        assertEqual(len(nodes), len(uids))
+        assertTrue(all(node_id in nodes for node_id in uids.values()))
 
     # -------------------------------------------------------------------------
     def testCategory(self):
@@ -188,25 +167,30 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         rows = self.rows
 
+        assertEqual = self.assertEqual
+        
         h = S3Hierarchy("test_hierarchy")
         for uid in uids:
             category = h.category(uids[uid])
-            self.assertEqual(category, rows[uid].category)
+            assertEqual(category, rows[uid].category)
 
     # -------------------------------------------------------------------------
     def testParent(self):
         """ Test parent lookup """
 
+        ids = self.ids
         uids = self.uids
         rows = self.rows
+        
+        assertEqual = self.assertEqual
         
         h = S3Hierarchy("test_hierarchy")
         for uid in uids:
             parent, category = h.parent(uids[uid], classify=True)
-            self.assertEqual(parent, rows[uid].parent)
+            assertEqual(parent, rows[uid].parent)
             if parent:
-                parent_uid = self.ids[parent]
-                self.assertEqual(category, rows[parent_uid].category)
+                parent_uid = ids[parent]
+                assertEqual(category, rows[parent_uid].category)
 
     # -------------------------------------------------------------------------
     def testChildren(self):
@@ -215,11 +199,13 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         rows = self.rows
 
+        assertEqual = self.assertEqual
+
         h = S3Hierarchy("test_hierarchy")
         for uid in uids:
-            self.assertEqual(h.children(uids[uid]),
-                             set(row.id for row in rows.values()
-                                        if row.parent == uids[uid]))
+            assertEqual(h.children(uids[uid]),
+                        set(row.id for row in rows.values()
+                                   if row.parent == uids[uid]))
 
     # -------------------------------------------------------------------------
     def testPath(self):
@@ -228,28 +214,30 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         rows = self.rows
 
+        assertEqual = self.assertEqual
+
         # Standard path from root
         node = uids["HIERARCHY2-1-2"]
         h = S3Hierarchy("test_hierarchy")
         path = h.path(node)
-        self.assertEqual(path, [uids["HIERARCHY2"],
-                                uids["HIERARCHY2-1"],
-                                uids["HIERARCHY2-1-2"]
-                                ])
+        assertEqual(path, [uids["HIERARCHY2"],
+                           uids["HIERARCHY2-1"],
+                           uids["HIERARCHY2-1-2"]
+                           ])
 
         # Path from category root
         node = uids["HIERARCHY1-1-1"]
         path = h.path(node, category="Cat 1", classify=True)
         classified = lambda uid: (uids[uid], rows[uid].category)
-        self.assertEqual(path, [classified("HIERARCHY1-1"),
-                                classified("HIERARCHY1-1-1"),
-                                ])
+        assertEqual(path, [classified("HIERARCHY1-1"),
+                           classified("HIERARCHY1-1-1"),
+                           ])
 
         # Path of root
         node = uids["HIERARCHY2"]
         path = h.path(node, category="Cat 1", classify=True)
         classified = lambda uid: (uids[uid], rows[uid].category)
-        self.assertEqual(path, [classified("HIERARCHY2")])
+        assertEqual(path, [classified("HIERARCHY2")])
 
     # -------------------------------------------------------------------------
     def testRoot(self):
@@ -258,25 +246,27 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         rows = self.rows
 
+        assertEqual = self.assertEqual
+
         # Top root
         node = uids["HIERARCHY1-1-1"]
         h = S3Hierarchy("test_hierarchy")
         root = h.root(node)
-        self.assertEqual(root, uids["HIERARCHY1"])
+        assertEqual(root, uids["HIERARCHY1"])
 
         # Root by category
         node = uids["HIERARCHY2-1"]
         root = h.root(node, classify=True)
-        self.assertEqual(root, (uids["HIERARCHY2"], rows["HIERARCHY2"].category))
+        assertEqual(root, (uids["HIERARCHY2"], rows["HIERARCHY2"].category))
 
         # Root of root
         node = uids["HIERARCHY1"]
         root = h.root(node)
-        self.assertEqual(root, uids["HIERARCHY1"])
+        assertEqual(root, uids["HIERARCHY1"])
 
         # None
         root = h.root(None)
-        self.assertEqual(root, None)
+        assertEqual(root, None)
 
     # -------------------------------------------------------------------------
     def testSiblings(self):
@@ -285,6 +275,8 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
         rows = self.rows
 
+        assertEqual = self.assertEqual
+
         h = S3Hierarchy("test_hierarchy")
         for uid in uids:
 
@@ -292,9 +284,9 @@ class S3HierarchyTests(unittest.TestCase):
             siblings = set(row.id for row in rows.values()
                                   if row.parent == parent)
 
-            self.assertEqual(h.siblings(uids[uid], inclusive=True), siblings)
+            assertEqual(h.siblings(uids[uid], inclusive=True), siblings)
             siblings.discard(uids[uid])
-            self.assertEqual(h.siblings(uids[uid], inclusive=False), siblings)
+            assertEqual(h.siblings(uids[uid], inclusive=False), siblings)
 
     # -------------------------------------------------------------------------
     def testFindAll(self):
@@ -304,6 +296,8 @@ class S3HierarchyTests(unittest.TestCase):
 
         h = S3Hierarchy("test_hierarchy")
         
+        assertEqual = self.assertEqual
+
         root = uids["HIERARCHY1"]
         nodes = h.findall(root)
         expected = ["HIERARCHY1-1",
@@ -313,7 +307,7 @@ class S3HierarchyTests(unittest.TestCase):
                     "HIERARCHY1-2-1",
                     "HIERARCHY1-2-2",
                     ]
-        self.assertEqual(nodes, set(uids[uid] for uid in expected))
+        assertEqual(nodes, set(uids[uid] for uid in expected))
 
         root = uids["HIERARCHY1"]
         nodes = h.findall(root, inclusive=True)
@@ -325,23 +319,26 @@ class S3HierarchyTests(unittest.TestCase):
                     "HIERARCHY1-2-1",
                     "HIERARCHY1-2-2",
                     ]
-        self.assertEqual(nodes, set(uids[uid] for uid in expected))
+        assertEqual(nodes, set(uids[uid] for uid in expected))
         
         root = uids["HIERARCHY2"]
         nodes = h.findall(root, category="Cat 1")
         expected = ["HIERARCHY2-1",
                     ]
-        self.assertEqual(nodes, set(uids[uid] for uid in expected))
+        assertEqual(nodes, set(uids[uid] for uid in expected))
 
         root = uids["HIERARCHY1"]
         nodes = h.findall(root, category="Cat 4")
-        self.assertEqual(nodes, set())
+        assertEqual(nodes, set())
 
     # -------------------------------------------------------------------------
     def testFilteringLeafOnly(self):
         """ Test filtering of the tree with leafonly=True """
 
         uids = self.uids
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
 
         h = S3Hierarchy("test_hierarchy",
                         filter = FS("type") == "D",
@@ -352,17 +349,15 @@ class S3HierarchyTests(unittest.TestCase):
         expected = ["HIERARCHY2",
                     "HIERARCHY2-1",
                     "HIERARCHY2-1-2"]
-        self.assertEqual(len(nodes), len(expected))
-        self.assertTrue(all(uids[uid] in nodes for uid in expected))
+        assertEqual(len(nodes), len(expected))
+        assertTrue(all(uids[uid] in nodes for uid in expected))
 
         # Check consistency
         for node in nodes.values():
-            for child_id in node["s"]:
-                self.assertTrue(child_id in nodes)
+            assertTrue(all(child_id in nodes for child_id in node["s"]))
             parent_id = node["p"]
             if parent_id:
-                self.assertTrue(parent_id in nodes)
-
+                assertTrue(parent_id in nodes)
 
     # -------------------------------------------------------------------------
     def testFilteringAnyNode(self):
@@ -374,6 +369,9 @@ class S3HierarchyTests(unittest.TestCase):
                         filter = FS("type") == "C",
                         leafonly = False)
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         # Check nodes
         nodes = h.nodes
         expected = ["HIERARCHY1",
@@ -383,16 +381,578 @@ class S3HierarchyTests(unittest.TestCase):
                     "HIERARCHY2",
                     "HIERARCHY2-1",
                     "HIERARCHY2-1-1"]
-        self.assertEqual(len(nodes), len(expected))
-        self.assertTrue(all(uids[uid] in nodes for uid in expected))
+        assertEqual(len(nodes), len(expected))
+        assertTrue(all(uids[uid] in nodes for uid in expected))
 
         # Check consistency
         for node in nodes.values():
-            for child_id in node["s"]:
-                self.assertTrue(child_id in nodes)
+            assertTrue(all(child_id in nodes for child_id in node["s"]))
             parent_id = node["p"]
             if parent_id:
-                self.assertTrue(parent_id in nodes)
+                assertTrue(parent_id in nodes)
+
+# =============================================================================
+class S3LinkedHierarchyTests(unittest.TestCase):
+    """ Tests for linktable-based hierarchies """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        s3db.define_table("test_lhierarchy",
+                          Field("name"),
+                          Field("category"),
+                          Field("type"),
+                          *s3_uid())
+
+        s3db.define_table("test_lhierarchy_link",
+                          Field("parent_id", "reference test_lhierarchy"),
+                          Field("child_id", "reference test_lhierarchy"),
+                          *s3_uid())
+
+        # Component for import
+        s3db.add_components("test_lhierarchy",
+                            test_lhierarchy = {"name": "parent",
+                                               "link": "test_lhierarchy_link",
+                                               "joinby": "child_id",
+                                               "key": "parent_id",
+                                               },
+                            ),
+        
+
+        xmlstr = """
+<s3xml>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1">
+        <data field="name">Type 1</data>
+        <data field="category">Cat 0</data>
+        <data field="type">A</data>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-1">
+        <data field="name">Type 1-1</data>
+        <data field="category">Cat 1</data>
+        <data field="type">C</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-1-1">
+        <data field="name">Type 1-1-1</data>
+        <data field="category">Cat 2</data>
+        <data field="type">B</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-1-2">
+        <data field="name">Type 1-1-2</data>
+        <data field="category">Cat 2</data>
+        <data field="type">A</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-2">
+        <data field="name">Type 1-2</data>
+        <data field="category">Cat 1</data>
+        <data field="type">B</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-2-1">
+        <data field="name">Type 1-2-1</data>
+        <data field="category">Cat 2</data>
+        <data field="type">B</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-2"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY1-2-2">
+        <data field="name">Type 1-2-2</data>
+        <data field="category">Cat 2</data>
+        <data field="type">C</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY1-2"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2">
+        <data field="name">Type 2</data>
+        <data field="category">Cat 0</data>
+        <data field="type">B</data>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2-1">
+        <data field="name">Type 2-1</data>
+        <data field="category">Cat 1</data>
+        <data field="type">A</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY2"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2-1-1">
+        <data field="name">Type 2-1-1</data>
+        <data field="category">Cat 2</data>
+        <data field="type">C</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY2-1"/>
+        </resource>
+    </resource>
+    <resource name="test_lhierarchy" uuid="LHIERARCHY2-1-2">
+        <data field="name">Type 2-1-2</data>
+        <data field="category">Cat 2</data>
+        <data field="type">D</data>
+        <resource name="test_lhierarchy_link">
+            <reference field="parent_id"
+                       resource="test_lhierarchy" uuid="LHIERARCHY2-1"/>
+        </resource>
+    </resource>
+</s3xml>
+"""
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        current.auth.override = True
+        resource = s3db.resource("test_lhierarchy")
+        resource.import_xml(xmltree)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+        db.test_lhierarchy_link.drop()
+        db.test_lhierarchy.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+        db = current.db
+
+        if not hasattr(self, "rows"):
+            table = db.test_lhierarchy
+            linktable = db.test_lhierarchy_link
+            left = linktable.on(linktable.child_id == table.id)
+            rows = db(db.test_lhierarchy.id>0).select(table.id,
+                                                      table.uuid,
+                                                      table.category,
+                                                      linktable.child_id,
+                                                      linktable.parent_id,
+                                                      left=left)
+            self.rows = {}
+            self.links = {}
+            self.uids = {}
+            self.ids = {}
+            for row in rows:
+                record = row.test_lhierarchy
+                uid = record.uuid
+                self.rows[uid] = record
+                self.links[uid] = row.test_lhierarchy_link
+                self.uids[uid] = record.id
+                self.ids[record.id] = uid
+
+        current.s3db.configure("test_lhierarchy",
+                               hierarchy=("child_id:test_lhierarchy_link.parent_id",
+                                          "category"))
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testHierarchyConstruction(self):
+        """ Test hierarchy construction """
+
+        uids = self.uids
+
+        h = S3Hierarchy("test_lhierarchy")
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        roots = h.roots
+        assertEqual(len(roots), 2)
+        assertTrue(uids["LHIERARCHY1"] in roots)
+        assertTrue(uids["LHIERARCHY2"] in roots)
+
+        nodes = h.nodes
+        assertEqual(len(nodes), len(uids))
+        assertTrue(all(node_id in nodes for node_id in uids.values()))
+
+    # -------------------------------------------------------------------------
+    def testCategory(self):
+        """ Test node category lookup """
+
+        uids = self.uids
+        rows = self.rows
+
+        assertEqual = self.assertEqual
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+            category = h.category(uids[uid])
+            assertEqual(category, rows[uid].category)
+
+    # -------------------------------------------------------------------------
+    def testParent(self):
+        """ Test parent lookup """
+
+        uids = self.uids
+        rows = self.rows
+        links = self.links
+
+        assertEqual = self.assertEqual
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+            parent, category = h.parent(uids[uid], classify=True)
+            assertEqual(parent, links[uid].parent_id)
+            if parent:
+                parent_uid = self.ids[parent]
+                assertEqual(category, rows[parent_uid].category)
+
+    # -------------------------------------------------------------------------
+    def testChildren(self):
+        """ Test child node lookup """
+
+        uids = self.uids
+        links = self.links
+
+        assertEqual = self.assertEqual
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+            assertEqual(h.children(uids[uid]),
+                        set(link.child_id for link in links.values()
+                                          if link.parent_id == uids[uid]))
+
+    # -------------------------------------------------------------------------
+    def testPath(self):
+        """ Test node path lookup """
+
+        uids = self.uids
+        rows = self.rows
+
+        assertEqual = self.assertEqual
+
+        # Standard path from root
+        node = uids["LHIERARCHY2-1-2"]
+        h = S3Hierarchy("test_lhierarchy")
+        path = h.path(node)
+        assertEqual(path, [uids["LHIERARCHY2"],
+                           uids["LHIERARCHY2-1"],
+                           uids["LHIERARCHY2-1-2"]
+                           ])
+
+        # Path from category root
+        node = uids["LHIERARCHY1-1-1"]
+        path = h.path(node, category="Cat 1", classify=True)
+        classified = lambda uid: (uids[uid], rows[uid].category)
+        assertEqual(path, [classified("LHIERARCHY1-1"),
+                           classified("LHIERARCHY1-1-1"),
+                           ])
+
+        # Path of root
+        node = uids["LHIERARCHY2"]
+        path = h.path(node, category="Cat 1", classify=True)
+        classified = lambda uid: (uids[uid], rows[uid].category)
+        assertEqual(path, [classified("LHIERARCHY2")])
+
+    # -------------------------------------------------------------------------
+    def testRoot(self):
+        """ Test root node lookup """
+
+        uids = self.uids
+        rows = self.rows
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        # Top root
+        node = uids["LHIERARCHY1-1-1"]
+        h = S3Hierarchy("test_lhierarchy")
+        root = h.root(node)
+        assertEqual(root, uids["LHIERARCHY1"])
+
+        # Root by category
+        node = uids["LHIERARCHY2-1"]
+        root = h.root(node, classify=True)
+        assertEqual(root, (uids["LHIERARCHY2"],
+                           rows["LHIERARCHY2"].category))
+
+        # Root of root
+        node = uids["LHIERARCHY1"]
+        root = h.root(node)
+        assertEqual(root, uids["LHIERARCHY1"])
+
+        # None
+        root = h.root(None)
+        assertEqual(root, None)
+
+    # -------------------------------------------------------------------------
+    def testSiblings(self):
+        """ Test lookup of sibling nodes """
+
+        uids = self.uids
+        ids = self.ids
+        links = self.links
+
+        assertEqual = self.assertEqual
+
+        h = S3Hierarchy("test_lhierarchy")
+        for uid in uids:
+
+            parent = links[uid].parent_id
+            siblings = set(node for node, _uid in ids.items()
+                                if links[_uid].parent_id == parent)
+
+            assertEqual(h.siblings(uids[uid], inclusive=True), siblings)
+            siblings.discard(uids[uid])
+            assertEqual(h.siblings(uids[uid], inclusive=False), siblings)
+
+    # -------------------------------------------------------------------------
+    def testFindAll(self):
+        """ Test lookup of descendant nodes """
+
+        uids = self.uids
+
+        assertEqual = self.assertEqual
+
+        h = S3Hierarchy("test_lhierarchy")
+
+        root = uids["LHIERARCHY1"]
+        nodes = h.findall(root)
+        expected = ["LHIERARCHY1-1",
+                    "LHIERARCHY1-1-1",
+                    "LHIERARCHY1-1-2",
+                    "LHIERARCHY1-2",
+                    "LHIERARCHY1-2-1",
+                    "LHIERARCHY1-2-2",
+                    ]
+        assertEqual(nodes, set(uids[uid] for uid in expected))
+
+        root = uids["LHIERARCHY1"]
+        nodes = h.findall(root, inclusive=True)
+        expected = ["LHIERARCHY1",
+                    "LHIERARCHY1-1",
+                    "LHIERARCHY1-1-1",
+                    "LHIERARCHY1-1-2",
+                    "LHIERARCHY1-2",
+                    "LHIERARCHY1-2-1",
+                    "LHIERARCHY1-2-2",
+                    ]
+        assertEqual(nodes, set(uids[uid] for uid in expected))
+
+        root = uids["LHIERARCHY2"]
+        nodes = h.findall(root, category="Cat 1")
+        expected = ["LHIERARCHY2-1",
+                    ]
+        assertEqual(nodes, set(uids[uid] for uid in expected))
+
+        root = uids["LHIERARCHY1"]
+        nodes = h.findall(root, category="Cat 4")
+        assertEqual(nodes, set())
+
+    # -------------------------------------------------------------------------
+    def testFilteringLeafOnly(self):
+        """ Test filtering of the tree with leafonly=True """
+
+        uids = self.uids
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        h = S3Hierarchy("test_lhierarchy",
+                        filter = FS("type") == "D",
+                        leafonly = True)
+
+        # Check nodes
+        nodes = h.nodes
+        expected = ["LHIERARCHY2",
+                    "LHIERARCHY2-1",
+                    "LHIERARCHY2-1-2"]
+        assertEqual(len(nodes), len(expected))
+        assertTrue(all(uids[uid] in nodes for uid in expected))
+
+        # Check consistency
+        for node in nodes.values():
+            assertTrue(all(child_id in nodes for child_id in node["s"]))
+            parent_id = node["p"]
+            if parent_id:
+                assertTrue(parent_id in nodes)
+
+
+    # -------------------------------------------------------------------------
+    def testFilteringAnyNode(self):
+        """ Test filtering of the tree with leafonly=False """
+
+        uids = self.uids
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        h = S3Hierarchy("test_lhierarchy",
+                        filter = FS("type") == "C",
+                        leafonly = False)
+
+        # Check nodes
+        nodes = h.nodes
+        expected = ["LHIERARCHY1",
+                    "LHIERARCHY1-1",
+                    "LHIERARCHY1-2",
+                    "LHIERARCHY1-2-2",
+                    "LHIERARCHY2",
+                    "LHIERARCHY2-1",
+                    "LHIERARCHY2-1-1"]
+        assertEqual(len(nodes), len(expected))
+        assertTrue(all(uids[uid] in nodes for uid in expected))
+
+        # Check consistency
+        for node in nodes.values():
+            assertTrue(all(child_id in nodes for child_id in node["s"]))
+            parent_id = node["p"]
+            if parent_id:
+                assertTrue(parent_id in nodes)
+
+# =============================================================================
+class S3TypeOfTests(unittest.TestCase):
+    """ Tests for __typeof query operator """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        s3db.define_table("typeof_nonhierarchy",
+                          Field("name"),
+                          *s3_uid())
+
+        s3db.define_table("typeof_hierarchy",
+                          Field("name"),
+                          Field("parent", "reference typeof_hierarchy"),
+                          Field("typeof_nonhierarchy_id", "reference typeof_nonhierarchy"),
+                          Field("typeof_nonhierarchy_multi_id", "list:reference typeof_nonhierarchy"),
+                          Field.Method("vsfield", lambda row: "test"),
+                          Field.Method("vmfield", lambda row: ["test1", "test2", "test3"]),
+                          *s3_uid())
+
+        s3db.define_table("typeof_hierarchy_reference",
+                          Field("typeof_hierarchy_id", "reference typeof_hierarchy"),
+                          Field("typeof_hierarchy_multi_id", "list:reference typeof_hierarchy"),
+                          *s3_uid())
+
+        xmlstr = """
+<s3xml>
+    <resource name="typeof_nonhierarchy" uuid="NONHIERARCHY1">
+        <data field="name">NonHierarchy1</data>
+    </resource>
+    <resource name="typeof_nonhierarchy" uuid="NONHIERARCHY2">
+        <data field="name">NonHierarchy2</data>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1">
+        <data field="name">Type 1</data>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1-1">
+        <data field="name">Type 1-1</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY1"/>
+        <reference field="typeof_nonhierarchy_id" resource="typeof_nonhierarchy" uuid="NONHIERARCHY1"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1-1-1">
+        <data field="name">Type 1-1-1</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY1-1"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1-1-2">
+        <data field="name">Type 1-1-2</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY1-1"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1-2">
+        <data field="name">Type 1-2</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY1"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1-2-1">
+        <data field="name">Type 1-2-1</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY1-2"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY1-2-2">
+        <data field="name">Type 1-2-2</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY1-2"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY2">
+        <data field="name">Type 2</data>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY2-1">
+        <data field="name">Type 2-1</data>
+        <reference field="typeof_nonhierarchy_multi_id" resource="typeof_nonhierarchy"
+                   uuid="[&quot;NONHIERARCHY1&quot;,&quot;NONHIERARCHY2&quot;]"/>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY2"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY2-1-1">
+        <data field="name">Type 2-1-1</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY2-1"/>
+    </resource>
+    <resource name="typeof_hierarchy" uuid="HIERARCHY2-1-2">
+        <data field="name">Type 2-1-2</data>
+        <reference field="parent" resource="typeof_hierarchy" uuid="HIERARCHY2-1"/>
+    </resource>
+</s3xml>
+"""
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        current.auth.override = True
+        resource = s3db.resource("typeof_hierarchy")
+        resource.import_xml(xmltree)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+        db.typeof_hierarchy.drop(mode="cascade")
+        db.typeof_hierarchy_reference.drop()
+        db.typeof_nonhierarchy.drop()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+        db = current.db
+
+        if not hasattr(self, "rows"):
+            rows = db(db.typeof_hierarchy.id>0).select()
+            self.rows = {}
+            self.uids = {}
+            self.ids = {}
+            for row in rows:
+                uid = row.uuid
+                self.rows[uid] = row
+                self.uids[uid] = row.id
+                self.ids[row.id] = uid
+
+        if not hasattr(self, "lookup_uids"):
+            rows = db(db.typeof_nonhierarchy.id>0).select()
+            self.lookup_uids = {}
+            for row in rows:
+                uid = row.uuid
+                self.lookup_uids[uid] = row.id
+
+        current.s3db.configure("typeof_hierarchy", hierarchy="parent")
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
 
     # -------------------------------------------------------------------------
     def testTypeOfReferenceSingle(self):
@@ -404,10 +964,10 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in referencing table
-        expr = FS("test_hierarchy_id").typeof(uids["HIERARCHY1"])
+        expr = FS("typeof_hierarchy_id").typeof(uids["HIERARCHY1"])
         query = expr.query(resource)
 
         table = resource.table
@@ -419,8 +979,8 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY1-2-1",
                                              "HIERARCHY1-2-2",
                                              ))
-        expected_query = table.test_hierarchy_id.belongs(expected)
-        
+        expected_query = table.typeof_hierarchy_id.belongs(expected)
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -433,11 +993,11 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in referencing table
-        expr = FS("test_hierarchy_id").typeof((uids["HIERARCHY1-2"],
-                                               uids["HIERARCHY2-1"],
+        expr = FS("typeof_hierarchy_id").typeof((uids["HIERARCHY1-2"],
+                                                 uids["HIERARCHY2-1"],
                                                ))
         query = expr.query(resource)
 
@@ -449,8 +1009,8 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY2-1-1",
                                              "HIERARCHY2-1-2",
                                              ))
-        expected_query = table.test_hierarchy_id.belongs(expected)
-        
+        expected_query = table.typeof_hierarchy_id.belongs(expected)
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -463,10 +1023,10 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with None
-        expr = FS("test_hierarchy_id").typeof(None)
+        expr = FS("typeof_hierarchy_id").typeof(None)
         query = expr.query(resource)
 
         table = resource.table
@@ -474,11 +1034,11 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY1-2-1",
                                              "HIERARCHY1-2-2",
                                              ))
-        expected_query = (table.test_hierarchy_id == None)
+        expected_query = (table.typeof_hierarchy_id == None)
         self.assertEquivalent(query, expected_query)
 
         # Test with list
-        expr = FS("test_hierarchy_id").typeof([None])
+        expr = FS("typeof_hierarchy_id").typeof([None])
         query = expr.query(resource)
 
         table = resource.table
@@ -486,20 +1046,20 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY1-2-1",
                                              "HIERARCHY1-2-2",
                                              ))
-        expected_query = (table.test_hierarchy_id == None)
+        expected_query = (table.typeof_hierarchy_id == None)
         self.assertEquivalent(query, expected_query)
 
         # Test with multiple values
-        expr = FS("test_hierarchy_id").typeof([None, uids["HIERARCHY1-2"]])
+        expr = FS("typeof_hierarchy_id").typeof([None, uids["HIERARCHY1-2"]])
         query = expr.query(resource)
-        
+
         table = resource.table
         expected = set(uids[uid] for uid in ("HIERARCHY1-2",
                                              "HIERARCHY1-2-1",
                                              "HIERARCHY1-2-2",
                                              ))
-        expected_query = (table.test_hierarchy_id.belongs(expected)) | \
-                         (table.test_hierarchy_id == None)
+        expected_query = (table.typeof_hierarchy_id.belongs(expected)) | \
+                         (table.typeof_hierarchy_id == None)
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -513,32 +1073,32 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
 
         # Remove hierarchy setting
-        current.s3db.clear_config("test_hierarchy", "hierarchy")
+        current.s3db.clear_config("typeof_hierarchy", "hierarchy")
 
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in referencing table, single value
-        expr = FS("test_hierarchy_id").typeof(uids["HIERARCHY1-2"])
+        expr = FS("typeof_hierarchy_id").typeof(uids["HIERARCHY1-2"])
         query = expr.query(resource)
 
         expected = uids["HIERARCHY1-2"]
-        expected_query = resource.table.test_hierarchy_id == expected
+        expected_query = resource.table.typeof_hierarchy_id == expected
 
         self.assertEquivalent(query, expected_query)
 
         # Test with field in referencing table, multiple values
-        expr = FS("test_hierarchy_id").typeof((uids["HIERARCHY1-2"],
-                                               uids["HIERARCHY2-1"]
+        expr = FS("typeof_hierarchy_id").typeof((uids["HIERARCHY1-2"],
+                                                 uids["HIERARCHY2-1"]
                                                ))
         query = expr.query(resource)
 
         expected = set(uids[uid] for uid in ("HIERARCHY1-2",
                                              "HIERARCHY2-1",
                                              ))
-        expected_query = resource.table.test_hierarchy_id.belongs(expected)
+        expected_query = resource.table.typeof_hierarchy_id.belongs(expected)
 
         self.assertEquivalent(query, expected_query)
-        
+
     # -------------------------------------------------------------------------
     def testTypeOfLookupTableSingle(self):
         """
@@ -549,13 +1109,13 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in hierarchy table
-        expr = FS("test_hierarchy_id$name").typeof("Type 1")
+        expr = FS("typeof_hierarchy_id$name").typeof("Type 1")
         query = expr.query(resource)
-        
-        table = db.test_hierarchy
+
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY1",
                                              "HIERARCHY1-1",
                                              "HIERARCHY1-1-1",
@@ -565,7 +1125,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY1-2-2",
                                              ))
         expected_query = table.id.belongs(expected)
-        
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -578,13 +1138,13 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in hierarchy table
-        expr = FS("test_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
+        expr = FS("typeof_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
         query = expr.query(resource)
-        
-        table = db.test_hierarchy
+
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY1-2",
                                              "HIERARCHY1-2-1",
                                              "HIERARCHY1-2-2",
@@ -593,7 +1153,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY2-1-2",
                                              ))
         expected_query = table.id.belongs(expected)
-        
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -606,13 +1166,13 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard
-        expr = FS("test_hierarchy_id$name").typeof("Type 1-*")
+        expr = FS("typeof_hierarchy_id$name").typeof("Type 1-*")
         query = expr.query(resource)
-        
-        table = db.test_hierarchy
+
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY1-1",
                                              "HIERARCHY1-1-1",
                                              "HIERARCHY1-1-2",
@@ -621,7 +1181,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY1-2-2",
                                              ))
         expected_query = table.id.belongs(expected)
-        
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -634,13 +1194,13 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard
-        expr = FS("test_hierarchy_id$name").typeof(("Type 1-1-*", "Type 2-1*"))
+        expr = FS("typeof_hierarchy_id$name").typeof(("Type 1-1-*", "Type 2-1*"))
         query = expr.query(resource)
-        
-        table = db.test_hierarchy
+
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY1-1-1",
                                              "HIERARCHY1-1-2",
                                              "HIERARCHY2-1",
@@ -648,7 +1208,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY2-1-2",
                                              ))
         expected_query = table.id.belongs(expected)
-        
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -661,15 +1221,15 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in hierarchy table, with wildcard, no match
-        expr = FS("test_hierarchy_id$name").typeof("Type 1-3*")
+        expr = FS("typeof_hierarchy_id$name").typeof("Type 1-3*")
         query = expr.query(resource)
-        
-        table = db.test_hierarchy
+
+        table = db.typeof_hierarchy
         expected_query = table.id.belongs(set())
-        
+
         self.assertEquivalent(query, expected_query)
 
     # -------------------------------------------------------------------------
@@ -682,26 +1242,26 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with None
-        expr = FS("test_hierarchy_id$name").typeof(None)
+        expr = FS("typeof_hierarchy_id$name").typeof(None)
         query = expr.query(resource)
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with list
-        expr = FS("test_hierarchy_id$name").typeof([None])
+        expr = FS("typeof_hierarchy_id$name").typeof([None])
         query = expr.query(resource)
-        #table = db.test_hierarchy
+        #table = db.typeof_hierarchy
         expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with multiple values
-        expr = FS("test_hierarchy_id$name").typeof([None, "Type 1-1-2"])
+        expr = FS("typeof_hierarchy_id$name").typeof([None, "Type 1-1-2"])
         query = expr.query(resource)
-        #table = db.test_hierarchy
+        #table = db.typeof_hierarchy
         expected_query = (table.id == uids["HIERARCHY1-1-2"])
         self.assertEquivalent(query, expected_query)
 
@@ -716,14 +1276,14 @@ class S3HierarchyTests(unittest.TestCase):
 
         uids = self.uids
         lookup_uids = self.lookup_uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with single value
         lookup = lookup_uids["NONHIERARCHY1"]
-        expr = FS("test_hierarchy_id$test_nonhierarchy_id").typeof(lookup)
+        expr = FS("typeof_hierarchy_id$typeof_nonhierarchy_id").typeof(lookup)
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY1-1",
                                              "HIERARCHY1-1-1",
                                              "HIERARCHY1-1-2",
@@ -733,10 +1293,10 @@ class S3HierarchyTests(unittest.TestCase):
         # Test with multiple values
         lookup = (lookup_uids["NONHIERARCHY1"],
                   lookup_uids["NONHIERARCHY2"])
-        expr = FS("test_hierarchy_id$test_nonhierarchy_id").typeof(lookup)
+        expr = FS("typeof_hierarchy_id$typeof_nonhierarchy_id").typeof(lookup)
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY1-1",
                                              "HIERARCHY1-1-1",
                                              "HIERARCHY1-1-2",
@@ -756,14 +1316,14 @@ class S3HierarchyTests(unittest.TestCase):
 
         uids = self.uids
         lookup_uids = self.lookup_uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with single value
         lookup = lookup_uids["NONHIERARCHY1"]
-        expr = FS("test_hierarchy_id$test_nonhierarchy_multi_id").typeof(lookup)
+        expr = FS("typeof_hierarchy_id$typeof_nonhierarchy_multi_id").typeof(lookup)
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY2-1",
                                              "HIERARCHY2-1-1",
                                              "HIERARCHY2-1-2",
@@ -773,10 +1333,10 @@ class S3HierarchyTests(unittest.TestCase):
         # Test with multiple values
         lookup = (lookup_uids["NONHIERARCHY1"],
                   lookup_uids["NONHIERARCHY2"])
-        expr = FS("test_hierarchy_id$test_nonhierarchy_multi_id").typeof(lookup)
+        expr = FS("typeof_hierarchy_id$typeof_nonhierarchy_multi_id").typeof(lookup)
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected = set(uids[uid] for uid in ("HIERARCHY2-1",
                                              "HIERARCHY2-1-1",
                                              "HIERARCHY2-1-2",
@@ -795,35 +1355,35 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        
-        # Remove hierarchy setting
-        current.s3db.clear_config("test_hierarchy", "hierarchy")
 
-        resource = current.s3db.resource("test_hierarchy_reference")
+        # Remove hierarchy setting
+        current.s3db.clear_config("typeof_hierarchy", "hierarchy")
+
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with field in lookup table, single value
-        expr = FS("test_hierarchy_id$name").typeof("Type 1-2")
+        expr = FS("typeof_hierarchy_id$name").typeof("Type 1-2")
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected_query = (table.name == "Type 1-2")
 
         self.assertEquivalent(query, expected_query)
 
         # Test with field in lookup table
-        expr = FS("test_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
+        expr = FS("typeof_hierarchy_id$name").typeof(("Type 1-2", "Type 2-1"))
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected_query = table.name.belongs(("Type 1-2", "Type 2-1"))
 
         self.assertEquivalent(query, expected_query)
 
         # Test with field in lookup table, multiple values + wildcards
-        expr = FS("test_hierarchy_id$name").typeof(("Type 1-*", "Type 2-1"))
+        expr = FS("typeof_hierarchy_id$name").typeof(("Type 1-*", "Type 2-1"))
         query = expr.query(resource)
 
-        table = db.test_hierarchy
+        table = db.typeof_hierarchy
         expected_query = (table.name.like("Type 1-%")) | \
                          (table.name == "Type 2-1")
 
@@ -839,12 +1399,12 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with single value
-        expr = FS("test_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
+        expr = FS("typeof_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
         query = expr.query(resource)
-        
+
         table = resource.table
         expected = set(uids[uid] for uid in ("HIERARCHY1",
                                              "HIERARCHY1-1",
@@ -855,12 +1415,12 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY1-2-2",
                                              ))
         found = self.inspect_multi_query(query,
-                                         field = table.test_hierarchy_multi_id,
+                                         field = table.typeof_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
                                          op = db._adapter.CONTAINS)
 
         self.assertEqual(found, expected)
-        
+
     # -------------------------------------------------------------------------
     def testTypeOfListReferenceMultiple(self):
         """
@@ -871,11 +1431,11 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with multiple values
-        expr = FS("test_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
-                                                     uids["HIERARCHY2-1"]))
+        expr = FS("typeof_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
+                                                       uids["HIERARCHY2-1"]))
         query = expr.query(resource)
 
         table = resource.table
@@ -887,7 +1447,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY2-1-2",
                                              ))
         found = self.inspect_multi_query(query,
-                                         field = table.test_hierarchy_multi_id,
+                                         field = table.typeof_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
                                          op = db._adapter.CONTAINS)
 
@@ -903,25 +1463,25 @@ class S3HierarchyTests(unittest.TestCase):
         db = current.db
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with None
-        expr = FS("test_hierarchy_multi_id").typeof(None)
+        expr = FS("typeof_hierarchy_multi_id").typeof(None)
         query = expr.query(resource)
         table = resource.table
         expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with list
-        expr = FS("test_hierarchy_multi_id").typeof([None])
+        expr = FS("typeof_hierarchy_multi_id").typeof([None])
         query = expr.query(resource)
         #table = resource.table
         expected_query = table.id.belongs(set())
         self.assertEquivalent(query, expected_query)
 
         # Test with multiple values
-        expr = FS("test_hierarchy_multi_id").typeof((None,
-                                                     uids["HIERARCHY2-1"]))
+        expr = FS("typeof_hierarchy_multi_id").typeof((None,
+                                                       uids["HIERARCHY2-1"]))
         query = expr.query(resource)
         #table = resource.table
         expected = set(uids[uid] for uid in ("HIERARCHY2-1",
@@ -929,7 +1489,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY2-1-2",
                                              ))
         found = self.inspect_multi_query(query,
-                                         field = table.test_hierarchy_multi_id,
+                                         field = table.typeof_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
                                          op = db._adapter.CONTAINS)
 
@@ -944,28 +1504,28 @@ class S3HierarchyTests(unittest.TestCase):
 
         db = current.db
         uids = self.uids
-        
-        # Remove hierarchy setting
-        current.s3db.clear_config("test_hierarchy", "hierarchy")
 
-        resource = current.s3db.resource("test_hierarchy_reference")
+        # Remove hierarchy setting
+        current.s3db.clear_config("typeof_hierarchy", "hierarchy")
+
+        resource = current.s3db.resource("typeof_hierarchy_reference")
 
         # Test with single value
-        expr = FS("test_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
+        expr = FS("typeof_hierarchy_multi_id").typeof(uids["HIERARCHY1"])
         query = expr.query(resource)
 
         table = resource.table
         expected = set(uids[uid] for uid in ("HIERARCHY1",))
         found = self.inspect_multi_query(query,
-                                         field = table.test_hierarchy_multi_id,
+                                         field = table.typeof_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
                                          op = db._adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
         # Test with multiple values
-        expr = FS("test_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
-                                                     uids["HIERARCHY2-1"]))
+        expr = FS("typeof_hierarchy_multi_id").typeof((uids["HIERARCHY1-2"],
+                                                       uids["HIERARCHY2-1"]))
         query = expr.query(resource)
 
         table = resource.table
@@ -973,7 +1533,7 @@ class S3HierarchyTests(unittest.TestCase):
                                              "HIERARCHY2-1",
                                              ))
         found = self.inspect_multi_query(query,
-                                         field = table.test_hierarchy_multi_id,
+                                         field = table.typeof_hierarchy_multi_id,
                                          conjunction = db._adapter.OR,
                                          op = db._adapter.CONTAINS)
 
@@ -983,7 +1543,7 @@ class S3HierarchyTests(unittest.TestCase):
     def testVirtualFieldSingle(self):
         """ Test fallbacks for __typeof with single value virtual field """
 
-        resource = current.s3db.resource("test_hierarchy")
+        resource = current.s3db.resource("typeof_hierarchy")
         row = self.rows["HIERARCHY1"]
 
         # vsfield returns "test"
@@ -1008,7 +1568,7 @@ class S3HierarchyTests(unittest.TestCase):
     def testVirtualFieldMultiple(self):
         """ Test fallbacks for __typeof with multi-value virtual field """
 
-        resource = current.s3db.resource("test_hierarchy")
+        resource = current.s3db.resource("typeof_hierarchy")
         row = self.rows["HIERARCHY2"]
 
         # vmfield returns ["test1", "test2", "test3"]
@@ -1034,13 +1594,13 @@ class S3HierarchyTests(unittest.TestCase):
         """ Test S3HierarchyFilter recognition of typeof queries """
 
         uids = self.uids
-        resource = current.s3db.resource("test_hierarchy_reference")
-        
-        filter_widget = S3HierarchyFilter("test_hierarchy_id")
+        resource = current.s3db.resource("typeof_hierarchy_reference")
+
+        filter_widget = S3HierarchyFilter("typeof_hierarchy_id")
 
         # Test with belongs on filter field
         ids = str(uids["HIERARCHY1-1"])
-        get_vars = {"~.test_hierarchy_id__belongs": ids}
+        get_vars = {"~.typeof_hierarchy_id__belongs": ids}
         variable = filter_widget.variable(resource, get_vars)
         expected = set(ids)
         values = filter_widget._values(get_vars, variable)
@@ -1048,7 +1608,7 @@ class S3HierarchyTests(unittest.TestCase):
 
         # Test with typeof on filter field
         ids = str(uids["HIERARCHY1-1"])
-        get_vars = {"~.test_hierarchy_id__typeof": ids}
+        get_vars = {"~.typeof_hierarchy_id__typeof": ids}
         variable = filter_widget.variable(resource, get_vars)
         expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
                                                   "HIERARCHY1-1-1",
@@ -1061,7 +1621,7 @@ class S3HierarchyTests(unittest.TestCase):
         ids = ",".join(str(_id) for _id in (uids["HIERARCHY1-1"],
                                             uids["HIERARCHY2-1"],
                                             None))
-        get_vars = {"~.test_hierarchy_id__typeof": ids}
+        get_vars = {"~.typeof_hierarchy_id__typeof": ids}
         variable = filter_widget.variable(resource, get_vars)
         expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
                                                   "HIERARCHY1-1-1",
@@ -1075,7 +1635,7 @@ class S3HierarchyTests(unittest.TestCase):
         self.assertEqual(set(values), expected)
 
         # Test with typeof on field in lookup table
-        get_vars = {"~.test_hierarchy_id$name__typeof": "Type 1-1"}
+        get_vars = {"~.typeof_hierarchy_id$name__typeof": "Type 1-1"}
         variable = filter_widget.variable(resource, get_vars)
         expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
                                                   "HIERARCHY1-1-1",
@@ -1085,7 +1645,7 @@ class S3HierarchyTests(unittest.TestCase):
         self.assertEqual(set(values), expected)
 
         # Test with typeof on field in lookup table, multiple values
-        get_vars = {"~.test_hierarchy_id$name__typeof": "Type 1-1,Type 2-1"}
+        get_vars = {"~.typeof_hierarchy_id$name__typeof": "Type 1-1,Type 2-1"}
         variable = filter_widget.variable(resource, get_vars)
         expected = set(str(uids[uid]) for uid in ("HIERARCHY1-1",
                                                   "HIERARCHY1-1-1",
@@ -1098,14 +1658,14 @@ class S3HierarchyTests(unittest.TestCase):
         self.assertEqual(set(values), expected)
 
         # Test with typeof on field in lookup table, unresolvable
-        get_vars = {"~.test_hierarchy_id$name__typeof": "Type 1-3"}
+        get_vars = {"~.typeof_hierarchy_id$name__typeof": "Type 1-3"}
         variable = filter_widget.variable(resource, get_vars)
         expected = set()
         values = filter_widget._values(get_vars, variable)
         self.assertEqual(set(values), expected)
 
         # Test with typeof on field in lookup table, None
-        get_vars = {"~.test_hierarchy_id$name__typeof": "None"}
+        get_vars = {"~.typeof_hierarchy_id$name__typeof": "None"}
         variable = filter_widget.variable(resource, get_vars)
         expected = set()
         values = filter_widget._values(get_vars, variable)
@@ -1113,8 +1673,8 @@ class S3HierarchyTests(unittest.TestCase):
 
         # Test preferrence of belongs in mixed queries
         ids = str(uids["HIERARCHY1-1"])
-        get_vars = {"~.test_hierarchy_id__belongs": ids,
-                    "~.test_hierarchy_id$name__typeof": "Type 1-1",
+        get_vars = {"~.typeof_hierarchy_id__belongs": ids,
+                    "~.typeof_hierarchy_id$name__typeof": "Type 1-1",
                     }
         variable = filter_widget.variable(resource, get_vars)
         expected = set(ids)
@@ -1153,7 +1713,7 @@ class S3HierarchyTests(unittest.TestCase):
             assertEqual(query.first, field)
             assertEqual(query.op, op)
             found.add(int(query.second))
-            
+
         return found
 
     # -------------------------------------------------------------------------
@@ -1186,7 +1746,7 @@ class S3HierarchyTests(unittest.TestCase):
         """
             Shortcut for query equivalence assertion
         """
-        
+
         self.assertTrue(self.equivalent(query, expected_query),
                         msg = "%s != %s" % (query, expected_query))
 
@@ -1207,6 +1767,8 @@ if __name__ == "__main__":
 
     run_suite(
         S3HierarchyTests,
+        S3LinkedHierarchyTests,
+        S3TypeOfTests,
     )
 
 # END ========================================================================

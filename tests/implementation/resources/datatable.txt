@@ -5,12 +5,17 @@ Documentation       Keywords for datatables
 ${DataTableID}      datatable
 
 *** Keywords ***
+Get DataTable Row Count
+    [Documentation]  Finds the total number of records in the datatable, and returns the value
+    ${count}=  Execute JavaScript  return $('#datatable').dataTable().fnSettings()._iRecordsTotal;
+    [Return]  ${count}
+
 Should Give X Results
     [Arguments]  ${number}
-    [Documentation]  Fails if the total number of records in the datatable is not _number_
     # Convert to int if passed as string
     ${expected}=  Set Variable  ${${number}}
-    ${count}=  Execute JavaScript  return $('#datatable').dataTable().fnSettings()._iRecordsTotal;
+    [Documentation]  Fails if the total number of records in the datatable is not _number_
+    ${count}=  Get DataTable Row Count
     Should Be Equal  ${count}  ${expected}  msg=Should have found ${expected} results but found ${count}  values=${false}
 
 DataTable Should Contain
@@ -39,3 +44,7 @@ Get DataTable Column By Label
                 ...                 return $(this).text() === '${label}';}).index()+1;
     Should Be True  ${column} > ${0}  Column not found in datatable: "${label}"
     [Return]  ${column}
+
+DataTable Search
+    [Arguments]  ${text}
+    Execute JavaScript  $('#${DataTableID}').dataTable().fnFilter( '${text}' );

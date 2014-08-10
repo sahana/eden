@@ -258,29 +258,33 @@ def customise_org_organisation_controller(**attr):
             list_fields = ["id",
                            "name",
                            "acronym",
-                           "organisation_type_id",
+                           "organisation_organisation_type.organisation_type_id",
                            (T("Services"), "service.name"),
                            (T("Neighborhoods Served"), "location.name"),
                            ]
             s3db.configure("org_organisation", list_fields=list_fields)
             
         if r.interactive:
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+            from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
             s3db.pr_address.comments.label = ""
             s3db.pr_contact.value.label = ""
             s3db.doc_document.url.label = ""
             crud_form = S3SQLCustomForm(
                 "name",
                 "acronym",
-                "organisation_type_id",
-                #S3SQLInlineComponentCheckbox(
+                S3SQLInlineLink(
+                    "organisation_type",
+                    field = "organisation_type_id",
+                    label = T("Type"),
+                    multiple = False,
+                    #widget = "hierarchy",
+                ),
                 S3SQLInlineComponentMultiSelectWidget(
                     "service",
                     label = T("Services"),
                     field = "service_id",
                     cols = 4,
                 ),
-                #S3SQLInlineComponentCheckbox(
                 S3SQLInlineComponentMultiSelectWidget(
                     "group",
                     label = T("Network"),
@@ -386,36 +390,26 @@ def customise_org_organisation_controller(**attr):
             from s3.s3filter import S3LocationFilter, S3OptionsFilter, S3TextFilter
             filter_widgets = [
                 S3TextFilter(["name", "acronym"],
-                             label=T("Name"),
-                             _class="filter-search",
+                             label = T("Name"),
+                             _class = "filter-search",
                              ),
                 S3OptionsFilter("group_membership.group_id",
-                                label=T("Network"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
+                                label = T("Network"),
+                                represent = "%(name)s",
+                                #hidden = True,
                                 ),
                 S3LocationFilter("organisation_location.location_id",
-                                 label=T("Neighborhood"),
-                                 levels=["L3", "L4"],
-                                 widget="multiselect",
-                                 cols=3,
-                                 #hidden=True,
+                                 label = T("Neighborhood"),
+                                 levels = ["L3", "L4"],
+                                 #hidden = True,
                                  ),
                 S3OptionsFilter("service_organisation.service_id",
-                                label=T("Service"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
+                                label = T("Service"),
+                                #hidden = True,
                                 ),
-                S3OptionsFilter("organisation_type_id",
-                                label=T("Type"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
+                S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                                label = T("Type"),
+                                #hidden = True,
                                 ),
                 ]
                 

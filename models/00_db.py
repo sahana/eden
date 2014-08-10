@@ -139,8 +139,8 @@ if not session.s3:
 
 # Use username instead of email address for logins
 # - would probably require further customisation
-#   to get this working within Eden
-#auth.settings.username_field = True
+#   to get this fully-working within Eden as it's not a Tested configuration
+#auth.settings.login_userfield = "username"
 
 auth.settings.hmac_key = settings.get_auth_hmac_key()
 auth.define_tables(migrate=migrate, fake_migrate=fake_migrate)

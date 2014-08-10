@@ -32,6 +32,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3CRUD",)
+
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -55,7 +57,7 @@ from gluon.tools import callback
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
-from s3utils import s3_unicode, s3_validate, s3_represent_value
+from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
 from s3widgets import S3EmbedComponentWidget
 
 # Compact JSON encoding
@@ -79,7 +81,8 @@ class S3CRUD(S3Method):
         """
 
         self.settings = current.response.s3.crud
-        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
+        sqlform = self._config("crud_form")
+        self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
 
         # Pre-populate create-form?
         self.data = None
@@ -152,7 +155,8 @@ class S3CRUD(S3Method):
 
         # Settings
         self.settings = current.response.s3.crud
-        self.sqlform = self._config("crud_form", S3SQLDefaultForm())
+        sqlform = self._config("crud_form")
+        self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
 
         _attr = Storage(attr)
         _attr["list_id"] = widget_id
@@ -351,7 +355,7 @@ class S3CRUD(S3Method):
                 response.s3.jquery_ready.append("S3EnableNavigateAwayConfirm()")
 
             # Redirection
-            if representation in ("popup", "iframe"):
+            if representation in ("popup", "iframe", "plain", "dl"):
                 self.next = None
             else:
                 if r.http == "POST" and "interim_save" in r.post_vars:
@@ -514,7 +518,7 @@ class S3CRUD(S3Method):
         view = self._view(r, "listadd.html")
         output = XML(response.render(view, output))
         return output
-            
+
     # -------------------------------------------------------------------------
     def read(self, r, **attr):
         """
@@ -606,11 +610,14 @@ class S3CRUD(S3Method):
             if representation == "html":
                 response.view = self._view(r, "display.html")
                 output["item"] = item
-            elif representation in ("popup", "iframe"):
+            elif representation == "popup":
                 response.view = self._view(r, "popup.html")
-                caller = attr.get("caller", None)
                 output["form"] = item
+                caller = attr.get("caller", None)
                 output["caller"] = caller
+            elif representation == "iframe":
+                response.view = self._view(r, "iframe.html")
+                output["form"] = item
 
             # Buttons
             buttons = self.render_buttons(r,
@@ -640,24 +647,26 @@ class S3CRUD(S3Method):
 
         elif representation == "plain":
             T = current.T
+            fields = [f for f in table if f.readable]
             if r.component:
                 if record_id:
-                    record = current.db(table._id == record_id).select(limitby=(0, 1)).first()
+                    record = current.db(table._id == record_id).select(limitby=(0, 1),
+                                                                       *fields
+                                                                       ).first()
                 else:
                     record = None
             else:
                 record = r.record
             if record:
                 # Hide empty fields from popups on map
-                for field in table:
-                    if field.readable:
-                        try:
-                            value = record[field]
-                        except:
-                            # e.g. gis_location.wkt
-                            value = None
-                        if value is None or value == "" or value == []:
-                            field.readable = False
+                for field in fields:
+                    try:
+                        value = record[field]
+                    except:
+                        # e.g. gis_location.wkt
+                        value = None
+                    if value is None or value == "" or value == []:
+                        field.readable = False
                 item = self.sqlform(request=request,
                                     resource=resource,
                                     record_id=record_id,
@@ -696,7 +705,7 @@ class S3CRUD(S3Method):
                 item = T("Record not found")
 
             output["item"] = item
-            response.view = "plain.html"
+            response.view = self._view(r, "plain.html")
 
         elif representation == "csv":
             exporter = S3Exporter().csv
@@ -785,10 +794,12 @@ class S3CRUD(S3Method):
             # Set view
             if representation == "html":
                 response.view = self._view(r, "update.html")
-            elif representation in ("popup", "iframe"):
+            elif representation in "popup":
                 response.view = self._view(r, "popup.html")
             elif representation == "plain":
                 response.view = self._view(r, "plain.html")
+            elif representation == "iframe":
+                response.view = self._view(r, "iframe.html")
 
             # Title and subtitle
             crud_string = self.crud_string
@@ -881,14 +892,15 @@ class S3CRUD(S3Method):
                                   vars=next_vars)
             else:
                 update_next = _config("update_next")
-                if representation in ("popup", "iframe", "plain"):
+                if representation in ("popup", "iframe", "plain", "dl"):
                     self.next = None
                 elif not update_next:
                     next_vars = self._remove_filters(r.get_vars)
                     if r.component:
                         self.next = r.url(method="", vars=next_vars)
                     else:
-                        self.next = r.url(id="[id]", method="read",
+                        self.next = r.url(id="[id]",
+                                          method="read",
                                           vars=next_vars)
                 else:
                     try:
@@ -941,10 +953,10 @@ class S3CRUD(S3Method):
             if isinstance(output, dict):
                 # Provide a confirmation form and a record list
                 form = FORM(TABLE(TR(TD(self.settings.confirm_delete,
-                                        _style="color: red;"),
+                                        _style="color:red"),
                                      TD(INPUT(_type="submit",
                                               _value=current.T("Delete"),
-                                              _style="margin-left: 10px;")))))
+                                              _style="margin-left:10px")))))
                 output["form"] = form
                 current.response.view = self._view(r, "delete.html")
             else:
@@ -1037,16 +1049,18 @@ class S3CRUD(S3Method):
 
             if representation in ("aadata", "dl"):
                 return output
-            else:
-                output["list_type"] = list_type
+
+            output["list_type"] = list_type
+
+            crud_string = self.crud_string
 
             # Page title
-            crud_string = self.crud_string
-            if r.component:
-                title = crud_string(r.tablename, "title_display")
-            else:
-                title = crud_string(self.tablename, "title_list")
-            output["title"] = title
+            if representation != "iframe":
+                if r.component:
+                    title = crud_string(r.tablename, "title_display")
+                else:
+                    title = crud_string(self.tablename, "title_list")
+                output["title"] = title
 
             # Filter-form
             if show_filter_form:
@@ -1377,6 +1391,7 @@ class S3CRUD(S3Method):
             dtargs["dt_pagination"] = dt_pagination
             dtargs["dt_displayLength"] = display_length
             dtargs["dt_base_url"] = r.url(method="", vars={})
+            dtargs["dt_permalink"] = r.url()
             datatable = dt.html(totalrows,
                                 displayrows,
                                 id=list_id,
@@ -1595,8 +1610,8 @@ class S3CRUD(S3Method):
             # plain.html view for pagination to work properly!
             ajax_url = attr.get("list_ajaxurl", None)
             if not ajax_url:
-                vars = dict([(k,v) for k, v in r.get_vars.iteritems()
-                                   if k not in ("start", "limit")])
+                vars = dict((k,v) for k, v in r.get_vars.iteritems()
+                                  if k not in ("start", "limit"))
                 ajax_url = r.url(representation="dl", vars=vars)
                     
             # Render the list (even if empty => Ajax-section is required
@@ -2134,6 +2149,7 @@ class S3CRUD(S3Method):
                     _id=None,
                     _class=None,
                     _title=None,
+                    _target=None,
                     **attr):
         """
             Generate a CRUD action button
@@ -2146,6 +2162,7 @@ class S3CRUD(S3Method):
             @param _id: the HTML id of the link
             @param _class: the HTML class of the link
             @param _title: the HTML title of the link
+            @param _target: the HTML target of the link
 
             @keyword custom: custom CRUD button (just add classes)
         """
@@ -2184,7 +2201,9 @@ class S3CRUD(S3Method):
         if _href:
             button["_href"] = _href
         if _title:
-            button["_title"] = _title=_title
+            button["_title"] = _title
+        if _target:
+            button["_target"] = _target
 
         # Additional classes?
         if bootstrap:
@@ -2279,7 +2298,7 @@ class S3CRUD(S3Method):
                 else:
                     label = crud_string(tablename, "label_list_button")
                     _href = url(method="",
-                                id=0,
+                                id=r.id if r.component else 0,
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
@@ -2348,7 +2367,7 @@ class S3CRUD(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def action_button(label, url, **attr):
+    def action_button(label, url, icon=None, **attr):
         """
             Add a link to response.s3.actions
 
@@ -2359,6 +2378,8 @@ class S3CRUD(S3Method):
 
         link = dict(attr)
         link.update(label=str(label), url=url)
+        if icon and current.deployment_settings.get_ui_use_button_glyphicons():
+            link.update(icon=icon)
         if "_class" not in link:
             link.update(_class="action-btn")
 
@@ -2419,34 +2440,52 @@ class S3CRUD(S3Method):
         if "viewing" in r.get_vars:
             get_vars["viewing"] = r.get_vars["viewing"]
 
+        # If this request is in iframe-format, action URLs should be in
+        # iframe-format as well
+        if r.representation == "iframe":
+            if current.deployment_settings.get_ui_iframe_opens_full():
+                iframe_safe = lambda url: url
+                # This is processed client-side in s3.dataTables.js
+                target = dict(_target="_blank")
+            else:
+                iframe_safe = lambda url: s3_set_extension(url, "iframe")
+                target = {}
+        else:
+            iframe_safe = lambda url: url
+            target = {}
+
         # Open-action (Update or Read)
         if editable and has_permission("update", table) and \
            not ownership_required("update", table):
             if not update_url:
                 # To use modals
                 #get_vars["refresh"] = "list"
-                update_url = URL(args = args + ["update"], #.popup to use modals
-                                 vars = get_vars)
+                update_url = iframe_safe(URL(args = args + ["update"], #.popup to use modals
+                                             vars = get_vars))
             s3crud.action_button(labels.UPDATE, update_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
-                                 _class="action-btn edit"
+                                 _class="action-btn edit",
+                                 icon = "edit",
+                                 **target
                                  )
         else:
             if not read_url:
-                read_url = URL(args = args,
-                               vars = get_vars)
+                read_url = iframe_safe(URL(args = args,
+                                           vars = get_vars))
             s3crud.action_button(labels.READ, read_url,
                                  # To use modals
                                  #_class="action-btn s3_modal"
-                                 _class="action-btn read"
+                                 _class="action-btn read",
+                                 **target
                                  )
 
         # Delete-action
         if deletable and has_permission("delete", table):
+            icon = "trash"
             if not delete_url:
-                delete_url = URL(args = args + ["delete"],
-                                 vars = get_vars)
+                delete_url = iframe_safe(URL(args = args + ["delete"],
+                                             vars = get_vars))
             if ownership_required("delete", table):
                 # Check which records can be deleted
                 query = auth.s3_accessible_query("delete", table)
@@ -2458,21 +2497,31 @@ class S3CRUD(S3Method):
                     if row_id:
                         rappend(str(row_id))
                 s3crud.action_button(labels.DELETE, delete_url,
-                                     _class="delete-btn", restrict=restrict)
+                                     _class="delete-btn",
+                                     icon=icon, 
+                                     restrict=restrict,
+                                     **target
+                                     )
             else:
                 s3crud.action_button(labels.DELETE, delete_url,
-                                     _class="delete-btn")
+                                     _class="delete-btn",
+                                     icon=icon,
+                                     **target
+                                     )
 
         # Copy-action
         if copyable and has_permission("create", table):
             if not copy_url:
-                copy_url = URL(args = args + ["copy"])
-            s3crud.action_button(labels.COPY, copy_url)
+                copy_url = iframe_safe(URL(args = args + ["copy"]))
+            s3crud.action_button(labels.COPY, 
+                                 copy_url,
+                                 icon="copy",
+                                 **target
+                                 )
 
         # Append custom actions
         if custom_actions:
             s3.actions = s3.actions + custom_actions
-
         return
 
     # -------------------------------------------------------------------------
@@ -2647,7 +2696,6 @@ class S3CRUD(S3Method):
 
         get_config = lambda key, tablename=component: \
                             s3db.get_config(tablename, key, None)
-
         try:
             selected = form.vars[key]
         except:
@@ -2656,11 +2704,21 @@ class S3CRUD(S3Method):
         if request.env.request_method == "POST":
             db = current.db
             table = db[component]
-            _vars = request.post_vars
-            _form = Storage(vars=Storage(table._filter_fields(_vars)),
-                            errors=Storage())
+
+            # Extract data for embedded form from post_vars
+            post_vars = request.post_vars
+            form_vars = Storage(table._filter_fields(post_vars))
+
+            # Pass values through validator to convert them into db-format
+            for k in form_vars:
+                value, error = s3_validate(table, k, form_vars[k])
+                if not error:
+                    form_vars[k] = value
+            
+            _form = Storage(vars = form_vars, errors = Storage())
             if _form.vars:
                 if selected:
+                    form_vars[table._id.name] = selected
                     # Onvalidation
                     onvalidation = get_config("update_onvalidation") or \
                                    get_config("onvalidation")
@@ -2683,6 +2741,7 @@ class S3CRUD(S3Method):
                                get_config("onaccept")
                     callback(onaccept, _form, tablename=component)
                 else:
+                    form_vars.pop(table._id.name, None)
                     # Onvalidation
                     onvalidation = get_config("create_onvalidation") or \
                                    get_config("onvalidation")
@@ -2695,7 +2754,7 @@ class S3CRUD(S3Method):
                         return
                     if selected:
                         # Update post_vars and form.vars
-                        request.post_vars[key] = str(selected)
+                        post_vars[key] = str(selected)
                         form.request_vars[key] = str(selected)
                         form.vars[key] = selected
                         # Update super-entity links

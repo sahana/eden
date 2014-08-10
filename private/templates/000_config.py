@@ -52,13 +52,6 @@ settings.base.template = "default"
 # Set this to the Public URL of the instance
 #settings.base.public_url = "http://127.0.0.1:8000"
 
-# Uncomment to set pootle url
-# settings.L10n.pootle_url = "http://pootle.sahanafoundation.org/"
-
-# Uncomment to set pootle username and password
-# settings.L10n.pootle_username = "username"
-# settings.L10n.pootle_password = "*****"
-
 # Switch to "False" in Production for a Performance gain
 # (need to set to "True" again when Table definitions are changed)
 settings.base.migrate = True
@@ -84,16 +77,14 @@ settings.base.debug = False
 # Uncomment to use Content Delivery Networks to speed up Internet-facing sites
 #settings.base.cdn = True
 
-# Uncomment this and set the solr url to connect to solr server for Full-Text Search
-#settings.base.solr_url = "http://127.0.0.1:8983/solr/"
+# Allow language files to be updated automatically
+#settings.L10n.languages_readonly = False
 
-# Uncomment to enable a guided tour
-#settings.base.guided_tour = True
-
-# This setting will be automatically changed _before_ registering the 1st user
+# This setting should be changed _before_ registering the 1st user
+# - should happen automatically if installing using supported scripts
 settings.auth.hmac_key = "akeytochange"
 
-# This setting is for Minimum Password Length
+# Minimum Password Length
 #settings.auth.password_min_length = 8
 
 # Email settings
@@ -129,26 +120,11 @@ settings.frontpage.rss = [
     }
 ]
 
-# Enable session store in Memcache to allow sharing of sessions across instances
-#settings.base.session_memcache = '127.0.0.1:11211'
+# Uncomment to enable a guided tour
+#settings.base.guided_tour = True
 
 # Instance Name - for management scripts
 #settings.base.instance_name = "test"
-
-# Allow language files to be updated automatically
-#settings.L10n.languages_readonly = False
-
-# Fill this in to get Google Analytics for your site
-#settings.base.google_analytics_tracking_id = ""
-
-# Fill these to allow users to Login using Facebook
-# https://developers.facebook.com/apps
-#settings.auth.facebook_id = ""
-#settings.auth.facebook_secret = ""
-# Fill these to allow users to Login using Google
-# https://code.google.com/apis/console/
-#settings.auth.google_id = ""
-#settings.auth.google_secret = ""
 
 # Bing API Key (for Map layers)
 #settings.gis.api_bing = ""
@@ -157,8 +133,19 @@ settings.frontpage.rss = [
 #settings.gis.api_google = ""
 # Yahoo API Key (for Geocoder)
 #settings.gis.api_yahoo = ""
+
 # GeoNames username
 #settings.gis.geonames_username = ""
+
+# Fill this in to get Google Analytics for your site
+#settings.base.google_analytics_tracking_id = ""
+
+# Chat server, see: http://eden.sahanafoundation.org/wiki/InstallationGuidelines/Chat
+#settings.base.chat_server = { "ip": "127.0.0.1",
+#        "port": 7070,
+#        "name": "servername"
+#        } 
+
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
 # NB Needs to be publically-accessible URL for querying via client JS
 #settings.gis.geoserver_url = "http://localhost/geoserver"
@@ -166,6 +153,22 @@ settings.frontpage.rss = [
 #settings.gis.geoserver_password = ""
 # Print Service URL: http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting
 #settings.gis.print_service = "/geoserver/pdf/"
+
+# Google OAuth (to allow users to login using Google)
+# https://code.google.com/apis/console/
+#settings.auth.google_id = ""
+#settings.auth.google_secret = ""
+
+# Pootle server
+# settings.L10n.pootle_url = "http://pootle.sahanafoundation.org/"
+# settings.L10n.pootle_username = "username"
+# settings.L10n.pootle_password = "*****"
+
+# SOLR server for Full-Text Search
+#settings.base.solr_url = "http://127.0.0.1:8983/solr/"
+
+# Memcache server to allow sharing of sessions across instances
+#settings.base.session_memcache = '127.0.0.1:11211'
 
 # UI options
 # Should user be prompted to save before navigating away?

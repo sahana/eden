@@ -31,7 +31,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Exporter"]
+__all__ = ("S3Exporter",)
 
 from gluon import current
 from gluon.storage import Storage

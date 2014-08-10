@@ -32,6 +32,7 @@
 """
 
 import datetime
+import re
 import sys
 
 from itertools import product, islice
@@ -440,15 +441,16 @@ class S3DataTable(object):
         if base_url is None:
             base_url = request.url
 
-        # @todo: this needs rework
-        #        - other data formats could have other list_fields,
-        #          hence applying the datatable sorting/filters is
-        #          not transparent
+        # @todo: other data formats could have other list_fields,
+        #        so position-based datatable sorting/filters may
+        #        be applied wrongly
         if s3.datatable_ajax_source:
-            end = s3.datatable_ajax_source.find(".aadata")
-            default_url = s3.datatable_ajax_source[:end] # strip '.aadata' extension
+            default_url = s3.datatable_ajax_source
         else:
             default_url = base_url
+
+        # Strip format extensions (e.g. .aadata or .iframe)
+        default_url = re.sub("(\/[a-zA-Z0-9_]*)(\.[a-zA-Z]*)", "\g<1>", default_url)
 
         # Keep any URL filters
         get_vars = request.get_vars
@@ -456,79 +458,64 @@ class S3DataTable(object):
             query = "&".join("%s=%s" % (k, v) for k, v in get_vars.items())
             default_url = "%s?%s" % (default_url, query)
 
-        div = DIV(_id = "%s_list_formats" % id, # Used by s3.filter.js to update URLs
-                  _class = "list_formats")
+        # Construct row of export icons
+        # @note: icons appear in reverse order due to float-right
+        icons = SPAN(_class = "list_formats")
+                   
+        export_formats = current.deployment_settings.get_ui_export_formats()
+        if export_formats:
+            
+            icons.append("%s:" % current.T("Export as"))
+            
+            formats = dict(s3.formats)
+
+            # Auto-detect KML fields
+            if "kml" not in formats and rfields:
+                kml_fields = set(["location_id", "site_id"])
+                if any(rfield.fname in kml_fields for rfield in rfields):
+                    formats["kml"] = default_url
+
+            default_formats = ("xml", "rss", "xls", "pdf")
+            EXPORT = T("Export in %(format)s format")
+
+            append_icon = icons.append
+            for fmt in export_formats:
+
+                # Export format URL
+                if fmt in default_formats:
+                    url = formats.get(fmt, default_url)
+                else:
+                    url = formats.get(fmt)
+                if not url:
+                    continue
+
+                # Onhover title for the icon
+                if fmt == "map":
+                    title = T("Show on Map")
+                else:
+                    title = EXPORT % dict(format=fmt.upper())
+
+                append_icon(DIV(_class="dt-export export_%s" % fmt,
+                                _title=title,
+                                data = {"url": url,
+                                        "extension": fmt,
+                                        },
+                                ))
+
+        export_options = DIV(_class="dt-export-options")
+
+        # Append the permalink (if any)
         if permalink is not None:
             link = A(T("Link to this result"),
                      _href=permalink,
                      _class="permalink")
-            div.append(link)
-            div.append(" | ")
+            export_options.append(link)
+            export_options.append(" | ")
 
-        export_formats = current.deployment_settings.get_ui_export_formats()
-        if export_formats:
-            div.append("%s:" % current.T("Export as"))
-            iconList = []
-            formats = s3.formats
-            EXPORT = T("Export in %(format)s format")
+        # Append the icons
+        export_options.append(icons)
 
-            # In reverse-order of appearance due to float-right
-            if "map" in formats and "map" in export_formats:
-                iconList.append(DIV(_class="export_map",
-                                    _onclick="S3.dataTables.formatRequest('map','%s','%s');" % (id, formats.map),
-                                    _title=T("Show on Map"),
-                                    ))
-            if "kml" in export_formats:
-                if "kml" in formats:
-                    iconList.append(DIV(_class="export_kml",
-                                        _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, formats.kml),
-                                        _title=EXPORT % dict(format="KML"),
-                                        ))
-                elif rfields:
-                    kml_list = ["location_id",
-                                "site_id",
-                                ]
-                    for r in rfields:
-                        if r.fname in kml_list:
-                            iconList.append(DIV(_class="export_kml",
-                                                _onclick="S3.dataTables.formatRequest('kml','%s','%s');" % (id, default_url),
-                                                _title=EXPORT % dict(format="KML"),
-                                                ))
-                            break
-            if "have" in formats and "have" in export_formats:
-                iconList.append(DIV(_class="export_have",
-                                    _onclick="S3.dataTables.formatRequest('have','%s','%s');" % (id, formats.have),
-                                    _title=EXPORT % dict(format="HAVE"),
-                                    ))
-            if "xml" in export_formats:
-                url = formats.xml if formats.xml else default_url
-                iconList.append(DIV(_class="export_xml",
-                                    _onclick="S3.dataTables.formatRequest('xml','%s','%s');" % (id, url),
-                                    _title=EXPORT % dict(format="XML"),
-                                    ))
-            if "rss" in export_formats:
-                url = formats.rss if formats.rss else default_url
-                iconList.append(DIV(_class="export_rss",
-                                    _onclick="S3.dataTables.formatRequest('rss','%s','%s');" % (id, url),
-                                    _title=EXPORT % dict(format="RSS"),
-                                    ))
-            if "xls" in export_formats:
-                url = formats.xls if formats.xls else default_url
-                iconList.append(DIV(_class="export_xls",
-                                    _onclick="S3.dataTables.formatRequest('xls','%s','%s');" % (id, url),
-                                    _title=EXPORT % dict(format="XLS"),
-                                    ))
-            if "pdf" in export_formats:
-                url = formats.pdf if formats.pdf else default_url
-                iconList.append(DIV(_class="export_pdf",
-                                    _onclick="S3.dataTables.formatRequest('pdf','%s','%s');" % (id, url),
-                                    _title=EXPORT % dict(format="PDF"),
-                                    ))
-
-            for icon in iconList:
-                div.append(icon)
-
-        return div
+        return export_options
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -737,6 +724,13 @@ class S3DataTable(object):
         # Wrap the table in a form and add some data in hidden fields
         form = FORM(_class="dt-wrapper")
         if not s3.no_formats and len(html) > 0:
+            # @todo: always *render* both export options and permalink,
+            #        even if the initial table is empty, so that
+            #        Ajax-update can unhide them once there are results
+            # @todo: move export-format update into fnDrawCallback
+            # @todo: poor UX with onclick-JS, better to render real
+            #        links which can be bookmarked, and then update them
+            #        in fnDrawCallback
             permalink = attr.get("dt_permalink", None)
             base_url = attr.get("dt_base_url", None)
             form.append(S3DataTable.listFormats(id, rfields,
@@ -1105,6 +1099,19 @@ class S3DataListLayout(object):
     """ DataList default layout """
 
     item_class = "thumbnail"
+
+    # ---------------------------------------------------------------------
+    def __init__(self, profile=None):
+        """
+            Constructor
+
+            @param profile: table name of the master resource of the
+                            profile page (if used for a profile), can be
+                            used in popup URLs to indicate the master
+                            resource
+        """
+
+        self.profile = profile
 
     # ---------------------------------------------------------------------
     def __call__(self, list_id, item_id, resource, rfields, record):
@@ -1494,7 +1501,7 @@ class S3PivotTable(object):
         represent_method = self._represent_method
         cols_repr = represent_method(cols)
         rows_repr = represent_method(rows)
-        layers_repr = dict([(f, represent_method(f)) for f, m in layers])
+        layers_repr = dict((f, represent_method(f)) for f, m in layers)
 
         layer_label = None
         col_titles = []
@@ -1798,6 +1805,7 @@ class S3PivotTable(object):
                     cols:
                     total:
                 },
+                method: <aggregation method>,
                 cells: [rows[cols]],
                 rows: [rows[index, value, label, total]],
                 cols: [cols[index, value, label, total]],
@@ -1870,8 +1878,8 @@ class S3PivotTable(object):
                 rtail = self._tail(rows, maxrows, least=least, method=hmethod)
             self._sortdim(rows, rfields[rows_dim])
             if rtail[1] is not None:
-                rows.append((OTHER, rtail[1], Storage(value=None, text=others)))
-            #row_indices = [i[0] for i in rows]
+                rows.append((OTHER, rtail[1], Storage(value=rtail[0],
+                                                      text=others)))
 
             # Group and sort the cols
             is_numeric = None
@@ -1890,8 +1898,8 @@ class S3PivotTable(object):
                 ctail = self._tail(cols, maxcols, least=least, method=hmethod)
             self._sortdim(cols, rfields[cols_dim])
             if ctail[1] is not None:
-                cols.append((OTHER, ctail[1], Storage(value=None, text=others)))
-            #col_indices = [i[0] for i in cols]
+                cols.append((OTHER, ctail[1], Storage(value=ctail[0],
+                                                      text=others)))
 
             rothers = rtail[0] or []
             cothers = ctail[0] or []
@@ -1949,8 +1957,11 @@ class S3PivotTable(object):
 
             for rindex, rtotal, rtitle in rows:
                 orow = []
-                rval = s3_unicode(rtitle.value) \
-                       if rtitle.value is not None and rindex != OTHER else None
+                rval = rtitle.value
+                if rindex == OTHER and isinstance(rval, list):
+                    rval = ",".join(s3_unicode(v) for v in rval)
+                elif rval is not None:
+                    rval = s3_unicode(rval)
                 if represent:
                     rappend((rindex,
                              rindex in rothers,
@@ -2015,8 +2026,11 @@ class S3PivotTable(object):
                                  "items": items,
                                  "value": value})
                     if ctotals:
-                        cval = s3_unicode(ctitle.value) \
-                               if ctitle.value is not None and cindex != OTHER else None
+                        cval = ctitle.value
+                        if cindex == OTHER and isinstance(cval, list):
+                            cval = ",".join(s3_unicode(v) for v in cval)
+                        elif cval is not None:
+                            cval = s3_unicode(cval)
                         if represent:
                             cappend((cindex,
                                      cindex in cothers,
@@ -2034,6 +2048,7 @@ class S3PivotTable(object):
         output = {"rows": orows,
                   "cols": ocols,
                   "cells": ocells,
+                  "method": method,
                   "lookup": lookup if lookup else None,
                   "total": self._totals(self.totals, [layer]),
                   "nodata": None if not self.empty else str(T("No data available"))}

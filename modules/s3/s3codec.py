@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Codec"]
+__all__ = ("S3Codec",)
 
 import datetime
 try:

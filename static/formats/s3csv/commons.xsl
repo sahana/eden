@@ -184,5 +184,18 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <!-- Convert a string to uppercase
 
+         @param string: the string
+    -->
+
+    <xsl:template name="uppercase">
+
+        <xsl:param name="string"/>
+        <xsl:value-of select="translate($string,
+            'abcdefghijklmnopqrstuvwxyzáéíóúàèìòùäöüåâêîôûãẽĩõũø',
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÀÈÌÒÙÄÖÜÅÂÊÎÔÛÃẼĨÕŨØ')"/>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
 </xsl:stylesheet>

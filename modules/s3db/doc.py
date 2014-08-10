@@ -27,10 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DocumentLibrary",
+__all__ = ("S3DocumentLibrary",
+           "S3DocSitRepModel",
            "doc_image_represent",
            "doc_document_list_layout",
-          ]
+           )
 
 import os
 
@@ -41,11 +42,11 @@ from ..s3 import *
 # =============================================================================
 class S3DocumentLibrary(S3Model):
 
-    names = ["doc_entity",
+    names = ("doc_entity",
              "doc_document",
              "doc_document_id",
              "doc_image",
-             ]
+             )
 
     def model(self):
 
@@ -84,6 +85,7 @@ class S3DocumentLibrary(S3Model):
                                cms_post=T("Post"),
                                cr_shelter=T("Shelter"),
                                deploy_mission=T("Mission"),
+                               doc_sitrep=T("Situation Report"),
                                hms_hospital=T("Hospital"),
                                hrm_human_resource=T("Human Resource"),
                                inv_adj=T("Stock Adjustment"),
@@ -109,9 +111,9 @@ class S3DocumentLibrary(S3Model):
         # Components
         doc_id = "doc_id"
         add_components(tablename,
-                       doc_document=doc_id,
-                       doc_image=doc_id,
-                      )
+                       doc_document = doc_id,
+                       doc_image = doc_id,
+                       )
 
         # ---------------------------------------------------------------------
         # Documents
@@ -131,6 +133,10 @@ class S3DocumentLibrary(S3Model):
                            autodelete = True,
                            represent = lambda file, tn=tablename: \
                                        self.doc_file_represent(file, tn),
+                           ),
+                     Field("mime_type",
+                           readable=False,
+                           writable=False,
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
@@ -177,9 +183,8 @@ class S3DocumentLibrary(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_DOCUMENT = T("Create Reference Document")
         crud_strings[tablename] = Storage(
-            label_create = ADD_DOCUMENT,
+            label_create = T("Add Reference Document"),
             title_display = T("Document Details"),
             title_list = T("Documents"),
             title_update = T("Edit Document"),
@@ -258,6 +263,10 @@ class S3DocumentLibrary(S3Model):
                                                        "uploads",
                                                        "images"),
                            widget=S3ImageCropWidget((300, 300))),
+                     Field("mime_type",
+                           readable=False,
+                           writable=False,
+                           ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
                            requires = IS_EMPTY_OR(IS_LENGTH(128)),
@@ -629,7 +638,6 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
 class doc_DocumentRepresent(S3Represent):
     """ Representation of Documents """
 
-    # -------------------------------------------------------------------------
     def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
@@ -652,5 +660,151 @@ class doc_DocumentRepresent(S3Represent):
                 elif url:
                     return A(v, _href=url)
         return v
+
+# =============================================================================
+class S3DocSitRepModel(S3Model):
+    """
+        Situation Reports
+    """
+
+    names = ("doc_sitrep",
+             "doc_sitrep_id",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Situation Reports
+        # - can be aggregated by OU
+        #
+        tablename = "doc_sitrep"
+        self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
+                          Field("name", length=128,
+                               label = T("Name"),
+                               ),
+                          Field("description", "text",
+                                label = T("Description"),
+                                represent = lambda body: XML(body),
+                                widget = s3_richtext_widget,
+                                ),
+                          self.org_organisation_id(),
+                          self.gis_location_id(
+                            widget = S3LocationSelectorWidget2(show_map = False),
+                            ),
+                          s3_date(default = "now",
+                                  ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Add Situation Report"),
+                title_display = T("Situation Report Details"),
+                title_list = T("Situation Reports"),
+                title_update = T("Edit Situation Report"),
+                title_upload = T("Import Situation Reports"),
+                label_list_button = T("List Situation Reports"),
+                label_delete_button = T("Delete Situation Report"),
+                msg_record_created = T("Situation Report added"),
+                msg_record_modified = T("Situation Report updated"),
+                msg_record_deleted = T("Situation Report deleted"),
+                msg_list_empty = T("No Situation Reports currently registered"))
+
+        crud_form = S3SQLCustomForm("name",
+                                    "description",
+                                    "organisation_id",
+                                    "location_id",
+                                    "date",
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        name = "document",
+                                        label = T("Attachments"),
+                                        fields = [("", "file")],
+                                    ),
+                                    "comments",
+                                    )
+
+        if current.deployment_settings.get_org_branches():
+            org_filter = S3HierarchyFilter("organisation_id",
+                                           leafonly = False,
+                                           )
+        else:
+            org_filter = S3OptionsFilter("organisation_id",
+                                         #filter = True,
+                                         #header = "",
+                                         )
+
+        filter_widgets = [org_filter,
+                          S3LocationFilter(),
+                          S3DateFilter("date"),
+                          ]
+
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = ["date",
+                                      "event_sitrep.incident_id",
+                                      "location_id$L1",
+                                      "location_id$L2",
+                                      "location_id$L3",
+                                      "organisation_id",
+                                      "name",
+                                      (T("Attachments"), "document.file"),
+                                      "comments",
+                                      ],
+                       super_entity = "doc_entity",
+                       )
+
+        # Components
+        self.add_components(tablename,
+                            event_sitrep = {"name": "event_sitrep",
+                                            "joinby": "sitrep_id",
+                                            },
+                            event_incident = {"link": "event_sitrep",
+                                              "joinby": "sitrep_id",
+                                              "key": "incident_id",
+                                              "actuate": "hide",
+                                              "multiple": "False",
+                                              #"autocomplete": "name",
+                                              "autodelete": False,
+                                              },
+                            )
+
+        represent = S3Represent(lookup=tablename)
+
+        sitrep_id = S3ReusableField("sitrep_id", "reference %s" % tablename,
+                                    label = T("Situation Report"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "doc_sitrep.id",
+                                                          represent,
+                                                          orderby="doc_sitrep.name",
+                                                          sort=True)),
+                                    sortby = "name",
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict(doc_sitrep_id = sitrep_id,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(doc_sitrep_id = lambda **attr: dummy("sitrep_id"),
+                    )
 
 # END =========================================================================

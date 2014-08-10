@@ -29,8 +29,8 @@ settings = current.deployment_settings
 # eg:
 # ["default"] (1 is a shortcut for this)
 # ["Standard"]
-# ["IFRC_Train"]
-# ["roles", "user"]
+# ["IFRC, IFRC/Train"]
+# ["roles", "demo/users"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
 #settings.base.prepopulate = 1
@@ -228,8 +228,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.display_L0 = True
 # Currently unused
 #settings.gis.display_L1 = False
-# Uncomemnt this to do deduplicate lookups on Imports via PCode (as alternative to Name)
-#settings.gis.lookup_pcode = True
+# Uncomment this to do deduplicate lookups on Imports via PCode (as alternative to Name)
+#settings.gis.lookup_code = "PCode"
 # Set this if there will be multiple areas in which work is being done,
 # and a menu to select among them is wanted.
 #settings.gis.menu = "Maps"
@@ -264,16 +264,24 @@ settings.L10n.decimal_separator = "."
 #settings.gis.layer_tree_radio = True
 # Uncomment to display the Map Legend as a floating DIV
 #settings.gis.legend = "float"
+# Uncomment to prevent showing LatLon in Location Represents
+#settings.gis.location_represent_address_only = True
 # Mouse Position: 'normal', 'mgrs' or None
 #settings.gis.mouse_position = "mgrs"
+# Uncomment to show the Navigation controls on the toolbar
+#settings.gis.nav_controls = True
 # Uncomment to hide the Overview map
 #settings.gis.overview = False
 # Uncomment to hide the permalink control
 #settings.gis.permalink = False
-# Uncomment to disable the ability to add PoIs to the main map
-#settings.gis.pois = False
+# Resources which can be directly added to the main map
+#settings.gis.poi_create_resources = None
+#settings.gis.poi_create_resources = [{"c":"event", "f":"incident_report", "table": "gis_poi", label": T("Add Incident Report") ,"tooltip": T("Add Incident Report"), "layer":"Incident Reports", "location": "popup"}]
 # PoIs to export in KML/OSM feeds from Admin locations
-#settings.gis.poi_resources = ["cr_shelter", "hms_hospital", "org_office"]
+#settings.gis.poi_export_resources = ["cr_shelter", "hms_hospital", "org_office"]
+# Uncomment to show the Print control:
+# http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
+#settings.gis.print_button = True
 # Uncomment to hide the Save control, or set to "float"
 #settings.gis.save = False
 # Uncomment to hide the ScaleLine control
@@ -345,6 +353,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
 #settings.ui.camp = True
+# Enable this to have Open links in IFrames open a full page in a new tab
+#settings.ui.iframe_opens_full = True
 # Enable this to change the label for 'Attachments' tabs
 #settings.ui.label_attachments = "Attachments"
 # Enable this to change the label for 'Mobile Phone'
@@ -358,13 +368,15 @@ settings.gis.geonames_username = "eden_test"
 # Uncomment to show created_by/modified_by using Names not Emails
 #settings.ui.auth_user_represent = "name"
 # Uncomment to restrict the export formats available
-#settings.ui.export_formats = ["kml", "pdf", "rss", "xls", "xml"]
+#settings.ui.export_formats = ("kml", "pdf", "rss", "xls", "xml")
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
 # Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)
 #settings.ui.use_button_glyphicons = True
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 #settings.ui.multiselect_widget = True
+# Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
+#settings.ui.hierarchy_theme = "default"
 
 # -----------------------------------------------------------------------------
 # CMS
@@ -393,9 +405,16 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.person = "person_id"
 
 # -----------------------------------------------------------------------------
+# Shelters
+# Uncomment to use a dynamic population estimation by calculations based on registrations  
+#settings.cr.shelter_population_dynamic = True
+
+# -----------------------------------------------------------------------------
 # Events
 # Make Event Types Hierarchical
 #settings.event.types_hierarchical = True
+# Make Incident Types Hierarchical
+#settings.event.incident_types_hierarchical = True
 
 # -----------------------------------------------------------------------------
 # Members
@@ -419,6 +438,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.pr.select_existing = False
 # Uncomment to prevent showing HR details in S3PersonAutocompleteWidget results
 #settings.pr.search_shows_hr_details = False
+# Uncomment to hide Emergency Contacts in Person Contacts page
+#settings.pr.show_emergency_contacts = False
 
 # -----------------------------------------------------------------------------
 # Organisations
@@ -426,15 +447,25 @@ settings.gis.geonames_username = "eden_test"
 #settings.org.autocomplete = True
 # Enable the use of Organisation Branches
 #settings.org.branches = True
+# Show branches as tree rather than as table
+#settings.org.branches_tree_view = True
 # Make Facility Types Hierarchical
 #settings.org.facility_types_hierarchical = True
 # Enable the use of Organisation Groups & what their name is
 #settings.org.groups = "Coalition"
 #settings.org.groups = "Network"
+# Organisation Location context
+#settings.org.organisation_location_context = "organisation_location.location_id"
+# Make Organisation Types Hierarchical
+#settings.org.organisation_types_hierarchical = True
+# Make Organisation Types Multiple
+#settings.org.organisation_types_multiple = True
 # Enable the use of Organisation Regions
 #settings.org.regions = True
 # Make Organisation Regions Hierarchical
 #settings.org.regions_hierarchical = True
+# Uncomment to show a Tab for Organisation Resources
+#settings.org.resources_tab = True
 # Make Services Hierarchical
 #settings.org.services_hierarchical = True
 # Set the length of the auto-generated org/site code the default is 10
@@ -449,6 +480,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.org.site_autocomplete_fields = ("instance_type", "location_id$L1", "location_id$addr_street", "organisation_id$name")
 # Uncomment to hide inv & req tabs from Sites
 #settings.org.site_inv_req_tabs = False
+# Uncomment to allow Sites to be staffed by Volunteers
+#settings.org.site_volunteers = True
 # Uncomment to add summary fields for Organisations/Offices for # National/International staff
 #settings.org.summary = True
 # Enable certain fields just for specific Organisations

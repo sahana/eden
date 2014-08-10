@@ -152,7 +152,7 @@ def index2():
                                  )
                 custom_actions = [dict(label=str(T("Warehouse")),
                                   _class="action-icon",
-                                  icon="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
+                                  img="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
                                   url=URL(c="inv", f="warehouse",
                                           args=["[id]", "update"]
                                           )
@@ -396,25 +396,24 @@ def supplier():
         Filtered version of the organisation() REST controller
     """
 
-    get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    get_vars["organisation_type.name"] = "Supplier"
 
     # Load model
     table = s3db.org_organisation
 
     # Modify CRUD Strings
-    ADD_SUPPLIER = T("Add Supplier")
     s3.crud_strings.org_organisation = Storage(
-        label_create=ADD_SUPPLIER,
-        title_display=T("Supplier Details"),
-        title_list=T("Suppliers"),
-        title_update=T("Edit Supplier"),
-        title_upload=T("Import Suppliers"),
-        label_list_button=T("List Suppliers"),
-        label_delete_button=T("Delete Supplier"),
-        msg_record_created=T("Supplier added"),
-        msg_record_modified=T("Supplier updated"),
-        msg_record_deleted=T("Supplier deleted"),
-        msg_list_empty=T("No Suppliers currently registered")
+        label_create = T("Create Supplier"),
+        title_display = T("Supplier Details"),
+        title_list = T("Suppliers"),
+        title_update = T("Edit Supplier"),
+        title_upload = T("Import Suppliers"),
+        label_list_button = T("List Suppliers"),
+        label_delete_button = T("Delete Supplier"),
+        msg_record_created = T("Supplier added"),
+        msg_record_modified = T("Supplier updated"),
+        msg_record_deleted = T("Supplier deleted"),
+        msg_list_empty = T("No Suppliers currently registered")
         )
 
     # Modify filter_widgets
@@ -1050,7 +1049,7 @@ def recv():
                            listadd = False,
                            )
 
-    output = s3_rest_controller(rheader=s3db.inv_recv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_recv_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1418,7 +1417,7 @@ def track_item():
                         )
         s3.filter = (FS("expiry_date") != None)
 
-    output = s3_rest_controller(rheader=s3db.inv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_rheader)
     return output
 
 # =============================================================================

@@ -138,12 +138,12 @@ class S3SurveyTemplateModel(S3Model):
         The template model is a container for the question model
     """
 
-    names = ["survey_template",
+    names = ("survey_template",
              "survey_template_id",
              "survey_section",
              "survey_section_id",
              "survey_template_status",
-             ]
+             )
 
     def model(self):
 
@@ -835,12 +835,12 @@ class S3SurveyQuestionModel(S3Model):
         Question Model
     """
 
-    names = ["survey_question",
+    names = ("survey_question",
              "survey_question_id",
              "survey_question_metadata",
              "survey_question_list",
              "survey_qstn_name_represent",
-             ]
+             )
 
     def model(self):
 
@@ -1378,7 +1378,7 @@ class S3SurveyFormatterModel(S3Model):
         rowList = json2py(rules)
     """
 
-    names = ["survey_formatter"]
+    names = ("survey_formatter",)
 
     def model(self):
 
@@ -1535,10 +1535,10 @@ class S3SurveySeriesModel(S3Model):
         Series Model
     """
 
-    names = ["survey_series",
+    names = ("survey_series",
              "survey_series_id",
              "survey_series_status",
-             ]
+             )
 
     def model(self):
 
@@ -2554,10 +2554,10 @@ class S3SurveyCompleteModel(S3Model):
         Completed Surveys Model
     """
 
-    names = ["survey_complete",
+    names = ("survey_complete",
              "survey_complete_id",
              "survey_answer",
-             ]
+             )
 
     def model(self):
 
@@ -3215,7 +3215,7 @@ class S3SurveyTranslateModel(S3Model):
 
     from gluon.languages import read_dict, write_dict
 
-    names = ["survey_translate"]
+    names = ("survey_translate",)
 
     def model(self):
 

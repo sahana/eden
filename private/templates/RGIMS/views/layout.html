@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="{{=T.accepted_language or "en"}}">{{# class="no-js" needed for modernzr }}
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{=T.accepted_language or "en"}}">{{# class="no-js" needed for modernizr }}
 <head>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 {{# Always force latest IE rendering engine (even in intranet) & Chrome Frame }}
@@ -16,19 +16,19 @@
  initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
  maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width
 --> """}}
-<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0;" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 {{# Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references }}
 <link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon" />
 {{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
+
+
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
 {{for sheet in s3.stylesheets:}}
  <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-{{if s3.debug:}}
- {{=s3base.s3_include_debug_css()}}
-{{else:}}
+{{if s3.debug:}}{{=s3base.s3_include_debug_css()}}{{else:}}
  {{# Built by /static/scripts/tools/build.sahana.py }}
  <link href="/{{=appname}}/static/themes/RGIMS/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}

@@ -101,64 +101,66 @@ class S3ScenarioModel(S3Model):
         # Components
         add_components(tablename,
                        # Tasks
-                       project_task={"link": "scenario_task",
-                                     "joinby": "scenario_id",
-                                     "key": "task_id",
-                                     # @ToDo: Widget to handle embedded LocationSelector
-                                     #"actuate": "embed",
-                                     "actuate": "link",
-                                     "autocomplete": "name",
-                                     "autodelete": False,
-                                    },
+                       project_task = {"link": "scenario_task",
+                                       "joinby": "scenario_id",
+                                       "key": "task_id",
+                                       # @ToDo: Widget to handle embedded LocationSelector
+                                       #"actuate": "embed",
+                                       "actuate": "link",
+                                       "autocomplete": "name",
+                                       "autodelete": False,
+                                       },
                        # Human Resources
-                       hrm_human_resource={"link": "scenario_human_resource",
+                       hrm_human_resource = {"link": "scenario_human_resource",
+                                             "joinby": "scenario_id",
+                                             "key": "human_resource_id",
+                                             # @ToDo: Widget to handle embedded AddPersonWidget
+                                             #"actuate": "embed",
+                                             "actuate": "link",
+                                             "autocomplete": "name",
+                                             "autodelete": False,
+                                             },
+                       # Assets
+                       asset_asset = {"link": "scenario_asset",
+                                      "joinby": "scenario_id",
+                                      "key": "asset_id",
+                                      "actuate": "embed",
+                                      "autocomplete": "name",
+                                      "autodelete": False,
+                                      },
+                       # Facilities
+                       scenario_site = "scenario_id",
+                       # Organisations
+                       org_organisation = {"link": "scenario_organisation",
                                            "joinby": "scenario_id",
-                                           "key": "human_resource_id",
-                                           # @ToDo: Widget to handle embedded AddPersonWidget
-                                           #"actuate": "embed",
-                                           "actuate": "link",
+                                           "key": "organisation_id",
+                                           "actuate": "embed",
                                            "autocomplete": "name",
                                            "autodelete": False,
-                                          },
-                       # Assets
-                       asset_asset={"link": "scenario_asset",
-                                    "joinby": "scenario_id",
-                                    "key": "asset_id",
-                                    "actuate": "embed",
-                                    "autocomplete": "name",
-                                    "autodelete": False,
-                                   },
-                       # Facilities
-                       scenario_site="scenario_id",
-                       # Organisations
-                       org_organisation={"link": "scenario_organisation",
-                                         "joinby": "scenario_id",
-                                         "key": "organisation_id",
-                                         "actuate": "embed",
-                                         "autocomplete": "name",
-                                         "autodelete": False,
-                                        },
+                                           },
                        # Map Config as a component of Scenarios
-                       gis_config={"link": "scenario_config",
-                                   "joinby": "scenario_id",
-                                   "multiple": False,
-                                   "key": "config_id",
-                                   "actuate": "replace",
-                                   "autocomplete": "name",
-                                   "autodelete": True,
-                                  },
+                       gis_config = {"link": "scenario_config",
+                                     "joinby": "scenario_id",
+                                     "multiple": False,
+                                     "key": "config_id",
+                                     "actuate": "replace",
+                                     "autocomplete": "name",
+                                     "autodelete": True,
+                                     },
                       )
 
+        represent = S3Represent(lookup=tablename)
         scenario_id = S3ReusableField("scenario_id", "reference %s" % tablename,
-                                      sortby="name",
-                                      requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "scenario_scenario.id",
-                                                              self.scenario_represent,
-                                                              orderby="scenario_scenario.name",
-                                                              sort=True)),
-                                      represent = self.scenario_represent,
                                       label = T("Scenario"),
                                       ondelete = "SET NULL",
+                                      represent = represent,
+                                      requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "scenario_scenario.id",
+                                                              represent,
+                                                              orderby = "scenario_scenario.name",
+                                                              sort = True,
+                                                              )),
+                                      sortby = "name",
                                       # Comment these to use a Dropdown & not an Autocomplete
                                       #widget = S3AutocompleteWidget()
                                       #comment = DIV(_class="tooltip",
@@ -169,9 +171,8 @@ class S3ScenarioModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                scenario_scenario_id = scenario_id,
-            )
+        return dict(scenario_scenario_id = scenario_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -180,31 +181,12 @@ class S3ScenarioModel(S3Model):
             Return safe defaults in case the model has been deactivated.
         """
 
-        return Storage(
-            scenario_scenario_id = S3ReusableField("scenario_id",
-                                                   "integer",
-                                                   readable=False,
-                                                   writable=False),
-        )
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def scenario_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.scenario_scenario
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
+        return dict(scenario_scenario_id = lambda **attr: dummy("scenario_id"),
+                    )
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -250,7 +232,10 @@ class S3ScenarioAssetModel(S3Model):
         tablename = "scenario_asset"
         self.define_table(tablename,
                           self.scenario_scenario_id(),
-                          self.asset_asset_id(),
+                          self.asset_asset_id(
+                            comment = S3AddResourceLink(c="asset", f="asset",
+                                                        tooltip = T("If you don't see the asset in the list, you can add a new one by clicking link 'Create Asset'.")),
+                            ),
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(

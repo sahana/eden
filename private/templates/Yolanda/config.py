@@ -17,18 +17,25 @@ from s3.s3query import FS
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
 from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
 from s3.s3widgets import S3LocationSelectorWidget2
-from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
 T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
+
+datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
 """
     Template settings for Requests Management
     - for Philippines
 """
 
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["Yolanda", "demo/users"]
+
+settings.base.system_name = T("Sahana")
+settings.base.system_name_short = T("Sahana")
 
 # =============================================================================
 # System Settings
@@ -72,13 +79,6 @@ settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = False
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["Yolanda"]
-
-settings.base.system_name = T("Sahana")
-settings.base.system_name_short = T("Sahana")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
@@ -1532,7 +1532,7 @@ def customise_gis_location_controller(**attr):
                                                       #_href=location_url,
                                                       ),
                                                     H2(name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [reqs_widget,
                                                   map_widget,
@@ -2048,7 +2048,7 @@ def customise_org_facility_controller(**attr):
                                                       ),
                                                     P(record.comments,
                                                       _class="s3-truncate"),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_layers = [layer],
                                profile_widgets = [reqs_widget,
@@ -2342,7 +2342,7 @@ def customise_org_organisation_controller(**attr):
                                                                    args=[record.logo]),
                                                         ),
                                                     H2(record.name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [contacts_widget,
                                                   map_widget,
@@ -2366,7 +2366,7 @@ def customise_org_organisation_controller(**attr):
                                                 "comments",
                                                 ],
                                               label = T("Search")),
-                                  S3OptionsFilter("organisation_type_id",
+                                  S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                                                   label = T("Type"),
                                                   ),
                                   ]
@@ -2389,7 +2389,13 @@ def customise_org_organisation_controller(**attr):
 
             s3_sql_custom_fields = ["id",
                                     "name",
-                                    "organisation_type_id",
+                                    S3SQLInlineLink(
+                                        "organisation_type",
+                                        field = "organisation_type_id",
+                                        label = T("Type"),
+                                        multiple = False,
+                                        #widget = "hierarchy",
+                                    ),
                                     "country",
                                      S3SQLInlineComponentMultiSelectWidget(
                                          "sector",
@@ -3059,7 +3065,7 @@ def customise_req_req_controller(**attr):
                                                   ),
                                                 P(record.purpose,
                                                   _class="s3-truncate"),
-                                                _class="profile_header",
+                                                _class="profile-header",
                                                 ),
                            profile_widgets = [commits_widget,
                                               sites_widget,
@@ -3243,7 +3249,7 @@ def customise_project_activity_controller(**attr):
                           S3OptionsFilter("activity_organisation.organisation_id",
                                           represent = "%(name)s",
                                           ),
-                          S3OptionsFilter("activity_organisation.organisation_id$organisation_type_id",
+                          S3OptionsFilter("activity_organisation.organisation_id$organisation_organisation_type.organisation_type_id",
                                           # Doesn't support translation
                                           #represent = "%(name)s",
                                           ),

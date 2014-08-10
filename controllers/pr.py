@@ -152,31 +152,8 @@ def person():
                 ctable.organisation_id.writable = False
                 ctable.skill_id.comment = None
 
-            elif r.component_name == "saved_search":
-                if r.method == "load":
-                    if r.component_id:
-                        table = db.pr_saved_search
-                        record = db(table.id == r.component_id).select(table.url,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                        if record:
-                            redirect(record.url)
-                        else:
-                            raise HTTP(404)
-
         return True
     s3.prep = prep
-
-    # def postp(r, output):
-        # if r.component_name == "saved_search" and r.method in (None, "search"):
-            # s3_action_buttons(r)
-            # s3.actions.append(
-                # dict(url=URL(args=r.args + ["[id]", "load"]),
-                     # label=str(T("Load")),
-                     # _class="action-btn")
-            # )
-        # return output
-    # s3.postp = postp
 
     s3db.configure("pr_group_membership",
                    list_fields=["id",
@@ -197,7 +174,6 @@ def person():
             (T("Journal"), "note"),
             (T("Skills"), "competency"),
             (T("Training"), "training"),
-            (T("Saved Searches"), "saved_search"),
             ]
 
     # Configuration tabs
@@ -268,12 +244,12 @@ def contact():
             # & vol specific versions
             controller = get_vars.get("controller", "pr")
             s3db.configure("pr_contact",
-                           create_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, "contacts"]),
-                           update_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, "contacts"])
+                           create_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, "contacts"]),
+                           update_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, "contacts"])
                            )
             if r.method == "create":
                 table = s3db.pr_person
@@ -287,6 +263,20 @@ def contact():
             pe_id = get_vars.get("~.pe_id", None)
             if pe_id:
                 s3db.pr_contact.pe_id.default = pe_id
+
+        else:
+            from s3 import S3TextFilter, S3OptionsFilter
+            filter_widgets = [S3TextFilter(["value",
+                                            "comments",
+                                            ],
+                                           label = T("Search"),
+                                           comment = T("You can search by value or comments."),
+                                           ),
+                              S3OptionsFilter("contact_method"),
+                              ]
+            s3db.configure("pr_contact",
+                           filter_widgets = filter_widgets,
+                           )
 
         return True
     s3.prep = prep
@@ -473,7 +463,7 @@ def tooltip():
 # =============================================================================
 def filter():
     """
-        REST controller for new S3Filter saved searches
+        REST controller for saved filters
     """
 
     # Page length
@@ -497,14 +487,6 @@ def filter():
 
     output = s3_rest_controller()
     return output
-
-# -----------------------------------------------------------------------------
-def saved_search():
-    """
-        REST controller for old S3Search saved searches
-    """
-
-    return s3_rest_controller()
 
 # =============================================================================
 def human_resource():

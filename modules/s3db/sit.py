@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SituationModel"]
+__all__ = ("S3SituationModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -36,13 +36,14 @@ from ..s3 import *
 # =============================================================================
 class S3SituationModel(S3Model):
     """
+        Situation Super Entity & Presence tables for Trackable resources
     """
 
-    names = ["sit_situation",
+    names = ("sit_situation",
              "sit_trackable",
              "sit_presence",
              "sit_location",
-             ]
+             )
 
     def model(self):
 

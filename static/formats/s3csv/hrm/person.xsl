@@ -831,7 +831,7 @@
             </xsl:if>
 
             <!-- Mark as deployable -->
-            <xsl:if test="col[@field='Deployable'] = 'true'">
+            <xsl:if test="col[@field='Deployable'] = 'true' or col[@field='Deployable'] = 'True'">
                 <resource name="deploy_application">
                     <data field="active" value="true"/>
                 </resource>

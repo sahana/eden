@@ -18,12 +18,19 @@ T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
 
+datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+
 """
     Template settings for Requests Management
     - for Libya
 """
 
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["Libya", "demo/users"]
+
+settings.base.system_name = T("Sahana")
+settings.base.system_name_short = T("Sahana")
 
 # =============================================================================
 # System Settings
@@ -67,13 +74,6 @@ settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = False
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["Libya"]
-
-settings.base.system_name = T("Sahana")
-settings.base.system_name_short = T("Sahana")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
@@ -1471,7 +1471,7 @@ def customise_gis_location_controller(**attr):
                                                       #_href=location_url,
                                                       ),
                                                     H2(name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [reqs_widget,
                                                   map_widget,
@@ -1750,11 +1750,7 @@ def customise_org_facility_controller(**attr):
             customise_org_facility_fields()
 
             # Which levels of Hierarchy are we using?
-            hierarchy = current.gis.get_location_hierarchy()
-            levels = hierarchy.keys()
-            if len(current.deployment_settings.gis.countries) == 1 or \
-               s3.gis.config.region_location_id:
-                levels.remove("L0")
+            levels = current.gis.get_relevant_hierarchy_levels()
 
             # Filter from a Profile page?
             # If so, then default the fields we know
@@ -1948,7 +1944,7 @@ def customise_org_facility_controller(**attr):
                                                       ),
                                                     P(record.comments,
                                                       _class="s3-truncate"),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [reqs_widget,
                                                   map_widget,
@@ -2220,7 +2216,7 @@ def customise_org_organisation_controller(**attr):
                                                                    args=[record.logo]),
                                                         ),
                                                     H2(record.name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [reqs_widget,
                                                   map_widget,
@@ -2843,7 +2839,7 @@ def customise_req_req_controller(**attr):
                                                   ),
                                                 P(record.purpose,
                                                   _class="s3-truncate"),
-                                                _class="profile_header",
+                                                _class="profile-header",
                                                 ),
                            profile_widgets = [commits_widget,
                                               sites_widget,

@@ -1,35 +1,48 @@
 /**
  * jQuery UI HierarchicalOpts Widget for S3HierarchyFilter
- * 
- * @copyright: 2013-14 (c) Sahana Software Foundation
- * @license: MIT
  *
- * requires: jQuery 1.9.1+
- * requires: jQuery UI 1.10 widget factory
- * requires: jQuery JStree 1.0
+ * @copyright 2013-14 (c) Sahana Software Foundation
+ * @license MIT
+ *
+ * requires jQuery 1.9.1+
+ * requires jQuery UI 1.10 widget factory
+ * requires jQuery jstree 1.0
  * 
- * status: experimental
+ * @todo Migrate to jsTree 3.x
+ * @todo Ajax-refresh, dynamic insertion of nodes via add-popups
  * 
  */
-
 (function($, undefined) {
 
     var hierarchicaloptsID = 0;
 
+    /**
+     * HierarchicalOpts widget
+     */
     $.widget('s3.hierarchicalopts', {
 
-        // Default options
+        /**
+         * Default options
+         *
+         * @todo document options
+         */
         options: {
             selected: null,
             noneSelectedText: 'Select',
             selectedText: 'selected',
             noOptionsText: 'No options available',
             multiple: true,
-            leafonly: true
+            leafonly: true,
+            themesFolder: 'static/styles/jstree',
+            theme: 'default',
+            htmlTitles: true
         },
 
+        /**
+         * Create the widget
+         */
         _create: function() {
-            // Create the widget
+            
             var el = $(this.element),
                 opts = this.options;
 
@@ -61,13 +74,19 @@
             this._isOpen = false;
         },
 
+        /**
+         * Update the widget options
+         */
         _init: function() {
-            // Update widget options
+            
             this.refresh();
         },
 
+        /**
+         * Remove generated elements & reset other changes
+         */
         _destroy: function() {
-            // Remove generated elements & reset other changes
+
             $.Widget.prototype.destroy.call(this);
             
             this._unbindEvents();
@@ -78,8 +97,11 @@
                         .show();
         },
 
+        /**
+         * Redraw contents
+         */
         refresh: function() {
-            // Re-draw contents
+
             this._unbindEvents();
 
             var opts = this.options;
@@ -103,42 +125,54 @@
                 this._updateButtonText(selected);
             }
 
-            $.jstree._themes = S3.Ap.concat('/static/styles/jstree/');
+            var rtl,
+                theme;
+            $.jstree._themes = S3.Ap.concat('/', opts.themesFolder, '/');
             if ($('body').css('direction') == 'ltr') {
                 rtl = false;
+                theme = opts.theme;
             } else {
                 rtl = true;
-            }
-            if (rtl) {
-                theme = 'default-rtl';
-            } else {
-                theme = 'default';
+                theme = opts.theme + '-rtl';
             }
 
             var multiple = opts.multiple,
                 leafonly = opts.leafonly;
 
-            this.tree.jstree({
+            var tree = this.tree,
+                initially_open = [];
+
+            // If there's only one root node, start with this node open
+            var roots = tree.find('> ul > li');
+            if (roots.length == 1) {
+                initially_open.push(roots.attr('id'));
+            }
+            
+            tree.jstree({
                 'core': {
                     animation: 100,
+                    check_callback: true,
+                    html_titles: opts.htmlTitles,
+                    initially_open: initially_open,
                     rtl: rtl
                 },
                 'themes': {
-                    'theme': theme,
-                    'icons': false
+                    icons: false,
+                    theme: theme
                 },
                 'ui': {
-                    'select_limit': multiple ? -1 : 1,
-                    'select_multiple_modifier': 'on',
-                    'initially_select' : selected
+                    initially_select : selected,
+                    select_limit: multiple ? -1 : 1,
+                    select_multiple_modifier: 'on'
                 },
                 'checkbox': {
-                    'override_ui': true,
-                    'two_state': !leafonly
+                    override_ui: true,
+                    two_state: !leafonly
                 },
                 'plugins': ['themes', 'html_data', 'ui', 'sort', 'checkbox']
-            })
+            });
 
+            // Multiple/LeadOnly selection mode logic
             if (!multiple) {
                 var tree = this.tree;
                 var inst = jQuery.jstree._reference(tree);
@@ -157,8 +191,11 @@
             this._bindEvents();
         },
 
-        _updateSelectedNodes: function(data) {
-            // Get all selected nodes and store the result in the hidden input
+        /**
+         * Get all selected nodes and store the result in the hidden input
+         */
+        _updateSelectedNodes: function() {
+
 
             var old_selected = this.input.val();
             if (old_selected) {
@@ -205,8 +242,12 @@
             return true;
         },
 
+        /**
+         * Update the button text with the number of selected items
+         *
+         * @param {Array} selected_ids - the HTML element IDs of the currently selected nodes
+         */
         _updateButtonText: function(selected_ids) {
-            // Update the button text with the number of selected items
 
             var text = null,
                 options = this.options;
@@ -231,8 +272,12 @@
             this.buttonText.text(text);
         },
 
+        /**
+         * Check particular nodes (used by setCurrentFilters)
+         *
+         * @param {Array} values - the nodeIDs of the nodes to select
+         */
         set: function(values) {
-            // Check particular nodes (used by setCurrentFilters)
 
             this.tree.jstree('uncheck_all');
             if (values) {
@@ -243,8 +288,12 @@
             }
         },
 
+        /**
+         * Get all checked nodes (used by getCurrentFilters)
+         *
+         * @returns {Array} the nodeIDs of the currently selected nodes
+         */
         get: function() {
-            // Get all checked nodes (used by getCurrentFilters)
 
             var value = this.input.val();
             if (value) {
@@ -254,47 +303,97 @@
             }
         },
 
+        /**
+         * Uncheck all nodes (used by clearFilters)
+         */
         reset: function() {
-            // Uncheck all nodes (used by clearFilters)
 
             this.tree.jstree('uncheck_all');
             this._updateSelectedNodes();
             return;
         },
 
-        open: function() {
-            // Open the tree
+        /**
+         * Open the tree (triggers 'open'-event)
+         */
+        openMenu: function() {
 
             if (this._isOpen) {
-                this._close();
+                this.closeMenu();
             }
-            
+
             var button = $(this.button);
             var pos = button.offset();
-            
+
             $(this.tree).css({
                 position: 'absolute',
                 top: pos.top + button.outerHeight(),
                 left: pos.left,
                 minWidth: button.outerWidth() - 8,
                 'z-index': 999999
-            }).show();
+            }).show().jstree('set_focus');
             this._isOpen = true;
             button.addClass('ui-state-active');
+
             $(this).trigger('open');
         },
 
-        close: function() {
-            // Close the tree
-            
-            $(this.tree).hide();
+        /**
+         * Close the tree (triggers 'close'-event)
+         */
+        closeMenu: function() {
+
+            $(this.tree).fadeOut(50)
+                        .jstree('unset_focus')
+                        .unbind('click.hierarchicalopts')
+                        .unbind('mouseleave.hierarchicalopts');
             this._isOpen = false;
             $(this.button).removeClass('ui-state-active');
             $(this).trigger('close');
         },
 
+        /**
+         * Add a new node
+         *
+         * @param {Number} parent - the parent nodeID
+         * @param {Number} id - the new nodeID
+         * @param {String} title - the node title
+         * @param {bool} check - check the node after adding it
+         */
+        addNode: function(parent, id, title, check) {
+
+            var tree = this.tree,
+                treeID = this.treeID;
+            var parentID = parent ? '#' + treeID + '-' + parent : -1,
+                nodeID = treeID + '-' + id;
+
+            // Insert the node
+            tree.jstree('create_node', parentID, "last", {
+                // Title of the new node
+                data: title,
+                attr: {
+                    // HTML attributes of the new node
+                    id: nodeID,
+                    rel: 'leaf'
+                }
+            }, false, false);
+            
+            if (parent) {
+                // Update the parent relationship
+                $(parentID).attr({rel: 'parent'});
+                // Open the parent
+                tree.jstree('open_node', parentID);
+            }
+            if (check) {
+                // Check the node if so requested
+                tree.jstree('check_node', '#' + nodeID);
+            }
+        },
+
+        /**
+         * Bind events to generated elements (after refresh)
+         */
         _bindEvents: function() {
-            // Bind events to generated elements (after refresh)
 
             var widget = this,
                 tree = $(this.tree),
@@ -303,15 +402,32 @@
 
             tree.bind('check_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
+                if (widget.options.multiple) {
+                    // Close the menu on mouse-leave
+                    tree.unbind('mouseleave.hierarchicalopts')
+                        .one('mouseleave.hierarchicalopts', function() {
+                        window.setTimeout(function() {
+                            widget.closeMenu();
+                        }, 100);
+                    });
+                } else {
+                    // Close the menu immediately
+                    window.setTimeout(function() {
+                        widget.closeMenu();
+                    }, 100);
+                }
             }).bind('uncheck_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
-            })
-            
+            }).bind("open_node.jstree", function (event, data) {
+                if((data.inst._get_parent(data.rslt.obj)).length) {
+                    data.inst.open_node(data.inst._get_parent(data.rslt.obj), false, true);
+                }
+            });
             button.bind('click' + namespace, function() {
                 if (!widget._isOpen) {
-                    widget.open();
+                    widget.openMenu();
                 } else {
-                    widget.close();
+                    widget.closeMenu();
                 }
             }).bind('keyup' + namespace, function(event) {
                 event.preventDefault();
@@ -319,11 +435,11 @@
                     case 27: // esc
                     case 38: // up
                     case 37: // left
-                        widget.close();
+                        widget.closeMenu();
                         break;
                     case 39: // right
                     case 40: // down
-                        widget.open();
+                        widget.openMenu();
                         break;
                 }
             }).bind('mouseenter' + namespace, function() {
@@ -340,18 +456,20 @@
                 $(this).removeClass('ui-state-focus');
             });
             $(document).bind('mousedown' + namespace, function(event) {
-                var target = event.target
+                var target = event.target;
                 if (!tree.is(target) && !button.is(target) &&
                     tree.has(event.target).length === 0 &&
                     button.has(event.target).length === 0) {
-                    widget.close();
+                    widget.closeMenu();
                 }
             });
             return true;
         },
-        
+
+        /**
+         * Unbind events (before refresh)
+         */
         _unbindEvents: function() {
-            // Unbind events (before refresh)
 
             var tree = $(this.tree),
                 button = $(this.button),
@@ -359,7 +477,8 @@
 
             tree.unbind('check_node.jstree')
                 .unbind('uncheck_node.jstree')
-                .unbind('loaded.jstree');
+                .unbind('loaded.jstree')
+                .unbind('open_node.jstree');
 
             $(this.button).unbind(namespace);
             $(document).unbind(namespace);

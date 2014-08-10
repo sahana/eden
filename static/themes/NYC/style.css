@@ -16,6 +16,20 @@ body {
     }
 }
 
+body.iframe {
+    padding-top: 0;
+}
+body.iframe #table-container{
+    margin-top: -21px;
+}
+body.iframe .form-container{
+    margin-top: -1px;
+}
+body.iframe #list-btn-add {
+    margin-bottom: 21px;
+    margin-top: -11px;
+}
+
 .navbar-inner .container{
     width: auto;
 }
@@ -71,7 +85,7 @@ body {
 
 /* Style */
 .fullpage {
-    background: #EEE;
+    background: #eee;
 }
 .fullpage .col1 {
     width: 100%;
@@ -82,18 +96,17 @@ body {
 .col3 {
     padding: 0;
 }
-.aside {
-    background: #ffffff;
-    margin: 10px;
-    /* Leave room for margin */
-    width: 180px;
+
+#single-col {
+    margin-left: 20px;
 }
+
 .map_home {
     margin: 0;
 }
 
 body, p, h1, h2, h3, h4, h5, h6, ul, ol, li, caption, pre, table, address, blockquote {
-    color: #222222;
+    color: #222;
 }
 
 h1 {
@@ -133,7 +146,7 @@ h6 {
 a,
 a:active,
 a:visited {
-    color: #0085BF;
+    color: #0085bf;
     cursor: pointer;
     text-decoration: none;
 }
@@ -143,10 +156,10 @@ a:visited:focus,
 a:hover,
 a:active:hover,
 a:visited:hover {
-    color: #555555;
+    color: #555;
 }
 a.btn-primary:visited {
-    color: #FFFFFF;
+    color: #fff;
 }
 
 #list-add h3 {
@@ -210,3 +223,12 @@ b.red {
 #pr_person_sub_human_resourcehuman_resource__row .controls {
     margin-left: 80px;
 }
+
+/* Tweak the  Organisation/Network RSS feed input
+#org_organisation_sub_rsscontact__label,
+#org_organisation_group_sub_rsscontact__label {
+    margin-top: 8px;
+}
+#sub_rsscontact_rsscontact_i_value_edit_none {
+    margin-top: -12px;
+} */

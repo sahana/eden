@@ -70,6 +70,13 @@
    <a class='brand' href='/{{=appname}}/default/index'><img src="/{{=appname}}/static/themes/OCHAROCCA/img/UN-OCHA-Logo_hor-blu660-block.jpg" style="height:28px;margin:0 0 -20px 0" alt=""/></a>
    <div class='nav-collapse collapse'>
     <ul class='nav'>
+        <li role='menuitem'>
+         <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-globe'></i><b class='caret'></b></a>
+            <ul class='dropdown-menu'>
+              <li><a href='/{{=appname}}/gis/location/summary?location.level__ne=None'><i class='icon-sitemap'></i> {{=T("Administrative Areas")}}</a></li>
+              <li><a href='/{{=appname}}/gis/location/summary?location.level=None'><i class='icon-map-marker'></i> {{=T("Locations")}}</a></li>
+            </ul>
+        </li>
        {{for opt in response.menu:}}
         <li role='menuitem'>
          <a href='{{=opt["url"]}}' tabindex='-1' class='menu-item'> <i class='icon-{{=opt["icon"]}}'></i> {{=opt["name"]}}</a>

@@ -13,18 +13,24 @@ from gluon import current, Field, URL
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3fields import S3Represent
-from s3.s3utils import S3DateTime, s3_avatar_represent
+from s3 import S3Represent, S3DateTime, s3_avatar_represent
 
 T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
 
+datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+
 """
     Template settings for IFRC MENA 4W Portal
 """
 
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["Syria", "demo/users"]
+
+settings.base.system_name = T("IFRC MENA 4W Portal")
+settings.base.system_name_short = T("IFRC MENA 4W")
 
 # =============================================================================
 # System Settings
@@ -61,13 +67,6 @@ settings.security.map = True
 
 # Owner Entity
 settings.auth.person_realm_human_resource_site_then_org = False
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["Syria"]
-
-settings.base.system_name = T("IFRC MENA 4W Portal")
-settings.base.system_name_short = T("IFRC MENA 4W")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
@@ -625,7 +624,7 @@ def customise_gis_location_controller(**attr):
                                        #_href=location_url,
                                        ),
                                      H2(settings.get_system_name()),
-                                     _class="profile_header",
+                                     _class="profile-header",
                                      )
                 s3db.configure("gis_location",
                                list_fields = list_fields,
@@ -660,7 +659,7 @@ def customise_hrm_human_resource_fields():
     table = s3db.hrm_human_resource
     table.site_id.represent = S3Represent(lookup="org_site")
     s3db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-    #from s3.s3utils import s3_auth_user_represent_name
+    #from s3 import s3_auth_user_represent_name
     #table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -826,7 +825,7 @@ def customise_org_organisation_controller(**attr):
                 #customise_org_office_fields()
                 customise_project_project_fields()
 
-                from s3.s3query import FS
+                from s3 import FS
                 contacts_widget = dict(label = "Contacts",
                                        label_create = "Create Contact",
                                        type = "datalist",
@@ -866,7 +865,7 @@ def customise_org_organisation_controller(**attr):
                                        #list_layout = render_projects,
                                        )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
@@ -878,7 +877,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
@@ -891,7 +890,7 @@ def customise_org_organisation_controller(**attr):
                                           )
                 # @ToDo: Renderer
                 #distributions_widget = dict(label = "Distributions",
-                #                            label_create = "Add New Distribution",
+                #                            label_create = "Create Distribution",
                 #                            type = "datalist",
                 #                            tablename = "supply_distribution",
                 #                            context = "location",
@@ -911,7 +910,7 @@ def customise_org_organisation_controller(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(record.name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [contacts_widget,
                                                   map_widget,
@@ -951,7 +950,8 @@ def customise_org_organisation_controller(**attr):
             table = s3db.org_organisation
 
             # Hide fields
-            table.organisation_type_id.readable = table.organisation_type_id.writable = False
+            field = s3db.org_organisation_organisation_type.organisation_type_id
+            field.readable = field.writable = False
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
@@ -1016,7 +1016,7 @@ def customise_pr_person_controller(**attr):
             MOBILE = settings.get_ui_label_mobile_phone()
             EMAIL = T("Email")
 
-            from s3.s3validators import IS_ONE_OF
+            from s3 import IS_ONE_OF
 
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
@@ -1054,7 +1054,7 @@ def customise_pr_person_controller(**attr):
                     field.readable = field.writable = False
                     hr_fields.remove("organisation_id")
 
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent
             s3_sql_custom_fields = [
                     "first_name",
                     #"middle_name",
@@ -1261,8 +1261,7 @@ def customise_project_activity_controller(**attr):
         if r.method in ("create", "update"):
             editable = True
             # Custom Widgets/Validators
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2#, S3MultiSelectWidget
+            from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2#, S3MultiSelectWidget
             location_field.label = "" # Gets replaced by widget
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
             location_field.widget = S3LocationSelectorWidget2(levels=levels)
@@ -1277,7 +1276,7 @@ def customise_project_activity_controller(**attr):
         s3db.project_activity_organisation.organisation_id.label = ""
 
         # Custom Crud Form
-        from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
         #bttable = s3db.project_beneficiary_type
         #total = current.db(bttable.name == "Total").select(bttable.parameter_id,
         #                                                   limitby=(0, 1)).first()
@@ -1335,7 +1334,7 @@ def customise_project_activity_controller(**attr):
             #"comments",
             )
 
-        from s3.s3filter import S3LocationFilter, S3OptionsFilter#, S3DateFilter
+        from s3 import S3LocationFilter, S3OptionsFilter#, S3DateFilter
         filter_widgets = [
             S3LocationFilter("location_id",
                              #levels = levels,
@@ -1437,7 +1436,7 @@ def customise_project_project_fields():
     table = s3db.project_project
     table.start_date.represent = date_represent
     table.end_date.represent = date_represent
-    from s3.s3utils import s3_auth_user_represent_name
+    from s3 import s3_auth_user_represent_name
     table.modified_by.represent = s3_auth_user_represent_name
     table.modified_on.represent = datetime_represent
 
@@ -1509,7 +1508,7 @@ def customise_project_project_controller(**attr):
 
             s3db.doc_document.file.label = ""
 
-            from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
             crud_form_fields = [
                     "name",
                     S3SQLInlineComponentCheckbox(
@@ -1577,7 +1576,7 @@ def customise_project_project_controller(**attr):
                 location_field.label = ""
                 location_field.represent = S3Represent(lookup="gis_location")
                 # Project Locations must be districts
-                from s3.s3validators import IS_ONE_OF
+                from s3 import IS_ONE_OF
 
                 location_field.requires = IS_ONE_OF(current.db, "gis_location.id",
                                                     S3Represent(lookup="gis_location"),
@@ -1605,7 +1604,7 @@ def customise_project_project_controller(**attr):
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="project", f="project")
 
-            from s3.s3filter import S3LocationFilter, S3TextFilter, S3OptionsFilter
+            from s3 import S3LocationFilter, S3TextFilter, S3OptionsFilter
             filter_widgets = [
                 S3TextFilter(["name",
                               "description",
@@ -1729,8 +1728,7 @@ def customise_supply_distribution_controller(**attr):
                 return False
 
         if r.interactive:
-            from s3.s3validators import IS_LOCATION_SELECTOR2
-            from s3.s3widgets import S3LocationSelectorWidget2
+            from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
             location_field = r.table.location_id
             levels = ("L0", "L1", "L2", "L3")
             location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)

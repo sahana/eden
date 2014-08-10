@@ -4,8 +4,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3query import FS
-from s3.s3utils import S3CustomController
+from s3 import FS, S3CustomController
 
 THEME = "MCOP"
 
@@ -58,6 +57,7 @@ for(var i=0,len=layers.length;i<len;i++){
                        "created_by$organisation_id",
                        "document.file",
                        "event_post.event_id",
+                       "event_post.incident_id",
                        ]
         # Order with most recent Alert first
         orderby = "cms_post.date desc"

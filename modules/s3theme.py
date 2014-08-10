@@ -125,7 +125,7 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
     def render_row(id, label, controls, help, hidden=False):
         # Based on web2py/gluon/sqhtml.py
         # wrappers
-        _help = SPAN(help, _class="help-block")
+        _help = DIV(help, _class="help-block")
         # embed _help into _controls
         _controls = DIV(controls, _help, _class="controls")
         # submit unflag by default

@@ -63,6 +63,10 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     padding-right: 2px;
 }
 
+.embeddedComponent .map_wrapper {
+    width: 100%;
+}
+
 .gis_coord_wrap .decimal {
     width: 174px;
 }
@@ -273,6 +277,18 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     bottom: 28px;
 }
 
+/* Tooltips */
+.gis_tooltip {
+    /* Need to over-ride the element.style */
+    opacity: 0.7 !important;
+}
+.gis_tooltip_content {
+    /*background-color: #ffffcb;*/
+    overflow: hidden;
+    padding: 3px;
+    margin: 10px;
+}
+
 /* Popups */
 .olPopup #plain {
     max-width: 450px;
@@ -393,6 +409,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 }
 .mappnlcntr .next {
     background-image: url(../../img/gis/mapfish/resultset_next.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
+.mappnlcntr .print {
+    background-image: url(../../img/silk/printer.png) !important;
     height: 20px !important;
     width: 20px !important;
 }

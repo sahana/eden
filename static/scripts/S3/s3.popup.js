@@ -70,15 +70,18 @@ function s3_popup_refresh_main_form() {
     if (typeof layer_id != 'undefined') {
         var maps = self.parent.S3.gis.maps
         if (typeof maps != 'undefined') {
-            layer_id = parseInt(layer_id);
             var map_id, map, layers, i, len, layer, found, strategies, j, jlen, strategy;
+            if (layer_id != 'undefined') {
+                layer_id = parseInt(layer_id);
+            }
+            var gis_draft_layer = self.parent.i18n.gis_draft_layer;
             for (map_id in maps) {
                 map = maps[map_id];
                 layers = map.layers;
                 for (i=0, len=layers.length; i < len; i++) {
                     layer = layers[i];
                     if (layer.s3_layer_id == layer_id) {
-                        found = true;
+                        // Refresh this layer
                         strategies = layer.strategies;
                         for (j=0, jlen=strategies.length; j < jlen; j++) {
                             strategy = strategies[j];
@@ -88,53 +91,31 @@ function s3_popup_refresh_main_form() {
                                 break;
                             }
                         }
-                        break;
-                    }
-                }
-                if (found) {
-                    if (document.location.pathname.indexOf('/create') != -1) {
-                        // Remove the Draft Feature & it's Popup
-                        var gis_draft_layer = self.parent.i18n.gis_draft_layer;
-                        for (i=0, len=layers.length; i < len; i++) {
-                            layer = layers[i];
-                            if (layer.name == gis_draft_layer) {
-                                var features = layer.features,
-                                    feature,
-                                    popup;
-                                for (j=features.length - 1; j >= 0; j--) {
-                                    feature = features[j];
-                                    popup = feature.popup;
-                                    map.removePopup(popup);
-                                    popup.destroy();
-                                    delete feature.popup;
-                                    feature.destroy();
-                                }
-                                break;
-                            }
-                        }
-                    } else {
-                        // Remove the Update Popup
-                        /* Not working - for some reason the feature loses its ref to the popup
-                        var features = layer.features,
-                            feature,
-                            popup;
-                        for (j=features.length - 1; j >= 0; j--) {
-                            feature = features[j];
-                            popup = feature.popup;
-                            if (popup) {
-                                map.removePopup(popup);
-                                popup.destroy();
-                                delete feature.popup;
-                            }
-                        } */
-                        // Close ALL popups
+                    } else if (layer.name == gis_draft_layer) {
+                        /* Close ALL popups */
                         while (map.popups.length) {
                             map.removePopup(map.popups[0]);
+                        }
+                        // Remove the Feature
+                        var features = layer.features;
+                        for (j=features.length - 1; j >= 0; j--) {
+                            features[j].destroy();
                         }
                     }
                 }
             }
         }
+        return;
+    }
+
+    var node_id = $_GET['node'];
+    if (node_id) {
+        var hierarchy = self.parent.$('#' + $_GET['hierarchy']),
+            node = self.parent.$('#' + node_id);
+        if (hierarchy && node) {
+            hierarchy.hierarchicalcrud('refreshNode', node);
+        }
+        self.parent.S3.popup_remove();
         return;
     }
 
@@ -231,7 +212,7 @@ function s3_popup_refresh_main_form() {
     // URL to retrieve the Options list for the field of the master resource
     var opt_url = S3.Ap.concat('/' + caller_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
 
-    // Dropdown or Autocomplete
+    // Identify the widget type (Dropdown, Checkboxes, Hierarchy or Autocomplete)
     var selector = self.parent.$('#' + caller);
     s3_debug('selector', selector);
     var inline = (caller.substring(0, 4) == 'sub_');
@@ -239,6 +220,8 @@ function s3_popup_refresh_main_form() {
     var has_dummy = (dummy.val() != undefined);
     s3_debug('has_dummy', has_dummy);
     var checkboxes = selector.hasClass('checkboxes-widget-s3');
+    var hierarchy_widget = selector.hasClass('s3-hierarchy-input');
+    
     var append;
     if (checkboxes) {
         // The number of columns
@@ -252,6 +235,9 @@ function s3_popup_refresh_main_form() {
         //var has_dummy = (dummy.val() != undefined);
         if (dropdown) {
             append = [];
+        } else if (hierarchy_widget) {
+            // Request hierarchy information for widget
+            opt_url += '&hierarchy=1&only_last=1';
         } else {
             // Return only current record if field is autocomplete
             opt_url += '&only_last=1';
@@ -270,11 +256,16 @@ function s3_popup_refresh_main_form() {
                 represent = '';
             }
             if (dropdown) {
+                // Add new option
                 append.push(["<option value='", value, "'>", represent, "</option>"].join(''));
             } else if (checkboxes) {
                 id = 'id_' + child_resource + '-' + count;
                 append.push(["<td><input id='", id, "' name='", child_resource, "' value='", value, "' type='checkbox'><label for='", id, "'>", represent, "</label></td>"].join(''));
                 count++;
+            } else if (hierarchy_widget) {
+                // Add new node
+                parent = this['@parent'];
+                selector.parent().hierarchicalopts('addNode', parent, value, represent, true);
             }
             // Type conversion: http://www.jibbering.com/faq/faq_notes/type_convert.html#tcNumber
             numeric_value = (+value);
@@ -329,14 +320,14 @@ function s3_popup_refresh_main_form() {
             });
             var output = [];
             count = 0;
-            for ( i = 0; i < append.length; i++ ) {
+            for (i = 0; i < append.length; i++) {
                 if (count === 0) {
                     // Start the row
                     output.push('<tr>');
                     // Add a cell
                     output.push(append[i]);
                     count++;
-                } else if ( count == (cols - 1) ) {
+                } else if (count == (cols - 1)) {
                     // Add a cell
                     output.push(append[i]);
                     // End the row
@@ -353,7 +344,7 @@ function s3_popup_refresh_main_form() {
             // Select the value we just added
             values.push(value_high);
             //selector.val(values).change();
-            for ( i = 0; i < values.length; i++ ) {
+            for (i = 0; i < values.length; i++) {
                 self.parent.$('#' + caller + ' input[value="' + values[i] + '"]').prop('checked', true);
             }
         }

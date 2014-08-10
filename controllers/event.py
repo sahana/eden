@@ -14,12 +14,18 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    return s3db.cms_index(module, alt_function="index_alt")
+
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Module homepage for non-Admin users when no CMS content found
+    """
+
+    # Just redirect to the list of Events
+    redirect(URL(f="event"))
 
 # -----------------------------------------------------------------------------
 def create():
@@ -65,7 +71,7 @@ def event():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=event_rheader)
+    output = s3_rest_controller(rheader = s3db.event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -94,23 +100,17 @@ def incident():
     def prep(r):
         if r.interactive:
             if r.component:
-                if r.component.name == "config":
+                if r.component_name == "config":
                     s3db.configure("gis_config",
-                                   deletable=False)
+                                   deletable = False,
+                                   )
                     s3.crud.submit_button = T("Update")
-                elif r.component.name == "human_resource":
-                    s3db.configure("event_human_resource",
-                                   list_fields=["human_resource_id"])
+                elif r.component_name in ("asset", "human_resource", "organisation", "site"):
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
-                elif r.component.name == "asset":
-                    s3db.configure("event_asset",
-                                   list_fields=["asset_id"])
-                    s3.crud.submit_button = T("Assign")
-                    s3.crud_labels["DELETE"] = T("Remove")
-                else:
-                    s3.crud.submit_button = T("Assign")
-                    s3.crud_labels["DELETE"] = T("Remove")
+                #else:
+                #    s3.crud.submit_button = T("Assign")
+                #    s3.crud_labels["DELETE"] = T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate
@@ -133,8 +133,9 @@ def incident():
         if r.interactive:
             if r.component:
                 if r.component.name == "human_resource":
-                    update_url = URL(c="hrm", f="human_resource", args=["[id]"])
-                    s3_action_buttons(r, update_url=update_url)
+                    #update_url = URL(c="hrm", f="human_resource", args=["[id]"])
+                    #s3_action_buttons(r, update_url=update_url)
+                    s3_action_buttons(r)
                     if "msg" in settings.modules:
                         s3base.S3CRUD.action_button(url = URL(f="compose",
                                                               vars = {"hrm_id": "[id]"}),
@@ -143,7 +144,7 @@ def incident():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=event_rheader)
+    output = s3_rest_controller(rheader = s3db.event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -185,78 +186,6 @@ def resource():
     s3.prep = prep
 
     return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def event_rheader(r):
-    """ Resource headers for component views """
-
-    rheader = None
-
-    if r.representation == "html":
-
-        if r.name == "event":
-            # Event Controller
-            tabs = [(T("Event Details"), None)]
-            #if settings.has_module("req"):
-            #    tabs.append((T("Requests"), "req"))
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            event = r.record
-            if event:
-                if event.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if event.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                table = r.table
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % table.name.label),
-                                       event.name),
-                                    TR(TH("%s: " % table.comments.label),
-                                       event.comments),
-                                    TR(TH("%s: " % table.start_date.label),
-                                       table.start_date.represent(event.start_date)),
-                                    TR(closed),
-                                    ), rheader_tabs)
-
-        if r.name == "incident":
-            # Incident Controller
-            tabs = [(T("Incident Details"), None)]
-            if settings.has_module("project"):
-                tabs.append((T("Tasks"), "task"))
-            if settings.has_module("hrm"):
-                tabs.append((T("Human Resources"), "human_resource"))
-            if settings.has_module("asset"):
-                tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Facilities"), "site"))
-            tabs.append((T("Map Configuration"), "config"))
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            record = r.record
-            if record:
-                if record.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if record.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                table = r.table
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % table.name.label),
-                                       record.name),
-                                    TR(TH("%s: " % table.comments.label),
-                                       record.comments),
-                                    TR(TH("%s: " % table.zero_hour.label),
-                                       table.zero_hour.represent(record.zero_hour)),
-                                    TR(closed),
-                                    ), rheader_tabs)
-
-    return rheader
 
 # -----------------------------------------------------------------------------
 def person():

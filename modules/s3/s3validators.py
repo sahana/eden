@@ -30,7 +30,7 @@
 
 """
 
-__all__ = ["single_phone_number_pattern",
+__all__ = ("single_phone_number_pattern",
            "multi_phone_number_pattern",
            "s3_single_phone_requires",
            "s3_phone_requires",
@@ -58,25 +58,16 @@ __all__ = ["single_phone_number_pattern",
            "IS_UTC_OFFSET",
            "QUANTITY_INV_ITEM",
            "IS_PHONE_NUMBER",
-           ]
+           )
 
 import re
 import time
 from datetime import datetime, timedelta
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 from gluon import *
 #from gluon import current
 #from gluon.dal import Field
 #from gluon.validators import IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
-from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import Validator
 
@@ -86,7 +77,6 @@ def translate(text):
     if text is None:
         return None
     elif isinstance(text, (str, unicode)):
-        from globals import current
         if hasattr(current, "T"):
             return str(current.T(text))
     return str(text)
@@ -1742,7 +1732,7 @@ class IS_LOCATION_SELECTOR2(Validator):
         if wkt:
             try:
                 from shapely.wkt import loads as wkt_loads
-                polygon = wkt_loads(wkt)
+                wkt_loads(wkt)
             except:
                 errors["wkt"] = current.T("WKT is Invalid!")
         if errors:
@@ -1782,11 +1772,11 @@ class IS_LOCATION_SELECTOR2(Validator):
                     for e in errors:
                         error = "%s\n%s" % (error, errors[e]) if error else errors[e]
                     return (parent, error)
-                id = table.insert(**feature)
-                feature.id = id
+                _id = table.insert(**feature)
+                feature.id = _id
                 # onaccept
                 current.gis.update_location_tree(feature)
-                return (id, None)
+                return (_id, None)
             else:
                 # Update existing Point
                 # Check that this is a valid location_id
@@ -1896,14 +1886,9 @@ class IS_LOCATION_SELECTOR2(Validator):
                         self.error_message or current.T("Invalid Location!"))
             level = location.level
             if level:
-                levels = self.levels
-                if not levels:
-                    # Which levels of Hierarchy are we using?
-                    hierarchy = current.gis.get_location_hierarchy()
-                    levels = hierarchy.keys()
-                    if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                       s3.gis.config.region_location_id:
-                        levels.remove("L0")
+                # Which levels of Hierarchy are we using?
+                levels = self.levels or \
+                         current.gis.get_relevant_hierarchy_levels()
 
                 if level in levels:
                     # OK
@@ -2264,11 +2249,27 @@ class IS_ADD_PERSON_WIDGET2(Validator):
     """
 
     def __init__(self,
-                 error_message=None):
+                 error_message=None,
+                 allow_empty=False):
+        """
+            Constructor
+
+            @param error_message: alternative error message
+            @param allow_empty: allow the selector to be left empty
+
+            @note: This validator can *not* be used together with IS_EMPTY_OR,
+                   because when a new person gets entered, the submitted value
+                   for person_id would be None and hence satisfy IS_EMPTY_OR,
+                   and then this validator would never be reached and no new
+                   person record would be created => instead of IS_EMPTY_OR,
+                   use IS_ADD_PERSON_WIDGET2(allow_empty=True).
+        """
 
         self.error_message = error_message
+        self.allow_empty = allow_empty
+        
         # Tell s3_mark_required that this validator doesn't accept NULL values
-        self.mark_required = True
+        self.mark_required = not allow_empty
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -2493,13 +2494,17 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             _vars = Storage([(k, _vars[k])
                              for k in _vars if k != "location_id"])
 
+            fullname = _vars["full_name"]
+            if not fullname and self.allow_empty:
+                return None, None
+
             # Validate the email
             email, error = email_validate(_vars.email, None)
             if error:
                 return (None, error)
 
             # Separate the Name into components
-            first_name, middle_name, last_name = name_split(_vars["full_name"])
+            first_name, middle_name, last_name = name_split(fullname)
             _vars["first_name"] = first_name
             _vars["middle_name"] = middle_name
             _vars["last_name"] = last_name

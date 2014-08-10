@@ -28,26 +28,6 @@ if request.is_local:
         else:
             # Anonymous request
             auth.s3_impersonate(None)
-    else:
-
-        # @todo: deprecate this:
-        search_subscription = get_vars.get("search_subscription", None)
-        if search_subscription:
-            # We're doing a request for a saved search
-            table = s3db.pr_saved_search
-            search = db(table.auth_token == search_subscription).select(table.pe_id,
-                                                                        limitby=(0, 1)
-                                                                        ).first()
-            if search:
-                # Impersonate user
-                user_id = auth.s3_get_user_id(pe_id=search.pe_id)
-
-                if user_id:
-                    # Impersonate the user who is subscribed to this saved search
-                    auth.s3_impersonate(user_id)
-                else:
-                    # Request is ANONYMOUS
-                    auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can
@@ -224,7 +204,7 @@ def s3_barchart(r, **attr):
         except ValueError:
             raise HTTP(400, "Bad Request")
     else:
-        raise HTTP(501, body=ERROR.BAD_FORMAT)
+        raise HTTP(501, ERROR.BAD_FORMAT)
 
 # -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
@@ -307,6 +287,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("timeplot", s3base.S3TimePlot) # temporary setting for testing
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
+    set_handler("hierarchy", s3base.S3HierarchyCRUD)
     
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method
@@ -365,6 +346,10 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                                authorised=authorised,
                                                update=editable,
                                                native=native)("[id]")
+            if r.representation == "iframe" and not settings.get_ui_iframe_opens_full():
+                # If this request is in iframe-format, "open" should
+                # be in iframe-format as well
+                open_url = s3base.s3_set_extension(open_url, "iframe")
 
             # Add action buttons for Open/Delete/Copy as appropriate
             s3_action_buttons(r,

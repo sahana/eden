@@ -42,7 +42,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Task"]
+__all__ = ("S3Task",)
 
 import datetime
 
@@ -110,6 +110,8 @@ class S3Task(object):
         table = current.db[tablename]
 
         table.uuid.readable = table.uuid.writable = False
+
+        table.prevent_drift.readable = table.prevent_drift.writable = False
 
         table.sync_output.readable = table.sync_output.writable = False
 

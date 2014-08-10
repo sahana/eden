@@ -1,6 +1,8 @@
 *** Settings ***
 Documentation     Test cases for org module
 Resource          ../../resources/main.txt
+Suite Setup       Start Testing
+Suite Teardown      End Testing
 
 *** Variables ***
 ${ORGANIZATION URL}     http://${BASEURL}/org/organisation
@@ -20,6 +22,7 @@ ${OfficeTextFilter}     office-org_office_name-org_office_code-org_office_commen
 *** Test Cases ***
 
 Create Organisation
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}/create
     Input Text  ${OrgNameField}  New Organization
     Input Text  ${OrgAcronymField}  NO
@@ -28,6 +31,7 @@ Create Organisation
     Should Show Confirmation
 
 Find Organization
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}
     Input Text  ${OrgTextFilter}  New Org
     Wait For Filter Result
@@ -35,12 +39,14 @@ Find Organization
     DataTable Row Should Contain  1  Name  New Organization
 
 Create Organisation Without Name
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}/create
     Input Text  ${OrgAcronymField}  NO
     Submit CRUD Form
     Field Should Have Error  ${OrgNameField}
 
 Update Organisation
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}
     Input Text  ${OrgTextFilter}  New Org
     Wait For Filter Result
@@ -54,6 +60,7 @@ Update Organisation
     Should Show Confirmation
 
 Create Office
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${OFFICE URL}/create
     Input Text  ${OfficeNameField}  NO HeadQuarters
     Select Option  ${OfficeTypeSelector}  Headquarters
@@ -64,6 +71,7 @@ Create Office
     Should Show Confirmation
 
 Find Office
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${OFFICE URL}
     Input Text  ${OfficeTextFilter}  NO Head
     Wait For Filter Result

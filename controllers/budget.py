@@ -31,7 +31,26 @@ def index():
 def budget():
     """ RESTful CRUD controller """
 
+    def prep(r):
+        if r.method == "timeplot" and \
+           r.get_vars.get("component") == "allocation":
+            # Disregard unterminated allocations (those without start date)
+            query = (FS("allocation.start_date") != None)
+            r.resource.add_component_filter("allocation", query)
+        return True
+    s3.prep = prep
+
     return s3_rest_controller(rheader=s3db.budget_rheader)
+
+# =============================================================================
+def allocation():
+    """
+        REST controller for budget_allocation
+
+        @status: experimental, not for production use
+    """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def location():

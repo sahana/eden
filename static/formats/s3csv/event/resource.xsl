@@ -131,10 +131,10 @@
                     <xsl:when test="$Status='Available'">
                         <xsl:text>1</xsl:text>
                     </xsl:when>
-                    <xsl:when test="$Status='On Scene'">
+                    <xsl:when test="$Status='Assigned'">
                         <xsl:text>2</xsl:text>
                     </xsl:when>
-                    <xsl:when test="$Status='Responding'">
+                    <xsl:when test="$Status='En Route'">
                         <xsl:text>3</xsl:text>
                     </xsl:when>
                     <xsl:otherwise>

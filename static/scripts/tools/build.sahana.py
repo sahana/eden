@@ -262,6 +262,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # Chat
+    print "Compressing Chat"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.chat.cfg"
+    outputFilename = "s3.chat.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # Guided Tour
     print "Compressing Guided Tour"
     sourceDirectory = ".."

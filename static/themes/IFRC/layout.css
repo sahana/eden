@@ -27,6 +27,7 @@
 #single-col {
     position: relative;
     clear: both;
+    padding: 5px 0 0 15px;
 }
 
 #right-col {

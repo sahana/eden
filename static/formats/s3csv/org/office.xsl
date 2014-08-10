@@ -71,7 +71,7 @@
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/',
-                             col[@field='L1'], '/',
+                         col[@field='L1'], '/',
                          col[@field='L2'])"/>
     <xsl:key name="L3" match="row"
              use="concat(col[contains(
@@ -206,6 +206,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$OfficeName"/>
             </xsl:attribute>
+
             <!-- Link to Location -->
             <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
                  S3LocationSelectorWidget2 doesn't have this limitation -->
@@ -214,6 +215,7 @@
                     <xsl:value-of select="$OfficeName"/>
                 </xsl:attribute>
             </reference>
+
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">

@@ -34,12 +34,12 @@
            - ...and any todo's in the code
 """
 
-__all__ = ["S3NavigationItem",
+__all__ = ("S3NavigationItem",
            "S3ScriptItem",
            "S3ResourceHeader",
            "s3_rheader_tabs",
            "s3_rheader_resource",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -125,8 +125,10 @@ class S3NavigationItem(object):
             @param r: the request to default to
 
             @param m: the URL method (will be appended to args)
-            @param p: the method to check authorization for (will not be appended to args)
-            @param t: the table concerned by this request (overrides c_f for auth)
+            @param p: the method to check authorization for
+                      (will not be appended to args)
+            @param t: the table concerned by this request
+                      (overrides c_f for auth)
 
             @param url: a URL to use instead of building one manually
                         - e.g. for external websites or mailto: links
@@ -377,8 +379,7 @@ class S3NavigationItem(object):
             by the renderer.
         """
 
-        auth = current.auth
-        has_role = auth.s3_has_role
+        has_role = current.auth.s3_has_role
 
         authorized = False
 
@@ -470,7 +471,7 @@ class S3NavigationItem(object):
         """ Check whether a tag is present in any item of the subtree """
 
         components = self.components
-        for i in self.components:
+        for i in components:
             if tag in i.tags or tag in i:
                 return 1
         return 0
@@ -539,10 +540,10 @@ class S3NavigationItem(object):
         if layout is not None:
             if tag is None or tag in self.tags:
                 self.renderer = layout
-            if tree:
+            if recursive:
                 for c in self.components:
                     if tag is None or tag in c.tags:
-                        c.set_layout(layout, tree=tree, tag=tag)
+                        c.set_layout(layout, recursive=recursive, tag=tag)
         return
 
     # -------------------------------------------------------------------------
@@ -1223,7 +1224,8 @@ class S3NavigationItem(object):
     # -------------------------------------------------------------------------
     def get_prev(self, **flags):
         """
-            Get the previous item in the parent's component list with these flags
+            Get the previous item in the parent's component list with these
+            flags
 
             @param flags: dictionary of flags
         """
@@ -1277,7 +1279,7 @@ def s3_rheader_resource(r):
     return (tablename, record)
 
 # =============================================================================
-def s3_rheader_tabs(r, tabs=[]):
+def s3_rheader_tabs(r, tabs=None):
     """
         Constructs a DIV of component links for a S3RESTRequest
 
@@ -1290,32 +1292,48 @@ def s3_rheader_tabs(r, tabs=[]):
 
 # =============================================================================
 class S3ComponentTabs(object):
+    """ Class representing a row of component tabs """
 
-    def __init__(self, tabs=[]):
+    def __init__(self, tabs=None):
+        """
+            Constructor
 
-        self.tabs = [S3ComponentTab(t) for t in tabs if t]
+            @param tabs: the tabs configuration as list of names or tuples
+                         (label, name)
+        """
+
+        if not tabs:
+            self.tabs = []
+        else:
+            self.tabs = [S3ComponentTab(t) for t in tabs if t]
 
     # -------------------------------------------------------------------------
     def render(self, r):
+        """
+            Render the tabs row
+
+            @param r: the S3Request
+        """
 
         rheader_tabs = []
 
-        tabs = [t for t in self.tabs if t.active(r)]
+        tabs = tuple(t for t in self.tabs if t.active(r))
 
-        # Check whether there is a tab for this resource method (no component)
-        mtab = r.component is None and \
-               [t.component for t in tabs if t.component == r.method] and True or False
+        mtab = False
+        if r.component is None:
+            # Check whether there is a tab for the current URL method
+            for t in tabs:
+                if t.component == r.method:
+                    mtab = True
+                    break
 
         record_id = r.id
         if not record_id and r.record:
             record_id = r.record[r.table._id]
 
-        for i in xrange(len(tabs)):
+        for i, tab in enumerate(tabs):
 
-            tab = tabs[i]
-            title = tab.title
-            component = tab.component
-
+            # Determine the query variables for the tab URL
             vars_match = tab.vars_match(r)
             if vars_match:
                 _vars = Storage(r.get_vars)
@@ -1324,20 +1342,21 @@ class S3ComponentTabs(object):
                 if "viewing" in r.get_vars:
                     _vars.viewing = r.get_vars.viewing
 
-            if i == len(tabs) - 1:
-                _class = "tab_last"
-            else:
-                _class = "tab_other"
-
-            here = False
+            # Determine the controller function for the tab URL
             if tab.function is None:
+                # Infer function from current request
                 if "viewing" in _vars:
                     tablename, record_id = _vars.viewing.split(".", 1)
                     function = tablename.split("_", 1)[1]
                 else:
                     function = r.function
             else:
+                # Tab defines controller function
                 function = tab.function
+
+            # Is this the current tab?
+            component = tab.component
+            here = False
             if function == r.name or function == r.function:
                 here = r.method == component or not mtab
             if component:
@@ -1345,18 +1364,23 @@ class S3ComponentTabs(object):
                    r.component.alias == component and \
                    vars_match:
                     here = True
-                elif not r.component and \
-                     r.custom_action and \
-                     r.method == component:
+                elif not r.component and r.method == component:
                     here = True
                 else:
                     here = False
             else:
                 if r.component or not vars_match:
                     here = False
+
+            # HTML class for the tab position
             if here:
                 _class = "tab_here"
+            elif i == len(tabs) - 1:
+                _class = "tab_last"
+            else:
+                _class = "tab_other"
 
+            # Complete the tab URL with args, deal with "viewing"
             if component:
                 if record_id:
                     args = [record_id, component]
@@ -1381,9 +1405,15 @@ class S3ComponentTabs(object):
                 _href = URL(function, args=args, vars=_vars)
                 _id = "rheader_tab_%s" % function
 
-            rheader_tabs.append(SPAN(A(tab.title, _href=_href, _id=_id,),
-                                     _class=_class,))
+            # Render tab
+            rheader_tabs.append(SPAN(A(tab.title,
+                                       _href=_href,
+                                       _id=_id,
+                                       ),
+                                     _class=_class,
+                                     ))
 
+        # Render tab row
         if rheader_tabs:
             rheader_tabs = DIV(rheader_tabs, _class="tabs")
         else:
@@ -1434,7 +1464,7 @@ class S3ComponentTab(object):
         tablename = None
         if "viewing" in get_vars:
             try:
-                tablename, record_id = get_vars["viewing"].split(".", 1)
+                tablename = get_vars["viewing"].split(".", 1)[0]
             except:
                 pass
 
@@ -1621,7 +1651,7 @@ class S3ResourceHeader:
                         if isinstance(f, str):
                             fn = f
                             if "." in fn:
-                                tn, fn = f.split(".", 1)
+                                fn = f.split(".", 1)[1]
                                 if fn not in table.fields or \
                                    fn not in record:
                                     continue
@@ -1637,7 +1667,8 @@ class S3ResourceHeader:
                             value = field.represent(value)
                     tr.append(TH("%s: " % label))
                     v = value
-                    if not isinstance(v, basestring) and not isinstance(value, A):
+                    if not isinstance(v, basestring) and \
+                       not isinstance(value, A):
                         try:
                             v = unicode(v)
                         except:

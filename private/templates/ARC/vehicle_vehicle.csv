@@ -1,0 +1,339 @@
+Name,Organisation,Facility,Facility Type,Type,Catalog,Category,Item Name,Brand,Purchase Date,Building,Address,Postcode,Country,L1,L2,L3,Lat,Lon
+1088,Metro New York North,Metro New York North,,ERV,Default,Vehicles,ERV,,1999,,99 Indian Field Road,6830,US,Connecticut,Fairfield,Greenwich,41.0275784531,-73.6056238554
+1089,American Red Cross of the Susquehanna Valley,Lancaster County Office,,ERV,Default,Vehicles,ERV,,1999,,430 West Orange Street,17603,US,Pennsylvania,Erie,Lancaster,40.038399,-76.314035
+1090,American Red Cross of Northwest Ohio,American Red Cross of Northwest Ohio,,ERV,Default,Vehicles,ERV,,1999,,3100 West Central Ave,43606,US,Ohio,Hamilton,Toledo,39.1400999985,-84.4706000018
+1091,Northwest North Carolina,Northwest North Carolina,,ERV,Default,Vehicles,ERV,,1999,,690 Coliseum Dr.,27106,US,North Carolina,Forsyth,Winston-Salem,36.1416999998,-80.3227000014
+1092,Flint River,Flint River,,ERV,Default,Vehicles,ERV,,1999,,1509 Crawford St,31709,US,Georgia,Sumter,Americus,32.0661000017,-84.1378000003
+1093,Southwest Florida,Southwest Florida,,ERV,Default,Vehicles,ERV,,1999,,2001 Cantu Court,34232,US,Florida,Sarasota,Sarasota,27.3183000014,-82.4494999986
+1094,American Red Cross of Lee County,American Red Cross of Lee County,,ERV,Default,Vehicles,ERV,,1999,,7051 Cypress Terrace,33907,US,Florida,Lee,Ft. Myers,26.5419000013,-81.8720000016
+1095,Wiregrass Area,Wiregrass Area,,ERV,Default,Vehicles,ERV,,1999,,1004 Montezuma Ave,36303,US,Alabama,Houston,Dothan,31.2380000015,-85.4131999989
+1096,American Red Cross of the Delmarva Peninsula,American Red Cross of the Delmarva Peninsula,,ERV,Default,Vehicles,ERV,,1999,Suite 501,100 West 10th Street,19703,US,Delaware,New Castle,Wilmington,39.7457000017,-75.5487999987
+1097,American Red Cross of Central SC,American Red Cross of Central SC,,ERV,Default,Vehicles,ERV,,1999,,2751 Bull St,29202,US,South Carolina,Spartanburg,Columbia,34.992800001,-81.9677999987
+1098,Greater Richmond,Greater Richmond,,ERV,Default,Vehicles,ERV,,1999,,420 East Cary St,23218,US,Virginia,Richmond,Richmond,37.5392000002,-77.4380999991
+1099,Vermont and New Hampshire Upper Valley Region,Vermont and New Hampshire Upper Valley Region,,ERV,Default,Vehicles,ERV,,1999,,29 Mansfield Ave,5401,US,Vermont,Chittenden,Burlington,44.4783999995,-73.2510999996
+1100,Greater Carolinas,Greater Carolinas,,ERV,Default,Vehicles,ERV,,1999,,2425 Park Road,28203,US,North Carolina,Mecklenburg,Charlotte,35.1979530017,-80.8517367072
+1101,East Central Mississippi,Laurel Office,,ERV,Default,Vehicles,ERV,,2000,,401 W Oak St,39440,US,Mississippi,Jones,Laurel,31.6930000002,-89.129799999
+1102,American Red Cross on Long Island,American Red Cross on Long Island,,ERV,Default,Vehicles,ERV,,2000,,195 Willis Ave,11501,US,New York,Monroe,Mineola,43.1306999996,-77.6070999987
+1103,Connecticut,Connecticut,,ERV,Default,Vehicles,ERV,,2000,,209 Farmington Ave,6032,US,Connecticut,Hartford,Farmington,41.7369000019,-72.791700002
+1104,American Red Cross of Southern Maine,American Red Cross of Southern Maine,,ERV,Default,Vehicles,ERV,,2000,,2401 Congress St,4102,US,Maine,Cumberland,Portland,43.6506999992,-70.3372000007
+1105,American Red Cross of Northern New Jersey,American Red Cross of Northern New Jersey,,ERV,Default,Vehicles,ERV,,2000,,209 Fairfield Road,7004,US,New Jersey,Hillsborough,Fairfield,43.0034999999,-71.4364
+1106,Southeastern Coastal Georgia,Southeastern Coastal Georgia,,ERV,Default,Vehicles,ERV,,2000,,207 Rose Drive,31520,US,Georgia,Glynn,Brunswick,31.1957999992,-81.4888999982
+1108,Greater Erie County,Greater Erie County,,ERV,Default,Vehicles,ERV,,2002,,4961 Pittsburgh Ave,16509,US,Pennsylvania,Blair,Erie,40.4868,-78.3982999995
+1109,Jefferson-Shelby,Jefferson-Shelby,,ERV,Default,Vehicles,ERV,,2000,,114 22nd St S,35233,US,Alabama,Jefferson,Birmingham,33.5129222411,-86.8010106015
+1110,American Red Cross of Central Georgia,American Red Cross of Central Georgia,,ERV,Default,Vehicles,ERV,,2001,,195 Holt Ave,31201,US,Georgia,Bibb,Macon,32.8409000003,-83.6508999991
+1112,Southern Tier,Southern Tier,,ERV,Default,Vehicles,ERV,,2001,,620 E Main St.,13760,US,New York,Niagara,Endicott,43.0982999986,-78.9503999989
+1113,American Red Cross of North Central Alabama,American Red Cross of North Central Alabama,,ERV,Default,Vehicles,ERV,,2001,,1101 Washington St NW,35801,US,Alabama,Madison,Huntsville,34.7443999984,-86.5888999996
+1114,North Central Florida,North Central Florida,,ERV,Default,Vehicles,ERV,,2001,,1425 NW 6th Street,32601,US,Florida,Alachua,Gainesville,29.6651000009,-82.3308000009
+1116,Cincinnati Area,Cincinnati Area,,ERV,Default,Vehicles,ERV,,2001,,2111 Dana Ave,45207,US,Ohio,Hamilton,Cincinnati,39.1456468443,-84.4606103486
+1117,Wayne County NC,Wayne County NC,,ERV,Default,Vehicles,ERV,,2001,,600 N George Street,27530,US,North Carolina,Wayne,Goldsboro,35.3656999989,-78.0788000005
+1118,American Red Cross of Northeastern New York,American Red Cross of Northeastern New York,,ERV,Default,Vehicles,ERV,,2001,,33 Everett Rd.,12205,US,New York,Broome,Albany,42.1391000001,-76.0793000008
+1119,Southern Alleghenies,Altoona Office,,ERV,Default,Vehicles,ERV,,2001,,415 Orchard Avenue,16601,US,Pennsylvania,Blair,Altoona,40.4689878742,-78.4048266265
+1120,Central West Virginia,Central West Virginia,,ERV,Default,Vehicles,ERV,,2001,,113 Lakeview Drive,25313,US,West Virginia,Wood,Charleston,39.2362999991,-81.5747999994
+1121,West Central Pennsylvania,West Central Pennsylvania,,ERV,Default,Vehicles,ERV,,2002,,133 Friendship Circle,15009,US,Pennsylvania,Allegheny,Beaver,40.4545999991,-79.9833000003
+1122,American Red Cross of Greater Columbus,American Red Cross of Greater Columbus,,ERV,Default,Vehicles,ERV,,2002,,995 E Broad Street,43205,US,Ohio,Montgomery,Columbus,39.7564999984,-84.2063999997
+1123,Southeastern Virginia,Southeastern Virginia,,ERV,Default,Vehicles,ERV,,2002,,611 W Brambleton Avenue,23510,US,Virginia,Norfolk,Norfolk,36.8509000019,-76.2888000015
+1124,Asheville-Mountain Area,Asheville-Mountain Area,,ERV,Default,Vehicles,ERV,,2002,,100 Edgewood Road,28804,US,North Carolina,Buncombe,Asheville,35.6477999982,-82.5634000003
+1125,Metropolitan Atlanta,Metropolitan Atlanta,,ERV,Default,Vehicles,ERV,,2002,,1955 Monroe Drive NE,30324,US,Georgia,Fulton,Atlanta,33.8079000006,-84.3753999993
+1126,Northeast Florida,Northeast Florida,,ERV,Default,Vehicles,ERV,,2002,,751 Riverside Avenue,32208,US,Florida,Duval,Jacksonville,30.315900002,-81.6759000011
+1127,American Red Cross of Northwest Florida,American Red Cross of Northwest Florida,,ERV,Default,Vehicles,ERV,,2002,,222 North Baylen Street,32502,US,Florida,Escambia,Penascola,30.4154999999,-87.2173999999
+1128,South Mississippi,Hattiesburg Office,,ERV,Default,Vehicles,ERV,,2001,,2020 Hardy Street,39401,US,Mississippi,Forrest,Hattiesburg,31.3246999,-89.3218576
+1129,Mid Florida Region,American Red Cross of Central Florida,,ERV,Default,Vehicles,ERV,,2002,,5 N Bumby Avenue,32803,US,Florida,Orange,Orlando,28.5428000018,-81.3515000012
+1130,American Red Cross of Central New Jersey,American Red Cross of Central New Jersey,,ERV,Default,Vehicles,ERV,,2003,Suite 101,707 Alexander Road,8540,US,New Jersey,Essex,Princeton,40.8817999998,-74.3046
+1131,Dayton Area,Dayton Area,,ERV,Default,Vehicles,ERV,,2003,,370 W 1st Street,45402,US,Ohio,Summit,Dayton,41.1050999986,-81.5373999999
+1132,Highlands,Highlands,,ERV,Default,Vehicles,ERV,,2003,,807 Carol St,28303,US,North Carolina,Cumberland,Fayetteville,35.0958000013,-78.9719000011
+1133,Mid Florida Region,Florida's Coast to Coast,,ERV,Default,Vehicles,ERV,,2003,,341 White Street,32114,US,Florida,Volusia,Daytona Beach,29.2063284327,-81.0484401366
+1135,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2003,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
+1136,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2003,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
+1137,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2003,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
+1138,Connecticut,Waterford,,ERV,Default,Vehicles,ERV,,2003,,200 Boston Post Road PO Box 640,6385,US,Connecticut,New London,Waterford,41.3447000013,-72.1354999989
+1139,Mid-Ohio Valley,Mid-Ohio Valley,,ERV,Default,Vehicles,ERV,,2003,,220 8th Street 2nd Floor,26101,US,West Virginia,Kanawha,Parkersburg,38.4250999988,-81.7608000004
+1141,American Red Cross of Eastern Massachusetts Region,American Red Cross of Massachusetts Bay,,ERV,Default,Vehicles,ERV,,2003,,139 Main Street,2148,US,Massachusetts,Middlesex,Cambridge,42.4200000017,-71.0661000012
+1142,Southwestern Pennsylvania,Southwestern Pennsylvania,,ERV,Default,Vehicles,ERV,,2003,,225 Boulevard of the Allies,15222,US,Pennsylvania,Allegheny,Pittsburgh,41.4070999996,-75.6411000005
+1143,Southeastern Pennsylvania,Southeastern Pennsylvania,,ERV,Default,Vehicles,ERV,,2004,,2221 Chestnut Street,19103,US,Pennsylvania,Philadelphia,Philadelphia,39.9526596444,-75.1778336782
+1144,American Red Cross of Summit and Portage Counties,American Red Cross of Summit and Portage Counties,,ERV,Default,Vehicles,ERV,,2004,,501 W Market Street,44303,US,Ohio,Stark,Akron,40.7611000013,-81.3493999988
+1145,Alabama Gulf Coast,Alabama Gulf Coast,,ERV,Default,Vehicles,ERV,,2004,,35 N Sage Ave,36607,US,Alabama,Mobile,Mobile,30.6913000009,-88.1145999986
+1146,Tampa Bay,Tampa Bay,,ERV,Default,Vehicles,ERV,,2004,,3310 W Main Street,33607,US,Florida,Hillsborough,Tampa,27.9569000006,-82.4985000008
+1147,Chesapeake Region,Central Maryland,,ERV,Default,Vehicles,ERV,,2004,,4800 Mount Hope Drive,21740,US,Maryland,Washington,Baltimore,39.6317999996,-77.7360999995
+1148,Stark County,Stark County,,ERV,Default,Vehicles,ERV,,2004,,408 9th Street SW,44707,US,Ohio,Stark,Canton,40.7922593003,-81.37987824
+1149,Central Virginia,Central Virginia,,ERV,Default,Vehicles,ERV,,2004,,1105 Rose Hill Drive,22903,US,Virginia,Albemarle,Charlottesville,38.0106999986,-78.6002000014
+1150,Central West Virginia,Central West Virginia,,ERV,Default,Vehicles,ERV,,2004,,113 Lakeview Drive,25313,US,West Virginia,Monongalia,Charleston,39.6493999992,-79.9532999996
+1151,American Red Cross of Eastern Massachusetts Region,American Red Cross of Massachusetts Bay,,ERV,Default,Vehicles,ERV,,2004,,139 Main Street,2148,US,Massachusetts,Middlesex,Cambridge,42.4200000017,-71.0661000012
+1152,Greater Rochester,Greater Rochester,,ERV,Default,Vehicles,ERV,,2004,,50 Prince Street,14620,US,New York,Westchester,Rochester,41.0562999993,-73.7776000013
+1153,Connecticut,New Haven,,ERV,Default,Vehicles,ERV,,2004,,703 Whitney Avenue,6511,US,Connecticut,New Haven,New Haven,41.3295000007,-72.9140000009
+1155,American Red Cross in the National Capital Region,Prince William County,,ERV,Default,Vehicles,ERV,,2005,,9934 Liberia Avenue,20110,US,Virginia,Fairfax,Manassas,38.8599999995,-77.2593999992
+1156,American Red Cross of Southwestern New York,Dunkirk,,ERV,Default,Vehicles,ERV,,2005,,212 Lakeshore Drive West,14048,US,New York,Chautauqua,Dunkirk,42.4855011,-79.3483847
+1157,American Red Cross in the National Capital Region,Fairfax County,,ERV,Default,Vehicles,ERV,,2005,,8550 Arlington Boulevard,22031,US,Virginia,Fairfax,Fairfax,38.8599999995,-77.2593999992
+1159,Northeast Mississippi,Columbus Office,,ERV,Default,Vehicles,ERV,,2005,,501 7th St N,39703,US,Mississippi,Lowndes,Columbus,33.6332999993,-88.4503999986
+1160,American Red Cross of Upstate SC,American Red Cross of Upstate SC,,ERV,Default,Vehicles,ERV,,2005,,940 Grove Road  PO Box 9035,29604,US,South Carolina,Florence,Greenville,34.2061999996,-79.826499999
+1161,Carolina Lowcountry,Carolina Lowcountry,,ERV,Default,Vehicles,ERV,,2005,,8085 Rivers Avenue Ste F,29406,US,South Carolina,York,North Charleston,34.9686999993,-81.0852999989
+1162,American Red Cross of Lackawanna County,American Red Cross of Lackawanna County,,ERV,Default,Vehicles,ERV,,2005,,545 Jefferson Avenue,18510,US,Pennsylvania,Lackawanna,Scranton,41.2131000012,-75.7765000018
+1163,Chesapeake Region,Central Maryland,,ERV,Default,Vehicles,ERV,,2005,,4800 Mount Hope Drive,21740,US,Maryland,Washington,Baltimore,39.6317999996,-77.7360999995
+1164,Rhode Island,Rhode Island,,ERV,Default,Vehicles,ERV,,2005,,105 Gano Street,2905,US,Rhode Island,Union,Providence,40.965500001,-76.9289000001
+1165,Central North Carolina,Central North Carolina,,ERV,Default,Vehicles,ERV,,2005,Unit 3,4737 University Drive,27707,US,North Carolina,Durham,Durham,35.9554000013,-78.9549000006
+1166,River Valley,River Valley,,ERV,Default,Vehicles,ERV,,2005,Suite 300,1299 Pineview Drive,26505,US,West Virginia,Monongalia,Morgantown,39.6616468376,-79.9530966633
+1167,Mid-Ohio Valley,Mid-Ohio Valley,,ERV,Default,Vehicles,ERV,,2005,,220 8th Street 2nd Floor,26101,US,West Virginia,Laramie,Parkersburg,41.162900001,-104.785399999
+1168,Triangle Area,Triangle Area,,ERV,Default,Vehicles,ERV,,2005,,100 N Peartree Lane,27610,US,North Carolina,Johnston,Raleigh,35.5179999991,-78.3546000008
+1169,New Hampshire Region,Manchester,,ERV,Default,Vehicles,ERV,,2006,,425 Reservoir Avenue,3104,US,New Hampshire,Hillsborough,Manchester,42.9978277,-71.4366116
+1170,American Red Cross in Greater New York,American Red Cross in Greater New York,,ERV,Default,Vehicles,ERV,,2006,,520 W 49th Street,10019,US,New York,New York,New York,36.0769999993,-115.167199999
+1171,Mid Florida Region,Florida's Coast to Coast,,ERV,Default,Vehicles,ERV,,2006,,341 White Street,32114,US,Florida,Volusia,Daytona Beach,29.2063284327,-81.0484401366
+1172,Central Panhandle,Central Panhandle,,ERV,Default,Vehicles,ERV,,2006,,430 E 15th Street,32405,US,Florida,Bay,Panama City,30.1750000009,-85.6543000004
+1173,Capital Area,Capital Area,,ERV,Default,Vehicles,ERV,,2006,,1115 Easterwood Drive,32311,US,Florida,Leon,Tallahassee,30.4420000016,-84.2186000016
+1174,Martin County,Martin County,,ERV,Default,Vehicles,ERV,,2006,,2750 S Kanner Highway,34994,US,Florida,Martin,Stuart,27.1713999992,-80.2525999997
+1175,Broward County,Broward County,,ERV,Default,Vehicles,ERV,,2006,Suite 111,6710 W Sunrise Blvd,33313,US,Florida,Broward,Plantation,26.1382,-80.2388000003
+1176,Southwest Florida,Southwest Florida,,ERV,Default,Vehicles,ERV,,2006,,2001 Cantu Court,34232,US,Florida,Sarasota,Sarasota,27.3183999995,-82.4493999999
+1177,Mississippi Capital River,Vicksburg Office,,ERV,Default,Vehicles,ERV,,2006,,916 Belmont St,39180,US,Mississippi,Warren,Vicksburg,32.3422603,-90.8816943
+1178,Greater Cleveland,Greater Cleveland,,ERV,Default,Vehicles,ERV,,2006,,3747 Euclid Ave,44115,US,Ohio,Licking,Cleveland,40.0597999989,-82.400699999
+1179,American Red Cross in the National Capital Region,Alexandria,,ERV,Default,Vehicles,ERV,,2006,,123 North Alfred Street,22314,US,Virginia,Fairfax,Alexandria,38.8599999995,-77.2593999992
+1180,Mid Florida Region,American Red Cross of Central Florida,,ERV,Default,Vehicles,ERV,,2006,,5 N Bumby Ave,32803,US,Florida,Orange,Orlando,28.5428000018,-81.3515000012
+1181,American Red Cross of the Mahoning Valley,American Red Cross of the Mahoning Valley,,ERV,Default,Vehicles,ERV,,2006,,661 Mahoning Avenue,44483,US,Ohio,Chautauqua,Warren,42.0822999999,-79.260000002
+1182,Northwest Mississippi,Oxford Office,,ERV,Default,Vehicles,ERV,,2006,Suite 105,2706 West Oxford Loop Suite 105,38655,US,Mississippi,Lafayette,Oxford,34.3326000012,-89.4519999996
+1183,Northeast Mississippi,Northeast Mississippi,,ERV,Default,Vehicles,ERV,,2006,,4127 Westside Drive,38801,US,Mississippi,Lee,Tupelo,34.2507000004,-88.7738000001
+1184,Broward County,Broward County,,ERV,Default,Vehicles,ERV,,2006,Suite 111,6710 W Sunrise Blvd,33313,US,Florida,Broward,Plantation,26.1382,-80.2388000003
+1185,East Alabama,East Alabama,,ERV,Default,Vehicles,ERV,,2006,,206 26th Street,36801,US,Alabama,Lee,Opelika,32.634,-85.4153999982
+1186,Etowah-Cherokee,Etowah-Cherokee,,ERV,Default,Vehicles,ERV,,2006,,405 S 1st Street,35901,US,Alabama,Etowah,Gadsden,34.0071000006,-86.0025999991
+1187,West Alabama,West Alabama,,ERV,Default,Vehicles,ERV,,2006,,325 Skyland Blvd E,35405,US,Alabama,Tuscaloosa,E Tuscaloosa,33.1673000007,-87.5329000022
+1188,American Red Cross of Northwest Alabama,American Red Cross of Northwest Alabama,,ERV,Default,Vehicles,ERV,,2006,,318 S Court Street  PO Box 218,35631,US,Alabama,Lauderdale,Florence,34.7982000001,-87.6746000018
+1189,North Treasure Coast,North Treasure Coast,,ERV,Default,Vehicles,ERV,,2006,,2506 17th Avenue,32960,US,Florida,Indian River,Vero Beach,27.6444999982,-80.4022999999
+1190,Collier County,Collier County,,ERV,Default,Vehicles,ERV,,2006,,2610 Northbrooke Plaza Drive,34119,US,Florida,Collier,Naples,26.2747999986,-81.7410999984
+1191,South Mississippi,Pascagoula Office,,ERV,Default,Vehicles,ERV,,2006,,1096 Jackson Ave,39567,US,Mississippi,Jackson,Pascagoula,30.3656000009,-88.5533000003
+1192,Northeast Georgia,Northeast Georgia,,ERV,Default,Vehicles,ERV,,2006,Suite 230,675 White Sulphur Road,30503,US,Georgia,Hall,Gainesville,34.3213000002,-83.793900002
+1193,South Georgia,Moultrie Office,,ERV,Default,Vehicles,ERV,,2006,,105 Sunset Circle,31768,US,Georgia,Colquitt,Moultrie,31.1889000012,-83.8438000011
+1194,Rappahannock Area,Rappahannock Area,,ERV,Default,Vehicles,ERV,,2006,,4836 South Point Parkway,22407,US,Virginia,Spotsylvania,Fredericksburg,38.2886000017,-77.5837000013
+1195,American Red Cross of Southeast Tennessee,American Red Cross of Southeast Tennessee,,ERV,Default,Vehicles,ERV,,2006,,801 McCallie Ave,30704,US,Tennessee,Hamilton,Chattanooga,35.0437843236,-85.2957467155
+1196,Cape Fear,Cape Fear,,ERV,Default,Vehicles,ERV,,2006,,1102 S 16th Street,28401,US,North Carolina,New Hanover,Wilmington,34.2403,-77.9398999993
+1197,Greater Albemarle Area,Greater Albemarle Area,,ERV,Default,Vehicles,ERV,,2006,,1409B Parkview Drive,27909,US,North Carolina,Pasquotank,Elizabeth City,36.2886999998,-76.2707999982
+1198,Pee Dee,Pee Dee,,ERV,Default,Vehicles,ERV,,2006,,1601A W Lucas Street,29501,US,South Carolina,Charleston,Florence,32.8944999989,-80.0172999986
+1199,Aiken Area,Aiken Area,,ERV,Default,Vehicles,ERV,,2006,,1314 Pine Log Road,29803,US,South Carolina,Richland,Aiken,34.0062000004,-81.0377000013
+1200,SUN Area,SUN Area,,ERV,Default,Vehicles,ERV,,2006,,249 Farley Circle,17837,US,Pennsylvania,Dauphin,Lewisburg,40.2694000003,-76.8969999997
+1201,American Red Cross Serving Erie and Niagara Counties,Niagara Office,,ERV,Default,Vehicles,ERV,,2006,,1522 Main Street,14305,US,New York,Niagara,Niagara Falls,43.103361,-79.052723
+1202,American Red Cross of Central New York,American Red Cross of Central New York,,ERV,Default,Vehicles,ERV,,2006,,220 Herald Place,13202,US,New York,New York,Syracuse,40.7672999986,-73.990400001
+1203,Pine Tree,Pine Tree,,ERV,Default,Vehicles,ERV,,2006,,73 Hammond Street,4401,US,Maine,Penobscot,Bangor,44.801600002,-68.7721000019
+1204,South Mississippi,Biloxi Office,,ERV,Default,Vehicles,ERV,,2007,,2782 Fernwood Road,39531,US,Mississippi,Harrison,Biloxi,30.3988000004,-88.9994000008
+1205,Coastal South Carolina,Coastal South Carolina,,ERV,Default,Vehicles,ERV,,2007,,3531 Pampas Drive,29577,US,South Carolina,Horry,Myrtle Beach,33.6614574951,-78.938712228
+1206,Frederick E Turnage,Frederick E Turnage,,ERV,Default,Vehicles,ERV,,2007,,326 South Franklin Street,27804,US,North Carolina,Nash,Rocky Mount,35.9878999999,-77.8491000008
+1207,Southside Area,Southside Area,,ERV,Default,Vehicles,ERV,,2007,,110 N Main St,23860,US,Virginia,Hopewell,Hopewell,37.3020303863,-77.2872298992
+1208,Augusta,Augusta,,ERV,Default,Vehicles,ERV,,2007,,1322 Ellis Street,30901,US,Georgia,Richmond,Augusta,33.4778999987,-81.9765999985
+1209,Mid Florida Region,Space Coast,,ERV,Default,Vehicles,ERV,,2007,,1700 Cedar Street,32955,US,Florida,Brevard,Rockledge,28.3284999988,-80.7373999993
+1210,Coastal Carolina,Coastal Carolina,,ERV,Default,Vehicles,ERV,,2007,,233 Middle Street,28560,US,North Carolina,Craven,New Bern,35.1056205993,-77.0402079715
+1211,Wyoming Valley,Wyoming Valley,,ERV,Default,Vehicles,ERV,,2007,,256 N Sherman Street,18702,US,Pennsylvania,Philadelphia,Wilkes-barre,39.9530000019,-75.1744000019
+1212,Pine Tree,Pine Tree,,ERV,Default,Vehicles,ERV,,2007,,73 Hammond Street,4401,US,Maine,Penobscot,Bangor,44.801600002,-68.7721000019
+1213,American Red Cross Greater Palm Beach Area,American Red Cross Greater Palm Beach Area,,ERV,Default,Vehicles,ERV,,2007,,825 Fern St,33401,US,Florida,Palm Beach,West Palm Beach,26.7107999992,-80.0601999981
+1214,Mississippi Capital River,Vicksburg Office,,ERV,Default,Vehicles,ERV,,2007,,916 Belmont St,39180,US,Mississippi,Warren,Vicksburg,32.3422603,-90.8816943
+1215,Mountain Empire,Mountain Empire,,ERV,Default,Vehicles,ERV,,2007,,14298 Lee Highway,24202,US,Virginia,Washington,Bristol,36.6649999992,-82.2067000009
+1217,Roanoke Valley,Roanoke Valley,,ERV,Default,Vehicles,ERV,,2008,,352 Church Avenue SW,24016,US,Virginia,Roanoke,Roanoke,37.2728999999,-79.9532999996
+1218,Piedmont Carolina,Piedmont Carolina,,ERV,Default,Vehicles,ERV,,2008,,131 E Main Street,29306,US,South Carolina,Spartanburg,Spartanburg,34.949463,-81.930428
+1219,Greensboro,Greensboro,,ERV,Default,Vehicles,ERV,,2008,,1501 Yanceyville St PO Box 14710,27415,US,North Carolina,Guilford,Greensboro,36.0960999991,-79.7789000014
+1220,Licking County,Licking County,,ERV,Default,Vehicles,ERV,,2008,,196 S 5th Street PO Box 4337,43058,US,Ohio,Trumbull,Newark,41.3088000006,-80.843800001
+1221,Catawba Valley,Catawba Valley,,ERV,Default,Vehicles,ERV,,2008,,1375 Lenoir Rhyne Blvd Suite 119,28602,US,North Carolina,Catawba,Hickory,35.7113999987,-81.3121999984
+1222,Upper Palmetto,Upper Palmetto,,ERV,Default,Vehicles,ERV,,2008,,200 Piedmont Boulevard,29732,US,South Carolina,Aiken,Rock Hill,33.4576999994,-81.6972999983
+1223,Triangle Area,Triangle Area,,ERV,Default,Vehicles,ERV,,2008,,100 N Peartree Lane,27610,US,North Carolina,Wake,Raleigh,35.7448000012,-78.5465999987
+1225,Southeast Georgia,Southeast Georgia,,ERV,Default,Vehicles,ERV,,2008,PO Box 9987,41 Park of Commerce Way  PO Box 9987,31412,US,Georgia,Chatham,Savannah,32.0659999996,-81.1651999988
+1226,East Central Mississippi,East Central Mississippi,,ERV,Default,Vehicles,ERV,,2008,,1820 23rd Ave,39301,US,Mississippi,Lauderdale,Meridian,32.3757000009,-88.7012999991
+1227,Vermont and New Hampshire Upper Valley Region,Green Mountain,,ERV,Default,Vehicles,ERV,,2008,,81 High Street,5301,US,Vermont,Windham,Brattleboro,42.8536829,-72.561552
+1228,South Mississippi,Hattiesburg Office,,ERV,Default,Vehicles,ERV,,2009,,2020 Hardy Street,39401,US,Mississippi,Forrest,Hattiesburg,31.3246999,-89.3218576
+1229,American Red Cross of Central Alabama,American Red Cross of Central Alabama,,ERV,Default,Vehicles,ERV,,1996,,5015 Woods Crossing,36106,US,Alabama,Montgomery,Montgomery,32.3524000009,-86.2604999993
+2075,Chisholm Trail,Chisholm Trail,,ERV,Default,Vehicles,ERV,,1994,,1515 S Sylvania Avenue,76111,US,Texas,Grayson,Ft. Worth,33.7685999984,-96.6039000005
+2091,Cornhusker,Cornhusker,,ERV,Default,Vehicles,ERV,,1996,,220 Oakcreek Drive PO Box 8367,68501,US,Nebraska,Cass,Lincoln,46.856400002,-96.8227000015
+2093,Southeastern Oklahoma,Southeastern Oklahoma,,ERV,Default,Vehicles,ERV,,1996,,503 E Chickasaw Ave,74501,US,Oklahoma,Pittsburg,Mcalester,34.929528259,-95.7636710493
+2094,Tulsa Area,Tulsa Area,,ERV,Default,Vehicles,ERV,,1996,,10151 E 11th Street,74128,US,Oklahoma,Pittsburg,Tulsa,34.9547000009,-95.9567999986
+2095,Tulsa Area,Tulsa Area,,ERV,Default,Vehicles,ERV,,1996,,10151 E 11th Street,74128,US,Oklahoma,Tulsa,Tulsa,36.1468999983,-95.8511999998
+2097,American Red Cross in Northwestern New Mexico,American Red Cross in Northwestern New Mexico,,ERV,Default,Vehicles,ERV,,1999,,2100 Cortland Drive,87401,US,New Mexico,Mercer,Farmington,40.3458999992,-74.7212000003
+2098,Abilene Area,Abilene Area,,ERV,Default,Vehicles,ERV,,1999,,1610 N 2nd St,79601,US,Texas,Tarrant,Abilene,32.7793000003,-97.3060000015
+2099,South Texas,South Texas,,ERV,Default,Vehicles,ERV,,1999,,6914 W Expressway 83 PO Box 2202,78552,US,Texas,Taylor,Harlingen,32.4756999982,-99.6750000007
+2100,American Red Cross Heart of Missouri,American Red Cross Heart of Missouri,,ERV,Default,Vehicles,ERV,,1999,,431 E McCarty Street,65109,US,Missouri,Cole,Jefferson City,38.5747000015,-92.2501999993
+2101,Louisville Area,Louisville Area,,ERV,Default,Vehicles,ERV,,1999,,510 E Chestnut Street PO Box 1675,40201,US,Kentucky,Jefferson,Louisville,38.2476000002,-85.7450000012
+2103,Heart of Texas Area,Heart of Texas Area,,ERV,Default,Vehicles,ERV,,1999,,4224 Cobbs Drive,76710,US,Texas,Cameron,Waco,26.2071999982,-97.6986000017
+2104,Louisiana Capital Area,Louisiana Capital Area,,ERV,Default,Vehicles,ERV,,1999,,4655 Sherwood Common Blvd,70816,US,Louisiana,East Baton Rouge,Baton Rouge,30.4063000011,-91.0573999995
+2106,Northwest Arkansas,Northwest Arkansas,,ERV,Default,Vehicles,ERV,,2000,,1709 S Greenwood Avenue,72901,US,Arkansas,Sebastian,Fort Smith,35.3669000007,-94.4039000009
+2108,Black Hills Area,Black Hills Area,,ERV,Default,Vehicles,ERV,,2000,,1221 N Maple Avenue,57701,US,South Dakota,Greenville,Rapid City,34.8284999986,-82.4004999999
+2109,San Antonio Area,New Braunfels Branch Office,,ERV,Default,Vehicles,ERV,,2000,,3734 Landa St,78130,US,Texas,McLennan,New Braunfels,31.5408999995,-97.1964999992
+2110,Greater Houston Area,Greater Houston Area,,ERV,Default,Vehicles,ERV,,2000,,2700 SW Freeway,77098,US,Texas,Bexar,Houston,29.4444999996,-98.396600001
+2111,Texarkana Area,Texarkana Area,,ERV,Default,Vehicles,ERV,,2000,,821 Spruce Street,75501,US,Texas,Jefferson,Texarkana,30.0863999987,-94.128600001
+2112,Texoma Area,Texoma Area,,ERV,Default,Vehicles,ERV,,2000,,2527 Highway 691,75020,US,Texas,Nueces,Denison,27.7745000009,-97.3986000011
+2113,American Red Cross of Greater Kalamazoo Area,American Red Cross of Greater Kalamazoo Area,,ERV,Default,Vehicles,ERV,,2000,,5640 Venture Court,49009,US,Michigan,Kalamazoo,Kalamazoo,42.2694999984,-85.6614000014
+2114,Wabash Valley,Wabash Valley,,ERV,Default,Vehicles,ERV,,2000,,700 S 3rd Street,47807,US,Indiana,Vigo,Terre Haute,39.4593999985,-87.4136000017
+2115,American Red Cross of Central Texas,American Red Cross of Central Texas,,ERV,Default,Vehicles,ERV,,2000,,2218 Pershing Drive,78723,US,Texas,Potter,Austin,35.1986000015,-101.862599998
+2116,Badger,Badger,,ERV,Default,Vehicles,ERV,,2000,,4860 Sheboygan Avenue,53705,US,Wisconsin,Kanawha,Madison,38.4250999988,-81.7608000004
+2117,Genesee-Lapeer,Genesee-Lapeer,,ERV,Default,Vehicles,ERV,,2000,,1401 S Grand Traverse,48503,US,Michigan,Genesee,Flint,43.0060999991,-83.6862000007
+2119,Rock River,Rock River,,ERV,Default,Vehicles,ERV,,2001,,727 N Church Street,61103,US,Illinois,Winnebago,Rockford,42.2778000009,-89.0907999985
+2120,Western Kansas,Western Kansas,,ERV,Default,Vehicles,ERV,,2001,,210 Fulton Terrace,67846,US,Kansas,Finney,Garden City,37.9653999993,-100.8728
+2121,Western Kansas,Hays Branch Office,,ERV,Default,Vehicles,ERV,,2001,,1030 E 27th St,67601,US,Kansas,Ellis,Hays,38.8856000004,-99.3205999993
+2122,Southwestern Indiana,Southwestern Indiana,,ERV,Default,Vehicles,ERV,,2001,,29 S Stockwell Road,47714,US,Indiana,Vanderburgh,Evansville,37.9761000015,-87.5023000014
+2123,American Red Cross of Northeast Tennessee,American Red Cross of Northeast Tennessee,,ERV,Default,Vehicles,ERV,,2001,,501 S Wilcox Drive,37660,US,Tennessee,Montgomery,Kingsport,36.4987000007,-87.2331999985
+2124,Coastal Bend-Texas,Coastal Bend-Texas,,ERV,Default,Vehicles,ERV,,2001,,1721 S Brownlee Blvd  PO Box 342,78463,US,Texas,Wichita,Corpus Christi,33.9052999989,-98.4767000009
+2125,Beaumont,Beaumont,,ERV,Default,Vehicles,ERV,,2001,,3260 Eastex Freeway,77702,US,Texas,Harris,Beaumont,29.7344999985,-95.415100001
+2126,Southwest Texas Region,Permian Basin Area,,ERV,Default,Vehicles,ERV,,2001,,9601 Wright Drive PO Box 60310,79711,US,Texas,Harris,Midland,29.7573999988,-95.3506999984
+2127,American Red Cross of North Central Texas,American Red Cross of North Central Texas,,ERV,Default,Vehicles,ERV,,2001,,1809 5th Street,76301,US,Texas,Midland,Wichita Falls,31.9373999986,-102.2172
+2128,South Central Minnesota,South Central Minnesota,,ERV,Default,Vehicles,ERV,,2001,,105 Homestead Drive,56001,US,Minnesota,Blue Earth,Mankato,44.149099998,-93.9891000016
+2130,American Red Cross in Southeastern Wisconsin,American Red Cross in Southeastern Wisconsin,,ERV,Default,Vehicles,ERV,,2002,,2600 W Wisconsin Avenue,53233,US,Wisconsin,Dane,Milwaukee,43.0757000002,-89.4629999997
+2131,American Red Cross of Greater Grand Rapids,American Red Cross of Greater Grand Rapids,,ERV,Default,Vehicles,ERV,,2002,,1050 Fuller Ave NE,49503,US,Michigan,Kent,Grand Rapids,42.9820999988,-85.6398999992
+2132,Grant Wood Area,Grant Wood Area,,ERV,Default,Vehicles,ERV,,2002,,6300 Rockwell Dr NE,52405,US,Iowa,Linn,Cedar Rapids,42.0412999988,-91.6489999999
+2133,Two Rivers,Two Rivers,,ERV,Default,Vehicles,ERV,,2002,,1760 Madison Street,37043,US,Tennessee,Knox,Clarksville,35.9472999981,-84.0209000001
+2134,American Red Cross of Greater Indianapolis,American Red Cross of Greater Indianapolis,,ERV,Default,Vehicles,ERV,,2002,,441 E 10th Street,46202,US,Indiana,Marion,Indianapolis,39.7811000008,-86.149700001
+2135,American Red Cross Heart of Missouri,Columbia Branch Office,,ERV,Default,Vehicles,ERV,,2002,,1805 W Worley Street,65203,US,Missouri,Boone,Columbia,38.9607000016,-92.3660999986
+2136,Kansas Capital Area,Kansas Capital Area,,ERV,Default,Vehicles,ERV,,2002,,1221 SW 17th Street,66604,US,Kansas,Shawnee,Topeka,39.0368999987,-95.6931999993
+2137,American Red Cross of Central Oklahoma,American Red Cross of Central Oklahoma,,ERV,Default,Vehicles,ERV,,2002,,601 NE 6th Street,73104,US,Oklahoma,Tulsa,Oklahoma City,36.1468999983,-95.8511999998
+2138,Northland,Northland,,ERV,Default,Vehicles,ERV,,2002,,2524 Maple Grove Road,55802,US,Minnesota,Saint Louis,Duluth,46.807599999,-92.1715999991
+2139,Southeast Minnesota,Southeast Minnesota,,ERV,Default,Vehicles,ERV,,2002,,310 14th Street SE,55904,US,Minnesota,Olmsted,Rochester,44.0034999996,-92.4585999995
+2140,Red River Valley,Red River Valley,,ERV,Default,Vehicles,ERV,,2002,,2602 12th Street N,58103,US,North Dakota,Cass,Fargo,46.856400002,-96.8227000015
+2141,Mid-Dakota,Mid-Dakota,,ERV,Default,Vehicles,ERV,,2002,,2021 4th Ave NW,58701,US,North Dakota,Ward,Minot,48.0681999998,-101.4153
+2142,Central Minnesota,Central Minnesota,,ERV,Default,Vehicles,ERV,,2002,,1301 W St Germain Street,56301,US,Minnesota,Stearns,St. Cloud,45.5571999997,-94.1673999989
+2143,Great Lakes Bay,Great Lakes Bay,,ERV,Default,Vehicles,ERV,,1999,,288 Washington Ave,48708,US,Michigan,Bay,Bay City,43.5914000009,-83.8887000008
+2144,Heart of Texas Area,Heart of Texas Area,,ERV,Default,Vehicles,ERV,,2002,,4224 Cobbs Drive,76710,US,Texas,McLennan,Waco,31.5408999995,-97.1964999992
+2145,Greater Houston Area,Greater Houston Area,,ERV,Default,Vehicles,ERV,,2002,,2700 SW Freeway,77098,US,Texas,Harris,Houston,29.7344999985,-95.4151
+2146,East Texas Piney Woods,East Texas Piney Woods,,ERV,Default,Vehicles,ERV,,2002,,1604 E State Highway 31,75604,US,Texas,Bowie,Longview,33.3793999996,-94.1592999995
+2147,American Red Cross of Tennessee Mountain Valley,American Red Cross of Tennessee Mountain Valley,,ERV,Default,Vehicles,ERV,,2003,,6921 Middlebrook Pike,37909,US,Tennessee,Shelby,Knoxville,35.1326999998,-90.0031999985
+2149,Central Iowa,Central Iowa,,ERV,Default,Vehicles,ERV,,2002,,2116 Grand Avenue,50312,US,Iowa,Polk,Des Moines,41.5835999995,-93.645300001
+2150,Mid-South,Mid-South,,ERV,Default,Vehicles,ERV,,2003,,1400 Central Avenue,38104,US,Tennessee,Shelby,Memphis,35.1266577801,-90.0155072305
+2151,Greater Kansas City,Greater Kansas City,,ERV,Default,Vehicles,ERV,,2003,,211 W Armour Boulevard,64111,US,Missouri,Jackson,Kansas City,39.0639000015,-94.5881000009
+2152,Louisville Area,Louisville Area,,ERV,Default,Vehicles,ERV,,2003,,510 E Chestnut Street PO Box 1675,40201,US,Kentucky,Jefferson,Louisville,38.2476000002,-85.7450000012
+2153,Saint Joseph County,Saint Joseph County,,ERV,Default,Vehicles,ERV,,2003,,3220 E Jefferson Boulevard,46615,US,Indiana,Saint Joseph,South Bend,41.6728999985,-86.2023999986
+2154,Midland Empire,Midland Empire,,ERV,Default,Vehicles,ERV,,2003,,401 N 12th Street,64501,US,Missouri,Buchanan,St. Joseph,39.7690999994,-94.8454999997
+2155,Muskegon-Oceana,Muskegon-Oceana,,ERV,Default,Vehicles,ERV,,2003,,313 W Webster Avenue,49440,US,Michigan,Muskegon,Muskegon,43.2338000013,-86.2512999995
+2156,North Central Kansas,North Central Kansas,,ERV,Default,Vehicles,ERV,,2003,,145 S Broadway Blvd PO Box 163,67401,US,Kansas,Saline,Salina,38.8390000014,-97.6248
+2157,American Red Cross of Greater Arkansas,American Red Cross of Greater Arkansas,,ERV,Default,Vehicles,ERV,,2003,,401 South Monroe Street,72205,US,Arkansas,Pulaski,Little Rock,34.7463999989,-92.3271999994
+2158,Dallas Area,Dallas Area,,ERV,Default,Vehicles,ERV,,2003,,4800 Harry Hines Boulevard,75235,US,Texas,Smith,Dallas,32.3214000014,-95.3007000014
+2159,Iowa Region,Siouxland Area,,ERV,Default,Vehicles,ERV,,2002,,4200 War Eagle Drive,51109,US,Iowa,Woodbury,Sioux City,42.4959000012,-96.4644999989
+2160,Heartland,Heartland,,ERV,Default,Vehicles,ERV,,2003,,2912 S 80th Avenue,68124,US,Nebraska,Lancaster,Omaha,40.8168999999,-96.7109000013
+2161,Rio Colorado,Rio Colorado,,ERV,Default,Vehicles,ERV,,2004,"1st Floor, W",2200 7th Street,77414,US,Texas,Matagorda,Bay City,28.8297999985,-95.6363000013
+2162,Southeastern Michigan,Southeastern Michigan,,ERV,Default,Vehicles,ERV,,2004,,100 Mack Avenue,48201,US,Michigan,Wayne,Detroit,42.3476999999,-83.0560000016
+2163,American Red Cross of the Twin Cities Area,American Red Cross of the Twin Cities Area,,ERV,Default,Vehicles,ERV,,2003,,1201 West River Parkway,55454,US,Minnesota,Hennepin,Minneapolis,44.9774000009,-93.2443000002
+2164,American Red Cross Saint Louis Area,Little Egypt,,ERV,Default,Vehicles,ERV,,2004,,556 N Airport Road,62966,US,Illinois,Jackson,Murphysboro,37.7762578,-89.2518762
+2165,American Red Cross of Northeast Indiana,American Red Cross of Northeast Indiana,,ERV,Default,Vehicles,ERV,,2004,,1212 E California Road  PO Box 5508,46825,US,Indiana,Allen,Ft Wayne,41.1185999994,-85.124200001
+2166,Greater Ozarks,Greater Ozarks,,ERV,Default,Vehicles,ERV,,2004,,1545 NW Bypass,65803,US,Missouri,Greene,Springfield,37.2763999998,-93.2892999986
+2167,American Red Cross of Southwest Louisiana,American Red Cross of Southwest Louisiana,,ERV,Default,Vehicles,ERV,,2004,,3512 Kirkman Street,70607,US,Louisiana,Calcasieu,Lake Charles,30.1931000016,-93.2096999992
+2168,Southeast Louisiana,Southeast Louisiana,,ERV,Default,Vehicles,ERV,,2004,,2640 Canal Street,70119,US,Louisiana,Orleans,New Orleans,29.9648999985,-90.0865000005
+2169,American Red Cross of Greater Arkansas,Jefferson County,,ERV,Default,Vehicles,ERV,,2003,Suite 250,211 W 3rd Street,71601,US,Arkansas,Jefferson,Pine Bluff,34.2272000018,-92.0045000019
+2170,Northwest Arkansas,Northwest Arkansas,,ERV,Default,Vehicles,ERV,,2004,,1709 S Greenwood Avenue,72901,US,Arkansas,Sebastian,Fort Smith,35.3669000007,-94.4039000009
+2171,El Paso Area,El Paso Area,,ERV,Default,Vehicles,ERV,,2004,,3620 Admiral Street  PO Box  972236,79997,US,Texas,Angelina,El Paso,31.3227000014,-94.6862999982
+2172,Washtenaw-Lenawee,Washtenaw-Lenawee,,ERV,Default,Vehicles,ERV,,2004,,4624 Packard Road,48108,US,Michigan,Washtenaw,Ann Arbor,42.2450000011,-83.6675000005
+2173,Sioux Empire,Sioux Empire,,ERV,Default,Vehicles,ERV,,2005,,808 West Avenue N,57104,US,South Dakota,Pennington,Sioux Falls,44.0843999983,-103.220899999
+2174,Wyandotte County,Wyandotte County,,ERV,Default,Vehicles,ERV,,2005,,1600 Washington Boulevard,66102,US,Kansas,Wyandotte,Kansas City,39.1200000011,-94.6466000008
+2175,Western Wisconsin,Western Wisconsin,,ERV,Default,Vehicles,ERV,,2005,,3728 Spooner Avenue,54720,US,Wisconsin,Milwaukee,Altoona,43.0375000014,-87.9329000002
+2176,Bluegrass Area,Bluegrass Area,,ERV,Default,Vehicles,ERV,,2005,,1450 Newtown Pike,40511,US,Kentucky,Fayette,Lexington,38.085900001,-84.4895000011
+2177,Red River Valley,East Grand Forks Office,,ERV,Default,Vehicles,ERV,,2006,,1708 River Road NW,56721,US,Minnesota,Polk,East Grand Forks,47.9420999996,-97.0372
+2178,Cimarron Valley,Cimarron Valley,,ERV,Default,Vehicles,ERV,,2006,,1023 West Elm,73703,US,Oklahoma,Oklahoma,Enid,35.4750000016,-97.5034000017
+2179,Nashville Area,Nashville Area,,ERV,Default,Vehicles,ERV,,2006,,2201 Charlotte Avenue,37203,US,Tennessee,Madison,Nashville,35.578000002,-88.8590000009
+2180,Jackson Area,Jackson Area,,ERV,Default,Vehicles,ERV,,2006,Suite 240,212 North Highland Avenue,38301,US,Tennessee,Davidson,Jackson,36.1596999988,-86.7899000009
+2181,Northwest Louisiana,Northwest Louisiana,,ERV,Default,Vehicles,ERV,,2006,,805 Brook Hollow Drive,71105,US,Louisiana,Caddo,Shreveport,32.454,-93.7093
+2182,South Plains Regional,South Plains Regional,,ERV,Default,Vehicles,ERV,,2006,,2201 19th Street,79401,US,Texas,El Paso,Lubbock,31.7938,-106.3772
+2183,Southeast Louisiana,Southeast Louisiana,,ERV,Default,Vehicles,ERV,,2006,,2640 Canal Street,70119,US,Louisiana,Orleans,New Orleans,29.9648999985,-90.0865000005
+2184,Crossroads,Crossroads,,ERV,Default,Vehicles,ERV,,2006,,1501 E Red River #A-1,77901,US,Texas,Victoria,Victoria,28.8134177,-96.9890998
+2185,Rio Colorado,Rio Colorado,,ERV,Default,Vehicles,ERV,,2006,"1st Floor, W",2200 7th Street,77414,US,Texas,Matagorda,Bay City,28.8297999985,-95.6363000013
+2186,Orange County TX,Orange County Office,,ERV,Default,Vehicles,ERV,,2006,,504 W Frank Street,75904,US,Texas,Angelina,Lufkin,31.340362,-94.733849
+2187,San Antonio Area,Laredo Branch Office,,ERV,Default,Vehicles,ERV,,2006,,2000 San Jorge Avenue,78040,US,Texas,Webb,Laredo,27.5170648,-99.4997263
+2188,American Red Cross of the Quad Cities Area,American Red Cross of the Quad Cities Area,,ERV,Default,Vehicles,ERV,,2006,,1100 River Drive,61265,US,Illinois,Rock Island,Moline,41.5066,-90.5234999989
+2189,Hawkeye,Hawkeye,,ERV,Default,Vehicles,ERV,,2006,,2530 University Avenue,50701,US,Iowa,Black Hawk,Waterloo,42.4961999991,-92.379000001
+2190,North Central Wisconsin,North Central Wisconsin,,ERV,Default,Vehicles,ERV,,2006,,3057 Michigan Avenue,54481,US,Wisconsin,Portage,Stevens Point,44.5058,-89.5639
+2191,Southern MO Region,Southeast Missouri,,ERV,Default,Vehicles,ERV,,2006,,2430 Myra Drive,63703,US,Missouri,Cape Girardeau,Cape Girardeau,37.3051999995,-89.5557999983
+2192,Illinois Capital Area,Illinois Capital Area,,ERV,Default,Vehicles,ERV,,2006,,1045 Outer Park Dr.,62704,US,Illinois,Sangamon,Springfield,39.7749999988,-89.6689999996
+2193,American Red Cross in Northeast Wisconsin,Green Bay (Main Office),,ERV,Default,Vehicles,ERV,,2006,,2131 Deckner Avenue,54308,US,Wisconsin,Brown,Green Bay,44.503,-87.968649
+2194,Brushy Creek Area,Brushy Creek Area,,ERV,Default,Vehicles,ERV,,2006,Suite 26,900 Central Avenue Suite 26,50501,US,Iowa,Webster,Fort Dodge,42.5053000003,-94.1860999991
+2195,Mid-West Kentucky,Mid-West Kentucky,,ERV,Default,Vehicles,ERV,,2006,,111 S Main Street,42431,US,Kentucky,Hopkins,Madisonville,37.3266753,-87.4991368
+2196,Illinois Capital Area,Illinois Capital Area,,ERV,Default,Vehicles,ERV,,2006,,1045 Outer Park Dr.,62704,US,Illinois,Sangamon,Springfield,39.7756000012,-89.6862999979
+2197,American Red Cross of Southeastern Ohio,American Red Cross of Southeastern Ohio,,ERV,Default,Vehicles,ERV,,2006,,100 S May Avenue,45701,US,Ohio,Athens,Athens,39.3346407098,-82.0881454225
+2198,Franklin County,Franklin County,,ERV,Default,Vehicles,ERV,,2006,,318 Washington Street,40601,US,Kentucky,Franklin,Frankfort,38.1994999981,-84.8790999983
+2199,Acadiana Area,Acadiana Area,,ERV,Default,Vehicles,ERV,,2007,,101 N Pat,70583,US,Louisiana,Lafayette,Scott,30.2402000015,-92.0579
+2200,San Antonio Area,San Antonio Area,,ERV,Default,Vehicles,ERV,,2007,,3642 E Houston Street,78219,US,Texas,Bexar,San Antonio,29.4444999996,-98.3966
+2201,Smith County,Smith County,,ERV,Default,Vehicles,ERV,,2007,,320 E Rieck Road PO Box 8588,75711,US,Texas,Bexar,Tyler,29.4444999996,-98.3966
+2202,Coastal Bend-Texas,Coastal Bend-Texas,,ERV,Default,Vehicles,ERV,,2007,,1721 S Brownlee Blvd  PO Box 342,78463,US,Texas,Travis,Corpus Christi,30.3042999994,-97.6860000006
+2203,Calloway County,Calloway County,,ERV,Default,Vehicles,ERV,,2007,Suite 1,607 Popular Street,42071,US,Kentucky,Calloway,Murray,36.6086999996,-88.3060000019
+2204,Southwestern Illinois,Southwestern Illinois,,ERV,Default,Vehicles,ERV,,2007,,1639 Main Street,62002,US,Illinois,Madison,Alton,38.9026000013,-90.1475
+2205,Northeast Louisiana,Northeast Louisiana,,ERV,Default,Vehicles,ERV,,2007,,414 Breard St,71201,US,Louisiana,Ouachita,Monroe,32.5062000007,-92.1169000004
+2206,American Red Cross of Greater Arkansas,South Arkansas,,ERV,Default,Vehicles,ERV,,2007,,2710 North West Avenue,71730,US,Arkansas,Union,El Dorado,33.2430999985,-92.6653000008
+2207,Northeast Arkansas,Northeast Arkansas,,ERV,Default,Vehicles,ERV,,2007,,630 W Walnut Street,72315,US,Arkansas,Mississippi,Blytheville,35.9285000003,-89.9098000007
+2208,American Red Cross of Northwest Indiana,American Red Cross of Northwest Indiana,,ERV,Default,Vehicles,ERV,,2007,,791 E 83rd Avenue,46410,US,Indiana,Lake,Merrillville,41.4675000009,-87.3264999986
+2209,Central Plains,Scottsbluff,,ERV,Default,Vehicles,ERV,,2008,Suite S-100,3701 Ave D,69361,US,Nebraska,Scotts Bluff,Scottsbluff,41.8834,-103.668
+2210,Tippecanoe County,Tippecanoe County,,ERV,Default,Vehicles,ERV,,2008,Suite 101,615 N 18th Street Suite 101,47904,US,Indiana,Tippecanoe,Lafayette,40.4232,-86.8773000018
+2211,Nashville Area,Nashville Area,,ERV,Default,Vehicles,ERV,,2008,,2201 Charlotte Avenue,37203,US,Tennessee,Hamilton,Nashville,35.0476999994,-85.2925999988
+2212,American Red Cross of the Quad Cities Area,"Des Moines, Henry and Lee County Branch",,ERV,Default,Vehicles,ERV,,2008,,2807 Summer Street,52601,US,Iowa,Des Moines,Burlington,40.777162,-91.118527
+2213,Texas Panhandle,Texas Panhandle,,ERV,Default,Vehicles,ERV,,2008,,1800 S Harrison,79102,US,Texas,Dallas,Amarillo,32.8310999985,-96.8497000002
+2214,North Central Wisconsin,North Central Wisconsin,,ERV,Default,Vehicles,ERV,,2008,,3057 Michigan Avenue,54481,US,Wisconsin,Portage,Stevens Point,44.5648000017,-89.5709999987
+2215,American Red Cross Saint Louis Area,American Red Cross Saint Louis Area,,ERV,Default,Vehicles,ERV,,2009,,10195 Corporate Square Drive,63132,US,Missouri,Saint Louis,St. Louis,38.6801999991,-90.4032
+2216,Midway-Kansas,Midway-Kansas,,ERV,Default,Vehicles,ERV,,2009,,1900 E Douglas PO Box 3726,67214,US,Kansas,Sedgwick,Wichita,37.6862999985,-97.3147
+2217,Midway-Kansas,Pioneer,,ERV,Default,Vehicles,ERV,,2009,,128 W 8th Street,67337,US,Kansas,Montgomery,Coffeyville,37.0361000004,-95.6162
+2218,American Red Cross of Greater Chicago,American Red Cross of Greater Chicago,,ERV,Default,Vehicles,ERV,,2009,,2200 W Harrison Street,60618,US,Illinois,Cook,Chicago,41.8740000018,-87.6814000014
+2219,American Red Cross of Central Oklahoma,American Red Cross of Central Oklahoma,,ERV,Default,Vehicles,ERV,,2009,,601 NE 6th Street,73104,US,Oklahoma,Athens,Oklahoma City,39.3044000006,-82.0846999998
+2220,Central Plains,Central Plains,,ERV,Default,Vehicles,ERV,,2009,,404 E 3rd Street,68801,US,Nebraska,Hall,Grand Island,40.9272722543,-98.3366658291
+3036,American Red Cross of Alaska,American Red Cross of Alaska,,ERV,Default,Vehicles,ERV,,1994,Suite 200,235 E 8th Avenue,99501,US,Alaska,Anchorage,Anchorage,61.2146999987,-149.879700001
+3037,American Red Cross of Alaska,Tanana Valley,,ERV,Default,Vehicles,ERV,,1994,Suite 201,725 26th Avenue,99701,US,Alaska,Fairbanks North Star,Fairbanks,64.8233999982,-147.716499999
+3047,Monterey Bay Area,Hollister Office,,ERV,Default,Vehicles,ERV,,1997,,357 5th Street,95023,US,California,San Benito,Hollister,36.8513999989,-121.403099999
+3048,Orange County CA,Orange County CA,,ERV,Default,Vehicles,ERV,,1997,,601 N Golden Circle Drive,92705,US,California,Orange,Santa Ana,33.749174642,-117.837936928
+3049,Monterey Bay Area,Salinas Office,,ERV,Default,Vehicles,ERV,,1997,,942 Lupin Drive,93906,US,California,Monterey,Salinas,36.6913999989,-121.653700002
+3050,American Red Cross of Northeastern California,American Red Cross of Northeastern California,,ERV,Default,Vehicles,ERV,,1997,,2125 E Onstott Road PO Box 142,95991,US,California,Sutter,Yuba City,39.1607999991,-121.634799998
+3051,"Sonoma, Mendocino and Lake Counties","Sonoma, Mendocino and Lake Counties",,ERV,Default,Vehicles,ERV,,1997,,5297 Aero Drive,95403,US,California,Sonoma,Santa Rosa,38.5111000018,-122.765099998
+3052,San Gabriel Pomona Valley,San Gabriel Pomona Valley,,ERV,Default,Vehicles,ERV,,1997,,430 Madeline Drive,91105,US,California,Los Angeles,Pasadena,34.1266000013,-118.159499999
+3053,Santa Barbara County,Santa Barbara County,,ERV,Default,Vehicles,ERV,,1997,,2707 State Street,93105,US,California,Santa Barbara,Santa Barbara,34.4374999999,-119.724199999
+3054,American Red Cross of Greater Los Angeles,American Red Cross of Greater Los Angeles,,ERV,Default,Vehicles,ERV,,1997,,11355 Ohio Avenue,90025,US,California,Los Angeles,Los Angeles,34.047600001,-118.451299999
+3055,American Red Cross of Greater Los Angeles,American Red Cross of Greater Los Angeles,,ERV,Default,Vehicles,ERV,,1997,,11355 Ohio Avenue,90025,US,California,Los Angeles,Los Angeles,34.047600001,-118.451299999
+3056,Oregon Trail,Oregon Trail,,ERV,Default,Vehicles,ERV,,1997,,3131 N Vancouver Avenue,97227,US,Oregon,Polk,Portland,45.0100000017,-123.109099999
+3057,Mile High,Colorado-Wyoming Region,,ERV,Default,Vehicles,ERV,,1999,,444 Sherman Street,80203,US,Colorado,Denver,Denver,39.7234999983,-104.984700002
+3058,Grand Canyon,Grand Canyon,,ERV,Default,Vehicles,ERV,,1999,,6135 N Black Canyon Highway,85015,US,Arizona,Maricopa,Phoenix,33.5263999999,-112.111600001
+3059,Oregon Mountain River,Oregon Mountain River Classroom,,ERV,Default,Vehicles,ERV,,1999,Suite 140,2570 Twin Knolls Drive,97701,US,Oregon,Deschutes,Bend,44.0533775,-121.2654171
+3060,Inland Northwest,Inland Northwest,,ERV,Default,Vehicles,ERV,,1999,,315 W Nora Avenue,99205,US,Washington,Clark,Spokane,45.6394999999,-122.625500001
+3061,American Red Cross Serving King and Kitsap Counties,American Red Cross Serving King and Kitsap Counties,,ERV,Default,Vehicles,ERV,,2000,,1900 25th Avenue S PO Box 3097,98114,US,Washington,King,Seattle,47.5862828048,-122.300224824
+3062,American Red Cross of Northern Utah,American Red Cross of Northern Utah,,ERV,Default,Vehicles,ERV,,2000,Suite 204,2955 Harrison Boulevard,84403,US,Utah,Weber,Ogden,41.1774999982,-111.918000002
+3063,Northern Colorado,Northern Colorado,,ERV,Default,Vehicles,ERV,,2000,,120 Saturn Drive,80525,US,Colorado,Larimer,Ft. Collins,40.5047000012,-105.078400001
+3064,Willamette,Willamette,,ERV,Default,Vehicles,ERV,,2000,ste 200,675 Orchard Heights Rd NW,97304,US,Oregon,Polk,Salem,44.9536516792,-123.05352566
+3065,American Red Cross Serving King and Kitsap Counties,American Red Cross Serving King and Kitsap Counties,,ERV,Default,Vehicles,ERV,,2000,,1900 25th Avenue S PO Box 3097,98114,US,Washington,King,Seattle,47.5862828048,-122.300224824
+3066,American Red Cross in New Mexico,American Red Cross in New Mexico,,ERV,Default,Vehicles,ERV,,2000,,7445 Pan American West Freeway NE,87109,US,New Mexico,Bernalillo,Albuquerque,35.1632644774,-106.586850226
+3067,American Red Cross of Montana,Missoula,,ERV,Default,Vehicles,ERV,,2001,,1535 Liberty Lane,59808,US,Montana,Missoula,Missoula,46.8778952,-114.0193769
+3068,Capital Region,Capital Region Chapter,,ERV,Default,Vehicles,ERV,,2001,,1565 Exposition Boulevard,95815,US,California,Sacramento,Sacramento,38.5960999988,-121.434799999
+3069,Southern Arizona,Southern Arizona,,ERV,Default,Vehicles,ERV,,2001,,2916 E Broadway Blvd,85716,US,Arizona,Pima,Tucson,32.2214,-110.929000002
+3070,American Red Cross of Wyoming,American Red Cross of Wyoming,,ERV,Default,Vehicles,ERV,,2001,,3619 Evans Ave,82002,US,Wyoming,Laramie,Cheyenne,41.1488999984,-104.818300002
+3071,American Red Cross Bay Area,Bay Area Warehouse,Warehouse,ERV,Default,Vehicles,ERV,,2001,"Bldg 92, Door E",650 West Ranger Ave,94501,US,California,Alameda,Alameda,37.7841006,-122.2992955
+3072,San Gabriel Pomona Valley,San Gabriel Pomona Valley,,ERV,Default,Vehicles,ERV,,2002,,430 Madeline Drive,91105,US,California,Los Angeles,Pasadena,34.1266000013,-118.159499999
+3073,American Red Cross of Northeastern California,American Red Cross of Northeastern California,,ERV,Default,Vehicles,ERV,,2002,,2125 E Onstott Road PO Box 142,95991,US,California,Sutter,Yuba City,39.1607999991,-121.634799998
+3074,Riverside County,Riverside County,,ERV,Default,Vehicles,ERV,,2002,Suite b PO B 55040,6177 River Crest Drive,92517,US,California,Riverside,Riverside,33.9400000015,-117.292599998
+3075,Inland Empire,Inland Empire,,ERV,Default,Vehicles,ERV,,2002,,202 West Rialto Avenue,92408,US,California,San Bernardino,San Bernardino,34.1011000017,-117.2878
+3076,Southern Arizona,Southern Arizona,,ERV,Default,Vehicles,ERV,,2002,,2916 E Broadway Blvd,85716,US,Arizona,Pima,Tucson,32.2214,-110.929000002
+3077,American Red Cross Bay Area,Bay Area Warehouse,Warehouse,ERV,Default,Vehicles,ERV,,2002,"Bldg 92, Door E",650 West Ranger Ave,94501,US,California,Alameda,Alameda,37.7841006,-122.2992955
+3078,Southern Nevada,Southern Nevada,,ERV,Default,Vehicles,ERV,,2002,Suite 206B,1771 E Flamingo Rd,89119,US,Nevada,Dona Ana,Las Vegas,32.3123000001,-106.7628
+3079,American Red Cross of Greater Idaho,American Red Cross of Greater Idaho,,ERV,Default,Vehicles,ERV,,2002,,146 S Cole Road,83709,US,Idaho,Ada,Boise,43.6037000009,-116.2742
+3080,American Red Cross Bay Area,Bay Area Warehouse,Warehouse,ERV,Default,Vehicles,ERV,,2003,"Bldg 92, Door E",650 West Ranger Ave,94501,US,California,Alameda,Alameda,37.7841006,-122.2992955
+3081,American Red Cross Central Valley,American Red Cross Central Valley,,ERV,Default,Vehicles,ERV,,2005,Suite 4b,1300 W Shaw Ave,93711,US,California,Fresno,Fresno,36.8084,-119.8152
+3082,Mountain Valley,Mountain Valley,,ERV,Default,Vehicles,ERV,,2005,,865 N Freedom Boulevard,84604,US,Utah,Salt Lake,Provo,40.7599000002,-111.863699999
+3083,Pikes Peak,Pikes Peak,,ERV,Default,Vehicles,ERV,,2006,,1040 S 8th Street,80905,US,Colorado,El Paso,Colorado Spring,38.8181000017,-104.8429
+3084,Yakima Valley,Yakima Valley,,ERV,Default,Vehicles,ERV,,2006,,302 S 2nd Street,98901,US,Washington,Yakima,Yakima,46.6739999986,-120.414700002
+3085,Western Colorado,Western Colorado,,ERV,Default,Vehicles,ERV,,2006,,506 Gunnison Avenue,81501,US,Colorado,Mesa,Grand Junction,39.0733999982,-108.5643
+3086,Capital Region,Capital Region Chapter,,ERV,Default,Vehicles,ERV,,2006,,1565 Exposition Boulevard,95815,US,California,Sacramento,Sacramento,38.5960999988,-121.434799999
+3087,Ventura County,Ventura County,,ERV,Default,Vehicles,ERV,,2006,,836 Calle Plano,93010,US,California,Ventura,Camarillo,34.1986000017,-119.0077
+3088,Greater Salt Lake Area,Greater Salt Lake Area,,ERV,Default,Vehicles,ERV,,2006,Suite 200,555 East 300 South,84102,US,Utah,Salt Lake,Salt Lake City,40.7599000002,-111.8637
+3089,Benton-Franklin County,Benton-Franklin County,,ERV,Default,Vehicles,ERV,,2006,,7202 West Deschutes Avenue,99336,US,Washington,Snohomish,Kennewick,47.9902999994,-122.1996
+3090,San Diego-Imperial Counties,San Diego-Imperial Counties,,ERV,Default,Vehicles,ERV,,2006,,3950 Calle Fortunada,92123,US,California,San Diego,San Diego,32.8137000017,-117.123399999
+3091,Snohomish County,Snohomish County,,ERV,Default,Vehicles,ERV,,2006,,2530 Lombard Avenue,98201,US,Washington,King,Everett,47.5989999995,-122.3264
+3092,American Red Cross of Silicon Valley,American Red Cross of Silicon Valley,,ERV,Default,Vehicles,ERV,,2006,,2731 N 1st Street,95134,US,California,Santa Clara,San Jose,37.3904000001,-121.9322
+3093,Mount Rainier,Mount Rainier,,ERV,Default,Vehicles,ERV,,2006,,1235 S Tacoma Way,98409,US,Washington,Pierce,Tacoma,47.2111999986,-122.482099999
+3094,American Red Cross in Southwestern New Mexico,American Red Cross in Southwestern New Mexico,,ERV,Default,Vehicles,ERV,,2006,,1301 E Griggs Ave,88001,US,New Mexico,Bernalillo,Las Cruces,35.0715,-106.579100002
+3095,Grand Canyon,Grand Canyon,,ERV,Default,Vehicles,ERV,,2006,,6135 N Black Canyon Highway,85015,US,Arizona,Maricopa,Phoenix,33.5263999999,-112.111600001
+3096,Mount Baker,Mount Baker,,ERV,Default,Vehicles,ERV,,2007,,2111 King Street,98225,US,Washington,Spokane,Bellingham,47.6964999999,-117.448100001
+3097,Northern Nevada,Northern Nevada,,ERV,Default,Vehicles,ERV,,2007,,1190 Corporate Blvd,89502,US,Nevada,Clark,Reno,36.0769999993,-115.167199999
+3098,Southern Nevada,Southern Nevada,,ERV,Default,Vehicles,ERV,,2007,Suite 206B,1771 E Flamingo Rd,89119,US,Nevada,Washoe,Las Vagas,39.4948999992,-119.749499999
+3099,Oregon Pacific,Oregon Pacific,,ERV,Default,Vehicles,ERV,,2008,,862 Bethel Drive,97402,US,Oregon,Deschutes,Eugene,44.0993000008,-121.2863
+3100,Southern Oregon,Southern Oregon,,ERV,Default,Vehicles,ERV,,2008,,60 Hawthorne Street,97504,US,Oregon,Garfield,Medford,36.3949999995,-97.9547000008
+3101,Southwest Washington,Southwest Washington,,ERV,Default,Vehicles,ERV,,2008,,3114 E 4th Plain Blvd,98661,US,Washington,King,Vancouver,47.5989999995,-122.3264
+3102,American Red Cross of Northeastern California,American Red Cross of Northeastern California,,ERV,Default,Vehicles,ERV,,2008,,2125 E Onstott Road PO Box 142,95991,US,California,Sutter,Yuba City,39.1607999991,-121.634799998
+3103,"Sonoma, Mendocino and Lake Counties","Sonoma, Mendocino and Lake Counties",,ERV,Default,Vehicles,ERV,,2008,,5297 Aero Drive,95403,US,California,Sonoma,Santa Rosa,38.5100999997,-122.765
+3104,Kern,Kern,,ERV,Default,Vehicles,ERV,,2008,,5035 Gilmore Avenue PO Box 1226,93302,US,California,Kern,Bakersfield,35.3894000015,-119.058200002
+4023,American Red Cross of Central Texas,Austin,,SERV,Default,Vehicles,SERV,,2000,Suite 140,6406 Burleson Road,78744,US,Texas,Travis,Austin,,
+4026,Northern Nevada,Reno DFSC,,SERV,Default,Vehicles,SERV,,2000,,450 Parr Blvd,89512,US,Nevada,Sullivan,Reno,,
+4028,American Red Cross Saint Louis Area,SU,,SERV,Default,Vehicles,SERV,,2002,,4300 Planned Industrial,63120,US,Missouri,Saint Louis,St Louis,,
+4702,American Red Cross of Central Texas,Austin,,Passenger,Default,Vehicles,Passenger,Pathfinder,1997,Suite 140,6406 Burleson Road,78744,US,Texas,Travis,Austin,36.5298999993,-82.5725000015
+4702,South Mississippi,Hattiesburg Office,,Passenger,Default,Vehicles,Passenger,Forester,2008,,2020 Hardy Street,39401,US,Mississippi,Forrest,Hattiesburg,31.3246999,-89.3218576
+4703,American Red Cross in the National Capital Region,Prince William County,,ERCV,Default,Vehicles,ERCV,Ford,2000,,9934 Liberia Avenue,20110,US,Virginia,Manassas,Manassas,38.7465999984,-77.4891000015
+4705,Grand Canyon,Grand Canyon,,ERCV,Default,Vehicles,ERCV,Ford,2000,,6135 N Black Canyon Highway,85015,US,Arizona,Maricopa,Phoenix,33.5251999979,-112.1118
+4706,Greater Kansas City,Greater Kansas City,,ERCV,Default,Vehicles,ERCV,Ford,2000,,211 W Armour Boulevard,64111,US,Missouri,Jackson,Kansas City,39.0638,-94.5881000009
+4707,Greater Houston Area,Greater Houston Area,,ERCV,Default,Vehicles,ERCV,Ford,2000,,2700 SW Freeway,77098,US,Texas,Nueces,Houston,27.7745000009,-97.3986000011
+4708,Metropolitan Atlanta,Metropolitan Atlanta,,ERCV,Default,Vehicles,ERCV,Ford,2000,,1955 Monroe Drive NE,30324,US,Georgia,Fulton,Atlanta,33.8079000006,-84.3753999993
+4709,Inland Northwest,Inland Northwest,,ERCV,Default,Vehicles,ERCV,Ford,2000,,315 W Nora Avenue,99205,US,Washington,Spokane,Spokane,47.6964999999,-117.448100001
+4710,Louisville Area,Bullitt & Spencer Counties,,ERCV,Default,Vehicles,ERCV,Ford,2000,P.O. Box 665,200 Saltwell Court,40165,US,Kentucky,Bullitt,Shepherdsville,37.9958129,-85.7247146
+4712,Capital Region,Capital Region Chapter,,ERCV,Default,Vehicles,ERCV,GMC,2000,,1565 Exposition Boulevard,95866,US,California,Sacramento,Sacramento,38.5956000016,-121.434599999
+4715,Greater Carolinas,Greater Carolinas,,ERCV,Default,Vehicles,ERCV,GMC,2002,,2425 Park Road,28203,US,North Carolina,Mecklenburg,Charlotte,35.1979530017,-80.8517367072
+4716,Connecticut,Connecticut,,ERCV,Default,Vehicles,ERCV,GMC,2002,,209 Farmington Avenue,6032,US,Connecticut,Hartford,Farmington,41.7380000017,-72.7932000008
+4717,Mile High,Colorado-Wyoming Region,,ERCV,Default,Vehicles,ERCV,Ford,2002,,444 Sherman Street,80203,US,Colorado,Denver,Denver,39.7229341024,-104.984944213
+4722,National Headquarters,National Headquarters,,Passenger,Default,Vehicles,H1,,2006,,2025 E Street NW,20006,US,District of Columbia,District of Columbia,Washington,38.8960000015,-77.0455
+4723,National Headquarters,National Headquarters,,Passenger,Default,Vehicles,H3,,2008,,2025 E Street NW,20006,US,District of Columbia,District of Columbia,Washington,38.8960000015,-77.0455
+5014,American Red Cross of Alaska,Juneau,,Passenger,Default,Vehicles,4x4,Ford,1994,Suite 2,3225 Hospital Drive,99801,US,Alaska,Juneau,Juneau,58.3295999991,-134.468199998
+5031,National Headquarters,National Headquarters,,Passenger,Default,Vehicles,Passenger,BMW,2001,,2025 E Street NW,20006,US,District of Columbia,District of Columbia,Washington,38.8960000015,-77.0455
+5032,National Headquarters,National Headquarters,,Passenger,Default,Vehicles,Passenger,BMW,2001,,2025 E Street NW,20006,US,District of Columbia,District of Columbia,Washington,38.8960000015,-77.0455
+5036,National Headquarters,National Headquarters,,Passenger,Default,Vehicles,Passenger,Forester,2008,,2025 E Street NW,20006,US,District of Columbia,District of Columbia,Washington,38.8960000015,-77.0455

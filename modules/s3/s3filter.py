@@ -29,6 +29,19 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3DateFilter",
+           "S3Filter",
+           "S3FilterForm",
+           "S3FilterString",
+           "S3FilterWidget",
+           "S3HierarchyFilter",
+           "S3LocationFilter",
+           "S3OptionsFilter",
+           "S3RangeFilter",
+           "S3TextFilter",
+           "get_s3_filter_opts",
+           )
+
 import datetime
 import re
 
@@ -48,7 +61,6 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.sqlhtml import MultipleOptionsWidget
 from gluon.storage import Storage
 from gluon.tools import callback
 
@@ -735,6 +747,9 @@ class S3LocationFilter(S3FilterWidget):
             @param attr: configuration options for this widget
         """
 
+        if not field:
+            field = "location_id"
+
         # Translate options using gis_location_name?
         settings = current.deployment_settings
         translate = settings.get_L10n_translate_gis_location()
@@ -972,20 +987,14 @@ class S3LocationFilter(S3FilterWidget):
 
         # Which levels should we display?
         # Lookup the appropriate labels from the GIS configuration
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = OrderedDict()
         if "levels" in opts:
+            hierarchy = current.gis.get_location_hierarchy()
+            levels = OrderedDict()
             for level in opts["levels"]:
                 levels[level] = hierarchy.get(level, level)
         else:
-            if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                current.response.s3.gis.config.region_location_id:
-                try:
-                    del hierarchy["L0"]
-                except KeyError:
-                    pass
-            for level in hierarchy:
-                levels[level] = hierarchy.get(level, level)
+            levels = current.gis.get_relevant_hierarchy_levels(as_dict=True)
+            
         # Pass to data_element
         self.levels = levels
 
@@ -1218,10 +1227,7 @@ class S3LocationFilter(S3FilterWidget):
         if "levels" in self.opts:
             levels = self.opts.levels
         else:
-            levels = current.gis.get_location_hierarchy().keys()
-            if len(current.deployment_settings.get_gis_countries()) == 1 or \
-                current.response.s3.gis.config.region_location_id:
-                levels.remove("L0")
+            levels = current.gis.get_relevant_hierarchy_levels()
 
         fields = ["%s$%s" % (fields, level) for level in levels]
         if resource:
@@ -1559,7 +1565,17 @@ class S3OptionsFilter(S3FilterWidget):
         # Make sure the selected options are in the available options
         # (not possible if we have a fixed options dict)
         if options is None and values:
-            for val in values:
+            numeric = rfield.ftype in ("integer", "id") or \
+                      rfield.ftype[:9] == "reference"
+            for _val in values:
+                if numeric:
+                    try:
+                        val = int(_val)
+                    except ValueError:
+                        # not valid for this field type => skip
+                        continue
+                else:
+                    val = _val
                 if val not in opt_keys and \
                    (not isinstance(val, (int, long)) or not str(val) in opt_keys):
                     opt_keys.append(val)
@@ -1781,7 +1797,7 @@ class S3HierarchyFilter(S3FilterWidget):
             return variable
 
         # Detect and resolve __typeof queries
-        BELONGS = current.db._adapter.BELONGS
+        #BELONGS = current.db._adapter.BELONGS
         resolve = S3ResourceQuery._resolve_hierarchy
         selector = resource.prefix_selector(selector)
         for key, value in get_vars.items():

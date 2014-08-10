@@ -18,7 +18,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["OCHA"]
+settings.base.prepopulate = ["OCHA", "demo/users"]
 
 settings.base.system_name = T("Who What Where")
 settings.base.system_name_short = T("3W")
@@ -226,7 +226,7 @@ def customise_org_organisation_controller(**attr):
             list_fields = ["id",
                            "name",
                            "acronym",
-                           "organisation_type_id",
+                           "organisation_organisation_type.organisation_type_id",
                            (T("Clusters"), "sector.name"),
                            "country",
                            "website"
@@ -239,7 +239,13 @@ def customise_org_organisation_controller(**attr):
             crud_form = S3SQLCustomForm(
                 "name",
                 "acronym",
-                "organisation_type_id",
+                S3SQLInlineLink(
+                    "organisation_type",
+                    field = "organisation_type_id",
+                    label = T("Type"),
+                    multiple = False,
+                    #widget = "hierarchy",
+                ),
                 "region_id",
                 "country",
                 S3SQLInlineComponentCheckbox(
@@ -257,40 +263,29 @@ def customise_org_organisation_controller(**attr):
             from s3.s3filter import S3TextFilter, S3OptionsFilter, S3LocationFilter
             filter_widgets = [
                 S3TextFilter(["name", "acronym"],
-                             label=T("Name"),
-                             _class="filter-search",
+                             label = T("Name"),
+                             _class = "filter-search",
                              ),
-                S3OptionsFilter("organisation_type_id",
-                                label=T("Type"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
+                S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                                label = T("Type"),
+                                #hidden = True,
                                 ),
                 S3OptionsFilter("sector_organisation.sector_id",
-                                label=T("Cluster"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
+                                label = T("Cluster"),
+                                #hidden = True,
                                 ),
                 S3OptionsFilter("project_organisation.project_id$theme_project.theme_id",
-                                label=T("Theme"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
+                                label = T("Theme"),
+                                #hidden = True,
                                 ),
                 S3LocationFilter("project_organisation.project_id$location.location_id",
-                                 label=T("Location"),
-                                 levels=["L1", "L2"],
-                                 widget="multiselect",
-                                 cols=3,
-                                 #hidden=True,
+                                 label = T("Location"),
+                                 levels = ["L1", "L2"],
+                                 #hidden = True,
                                  ),
                 ]
             s3db.configure("org_organisation",
-                           crud_form=crud_form,
+                           crud_form = crud_form,
                            filter_widgets = filter_widgets,
                            )
             

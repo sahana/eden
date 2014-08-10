@@ -50,7 +50,11 @@ def series():
             _roles_permitted = table.roles_permitted
             _roles_permitted.readable = _roles_permitted.writable = False
             _roles_permitted.default = r.record.roles_permitted
-            if not r.record.richtext:
+            if r.record.richtext:
+                table.body.represent = lambda body: XML(body)
+                table.body.widget = s3_richtext_widget
+            else:
+                table.body.represent = lambda body: XML(s3_URLise(body))
                 table.body.widget = None
             # Titles do show up
             table.name.comment = ""
@@ -305,6 +309,7 @@ def cms_post_age(row):
 def newsfeed():
     """
         RESTful CRUD controller for display of posts as a filterable dataList
+        (use with /datalist method)
     """
 
     # Load Model
@@ -356,7 +361,7 @@ def newsfeed():
     finsert = filter_widgets.insert
 
     if show_events:
-        fappend(S3OptionsFilter("event_post",
+        fappend(S3OptionsFilter("event_post.event_id",
                                 label = T("Filter by Disaster"),
                                 hidden = hidden,
                                 ))
@@ -593,6 +598,7 @@ def newsfeed():
                            )
 
         elif r.representation == "xls":
+            table.body.represent = None
             table.created_by.represent = s3base.s3_auth_user_represent_name
             #table.created_on.represent = datetime_represent
             utable = auth.settings.table_user

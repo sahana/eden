@@ -26,12 +26,9 @@ class index():
             raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         script = '''
-$('.marker').mouseover(function(){
- $(this).children('.marker-window').show();
-})
-$('.marker').mouseout(function(){
- $(this).children('.marker-window').hide();
-})'''
+$('.marker').mouseover(function(){$(this).children('.marker-window').show()})
+$('.marker').mouseout(function(){$(this).children('.marker-window').hide()})
+$('#single-col').css('padding', 0)'''
         response.s3.jquery_ready.append(script)
 
         markers = [

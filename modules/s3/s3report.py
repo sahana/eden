@@ -609,7 +609,6 @@ class S3ReportForm(object):
         fieldset = self._fieldset(T("Report Options"),
                                   selectors,
                                   _id="%s-options" % widget_id)
-
         return fieldset
 
     # -------------------------------------------------------------------------

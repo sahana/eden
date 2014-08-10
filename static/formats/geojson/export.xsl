@@ -6,7 +6,7 @@
     <!-- **********************************************************************
          GeoJSON Export Templates for Sahana Eden
 
-         Copyright (c) 2012-13 Sahana Software Foundation
+         Copyright (c) 2012-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -38,11 +38,13 @@
     <s3:fields tables="gis_layer_shapefile*" select="layer_id"/>
     <s3:fields tables="gis_theme_data" select="location_id,value"/>
     <!-- Need to be able to filter &/or style records -->
+    <s3:fields tables="cms_series" select="name"/>
     <s3:fields tables="deploy_application" select="human_resource_id"/>
     <!--
     <s3:fields tables="event_event" select="event_type_id"/>
     <s3:fields tables="event_event_location" select="event_id"/>-->
     <s3:fields tables="event_incident_report_group" select="incident_report_id"/>
+    <s3:fields tables="event_post_incident_type" select="incident_type_id,post_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
     <s3:fields tables="project_activity_group" select="activity_id"/>
     <s3:fields tables="project_activity_organisation" select="activity_id"/>
@@ -51,6 +53,7 @@
     <s3:fields tables="stats_people_group" select="people_id"/>
     <s3:fields tables="stats_trained_group" select="trained_id"/>
     <s3:fields tables="supply_distribution" select="activity_id"/>
+    <s3:fields tables="vehicle_vehicle" select="asset_id,vehicle_type_id"/>
     <s3:fields tables="vulnerability_evac_route_group" select="evac_route_id"/>
     <s3:fields tables="vulnerability_risk_group" select="risk_id"/>
     <s3:fields tables="vulnerability_risk_tag" select="risk_id"/>
@@ -126,11 +129,6 @@
                             <xsl:value-of select="@marker"/>
                         </marker>
                     </xsl:if>-->
-                    <xsl:if test="map[1]/@popup!=''">
-                        <popup>
-                            <xsl:value-of select="map[1]/@popup"/>
-                        </popup>
-                    </xsl:if>
                     <xsl:if test="map[1]/@popup_url!=''">
                         <url>
                             <xsl:value-of select="map[1]/@popup_url"/>
@@ -182,9 +180,6 @@
                     <marker>
                         <xsl:value-of select="map[1]/@marker"/>
                     </marker>
-                    <popup>
-                        <xsl:value-of select="map[1]/@popup"/>
-                    </popup>
                     <url>
                         <xsl:value-of select="map[1]/@popup_url"/>
                     </url>
@@ -361,11 +356,11 @@
                     </xsl:attribute>
                 </geometry>
                 <properties>
-                    <xsl:call-template name="Properties">
-                        <xsl:with-param name="uuid">
+                    <xsl:call-template name="Properties"/>
+                        <!--<xsl:with-param name="uuid">
                             <xsl:value-of select="./@uuid"/>
                         </xsl:with-param>
-                    </xsl:call-template>
+                    </xsl:call-template>-->
                 </properties>
             </xsl:when>
             <xsl:when test="./map[1]/@wkt!='null'">
@@ -392,11 +387,11 @@
                     </coordinates>
                 </geometry>
                 <properties>
-                    <xsl:call-template name="Properties">
-                        <xsl:with-param name="uuid">
+                    <xsl:call-template name="Properties"/>
+                        <!--<xsl:with-param name="uuid">
                             <xsl:value-of select="./@uuid"/>
                         </xsl:with-param>
-                    </xsl:call-template>
+                    </xsl:call-template>-->
                 </properties>
             </xsl:when>
             <!-- xsl:otherwise skip -->
@@ -405,22 +400,18 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
-        <xsl:param name="uuid"/>
+        <!--<xsl:param name="uuid"/>-->
         <xsl:variable name="attributes" select="./map[1]/@attributes"/>
 
-        <id>
-            <!-- We want the Resource's UUID here, not the associated Location's or Site's -->
+        <!-- We don't need the UUID, so save bandwidth
+        <id>-->
+            <!-- We want the Resource's UUID here, not the associated Location's or Site's
             <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
-        </id>
+        </id>-->
         <xsl:if test="map[1]/@marker!=''">
             <marker>
                 <xsl:value-of select="map[1]/@marker"/>
             </marker>
-        </xsl:if>
-        <xsl:if test="map[1]/@popup!=''">
-            <popup>
-                <xsl:value-of select="map[1]/@popup"/>
-            </popup>
         </xsl:if>
         <xsl:if test="map[1]/@popup_url!=''">
             <url>
@@ -454,39 +445,46 @@
     <xsl:template name="Attribute">
         <xsl:param name="attribute"/>
 
-        <xsl:variable name="key" select="substring-before(substring-after(substring-before($attribute,':'),'|'),'|')"/>
-        <xsl:variable name="value" select="substring-after($attribute,':')"/>
-        <xsl:choose>
-            <xsl:when test="contains($value,'|')">
-                <!-- Text -->
-                <xsl:element name="{$key}">
-                    <xsl:value-of select="substring-before(substring-after($value,'|'),'|')"/>
-                </xsl:element>
-            </xsl:when>
-            <xsl:otherwise>
-                <!-- Numeric -->
-                <xsl:element name="{$key}">
-                    <xsl:attribute name="type">
-                        <xsl:text>numeric</xsl:text>
-                    </xsl:attribute>
-                    <xsl:value-of select="$value"/>
-                </xsl:element>
-            </xsl:otherwise>
-        </xsl:choose>
+        <xsl:variable name="key" select="substring-after(substring-before($attribute, '||::'), '||')"/>
+        <xsl:variable name="value" select="substring-after($attribute, '||::')"/>
+        <!--<xsl:if test="$key!=''">-->
+            <xsl:element name="{$key}">
+                <xsl:choose>
+                    <xsl:when test="contains($value, '||')">
+                        <!-- Text -->
+                        <xsl:value-of select="substring-before(substring-after($value, '||'), '||')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <!-- Numeric -->
+                        <xsl:attribute name="type">
+                            <xsl:text>numeric</xsl:text>
+                        </xsl:attribute>
+                        <xsl:value-of select="$value"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:element>
+        <!--</xsl:if>-->
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template name="Attributes">
         <xsl:param name="attributes"/>
-        <xsl:variable name="attr" select="substring-before(substring-after($attributes,'{'),'}')"/>
+
+        <xsl:variable name="attr">
+            <xsl:choose>
+                <xsl:when test="contains($attributes, '{{')">
+                    <xsl:value-of select="substring-before(substring-after($attributes, '{{'), '}}')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$attributes"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
         <xsl:choose>
-            <!--<xsl:when test="contains($attributes,'],[')">-->
-            <xsl:when test="contains($attr,',')">
-                <!--
-                <xsl:variable name="attribute" select="substring-before($attributes,',[')"/>
-                <xsl:variable name="remainder" select="normalize-space(substring-after($attributes,'],'))"/>-->
-                <xsl:variable name="attribute" select="substring-before($attr,',')"/>
-                <xsl:variable name="remainder" select="normalize-space(substring-after($attr,','))"/>
+            <xsl:when test="contains($attr, ',,||')">
+                <xsl:variable name="attribute" select="substring-before($attr, ',,||')"/>
+                <xsl:variable name="remainder" select="normalize-space(substring-after($attr, ',,'))"/>
                 <xsl:call-template name="Attribute">
                     <xsl:with-param name="attribute">
                         <xsl:value-of select="$attribute"/>

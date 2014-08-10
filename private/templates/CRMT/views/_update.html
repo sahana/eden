@@ -11,18 +11,14 @@
  <div id='component'>
 {{except:}}
 </div>
-<div>
  {{pass}}
 {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
+{{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
 {{try:}}{{=deduplicate}}{{except:}}{{pass}}
 <div id='map'></div>
 {{include "last_update.html"}}
 {{include "key.html"}}
 <div class='form-container'>
 {{try:}}{{=form}}{{except:}}{{pass}}
- <a href='{{=URL(args=[r.id, "read"])}}' class='btn btn-danger cancel' type='button'>
-  {{=T("Cancel")}}
- </a>
-</div>
 </div>
 {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

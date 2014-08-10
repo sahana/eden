@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SupplyModel",
+__all__ = ("S3SupplyModel",
            "S3SupplyDistributionModel",
            "supply_item_rheader",
            "supply_item_controller",
@@ -41,7 +41,7 @@ __all__ = ["S3SupplyModel",
            "supply_ItemRepresent",
            #"supply_ItemCategoryRepresent",
            "supply_get_shipping_code",
-           ]
+           )
 
 import re
 
@@ -71,7 +71,7 @@ class S3SupplyModel(S3Model):
                - is this just supply_item_alt?
     """
 
-    names = ["supply_brand",
+    names = ("supply_brand",
              "supply_catalog",
              "supply_item_category",
              "supply_item_category_id",
@@ -88,7 +88,7 @@ class S3SupplyModel(S3Model):
              "supply_item_category_represent",
              "supply_item_add",
              "supply_item_pack_quantity",
-             ]
+             )
 
     def model(self):
 
@@ -1163,9 +1163,9 @@ class S3SupplyDistributionModel(S3Model):
         - usually as part of an Activity
     """
 
-    names = ["supply_distribution_item",
+    names = ("supply_distribution_item",
              "supply_distribution",
-             ]
+             )
 
     def model(self):
 
@@ -1325,11 +1325,7 @@ class S3SupplyDistributionModel(S3Model):
             return years
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            levels.remove("L0")
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         # Normally only used in Report
         filter_widgets = [

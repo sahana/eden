@@ -11,6 +11,7 @@
          Organisation....................hrm_course.organisation_id
          Certificate.....................hrm_course_certificate.certificate_id
          Job Titles......................hrm_course_job_title.job_title_id
+         Sectors.........................hrm_course_sector.sector_id
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -21,12 +22,10 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="certs"
-             match="row"
+    <xsl:key name="certs" match="row"
              use="col[@field='Certificate']"/>
 
-    <xsl:key name="orgs"
-             match="row"
+    <xsl:key name="orgs" match="row"
              use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
@@ -58,8 +57,9 @@
         <xsl:variable name="CertName" select="col[@field='Certificate']/text()"/>
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="JobTitles" select="col[@field='Job Titles']"/>
+        <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
 
-        <!-- HRM Course -->
+        <!-- Course -->
         <resource name="hrm_course">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
@@ -87,13 +87,29 @@
                 <xsl:with-param name="listsep" select="';'"/>
                 <xsl:with-param name="arg">job_title_ref</xsl:with-param>
             </xsl:call-template>
+            <!-- Sectors -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Sectors"/>
+                </xsl:with-param>
+                <xsl:with-param name="listsep" select="';'"/>
+                <xsl:with-param name="arg">sector_ref</xsl:with-param>
+            </xsl:call-template>
             
         </resource>
 
+        <!-- Job Titles -->
         <xsl:call-template name="splitList">
             <xsl:with-param name="list"><xsl:value-of select="$JobTitles"/></xsl:with-param>
             <xsl:with-param name="listsep" select="';'"/>
             <xsl:with-param name="arg">job_title_res</xsl:with-param>
+        </xsl:call-template>
+
+        <!-- Sectors -->
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Sectors"/></xsl:with-param>
+            <xsl:with-param name="listsep" select="';'"/>
+            <xsl:with-param name="arg">sector_res</xsl:with-param>
         </xsl:call-template>
 
     </xsl:template>
@@ -140,7 +156,7 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
-            <!-- Sectors -->
+            <!-- Job Titles -->
             <xsl:when test="$arg='job_title_ref'">
                 <resource name="hrm_course_job_title">
                     <reference field="job_title_id" resource="hrm_job_title">
@@ -152,6 +168,24 @@
             </xsl:when>
             <xsl:when test="$arg='job_title_res'">
                 <resource name="hrm_job_title">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$item"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+            <!-- Sectors -->
+            <xsl:when test="$arg='sector_ref'">
+                <resource name="hrm_course_sector">
+                    <reference field="sector_id" resource="org_sector">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$item"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='sector_res'">
+                <resource name="org_sector">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="$item"/>
                     </xsl:attribute>

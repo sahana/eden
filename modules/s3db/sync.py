@@ -27,11 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["SyncDataModel",
+__all__ = ("SyncDataModel",
            "sync_rheader",
            "sync_now",
            "sync_job_reset"
-           ]
+           )
 
 from gluon import *
 from gluon.dal import Row
@@ -41,14 +41,14 @@ from ..s3 import *
 # =============================================================================
 class SyncDataModel(S3Model):
 
-    names = ["sync_config",
+    names = ("sync_config",
              "sync_status",
              "sync_repository",
              "sync_task",
              "sync_resource_filter",
              "sync_job",
              "sync_log"
-             ]
+             )
 
     def model(self):
 

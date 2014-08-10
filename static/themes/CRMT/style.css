@@ -18,6 +18,11 @@ h2 a {
     cursor: pointer;
 }
 
+h2 a:hover,
+h2 a:focus {
+    text-decoration: none;
+    }
+
 h2 i {
     font-size: 20px;
 }
@@ -71,44 +76,62 @@ h2 i {
 }
 
 #org_facility_organisation_id__row .help-block div{
-    top: 0;
-    margin-bottom: 12px;
-}
-
-/* Main Map */
-.gis_fullscreen_map-btn {
-    display: none;
-}
-/* Hide the large legend for the Floods layer */
-.map_legend_div {
-    max-width: 400px;
-}
-
-/* Saved Maps */
-#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td {
-    padding-right: 10px;
-}
-#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:last-child {
-    border-left: solid 1px;
+    margin-bottom: -16px;
 }
 
 /* Summary Page */
-h2.summary {
+h2 {
+    float: left;
+    margin-right: 15px;
+}
+
+h2.profile-header {
+    float: none;
+}
+
+.card_1_line {
+    height: 1.5em;
+}
+.dl-field p > i {
+    margin-right: 5px;
+}
+
+#list-btn-add {
     float: left;
 }
 
-.cms-edit {
-    /* Push above Summary Tabs */
-    z-index: 1001;
+#show-add-btn {
+    margin-bottom: 10px;
 }
-.btn.summary-create {
-    /* background: linear-gradient(to bottom, #3788B3 0%, #235482 100%) repeat scroll 0 0 transparent;*/
-    margin: 15px;
-    padding: 4px 6px;
+
+#list-add h3 {
+    padding: 7px 15px;
+    text-align: left;
+}
+
+#map {
     float: left;
+}
+
+#list-add,
+#filter-form,
+#table-container,
+.form-container {
+    clear: both;
+}
+
+#summary-common {
     /* Push above alert-space & Summary Tabs */
     position: relative;
     z-index: 1001;
+    margin-top: 15px;
+}
+
+#summary-common #cms {
+    float: left;
+    margin-left: 20px;
+    line-height: 12px;
+    width: 50%;
 }
 
 .ui-tabs {
@@ -116,13 +139,6 @@ h2.summary {
 }
 .ui-tabs .ui-tabs-nav li {
     float: right;
-}
-
-#summary-common { 
-    float: left;
-    margin-top: 10px;
-    width: 70%;
-    line-height: 18px;
 }
 
 #summary-sections {
@@ -141,15 +157,14 @@ h2.summary {
     z-index: 1000; /* Push above alert-space */
 }
 
-
 #summary-tabs.ui-widget-content {
     width: 100%;
     float: left;
-    margin: -10px;
+    margin-top: -25px;
 }
 
 #summary-tabs #filter-form {
-    margin: 0 20px 0 40px; /* Needs to allow space for the Map's Zoom controls */
+    margin: 0 20px;
     position: absolute;
     top: 45px;
     width: auto;
@@ -167,11 +182,7 @@ h2.summary {
     clear: none;
 } */
 
-.dataTables_info {
-    margin: 8px 30px 4px 30px;
-}
-
-.list_formats {
+.dt-export-options {
     padding-top: 8px;
 }
 
@@ -183,6 +194,12 @@ h2.summary {
 #summary-tabs #map {
     border-radius: 5px;
     margin: 0;
+}
+
+/* Move zoom below filter */ 
+#summary-tabs #map div.olControlZoom {
+    left: 18px;
+    top: 108px;
 }
 
 #summary-2_filter {
@@ -199,19 +216,6 @@ select {
     display: none;
 }
 
-/* Hide the colons for Location Selectors before JS can hide */
-.form-container #org_facility_location_id__label,
-.form-container #project_activity_location_id__label,
-.form-container #stats_people_location_id__label,
-.form-container #vulnerability_evac_route_location_id__label,
-.form-container #vulnerability_risk_location_id__label {
-    display: none;
-}
-/* But show in Map Popups */
-#plain #org_facility_location_id__label {
-    display: block;
-}
-
 [id$=map_icon__row] div.controls{
     float: left;
 }
@@ -222,7 +226,19 @@ select {
     margin-left: 10px;
 }
 
-/* Filter Forms */
+/* Filter Form */
+#filter-form-title {
+    margin: 0 0 0 7px;
+    padding: 0 3px;
+    font-size: 16px;
+    display: inline-block;
+    z-index: 1;
+    position: relative;
+    background-color: white;
+    border-radius: 5px;
+    float: left;
+}
+
 #filter-form td {
     border: none;
 }
@@ -284,23 +300,35 @@ button.ui-multiselect.ui-state-default.ui-corner-all:hover {
     *background: #d9d9d9;
 }
 
-button.ui-multiselect.ui-state-default.ui-corner-all {
-    margin-bottom: 10px;
+/* Filter Form */
+#filter-form-title {
+    margin: 0 0 0 7px;
+    padding: 0 3px;
+    font-size: 16px;
+    display: inline-block;
+    z-index: 1;
+    position: relative;
+    background-color: white;
+    border-radius: 5px;
+    float: left;
 }
 
-/* Filter Form */
 form.filter-form,
-form#summary-filter-form
- {
+form#summary-filter-form {
     float: left;
     background-color: rgba(255,255,255,0.8);
     padding: 5px 10px;
     border-radius: 5px;
+    margin-top: -10px;
 }
 
 .horiz_filter_form {
     float: left;
     margin-right: 15px;
+}
+
+.horiz_filter_form label {
+    margin: 2px 0;
 }
 
 .horiz_filter_form .filter-controls,
@@ -328,12 +356,6 @@ form#summary-filter-form
     color: #0088CC;
 }
 
-/* Contacts Page */
-.form-container #pr_person_sub_human_resourcehuman_resource__label {
-    /* Hide the colon */
-    display: none;
-}
-
 /* Adjust Field Widths to match Titles/Data */
 #sub_defaultactivity_organisation_defaultactivity_organisation_i_organisation_id_edit_none,
 #sub_defaultactivity_organisation_defaultactivity_organisation_i_organisation_id_edit_0 {
@@ -356,33 +378,22 @@ form#summary-filter-form
     width: 240px;
 }
 
-/* Organisations/Places Forms
-#sub_defaulthuman_resource_defaulthuman_resource_i_person_id_edit_none,
-#sub_defaulthuman_resource_defaulthuman_resource_i_site_id_edit_none,
-#sub_defaultresource_defaultresource_i_value_edit_none {
-    margin-top: -20px;
-} */
+/* Organisations */
+#sub-filedocument {
+    float: left;
+}
+
+#project_activity_sub_filedocument__row .tooltip {
+    margin-top: -3px; 
+}
 
 #sub_defaultresource_defaultresource_i_value_edit_none {
     width: 50px;
 }
 
-/* Map Borders*/
-div.map_save_button,
-div.map_save_panel,
-div.map_legend_tab,
-div.map_legend_panel,
-div.x-panel-body {
-    border: 1px solid #B2B2B2;
-}
 
-div.map_legend_tab {
-    border-right: none;
-    margin-right: -1px;
-}
-
-div.map_legend_panel {
-    margin-bottom: 30px;
+#sub_defaultsite_org_group_defaultsite_org_group_i_status_edit_none {
+    width: 270px;
 }
 
 /* Report */

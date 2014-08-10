@@ -14,15 +14,11 @@ settings = current.deployment_settings
 T = current.T
 
 """
-    Template settings for US
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Template settings for Hospital Status Tracking after Hurricane Sandy
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["Sandy"]
+settings.base.prepopulate = ["Sandy", "demo/users"]
 
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False

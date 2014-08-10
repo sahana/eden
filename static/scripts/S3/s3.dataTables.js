@@ -51,41 +51,36 @@
         }
     }
 
-    /* Function used by Export buttons */
-    var formatRequest = function(representation, tableid, url) {
-        var t = tableIdReverse('#' + tableid);
-        var dt = oDataTable[t];
-        var oSetting = dt.dataTableSettings[t];
-        if (oSetting) {
-            var argData = 'id=' + tableid;
-            var serverFilterArgs = $('#' + tableid + '_dataTable_filter');
-            if (serverFilterArgs.val() !== '') {
-                argData += '&sFilter=' + serverFilterArgs.val();
-            }
-            argData += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
-            aoColumns = oSetting.aoColumns;
-            var i, len;
-            for (i=0, len=aoColumns.length; i < len; i++) {
-                if (!aoColumns[i].bSortable) {
-                    argData += '&bSortable_' + i + '=false';
+    var updateURLQuery = function(target, source) {
+
+        var tquery = target.split('?'),
+            squery = source.split('?');
+
+        var turlvars = tquery.length > 1 ? tquery[1].split('&') : [],
+            surlvars = squery.length > 1 ? squery[1].split('&') : [],
+            rurlvars = [],
+            i, len, q;
+
+        for (i=0, len=turlvars.length; i<len; i++) {
+            q = turlvars[i].split('=');
+            if (q.length > 1) {
+                k = decodeURIComponent(q[0]);
+                if (k.indexOf('.') == -1 && k[0] != '(' && k[0] != 'w') {
+                    rurlvars.push(turlvars[i]);
                 }
             }
-            var aaSort = (oSetting.aaSortingFixed !== null) ?
-                         oSetting.aaSortingFixed.concat(oSetting.aaSorting) :
-                         oSetting.aaSorting.slice();
-            argData += '&iSortingCols=' + aaSort.length;
-            for (i=0, len=aaSort.length; i < len; i++) {
-                argData += '&iSortCol_' + i + '=' + aaSort[i][0];
-                argData += '&sSortDir_' + i + '=' + aaSort[i][1];
-            }
-            url = appendUrlQuery(url, representation, argData);
-        } else {
-            url = appendUrlQuery(url, representation, '');
         }
-        window.open(url);
-    }
-    // Pass to global scope to be accessible onclick HTML
-    S3.dataTables.formatRequest = formatRequest;
+        for (i=0, len=surlvars.length; i<len; i++) {
+            q = surlvars[i].split('=');
+            if (q.length > 1) {
+                k = decodeURIComponent(q[0]);
+                if (k.indexOf('.') != -1 || k[0] == '(') {
+                    rurlvars.push(surlvars[i]);
+                }
+            }
+        }
+        return rurlvars.length ? tquery[0] + '?' + rurlvars.join('&') : tquery[0];
+    };
 
     /* Function to return the class name of the tag from the class name prefix that is passed in. */
     var getElementClass = function(tagObj, prefix) {
@@ -158,12 +153,13 @@
         return -1;
     }
 
-    var toggleDiv = function(divId) {
-       $('#display' + divId).toggle();
-       $('#full' + divId).toggle();
-    }
-    // Pass to global scope to be accessible as an href in HTML
-    S3.dataTables.toggleDiv = toggleDiv;
+    var toggleCell = function() {
+        $(this).parent()
+               .toggle()
+               .siblings('.dt-truncate')
+               .toggle();
+        return false;
+    };
 
     var toggleRow = function(groupid) {
         var _sublevel = '.sublevel' + groupid.substr(6);
@@ -974,6 +970,7 @@
                         dt.fnDraw(false);
                     }
                 });
+                $('.ui-icon-zoomin, .ui-icon-zoomout').unbind('click.dtToggleCell');
             },
             'fnServerData': fnAjaxCallback[t],
             'fnRowCallback': function(nRow, aData, iDisplayIndex) {
@@ -1005,7 +1002,13 @@
                             }
                             var c = action._class;
                             var label = S3.Utf8.decode(action.label);
+                            var title = label;
                             re = /%5Bid%5D/g;
+                            if (action.icon) {
+                                label = '<i class="icon icon-' + action.icon + '" alt="' + label + '"></i>';
+                            } else if (action.img) {
+                                label = '<img src="' + action.icon + '" alt="' + label + '">';
+                            }
                             if (action._onclick) {
                                 var oc = Actions[i]._onclick.replace(re, action_id);
                                 Buttons = Buttons + '<a class="' + c + '" onclick="' + oc + '">' + label + '</a>' + '&nbsp;';
@@ -1015,16 +1018,16 @@
                                     fnActionCallBacks.push([action_id, S3ActionCallBack]);
                                 }
                             } else if (action.url) {
-                                if (action.icon) {
-                                    label = '<img src="' + action.icon + '" alt="' + label + '" title="' + label + '">';
-                                }
                                 var url = action.url.replace(re, action_id);
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
-                            } else {
-                                if (action.icon) {
-                                    label = '<img src="' + action.icon + '" alt="' + label + '" title="' + label + '">';
+                                var target = action._target;
+                                if (target) {
+                                    target = ' target="' + target + '"';
+                                } else {
+                                    target = '';
                                 }
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + label + '">' + label + '</a>' + '&nbsp;';
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + title + '"' + target + '>' + label + '</a>' + '&nbsp;';
+                            } else {
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + title + '"' + target + '>' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table
@@ -1064,18 +1067,15 @@
                     if ($.inArray(j, gList) != -1) {
                         continue;
                     }
-                    // Ignore if the data starts with an html open tag
-                    if (aData[j][0] == '<') {
+                    // Ignore if the data contains HTML tags
+                    if (aData[j].match(/<.*>/)) {
                         tdposn++;
                         continue;
                     }
                     if (aData[j].length > textDisplay[t][0]) {
-                        var uniqueid = '_' + t + iDisplayIndex + j;
-                        var icon = '<a href="javascript:S3.dataTables.toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomin" style="float:right"></a>';
-                        var display = '<div id="display' + uniqueid + '">' + icon + aData[j].substr(0, textDisplay[t][1]) + "&hellip;</div>";
-                        icon = '<a href="javascript:S3.dataTables.toggleDiv(\'' + uniqueid + '\');" class="ui-icon ui-icon-zoomout" style="float:right"></a>';
-                        display += '<div  style="display:none" id="full' + uniqueid + '">' + icon + aData[j] + "</div>";
-                        $('td:eq(' + tdposn + ')', nRow).html( display );
+                        var disp = '<div class="dt-truncate"><span class="ui-icon ui-icon-zoomin" style="float:right"></span>' + aData[j].substr(0, textDisplay[t][1]) + "&hellip;</div>";
+                        var full = '<div  style="display:none" class="dt-truncate"><span class="ui-icon ui-icon-zoomout" style="float:right"></span>' + aData[j] + "</div>";
+                        $('td:eq(' + tdposn + ')', nRow).html(disp+full);
                     }
                     // increment the count of the td tags (don't do this for groups)
                     tdposn++;
@@ -1085,6 +1085,18 @@
             'fnDrawCallback': function(oSettings) {
                 //var table = '#' + oSettings.nTable.id;
                 //var t = tableIdReverse(table);
+
+                // Update permalink
+                var ajaxSource = oSettings.sAjaxSource;
+                if (ajaxSource) {
+                    $(id).closest('.dt-wrapper').find('a.permalink').each(function() {
+                        var $this = $(this);
+                        var url = updateURLQuery($this.attr('href'), ajaxSource);
+                        $this.attr('href', url);
+                    });
+                }
+
+                $('.dt-truncate .ui-icon-zoomin, .dt-truncate .ui-icon-zoomout').bind('click.dtToggleCell', toggleCell);
                 bindButtons(t, tableConfig, fnActionCallBacks);
                 if (oSettings.aiDisplay.length === 0) {
                     return;
@@ -1176,6 +1188,46 @@
         // Delay in milliseconds to prevent too many AJAX calls
         dt.fnSetFilteringDelay(450);
 
+        // Export formats click-handler
+        dt.closest('.dt-wrapper').find('.dt-export')
+                                 .off('click.datatable')
+                                 .on('click.datatable', function() {
+
+            var tableid = dt.attr('id');
+              
+            var oSetting = dt.dataTableSettings[t],
+                url = $(this).data('url'),
+                extension = $(this).data('extension');
+                
+            if (oSetting) {
+                var arguments = 'id=' + tableid,
+                    serverFilterArgs = $('#' + tableid + '_dataTable_filter');
+                if (serverFilterArgs.val() !== '') {
+                    arguments += '&sFilter=' + serverFilterArgs.val();
+                }
+                arguments += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
+                aoColumns = oSetting.aoColumns;
+                var i, len;
+                for (i=0, len=aoColumns.length; i < len; i++) {
+                    if (!aoColumns[i].bSortable) {
+                        arguments += '&bSortable_' + i + '=false';
+                    }
+                }
+                var aaSort = oSetting.aaSortingFixed !== null ?
+                             oSetting.aaSortingFixed.concat(oSetting.aaSorting) :
+                             oSetting.aaSorting.slice();
+                arguments += '&iSortingCols=' + aaSort.length;
+                for (i=0, len=aaSort.length; i < len; i++) {
+                    arguments += '&iSortCol_' + i + '=' + aaSort[i][0];
+                    arguments += '&sSortDir_' + i + '=' + aaSort[i][1];
+                }
+                url = appendUrlQuery(url, extension, arguments);
+            } else {
+                url = appendUrlQuery(url, extension, '');
+            }
+            window.open(url);
+        });
+
         // Does not handle horizontal overflow properly:
         //new FixedHeader(dt);
 
@@ -1214,90 +1266,6 @@
 $(document).ready(function() {
     // Initialise all dataTables on the page
     S3.dataTables.initAll();
-
-    // Add Events to any Map Buttons present
-    // S3Search Results
-    var dt_mapButton = $('#gis_datatables_map-btn');
-    if (dt_mapButton) {
-        dt_mapButton.on('click', function() {
-            // Find the map
-            var map_id = dt_mapButton.attr('map');
-            if (undefined == map_id) {
-                map_id = 'default_map';
-            }
-            var map = S3.gis.maps[map_id];
-            // Load the search results layer
-            var layers = map.layers;
-            var layer, j, jlen, strategies, strategy;
-            for (var i=0, len=layers.length; i < len; i++) {
-                layer = layers[i];
-                if (layer.s3_layer_id == 'search_results') {
-                    // Set a new event to restore clustering when the layer is loaded
-                    layer.events.on({
-                        'loadend': S3.gis.search_layer_loadend
-                    });
-                    // Disable Clustering to get correct bounds
-                    strategies = layer.strategies;
-                    for (j=0, jlen=strategies.length; j < jlen; j++) {
-                        strategy = strategies[j];
-                        if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
-                            strategy.deactivate();
-                        }
-                    }
-                    layer.setVisibility(true);
-                }
-            };
-            if (map.s3.polygonButton) {
-                // Disable the polygon control
-                map.s3.polygonButton.disable();
-            }
-            map.s3.mapWin.show();
-            // Disable the crosshair on the Map Selector
-            $('.olMapViewport').removeClass('crosshair');
-            // Set the Tab to show as active
-            dt_mapButton.parent()
-                        .addClass('tab_here');
-            // Deactivate the list Tab
-            $('#gis_datatables_list_tab').parent()
-                                         .removeClass('tab_here')
-                                         .addClass('tab_other');
-            // Set to revert if Map closed
-            $('div.x-tool-close').click(function(evt) {
-                // Set the Tab to show as inactive
-                dt_mapButton.parent()
-                            .removeClass('tab_here')
-                            .addClass('tab_other');
-                // Activate the list Tab
-                $('#gis_datatables_list_tab').parent()
-                                             .removeClass('tab_other')
-                                             .addClass('tab_here');
-            });
-            // @ToDo: Close Map Window & revert if Tab clicked
-        });
-    }
-
-    // S3Search Widget
-    var search_mapButton = $('#gis_search_map-btn');
-    if (search_mapButton) {
-        search_mapButton.on('click', function(evt) {
-            // Prevent button submitting the form
-            evt.preventDefault();
-            // Find the map
-            var map_id = search_mapButton.attr('map');
-            if (undefined == map_id) {
-                map_id = 'default_map';
-            }
-            var map = S3.gis.maps[map_id];
-            // Enable the polygon control
-            map.s3.polygonButton.enable();
-            // @ToDo: Set appropriate Bounds
-            // Default to current gis_config
-            // If there is an Options widget for Lx, then see if that is set & use this
-            map.s3.mapWin.show();
-            // Enable the crosshair on the Map Selector
-            $('.olMapViewport').addClass('crosshair');
-        });
-    }
 });
 
 // END ========================================================================

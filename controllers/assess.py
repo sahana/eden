@@ -16,6 +16,24 @@ def index():
 
     redirect(URL(f="building"))
 
+
+# -----------------------------------------------------------------------------
+def ifrc24h():
+    """
+        Custom function to demo Mobile Assessment collection
+    """
+
+    # This function uses it's own Theme
+    settings.base.theme = "mobile"
+
+    # No need to capture DoB/Gender of community contact people
+    settings.pr.request_dob = False
+    settings.pr.request_gender = False
+    # Keep UX simple
+    settings.pr.lookup_duplicates = False
+
+    return s3_rest_controller("assess", "24h")
+
 # -----------------------------------------------------------------------------
 def building_marker_fn(record):
     """

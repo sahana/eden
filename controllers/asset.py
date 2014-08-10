@@ -14,12 +14,18 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-    """ Module Home Page """
+    """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
+    return s3db.cms_index(module, alt_function="index_alt")
 
-    return dict(module_name=module_name)
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Module homepage for non-Admin users when no CMS content found
+    """
+
+    # Just redirect to the list of Assets
+    redirect(URL(f="asset"))
 
 # -----------------------------------------------------------------------------
 def create():
@@ -51,7 +57,8 @@ def catalog():
     """ RESTful CRUD controller """
 
     return s3_rest_controller("supply", "catalog",
-                              rheader=s3db.supply_catalog_rheader)
+                              rheader = s3db.supply_catalog_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def item():
@@ -91,8 +98,8 @@ def catalog_item():
     """
 
     return s3_rest_controller("supply", "catalog_item",
-                              csv_template=("supply", "catalog_item"),
-                              csv_stylesheet=("supply", "catalog_item.xsl"),
+                              csv_template = ("supply", "catalog_item"),
+                              csv_stylesheet = ("supply", "catalog_item.xsl"),
                               )
 
 # -----------------------------------------------------------------------------
@@ -115,25 +122,24 @@ def item_category():
 def supplier():
     """ RESTful CRUD controller """
 
-    get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    get_vars["organisation_type.name"] = "Supplier"
 
     # Load model
     table = s3db.org_organisation
 
     # Modify CRUD Strings
-    ADD_SUPPLIER = T("Add Supplier")
     s3.crud_strings.org_organisation = Storage(
-        label_create=ADD_SUPPLIER,
-        title_display=T("Supplier Details"),
-        title_list=T("Suppliers"),
-        title_update=T("Edit Supplier"),
-        title_upload=T("Import Suppliers"),
-        label_list_button=T("List Suppliers"),
-        label_delete_button=T("Delete Supplier"),
-        msg_record_created=T("Supplier added"),
-        msg_record_modified=T("Supplier updated"),
-        msg_record_deleted=T("Supplier deleted"),
-        msg_list_empty=T("No Suppliers currently registered")
+        label_create = T("Create Supplier"),
+        title_display = T("Supplier Details"),
+        title_list = T("Suppliers"),
+        title_update = T("Edit Supplier"),
+        title_upload = T("Import Suppliers"),
+        label_list_button = T("List Suppliers"),
+        label_delete_button = T("Delete Supplier"),
+        msg_record_created = T("Supplier added"),
+        msg_record_modified = T("Supplier updated"),
+        msg_record_deleted = T("Supplier deleted"),
+        msg_list_empty = T("No Suppliers currently registered")
         )
 
     # Modify filter_widgets

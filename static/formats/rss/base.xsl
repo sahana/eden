@@ -56,6 +56,7 @@
                 </xsl:variable>
                 <xsl:value-of select="$target"/>
                 <xsl:apply-templates select=".//resource[@name=$target]" mode="item">
+                    <xsl:sort select="@modified_on" order="descending"/>
                     <xsl:with-param name="resource_url" select="$resource_url"/>
                 </xsl:apply-templates>
             </channel>

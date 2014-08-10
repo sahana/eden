@@ -35,9 +35,9 @@
 
 """
 
-__all__ = ["S3Msg",
+__all__ = ("S3Msg",
            "S3Compose",
-           ]
+           )
 
 import base64
 import datetime
@@ -119,40 +119,37 @@ class S3Msg(object):
 
         MOBILE = current.deployment_settings.get_ui_label_mobile_phone()
         # Full range of contact options
-        self.CONTACT_OPTS = {
-                "EMAIL":       T("Email"),
-                "FACEBOOK":    T("Facebook"),
-                "FAX":         T("Fax"),
-                "HOME_PHONE":  T("Home phone"),
-                "RADIO":       T("Radio Callsign"),
-                "RSS":         T("RSS Feed"),
-                "SKYPE":       T("Skype"),
-                "SMS":         MOBILE,
-                "TWITTER":     T("Twitter"),
-                #"XMPP":       "XMPP",
-                #"WEB":        T("Website"),
-                "WORK_PHONE":  T("Work phone"),
-                "OTHER":       T("other")
-            }
+        self.CONTACT_OPTS = {"EMAIL":       T("Email"),
+                             "FACEBOOK":    T("Facebook"),
+                             "FAX":         T("Fax"),
+                             "HOME_PHONE":  T("Home phone"),
+                             "RADIO":       T("Radio Callsign"),
+                             "RSS":         T("RSS Feed"),
+                             "SKYPE":       T("Skype"),
+                             "SMS":         MOBILE,
+                             "TWITTER":     T("Twitter"),
+                             #"XMPP":       "XMPP",
+                             #"WEB":        T("Website"),
+                             "WORK_PHONE":  T("Work phone"),
+                             "OTHER":       T("other")
+                             }
 
         # Those contact options to which we can send notifications
         # NB Coded into hrm_map_popup & s3.msg.js
-        self.MSG_CONTACT_OPTS = {
-                "EMAIL":   T("Email"),
-                "SMS":     MOBILE,
-                "TWITTER": T("Twitter"),
-                #"XMPP":   "XMPP",
-            }
+        self.MSG_CONTACT_OPTS = {"EMAIL":   T("Email"),
+                                 "SMS":     MOBILE,
+                                 "TWITTER": T("Twitter"),
+                                 #"XMPP":   "XMPP",
+                                 }
 
         # SMS Gateways
-        self.GATEWAY_OPTS = {
-                "MODEM":   T("Modem"),
-                "SMTP":    T("SMTP"),
-                "TROPO":   T("Tropo"),
-                # Currently only available for Inbound
-                #"TWILIO":  T("Twilio"),
-                "WEB_API": T("Web API"),
-            }
+        self.GATEWAY_OPTS = {"MODEM":   T("Modem"),
+                             "SMTP":    T("SMTP"),
+                             "TROPO":   T("Tropo"),
+                             # Currently only available for Inbound
+                             #"TWILIO":  T("Twilio"),
+                             "WEB_API": T("Web API"),
+                             }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -744,8 +741,10 @@ class S3Msg(object):
                    cc=None,
                    bcc=None,
                    reply_to=None,
-                   sender="%(sender)s",
-                   encoding="utf-8"):
+                   sender=None,
+                   encoding="utf-8",
+                   #from_address=None,
+                   ):
         """
             Function to send Email
             - simple Wrapper over Web2Py's Email API
@@ -755,10 +754,14 @@ class S3Msg(object):
             return False
 
         settings = current.deployment_settings
+
         default_sender = settings.get_mail_sender()
         if not default_sender:
             current.log.warning("Email sending disabled until the Sender address has been set in models/000_config.py")
             return False
+
+        if not sender:
+            sender = default_sender
 
         limit = settings.get_mail_limit()
         if limit:
@@ -780,9 +783,11 @@ class S3Msg(object):
                                    cc=cc,
                                    bcc=bcc,
                                    reply_to=reply_to,
-                                   # @ToDo: Once more people have upgraded their web2py
-                                   #sender=sender,
-                                   encoding=encoding
+                                   sender=sender,
+                                   encoding=encoding,
+                                   # Added to Web2Py 2014-03-04
+                                   # - defaults to sender
+                                   #from_address=from_address,
                                    )
         if not result:
             current.session.error = current.mail.error
@@ -1282,6 +1287,50 @@ class S3Msg(object):
                     log_tweet(c, recipient, from_address)
 
         return True
+
+    #------------------------------------------------------------------------------
+    def post_to_facebook(self, text="", channel_id=None):
+        """
+            Posts a message on Facebook
+
+            https://developers.facebook.com/docs/graph-api
+
+            @ToDo: Log messages in msg_facebook
+        """
+
+        table = current.s3db.msg_facebook_channel
+        if not channel_id:
+            # Try the 1st enabled one in the DB
+            query = (table.enabled == True)
+        else:
+            query = (table.channel_id == channel_id)
+
+        c = current.db(query).select(table.app_id,
+                                     table.app_secret,
+                                     table.page_id,
+                                     table.page_access_token,
+                                     limitby=(0, 1)
+                                     ).first()
+
+        import facebook
+
+        try:
+            app_access_token = facebook.get_app_access_token(c.app_id,
+                                                             c.app_secret)
+        except:
+            import sys
+            message = sys.exc_info()[1]
+            current.log.error("S3MSG: %s" % message)
+            return
+
+        graph = facebook.GraphAPI(app_access_token)
+
+        page_id = c.page_id
+        if page_id:
+            graph = facebook.GraphAPI(c.page_access_token)
+            graph.put_object(page_id, "feed", message=text)
+        else:
+            graph.put_object(user_id, "feed", message=text)
 
     # -------------------------------------------------------------------------
     def poll(self, tablename, channel_id):
@@ -2078,7 +2127,7 @@ class S3Msg(object):
                                 tweet_id = tweet_id,
                                 lang = lang,
                                 date = created_at,
-                                inbound = True,
+                                #inbound = True,
                                 location_id = location_id,
                                 )
             update_super(rtable, dict(id=_id))
@@ -2268,12 +2317,28 @@ class S3Compose(S3CRUD):
         """
 
         post_vars = current.request.post_vars
+        settings = current.deployment_settings
+
+        if settings.get_mail_default_subject():
+            system_name_short = "%s - " % settings.get_system_name_short()
+        else:
+            system_name_short = ""
+
+        if settings.get_mail_auth_user_in_subject():
+            user = current.auth.user
+            if user:
+                authenticated_user = "%s %s - " % (user.first_name,
+                                                   user.last_name)
+        else:
+            authenticated_user = ""
+
+        post_vars.subject = authenticated_user + system_name_short + post_vars.subject
         contact_method = post_vars.contact_method
 
         recipients = self.recipients
         if not recipients:
             if not post_vars.pe_id:
-                if contact_method != "TWITTER": 
+                if contact_method != "TWITTER":
                     current.session.error = current.T("Please enter the recipient(s)")
                     redirect(self.url)
                 else:

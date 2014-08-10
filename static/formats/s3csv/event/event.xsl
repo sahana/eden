@@ -3,10 +3,10 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Event - CSV Import Stylesheet
+         Events - CSV Import Stylesheet
 
          CSV fields:
-         Name....................event_event.name
+         Name OR Reference.......event_event.name
          Type....................event_event.event_type_id or event_event_type.parent
          SubType.................event_event.event_type_id or event_event_type.parent
          SubSubType..............event_event.event_type_id
@@ -190,7 +190,12 @@
             </xsl:call-template>
         </xsl:variable>
         <xsl:variable name="EventName">
-            <xsl:value-of select="col[@field='Name']"/>
+            <xsl:if test="col[@field='Name']!=''">
+                <xsl:value-of select="col[@field='Name']"/>
+            </xsl:if>
+            <xsl:if test="col[@field='Reference']!=''">
+                <xsl:value-of select="col[@field='Reference']"/>
+            </xsl:if>
         </xsl:variable>
         <xsl:variable name="Type">
             <xsl:value-of select="col[@field='Type']"/>
@@ -325,6 +330,7 @@
         <xsl:param name="SubType"/>
         <xsl:param name="SubSubType"/>
 
+        <!-- @todo: migrate to Taxonomy-pattern, see vulnerability/data.xsl -->
         <resource name="event_event_type">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($EventTypePrefix, $Type)"/>

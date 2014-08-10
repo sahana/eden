@@ -36,6 +36,7 @@ import os
 import re
 import sys
 import time
+import urlparse
 import HTMLParser
 
 try:
@@ -529,6 +530,38 @@ def s3_truncate(text, length=48, nice=True):
         return text
 
 # =============================================================================
+def s3_datatable_truncate(string, maxlength=40):
+    """
+        Representation method to override the dataTables-internal truncation
+        of strings per field, like:
+
+        if not r.id and not r.method:
+            table.field.represent = lambda string: \
+                                    s3_datatable_truncate(string, maxlength=40)
+
+        @param string: the string
+        @param maxlength: the maximum string length
+
+        @note: the JS click-event will be attached by S3.datatables.js
+    """
+
+    if string and len(string) > maxlength:
+        _class = "dt-truncate"
+        return TAG[""](
+                DIV(SPAN(_class="ui-icon ui-icon-zoomin",
+                            _style="float:right"),
+                    XML(string[:37] + "&hellip;"),
+                    _class=_class),
+                DIV(SPAN(_class="ui-icon ui-icon-zoomout",
+                            _style="float:right"),
+                    string,
+                    _style="display:none",
+                    _class=_class),
+                )
+    else:
+        return string if string else ""
+
+# =============================================================================
 def s3_trunk8(selector=None, lines=None, less=None, more=None):
     """
         Intelligent client-side text truncation
@@ -683,6 +716,8 @@ def s3_comments_represent(text, show_link=True):
         Represent Comments Fields
     """
 
+    # Make sure text is multi-byte-aware before truncating it
+    text = s3_unicode(text)
     if len(text) < 80:
         return text
     elif not show_link:
@@ -710,7 +745,7 @@ def s3_url_represent(url):
 
     if not url:
         return ""
-    return A(url, _href=url, _target="blank")
+    return A(url, _href=url, _target="_blank")
 
 # =============================================================================
 def s3_URLise(text):
@@ -720,7 +755,7 @@ def s3_URLise(text):
         @param text: the text
     """
 
-    output = URLSCHEMA.sub(lambda m: '<a href="%s">%s</a>' %
+    output = URLSCHEMA.sub(lambda m: '<a href="%s" target="_blank">%s</a>' %
                           (m.group(0), m.group(0)), text)
     return output
     
@@ -1272,6 +1307,71 @@ def s3_orderby_fields(table, orderby, expr=False):
         else:
             continue
         yield f
+
+# =============================================================================
+def s3_get_extension(request=None):
+    """
+        Get the file extension in the path of the request
+
+        @param request: the request object (web2py request or S3Request),
+                        defaults to current.request
+    """
+
+
+    if request is None:
+        request = current.request
+        
+    extension = request.extension
+    if request.function == "ticket" and request.controller == "admin":
+        extension = "html"
+    elif "format" in request.get_vars:
+        ext = request.get_vars.format
+        if isinstance(ext, list):
+            ext = ext[-1]
+        extension = ext.lower() or extension
+    else:
+        ext = None
+        for arg in request.args[::-1]:
+            if "." in arg:
+                ext = arg.rsplit(".", 1)[1].lower()
+                break
+        if ext:
+            extension = ext
+    return extension
+
+# =============================================================================
+def s3_set_extension(url, extension=None):
+    """
+        Add a file extension to the path of a url, replacing all
+        other extensions in the path.
+
+        @param url: the URL (as string)
+        @param extension: the extension, defaults to the extension
+                          of current. request
+    """
+
+    if extension == None:
+        extension = s3_get_extension()
+    #if extension == "html":
+        #extension = ""
+
+    u = urlparse.urlparse(url)
+    
+    path = u.path
+    if path:
+        if "." in path:
+            elements = [p.split(".")[0] for p in path.split("/")]
+        else:
+            elements = path.split("/")
+        if extension and elements[-1]:
+            elements[-1] += ".%s" % extension
+        path = "/".join(elements)
+    return urlparse.urlunparse((u.scheme,
+                                u.netloc,
+                                path,
+                                u.params,
+                                u.query,
+                                u.fragment))
 
 # =============================================================================
 def search_vars_represent(search_vars):

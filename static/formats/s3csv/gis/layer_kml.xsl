@@ -12,12 +12,16 @@
          URL..................string..........Layer URL
          Symbology............string..........Symbology Name
          Marker...............string..........Layer Symbology Marker Name
+         Style................string..........Layer Style
          Folder...............string..........Layer Folder
          Title................string..........Layer Title
          Body.................string..........Layer Body
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
+         Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
+         Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
+         Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
 
          Needs Importing twice:
             layer_config
@@ -116,12 +120,26 @@
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <xsl:if test="col[@field='Title'] != ''">
                 <data field="title"><xsl:value-of select="col[@field='Title']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Body'] != ''">
                 <data field="body"><xsl:value-of select="col[@field='Body']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Folder']!=''">
+                <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Refresh']!=''">
+                <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Attribute']!=''">
+                <data field="cluster_attribute"><xsl:value-of select="col[@field='Cluster Attribute']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Distance']!=''">
+                <data field="cluster_distance"><xsl:value-of select="col[@field='Cluster Distance']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Cluster Threshold']!=''">
+                <data field="cluster_threshold"><xsl:value-of select="col[@field='Cluster Threshold']"/></data>
             </xsl:if>
         </resource>
 
@@ -145,6 +163,9 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <xsl:if test="col[@field='Style']!=''">
+                <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
+            </xsl:if>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>

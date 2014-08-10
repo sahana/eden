@@ -87,7 +87,8 @@
 .pt-show-table {
     display: none;
 }
-.pt-form button:first-child {
+.pt-form fieldset legend button:first-child,
+.tp-form fieldset legend button:first-child {
     display: none;
 }
 
@@ -140,4 +141,55 @@
     font-size: 12px;
     line-height: 12px;
     color: black;
+}
+
+/* static timeplot SVG styles */
+
+.axis {
+   font: 10px sans-serif;
+ }
+
+.axis path,
+.axis line {
+   fill: none;
+   stroke: #000;
+   shape-rendering: crispEdges;
+}
+.grid .tick {
+    stroke: #ccc;
+    stroke-width: 0.5;
+    opacity: 0.7;
+}
+.grid path {
+    stroke-width: 0;
+}
+.grid {
+    fill: none;
+}
+rect.basearea {
+    opacity: 0.4;
+    stroke-width: 0;
+}
+rect.basearea.positive {
+    fill: lightgreen;
+}
+rect.basearea.negative {
+    fill: #fcc;
+}
+line.baseline.positive {
+    stroke: green;
+}
+line.baseline.negative {
+    stroke: red;
+}
+rect.bar.positive {
+    fill: steelblue;
+}
+rect.bar.negative {
+    fill: brown;
+}
+text.empty {
+    font-size: 12px;
+    font-style: italic;
+    fill: black;
 }

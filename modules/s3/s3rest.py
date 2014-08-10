@@ -27,6 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3Request",
+           "S3Method",
+           "s3_request",
+           )
+
 import datetime
 import os
 import re
@@ -56,7 +61,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3resource import S3Resource
-from s3utils import s3_store_last_record_id, s3_remove_last_record_id
+from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
 
 REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
 
@@ -429,7 +434,7 @@ class S3Request(object):
 
         if method and custom_action:
             handler = custom_action
-            
+
         if http == "GET":
             if not method:
                 if resource.count() == 1:
@@ -438,21 +443,21 @@ class S3Request(object):
                     method = "list"
             transform = self.transformable()
             handler = self.get_handler(method, transform=transform)
-            
+
         elif http == "PUT":
             transform = self.transformable(method="import")
             handler = self.get_handler(method, transform=transform)
-            
+
         elif http == "POST":
             transform = self.transformable(method="import")
             return self.get_handler(method, transform=transform)
-                
+
         elif http == "DELETE":
             if method:
                 return self.get_handler(method)
             else:
                 return self.get_handler("delete")
-                
+
         else:
             return None
 
@@ -523,16 +528,11 @@ class S3Request(object):
             if not self.component_id:
                 self.component_id = f[2][1]
 
-        # ?format= overrides extensions
-        if "format" in self.vars:
-            ext = self.vars["format"]
-            if isinstance(ext, list):
-                ext = ext[-1]
-            representation = ext or representation
-        if not representation:
-            self.representation = self.DEFAULT_REPRESENTATION
+        representation = s3_get_extension(self)
+        if representation:
+            self.representation = representation
         else:
-            self.representation = representation.lower()
+            self.representation = self.DEFAULT_REPRESENTATION
         return
 
     # -------------------------------------------------------------------------
@@ -563,6 +563,7 @@ class S3Request(object):
                 if self.vars is not None and count == 1:
                     self.resource.load()
                     self.record = self.resource._rows[0]
+                    self.id = self.record.id
                 else:
                     #current.session.error = current.ERROR.BAD_RECORD
                     redirect(URL(r=self, c=self.prefix, f=self.name))
@@ -652,8 +653,10 @@ class S3Request(object):
                 form = output.get("form")
                 if form:
                     if not hasattr(form, "errors"):
-                        form = form[0]
-                    if form.errors:
+                        # Form embedded in a DIV together with other components
+                        form = form.elements('form', first_only=True)
+                        form = form[0] if form else None
+                    if form and form.errors:
                         return output
 
             session = current.session
@@ -1119,9 +1122,9 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
-        if "field" in _vars:
-            items = _vars["field"]
+        get_vars = r.get_vars
+        if "field" in get_vars:
+            items = get_vars["field"]
             if not isinstance(items, (list, tuple)):
                 items = [items]
             fields = []
@@ -1132,33 +1135,43 @@ class S3Request(object):
                     add_fields(f)
         else:
             fields = None
-        only_last = False
-        if "only_last" in _vars:
-            only_last = _vars["only_last"]
-        show_uids = False
-        if "show_uids" in _vars:
-            v = _vars["show_uids"]
-            if isinstance(v, (list, tuple)):
-                v = v[-1]
-            if v.lower() == "true":
-                show_uids = True
-        component = r.component_name
+
+        if "hierarchy" in get_vars:
+            hierarchy = get_vars["hierarchy"].lower() not in ("false", "0")
+        else:
+            hierarchy = False
+            
+        if "only_last" in get_vars:
+            only_last = get_vars["only_last"].lower() not in ("false", "0")
+        else:
+            only_last = False
+            
+        if "show_uids" in get_vars:
+            show_uids = get_vars["show_uids"].lower() not in ("false", "0")
+        else:
+            show_uids = False
+
         representation = r.representation
         if representation == "xml":
-            output = r.resource.export_options(component=component,
-                                               fields=fields,
-                                               show_uids=show_uids)
+            only_last = False
+            as_json = False
             content_type = "text/xml"
         elif representation == "s3json":
-            output = r.resource.export_options(component=component,
-                                               fields=fields,
-                                               only_last=only_last,
-                                               as_json=True)
+            show_uids = False
+            as_json = True
             content_type = "application/json"
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
-        response = current.response
-        response.headers["Content-Type"] = content_type
+
+        component = r.component_name
+        output = r.resource.export_options(component=component,
+                                           fields=fields,
+                                           show_uids=show_uids,
+                                           only_last=only_last,
+                                           hierarchy=hierarchy,
+                                           as_json=as_json)
+            
+        current.response.headers["Content-Type"] = content_type
         return output
 
     # -------------------------------------------------------------------------
@@ -1205,7 +1218,7 @@ class S3Request(object):
 
         stylesheet = self.stylesheet(method=method, skip_error=True)
 
-        if self.representation != "xml" and not stylesheet:
+        if not stylesheet and self.representation != "xml":
             return False
         else:
             return True
@@ -1292,7 +1305,8 @@ class S3Request(object):
             target=None,
             method=None,
             representation=None,
-            vars=None):
+            vars=None,
+            host=None):
         """
             Returns the URL of this request, use parameters to override
             current requests attributes:
@@ -1308,6 +1322,7 @@ class S3Request(object):
             @param method: the URL method
             @param representation: the representation for the URL
             @param vars: the URL query variables
+            @param host: string to force absolute URL with host (True means http_host)
 
             Particular behavior:
                 - changing the master record ID resets the component ID
@@ -1408,7 +1423,9 @@ class S3Request(object):
         return URL(r=self,
                    c=self.controller,
                    f=f,
-                   args=args, vars=vars)
+                   args=args,
+                   vars=vars,
+                   host=host)
 
     # -------------------------------------------------------------------------
     def target(self):
@@ -1594,7 +1611,7 @@ class S3Method(object):
 
             @param r: the S3Request
             @param method: the method established by the REST interface
-            @param as_widget: render as widget (to embed in another method)
+            @param widget_id: widget ID
             @param attr: dict of parameters for the method handler
 
             @return: output object to send to the view

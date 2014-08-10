@@ -7,6 +7,9 @@
 module = request.controller
 resourcename = request.function
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # -----------------------------------------------------------------------------
 def index():
     """
@@ -17,15 +20,6 @@ def index():
     response.title = module_name
 
     # Read user request
-    config = get_vars.get("config", None)
-    if config:
-        try:
-            config = int(config)
-        except:
-            config = None
-        else:
-            config = gis.set_config(config)
-
     height = get_vars.get("height", None)
     width = get_vars.get("width", None)
     toolbar = get_vars.get("toolbar", None)
@@ -54,13 +48,16 @@ def index():
             script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
         s3.scripts.append(script)
 
-    help = T("To Print or Share the Map you will have to take a screenshot. If you need help taking a screen shot, have a look at these instructions for %(windows)s or %(mac)s") \
-        % dict(windows="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Microsoft-Windows' target='_blank'>Windows</a>",
-               mac="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Mac-OS-X' target='_blank'>Mac</a>")
-    script = '''i18n.gis_print_help="%s"''' % help
-    s3.js_global.append(script)
-    script = "/%s/static/scripts/S3/s3.gis.print_help.js" % appname
-    s3.scripts.append(script)
+    save = settings.get_gis_save()
+
+    if not save:
+        help = T("To Print or Share the Map you will have to take a screenshot. If you need help taking a screen shot, have a look at these instructions for %(windows)s or %(mac)s") \
+            % dict(windows="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Microsoft-Windows' target='_blank'>Windows</a>",
+                   mac="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Mac-OS-X' target='_blank'>Mac</a>")
+        script = '''i18n.gis_print_help="%s"''' % help
+        s3.js_global.append(script)
+        script = "/%s/static/scripts/S3/s3.gis.print_help.js" % appname
+        s3.scripts.append(script)
 
     # Include an embedded Map on the index page
     map = define_map(height = height,
@@ -70,7 +67,8 @@ def index():
                      collapsed = collapsed,
                      closable = False,
                      maximizable = False,
-                     config = config)
+                     save = save,
+                     )
 
     return dict(map=map,
                 title = T("Map"))
@@ -82,10 +80,27 @@ def map_viewing_client():
         UI for a user to view the overall Maps with associated Features
     """
 
+    # Read user request
+    print_mode = get_vars.get("print", None)
+    if print_mode:
+        collapsed = True
+        toolbar = False
+        save = False
+        zoomcontrol = False
+    else:
+        collapsed = False
+        toolbar = True
+        save = settings.get_gis_save()
+        zoomcontrol = None
+
     map = define_map(window = True,
-                     toolbar = True,
+                     toolbar = toolbar,
+                     collapsed = collapsed,
                      closable = False,
-                     maximizable = False)
+                     maximizable = False,
+                     save = save,
+                     zoomcontrol = zoomcontrol,
+                     )
 
     response.title = T("Map Viewing Client")
     return dict(map=map)
@@ -98,13 +113,23 @@ def define_map(height = None,
                closable = True,
                collapsed = False,
                maximizable = True,
-               config = None):
+               save = False,
+               zoomcontrol = None,
+               ):
     """
         Define the main Situation Map
         This is called from both the Index page (embedded)
         & the Map_Viewing_Client (fullscreen)
     """
 
+    config = get_vars.get("config", None)
+    if config:
+        try:
+            config = int(config)
+        except:
+            config = None
+        else:
+            config = gis.set_config(config)
     if not config:
         config = gis.get_config()
 
@@ -118,31 +143,64 @@ def define_map(height = None,
     else:
         wms_browser = None
 
-    # http://eden.sahanafoundation.org/wiki/BluePrintGISPrinting
-    print_service = settings.get_gis_print_service()
-    if print_service:
-        print_tool = {"url": print_service}
-    else:
-        print_tool = {}
-
     # Do we allow creation of PoIs from the main Map?
-    pois = settings.get_gis_pois() and \
-           auth.s3_has_permission("create", s3db.gis_poi)
-    if pois:
-        if s3.debug:
-            script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
-        else:
-            script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
-        s3.scripts.append(script)
-        # @ToDo: Allow multiple PoI layers
-        ftable = s3db.gis_layer_feature
-        layer = db(ftable.name == "PoIs").select(ftable.layer_id,
-                                                 limitby=(0, 1)
-                                                 ).first()
-        if layer:
-            script = '''S3.gis.pois_layer=%s''' % layer.layer_id
-            s3.js_global.append(script)
+    add_feature = add_line = add_polygon = False
+    poi_resources = settings.get_gis_poi_create_resources()
+    if poi_resources:
+        layers = []
+        # Remove those which this user doesn't have permissions to create
+        not_permitted = []
+        for res in poi_resources:
+            permit = auth.s3_has_permission("create", res["table"], c=res["c"], f=res["f"])
+            if permit:
+                # Store the layer name
+                layers.append(res["layer"])
+                # Enable the relevant button
+                # @ToDo: Support Menus / Popups
+                feature_type = res.get("type", None)
+                if feature_type == "line":
+                    add_line = True
+                elif feature_type == "polygon":
+                    add_polygon = True
+                else:
+                    # Default
+                    add_feature = True
+            else:
+                # Remove from list
+                not_permitted.append(res)
+        for res in not_permitted:
+            poi_resources.remove(res)
 
+        if poi_resources:
+            # Lookup Layer IDs
+            ftable = s3db.gis_layer_feature
+            rows = db(ftable.name.belongs(layers)).select(ftable.layer_id, ftable.name)
+            layers_lookup = dict()
+            for row in rows:
+                layers_lookup[row.name] = row.layer_id
+
+            # Prepare JSON data structure
+            pois = []
+            for res in poi_resources:
+                poi = dict(c = res["c"],
+                           f = res["f"],
+                           l = s3_unicode(res["label"]),
+                           #t = s3_unicode(res["tooltip"]),
+                           i = layers_lookup.get(res["layer"], None),
+                           t = res.get("type", "point"),
+                           )
+                pois.append(poi)
+
+            # Inject client-side JS
+            script = '''S3.gis.poi_resources=%s''' % json.dumps(pois, separators=SEPARATORS)
+            s3.js_global.append(script)
+            if s3.debug:
+                script = "/%s/static/scripts/S3/s3.gis.pois.js" % appname
+            else:
+                script = "/%s/static/scripts/S3/s3.gis.pois.min.js" % appname
+            s3.scripts.append(script)
+
+    # Are we wanting to display a specific PoI Marker?
     # @ToDo: Generalise with feature/tablename?
     poi = get_vars.get("poi", None)
     if poi:
@@ -175,25 +233,25 @@ def define_map(height = None,
         lon = None
         feature_resources = None
 
-    save = settings.get_gis_save()
-
     map = gis.show_map(height = height,
                        width = width,
                        lat = lat,
                        lon = lon,
-                       add_feature = pois,
+                       add_feature = add_feature,
+                       add_line = add_line,
+                       add_polygon = add_polygon,
                        catalogue_layers = True,
                        feature_resources = feature_resources,
                        legend = legend,
-                       print_tool = print_tool,
                        save = save,
                        search = search,
                        toolbar = toolbar,
                        wms_browser = wms_browser,
-                       window = window,
+                       collapsed = collapsed,
                        closable = closable,
                        maximizable = maximizable,
-                       collapsed = collapsed,
+                       window = window,
+                       zoomcontrol = zoomcontrol,
                        )
 
     return map
@@ -231,10 +289,11 @@ def location():
     filter_level_widgets = []
     for level, level_label in location_hierarchy.items():
         search_fields.append(level)
+        hidden = False if level == "L0" else True
         filter_level_widgets.append(S3OptionsFilter(level,
                                                     label = level_label,
                                                     #cols = 5,
-                                                    hidden = True,
+                                                    hidden = hidden,
                                                     ))
 
     filter_widgets = [
@@ -567,7 +626,7 @@ def ldata():
                                                     f=int(l.parent),
                                                     )
 
-    script = '''n=%s\n''' % json.dumps(location_dict)
+    script = '''n=%s\n''' % json.dumps(location_dict, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return script
 
@@ -588,7 +647,7 @@ def hdata():
     if len(args) == 0:
         raise HTTP(400)
 
-    id = args[0]
+    _id = args[0]
 
     # @ToDo: Translate options using gis_hierarchy_name?
     #translate = settings.get_L10n_translate_gis_location()
@@ -599,7 +658,7 @@ def hdata():
 
     table = s3db.gis_hierarchy
     query = (table.deleted == False) & \
-            (table.location_id == id)
+            (table.location_id == _id)
     fields = [table.L1,
               table.L2,
               table.L3,
@@ -610,14 +669,14 @@ def hdata():
                            limitby=(0, 1)
                            ).first()
     if not row:
-        return ""
+        return '''var n'''
 
     hdict = {}
     for l in ["L1", "L2", "L3", "L4", "L5"]:
         if row[l]:
             hdict[int(l[1:])] = row[l]
 
-    script = '''n=%s\n''' % json.dumps(hdict)
+    script = '''n=%s\n''' % json.dumps(hdict, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return script
 
@@ -640,7 +699,7 @@ def s3_gis_location_parents(r, **attr):
         # @ToDo
         output = dict()
         #return output
-        raise HTTP(501, body=current.ERROR.BAD_FORMAT)
+        raise HTTP(501, ERROR.BAD_FORMAT)
 
     elif r.representation == "json":
 
@@ -651,15 +710,15 @@ def s3_gis_location_parents(r, **attr):
                 _parents = {}
                 for parent in parents:
                     _parents[parent.level] = parent.id
-                output = json.dumps(_parents)
+                output = json.dumps(_parents, separators=SEPARATORS)
                 return output
             else:
-                raise HTTP(404, body=current.ERROR.NO_MATCH)
+                raise HTTP(404, ERROR.NO_MATCH)
         else:
-            raise HTTP(404, body=current.ERROR.BAD_RECORD)
+            raise HTTP(404, ERROR.BAD_RECORD)
 
     else:
-        raise HTTP(501, body=current.ERROR.BAD_FORMAT)
+        raise HTTP(501, ERROR.BAD_FORMAT)
 
 # -----------------------------------------------------------------------------
 def l0():
@@ -715,7 +774,7 @@ def l0():
     for key in location_hierarchy:
         result[key] = location_hierarchy[key]
 
-    output = json.dumps(result)
+    output = json.dumps(result, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return output
 
@@ -813,6 +872,10 @@ def config_default(r, **attr):
 def config():
     """ RESTful CRUD controller """
 
+    # Filter out Temp configs
+    FS = s3base.S3FieldSelector
+    s3.filter = (FS("config.temp") == False)
+
     # Custom Methods to set as default
     set_method = s3db.set_method
     set_method(module, resourcename,
@@ -834,10 +897,11 @@ def config():
         if r.representation == "url":
             # Save from Map
             if r.method == "create" and \
-                 auth.is_logged_in():
-                pe_id = auth.user.pe_id
-                r.table.pe_id.default = pe_id
-                r.table.pe_type.default = 1
+               auth.is_logged_in():
+                table = r.table
+                table.pe_id.default = auth.user.pe_id
+                table.pe_type.default = 1
+                table.temp.writable = True
 
         elif r.interactive or r.representation == "aadata":
             if not r.component:
@@ -860,15 +924,15 @@ def config():
                     # Hide Exports
                     settings.ui.export_formats = []
                     # Filter Region & Default Configs
-                    table = r.table
-                    s3.filter = (table.region_location_id == None) & \
-                                (table.uuid != "SITE_DEFAULT")
+                    s3.filter = (FS("config.temp") == False) & \
+                                (FS("config.region_location_id") == None) & \
+                                (FS("config.uuid") != "SITE_DEFAULT")
                     list_fields = ["name",
                                    "pe_id",
                                    "pe_default",
                                    ]
                     CREATED_BY = T("Created By")
-                    field = table.pe_id
+                    field = r.table.pe_id
                     field.label = CREATED_BY
                     field.represent = s3db.pr_PersonEntityRepresent(show_label = False,
                                                                     show_type = False,
@@ -1031,24 +1095,43 @@ def config():
             # Save from Map
             result = json.loads(output["item"])
             if result["status"] == "success":
+                config_id = r.id
+                post_vars = request.post_vars
+                if post_vars.get("temp", False):
+                    # This is coming from a Print Screenshot
+                    # Hide the message
+                    try:
+                        del result["message"]
+                    except:
+                        pass
+                    # Add the ID
+                    result["id"] = config_id
+                    output["item"] = json.dumps(result, separators=SEPARATORS)
+                elif post_vars.get("hide", False):
+                    # This is coming from Save Panel
+                    # Hide the message
+                    try:
+                        del result["message"]
+                    except:
+                        pass
+                    output["item"] = json.dumps(result, separators=SEPARATORS)
                 # Process Layers
                 ltable = s3db.gis_layer_config
-                id = r.id
                 layers = json.loads(request.post_vars.layers)
                 form = Storage()
                 for layer in layers:
                     if "id" in layer and layer["id"] != "search_results":
                         layer_id = layer["id"]
-                        form_vars = Storage(config_id = id,
+                        form_vars = Storage(config_id = config_id,
                                             layer_id = layer_id,
                                             )
                         if "base" in layer:
                             form_vars.base = layer["base"]
                         form_vars.visible = layer.get("visible", False)
                         if "style" in layer:
-                            form_vars.style = json.dumps(layer["style"])
+                            form_vars.style = json.dumps(layer["style"], separators=SEPARATORS)
                         # Update or Insert?
-                        query = (ltable.config_id == id) & \
+                        query = (ltable.config_id == config_id) & \
                                 (ltable.layer_id == layer_id)
                         record = db(query).select(ltable.id,
                                                   limitby=(0, 1)).first()
@@ -1057,7 +1140,7 @@ def config():
                             form_vars.id = record_id
                             db(ltable.id == record_id).update(**form_vars)
                         else:
-                            # How could this happen?
+                            # New Saved Map
                             form_vars.id = ltable.insert(**form_vars)
                         # Ensure that Default Base processing happens properly
                         form.vars = form_vars
@@ -1066,7 +1149,8 @@ def config():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader)
+    output = s3_rest_controller(rheader = s3db.gis_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -1074,6 +1158,7 @@ def enable_layer(r, **attr):
     """
         Enable a Layer
             designed to be a custom method called by an action button
+        @ToDo: Make this call an API function which can then also be used by CLI scripts (like msg_channel_enable)
     """
 
     if r.component_name != "layer_entity":
@@ -1092,6 +1177,7 @@ def disable_layer(r, **attr):
     """
         Disable a Layer
             designed to be a custom method called by an action button in config/layer_entity
+        @ToDo: Make this call an API function which can then also be used by CLI scripts (like msg_channel_disable)
     """
 
     if r.component_name != "layer_entity":
@@ -2805,17 +2891,27 @@ def poi():
                 field = r.table.location_id
                 field.label = ""
                 # Lat/Lon from Feature?
+                # @ToDo: S3PoIWidget() instead to pickup the passed Lat/Lon/WKT
                 lat = get_vars.get("lat", None)
                 if lat is not None:
                     lon = get_vars.get("lon", None)
                     if lon is not None:
-                        form_vars = Storage(lat=float(lat),
-                                            lon=float(lon),
+                        form_vars = Storage(lat = float(lat),
+                                            lon = float(lon),
                                             )
                         form = Storage(vars=form_vars)
                         s3db.gis_location_onvalidation(form)
                         id = s3db.gis_location.insert(**form_vars)
                         field.default = id
+                # WKT from Feature?
+                wkt = get_vars.get("wkt", None)
+                if wkt is not None:
+                    form_vars = Storage(wkt = wkt,
+                                        )
+                    form = Storage(vars = form_vars)
+                    s3db.gis_location_onvalidation(form)
+                    id = s3db.gis_location.insert(**form_vars)
+                    field.default = id
 
             elif r.method in ("update", "update.popup"):
                 table = r.table
@@ -2840,7 +2936,7 @@ def poi():
                 if layer:
                     popup_edit_url = r.url(method="update",
                                            representation="popup",
-                                           vars={'refresh_layer':layer.layer_id},
+                                           vars={"refresh_layer":layer.layer_id},
                                            )
                 else:
                     popup_edit_url = r.url(method="update",
@@ -3057,7 +3153,7 @@ def geocode():
         # Not needed by S3LocationSelectorWidget2 as it downloads bounds with options
         results = "NotImplementedError"
 
-    results = json.dumps(results)
+    results = json.dumps(results, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return results
 
@@ -3083,7 +3179,7 @@ def geocode_r():
     results = gis.geocode_r(lat, lon)
 
     # Return the results
-    results = json.dumps(results)
+    results = json.dumps(results, separators=SEPARATORS)
     response.headers["Content-Type"] = "application/json"
     return results
 
@@ -3313,7 +3409,7 @@ def maps():
         # @ToDo: Read Metadata (no way of editing this yet)
 
         # Encode as JSON
-        output = json.dumps(output)
+        output = json.dumps(output, separators=SEPARATORS)
 
         # Output to browser
         response.headers["Content-Type"] = "application/json"
@@ -3395,7 +3491,7 @@ def maps():
         id = table.insert(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
 
         # Return the ID of the saved record for the Bookmark
-        output = json.dumps(dict(id=id))
+        output = json.dumps(dict(id=id), separators=SEPARATORS)
         return output
 
     elif request.env.request_method == "PUT":
@@ -3479,7 +3575,7 @@ def maps():
         db(table.id == id).update(lat=lat, lon=lon, zoom=zoom, layer_id=layers)
 
         # Return the ID of the saved record for the Bookmark
-        output = json.dumps(dict(id=id))
+        output = json.dumps(dict(id=id), separators=SEPARATORS)
         return output
 
     # Abort - we shouldn't get here

@@ -2,7 +2,7 @@
 
 """ S3 TimePlot Reports Method
 
-    @copyright: 2011-2014 (c) Sahana Software Foundation
+    @copyright: 2013-2014 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{Python 2.6}} <http://www.python.org>}
@@ -29,7 +29,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3TimePlot",
+           "S3TimePlotEvent",
+           "S3TimePlotEventFrame",
+           "S3TimePlotPeriod",
+           )
+
 import datetime
+import dateutil.tz
 import re
 import sys
 
@@ -48,9 +55,20 @@ from itertools import izip, tee
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import *
+from gluon.validators import IS_IN_SET
+from gluon.sqlhtml import OptionsWidget
 
 from s3rest import S3Method
 from s3query import FS
+from s3report import S3ReportForm
+
+tp_datetime = lambda *t: datetime.datetime(tzinfo=dateutil.tz.tzutc(), *t)
+
+tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
+                       if dt and dt.tzinfo is None else dt
+
+# Compact JSON encoding
+SEPARATORS = (",", ":")
 
 # =============================================================================
 class S3TimePlot(S3Method):
@@ -80,6 +98,8 @@ class S3TimePlot(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    # @todo: widget-method
+    # -------------------------------------------------------------------------
     def timeplot(self, r, **attr):
         """
             Time plot report page
@@ -88,22 +108,54 @@ class S3TimePlot(S3Method):
             @param attr: controller attributes for the request
         """
         
-        resource = self.resource
-
-        options = ("timestamp",
-                   "fact",
-                   "start",
-                   "end",
-                   "slots")
+        output = {}
 
         # Extract the relevant GET vars
+        # @todo: option for grouping
+        report_vars = ("timestamp",
+                       "fact",
+                       "start",
+                       "end",
+                       "slots",
+                       "baseline",
+                       )
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                               if k in options)
+                        if k in report_vars)
+
+        # Execute on component?
+        resource = self.resource
+        alias = r.get_vars.get("component")
+        if alias and alias not in (resource.alias, "~"):
+            if alias not in resource.components:
+                hook = current.s3db.get_component(resource.tablename, alias)
+                if hook:
+                    resource._attach(alias, hook)
+            if alias in resource.components:
+                resource = resource.components[alias]
+
+        tablename = resource.tablename
+        get_config = resource.get_config
+
+        # Apply filter defaults (before rendering the data!)
+        show_filter_form = False
+        if r.representation in ("html", "iframe"):
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not self.hide_filter:
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
 
         # Fall back to report options defaults
-        if not any(k in get_vars for k in options):
-            timeplot_options = resource.get_config("timeplot_options", {})
-            get_vars = timeplot_options.get("defaults", {})
+        report_options = resource.get_config("timeplot_options", {})
+        defaults = report_options.get("defaults", {})
+        if not any(k in get_vars for k in report_vars):
+            get_vars = defaults
+        else:
+            # Optional URL args always fall back to config:
+            optional = ("timestamp",)
+            for opt in optional:
+                if opt not in get_vars and opt in defaults:
+                    get_vars[opt] = defaults[opt]
 
         # Parse event timestamp option
         timestamp = get_vars.get("timestamp")
@@ -116,7 +168,7 @@ class S3TimePlot(S3Method):
         # Parse fact option
         fact = get_vars.get("fact")
         try:
-            fact, method = self.resolve_fact(resource, fact)
+            method, rfields, arguments = self.resolve_fact(resource, fact)
         except (SyntaxError, AttributeError):
             r.error(400, sys.exc_info()[1])
 
@@ -125,22 +177,28 @@ class S3TimePlot(S3Method):
         end = get_vars.get("end")
         slots = get_vars.get("slots")
         try:
-            event_frame = self.create_event_frame(event_start,
+            event_frame = self.create_event_frame(resource,
+                                                  event_start,
                                                   event_end,
                                                   start,
                                                   end,
-                                                  slots)
+                                                  slots,
+                                                  )
         except (SyntaxError, ValueError):
             r.error(400, sys.exc_info()[1])
 
         # Add event data
+        baseline = get_vars.get("baseline")
         try:
             self.add_event_data(event_frame,
                                 resource,
                                 event_start,
                                 event_end,
-                                [fact])
-        except (SyntaxError):
+                                rfields,
+                                baseline= baseline,
+                                cumulative = method == "cumulate",
+                                )
+        except SyntaxError:
             pass
 
         # Iterate over the event frame to collect aggregates
@@ -154,46 +212,80 @@ class S3TimePlot(S3Method):
             if item_end:
                 item_end = item_end.isoformat()
             value = period.aggregate(method=method,
-                                     field=fact.colname,
-                                     event_type=resource.tablename)
+                                     fields=[rfield.colname for rfield in rfields],
+                                     arguments=arguments,
+                                     event_type=tablename,
+                                     )
             new_item((item_start, item_end, value))
 
-        # Convert to JSON
-        items = json.dumps(items)
+        # Timeplot data
+        data = {"items": items,
+                "empty": event_frame.empty,
+                "baseline": event_frame.baseline,
+                }
 
-        # Generate output
+        # Widget ID
         widget_id = "timeplot"
 
+        # Render output
         if r.representation in ("html", "iframe"):
+            # Page load
             
-            title = self.crud_string(resource.tablename, "title_report")
+            output["title"] = self.crud_string(tablename, "title_report")
             
-            output = {"title": title}
-            
-            form = FORM(DIV(_class="tp-chart", _style="height: 300px;"),
-                        INPUT(_type="hidden",
-                              _class="tp-data",
-                              _value=items),
-                        _class="tp-form",
-                        _id = widget_id)
+            # Filter widgets
+            if show_filter_form:
+                advanced = False
+                for widget in filter_widgets:
+                    if "hidden" in widget.opts and widget.opts.hidden:
+                        advanced = get_config("report_advanced", True)
+                        break
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_form = S3FilterForm(filter_widgets,
+                                           formstyle=filter_formstyle,
+                                           advanced=advanced,
+                                           submit=False,
+                                           _class="filter-form",
+                                           _id="%s-filter-form" % widget_id,
+                                           )
+                fresource = current.s3db.resource(tablename)
+                alias = resource.alias if resource.parent else None
+                filter_widgets = filter_form.fields(fresource,
+                                                    r.get_vars,
+                                                    alias=alias,
+                                                    )
+            else:
+                # Render as empty string to avoid the exception in the view
+                filter_widgets = None
 
-            output["form"] = form
+            ajax_vars = Storage(r.get_vars)
+            ajax_vars.update(get_vars)
+            filter_url = url=r.url(method="",
+                                   representation="",
+                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                            if k not in report_vars)))
+            ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
+                                                representation="json",
+                                                vars=ajax_vars,
+                                                ))
+
+            output["form"] = S3TimePlotForm(resource) \
+                                           .html(data,
+                                                 get_vars = get_vars,
+                                                 filter_widgets = filter_widgets,
+                                                 ajaxurl = ajaxurl,
+                                                 filter_url = filter_url,
+                                                 widget_id = widget_id,
+                                                 )
 
             # View
             response = current.response
             response.view = self._view(r, "timeplot.html")
-
-            # Script to attach the timeplot widget
-            options = {"method": method}
-            script = """$("#%(widget_id)s").timeplot(%(options)s);""" % \
-                        {"widget_id": widget_id,
-                         "options": json.dumps(options)
-                        }
-            response.s3.jquery_ready.append(script)
-        
+       
         elif r.representation == "json":
+            # Ajax load
 
-            output = items
+            output = json.dumps(data, separators=SEPARATORS)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -206,7 +298,9 @@ class S3TimePlot(S3Method):
                        resource,
                        event_start,
                        event_end,
-                       facts):
+                       facts,
+                       cumulative=False,
+                       baseline=None):
         """
             Extract event data from resource and add them to the
             event frame
@@ -216,24 +310,32 @@ class S3TimePlot(S3Method):
             @param event_start: the event start field (S3ResourceField)
             @param event_end: the event_end field (S3ResourceField)
             @param fact: list of fact fields (S3ResourceField)
+            @param cumulative: whether the aggregation method is cumulative
+            @param baseline: field selector to extract the baseline value (e.g.
+                             for burn-down visualization)
 
             @return: the extracted data (dict from S3Resource.select)
         """
 
         # Fields to extract
         fields = set(fact.selector for fact in facts)
-        fields.add(event_start.selector)
-        fields.add(event_end.selector)
+        if event_start:
+            fields.add(event_start.selector)
+        else:
+            return None
+        if event_end:
+            fields.add(event_end.selector)
         fields.add(resource._id.name)
 
         # Filter by event frame start:
         # End date of events must be after the event frame start date
-        if event_end:
+        if not cumulative and event_end:
             end_selector = FS(event_end.selector)
             start = event_frame.start
             query = (end_selector == None) | (end_selector >= start)
         else:
-            # No point if events have no end date
+            # No point if events have no end date, and wrong if
+            # method is cumulative
             query = None
 
         # Filter by event frame end:
@@ -245,6 +347,33 @@ class S3TimePlot(S3Method):
 
         # Add as temporary filter
         resource.add_filter(query)
+
+        # Compute baseline
+        value = None
+        if baseline:
+            try:
+                rfield = resource.resolve_selector(baseline)
+            except (AttributeError, SyntaxError):
+                current.log.error(sys.exc_info[1])
+            else:
+                if rfield.field and rfield.ftype in ("integer", "double"):
+                    # Don't need s3db here - if there's an rfield.field,
+                    # then there's also a table!
+                    baseline_table = current.db[rfield.tname]
+                    pkey = str(baseline_table._id)
+                    colname = rfield.colname
+                    rows = resource.select([baseline],
+                                           groupby = [pkey, colname],
+                                           as_rows = True,
+                                           )
+                    value = 0
+                    for row in rows:
+                        v = row[colname]
+                        if v is not None:
+                            value += v
+                else:
+                    current.log.error("Invalid field type for baseline")
+        event_frame.baseline = value
 
         # Extract the records
         data = resource.select(fields)
@@ -262,7 +391,7 @@ class S3TimePlot(S3Method):
         # Column names for extractions
         pkey = str(resource._id)
         start_colname = event_start.colname
-        end_colname = event_end.colname
+        end_colname = event_end.colname if event_end else None
 
         # Use table name as event type
         tablename = resource.tablename
@@ -270,14 +399,14 @@ class S3TimePlot(S3Method):
         # Create the events
         events = []
         add_event = events.append
-        for row in data["rows"]:
+        for row in data.rows:
             values = dict((fact.colname, row[fact.colname])
                           for fact in facts)
             start = row[start_colname]
-            if convert_start:
+            if convert_start and start:
                 start = convert_date(start)
-            end = row[end_colname]
-            if convert_end:
+            end = row[end_colname] if end_colname else None
+            if convert_end and end:
                 end = convert_date(end)
             event = S3TimePlotEvent(row[pkey],
                                     start = start,
@@ -289,19 +418,20 @@ class S3TimePlot(S3Method):
         # Extend the event frame with these events
         if events:
             event_frame.extend(events)
-
         return data
         
     # -------------------------------------------------------------------------
     def create_event_frame(self,
+                           resource,
                            event_start,
                            event_end,
                            start=None,
                            end=None,
                            slots=None):
         """
-            Create an event frame for the current resource
+            Create an event frame for this report
 
+            @param resource: the target resource
             @param event_start: the event start field (S3ResourceField)
             @param event_end: the event end field (S3ResourceField)
             @param start: the start date/time (string)
@@ -311,9 +441,7 @@ class S3TimePlot(S3Method):
             @return: the event frame
         """
 
-        resource = self.resource
-
-        now = datetime.datetime.utcnow()
+        now = tp_tzsafe(datetime.datetime.utcnow())
 
         dtparse = self.dtparse
 
@@ -346,7 +474,7 @@ class S3TimePlot(S3Method):
             if rows:
                 first_event = rows.first()[event_start.colname]
                 if isinstance(first_event, datetime.date):
-                    first_event = datetime.datetime.fromordinal(first_event.toordinal())
+                    first_event = tp_tzsafe(datetime.datetime.fromordinal(first_event.toordinal()))
                 start_dt = first_event
 
         if not start_dt and event_end and event_end.field:
@@ -364,7 +492,7 @@ class S3TimePlot(S3Method):
             if rows:
                 last_event = rows.first()[event_end.colname]
                 if isinstance(last_event, datetime.date):
-                    last_event = datetime.datetime.fromordinal(last_event.toordinal())
+                    last_event = tp_tzsafe(datetime.datetime.fromordinal(last_event.toordinal()))
                 start_dt = dtparse("-%s" % STANDARD_SLOT, start=last_event)
 
         if not start_dt:
@@ -413,7 +541,7 @@ class S3TimePlot(S3Method):
         """
 
         if start is None:
-            start = datetime.datetime.utcnow()
+            start = tp_tzsafe(datetime.datetime.utcnow())
 
         if not timestr:
             return start
@@ -445,7 +573,7 @@ class S3TimePlot(S3Method):
             groups = match.groups()
             year = int(groups[1])
             month = int(groups[0])
-            return datetime.datetime(year, month, 1, 0, 0, 0)
+            return tp_datetime(year, month, 1, 0, 0, 0)
 
         # Year-Month, e.g. "2001-05"
         match = regex.YEAR_MONTH.match(timestr)
@@ -453,14 +581,14 @@ class S3TimePlot(S3Method):
             groups = match.groups()
             month = int(groups[1])
             year = int(groups[0])
-            return datetime.datetime(year, month, 1, 0, 0, 0)
+            return tp_datetime(year, month, 1, 0, 0, 0)
 
         # Year only, e.g. "1996"
         match = regex.YEAR.match(timestr)
         if match:
             groups = match.groups()
             year = int(groups[0])
-            return datetime.datetime(year, 1, 1, 0, 0, 0)
+            return tp_datetime(year, 1, 1, 0, 0, 0)
         
         # Date, e.g. "2013-01-04"
         match = regex.DATE.match(timestr)
@@ -470,10 +598,10 @@ class S3TimePlot(S3Method):
             month = int(groups[1])
             day = int(groups[2])
             try:
-                return datetime.datetime(year, month, day)
+                return tp_datetime(year, month, day)
             except ValueError:
                 # Day out of range
-                return datetime.datetime(year, month, 1) + \
+                return tp_datetime(year, month, 1) + \
                        datetime.timedelta(days = day-1)
 
         # ISO datetime
@@ -540,23 +668,253 @@ class S3TimePlot(S3Method):
 
         # Parse the fact
         if not fact:
-            method, selector = "count", "id"
+            method, parameters = "count", "id"
         else:
-            match = re.match("([a-zA-Z]+)\(([a-zA-Z0-9_.$:]+)\)\Z", fact)
+            match = re.match("([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,]+)\)\Z", fact)
             if match:
-                method, selector = match.groups()
+                method, parameters = match.groups()
             else:
-                method, selector = "count", fact
+                method, parameters = "count", fact
 
         # Validate method
         if method not in S3TimePlotPeriod.methods:
             raise SyntaxError("Unsupported aggregation method: %s" % method)
 
-        # Resolve field selector
-        rfield = resource.resolve_selector(selector)
+        parameters = parameters.split(",")
+        selectors = parameters[:1]
+        arguments = []
+        if method == "cumulate":
+            if len(parameters) > 1:
+                parameters = parameters[:3]
+                selectors = parameters[:-1]
+                arguments = parameters[-1:]
 
-        return rfield, method
+        rfields = []
+        for selector in selectors:
+            rfields.append(resource.resolve_selector(selector))
+        if not rfields:
+            raise SyntaxError
 
+        return method, rfields, arguments
+
+# =============================================================================
+class S3TimePlotForm(S3ReportForm):
+    """ Helper class to render a report form """
+
+    def __init__(self, resource):
+
+        self.resource = resource
+
+    # -------------------------------------------------------------------------
+    def html(self,
+             data,
+             filter_widgets=None,
+             get_vars=None,
+             ajaxurl=None,
+             filter_url=None,
+             filter_form=None,
+             filter_tab=None,
+             widget_id=None):
+        """
+            Render the form for the report
+
+            @param get_vars: the GET vars if the request (as dict)
+            @param widget_id: the HTML element base ID for the widgets
+        """
+
+        T = current.T
+
+        # Filter options
+        if filter_widgets is not None:
+            filter_options = self._fieldset(T("Filter Options"),
+                                            filter_widgets,
+                                            _id="%s-filters" % widget_id,
+                                            _class="filter-form")
+        else:
+            filter_options = ""
+
+        # Report options
+        report_options = self.report_options(get_vars = get_vars,
+                                             widget_id = widget_id)
+
+        hidden = {"tp-data": json.dumps(data, separators=SEPARATORS)}
+
+
+        # @todo: report options
+        # @todo: chart title
+        # @todo: empty-section
+        # @todo: CSS
+        
+        # Report form submit element
+        resource = self.resource
+        submit = resource.get_config("report_submit", True)
+        if submit:
+            _class = "tp-submit"
+            if submit is True:
+                label = T("Update Report")
+            elif isinstance(submit, (list, tuple)):
+                label = submit[0]
+                _class = "%s %s" % (submit[1], _class)
+            else:
+                label = submit
+            submit = TAG[""](
+                        INPUT(_type="button",
+                              _value=label,
+                              _class=_class))
+        else:
+            submit = ""
+
+        form = DIV(DIV(FORM(filter_options,
+                            report_options,
+                            submit,
+                            hidden = hidden,
+                            _class = "tp-form",
+                            _id = "%s-tp-form" % widget_id,
+                            ),
+                       _class="tp-form-container form-container",
+                       ),
+                   DIV(DIV(_class="inline-throbber tp-throbber"),
+                       DIV(#DIV(_class="tp-chart-controls"),
+                           DIV(#DIV(_class="tp-hide-chart"),
+                               #DIV(_class="tp-chart-title"),
+                               DIV(_class="tp-chart"),
+                               _class="tp-chart-contents"
+                           ),
+                           _class="tp-chart-container"
+                       ),
+                       #DIV(empty, _class="tp-empty"),
+                   ),
+                   _class="tp-container",
+                   _id=widget_id
+               )
+        
+        # Script to attach the timeplot widget
+
+        settings = current.deployment_settings
+        options = {
+            "ajaxURL": ajaxurl,
+            "autoSubmit": settings.get_ui_report_auto_submit(),
+            "emptyMessage": str(T("No data available for this time interval")),
+        }
+        script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
+                    {"widget_id": widget_id,
+                     "options": json.dumps(options),
+                    }
+        current.response.s3.jquery_ready.append(script)
+
+        return form
+        
+    # -------------------------------------------------------------------------
+    def report_options(self, get_vars=None, widget_id="timeplot"):
+        """
+            Render the widgets for the report options form
+
+            @param get_vars: the GET vars if the request (as dict)
+            @param widget_id: the HTML element base ID for the widgets
+        """
+
+        T = current.T
+
+        timeplot_options = self.resource.get_config("timeplot_options")
+
+        selectors = []
+
+        # @todo: formstyle may not be executable => convert
+        formstyle = current.deployment_settings.get_ui_filter_formstyle()
+
+        # Report type selector
+        # @todo: implement
+        #fact_selector = self.fact_options(options = timeplot_options,
+                                          #get_vars = get_vars,
+                                          #widget_id = "%s-fact" % widget_id,
+                                          #)
+        #selectors.append(formstyle("%s-fact__row" % widget_id,
+                                   #"Label",
+                                   #fact_selector,
+                                   #None,
+                                   #))
+
+        # Time frame selector
+        time_selector = self.time_options(options = timeplot_options,
+                                          get_vars = get_vars,
+                                          widget_id = "%s-time" % widget_id,
+                                          )
+        selectors.append(formstyle("%s-time__row" % widget_id,
+                                   "Time Frame",
+                                   time_selector,
+                                   None,
+                                   ))
+
+        # Render container according to row type
+        if selectors[0].tag == "tr":
+            selectors = TABLE(selectors)
+        else:
+            selectors = TAG[""](selectors)
+
+        # Render field set
+        fieldset = self._fieldset(T("Report Options"),
+                                  selectors,
+                                  _id="%s-options" % widget_id)
+
+        return fieldset
+
+    # -------------------------------------------------------------------------
+    def time_options(self,
+                     options=None,
+                     get_vars=None,
+                     widget_id=None):
+
+        T = current.T
+
+        resource = self.resource
+        prefix = resource.prefix_selector
+
+        # Time options:
+        if options and "time" in options:
+            opts = options["time"]
+        else:
+            # (label, start, end, slots)
+            # If you specify a start, then end is relative to that - without start, end is relative to now
+            opts = (("All up to now", "", "", ""),
+                    ("Last Year", "-1year", "", "months"),
+                    ("Last 6 Months", "-6months", "", "weeks"),
+                    ("Last Quarter", "-3months", "", "weeks"),
+                    ("Last Month", "-1month", "", "days"),
+                    ("Last Week", "-1week", "", "days"),
+                    ("All/+1 Month", "", "+1month", ""),
+                    ("All/+2 Month", "", "+2month", ""),
+                    ("-6/+3 Months", "-6months", "+9months", "months"),
+                    ("-3/+1 Months", "-3months", "+4months", "weeks"),
+                    ("-4/+2 Weeks", "-4weeks", "+6weeks", "weeks"),
+                    ("-2/+1 Weeks", "-2weeks", "+3weeks", "days"),
+                    )
+
+        widget_opts = []
+        for opt in opts:
+            label, start, end, slots = opt
+            widget_opts.append(("|".join((start, end, slots)), T(label)))
+        
+        # Get current value
+        if get_vars:
+            start = get_vars.get("start", "")
+            end = get_vars.get("end", "")
+            slots = get_vars.get("slots", "")
+        else:
+            start = end = slots = ""
+        value = "|".join((start, end, slots))
+
+        # Dummy field
+        dummy_field = Storage(name="time",
+                              requires=IS_IN_SET(widget_opts))
+
+        # Construct widget
+        return OptionsWidget.widget(dummy_field,
+                                    value,
+                                    _id=widget_id,
+                                    _name="time",
+                                    _class="tp-time",
+                                    )
+                                    
 # =============================================================================
 class S3TimePlotEvent(object):
     """ Class representing an event """
@@ -580,8 +938,8 @@ class S3TimePlotEvent(object):
         self.event_type = event_type
         self.event_id = event_id
 
-        self.start = start
-        self.end = end
+        self.start = tp_tzsafe(start)
+        self.end = tp_tzsafe(end)
         
         self.values = values if values is not None else {}
         
@@ -612,7 +970,7 @@ class S3TimePlotEvent(object):
 class S3TimePlotPeriod(object):
     """ Class representing a period within the time frame """
 
-    methods = ("count", "sum", "avg", "min", "max")
+    methods = ("count", "cumulate", "sum", "avg", "min", "max")
 
     def __init__(self, start, end=None):
         """
@@ -622,22 +980,36 @@ class S3TimePlotPeriod(object):
             @param end: end time of the period (datetime.datetime)
         """
 
-        self.start = start
-        self.end = end
+        self.start = tp_tzsafe(start)
+        self.end = tp_tzsafe(end)
 
         # Event sets, structure: {event_type: {event_id: event}}
-        self.sets = {}
+        self.csets = {}
+        self.psets = {}
 
     # -------------------------------------------------------------------------
-    def add(self, event):
+    def add_current(self, event):
         """
-            Add an event to this period
+            Add a current event to this period
 
             @param event: the event (S3TimePlotEvent)
         """
 
-        sets = self.sets
-        
+        self._add(self.csets, event)
+
+    # -------------------------------------------------------------------------
+    def add_previous(self, event):
+        """
+            Add a previous event to this period
+
+            @param event: the event (S3TimePlotEvent)
+        """
+
+        self._add(self.psets, event)
+
+    # -------------------------------------------------------------------------
+    def _add(self, sets, event):
+
         # Find the event set by type
         event_type = event.event_type
         if event_type not in sets:
@@ -650,7 +1022,7 @@ class S3TimePlotPeriod(object):
         return
 
     # -------------------------------------------------------------------------
-    def aggregate(self, method="count", field=None, event_type=None):
+    def aggregate(self, method="count", fields=None, arguments=None, event_type=None):
         """
             Aggregate event data in this period
 
@@ -659,10 +1031,61 @@ class S3TimePlotPeriod(object):
             @param method: the aggregation method
         """
 
-        if field is None and method == "count":
+        if fields is None and method == "count":
             return self.count(event_type)
+
+        if method == "cumulate":
+
+            events = self.events(event_type=event_type)
+
+            slots = arguments[0] if arguments else None
+            if len(fields) > 1:
+                base, slope = fields[:2]
+            else:
+                if slots:
+                    base, slope = None, fields[0]
+                else:
+                    base, slope = fields[0], None
+
+            values = []
+            for event in events:
+
+                if event.start == None:
+                    continue
+
+                base_value = event[base] if base else None
+                slope_value = event[slope] if slope else None
+
+                if base_value is None:
+                    if not slope or slope_value is None:
+                        continue
+                    else:
+                        base_value = 0
+                elif type(base_value) is list:
+                    try:
+                        base_value = sum(base_value)
+                    except (TypeError, ValueError):
+                        continue
+
+                if slope_value is None:
+                    if not base or base_value is None:
+                        continue
+                    else:
+                        slope_value = 0
+                elif type(slope_value) is list:
+                    try:
+                        slope_value = sum(slope_value)
+                    except (TypeError, ValueError):
+                        continue
+
+                duration = self._duration(event, slots) if slope_value and slots else 1
+                values.append((base_value, slope_value, duration))
+
+            return self._aggregate(method, values)
+                
         else:
-            events = self.events(event_type)
+            events = self.current_events(event_type=event_type)
+            field = fields[0] if fields else None
 
             if field:
                 values = []
@@ -681,6 +1104,53 @@ class S3TimePlotPeriod(object):
             else:
                 return None
 
+    # -------------------------------------------------------------------------
+    def _duration(self, event, slots):
+        """
+            Compute the total duration of the given event before the end
+            of this period, in number of slots
+
+            @param event: the S3TimePlotEvent
+            @param slots: the slot
+        """
+
+        if event.end is None or event.end > self.end:
+            end_date = self.end
+        else:
+            end_date = event.end
+        if event.start is None or event.start >= end_date:
+            return 0
+        rule = self.get_rule(event.start, end_date, slots)
+        if rule:
+            return rule.count()
+        else:
+            return 1
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_rule(start, end, slots):
+
+        match = re.match("\s*(\d*)\s*([hdwmy]{1}).*", slots)
+        if match:
+            num, delta = match.groups()
+            deltas = {
+                "h": HOURLY,
+                "d": DAILY,
+                "w": WEEKLY,
+                "m": MONTHLY,
+                "y": YEARLY,
+            }
+            if delta not in deltas:
+                return None
+            else:
+                num = int(num) if num else 1
+                return rrule(deltas[delta],
+                             dtstart=start,
+                             until=end,
+                             interval=num)
+        else:
+            return None
+            
     # -------------------------------------------------------------------------
     @staticmethod
     def _aggregate(method, values):
@@ -720,31 +1190,66 @@ class S3TimePlotPeriod(object):
                     return sum(values) / float(num)
             except (TypeError, ValueError):
                 return None
+        elif method in ("cumulate"):
+            try:
+                return sum(base + slope * duration
+                           for base, slope, duration in values)
+            except (TypeError, ValueError):
+                return None
         return None
 
     # -------------------------------------------------------------------------
     def events(self, event_type=None):
         """
-            Return a list of all events
-
-            @param event_type: the event type identifier (string)
+            Return a list of all events of the given type
         """
-        
-        events = {}
-        sets = self.sets
+
+        if event_type in self.csets:
+            events = dict(self.csets[event_type])
+        else:
+            events = {}
+        if event_type in self.psets:
+            events.update(self.psets[event_type])
+        return events.values()
+
+    # -------------------------------------------------------------------------
+    def current_events(self, event_type=None):
+        """
+            Return a list of current events of the given type
+        """
+
+        return self._events(self.csets, event_type=event_type)
+
+    # -------------------------------------------------------------------------
+    def previous_events(self, event_type=None):
+        """
+            Return a list of previous events of the given type
+        """
+
+        return self._events(self.psets, event_type=event_type)
+
+    # -------------------------------------------------------------------------
+    def _events(self, sets, event_type=None):
+        """
+            Return a list of events of the given type from the given sets
+        """
+
         if event_type in sets:
             events = sets[event_type]
-        return events.values()
+            return events.values()
+        else:
+            return {}
 
     # -------------------------------------------------------------------------
     def count(self, event_type=None):
         """
-            Get the number of events of the given type within this period
+            Get the number of current events of the given type
+            within this period.
 
             @param event_type: the event type identifier (string)
         """
 
-        sets = self.sets
+        sets = self.csets
         if event_type in sets:
             return len(sets[event_type])
         else:
@@ -768,13 +1273,16 @@ class S3TimePlotEventFrame(object):
         # Start time is required
         if start is None:
             raise SyntaxError("start time required")
-        self.start = start
+        self.start = tp_tzsafe(start)
 
         # End time defaults to now
         if end is None:
             end = datetime.datetime.utcnow()
-        self.end = end
+        self.end = tp_tzsafe(end)
 
+        self.empty = True
+        self.baseline = None
+        
         self.slots = slots
         self.periods = {}
 
@@ -790,27 +1298,7 @@ class S3TimePlotEventFrame(object):
         if not slots:
             return None
 
-        match = re.match("\s*(\d*)\s*([hdwmy]{1}).*", slots)
-        if match:
-            num, delta = match.groups()
-            deltas = {
-                "h": HOURLY,
-                "d": DAILY,
-                "w": WEEKLY,
-                "m": MONTHLY,
-                "y": YEARLY,
-            }
-            if delta not in deltas:
-                # @todo: handle "continuous" and "automatic"
-                return None
-            else:
-                num = int(num) if num else 1
-                return rrule(deltas[delta],
-                             dtstart=self.start,
-                             until=self.end,
-                             interval=num)
-        else:
-            return None
+        return S3TimePlotPeriod.get_rule(self.start, self.end, slots)
 
     # -------------------------------------------------------------------------
     def extend(self, events):
@@ -822,6 +1310,10 @@ class S3TimePlotEventFrame(object):
             @todo: integrate in constructor
             @todo: handle self.rule == None
         """
+
+        if not events:
+            return
+        empty = self.empty
 
         # Order events by start datetime
         events = sorted(events)
@@ -836,7 +1328,8 @@ class S3TimePlotEventFrame(object):
         else:
             first = rule.before(start, inc=True)
 
-        current = []
+        current_events = {}
+        previous_events = {}
         for start in rule.between(first, self.end, inc=True):
 
             # Compute end of this period
@@ -851,11 +1344,11 @@ class S3TimePlotEventFrame(object):
             # Find all current events
             for index, event in enumerate(events):
                 if event.end and event.end < start:
-                    # Event ends before this period
-                    continue
+                    # Event ended before this period
+                    previous_events[event.event_id] = event
                 elif event.start is None or event.start < end:
                     # Event starts before or during this period
-                    current.append(event)
+                    current_events[event.event_id] = event
                 else:
                     # Event starts only after this period
                     break
@@ -864,8 +1357,12 @@ class S3TimePlotEventFrame(object):
             period = periods.get(start)
             if period is None:
                 period = periods[start] = S3TimePlotPeriod(start, end=end)
-            for event in current:
-                period.add(event)
+            for event in current_events.values():
+                period.add_current(event)
+            for event in previous_events.values():
+                period.add_previous(event)
+
+            empty = False
 
             # Remaining events
             events = events[index:]
@@ -874,8 +1371,15 @@ class S3TimePlotEventFrame(object):
                 break
 
             # Remove events which end during this period
-            current = [event for event in current
-                       if not event.end or event.end > end]
+            remaining = {}
+            for event_id, event in current_events.items():
+                if not event.end or event.end > end:
+                    remaining[event_id] = event
+                else:
+                    previous_events[event_id] = event
+            current_events = remaining
+
+        self.empty = empty
         return
         
     # -------------------------------------------------------------------------

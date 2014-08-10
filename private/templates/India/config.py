@@ -25,11 +25,18 @@ T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
 
+datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+
 """
-    Template settings for DRM Portal
+    Template settings for India DRM Portal
 """
 
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["India", "demo/users"]
+
+settings.base.system_name = T("India Disaster Risk Management Information System")
+settings.base.system_name_short = T("DRMIS")
 
 # =============================================================================
 # System Settings
@@ -93,13 +100,6 @@ def drmp_realm_entity(table, row):
     return 0
 
 settings.auth.realm_entity = drmp_realm_entity
-
-# -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["India"]
-
-settings.base.system_name = T("India Disaster Risk Management Information System")
-settings.base.system_name_short = T("DRMIS")
 
 # -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
@@ -2358,7 +2358,7 @@ def customise_event_event_controller(**attr):
                                         list_layout = render_profile_posts,
                                         )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "event",
@@ -2384,7 +2384,7 @@ def customise_event_event_controller(**attr):
                                          list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "event",
@@ -2420,7 +2420,7 @@ def customise_event_event_controller(**attr):
                                                       ),
                                                     H2(record.name),
                                                     #P(record.comments),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [incidents_widget,
                                                   map_widget,
@@ -2611,7 +2611,7 @@ def customise_gis_location_controller(**attr):
                                        list_layout = render_projects,
                                        )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "location",
@@ -2625,7 +2625,7 @@ def customise_gis_location_controller(**attr):
                                       )
                 # @ToDo: Renderer
                 #distributions_widget = dict(label = "Distributions",
-                #                            label_create = "Add New Distribution",
+                #                            label_create = "Create Distribution",
                 #                            type = "datalist",
                 #                            tablename = "supply_distribution",
                 #                            context = "location",
@@ -2661,7 +2661,7 @@ def customise_gis_location_controller(**attr):
                                                       #_href=location_url,
                                                       ),
                                                     H2(name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [#locations_widget,
                                                   incidents_widget,
@@ -3067,7 +3067,7 @@ def customise_org_organisation_controller(**attr):
                                        list_layout = render_projects,
                                        )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
@@ -3079,7 +3079,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
@@ -3092,7 +3092,7 @@ def customise_org_organisation_controller(**attr):
                                           )
                 # @ToDo: Renderer
                 #distributions_widget = dict(label = "Distributions",
-                #                            label_create = "Add New Distribution",
+                #                            label_create = "Create Distribution",
                 #                            type = "datalist",
                 #                            tablename = "supply_distribution",
                 #                            context = "location",
@@ -3112,7 +3112,7 @@ def customise_org_organisation_controller(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(record.name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [contacts_widget,
                                                   map_widget,
@@ -3152,7 +3152,8 @@ def customise_org_organisation_controller(**attr):
             table = s3db.org_organisation
 
             # Hide fields
-            table.organisation_type_id.readable = table.organisation_type_id.writable = False
+            field = s3db.org_organisation_organisation_type.organisation_type_id
+            field.readable = field.writable = False
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False

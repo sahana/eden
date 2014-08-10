@@ -29,9 +29,6 @@
 
 /* Side Menu (S3OptionsMenu) */
 
-#subnav {
-    padding: 15px;
-}
 #subnav div a {
     font-family: 'LeagueGothicRegular','Arial Narrow','Lucida Grande','Lucida Sans',Arial,sans-serif;
     font-weight: 400;

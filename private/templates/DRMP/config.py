@@ -23,11 +23,18 @@ T = current.T
 s3 = current.response.s3
 settings = current.deployment_settings
 
+datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+
 """
     Template settings for DRM Portal
 """
 
-datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+# -----------------------------------------------------------------------------
+# Pre-Populate
+settings.base.prepopulate = ["DRMP", "demo/users"]
+
+settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System")
+settings.base.system_name_short = T("DRMIS")
 
 # =============================================================================
 # System Settings
@@ -96,13 +103,6 @@ def drmp_realm_entity(table, row):
 settings.auth.realm_entity = drmp_realm_entity
 
 # -----------------------------------------------------------------------------
-# Pre-Populate
-settings.base.prepopulate = ["DRMP"]
-
-settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System ")
-settings.base.system_name_short = T("DRMIS")
-
-# -----------------------------------------------------------------------------
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "DRMP"
 settings.ui.formstyle_row = "bootstrap"
@@ -139,8 +139,8 @@ settings.gis.countries = ["TL"]
 settings.gis.layer_properties = False
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
-# Uncomment to disable the ability to add PoIs to the main map
-settings.gis.pois = False
+# Resources which can be directly added to the main map
+settings.gis.poi_create_resources = None
 # GeoNames username
 settings.gis.geonames_username = "tldrmp"
 
@@ -2336,9 +2336,8 @@ def customise_event_event_controller(**attr):
     standard_prep = s3.prep
     def custom_prep(r):
         if r.interactive:
-            ADD_EVENT = T("New Disaster")
             s3.crud_strings["event_event"] = Storage(
-                label_create = ADD_EVENT,
+                label_create = T("New Disaster"),
                 title_display = T("Disaster Details"),
                 title_list = T("Disasters"),
                 title_update = T("Edit Disaster"),
@@ -2399,7 +2398,7 @@ def customise_event_event_controller(**attr):
                                   bbox = bbox,
                                   )
                 alerts_widget = dict(label = "Alerts",
-                                     label_create = "Add New Alert",
+                                     label_create = "Create Alert",
                                      type = "datalist",
                                      tablename = "cms_post",
                                      context = "event",
@@ -2425,7 +2424,7 @@ def customise_event_event_controller(**attr):
                                         list_layout = render_profile_posts,
                                         )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "event",
@@ -2451,7 +2450,7 @@ def customise_event_event_controller(**attr):
                                          list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "event",
@@ -2487,7 +2486,7 @@ def customise_event_event_controller(**attr):
                                                       ),
                                                     H2(record.name),
                                                     #P(record.comments),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [alerts_widget,
                                                   map_widget,
@@ -2681,7 +2680,7 @@ def customise_gis_location_controller(**attr):
                                         list_layout = render_profile_posts,
                                         )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "location",
@@ -2739,7 +2738,7 @@ def customise_gis_location_controller(**attr):
                                                       #_href=location_url,
                                                       ),
                                                     H2(name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [#locations_widget,
                                                   resources_widget,
@@ -3168,7 +3167,7 @@ def customise_org_organisation_controller(**attr):
                                          list_layout = render_profile_posts,
                                          )
                 reports_widget = dict(label = "Reports",
-                                      label_create = "Add New Report",
+                                      label_create = "Create Report",
                                       type = "datalist",
                                       tablename = "cms_post",
                                       context = "organisation",
@@ -3180,7 +3179,7 @@ def customise_org_organisation_controller(**attr):
                                       list_layout = render_profile_posts,
                                       )
                 assessments_widget = dict(label = "Assessments",
-                                          label_create = "Add New Assessment",
+                                          label_create = "Create Assessment",
                                           type = "datalist",
                                           tablename = "cms_post",
                                           context = "organisation",
@@ -3206,7 +3205,7 @@ def customise_org_organisation_controller(**attr):
                                                       #_href=org_url,
                                                       ),
                                                     H2(record.name),
-                                                    _class="profile_header",
+                                                    _class="profile-header",
                                                     ),
                                profile_widgets = [contacts_widget,
                                                   map_widget,
@@ -3248,7 +3247,8 @@ def customise_org_organisation_controller(**attr):
             table = s3db.org_organisation
 
             # Hide fields
-            table.organisation_type_id.readable = table.organisation_type_id.writable = False
+            field = s3db.org_organisation_organisation_type.organisation_type_id
+            field.readable = field.writable = False
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False

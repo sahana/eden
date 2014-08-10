@@ -41,7 +41,19 @@ def vehicle():
     table = s3db[tablename]
 
     s3db.configure("vehicle_vehicle",
-                    deletable=False)
+                   deletable = False,
+                   )
+
+    set_method = s3db.set_method
+
+    set_method("asset", "asset", method="assign",
+               action = s3db.hrm_AssignMethod(component="human_resource"))
+
+    set_method("asset", "asset", method="check-in",
+               action = s3base.S3CheckInMethod())
+
+    set_method("asset", "asset", method="check-out",
+               action = s3base.S3CheckOutMethod())
 
     # Type is Vehicle
     VEHICLE = s3db.asset_types["VEHICLE"]
@@ -57,7 +69,6 @@ def vehicle():
     list_fields = s3db.get_config("asset_asset", "list_fields")
     if "type" in list_fields:
         list_fields.remove("type")
-    s3db.configure(tablename, list_fields=list_fields)
 
     field = table.item_id
     field.label = T("Vehicle Type")
@@ -102,6 +113,12 @@ def vehicle():
 
     # Defined in Model
     return s3db.asset_controller()
+
+# =============================================================================
+def vehicle_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def item():

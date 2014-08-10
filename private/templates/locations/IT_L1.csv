@@ -1,21 +1,21 @@
-L0,L1
-IT,Abruzzo
-IT,Apulia
-IT,Basilicata
-IT,Calabria
-IT,Campania
-IT,Emilia-Romagna
-IT,Friuli-Venezia Giulia
-IT,Lazio
-IT,Liguria
-IT,Lombardia
-IT,Marche
-IT,Molise
-IT,Piemonte
-IT,Sardegna
-IT,Sicily
-IT,Toscana
-IT,Trentino-Alto Adige
-IT,Umbria
-IT,Valle d'Aosta
-IT,Veneto
+L0,L1,L1 L10n:it
+IT,Abruzzo,
+IT,Aosta Valley,Valle d'Aosta
+IT,Apulia,Puglia
+IT,Basilicata,
+IT,Calabria,
+IT,Campania,
+IT,Emilia-Romagna,
+IT,Friuli-Venezia Giulia,
+IT,Lazio,
+IT,Liguria,
+IT,Lombardy,Lombardia
+IT,Marche,
+IT,Molise,
+IT,Piedmont,Piemonte
+IT,Sardinia,Sardegna
+IT,Sicily,Sicilia
+IT,Trentino-Alto Adige,
+IT,Tuscany,Toscana
+IT,Umbria,
+IT,Veneto,
