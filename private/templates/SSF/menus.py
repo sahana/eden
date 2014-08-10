@@ -83,37 +83,43 @@ class S3MainMenu(default.S3MainMenu):
         ]
 
 # =============================================================================
-#class S3OptionsMenu(default.S3OptionsMenu):
-    #"""
-        #Custom Controller Menus
+class S3OptionsMenu(default.S3OptionsMenu):
+    """
+        Custom Controller Menus
 
-        #The options menu (left-hand options menu) is individual for each
-        #controller, so each controller has its own options menu function
-        #in this class.
+        The options menu (left-hand options menu) is individual for each
+        controller, so each controller has its own options menu function
+        in this class.
 
-        #Each of these option menu functions can be customised separately,
-        #by simply overriding (re-defining) the default function. The
-        #options menu function must return an instance of the item layout.
+        Each of these option menu functions can be customised separately,
+        by simply overriding (re-defining) the default function. The
+        options menu function must return an instance of the item layout.
 
-        #The standard menu uses the M item layout class, but you can of
-        #course also use any other layout class which you define in
-        #layouts.py (can also be mixed).
+        The standard menu uses the M item layout class, but you can of
+        course also use any other layout class which you define in
+        layouts.py (can also be mixed).
 
-        #Make sure additional helper functions in this class don't match
-        #any current or future controller prefix (e.g. by using an
-        #underscore prefix).
-    #"""
+        Make sure additional helper functions in this class don't match
+        any current or future controller prefix (e.g. by using an
+        underscore prefix).
+    """
 
-    #def cr(self):
-        #""" CR / Shelter Registry """
+    def project(self):
+        """ Project module """
 
-        #return M(c="cr")(
-                    #M("Camp", f="shelter")(
-                        #M("New", m="create"),
-                        #M("List All"),
-                        #M("Map", m="map"),
-                        #M("Import", m="import"),
-                    #)
-                #)
+        # Hide the options menu
+        return None
+
+    def org(self):
+        """ Org module """
+
+        # Hide the options menu
+        return None
+
+    def pr(self):
+        """ Person Registry module """
+
+        # Hide the options menu
+        return None
 
 # END =========================================================================

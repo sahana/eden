@@ -36,7 +36,7 @@ class index(S3CustomController):
 
         project_url = URL(c="project", f="location", extension="geojson")
         project_url = "%s?~.project_id$sector.name=Deployment" % project_url
-        contributor_url = URL(c="pr", f="address", extension="geojson")
+        contributor_url = URL(c="pr", f="person", extension="geojson")
 
         # Set the marker
         mtable = s3db.gis_marker
