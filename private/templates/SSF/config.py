@@ -143,7 +143,7 @@ settings.project.milestones = True
 settings.project.sectors = True
 # Uncomment this to use Projects for Activities & Tasks
 settings.project.projects = True
-# Uncomment this to use Tag in Tasks
+# Uncomment this to use Tags in Tasks
 settings.project.task_tag = True
 # Uncomment this to enable Hazards in 3W projects
 settings.project.hazards = True
