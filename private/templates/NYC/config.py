@@ -112,8 +112,7 @@ settings.ui.auth_user_represent = "name"
 
 # Record Approval
 settings.auth.record_approval = True
-settings.auth.record_approval_required_for = ["org_organisation",
-                                              ]
+settings.auth.record_approval_required_for = ("org_organisation",)
 
 # -----------------------------------------------------------------------------
 # Audit
@@ -1169,9 +1168,10 @@ def pr_contact_postprocess(form):
             # Update form
             old_rss = form.record.sub_rsscontact
             import json
-            old_rss = json.loads(old_rss)["data"][0]["value"]["value"]
-            if old_rss:
+            data = old_rss = json.loads(old_rss)["data"]
+            if data:
                 # RSS feed is being deleted, so we should disable it
+                old_rss = data[0]["value"]["value"]
                 table = s3db.msg_rss_channel
                 old = current.db(table.url == old_rss).select(table.channel_id,
                                                               table.enabled,
