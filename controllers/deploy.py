@@ -595,49 +595,39 @@ def email_inbox():
     )
 
     def prep(r):
+        # Decode subject and sender fields
+        decode = current.msg.decode_email
         if r.id:
             s3db.msg_attachment.document_id.label = ""
-        elif not r.method:
-            from s3 import s3_datatable_truncate
-            table.subject.represent = lambda string: \
-                                      s3_datatable_truncate(string, maxlength=40)
-            table.from_address.represent = lambda string: \
-                                           s3_datatable_truncate(string, maxlength=40)
-        if r.component and r.component.alias == "select":
-            if not r.method:
-                r.method = "select"
-            if r.method == "select":
-                r.custom_action = s3db.deploy_response_select_mission
+            if r.component and r.component.alias == "select":
+                if not r.method:
+                    r.method = "select"
+                if r.method == "select":
+                    r.custom_action = s3db.deploy_response_select_mission
+            represent = lambda string: decode(string)
+        elif not r.method and r.representation in ("html", "aadata"):
+            # Use custom data table method
+            r.method = "inbox"
+            r.custom_action = s3db.deploy_Inbox()
+            represent = lambda string: s3base.s3_datatable_truncate(decode(string))
+        table = r.resource.table
+        table.subject.represent = represent
+        table.from_address.represent = represent
         return True
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive:
-            # Standard action buttons
-            s3_action_buttons(r)
-                
-            # Custom actions
+        if r.interactive and r.record and not r.component:
+            # Custom CRUD button for linking the message to mission
             authorised = auth.s3_has_permission("create", "deploy_response")
-            if authorised and not r.component:
-                LINKTOMISSION = T("Link to Mission")
-                if r.id:
-                    # Custom CRUD button
-                    s3.rfooter = s3base.S3CRUD.crud_button(
-                                            LINKTOMISSION,
-                                            _href=URL(f="email_inbox",
-                                                      args=[r.id, "select"],
-                                                      ),
-                                            _class="action-btn link",
-                                            )
-                else:
-                    # Custom action button
-                    s3.actions.append({"label": str(LINKTOMISSION),
-                                       "_class": "action-btn link",
-                                       "url": URL(f="email_inbox",
-                                                  args=["[id]", "select"],
-                                                 ),
-                                       },
-                                      )
+            if authorised:
+                s3.rfooter = s3base.S3CRUD.crud_button(
+                                        T("Link to Mission"),
+                                        _href=URL(f="email_inbox",
+                                                  args=[r.id, "select"],
+                                                  ),
+                                        _class="action-btn link",
+                                        )
         return output
     s3.postp = postp
 

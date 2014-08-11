@@ -545,12 +545,14 @@ def s3_datatable_truncate(string, maxlength=40):
         @note: the JS click-event will be attached by S3.datatables.js
     """
 
+    string = s3_unicode(string)
     if string and len(string) > maxlength:
         _class = "dt-truncate"
         return TAG[""](
                 DIV(SPAN(_class="ui-icon ui-icon-zoomin",
-                            _style="float:right"),
-                    XML(string[:37] + "&hellip;"),
+                         _style="float:right",
+                         ),
+                    string[:maxlength-3] + "...",
                     _class=_class),
                 DIV(SPAN(_class="ui-icon ui-icon-zoomout",
                             _style="float:right"),

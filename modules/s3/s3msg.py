@@ -180,6 +180,28 @@ class S3Msg(object):
 
         return clean
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def decode_email(header):
+        """
+            Decode an RFC2047-encoded email header (e.g.
+            "Dominic =?ISO-8859-1?Q?K=F6nig?=") and return it as unicode.
+
+            @param header: the header
+        """
+
+        # Deal with missing word separation (thanks Ingmar Hupp)
+        import re
+        header = re.sub(r"(=\?.*\?=)(?!$)", r"\1 ", header)
+
+        # Decode header
+        from email.header import decode_header
+        decoded = decode_header(header)
+
+        # Build string
+        return " ".join([s3_unicode(part[0], part[1] or "ASCII")
+                         for part in decoded])
+
     # =========================================================================
     # Inbound Messages
     # =========================================================================

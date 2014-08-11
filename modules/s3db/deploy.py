@@ -32,6 +32,7 @@ __all__ = ("S3DeploymentModel",
            "deploy_rheader",
            "deploy_apply",
            "deploy_alert_select_recipients",
+           "deploy_Inbox",
            "deploy_response_select_mission",
            )
 
@@ -1278,6 +1279,160 @@ def deploy_member_filter():
                                               ))
     return widgets
     
+# =============================================================================
+class deploy_Inbox(S3Method):
+    
+    def apply_method(self, r, **attr):
+        """
+            Custom method for email inbox, provides a datatable with bulk-delete
+            option
+
+            @param r: the S3Request
+            @param attr: the controller attributes
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        response = current.response
+        s3 = response.s3
+
+        resource = self.resource
+        if r.http == "POST":
+
+            deleted = 0
+            post_vars = r.post_vars
+
+            if all([n in post_vars for n in ("delete", "selected", "mode")]):
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+                    
+                if selected:
+                    # Handle exclusion filter
+                    if post_vars.mode == "Exclusive":
+                        if "filterURL" in post_vars:
+                            filters = S3URLQuery.parse_url(post_vars.ajaxURL)
+                        else:
+                            filters = None
+                        query = ~(FS("id").belongs(selected))
+                        mresource = s3db.resource("msg_email",
+                                                filter=query, vars=filters)
+                        if response.s3.filter:
+                            mresource.add_filter(response.s3.filter)
+                        rows = mresource.select(["id"], as_rows=True)
+                        selected = [str(row.id) for row in rows]
+                    query = (FS("id").belongs(selected))
+                    mresource = s3db.resource("msg_email", filter=query)
+                else:
+                    mresource = resource
+
+                # Delete the messages
+                deleted = mresource.delete(format=r.representation)
+                if deleted:
+                    response.confirmation = T("%(number)s messages deleted") % \
+                                            dict(number=deleted)
+                else:
+                    response.warning = T("No messages could be deleted")
+
+        # List fields
+        list_fields = ["id",
+                       "date",
+                       "from_address",
+                       "subject",
+                       "body",
+                       (T("Attachments"), "attachment.document_id"),
+                       ]
+
+        # Truncate message body
+        table = resource.table
+        table.body.represent = lambda body: DIV(XML(body),
+                                                _class="s3-truncate")
+        s3_trunk8()
+
+        # Data table filter & sorting
+        get_vars = r.get_vars
+        totalrows = resource.count()
+        if "iDisplayLength" in get_vars:
+            display_length = int(get_vars["iDisplayLength"])
+        else:
+            display_length = 25
+        limit = 4 * display_length
+        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        resource.add_filter(filter)
+
+        # Extract the data
+        data = resource.select(list_fields,
+                               start=0,
+                               limit=limit,
+                               orderby=orderby,
+                               left=left,
+                               count=True,
+                               represent=True)
+
+        # Instantiate the data table
+        filteredrows = data["numrows"]
+        dt = S3DataTable(data["rfields"], data["rows"])
+        dt_id = "datatable"
+
+        # Bulk actions
+        # @todo: user confirmation
+        dt_bulk_actions = [(T("Delete"), "delete")]
+
+        if r.representation == "html":
+            # Action buttons
+            s3.actions = [{"label": str(T("Link to Mission")),
+                           "_class": "action-btn link",
+                           "url": URL(f="email_inbox", args=["[id]", "select"]),
+                           },
+                          ]
+            S3CRUD.action_buttons(r,
+                                editable=False,
+                                read_url = r.url(method="read", id="[id]"),
+                                delete_url = r.url(method="delete", id="[id]"),
+                                )
+
+            # Export not needed
+            s3.no_formats = True
+
+            # Render data table
+            items = dt.html(totalrows,
+                            filteredrows,
+                            dt_id,
+                            dt_displayLength = display_length,
+                            dt_ajax_url=URL(c = "deploy",
+                                            f = "email_inbox",
+                                            extension = "aadata",
+                                            vars = {},
+                                            ),
+                            dt_bFilter = "true",
+                            dt_pagination = "true",
+                            dt_bulk_actions = dt_bulk_actions,
+                            )
+
+            response.view = "list_filter.html"
+            return {"items": items,
+                    "title": S3CRUD.crud_string(resource.tablename, "title_list"),
+                    }
+
+        elif r.representation == "aadata":
+            # Ajax refresh
+            echo = int(get_vars.sEcho) if "sEcho" in get_vars else None
+
+            response = current.response
+            response.headers["Content-Type"] = "application/json"
+
+            return dt.json(totalrows,
+                        filteredrows,
+                        dt_id,
+                        echo,
+                        dt_bulk_actions = dt_bulk_actions)
+
+        else:
+            r.error(405, current.ERROR.BAD_FORMAT)
+
 # =============================================================================
 def deploy_apply(r, **attr):
     """
