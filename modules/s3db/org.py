@@ -378,8 +378,7 @@ class S3OrganisationModel(S3Model):
                      #Field("archived", "boolean", default=False),
                      *s3_meta_fields())
 
-        form_fields = [ "root_organisation",
-                        "name",
+        form_fields = [ "name",
                         "acronym",
                         S3SQLInlineLink(
                             "organisation_type",
