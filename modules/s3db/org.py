@@ -62,6 +62,7 @@ __all__ = ("S3OrganisationModel",
            "org_update_affiliations",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
+           #"org_AssignMethod",
            "org_customise_org_resource_fields",
            "org_organisation_list_layout",
            "org_resource_list_layout",
@@ -1212,7 +1213,6 @@ class S3OrganisationGroupModel(S3Model):
         T = current.T
         db = current.db
 
-        add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -1310,22 +1310,27 @@ class S3OrganisationGroupModel(S3Model):
                                    )
 
         # Components
-        add_components(tablename,
-                       org_group_membership = {"name": "membership",
-                                               "joinby": "group_id",
-                                               },
-                       org_organisation = {"joinby": "group_id",
-                                           "key": "organisation_id",
-                                           "link": "org_group_membership",
-                                           "actuate": "replace",
-                                           },
-                       pr_group = {"name": "pr_group",
-                                   "joinby": "org_group_id",
-                                   "key": "group_id",
-                                   "link": "org_group_team",
-                                   "actuate": "replace",
-                                   },
-                       )
+        self.add_components(tablename,
+                            org_group_membership = {"name": "membership",
+                                                    "joinby": "group_id",
+                                                    },
+                            org_organisation = {"joinby": "group_id",
+                                                "key": "organisation_id",
+                                                "link": "org_group_membership",
+                                                "actuate": "replace",
+                                                },
+                            pr_group = {"name": "pr_group",
+                                        "joinby": "org_group_id",
+                                        "key": "group_id",
+                                        "link": "org_group_team",
+                                        "actuate": "replace",
+                                        },
+                            )
+
+        # Custom Method to Assign Orgs
+        self.set_method("org", "group",
+                        method = "assign",
+                        action = org_AssignMethod(component="membership"))
 
         # ---------------------------------------------------------------------
         # Group membership status
@@ -4885,6 +4890,8 @@ def org_rheader(r, tabs=[]):
                 (T("Groups"), "pr_group"),
                 (T("Documents"), "document"),
                 ]
+        if current.auth.s3_has_permission("create", "org_group_membership"):
+            tabs.insert(2, (T("Add Organization"), "assign"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(
                             TH("%s: " % table.name.label),
@@ -5901,6 +5908,238 @@ def org_update_root_organisation(organisation_id, root_org=None):
 
     return root_org
     
+# =============================================================================
+class org_AssignMethod(S3Method):
+    """
+        Custom Method to allow organisations to be assigned to something
+        e.g. Organisation Group
+    """
+
+    def __init__(self, component, types=None):
+        """
+            @param component: the Component in which to create records
+        """
+
+        self.component = component
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        component = self.component
+        components = r.resource.components
+        for c in components:
+            if c == component:
+                component = components[c]
+                break
+        try:
+            if component.link:
+                component = component.link
+        except:
+            current.log.error("Invalid Component!")
+            raise
+
+        tablename = component.tablename
+
+        # Requires permission to create component
+        authorised = current.auth.s3_has_permission("create", tablename)
+        if not authorised:
+            r.unauthorised()
+
+        T = current.T
+        s3db = current.s3db
+
+        get_vars = r.get_vars
+        response = current.response
+
+        if r.http == "POST":
+            added = 0
+            post_vars = r.post_vars
+            if all([n in post_vars for n in ("assign", "selected", "mode")]):
+                fkey = component.fkey
+                record = r.record
+                if fkey in record:
+                    # SuperKey
+                    record_id = r.record[fkey]
+                else:
+                    record_id = r.id
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+
+                db = current.db
+                table = s3db[tablename]
+                if selected:
+                    # Handle exclusion filter
+                    if post_vars.mode == "Exclusive":
+                        if "filterURL" in post_vars:
+                            filters = S3URLQuery.parse_url(post_vars.ajaxURL)
+                        else:
+                            filters = None
+                        query = ~(FS("id").belongs(selected))
+                        hresource = s3db.resource("org_organisation",
+                                                  filter=query, vars=filters)
+                        rows = hresource.select(["id"], as_rows=True)
+                        selected = [str(row.id) for row in rows]
+
+                    query = (table.organisation_id.belongs(selected)) & \
+                            (table[fkey] == record_id) & \
+                            (table.deleted != True)
+                    rows = db(query).select(table.id)
+                    rows = dict((row.id, row) for row in rows)
+                    onaccept = component.get_config("create_onaccept",
+                                                    component.get_config("onaccept",
+                                                                         None)
+                                                    )
+                    for organisation_id in selected:
+                        try:
+                            org_id = int(organisation_id.strip())
+                        except ValueError:
+                            continue
+                        if org_id not in rows:
+                            link = Storage(organisation_id = organisation_id)
+                            link[fkey] = record_id
+                            _id = table.insert(**link)
+                            if onaccept:
+                                link["id"] = _id
+                                form = Storage(vars=link)
+                                onaccept(form)
+                            added += 1
+            current.session.confirmation = T("%(number)s assigned") % \
+                                           dict(number=added)
+            if added > 0:
+                redirect(URL(args=[r.id, "organisation"], vars={}))
+            else:
+                redirect(URL(args=r.args, vars={}))
+
+        elif r.http == "GET":
+
+            # Filter widgets
+            filter_widgets = []
+
+            # List fields
+            list_fields = ["id",
+                           "name",
+                           ]
+
+            # Data table
+            resource = s3db.resource("org_organisation")
+            totalrows = resource.count()
+            if "iDisplayLength" in get_vars:
+                display_length = int(get_vars["iDisplayLength"])
+            else:
+                display_length = 25
+            limit = 4 * display_length
+            filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+            resource.add_filter(filter)
+            data = resource.select(list_fields,
+                                   start=0,
+                                   limit=limit,
+                                   orderby=orderby,
+                                   left=left,
+                                   count=True,
+                                   represent=True)
+            filteredrows = data["numrows"]
+            dt = S3DataTable(data["rfields"], data["rows"])
+            dt_id = "datatable"
+
+            # Bulk actions
+            dt_bulk_actions = [(T("Add"), "assign")]
+
+            if r.representation == "html":
+                # Page load
+                resource.configure(deletable = False)
+
+                profile_url = URL(c = "org",
+                                  f = "organisation",
+                                  args = ["[id]", "profile"])
+                S3CRUD.action_buttons(r,
+                                      deletable = False,
+                                      read_url = profile_url,
+                                      update_url = profile_url)
+                response.s3.no_formats = True
+
+                # Data table (items)
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_displayLength=display_length,
+                                dt_ajax_url=URL(args = r.args,
+                                                extension="aadata",
+                                                vars={},
+                                                ),
+                                dt_bFilter="false",
+                                dt_pagination="true",
+                                dt_bulk_actions=dt_bulk_actions,
+                                )
+
+                # Filter form
+                if filter_widgets:
+
+                    # Where to retrieve filtered data from:
+                    _vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=_vars)
+
+                    # Where to retrieve updated filter options from:
+                    filter_ajax_url = URL(f="human_resource",
+                                          args=["filter.options"],
+                                          vars={})
+
+                    get_config = resource.get_config
+                    filter_clear = get_config("filter_clear", True)
+                    filter_formstyle = get_config("filter_formstyle", None)
+                    filter_submit = get_config("filter_submit", True)
+                    filter_form = S3FilterForm(filter_widgets,
+                                               clear=filter_clear,
+                                               formstyle=filter_formstyle,
+                                               submit=filter_submit,
+                                               ajax=True,
+                                               url=filter_submit_url,
+                                               ajaxurl=filter_ajax_url,
+                                               _class="filter-form",
+                                               _id="datatable-filter-form",
+                                               )
+                    fresource = current.s3db.resource(resource.tablename)
+                    alias = resource.alias if r.component else None
+                    ff = filter_form.html(fresource,
+                                          r.get_vars,
+                                          target="datatable",
+                                          alias=alias)
+                else:
+                    ff = ""
+                    
+                output = dict(items = items,
+                              title = T("Add Organization"),
+                              list_filter_form = ff)
+
+                response.view = "list_filter.html"
+                return output
+
+            elif r.representation == "aadata":
+                # Ajax refresh
+                if "sEcho" in get_vars:
+                    echo = int(get_vars.sEcho)
+                else:
+                    echo = None
+                items = dt.json(totalrows,
+                                filteredrows,
+                                dt_id,
+                                echo,
+                                dt_bulk_actions=dt_bulk_actions)
+                response.headers["Content-Type"] = "application/json"
+                return items
+
+            else:
+                r.error(501, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
 # =============================================================================
 def org_customise_org_resource_fields(method):
     """
