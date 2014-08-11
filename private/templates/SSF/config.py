@@ -136,13 +136,15 @@ settings.org.branches = True
 # Uncomment this to use settings suitable for detailed Task management
 settings.project.mode_task = True
 # Uncomment this to use Activities for projects & tasks
-settings.project.activities = True
+#settings.project.activities = True
 # Uncomment this to enable Milestones in tasks
 settings.project.milestones = True
 # Uncomment this to enable Sectors in projects
 settings.project.sectors = True
 # Uncomment this to use Projects for Activities & Tasks
 settings.project.projects = True
+# Uncomment this to use Tag in Tasks
+settings.project.task_tag = True
 # Uncomment this to enable Hazards in 3W projects
 settings.project.hazards = True
 # Uncomment this to enable Themes in 3W projects
@@ -331,6 +333,119 @@ def customise_project_project_controller(**attr):
     return attr
 
 settings.customise_project_project_controller = customise_project_project_controller
+
+# -----------------------------------------------------------------------------
+def customise_project_task_resource(r, tablename):
+    """
+        Customise project_task resource
+        - CRUD Form
+        Runs after controller customisation
+        But runs before prep
+    """
+
+    s3db = current.s3db
+    db = current.db
+
+    if r.interactive:
+        trimmed_task = False
+        get_vars = r.get_vars
+
+        # Check if it is a bug report
+        if get_vars.get("bug"):
+            tagname = "bug"
+            trimmed_task = True
+
+        # Check if it is a feature request
+        elif get_vars.get("featureRequest"):
+            tagname = "feature request"
+            trimmed_task = True
+
+        # Check if it is a support task
+        elif get_vars.get("support"):
+            tagname = "support"
+            trimmed_task = True
+
+        from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
+        if trimmed_task:
+            # Show a trimmed view of creating task
+            crud_fields = ["name",
+                           "description",
+                           S3SQLInlineLink(
+                               "tag",
+                               label = T("Tag"),
+                               field = "tag_id",
+                           ),
+                           "priority",
+                           "status",
+                           S3SQLInlineComponent(
+                               "document",
+                               label = T("Attachment"),
+                               fields = ["", "file"],
+                           ),
+                           ]
+
+            tagtable = s3db.project_tag
+            query = (tagtable.deleted != True) & \
+                    (tagtable.name == tagname)
+            row = db(query).select(tagtable.id, limitby=(0, 1)).first()
+
+            # Set the tag
+            try:
+                s3db.project_task_tag.tag_id.default = row.id
+            except:
+                current.log.error("Pre-Populate",
+                                  "Tags not prepopulated")
+        else:
+            # Show all fields for creating the task
+            crud_fields = [S3SQLInlineComponent(
+                               "task_milestone",
+                               label = T("Milestone"),
+                               fields = [("", "milestone_id")],
+                               multiple = False,
+                           ),
+                           "name",
+                           "description",
+                           S3SQLInlineComponent(
+                               "task_tag",
+                               label = T("Tags"),
+                               fields = [("", "tag_id")],
+                           ),
+                           "priority",
+                           "status",
+                           "pe_id",
+                           "source",
+                           "date_due",
+                           "time_estimated",
+                           S3SQLInlineComponent(
+                               "document",
+                               label = T("Attachment"),
+                               fields = ["", "file"],
+                           ),
+                           S3SQLInlineComponent("time",
+                                label = T("Time Log"),
+                                fields = ["date",
+                                          "person_id",
+                                          "hours",
+                                          "comments"
+                                          ],
+                                orderby = "date"
+                           ),
+                           "time_actual",
+                           ]
+            if r.tablename == "project_task":
+                # Add the project field if it is not under the component
+                crud_fields.insert(0, S3SQLInlineComponent("task_project",
+                                                           label = T("Project"),
+                                                           fields = [("", "project_id")],
+                                                           multiple = False,
+                                                           ))
+        crud_form = S3SQLCustomForm(*crud_fields)
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+settings.customise_project_task_resource = customise_project_task_resource
 
 # -----------------------------------------------------------------------------
 def customise_delphi_problem_controller(**attr):

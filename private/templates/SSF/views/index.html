@@ -10,7 +10,7 @@
         
         <div class='row'>
           <div class='span1'>
-            <img src="/{{=appname}}/static/themes/{{=theme}}/img/logo.png" alt=""/>
+            <img src='/{{=appname}}/static/themes/{{=theme}}/img/logo.png' alt=''/>
           </div>
           <div class='span5'>
             <h2> {{=title}}</h2>
@@ -21,32 +21,39 @@
         <div class='row'>
           <div class='span2'>
             {{if not auth.is_logged_in():}}
-            <div class="btn-group">
-              <button type='button' class='btn btn-primary dropdown-toggle' data-toggle="dropdown">
-                <i class="icon-signin icon-white"></i> Login/Register
+            <div class='btn-group'>
+              <button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'>
+                <i class='icon-signin icon-white'></i> {{=T("Login/Register")}}
               </button>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="/{{=appname}}/default/user/login">Login</a></li>
-                <li><a href="/{{=appname}}/default/user/register">Register</a></li>
+              <ul class='dropdown-menu' role='menu'>
+                <li><a href='/{{=appname}}/default/user/login'>{{=T("Login")}}</a></li>
+                <li><a href='/{{=appname}}/default/user/register'>{{=T("Register")}}</a></li>
               </ul>
             </div>
             {{else:}}
             <div class='span2'>
               <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/pr/person/{{=auth.user.id}}'>
-                <i class="icon-user icon-white"></i> Profile
+                <i class='icon-user icon-white'></i> {{=T("Profile")}}
               </a>
             </div>
             {{pass}}
           </div>
           <div class='span2'>
             <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/task?~.status__belongs=2,3,4,11'>
-              <i class="icon-pencil icon-white"></i> Work on a Task
+              <i class="icon-pencil icon-white"></i> {{=T("Work on a Task")}}
             </a>
           </div>
           <div class='span2'>
-            <a type='button' class='btn btn-lg btn-primary' href='#'>
-              <i class="icon-exclamation-sign icon-white"></i> Report a Problem
-            </a>
+            <div class = 'btn-group'>
+              <button type='button' class='btn btn-primary dropdown-toggle' data-toggle='dropdown'>
+                <i class='icon-exclamation-sign icon-white'></i> {{=T("Create a Task")}}
+              </button>
+              <ul class='dropdown-menu' role='menu'>
+                <li><a href='/{{=appname}}/project/task/create?bug=1'>{{=T("Report a Bug")}}</a></li>
+                <li><a href='/{{=appname}}/project/task/create?featureRequest=1'>{{=T("Request a Feature")}}</a></li>
+                <li><a href='/{{=appname}}/project/task/create?support=1'>{{=T("Request Support")}}</a></li>
+              </ul>
+            </div>
           </div>
         </div>
 
@@ -69,11 +76,11 @@
     <h2><i class='icon-news'></i> {{=T("Updates Feed")}}</h2>
     <div class = 'well'>
      <div id='feed-control'>
-      <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+      <span>{{=T("Loading")}}...</span>
      </div>
      <div> &nbsp;
        <a id='feed-url' type='button' class='pull-right btn btn-lg btn-primary' target='_blank'>
-        <i class="icon-rss"></i>
+        <i class='icon-rss'></i>
        </a>
      </div>
     </div>
