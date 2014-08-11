@@ -378,7 +378,8 @@ class S3OrganisationModel(S3Model):
                      #Field("archived", "boolean", default=False),
                      *s3_meta_fields())
 
-        form_fields = [ "name",
+        form_fields = [ "root_organisation",
+                        "name",
                         "acronym",
                         S3SQLInlineLink(
                             "organisation_type",
@@ -397,9 +398,10 @@ class S3OrganisationModel(S3Model):
                         ]
 
         if settings.get_org_summary():
-            # Include Summary fields in form
-            form_fields.insert(8,"summary.national_staff")
-            form_fields.insert(9,"summary.international_staff")
+            # Include Summary fields in form 
+            position = form_fields.index("year")
+            form_fields.insert(position+1, "summary.national_staff")
+            form_fields.insert(position+2, "summary.international_staff")
 
         crud_form = S3SQLCustomForm(*form_fields
                                     )
