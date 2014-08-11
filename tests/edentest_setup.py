@@ -59,6 +59,10 @@ if __name__ == "__main__":
             print "Could not install Selenium2Library. Exiting..."
             exit(1)
 
+        if not pip_install("requests"):
+            print "Could not install Requests. Exiting..."
+            exit(1)
+
         if not pip_install("robotframework-databaselibrary"):
             print "Could not install DatabaseLibrary. Exiting..."
             exit(1)
@@ -76,6 +80,10 @@ if __name__ == "__main__":
 
         if not easy_install("robotframework-databaselibrary"):
             print "Could not install DatabaseLibrary. Exiting..."
+            exit(1)
+
+        if not easy_install("requests"):
+            print "Could not install Requests. Exiting..."
             exit(1)
 
         # installing the dependencies of Selenium2Library

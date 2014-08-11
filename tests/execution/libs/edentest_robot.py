@@ -5,7 +5,7 @@ from robot.libraries.BuiltIn import BuiltIn
 import requests
 from base64 import b64encode
 
-class edentest_robot:
+class edentest_robot(object):
 
     def __init__(self, server, appname, admin_email, admin_password):
         """
