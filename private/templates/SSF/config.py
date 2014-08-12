@@ -132,7 +132,7 @@ settings.hrm.show_staff = False
 # Enable the use of Organisation Branches
 settings.org.branches = True
 
-# Project 
+# Project
 # Uncomment this to use settings suitable for detailed Task management
 settings.project.mode_task = True
 # Uncomment this to use Activities for projects & tasks
@@ -156,6 +156,70 @@ settings.project.multiple_organisations = True
 settings.pr.show_emergency_contacts = False
 
 # -----------------------------------------------------------------------------
+def deployment_page(r, **attr):
+    """
+        Custom Method for deployment page.
+    """
+
+    if r.http != "GET":
+        r.error(405, current.ERROR.BAD_METHOD)
+
+    db = current.db
+    s3db = current.s3db
+    output = {}
+
+    output["deployment_name"] = r.record.name
+    output["description"] = r.record.description
+
+    # Query the organisation name
+    otable = s3db.org_organisation
+    query = (otable.id == r.record.organisation_id) & \
+            (otable.deleted == False)
+
+    rows = db(query).select(otable.name,
+                                limitby=(0, 1)).first()
+    output["org_name"] = rows.name
+
+    # Query the locations
+    ltable = s3db.project_location
+    gtable = s3db.gis_location
+    query = (ltable.project_id == r.id) & \
+            (ltable.location_id == gtable.id) & \
+            (gtable.deleted == False)
+    rows = db(query).select(gtable.name)
+    output["locations"] = [row.name for row in rows]
+
+    # Query the links
+    dtable = s3db.doc_document
+    query = (dtable.doc_id == r.record.doc_id) & \
+            (dtable.url != "") & \
+            (dtable.url != None) & \
+            (dtable.deleted == False)
+    rows = db(query).select(dtable.name, dtable.url)
+    output["links"] = [(row.name, row.url) for row in rows]
+
+
+    query = (dtable.doc_id == r.record.doc_id) & \
+            (dtable.file != "") & \
+            (dtable.file != None) & \
+            (dtable.deleted == False)
+    rows = db(query).select(dtable.name, dtable.file)
+    output["files"] = [(row.name, row.file) for row in rows]
+
+    # Set the custom view
+    from os import path
+    view = path.join(current.request.folder, "private", "templates",
+                     "SSF", "views", "deployment_page.html")
+    try:
+        # Pass view as file not str to work in compiled mode
+        current.response.view = open(view, "rb")
+    except IOError:
+        from gluon.http import HTTP
+        raise HTTP(404, "Unable to open Custom View: %s" % view)
+
+    return output
+
+# -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):
 
     db = current.db
@@ -173,49 +237,54 @@ def customise_project_project_controller(**attr):
                 return False
 
         if r.interactive:
-            if r.component:
-                pass
-            else:
-                is_deployment = False
+            is_deployment = False
 
-                stable = s3db.project_sector_project
-                otable = s3db.org_sector
+            stable = s3db.project_sector_project
+            otable = s3db.org_sector
 
+            # Check if current record is Deployment
+            if r.id:
                 # Viewing details of project_project record
-                if r.id:
-                    # Check if current record is Deployment
-                    query = (stable.project_id == r.id) & \
-                            (otable.id == stable.sector_id)
-                    rows = db(query).select(otable.name)
-                    for row in rows:
-                        if row.name == "Deployment":
-                            is_deployment = True
+                query = (stable.project_id == r.id) & \
+                        (otable.id == stable.sector_id)
+                rows = db(query).select(otable.name)
+                for row in rows:
+                    if row.name == "Deployment":
+                        is_deployment = True
 
-                request_sector = r.get_vars.get("sector.name")
+            request_sector = r.get_vars.get("sector.name")
 
-                # Viewing Projects/Deployments Page
-                if request_sector and "Deployment" in request_sector:
-                    is_deployment = True
+            # Viewing Projects/Deployments Page
+            if request_sector and "Deployment" in request_sector:
+                is_deployment = True
 
+            if is_deployment:
+                # Change the CRUD strings and labels
+                s3db[tablename].name.label = T("Deployment Name")
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Create Deployment"),
+                    title_display = T("Deployment Details"),
+                    title_list = T("Deployments"),
+                    title_update = T("Edit Deployment"),
+                    title_report = T("Deployment Report"),
+                    title_upload = T("Import Deployments"),
+                    label_list_button = T("List Deployments"),
+                    label_delete_button = T("Delete Deployment"),
+                    msg_record_created = T("Deployment added"),
+                    msg_record_modified = T("Deployment updated"),
+                    msg_record_deleted = T("Deployment deleted"),
+                    msg_list_empty = T("No Deployments currently registered")
+                )
+                # Set the method for deployment page
+                s3db.set_method(r.controller,
+                                r.function,
+                                method = "deployment",
+                                action = deployment_page)
+
+            if not r.component:
+                # Viewing project/deployment's Basic Details
                 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
-
                 if is_deployment:
-                    s3db[tablename].name.label = T("Deployment Name")
-                    s3.crud_strings[tablename] = Storage(
-                        label_create = T("Create Deployment"),
-                        title_display = T("Deployment Details"),
-                        title_list = T("Deployments"),
-                        title_update = T("Edit Deployment"),
-                        title_report = T("Deployment Report"),
-                        title_upload = T("Import Deployments"),
-                        label_list_button = T("List Deployments"),
-                        label_delete_button = T("Delete Deployment"),
-                        msg_record_created = T("Deployment added"),
-                        msg_record_modified = T("Deployment updated"),
-                        msg_record_deleted = T("Deployment deleted"),
-                        msg_list_empty = T("No Deployments currently registered")
-                    )
-
                     # Bring back to the Deployments page if record deleted
                     delete_next = URL(c="project", f="project",
                                       vars={"sector.name": "None,Deployment"})
@@ -275,6 +344,14 @@ def customise_project_project_controller(**attr):
                                             invert = True,
                                             )
                         ),
+                        S3SQLInlineComponent(
+                            "image",
+                            fields = ["", "file"],
+                            filterby = dict(field = "file",
+                                            options = "",
+                                            invert = True,
+                                            )
+                        ),
                         "comments",
                         )
 
@@ -283,7 +360,6 @@ def customise_project_project_controller(**attr):
                     location_id.requires = s3db.gis_country_requires
                     # Use dropdown, not AC
                     location_id.widget = None
-
                 else:
                     # Bring back to the Projects page if record deleted
                     delete_next = URL(c="project", f="project",
@@ -325,6 +401,24 @@ def customise_project_project_controller(**attr):
         return True
 
     s3.prep = custom_prep
+
+    # Custom postp
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        if r.interactive and r.id is None:
+            # Change the Open button to deployment page if deployment
+            request_sector = r.get_vars.get("sector.name")
+
+            if request_sector and "Deployment" in request_sector:
+                s3.actions[0]["url"] = URL(c="project", f="project",
+                                           args=["[id]", "deployment"])
+
+        return output
+    s3.postp = custom_postp
 
     args = current.request.args
     if len(args) > 1 and args[1] == "task":
