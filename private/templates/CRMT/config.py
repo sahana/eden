@@ -302,7 +302,7 @@ settings.gis.save = "float"
 # Uncomment to hide the GeoNames search box
 settings.gis.search_geonames = False
 # GeoNames username
-settings.gis.geonames_username = "lacrmt"
+#settings.gis.geonames_username = "lacrmt"
 
 # Don't simplify Polygons as much to retain their original shape
 settings.gis.simplify_tolerance = 0.0001

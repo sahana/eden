@@ -38,6 +38,7 @@ __all__ = ("S3LocationModel",
            "S3LayerEntityModel",
            "S3FeatureLayerModel",
            "S3MapModel",
+           "S3GISStyleModel",
            "S3GISThemeModel",
            "S3POIModel",
            "S3POIFeedModel",
@@ -2665,30 +2666,27 @@ class S3FeatureLayerModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
-
-        add_components = self.add_components
-        crud_strings = current.response.s3.crud_strings
 
         # =====================================================================
         # Feature Layers
 
         tablename = "gis_layer_feature"
         self.define_table(tablename,
+                          # Instance
                           self.super_link("layer_id", "gis_layer_entity"),
                           name_field()(),
                           desc_field()(),
                           # REST Query added to Map JS to call back to server
                           Field("controller",
-                                requires = IS_NOT_EMPTY(),
                                 label = T("Controller"),
+                                requires = IS_NOT_EMPTY(),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s /" % (T("Controller"),
                                                                   T("Part of the URL to call to access the Features"))),
                                 ),
                           Field("function",
-                                requires = IS_NOT_EMPTY(),
                                 label = T("Function"),
+                                requires = IS_NOT_EMPTY(),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s /" % (T("Function"),
                                                                   T("Part of the URL to call to access the Features"))),
@@ -2703,9 +2701,9 @@ class S3FeatureLayerModel(S3Model):
                           # @ToDo: Deprecate (replaced by popup_format)
                           Field("popup_label",
                                 label = T("Popup Label"),
-                                comment=DIV(_class="tooltip",
-                                            _title="%s|%s" % (T("Popup Label"),
-                                                              T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
+                                comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Popup Label"),
+                                                                T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
                                 ),
                           # @ToDo: Deprecate (replaced by popup_format)
                           Field("popup_fields", "list:string",
@@ -2716,34 +2714,40 @@ class S3FeatureLayerModel(S3Model):
                                               _title="%s|%s" % (T("Popup Fields"),
                                                                 T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records."))),
                                 ),
-                          Field("popup_format",
-                                label = T("Popup Format"),
-                                comment=DIV(_class="tooltip",
-                                            _title="%s|%s" % (T("Popup Format"),
-                                                              T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
-                                ),
                           Field("attr_fields", "list:string",
                                 label = T("Attributes"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Attributes"),
                                                                 T("Used to populate feature attributes which can be used for Styling and Popups."))),
                                 ),
+                          Field("popup_format",
+                                label = T("Popup Format"),
+                                comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Popup Format"),
+                                                                T("Used in onHover Tooltip & Cluster Popups to differentiate between types."))),
+                                ),
                           Field("style_default", "boolean",
-                                default=False,
-                                label=T("Default"),
+                                default = False,
+                                label = T("Default"),
                                 represent = s3_yes_no_represent,
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Default"),
-                                                                T("Whether calls to this resource should use this configuration as the default one"))),
+                                                                T("Whether calls to this resource which don't specify the layer should use this configuration as the default one"))),
                                 ),
                           Field("polygons", "boolean",
-                                default=False,
+                                default = False,
+                                label = T("Display Polygons?"),
                                 represent = s3_yes_no_represent,
-                                label=T("Display Polygons?")),
+                                ),
+                          Field("individual", "boolean",
+                                default = False,
+                                label = T("Style Features Individually?"),
+                                represent = s3_yes_no_represent,
+                                ),
                           Field("trackable", "boolean",
+                                default = False,
                                 label = T("Trackable"),
                                 represent = s3_yes_no_represent,
-                                default = False,
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Trackable"),
                                                                 T("Whether the resource should be tracked using S3Track rather than just using the Base Location"))),
@@ -2766,9 +2770,8 @@ class S3FeatureLayerModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_FEATURE_LAYER = T("Create Feature Layer")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_FEATURE_LAYER,
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Feature Layer"),
             title_display = T("Feature Layer Details"),
             title_list = T("Feature Layers"),
             title_update = T("Edit Feature Layer"),
@@ -2797,26 +2800,28 @@ class S3FeatureLayerModel(S3Model):
                        )
 
         # Components
-        add_components(tablename,
-                       # Configs
-                       gis_config = {"link": "gis_layer_config",
-                                     "pkey": "layer_id",
-                                     "joinby": "layer_id",
-                                     "key": "config_id",
-                                     "actuate": "hide",
-                                     "autocomplete": "name",
-                                     "autodelete": False,
-                                     },
-                       # Symbologies
-                       gis_symbology = {"link": "gis_layer_symbology",
-                                        "pkey": "layer_id",
-                                        "joinby": "layer_id",
-                                        "key": "symbology_id",
-                                        "actuate": "hide",
-                                        "autocomplete": "name",
-                                        "autodelete": False,
-                                        },
-                      )
+        self.add_components(tablename,
+                            # Configs
+                            gis_config = {"link": "gis_layer_config",
+                                          "pkey": "layer_id",
+                                          "joinby": "layer_id",
+                                          "key": "config_id",
+                                          "actuate": "hide",
+                                          "autocomplete": "name",
+                                          "autodelete": False,
+                                          },
+                            # Styles
+                            gis_style = "layer_id",
+                            # Symbologies
+                            gis_symbology = {"link": "gis_layer_symbology",
+                                             "pkey": "layer_id",
+                                             "joinby": "layer_id",
+                                             "key": "symbology_id",
+                                             "actuate": "hide",
+                                             "autocomplete": "name",
+                                             "autodelete": False,
+                                             },
+                            )
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -2902,7 +2907,6 @@ class S3MapModel(S3Model):
              "gis_layer_wfs",
              "gis_layer_wms",
              "gis_layer_xyz",
-             #"gis_style"
              )
 
     def model(self):
@@ -4090,25 +4094,6 @@ class S3MapModel(S3Model):
                            ),
                      *s3_meta_fields())
 
-        # ---------------------------------------------------------------------
-        # Below tables are not yet implemented
-
-        # ---------------------------------------------------------------------
-        # GIS Styles: SLD
-        #
-        # @ToDo: Move Styles here
-        # JSON for use internally (as-above)
-        # XML which can be used by a GeoServer co-app:
-        # http://docs.geoserver.org/stable/en/user/restconfig/rest-config-api.html#styles
-        # Can we convert between JSON <> XML as-appropriate? (without losing details)
-
-        #tablename = "gis_style"
-        #define_table(tablename,
-        #             Field("name", notnull=True, unique=True),
-        #             Field("json", "text"),
-        #             Field("xml", "text"),
-        #            *s3_meta_fields())
-
         # Pass names back to global scope (s3.*)
         return dict()
 
@@ -4474,9 +4459,56 @@ class S3MapModel(S3Model):
         S3MapModel.gis_layer_shapefile_onaccept(form)
 
 # =============================================================================
+class S3GISStyleModel(S3Model):
+    """
+        GIS Styles
+        - can be linked to a layer/record_id
+        - @ToDo: can be linked to a layer_config (migrate existing here)
+        - @ToDo: can be standalone, named styles for re-use (link vs copy)
+    """
+
+    names = ("gis_style",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # GIS Styles
+
+        tablename = "gis_style"
+        self.define_table(tablename,
+                          # Optionally give the style a Name/Description
+                          #name_field()(),
+                          #desc_field()(),
+                          # Optionally link to a specific Layer
+                          # Component not Instance
+                          self.super_link("layer_id", "gis_layer_entity"),
+                          # Optionally restrict to a specific Config
+                          self.gis_config_id(),
+                          # Optionally restrict to a specific Record
+                          Field("record_id", "integer",
+                                label = T("Record"),
+                                ),
+                          Field("style", "json",
+                                label = T("Style"),
+                                requires = IS_JSONS3(error_message="Style invalid"),
+                                ),
+                          # @ToDo: SLD XML which can be used by a GeoServer co-app:
+                          # http://docs.geoserver.org/stable/en/user/restconfig/rest-config-api.html#styles
+                          # Not currently possible to convert between JSON <> XML automatically without losing details
+                          #Field("sld", "text"),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
 class S3GISThemeModel(S3Model):
     """
         Thematic Mapping model
+
+        @ToDo: Deprecate since we now have this functionality available for normal feature layers?
     """
 
     names = ("gis_layer_theme",
@@ -4489,11 +4521,7 @@ class S3GISThemeModel(S3Model):
         T = current.T
         db = current.db
 
-        # Shortcuts
-        add_components = self.add_components
-        configure = self.configure
         define_table = self.define_table
-        layer_id = self.super_link("layer_id", "gis_layer_entity")
 
         # =====================================================================
         # Theme Layer
@@ -4501,8 +4529,8 @@ class S3GISThemeModel(S3Model):
 
         tablename = "gis_layer_theme"
         define_table(tablename,
-                     layer_id,
-                     name_field()(unique=True),
+                     self.super_link("layer_id", "gis_layer_entity"),
+                     name_field()(unique = True),
                      desc_field()(),
                      # @ToDo:
                      #self.stats_parameter_id(),
@@ -4518,22 +4546,23 @@ class S3GISThemeModel(S3Model):
                      #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
                      *s3_meta_fields())
 
-        configure(tablename,
-                  super_entity="gis_layer_entity")
+        self.configure(tablename,
+                       super_entity = "gis_layer_entity",
+                       )
 
         # Components
-        add_components(tablename,
-                       # Configs
-                       gis_config = {"link": "gis_layer_config",
-                                     "pkey": "layer_id",
-                                     "joinby": "layer_id",
-                                     "key": "config_id",
-                                     "actuate": "hide",
-                                     "autocomplete": "name",
-                                     "autodelete": False,
-                                     },
-                       gis_theme_data = "layer_theme_id",
-                       )
+        self.add_components(tablename,
+                            # Configs
+                            gis_config = {"link": "gis_layer_config",
+                                          "pkey": "layer_id",
+                                          "joinby": "layer_id",
+                                          "key": "config_id",
+                                          "actuate": "hide",
+                                          "autocomplete": "name",
+                                          "autodelete": False,
+                                          },
+                            gis_theme_data = "layer_theme_id",
+                            )
 
         represent = S3Represent(lookup=tablename)
         layer_theme_id = S3ReusableField("layer_theme_id", "reference %s" % tablename,
@@ -4562,7 +4591,7 @@ class S3GISThemeModel(S3Model):
         define_table(tablename,
                      layer_theme_id(),
                      self.gis_location_id(
-                         requires = IS_LOCATION(level=["L1", "L2", "L3", "L4"]),
+                         requires = IS_LOCATION(level=("L1", "L2", "L3", "L4")),
                          widget = S3LocationAutocompleteWidget(),
                      ),
                      Field("value",

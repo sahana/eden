@@ -42,6 +42,7 @@ __all__ = ("single_phone_number_pattern",
            "IS_INT_AMOUNT",
            "IS_IN_SET_LAZY",
            "IS_HTML_COLOUR",
+           "IS_JSONS3",
            "IS_LAT",
            "IS_LON",
            "IS_LAT_LON",
@@ -63,6 +64,14 @@ __all__ = ("single_phone_number_pattern",
 import re
 import time
 from datetime import datetime, timedelta
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 #from gluon import current
@@ -104,7 +113,45 @@ s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
                              error_message="Invalid phone number!")
 
 # =============================================================================
-class IS_LAT(object):
+class IS_JSONS3(Validator):
+    """
+    Example:
+        Used as::
+
+            INPUT(_type='text', _name='name',
+                requires=IS_JSON(error_message="This is not a valid json input")
+
+            >>> IS_JSON()('{"a": 100}')
+            ({u'a': 100}, None)
+
+            >>> IS_JSON()('spam1234')
+            ('spam1234', 'invalid json')
+    """
+
+    def __init__(self, error_message="Invalid JSON"):
+        self.native_json = current.db._adapter.native_json
+        self.error_message = error_message
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+        # Convert CSV import format to valid JSON
+        value = value.replace("'", "\"")
+        try:
+            if self.native_json:
+                json.loads(value) # raises error in case of malformed JSON
+                return (value, None) #  the serialized value is not passed
+            return (json.loads(value), None)
+        except JSONErrors, e:
+            return (value, "%s: %s" % (current.T(self.error_message), e))
+
+    # -------------------------------------------------------------------------
+    def formatter(self, value):
+        if value is None:
+            return None
+        return json.dumps(value)
+
+# =============================================================================
+class IS_LAT(Validator):
     """
         example:
 
@@ -113,6 +160,7 @@ class IS_LAT(object):
         Latitude has to be in decimal degrees between -90 & 90
         - we attempt to convert DMS format into decimal degrees
     """
+
     def __init__(self,
                  error_message = "Latitude/Northing should be between -90 & 90!"
                  ):
@@ -169,7 +217,7 @@ class IS_LAT(object):
                 return (value, None)
 
 # =============================================================================
-class IS_LON(object):
+class IS_LON(Validator):
     """
         example:
 
@@ -178,6 +226,7 @@ class IS_LON(object):
         Longitude has to be in decimal degrees between -180 & 180
         - we attempt to convert DMS format into decimal degrees
     """
+
     def __init__(self,
                  error_message = "Longitude/Easting should be between -180 & 180!"
                  ):
