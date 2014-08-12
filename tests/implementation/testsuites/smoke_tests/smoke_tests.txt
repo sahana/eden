@@ -9,6 +9,8 @@
 
 # Setting the depth till where URLs will be parsed
 ${MAXDEPTH}  2
+# Follow external links
+${EXT LINKS}  ${False}
 ${PAGE LOAD TIMEOUT}  0.25
 ${ELEMENT LOAD TIMEOUT}  0.50
 # Starting URL
@@ -21,8 +23,9 @@ ${ROOT URL}  ${BASE URL}
 
 *** Settings ***
 Resource  ../../resources/main.txt
-Library  edentest_smoke.py  ${ROOT URL}  ${DO NOT FOLLOW}
+Library  edentest_smoke.py  ${ROOT URL}  ${DO NOT FOLLOW}  ${EXT LINKS}
 Library  DateTime
+Library  OperatingSystem
 
 *** Keywords ***
 
@@ -76,6 +79,8 @@ Visit URLs And Return ToVisit
     \  Go To  ${Url}
     \  ${status}=  Check For Errors  ${Url}
     \  ${URLs Failed}=  Increment URLs Failed  ${URLs Failed}  ${status}
+    \  Run Keyword If  ${status}==0  Append To File  ${Log File}  ${URL} - PASSED \n
+    \  Run Keyword If  ${status}!=0  Append To File  ${Log File}  ${URL} - FAILED \n
     \  Continue For Loop If  ${status}!=0
     \  Append To List  ${ALREADY VISITED}  ${Url}
     \  ${Current Urls}=  Get All URLs From Current Page
@@ -96,10 +101,18 @@ Add Current Urls to ToVisit Urls
     Remove Duplicates  ${To Visit}
     [Return]  ${To Visit}
 
+Create Log File
+    ${Time}=  Get Current Date  result_format=datetime
+    ${Time}=  Convert Date  ${Time}  result_format=%d.%m.%Y.%H.%M
+    Set Global Variable  ${Log File}  ${Time}_smoke_tests_log.txt
+    Remove File  ${Log File}
+    Create File  ${Log File}
+
 *** Testcases ***
 Every page is showing correctly
     Set Selenium Timeouts
     Register Keyword To Run On Failure  Nothing
+    Create Log File
 
     Login To Eden  ${VALID USER}  ${VALID PASSWORD}
     ${To Visit}=  Create List  ${START URL}
@@ -130,4 +143,5 @@ Every page is showing correctly
     # Log Results of the suite
     Log  \n Total URLs Visited - ${URLs Count} \n Total URLs Failed - ${URLs Failed}  console=yes
 
+    Append to file  ${Log File}  \n Total URLs Visited - ${URLs Count} \n Total URLs Failed - ${URLs Failed}
     Run Keyword if  ${URLs Failed}!=0  Fail  Broken URLs Found

@@ -3,13 +3,17 @@
 class edentest_smoke(object):
     """ Smoke Test, visit every link it can find and report on the outcome """
 
-    def __init__(self, base_url, do_not_follow):
+    def __init__(self, base_url, do_not_follow, ext_links):
         self.base_url = base_url
         self.do_not_follow = do_not_follow
+        self.follow_external_links = ext_links
 
     def check_if_url_should_be_skipped(self, url):
 
-        if len(url) == 0 or url.find(self.base_url) == -1:
+        if len(url) == 0:
+            return 1
+
+        if not self.follow_external_links and url.find(self.base_url) == -1:
             return 1
 
         for ignore in self.do_not_follow:

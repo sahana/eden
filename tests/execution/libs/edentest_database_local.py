@@ -27,7 +27,9 @@ class EdenTestQuery(object):
         s3db = current.s3db
 
         logger.info("Executing %s" % statement)
+
         output = eval(statement)
+        db.commit()
         return output
 
     @staticmethod
@@ -51,7 +53,28 @@ class EdenTestQuery(object):
         return count_value
 
     @staticmethod
-    def truncate_table(table):
+    def count_entries_of_table(table_name):
+        """
+            Returns the count of the number of entries of a table
+            Usage:
+                ${output} =  Count Entries Of Table  org_site
+                Log to console  ${output}
+            -------
+            50
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        logger.info("Counting the entries in table %s" % (table_name))
+
+        table = s3db[table_name]
+        count_value = db(table.deleted != True).count()
+
+        return count_value
+
+    @staticmethod
+    def truncate_table(table_name):
         """
             Truncates the table passed as argument
             If the database is in use, it will throw an OperationalError saying
@@ -63,9 +86,11 @@ class EdenTestQuery(object):
         db = current.db
         s3db = current.s3db
 
-        logger.info("Truncating table %s" % table)
-        cmd = "s3db.%s.truncate()" % table
-        eval(cmd)
+        logger.info("Truncating table %s" % table_name)
+
+        table = s3db[table_name]
+        table.truncate()
+        db.commit()
 
     @staticmethod
     def execute_sql_string(sql_string):
@@ -83,7 +108,11 @@ class EdenTestQuery(object):
         s3db = current.s3db
 
         logger.info("Executing query %s" % sql_string)
-        return db.executesql(sql_string, as_dict=True)
+
+        output = db.executesql(sql_string, as_dict=True)
+        db.commit()
+
+        return output
 
     @staticmethod
     def query_and_return_the_first_row_where(statement):
