@@ -135,6 +135,7 @@ class S3Msg(object):
                              "GITHUB":      T("Github Repo"),
                              "LINKEDIN":    T("LinkedIn Profile"),
                              "BLOG":        T("Blog"),
+                             "CAPALERT":    T("CAP Alert"),
                              "OTHER":       T("Other")
                              }
 
@@ -1358,6 +1359,57 @@ class S3Msg(object):
         else:
             graph.put_object(user_id, "feed", message=text)
 
+    # -------------------------------------------------------------------------
+    def post_to_broker(self, channel, alert_url, alert_id):
+        
+            db = current.db
+            s3db = current.s3db
+            table = s3db.msg_cap
+            otable = s3db.msg_outbox
+            settings = current.deployment_settings
+            auth = current.auth
+            
+            brokers = settings.get_cap_publishing_brokers()
+            hub_url = brokers[channel]
+            
+            def log_alert(channel, alert_id, status):
+                _id = table.insert(alert_id=alert_id,
+                                   to_broker=channel,
+                                   broker_url=brokers[channel],
+                                   issuer=auth.s3_logged_in_person(),
+                                   success_status=status,                       
+                                   )
+                record = db(table.id == _id).select(table.id,
+                                                    limitby=(0, 1)
+                                                    ).first()
+                s3db.update_super(table, record)
+                message_id = record.message_id
+    
+                # Log in msg_outbox
+                otable.insert(message_id = message_id,
+                              address = hub_url,
+                              status = status,
+                              contact_method = "CAPALERT",
+                              )
+            
+            def publish_alert(alert_id, params=None, headers=None):
+                import requests
+                status = requests.post(url=hub_url, headers=headers, params=params)
+                log_alert(channel, alert_id, status.status_code)
+                    
+            if channel and alert_url:
+                if channel == "Pubsubhubbub":
+                    # Publish the feed to Pubsubhubbub
+                    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+                    params = {"hub.mode" : "publish", "hub.url" : alert_url}
+                    publish_alert(alert_id, params=params, headers=headers)
+                elif channel == "Alerthub":
+                    # Publish the feed to Alerthub
+                    params = {"hub.mode" : "publish", "hub.url" : alert_url}
+                    publish_alert(alert_id, params=params)
+            else:
+                current.log.error("Incorrect parameters")
+    
     # -------------------------------------------------------------------------
     def poll(self, tablename, channel_id):
         """
