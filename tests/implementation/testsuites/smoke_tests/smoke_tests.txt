@@ -8,7 +8,7 @@
 # It contains the configuration settings to run the smoke tests
 
 # Setting the depth till where URLs will be parsed
-${MAXDEPTH}  3
+${MAXDEPTH}  2
 ${PAGE LOAD TIMEOUT}  0.25
 ${ELEMENT LOAD TIMEOUT}  0.50
 # Starting URL
@@ -74,7 +74,7 @@ Visit URLs And Return ToVisit
 
     :FOR  ${Url}  In  @{URL List}
     \  Go To  ${Url}
-    \  ${status}=  Check For Errors  ${URL}
+    \  ${status}=  Check For Errors  ${Url}
     \  ${URLs Failed}=  Increment URLs Failed  ${URLs Failed}  ${status}
     \  Continue For Loop If  ${status}!=0
     \  Append To List  ${ALREADY VISITED}  ${Url}
