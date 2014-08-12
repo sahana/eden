@@ -15,6 +15,9 @@ else:
     if not isinstance(pop_list, (list, tuple)):
         pop_list = [pop_list]
 
+if settings.get_base_isdemo() and pop_list:
+    pop_list.extend(settings.get_base_demoprepop())
+
 if len(pop_list) > 0:
 
     # =========================================================================

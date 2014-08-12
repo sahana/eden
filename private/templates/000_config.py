@@ -57,6 +57,8 @@ settings.base.template = "default"
 settings.base.migrate = True
 # To just create the .table files (also requires migrate=True):
 #settings.base.fake_migrate = True
+# Uncomment when using a demo instance
+#settings.base.isdemo = True
 
 # Set this to True to switch to Debug mode
 # Debug mode means that uncompressed CSS/JS files are loaded

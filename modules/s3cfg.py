@@ -546,6 +546,14 @@ class S3Config(Storage):
             # Pre-populate off (production mode), don't bother resolving
             return 0
 
+    def get_base_demoprepop(self):
+        """ Demo prepop data location """
+        return self.base.get("demoprepop", [])
+
+    def get_base_isdemo(self):
+        """ Whether to prepopulate demo data """
+        return self.base.get("isdemo", False)
+
     def get_base_guided_tour(self):
         """ Whether the guided tours are enabled """
         return self.base.get("guided_tour", False)
