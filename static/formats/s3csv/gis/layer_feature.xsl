@@ -21,6 +21,7 @@
          Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to be visible to Styler)
          Filter...............string..........Layer Filter
          Default..............boolean.........Layer Default
+         Individual...........boolean.........Layer Individual
          Polygons.............boolean.........Layer Polygons
          Trackable............boolean.........Layer Trackable
          Site.................boolean.........Layer Site (use Site for location)
@@ -141,6 +142,9 @@
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <xsl:if test="col[@field='Default']">
                 <data field="style_default"><xsl:value-of select="col[@field='Default']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Individual']">
+                <data field="individual"><xsl:value-of select="col[@field='Individual']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Polygons']">
                 <data field="polygons"><xsl:value-of select="col[@field='Polygons']"/></data>

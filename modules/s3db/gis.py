@@ -2485,31 +2485,6 @@ class S3LayerEntityModel(S3Model):
         # =====================================================================
         #  Layer Config link table
 
-        # Style is a JSON object with the following structure
-        # (only the starred elements are currently parsed)
-        # @ToDo: Support elements in a common section (such as prop, graphic)
-        # @ToDo: Popup style
-        # @ToDo: Import/Export SLD
-        # @ToDo: Be able to reuse Styles across Layers/Configs (separate gis_style table)
-        #Style = [{
-        #   prop: string,       //* Attribute used to activate this style rule (otherwise defaults to 'value')
-        #   cat: string,        //* Absolute Value used to style the element
-        #   low: float,         //* Low value of the range of values used for this style rule
-        #   high: float,        //* High value of the range of values used for this style rule
-        #   label: string,      //* Optional label for the Category/Range (falls back to cat or 'low - high')
-        #   externalGraphic: string, //* Marker to load from /static/path/to/marker.png
-        #   fill: string,       //*
-        #   fillOpacity: float, //*
-        #   stroke: string,     //* (will default to fill, if not set)
-        #   strokeOpacity: float,
-        #   strokeWidth: float or int, //* OpenLayers wants int, SLD wants float
-        #   label: string,      //* Attribute used to label the element
-        #   show_label: boolean, //* Whether or not to label the element
-        #   graphic: string,    //* Shape: "circle", "square", "star", "x", "cross", "triangle"
-        #   size: integer,,     //* Radius of the Shape
-        #   popup: {},
-        #}]
-
         tablename = "gis_layer_config"
         define_table(tablename,
                      layer_id,
@@ -2720,6 +2695,7 @@ class S3FeatureLayerModel(S3Model):
                                               _title="%s|%s" % (T("Attributes"),
                                                                 T("Used to populate feature attributes which can be used for Styling and Popups."))),
                                 ),
+                          # @ToDo: Move to gis_style?
                           Field("popup_format",
                                 label = T("Popup Format"),
                                 comment = DIV(_class="tooltip",
@@ -2734,6 +2710,7 @@ class S3FeatureLayerModel(S3Model):
                                               _title="%s|%s" % (T("Default"),
                                                                 T("Whether calls to this resource which don't specify the layer should use this configuration as the default one"))),
                                 ),
+                          # @ToDo: Move to gis_style?
                           Field("polygons", "boolean",
                                 default = False,
                                 label = T("Display Polygons?"),
@@ -2760,9 +2737,11 @@ class S3FeatureLayerModel(S3Model):
                                                                 T("Select this if you need this resource to be mapped from site_id instead of location_id."))),
                                 ),
                           gis_layer_folder()(),
+                          # @ToDo: Move to gis_style?
                           gis_opacity()(),
                           gis_refresh()(),
                           cluster_attribute()(),
+                          # @ToDo: Move to gis_style?
                           cluster_distance()(),
                           cluster_threshold()(),
                           s3_role_required(),    # Single Role
@@ -4476,6 +4455,31 @@ class S3GISStyleModel(S3Model):
         # ---------------------------------------------------------------------
         # GIS Styles
 
+        # Style is a JSON object with the following structure
+        # (only the starred elements are currently parsed)
+        # @ToDo: Support elements in a common section (such as prop, graphic)
+        # @ToDo: Popup style
+        # @ToDo: Import/Export SLD
+        # @ToDo: Be able to reuse Styles across Layers/Configs (separate gis_style table)
+        #Style = [{
+        #   prop: string,       //* Attribute used to activate this style rule (otherwise defaults to 'value')
+        #   cat: string,        //* Absolute Value used to style the element
+        #   low: float,         //* Low value of the range of values used for this style rule
+        #   high: float,        //* High value of the range of values used for this style rule
+        #   label: string,      //* Optional label for the Category/Range (falls back to cat or 'low - high')
+        #   externalGraphic: string, //* Marker to load from /static/path/to/marker.png
+        #   fill: string,       //*
+        #   fillOpacity: float, //*
+        #   stroke: string,     //* (will default to fill, if not set)
+        #   strokeOpacity: float,
+        #   strokeWidth: float or int, //* OpenLayers wants int, SLD wants float
+        #   label: string,      //* Attribute used to label the element
+        #   show_label: boolean, //* Whether or not to label the element
+        #   graphic: string,    //* Shape: "circle", "square", "star", "x", "cross", "triangle"
+        #   size: integer,,     //* Radius of the Shape
+        #   popup: {},
+        #}]
+
         tablename = "gis_style"
         self.define_table(tablename,
                           # Optionally give the style a Name/Description
@@ -4492,6 +4496,7 @@ class S3GISStyleModel(S3Model):
                                 ),
                           Field("style", "json",
                                 label = T("Style"),
+                                # @ToDo: Validate that a record-specific style just has a single entry in the array
                                 requires = IS_JSONS3(error_message="Style invalid"),
                                 ),
                           # @ToDo: SLD XML which can be used by a GeoServer co-app:

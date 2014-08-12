@@ -1636,6 +1636,7 @@ def customise_stats_people_controller(**attr):
                 field.widget = S3LocationSelectorWidget2(levels = levels,
                                                          hide_lx = False,
                                                          polygons = True,
+                                                         color_picker = True,
                                                          reverse_lx = True,
                                                          show_postcode = True,
                                                          #show_map = False,
@@ -1977,6 +1978,7 @@ def customise_vulnerability_risk_controller(**attr):
                                                          reverse_lx = True,
                                                          #points = False,
                                                          polygons = True,
+                                                         color_picker = True,
                                                          show_address = True,
                                                          show_postcode = True,
                                                          )

@@ -130,10 +130,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         $.when(layersLoaded(map_id)).then(
             function(status) {
                 // Success: Set a flag to show that we've completed loading
-                var gis = S3.gis;
+                // - used by gis.get_screenshot()
                 // Wait a little longer to allow tiles to render
                 setTimeout(function loaded() {
-                    S3.gis.maps[map_id].s3.loaded = true;
+                    map.s3.loaded = true;
                 }, 800);
             },
             function(status) {
@@ -3782,7 +3782,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             addPdfControl(toolbar);
         }
 
-        if (options.draw_feature || options.draw_polygon) {
+        if (options.draw_feature || options.draw_line || options.draw_polygon) {
             // Draw Controls
             toolbar.addSeparator();
             //toolbar.add(selectButton);
@@ -3829,7 +3829,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     addPointControl(map, toolbar, point_pressed);
                 }
             }
-            //toolbar.add(lineButton);
             if (options.draw_line) {
                 if (poi_resources) {
                     // Add a button per line resource
@@ -3844,7 +3843,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     addLineControl(map, toolbar, line_pressed);
                 }
             }
-            //toolbar.add(polygonButton);
             if (options.draw_polygon) {
                 if (poi_resources) {
                     // Add a button per line resource
@@ -3858,6 +3856,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // Add a generic button
                     addPolygonControl(map, toolbar, polygon_pressed, true);
                 }
+            }
+            if (options.color_picker) {
+                addColorPickerControl(map, toolbar);
             }
             //toolbar.add(dragButton);
             //toolbar.add(resizeButton);
@@ -3966,12 +3967,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 new OpenLayers.Feature.Vector(
                     e.point,
                     {},
-                    {
-                        graphicName: 'cross',
-                        strokeColor: '#f00',
-                        strokeWidth: 2,
-                        fillOpacity: 0,
-                        pointRadius: 10
+                    {graphicName: 'cross',
+                     strokeColor: '#f00',
+                     strokeWidth: 2,
+                     fillOpacity: 0,
+                     pointRadius: 10
                     }
                 ),
                 circle
@@ -3985,7 +3985,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
 
         // Toolbar Button
-        var geoLocateButton = new Ext.Toolbar.Button({
+        var geoLocateButton = new Ext.Button({
             iconCls: 'geolocation',
             tooltip: i18n.gis_geoLocate,
             handler: function() {
@@ -4034,7 +4034,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var map = toolbar.map;
         var s3 = map.s3;
         // Toolbar Button
-        var googleEarthButton = new Ext.Toolbar.Button({
+        var googleEarthButton = new Ext.Button({
             iconCls: 'googleearth',
             tooltip: s3.options.Google.Earth,
             enableToggle: true,
@@ -4110,7 +4110,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         map.addControl(StreetviewClicker);
 
         // Toolbar Button
-        var googleStreetviewButton = new Ext.Toolbar.Button({
+        var googleStreetviewButton = new Ext.Button({
             iconCls: 'streetview',
             tooltip: map.s3.options.Google.StreetviewButton,
             allowDepress: true,
@@ -4298,12 +4298,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         toolbar.map.addControl(nav);
         nav.activate();
         // Toolbar Buttons
-        var navPreviousButton = new Ext.Toolbar.Button({
+        var navPreviousButton = new Ext.Button({
             iconCls: 'back',
             tooltip: i18n.gis_navPrevious,
             handler: nav.previous.trigger
         });
-        var navNextButton = new Ext.Toolbar.Button({
+        var navNextButton = new Ext.Button({
             iconCls: 'next',
             tooltip: i18n.gis_navNext,
             handler: nav.next.trigger
@@ -4701,12 +4701,103 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
     };
 
+    /**
+     * Check that Map UI is Loaded
+     */
+    var uiLoaded = function(map_id) {
+        var dfd = new jQuery.Deferred();
+        var s3 = S3.gis.maps[map_id].s3;
+
+        // Test every half-second
+        setTimeout(function working() {
+            if (s3.mapWin != undefined) {
+                dfd.resolve('loaded');
+            } else if (dfd.state() === 'pending') {
+                // Notify progress
+                dfd.notify('waiting for JS to load...');
+                // Loop
+                setTimeout(working, 500);
+            } else {
+                // Failed!?
+            }
+        }, 1);
+
+        // Return the Promise so caller can't change the Deferred
+        return dfd.promise();
+    };
+
+    var rgb2hex = function(r,g,b) {
+        if (g !== undefined) 
+            return Number(0x1000000 + r*0x10000 + g*0x100 + b).toString(16).substring(1);
+        else 
+            return Number(0x1000000 + r[0]*0x10000 + r[1]*0x100 + r[2]).toString(16).substring(1);
+    }
+
+    // ColorPicker to style Features
+    // - currently used just by S3LocationSelectorWidget2
+    var addColorPickerControl = function(map, toolbar) {
+        var map_id = map.s3.id;
+        var colorPickerButton = new Ext.Toolbar.Item({
+            html: '<input class="gis_colorpicker" />'
+        });
+        toolbar.add(colorPickerButton);
+        $.when(uiLoaded(map_id)).then(
+            function(status) {
+                // Success: Load Colorpicker
+                $('#' + map_id + '_panel .gis_colorpicker').spectrum({
+                    showInput: true,
+                    showInitial: true,
+                    preferredFormat: 'rgb', // needed for Alpha
+                    showPaletteOnly: true,
+                    togglePaletteOnly: true,
+                    palette: ['rgba(255, 0, 0, .5)',    // red
+                              'rgba(255, 255, 0, .5)',  // yellow
+                              'rgba(0, 255, 0, .5)',    // green
+                              'rgba(0, 0, 255, .5)',    // blue
+                              'rgba(255, 255, 255, .5)',// white
+                              'rgba(0, 0, 0, .5)'       // black
+                              ],
+                    showAlpha: true,
+                    cancelText: i18n.gis_cancelText,
+                    chooseText: i18n.gis_chooseText,
+                    togglePaletteMoreText: i18n.gis_togglePaletteMoreText,
+                    togglePaletteLessText: i18n.gis_togglePaletteLessText,
+                    clearText: i18n.gis_clearText,
+                    noColorSelectedText: i18n.gis_noColorSelectedText,
+                    change: function(colour) {
+                        // Modify the Style of the Draft Layer
+                        var style = {fill: rgb2hex(colour._r, colour._g, colour._b)};
+                        if (colour._a != 1) {
+                            style.fillOpacity = colour._a;
+                        }
+                        var layer = {
+                            'style': style
+                        };
+                        var response = createStyleMap(map, layer);
+                        var featureStyleMap = response[0];
+                        var draftLayer = map.s3.draftLayer;
+                        draftLayer.styleMap = featureStyleMap;
+                        draftLayer.redraw();
+                    }
+                });
+            },
+            function(status) {
+                // Failed
+                s3_debug(status);
+            },
+            function(status) {
+                // Progress
+                s3_debug(status);
+            }
+        );
+    };
+
     // Potlatch button for editing OpenStreetMap
     // @ToDo: Select a Polygon for editing rather than the whole Viewport
     var addPotlatchButton = function(toolbar) {
         var map = toolbar.map;
         // Toolbar Button
-        var potlatchButton = new Ext.Toolbar.Button({
+        var potlatchButton = new Ext.Button({
             iconCls: 'potlatch',
             tooltip: i18n.gis_potlatch,
             handler: function() {
@@ -4730,7 +4821,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Print button on Toolbar to save a screenshot
     var addPrintButton = function(toolbar) {
         // Toolbar Button
-        var printButton = new Ext.Toolbar.Button({
+        var printButton = new Ext.Button({
             iconCls: 'print',
             tooltip: i18n.gis_print,
             handler: function() {
@@ -4756,7 +4847,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Save button on Toolbar to save the Viewport settings
     var addSaveButton = function(toolbar) {
         // Toolbar Button
-        var saveButton = new Ext.Toolbar.Button({
+        var saveButton = new Ext.Button({
             iconCls: 'save',
             tooltip: i18n.gis_save,
             handler: function() {
@@ -5194,7 +5285,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var addLayerPropertiesButton = function(map, layerTree) {
         // Ensure just 1 propertiesWindow per map
         var propertiesWindow = map.s3.propertiesWindow;
-        var layerPropertiesButton = new Ext.Toolbar.Button({
+        var layerPropertiesButton = new Ext.Button({
             iconCls: 'gxp-icon-layerproperties',
             tooltip: i18n.gis_properties,
             handler: function() {
@@ -5345,7 +5436,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     // Clear Layers control
     var addClearLayersButton = function(map, toolbar) {
-        var clearLayersButton = new Ext.Toolbar.Button({
+        var clearLayersButton = new Ext.Button({
             iconCls: 'icon-clearlayers',
             tooltip: i18n.gis_clearlayers,
             handler: function() {
@@ -5608,6 +5699,15 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.colour) {
                         // Feature Query: Use colour from feature (e.g. FeatureQuery)
                         color = feature.attributes.colour;
+                    } else if (feature.attributes.style) {
+                        // Feature Layer with per-feature Style
+                        color = feature.attributes.style.fill;
+                        if (undefined != color) {
+                            color = '#' + color;
+                        } else {
+                            // default fillColor
+                            color = '#000000';
+                        }
                     } else if (style) {
                         if (!style_array) {
                             // Common Style for all features in layer
@@ -5641,6 +5741,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.opacity) {
                         // Use opacity from feature (e.g. FeatureQuery)
                         fillOpacity = feature.attributes.opacity;
+                    } else if (feature.attributes.style) {
+                        // Feature Layer with per-feature Style
+                        fillOpacity = feature.attributes.style.fillOpacity;
                     } else if (style) {
                         if (!style_array) {
                             // Common Style for all features in layer
@@ -5666,6 +5769,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     } else if (feature.attributes.colour) {
                         // Use colour from feature (e.g. FeatureQuery)
                         color = feature.attributes.colour;
+                    } else if (feature.attributes.style) {
+                        // Feature Layer with per-feature Style
+                        var fstyle = feature.attributes.style;
+                        color = fstyle.stroke || fstyle.fill;
+                        if (undefined != color) {
+                            color = '#' + color;
+                        } else {
+                            // default fillColor
+                            color = '#000000';
+                        }
                     } else if (style) {
                         if (!style_array) {
                             // Common Style for all features in layer

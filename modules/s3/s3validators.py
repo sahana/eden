@@ -1730,6 +1730,7 @@ class IS_LOCATION_SELECTOR2(Validator):
         For Update forms, this will check that we have a valid location_id FK and update any changes
 
         @ToDo: Audit
+        @ToDo: Allow multiple in a single page
     """
 
     def __init__(self,

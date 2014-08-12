@@ -26,6 +26,11 @@ form .map_loader {
     margin: 0 0 0 4px;
 }
 
+/* Override widgets.css */
+.form-container form tr.x-toolbar-left-row td {
+    padding: 0;
+}
+
 /* Main Map */
 .map_home {
     margin: 0 0 0 -12px;

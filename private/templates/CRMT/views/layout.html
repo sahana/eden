@@ -27,10 +27,10 @@
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
 {{for sheet in s3.external_stylesheets:}}
- <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+ <link href="{{=sheet}}" rel="stylesheet" type="text/css" />
 {{pass}}
 {{for sheet in s3.stylesheets:}}
- <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+ <link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" />
 {{pass}}
 {{include "bootstrap_css.html"}}
 {{if s3.debug:}}{{=s3base.s3_include_debug_css()}}{{else:}}

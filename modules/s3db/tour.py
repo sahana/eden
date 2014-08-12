@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3GuidedTourModel",
+__all__ = ("S3GuidedTourModel",
            "tour_rheader",
            "tour_builder",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -42,10 +42,10 @@ class S3GuidedTourModel(S3Model):
 
     """ Details about which guided tours this Person has completed """
 
-    names = ["tour_config",
+    names = ("tour_config",
              "tour_details",
              "tour_user",
-             ]
+             )
 
     def model(self):
 
@@ -185,7 +185,7 @@ class S3GuidedTourModel(S3Model):
             msg_list_empty = T("No Details currently registered"))
 
         configure(tablename,
-                  orderby="tour_details.tour_config_id,tour_details.posn"
+                  orderby = "tour_details.tour_config_id,tour_details.posn"
                   )
         # ---------------------------------------------------------------------
         # Details of the tours that the user has taken.
@@ -228,9 +228,8 @@ class S3GuidedTourModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage(
-                       tour_config_id = tour_config_id,
-                      )
+        return dict(tour_config_id = tour_config_id,
+                    )
 
 # =============================================================================
 def tour_rheader(r):
@@ -265,10 +264,11 @@ def tour_builder(output):
     """
          Helper function to attach a guided tour (if required) to the output
     """
-    request = current.request
+
     auth = current.auth
-    s3db = current.s3db
     db = current.db
+    s3db = current.s3db
+    request = current.request
     s3 = current.response.s3
     T = current.T
 
@@ -414,7 +414,7 @@ def tour_builder(output):
         post_ride_data = [cnt, tour_id]
     joyride_div = DIV(joyride_OL,
                       _class="hidden")
-    # add the javascript configuration data
+    # Add the javascript configuration data
     from gluon.serializers import json as jsons
     if pre_step_data:
         joyride_div.append(INPUT(_type="hidden",
@@ -453,7 +453,7 @@ def tour_builder(output):
         appname = request.application
         s3.scripts.append("/%s/static/scripts/jquery.joyride.js" % appname)
         s3.scripts.append("/%s/static/scripts/S3/s3.guidedtour.js" % appname)
-        s3.stylesheets.append("plugins/guidedtour.min.css")
+        s3.stylesheets.append("plugins/joyride.min.css")
     else:
         s3.scripts.append("/%s/static/scripts/S3/s3.guidedtour.min.js" % request.application)
         s3.stylesheets.append("plugins/joyride.css")

@@ -2240,10 +2240,11 @@ class GIS(object):
         if layer_id:
             # Feature Layer
             # e.g. Search results loaded as a Feature Resource layer
-            layer = db(ftable.id == layer_id).select(ftable.trackable,
-                                                     ftable.polygons,
+            layer = db(ftable.id == layer_id).select(ftable.attr_fields,
                                                      ftable.popup_fields, # @ToDo: Deprecate
-                                                     ftable.attr_fields,
+                                                     ftable.polygons,
+                                                     ftable.individual,
+                                                     ftable.trackable,
                                                      limitby=(0, 1)).first()
 
         else:
@@ -2253,11 +2254,13 @@ class GIS(object):
             function = request.function
             query = (ftable.controller == controller) & \
                     (ftable.function == function)
-            layers = db(query).select(ftable.style_default,
-                                      ftable.trackable,
-                                      ftable.polygons,
-                                      ftable.popup_fields, # @ToDo: Deprecate
+            layers = db(query).select(ftable.layer_id,
                                       ftable.attr_fields,
+                                      ftable.popup_fields, # @ToDo: Deprecate
+                                      ftable.style_default,
+                                      ftable.polygons,
+                                      ftable.individual,
+                                      ftable.trackable,
                                       )
             if len(layers) > 1:
                 layers.exclude(lambda row: row.style_default == False)
@@ -2266,6 +2269,7 @@ class GIS(object):
                     return None
             if layers:
                 layer = layers.first()
+                layer_id = layer.layer_id
 
         attr_fields = get_vars.get("attr", [])
         if attr_fields:
@@ -2278,19 +2282,22 @@ class GIS(object):
                 popup_fields = layer.popup_fields or []
             if not attr_fields:
                 attr_fields = layer.attr_fields or []
-            trackable = layer.trackable
+            individual = layer.individual
             polygons = layer.polygons
+            trackable = layer.trackable
         else:
             if not popup_fields:
                 popup_fields = ["name"]
-            trackable = False
+            individual = False
             polygons = False
+            trackable = False
 
         table = resource.table
         pkey = table._id.name
 
-        markers = {}
         attributes = {}
+        markers = {}
+        styles = {}
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
@@ -2330,8 +2337,8 @@ class GIS(object):
                             ftype = None
                         attr_cols[fieldname] = (ftype, fname)
 
-                rows = data["rows"]
                 _pkey = str(_pkey)
+                rows = data["rows"]
                 for row in rows:
                     record_id = int(row[_pkey])
                     if attr_cols:
@@ -2401,6 +2408,23 @@ class GIS(object):
                     markers = GIS.get_marker(c, f)
 
                 markers[tablename] = markers
+
+            if individual:
+                # Add a per-feature Style
+                config = GIS.get_config()
+                stable = s3db.gis_style
+                query = (stable.deleted == False) & \
+                        (stable.layer_id == layer_id) & \
+                        (stable.record_id.belongs(resource._ids)) & \
+                        ((stable.config_id == config.id) | \
+                         (stable.config_id == None))
+                rows = db(query).select(stable.record_id,
+                                        stable.style)
+                for row in rows:
+                    styles[row.record_id] = row.style
+
+                styles[tablename] = styles
+
         else:
             # KML, GeoRSS or GPX
             marker_fn = s3db.get_config(tablename, "marker_fn")
@@ -2577,11 +2601,12 @@ class GIS(object):
         #            (layer_name, duration))
 
         # Used by S3XML's gis_encode()
-        return dict(latlons = _latlons,
+        return dict(geojsons = _geojsons,
+                    latlons = _latlons,
                     wkts = _wkts,
-                    geojsons = _geojsons,
-                    markers = markers,
                     attributes = attributes,
+                    markers = markers,
+                    styles = styles,
                     )
 
     # -------------------------------------------------------------------------
@@ -5965,6 +5990,7 @@ class GIS(object):
                  legend = False,
                  toolbar = False,
                  area = False,
+                 color_picker = False,
                  nav = None,
                  save = False,
                  search = False,
@@ -6048,6 +6074,7 @@ class GIS(object):
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param area: Show the Area tool on the Toolbar
+            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelectorWidget2)
             @param nav: Show the Navigation controls on the Toolbar
             @param save: Show the Save tool on the Toolbar
             @param search: Show the Geonames search box (requires a username to be configured)
@@ -6096,6 +6123,7 @@ class GIS(object):
                    legend = legend,
                    toolbar = toolbar,
                    area = area,
+                   color_picker = color_picker,
                    nav = nav,
                    save = save,
                    search = search,
@@ -6155,6 +6183,17 @@ class MAP(DIV):
                            "_id": map_id,
                            }
         self.parent = None
+
+        # Show Color Picker?
+        if opts.get("color_picker", False):
+            # Can't be done in _setup() as usually run from xml() and hence we've already passed this part of the layout.html
+            s3 = current.response.s3
+            if s3.debug:
+                style = "plugins/spectrum.css"
+            else:
+                style = "plugins/spectrum.min.css"
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
 
     # -------------------------------------------------------------------------
     def _setup(self):
@@ -6437,6 +6476,17 @@ class MAP(DIV):
                 options["area"] = True
                 i18n["gis_area_message"] = T("The area is")
                 i18n["gis_area_tooltip"] = T("Measure Area: Click the points around the polygon & end with a double-click")
+
+            # Show Color Picker?
+            if opts.get("color_picker", False):
+                options["color_picker"] = True
+                #i18n["gis_color_picker_tooltip"] = T("Select Color")
+                i18n["gis_cancelText"] = T("cancel")
+                i18n["gis_chooseText"] = T("choose")
+                i18n["gis_togglePaletteMoreText"] = T("more")
+                i18n["gis_togglePaletteLessText"] = T("less")
+                i18n["gis_clearText"] = T("Clear Color Selection")
+                i18n["gis_noColorSelectedText"] = T("No Color Selected")
 
             # Show Print control?
             print_control = settings.get_gis_print()
@@ -6801,21 +6851,33 @@ class MAP(DIV):
         if js_globals not in js_global:
             js_global_append(js_globals)
 
+        debug = s3.debug
         scripts = s3.scripts
         if s3.cdn:
-            if s3.debug:
+            if debug:
                 script = "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore.js"
             else:
                 script = "//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js"
         else:
-            if s3.debug:
+            if debug:
                 script = URL(c="static", f="scripts/underscore.js")
             else:
                 script = URL(c="static", f="scripts/underscore-min.js")
         if script not in scripts:
             scripts.append(script)
 
-        script = URL(c="static", f="scripts/S3/s3.gis.loader.js")
+        if self.opts.get("color_picker", False):
+            if debug:
+                script = URL(c="static", f="scripts/spectrum.js")
+            else:
+                script = URL(c="static", f="scripts/spectrum.min.js")
+            if script not in scripts:
+                scripts.append(script)
+
+        if debug:
+            script = URL(c="static", f="scripts/S3/s3.gis.loader.js")
+        else:
+            script = URL(c="static", f="scripts/S3/s3.gis.loader.min.js")
         if script not in scripts:
             scripts.append(script)
 

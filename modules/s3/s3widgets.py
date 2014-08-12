@@ -1148,7 +1148,7 @@ $('#%s').click(function(){
 # =============================================================================
 class S3ColorPickerWidget(FormWidget):
     """
-        Displays an <input type="color"> widget to allow the user to pick a
+        Displays a widget to allow the user to pick a
         color, and falls back to using JSColor or a regular text input if
         necessary.
     """
@@ -1157,7 +1157,9 @@ class S3ColorPickerWidget(FormWidget):
         "showInput": True,
         "showInitial": True,
         "preferredFormat": "hex",
-        "showPalette": True,
+        #"showPalette": True,
+        "showPaletteOnly": True,
+        "togglePaletteOnly": True,
         "palette": ("red", "yellow", "green", "blue", "white", "black")
     }
 
@@ -1166,17 +1168,33 @@ class S3ColorPickerWidget(FormWidget):
             @param options: options for the JavaScript widget
             @see: http://bgrins.github.com/spectrum/
         """
+
         self.options = dict(self.DEFAULT_OPTIONS)
         self.options.update(options or {})
 
     def __call__(self, field, value, **attributes):
+
+        default = dict(#_type = "color", # We don't want to use native HTML5 widget as it doesn't support our options & is worse for documentation
+                       _type = "text",
+                       value = (value != None and str(value)) or "",
+                       )
+
+        attr = StringWidget._attributes(field, default, **attributes)
+        
+        widget = INPUT(**attr)
+
+        if "_id" in attr:
+            selector = attr["_id"]
+        else:
+            selector = str(field).replace(".", "_")
+
         s3 = current.response.s3
-        app = current.request.application
 
         _min = "" if s3.debug else ".min"
 
-        script = "/%s/static/scripts/spectrum%s.js" % (app, _min)
-        style = "spectrum%s.css" % _min
+        script = "/%s/static/scripts/spectrum%s.js" % \
+            (current.request.application, _min)
+        style = "plugins/spectrum%s.css" % _min
 
         if script not in s3.scripts:
             s3.scripts.append(script)
@@ -1184,17 +1202,27 @@ class S3ColorPickerWidget(FormWidget):
         if style not in s3.stylesheets:
             s3.stylesheets.append(style)
 
-        s3.jquery_ready.append('''
-var sp_options=%s
-sp_options.change=function(color){this.value=color.toHex()}
-$('.color').spectrum(sp_options)''' % \
-    json.dumps(self.options, separators=SEPARATORS) if self.options else "")
+        # i18n of Strings
+        T = current.T
+        options = self.options
+        options.update(cancelText = s3_unicode(T("cancel")),
+                       chooseText = s3_unicode(T("choose")),
+                       togglePaletteMoreText = s3_unicode(T("more")),
+                       togglePaletteLessText = s3_unicode(T("less")),
+                       clearText = s3_unicode(T("Clear Color Selection")),
+                       noColorSelectedText = s3_unicode(T("No Color Selected")),
+                       )
 
-        attr = self._attributes(field, {"_class": "color",
-                                        "_value": value
-                                        }, **attributes)
+        options = json.dumps(options, separators=SEPARATORS)
+        # Ensure we save in rrggbb format not #rrggbb (IS_HTML_COLOUR)
+        options = "%s,change:function(c){this.value=c.toHex()}}" % options[:-1]
+        script = \
+'''$('#%(selector)s').spectrum(%(options)s)''' % dict(selector = selector,
+                                                      options = options,
+                                                      )
+        s3.jquery_ready.append(script)
 
-        return INPUT(**attr)
+        return widget
 
 # =============================================================================
 class S3DateWidget(FormWidget):
@@ -3835,15 +3863,16 @@ class S3LocationSelectorWidget2(FormWidget):
 
     def __init__(self,
                  levels = None,          # Which levels of the hierarchy to expose?
-                 hide_lx = True,         # Whether to hide lower Lx fields until higher level selected
-                 reverse_lx = False,     # Whether to show Lx fields in the order usually used by Street Addresses
-                 show_address = False,   # Whether to show a field for Street Address
-                 show_postcode = False,  # Whether to show a field for Postcode
-                 show_map = True,        # Whether to show a Map to select specific points
-                 lines = False,          # Whether the Map uses a Line draw tool
-                 points = True,          # Whether the Map uses a Point draw tool
-                 polygons = False,       # Whether the Map uses a Polygon draw tool
-                 catalog_layers = False, # Whether the Map should display Catalogue Layers or just the default base layer
+                 hide_lx = True,         # Hide lower Lx fields until higher level selected
+                 reverse_lx = False,     # Show Lx fields in the order usually used by Street Addresses
+                 show_address = False,   # Show a field for Street Address
+                 show_postcode = False,  # Show a field for Postcode
+                 show_map = True,        # Show a Map to select specific points
+                 lines = False,          # Use a Line draw tool
+                 points = True,          # Use a Point draw tool
+                 polygons = False,       # Use a Polygon draw tool
+                 color_picker = False,   # Display a Color Picker to set per-feature styling (also need to enable in the feature layer to show on map)
+                 catalog_layers = False, # Display Catalogue Layers or just the default base layer
                  ):
 
         self.levels = levels
@@ -3855,6 +3884,7 @@ class S3LocationSelectorWidget2(FormWidget):
         self.lines = lines
         self.points = points
         self.polygons = polygons
+        self.color_picker = color_picker
         self.catalog_layers = catalog_layers
 
     def __call__(self, field, value, **attributes):
@@ -4616,6 +4646,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                add_polygon = polygons,
                                add_polygon_active = add_polygon_active,
                                catalogue_layers = self.catalog_layers,
+                               color_picker = self.color_picker,
                                toolbar = toolbar,
                                # Hide controls from toolbar
                                nav = False,

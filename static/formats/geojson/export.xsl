@@ -408,17 +408,13 @@
             <!-- We want the Resource's UUID here, not the associated Location's or Site's
             <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
         </id>-->
+
         <xsl:if test="map[1]/@marker!=''">
             <marker>
                 <xsl:value-of select="map[1]/@marker"/>
             </marker>
         </xsl:if>
-        <xsl:if test="map[1]/@popup_url!=''">
-            <url>
-                <xsl:value-of select="map[1]/@popup_url"/>
-            </url>
-        </xsl:if>
-        
+
         <xsl:if test="map[1]/@marker_url">
             <!-- Per-feature Marker -->
             <marker_url>
@@ -430,6 +426,18 @@
             <marker_width>
                 <xsl:value-of select="map[1]/@marker_width"/>
             </marker_width>
+        </xsl:if>
+
+        <xsl:if test="map[1]/@popup_url!=''">
+            <url>
+                <xsl:value-of select="map[1]/@popup_url"/>
+            </url>
+        </xsl:if>
+
+        <xsl:if test="map[1]/@style!=''">
+            <style>
+                <xsl:value-of select="map[1]/@style"/>
+            </style>
         </xsl:if>
 
         <xsl:if test="$attributes!=''">

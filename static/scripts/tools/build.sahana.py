@@ -294,38 +294,8 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
-    # Vulnerability
-    print "Compressing Vulnerability"
-    sourceDirectory = "../.."
-    configFilename = "sahana.js.vulnerability.cfg"
-    outputFilename = "s3.vulnerability.min.js"
-    merged = mergejs.run(sourceDirectory,
-                         None,
-                         configFilename)
-    minimized = minimize(merged)
-    open(outputFilename, "w").write(minimized)
-    try:
-        os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
-    except:
-        pass
-    shutil.move(outputFilename, "../../themes/Vulnerability/js")
-    print "Compressing Vulnerability GIS"
-    sourceDirectory = "../../themes/Vulnerability/js"
-    configFilename = "sahana.js.vulnerability_gis.cfg"
-    outputFilename = "OpenLayers.js"
-    merged = mergejs.run(sourceDirectory,
-                         None,
-                         configFilename)
-    minimized = minimize(merged)
-    open(outputFilename, "w").write(minimized)
-    try:
-        os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
-    except:
-        pass
-    shutil.move(outputFilename, "../../themes/Vulnerability/js")
-
     # Single scripts
-    for filename in ["add_person",
+    for filename in ("add_person",
                      "cap",
                      "contacts",
                      "embed_component",
@@ -333,6 +303,7 @@ def dojs(dogis = False, warnings = True):
                      "gis.feature_crud",
                      "gis.fullscreen",
                      "gis.latlon",
+                     "gis.loader",
                      "gis.pois",
                      "locationselector.widget",
                      "locationselector.widget2",
@@ -341,7 +312,7 @@ def dojs(dogis = False, warnings = True):
                      "register_validation",
                      "select_person",
                      "timeline",
-                     ]:
+                     ):
         print "Compressing s3.%s.js" % filename
         inputFilename = os.path.join("..", "S3", "s3.%s.js" % filename)
         outputFilename = "s3.%s.min.js" % filename
@@ -354,15 +325,48 @@ def dojs(dogis = False, warnings = True):
             pass
         shutil.move(outputFilename, "../S3")
 
-    #for filename in ("spectrum",
-    #                 "tag-it",
-    #                 ):
-    #    print "Compressing %s.js" % filename
-    #    in_f = os.path.join("..", filename + ".js")
-    #    out_f = os.path.join("..", filename + ".min.js")
-    #    with open(in_f, "r") as inp:
-    #        with open(out_f, "w") as out:
-    #            out.write(minimize(inp.read()))
+    # Enable when needed
+    full = False
+    if full:
+        for filename in ("spectrum",
+                         "tag-it",
+                         ):
+            print "Compressing %s.js" % filename
+            in_f = os.path.join("..", filename + ".js")
+            out_f = os.path.join("..", filename + ".min.js")
+            with open(in_f, "r") as inp:
+                with open(out_f, "w") as out:
+                    out.write(minimize(inp.read()))
+
+        # Vulnerability
+        print "Compressing Vulnerability"
+        sourceDirectory = "../.."
+        configFilename = "sahana.js.vulnerability.cfg"
+        outputFilename = "s3.vulnerability.min.js"
+        merged = mergejs.run(sourceDirectory,
+                             None,
+                             configFilename)
+        minimized = minimize(merged)
+        open(outputFilename, "w").write(minimized)
+        try:
+            os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
+        except:
+            pass
+        shutil.move(outputFilename, "../../themes/Vulnerability/js")
+        print "Compressing Vulnerability GIS"
+        sourceDirectory = "../../themes/Vulnerability/js"
+        configFilename = "sahana.js.vulnerability_gis.cfg"
+        outputFilename = "OpenLayers.js"
+        merged = mergejs.run(sourceDirectory,
+                             None,
+                             configFilename)
+        minimized = minimize(merged)
+        open(outputFilename, "w").write(minimized)
+        try:
+            os.remove("../../themes/Vulnerability/js/%s" % outputFilename)
+        except:
+            pass
+        shutil.move(outputFilename, "../../themes/Vulnerability/js")
 
     if dogis:
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
@@ -460,8 +464,8 @@ def dojs(dogis = False, warnings = True):
         minimizedGxp = minimize(mergedGxpFull)
         minimizedGxp2 = minimize(mergedGxp2)
 
-        for filename in ["WMSGetFeatureInfo",
-                         ]:
+        for filename in ("WMSGetFeatureInfo",
+                         ):
             inputFilename = os.path.join("..", "gis", "gxp", "plugins", "%s.js" % filename)
             outputFilename = "%s.min.js" % filename
             input = open(inputFilename, "r").read()
@@ -473,9 +477,9 @@ def dojs(dogis = False, warnings = True):
                 pass
             shutil.move(outputFilename, "../gis/gxp/plugins")
 
-        for filename in ["GoogleEarthPanel",
+        for filename in ("GoogleEarthPanel",
                          "GoogleStreetViewPanel",
-                         ]:
+                         ):
             inputFilename = os.path.join("..", "gis", "gxp", "widgets", "%s.js" % filename)
             outputFilename = "%s.min.js" % filename
             input = open(inputFilename, "r").read()
@@ -550,14 +554,14 @@ def dojs(dogis = False, warnings = True):
 def docss():
     """ Compresses the  CSS files """
 
-    listCSS = []
-
+    # Theme
     theme = settings.get_theme()
     print "Using theme %s" % theme
     css_cfg = os.path.join("..", "..", "..", "private", "templates", theme, "css.cfg")
     f = open(css_cfg, "r")
     files = f.readlines()
     f.close()
+    listCSS = []
     for file in files[:-1]:
         p = re.compile("(\n|\r|\t|\f|\v)+")
         file = p.sub("", file)
@@ -582,32 +586,28 @@ def docss():
     print "Moving new %s." % outputFilenameCSS
     shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
 
+    # Enable when needed
+    full = False
+    if full:
+        for filename in ("joyride",
+                         "spectrum",
+                         ):
+            print "Merging %s styles." % filename
+            listCSS = ("../../styles/plugins/%s.css" % filename,)
+            outputFilenameCSS = "%s.min.css" % filename
+            mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
+            print "Writing to %s." % outputFilenameCSS
+            compressCSS(mergedCSS, outputFilenameCSS)
+            # Move files to correct locations
+            print "Deleting %s." % outputFilenameCSS
+            try:
+                os.remove("../../styles/plugins/%s" % outputFilenameCSS)
+            except:
+                pass
+            print "Moving new %s." % outputFilenameCSS
+            shutil.move(outputFilenameCSS, "../../styles/plugins")
 
-    # Guided tour stylesheet
-    listCSS = ["../../styles/plugins/joyride.css"]
-    outputFilenameCSS = "guidedtour.min.css"
-
-    # Merge CSS files
-    print "Merging guided tour styles."
-    mergedCSS = mergeCSS(listCSS, outputFilenameCSS)
-
-    # Compress CSS files
-    print "Writing to %s." % outputFilenameCSS
-    compressCSS(mergedCSS, outputFilenameCSS)
-
-    # Move files to correct locations
-    print "Deleting %s." % outputFilenameCSS
-    try:
-        os.remove("../../styles/plugins/%s" % outputFilenameCSS)
-    except:
-        pass
-    print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../styles/plugins")
-
-    # Bootstrap
-    # - enable as-needed
-    bootstrap = False
-    if bootstrap:
+        # Bootstrap
         print "Bootstrap CSS"
         listCSS = []
         for file in ["bootstrap.css",
@@ -636,10 +636,7 @@ def docss():
         print "Moving new %s." % outputFilenameCSS
         shutil.move(outputFilenameCSS, "../../styles/bootstrap")
 
-    # Ext
-    # - enable as-needed
-    ext = False
-    if ext:
+        # Ext
         print "Ext Gray CSS"
         listCSS = []
         for file in ["ext-all-notheme.css",
