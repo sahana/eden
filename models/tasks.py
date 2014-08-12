@@ -47,9 +47,16 @@ def crop_image(path, x1, y1, x2, y2, width):
 tasks["crop_image"] = crop_image
 
 # -----------------------------------------------------------------------------
+def cap_publish_alert(channel, alert_url, alert_id):
+    if channel:
+        msg.post_to_broker(channel, alert_url, alert_id)
+    
+tasks["cap_publish_alert"] = cap_publish_alert
+
+# -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def document_create_index(document, user_id=None):
 
         import os

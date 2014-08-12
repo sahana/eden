@@ -158,7 +158,7 @@ def alert():
         """
             REST post-processor:
              - check to see if "Save and add information" was pressed
-        """ 
+        """
         
         lastid = r.resource.lastid
         if lastid and request.post_vars.get("edit_info", False):
@@ -207,7 +207,7 @@ def alert():
 
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
-                   r.method not in ("import", "import_feed"):
+                   r.method not in ("import", "import_feed", "publish"):
                     fields = s3db.cap_info_labels()
                     jsobj = []
                     for f in fields:

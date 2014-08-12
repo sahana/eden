@@ -1774,6 +1774,11 @@ class S3Config(Storage):
                 ("High", T("High"), "Expected", "Severe", "Observed", "orange"),
                 ("Low", T("Low"), "Expected", "Moderate", "Observed", "green")
                 ])
+        
+    def get_cap_publishing_brokers(self):
+        return self.cap.get("brokers", OrderedDict([("Pubsubhubbub", "http://pubsubhubbub.appspot.com/"),
+                                                    ("Alerthub", "https://alert-hub.appspot.com/"),
+                                                      ]))
 
     # -------------------------------------------------------------------------
     # CMS: Content Management System
