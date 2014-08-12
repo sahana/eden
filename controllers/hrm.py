@@ -100,11 +100,15 @@ def staff():
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
+                    args = []
                     vars = {
                         "human_resource.id": r.id,
                         "group": "staff"
                     }
-                    redirect(URL(f="person", vars=vars))
+                    if r.representation == "iframe":
+                        vars.update(format="iframe")
+                        args.append(r.method)
+                    redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
                     # Redirect to person controller
