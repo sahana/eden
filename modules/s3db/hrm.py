@@ -5664,6 +5664,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                           "organisation",
                                           "job_title_id",
                                           "job_title",
+                                          "responsibilities",
                                           "start_date",
                                           "end_date",
                                           "hours",
@@ -7092,6 +7093,13 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     else:
         organisation = ""
 
+    # Key Responsibilities
+    responsibilities = record["hrm_experience.responsibilities"]
+    if responsibilities:
+        responsibilities = card_line("icon-cog", responsibilities)
+    else:
+        responsibilities = ""
+
     # Location
     location_id = raw["hrm_experience.location_id"]
     if location_id:
@@ -7194,6 +7202,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
                            date,
                            hours,
                            supervisor,
+                           responsibilities,
                            P(SPAN(comments),
                              " ",
                              _class="card_manylines",

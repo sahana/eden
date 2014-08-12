@@ -53,6 +53,9 @@
 .icon-skype:before {
   content: "\f17e";
 }
+.icon-star:before {
+  content: "\f005";
+}
 .icon-twitter:before {
   content: "\f099";
 }

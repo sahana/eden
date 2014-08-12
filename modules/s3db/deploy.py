@@ -235,6 +235,7 @@ class S3DeploymentModel(S3Model):
                                      "start_date",
                                      "end_date",
                                      "job_title_id",
+                                     "job_title",
                                      "appraisal.rating",
                                      "mission_id",
                                  ],
@@ -400,6 +401,9 @@ class S3DeploymentModel(S3Model):
                      human_resource_id(empty = False,
                                        label = T(hr_label)),
                      self.hrm_job_title_id(),
+                     Field("job_title",
+                           label = T("Position"),
+                           ),
                      # These get copied to hrm_experience
                      # rest of fields may not be filled-out, but are in attachments
                      s3_date("start_date", # Only field visible when deploying from Mission profile
@@ -414,8 +418,7 @@ class S3DeploymentModel(S3Model):
         configure(tablename,
                   context = {"mission": "mission_id",
                              },
-                  create_onaccept = self.deploy_assignment_create_onaccept,
-                  update_onaccept = self.deploy_assignment_update_onaccept,
+                  onaccept = self.deploy_assignment_onaccept,
                   filter_widgets = [
                     S3TextFilter(["human_resource_id$person_id$first_name",
                                   "human_resource_id$person_id$middle_name",
@@ -554,9 +557,11 @@ class S3DeploymentModel(S3Model):
                 
     # -------------------------------------------------------------------------
     @staticmethod
-    def deploy_assignment_create_onaccept(form):
+    def deploy_assignment_onaccept(form):
         """
-            Create linked hrm_experience record
+            Create/update linked hrm_experience record for assignment
+
+            @param form: the form
         """
 
         db = current.db
@@ -564,61 +569,77 @@ class S3DeploymentModel(S3Model):
         form_vars = form.vars
         assignment_id = form_vars.id
 
-        # Extract required data
-        human_resource_id = form_vars.human_resource_id
-        mission_id = form_vars.mission_id
-        job_title_id = form_vars.mission_id
-        
-        if not mission_id or not human_resource_id:
+        fields = ("human_resource_id",
+                  "mission_id",
+                  "job_title",
+                  "job_title_id",
+                  "start_date",
+                  "end_date",
+                  )
+
+        if any(key not in form_vars for key in fields):
             # Need to reload the record
             atable = db.deploy_assignment
             query = (atable.id == assignment_id)
-            assignment = db(query).select(atable.mission_id,
-                                          atable.human_resource_id,
-                                          atable.job_title_id,
-                                          limitby=(0, 1)).first()
-            if assignment:
-                mission_id = assignment.mission_id
-                human_resource_id = assignment.human_resource_id
-                job_title_id = assignment.job_title_id
+            qfields = [atable[f] for f in fields]
+            row = db(query).select(limitby=(0, 1), *qfields).first()
+            if row:
+                data = dict((k, row[k]) for k in fields)
+            else:
+                # No such record
+                return
+        else:
+            # Can use form vars
+            data = dict((k, form_vars[k]) for k in fields)
+            
+        hr = mission = None
 
-        # Lookup the person ID
-        hrtable = s3db.hrm_human_resource
-        hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
-                                                        hrtable.type,
-                                                        limitby=(0, 1)
-                                                        ).first()
+        # Lookup person details
+        human_resource_id = data.pop("human_resource_id")
+        if human_resource_id:
+            hrtable = s3db.hrm_human_resource
+            hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
+                                                            hrtable.type,
+                                                            limitby=(0, 1)
+                                                            ).first()
+            if hr:
+                data["person_id"] = hr.person_id
+                data["employment_type"] = hr.type
 
         # Lookup mission details
-        mtable = db.deploy_mission
-        mission = db(mtable.id == mission_id).select(mtable.location_id,
-                                                     mtable.organisation_id,
-                                                     limitby=(0, 1)
-                                                     ).first()
-        if mission:
-            location_id = mission.location_id
-            organisation_id = mission.organisation_id
-        else:
-            location_id = None
-            organisation_id = None
+        mission_id = data.pop("mission_id")
+        if mission_id:
+            mtable = db.deploy_mission
+            mission = db(mtable.id == mission_id).select(mtable.location_id,
+                                                         mtable.organisation_id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+            if mission:
+                data["location_id"] = mission.location_id
+                data["organisation_id"] = mission.organisation_id
 
-        # Create hrm_experience
-        etable = s3db.hrm_experience
-        id = etable.insert(person_id = hr.person_id,
-                           employment_type = hr.type,
-                           location_id = location_id,
-                           job_title_id = job_title_id,
-                           organisation_id = organisation_id,
-                           start_date = form_vars.start_date,
-                           # In case coming from update
-                           end_date = form_vars.get("end_date", None),
-                           )
+        if hr and mission:
+            etable = s3db.hrm_experience
+            
+            # Lookup experience record for this assignment
+            ltable = s3db.deploy_assignment_experience
+            query = ltable.assignment_id == assignment_id
+            link = db(query).select(ltable.experience_id,
+                                    limitby=(0, 1)
+                                    ).first()
+            if link:
+                # Update experience
+                db(etable.id == link.experience_id).update(**data)
+            else:
+                # Create experience record
+                experience_id = etable.insert(**data)
 
-        # Create link
-        ltable = db.deploy_assignment_experience
-        ltable.insert(assignment_id = assignment_id,
-                      experience_id = id,
-                      )
+                # Create link
+                ltable = db.deploy_assignment_experience
+                ltable.insert(assignment_id = assignment_id,
+                              experience_id = experience_id,
+                              )
+        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -669,33 +690,6 @@ class S3DeploymentModel(S3Model):
             link.update_record(appraisal_id=None)
 
         s3db.resource("hrm_appraisal", id=link.appraisal_id).delete()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def deploy_assignment_update_onaccept(form):
-        """
-            Update linked hrm_experience record
-        """
-
-        db = current.db
-        s3db = current.s3db
-        form_vars = form.vars
-
-        # Lookup Experience
-        ltable = s3db.deploy_assignment_experience
-        link = db(ltable.assignment_id == form_vars.id).select(ltable.experience_id,
-                                                               limitby=(0, 1)
-                                                               ).first()
-        if link:
-            # Update Experience
-            # - likely to be just end_date
-            etable = s3db.hrm_experience
-            db(etable.id == link.experience_id).update(start_date = form_vars.start_date,
-                                                       end_date = form_vars.end_date,
-                                                       )
-        else:
-            # Create Experience
-            S3DeploymentModel.deploy_assignment_create_onaccept(form)
 
 # =============================================================================
 class S3DeploymentAlertModel(S3Model):
@@ -2587,6 +2581,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                             render("deploy_assignment.start_date"),
                             render("deploy_assignment.end_date"),
                             render("deploy_assignment.job_title_id"),
+                            render("deploy_assignment.job_title"),
                             render("hrm_appraisal.rating"),
                             _class="media-body",
                        )
