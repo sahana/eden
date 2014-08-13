@@ -864,6 +864,11 @@ class S3SurveyQuestionModel(S3Model):
         #    A question can belong to many different sections.
         #    The notes are to help the enumerator and will typically appear as a
         #    footnote in the printed form.
+        #
+        #   @todo: the name, code and type combination should be unique
+        #          so that multiple imports don't add the same question a second time
+        #          may want a restriction such that:
+        #          if name and code exist then the type must match.
 
         tablename = "survey_question"
         define_table(tablename,
@@ -998,6 +1003,10 @@ class S3SurveyQuestionModel(S3Model):
         """
             Return the question name, for locations in the gis hierarchy
             the localised name will be returned
+            @todo: add the full name if it is a grid question BUT not displayed
+                  as part of a grid,
+                  e.g. "Currently known Displaced", rather than just "Displaced"
+                  see controller... templateRead() for an example not in the grid
         """
 
         if value == "L0" or value == "L1" or \
