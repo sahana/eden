@@ -2522,6 +2522,7 @@ class GIS(object):
                 if settings.get_gis_spatialdb():
                     if geojson:
                         # Do the Simplify & GeoJSON direct from the DB
+                        # @ToDo: Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
                         rows = db(query).select(table.id,
                                                 gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
                         for row in rows:
