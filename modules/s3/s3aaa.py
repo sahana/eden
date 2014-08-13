@@ -2007,10 +2007,17 @@ S3OptionsFilter({
 
     # -------------------------------------------------------------------------
     def auth_user_onaccept(self, email, user_id):
+        deployment_settings = current.deployment_settings
         db = current.db
+        chat_server = deployment_settings.get_chat_server()
         if self.settings.login_userfield != "username":
             chat_username = email.replace("@", "_")
             db(db.auth_user.id == user_id).update(username = chat_username)
+            if chat_server:
+                # Using RawSQL as table not created in web2py
+                chatdb = DAL(deployment_settings.get_chat_database_string(),migrate=False)
+                sql_query="insert into ofGroupUser values (\'%s\',\'%s\' ,0);" % (chat_server["groupname"], chat_username)
+                chatdb.executesql(sql_query)
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):

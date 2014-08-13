@@ -146,7 +146,9 @@ settings.frontpage.rss = [
 # Chat server, see: http://eden.sahanafoundation.org/wiki/InstallationGuidelines/Chat
 #settings.base.chat_server = { "ip": "127.0.0.1",
 #        "port": 7070,
-#        "name": "servername"
+#        "groupname" : "everyone",
+#        "name": "servername",
+#        "server_db" : "openfire",
 #        }
 
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
