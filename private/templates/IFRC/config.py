@@ -918,6 +918,45 @@ def customise_hrm_department_controller(**attr):
 settings.customise_hrm_department_controller = customise_hrm_department_controller
 
 # -----------------------------------------------------------------------------
+def customise_hrm_experience_controller(**attr):
+
+    s3 = current.response.s3
+
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            if not standard_prep(r):
+                return False
+
+        if r.controller == "deploy":
+            # Popups in RDRT Member Profile
+
+            table = r.table
+
+            job_title_id = table.job_title_id
+            job_title_id.label = T("Sector / Area of Expertise")
+            job_title_id.comment = None
+            jtable = current.s3db.hrm_job_title
+            query = (jtable.type == 4)
+            if r.method == "update" and r.record.job_title_id:
+                # Allow to keep the current value
+                query |= (jtable.id == r.record.job_title_id)
+            from s3 import IS_ONE_OF
+            job_title_id.requires = IS_ONE_OF(current.db(query),
+                                              "hrm_job_title.id",
+                                              job_title_id.represent,
+                                              )
+            job_title = table.job_title
+            job_title.readable = job_title.writable = True
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.customise_hrm_experience_controller = customise_hrm_experience_controller
+
+# -----------------------------------------------------------------------------
 def customise_hrm_human_resource_controller(**attr):
 
     controller = current.request.controller
@@ -992,6 +1031,7 @@ def customise_hrm_human_resource_controller(**attr):
                        ("Language", "Language Skills", "Add Language Skills"),
                        )
             widgets = []
+            append_widget = widgets.append
             profile_widgets = r.resource.get_config("profile_widgets")
             while profile_widgets:
                 widget = profile_widgets.pop(0)
@@ -1003,12 +1043,13 @@ def customise_hrm_human_resource_controller(**attr):
                         new_widget["label"] = label
                         new_widget["label_create"] = label_create
                         new_widget["filter"] = query
-                        widgets.append(new_widget)
-                    break
+                        append_widget(new_widget)
+                elif widget["tablename"] == "hrm_experience":
+                    new_widget = dict(widget)
+                    new_widget["create_controller"] = "deploy"
+                    append_widget(new_widget)
                 else:
-                    widgets.append(widget)
-            if profile_widgets:
-                widgets.extend(profile_widgets)
+                    append_widget(widget)
             
             # Custom list fields for RDRT
             phone_label = settings.get_ui_label_mobile_phone()
