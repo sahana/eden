@@ -144,9 +144,18 @@ settings.frontpage.rss = [
 #settings.base.google_analytics_tracking_id = ""
 
 # Chat server, see: http://eden.sahanafoundation.org/wiki/InstallationGuidelines/Chat
+# Settings with extra # infront fallback to sahana settings if not specified
 #settings.base.chat_server = { "ip": "127.0.0.1",
 #        "port": 7070,
-#        "name": "servername"
+#        "name": "servername",
+#		# Default group everyone is added to
+#		"groupname" : "everyone",
+#		# Only mysql/postgres allowed
+#		"server_db_type" : "mysql",
+##      "server_db" : "openfire",
+##		"server_db_username" : "",
+##		"server_db_password": "",
+##		"server_db_port" : 3306,
 #        }
 
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)
