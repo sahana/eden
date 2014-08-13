@@ -1023,7 +1023,7 @@ var S3OptionsFilter = function(settings) {
         var selector;
         if (typeof setting == 'string') {
             // Simple field name
-            selector = '[name="' + name + '"]';
+            selector = '[name="' + setting + '"]';
         } else {
             // Inline form
             var prefix = setting.prefix ? setting.prefix : 'default';
