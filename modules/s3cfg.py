@@ -568,6 +568,29 @@ class S3Config(Storage):
         """
         return self.base.get("chat_server", False)
 
+    def get_chatdb_string(self):
+        chat_server = self.base.get("chat_server",False)
+                
+        if(chat_server["server_db_type"] == "mysql"):
+            db_string = "mysql://%s:%s@%s:%s/%s" % \
+            (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
+                chat_server["server_db_password"] if chat_server["server_db_password"] else  self.database.get("password", "password"),
+                chat_server["ip"] if chat_server["ip"] else self.database.get("host", "localhost"),
+                chat_server["server_db_port"] if chat_server["server_db_port"] else self.database.get("port", 3306),
+                chat_server["server_db"] if chat_server["server_db"] else self.database.get("database", "openfiredb"))
+        elif (chat_server["server_db_type"] == "postgres"):
+            db_string = "postgres://%s:%s@%s:%s/%s" % \
+            (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
+                chat_server["server_db_password"] if chat_server["server_db_password"] else  self.database.get("password", "password"),
+                chat_server["ip"] if chat_server["ip"] else self.database.get("host", "localhost"),
+                chat_server["server_db_port"] if chat_server["server_db_port"] else self.database.get("port", 5432),
+                chat_server["server_db"] if chat_server["server_db"] else self.database.get("database", "openfiredb"))
+        else:
+            from gluon import HTTP
+            raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
+        return db_string
+
+
     def get_base_session_memcache(self):
         """
             Should we store sessions in a Memcache service to allow sharing
