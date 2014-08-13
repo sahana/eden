@@ -6,10 +6,7 @@
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
- * requires jQuery jstree 1.0
- * 
- * @todo Migrate to jsTree 3.x
- * @todo Ajax-refresh, dynamic insertion of nodes via add-popups
+ * requires jQuery jstree 3.0.3
  * 
  */
 (function($, undefined) {
@@ -104,9 +101,10 @@
 
             this._unbindEvents();
 
-            var opts = this.options;
+            var opts = this.options,
+                tree = this.tree;
 
-            if (!this.tree.find('li').length) {
+            if (!tree.find('li').length) {
                 this.button.hide();
                 this.noopts.show();
                 return;
@@ -114,74 +112,59 @@
                 this.noopts.hide();
                 this.button.show();
             }
-            
-            var selected = [],
-                s = opts.selected;
-            if (s) {
-                var treeID = this.treeID;
-                for (var i=0, len=s.length; i<len; i++) {
-                    selected.push(treeID + '-' + s[i]);
-                }
-                this._updateButtonText(selected);
-            }
 
-            var rtl,
-                theme;
-            $.jstree._themes = S3.Ap.concat('/', opts.themesFolder, '/');
-            if ($('body').css('direction') == 'ltr') {
-                rtl = false;
-                theme = opts.theme;
-            } else {
-                rtl = true;
-                theme = opts.theme + '-rtl';
+            // Initially selected nodes
+            var s = opts.selected;
+            if (s) {
+                var treeID = this.treeID, nodeID;
+                $.each(s, function() {
+                    $('#' + treeID + '-' + this).data('jstree', {selected: true});
+                })
+            }
+            // If there's only one root node, start with this node open
+            var roots = tree.find('> ul > li');
+            if (roots.length == 1) {
+                var root = roots.first();
+                var node_data = root.data('jstree');
+                root.data('jstree', $.extend({}, node_data, {'opened': true}));
             }
 
             var multiple = opts.multiple,
                 leafonly = opts.leafonly;
-
-            var tree = this.tree,
-                initially_open = [];
-
-            // If there's only one root node, start with this node open
-            var roots = tree.find('> ul > li');
-            if (roots.length == 1) {
-                initially_open.push(roots.attr('id'));
-            }
             
             tree.jstree({
                 'core': {
+                    'themes': {
+                        url: true,
+                        dir: S3.Ap.concat('/', opts.themesFolder, '/'),
+                        name: opts.theme,
+                        icons: false,
+                        stripes: true
+                    },
                     animation: 100,
-                    check_callback: true,
-                    html_titles: opts.htmlTitles,
-                    initially_open: initially_open,
-                    rtl: rtl
-                },
-                'themes': {
-                    icons: false,
-                    theme: theme
-                },
-                'ui': {
-                    initially_select : selected,
-                    select_limit: multiple ? -1 : 1,
-                    select_multiple_modifier: 'on'
+                    multiple: multiple,
+                    check_callback: true
                 },
                 'checkbox': {
-                    override_ui: true,
-                    two_state: !leafonly
+                    three_state: leafonly
                 },
-                'plugins': ['themes', 'html_data', 'ui', 'sort', 'checkbox']
+                'plugins': ['sort', 'checkbox']
             });
+            
+            var selected = tree.jstree('get_checked');
+            this._updateButtonText(selected);
 
-            // Multiple/LeadOnly selection mode logic
+            // Multiple/LeafOnly selection mode logic
             if (!multiple) {
                 var tree = this.tree;
-                var inst = jQuery.jstree._reference(tree);
-                tree.bind('check_node.jstree', function(e, data) {
-                    var currentNode = data.rslt.obj.attr("id");
-                    inst.get_checked(null, true).each(function () {
-                        if (currentNode != this.id){
-                            if (!leafonly || inst.is_leaf('#' + this.id)) {
-                                inst.uncheck_node('#' + this.id);
+                var inst = jQuery.jstree.reference(tree);
+                tree.bind('select_node.jstree', function(e, data) {
+                    var node = data.node;
+                    var nodeID = $(node).attr("id");
+                    $(inst.get_checked(true)).each(function () {
+                        if (nodeID != this.id){
+                            if (!leafonly || inst.is_leaf(this)) {
+                                inst.uncheck_node(this);
                             }
                         }
                     });
@@ -210,7 +193,7 @@
                 multiple = this.options.multiple,
                 leafonly = this.options.leafonly;
 
-            var nodes = tree.jstree('get_checked', null, true);
+            var nodes = tree.jstree('get_checked', true);
                 
             $(nodes).each(function() {
                 var id = $(this).attr('id');
@@ -363,30 +346,35 @@
         addNode: function(parent, id, title, check) {
 
             var tree = this.tree,
-                treeID = this.treeID;
-            var parentID = parent ? '#' + treeID + '-' + parent : -1,
-                nodeID = treeID + '-' + id;
+                treeID = this.treeID,
+                parentNode = '#';
+
+            // Get parent node
+            if (parent) {
+                parentNode = $('#' + treeID + '-' + parent);
+                if (!parentNode.length) {
+                    parentNode = '#';
+                }
+            }
 
             // Insert the node
-            tree.jstree('create_node', parentID, "last", {
-                // Title of the new node
-                data: title,
-                attr: {
+            var nodeID = treeID + '-' + id;
+            tree.jstree('create_node', parentNode, {
+                id: nodeID,
+                text: title,
+                li_attr: {
                     // HTML attributes of the new node
-                    id: nodeID,
                     rel: 'leaf'
                 }
-            }, false, false);
+            }, "last");
             
+            // Update the parent relationship and open the parent node
             if (parent) {
-                // Update the parent relationship
-                $(parentID).attr({rel: 'parent'});
-                // Open the parent
-                tree.jstree('open_node', parentID);
+                parentNode.attr({rel: 'parent'});
+                tree.jstree('open_node', parentNode);
             }
             if (check) {
-                // Check the node if so requested
-                tree.jstree('check_node', '#' + nodeID);
+                tree.jstree('check_node', $('#' + nodeID));
             }
         },
 
@@ -400,7 +388,7 @@
                 button = $(this.button),
                 namespace = this._namespace;
 
-            tree.bind('check_node.jstree', function (event, data) {
+            tree.bind('select_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
                 if (widget.options.multiple) {
                     // Close the menu on mouse-leave
@@ -416,11 +404,14 @@
                         widget.closeMenu();
                     }, 100);
                 }
-            }).bind('uncheck_node.jstree', function (event, data) {
+            }).bind('deselect_node.jstree', function (event, data) {
                 widget._updateSelectedNodes();
             }).bind("open_node.jstree", function (event, data) {
-                if((data.inst._get_parent(data.rslt.obj)).length) {
-                    data.inst.open_node(data.inst._get_parent(data.rslt.obj), false, true);
+                var instance = data.instance,
+                    node = data.node;
+                var parent = instance.get_parent(node)
+                if(parent.length) {
+                    instance.open_node(parent, false, true);
                 }
             });
             button.bind('click' + namespace, function() {
@@ -475,8 +466,8 @@
                 button = $(this.button),
                 namespace = this._namespace;
 
-            tree.unbind('check_node.jstree')
-                .unbind('uncheck_node.jstree')
+            tree.unbind('select_node.jstree')
+                .unbind('deselect_node.jstree')
                 .unbind('loaded.jstree')
                 .unbind('open_node.jstree');
 

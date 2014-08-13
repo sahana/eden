@@ -2839,7 +2839,9 @@ class S3Resource(object):
                         
                     item = {"@value": value, "$": represent}
                     if h:
-                        item["@parent"] = str(h.parent(row[h.pkey]))
+                        parent = h.parent(row[h.pkey])
+                        if parent:
+                            item["@parent"] = str(parent)
                     result = [item]
                 else:
                     result = []

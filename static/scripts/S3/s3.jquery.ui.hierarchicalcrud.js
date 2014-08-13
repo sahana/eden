@@ -6,7 +6,7 @@
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
- * requires jQuery jstree 1.0
+ * requires jQuery jstree 3.0.3
  */
 (function($, undefined) {
 
@@ -19,6 +19,8 @@
 
         /**
          * Default options
+         *
+         * @todo document options
          */
         options: {
             widgetID: null,
@@ -77,23 +79,11 @@
 
             this._unbindEvents();
 
-            // Select theme
-            var rtl,
-                theme;
-            $.jstree._themes = S3.Ap.concat('/', opts.themesFolder, '/');
-            if ($('body').css('direction') == 'ltr') {
-                rtl = false;
-                theme = opts.theme;
-            } else {
-                rtl = true;
-                theme = opts.theme + '-rtl';
-            }
-
-            // If there's only one root node, start with this node open
-            var initially_open = [],
-                roots = tree.find('> ul > li');
+            var roots = tree.find('> ul > li');
             if (roots.length == 1) {
-                initially_open.push(roots.attr('id'));
+                var root = roots.first();
+                var node_data = root.data('jstree');
+                root.data('jstree', $.extend({}, node_data, {'opened': true}));
             }
 
             var self = this;
@@ -101,51 +91,47 @@
             // Render tree
             tree.jstree({
                 'core': {
+                    'themes': {
+                        url: true,
+                        dir: S3.Ap.concat('/', opts.themesFolder, '/'),
+                        name: opts.theme,
+                        icons: false,
+                        stripes: true
+                    },
                     animation: 100,
-                    check_callback: true,
-                    html_titles: opts.htmlTitles,
-                    initially_open: initially_open,
-                    rtl: rtl
-                },
-                'themes': {
-                    icons: false,
-                    theme: theme
-                },
-                'ui': {
-                    select_limit: 1
+                    multiple: false,
+                    check_callback: true
                 },
                 'contextmenu': {
-                    items: {
-                        "create": null,
-                        "rename": null,
-                        "remove": null,
-                        "ccp": null,
-                        "open": {
-                            label: self.options.openLabel,
-                            action: function(node) {
-                                self._openNode(node);
+                    items: function($node) {
+                        return {
+                            "open": {
+                                label: self.options.openLabel,
+                                action: function(obj) {
+                                    self._openNode($node);
+                                },
+                                separator_after: true
                             },
-                            separator_after: true
-                        },
-                        "edit": {
-                            label: self.options.editLabel,
-                            action: function(node) {
-                                self._editNode(node);
+                            "edit": {
+                                label: self.options.editLabel,
+                                action: function(obj) {
+                                    self._editNode($node);
+                                }
+                            },
+                            "delete": {
+                                label: self.options.deleteLabel,
+                                separator_after: true,
+                                _disabled: true
+                            },
+                            "add": {
+                                label: self.options.addLabel,
+                                _disabled: true
                             }
-                        },
-                        "delete": {
-                            label: self.options.deleteLabel,
-                            separator_after: true,
-                            _disabled: true
-                        },
-                        "add": {
-                            label: self.options.addLabel,
-                            _disabled: true
-                        }
+                        };
                     },
                     select_node: true
                 },
-                'plugins': ['themes', 'html_data', 'ui', 'sort', 'contextmenu']
+                'plugins': ['sort', 'contextmenu']
             });
 
             this._bindEvents();
@@ -159,7 +145,7 @@
         _openNode: function(node) {
             
             var openURL = this.options.openURL,
-                id = node.attr('id');
+                id = node.id;
             if (!openURL || !id) {
                 return;
             }
@@ -204,7 +190,7 @@
         _editNode: function(node) {
             
             var editURL = this.options.editURL,
-                id = node.attr('id');
+                id = node.id;
             if (!editURL || !id) {
                 return;
             }
