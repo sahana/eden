@@ -190,13 +190,13 @@ class S3AssetModel(S3Model):
                                               ),
                                      required = True,
                                      script = '''
-S3OptionsFilter({
- 'triggerName':'organisation_id',
- 'targetName':'site_id',
+$.filterOptionsS3({
+ 'trigger':'organisation_id',
+ 'target':'site_id',
  'lookupResource':'site',
  'lookupPrefix':'org',
  'lookupField':'site_id',
- 'lookupURL':S3.Ap.concat('/org/sites_for_org/'),
+ 'lookupURL':S3.Ap.concat('/org/sites_for_org/')
 })''',
                                      ),
                      # This is a component, so needs to be a super_link
@@ -465,9 +465,9 @@ S3OptionsFilter({
                 site_types[key] = str(site_types[key])
             site_types = json.dumps(site_types)
             script = '''
-S3OptionsFilter({
- 'triggerName':'organisation_id',
- 'targetName':'site_id',
+$.filterOptionsS3({
+ 'trigger':'organisation_id',
+ 'target':'site_id',
  'lookupPrefix':'org',
  'lookupResource':'site',
  'lookupField':'site_id',
