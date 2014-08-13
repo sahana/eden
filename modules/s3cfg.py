@@ -567,6 +567,28 @@ class S3Config(Storage):
             Get the IP:port of the chat server if enabled or return False
         """
         return self.base.get("chat_server", False)
+    def get_chat_database_string(self):
+        db_type = self.database.get("db_type", "sqlite").lower()
+        chat_server = self.base.get("chat_server", False)
+	if (chat_server and db_type == "mysql"):
+            db_string = "mysql://%s:%s@%s:%s/%s" % \
+                        (self.database.get("username", "sahana"),
+                         self.database.get("password", "password"),
+                         self.database.get("host", "localhost"),
+                         self.database.get("port", None) or "3306",
+                         chat_server["server_db"])
+        elif (chat_server and db_type == "postgres"):
+            db_string = "postgres://%s:%s@%s:%s/%s" % \
+                        (self.database.get("username", "sahana"),
+                         self.database.get("password", "password"),
+                         self.database.get("host", "localhost"),
+                         self.database.get("port", None) or "5432",
+                         chat_server["server_db"])
+        else:
+            from gluon import HTTP
+            raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
+        return db_string
+
 
     def get_base_session_memcache(self):
         """
