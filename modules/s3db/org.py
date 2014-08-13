@@ -6032,10 +6032,17 @@ class org_AssignMethod(S3Method):
             resource = s3db.resource("org_organisation")
             totalrows = resource.count()
             if "iDisplayLength" in get_vars:
-                display_length = int(get_vars["iDisplayLength"])
+                display_length = get_vars["iDisplayLength"]
+                if display_length == "None":
+                    display_length = None
+                else:
+                    display_length = int(display_length)
             else:
                 display_length = 25
-            limit = 4 * display_length
+            if display_length:
+                limit = 4 * display_length
+            else:
+                limit = None
             filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
             resource.add_filter(filter)
             data = resource.select(list_fields,

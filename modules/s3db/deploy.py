@@ -1350,10 +1350,17 @@ class deploy_Inbox(S3Method):
         get_vars = r.get_vars
         totalrows = resource.count()
         if "iDisplayLength" in get_vars:
-            display_length = int(get_vars["iDisplayLength"])
+            display_length = get_vars["iDisplayLength"]
+            if display_length == "None":
+                display_length = None
+            else:
+                display_length = int(display_length)
         else:
             display_length = 25
-        limit = 4 * display_length
+        if display_length:
+            limit = 4 * display_length
+        else:
+            limit = None
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(filter)
 
@@ -1515,10 +1522,17 @@ def deploy_apply(r, **attr):
         resource = r.resource
         totalrows = resource.count()
         if "iDisplayLength" in get_vars:
-            display_length = int(get_vars["iDisplayLength"])
+            display_length = get_vars["iDisplayLength"]
+            if display_length == "None":
+                display_length = None
+            else:
+                display_length = int(display_length)
         else:
             display_length = 25
-        limit = 4 * display_length
+        if display_length:
+            limit = 4 * display_length
+        else:
+            limit = None
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(filter)
         data = resource.select(list_fields,
@@ -1718,10 +1732,17 @@ def deploy_alert_select_recipients(r, **attr):
     # Data table
     totalrows = resource.count()
     if "iDisplayLength" in get_vars:
-        display_length = int(get_vars["iDisplayLength"])
+        display_length = get_vars["iDisplayLength"]
+        if display_length == "None":
+            display_length = None
+        else:
+            display_length = int(display_length)
     else:
         display_length = 25
-    limit = 4 * display_length
+    if display_length:
+        limit = 4 * display_length
+    else:
+        limit = None
     filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
     resource.add_filter(filter)
     data = resource.select(list_fields,
@@ -1905,10 +1926,17 @@ def deploy_response_select_mission(r, **attr):
     # Data table
     totalrows = resource.count()
     if "iDisplayLength" in get_vars:
-        display_length = int(get_vars["iDisplayLength"])
+        display_length = get_vars["iDisplayLength"]
+        if display_length == "None":
+            display_length = None
+        else:
+            display_length = int(display_length)
     else:
         display_length = 25
-    limit = 4 * display_length
+    if display_length:
+        limit = 4 * display_length
+    else:
+        limit = None
     filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
     if not orderby:
         # Most recent missions on top
