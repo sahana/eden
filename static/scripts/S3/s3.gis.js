@@ -4738,7 +4738,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var addColorPickerControl = function(map, toolbar) {
         var map_id = map.s3.id;
         var colorPickerButton = new Ext.Toolbar.Item({
-            html: '<input class="gis_colorpicker" />'
+            html: '<input class="gis_colorpicker" name="colour" />'
         });
         toolbar.add(colorPickerButton);
         $.when(uiLoaded(map_id)).then(

@@ -1726,8 +1726,10 @@ class IS_LOCATION_SELECTOR2(Validator):
     """
         Designed for use with the S3LocationSelectorWidget2
 
-        For Create forms, this will create a new location if there is a Lat/Lon submitted
-        For Update forms, this will check that we have a valid location_id FK and update any changes
+        For Create forms, this will create a new location if there is a Lat/Lon
+                          submitted
+        For Update forms, this will check that we have a valid location_id FK
+                          and update any changes
 
         @ToDo: Audit
         @ToDo: Allow multiple in a single page
@@ -1820,7 +1822,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                     errors = form.errors
                     error = ""
                     for e in errors:
-                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                        error = "%s\n%s" % (error, errors[e]) if error else \
+                                errors[e]
                     return (parent, error)
                 _id = table.insert(**feature)
                 feature.id = _id
@@ -1866,7 +1869,9 @@ class IS_LOCATION_SELECTOR2(Validator):
                                 if wkt and wkt != location.wkt:
                                     changed = True
                                 else:
-                                    # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
+                                    # Float comparisons need care
+                                    # - just check the 1st 5 decimal points, as
+                                    #   that's all we care about
                                     llat = location.lat
                                     if lat is not None and llat is not None:
                                         if round(lat, 5) != round(llat, 5):
@@ -1883,7 +1888,8 @@ class IS_LOCATION_SELECTOR2(Validator):
 
                     if changed:
                         # Update the record
-                        if not current.auth.s3_has_permission("update", table, record_id=value):
+                        if not current.auth.s3_has_permission("update", table,
+                                                              record_id=value):
                             return (value, current.auth.messages.access_denied)
                         feature = Storage(addr_street=address,
                                           addr_postcode=postcode,
@@ -1897,7 +1903,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                             feature.wkt = wkt
                             feature.inherited = False
                         # onvalidation
-                        # - includes detailed bounds check if deployment_setting doesn't disable it
+                        # - includes detailed bounds check if deployment_setting
+                        #   doesn't disable it
                         form = Storage()
                         form.errors = errors
                         form.vars = feature
@@ -1906,7 +1913,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                             errors = form.errors
                             error = ""
                             for e in errors:
-                                error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                                error = "%s\n%s" % (error, errors[e]) if error \
+                                   else errors[e]
                             return (value, error)
                         # Update the record
                         db(table.id == value).update(**feature)
@@ -1944,8 +1952,8 @@ class IS_LOCATION_SELECTOR2(Validator):
                     # OK
                     return (value, None)
                 else:
-                    return (value,
-                            self.error_message or current.T("Location is of incorrect level!"))
+                    return (value, self.error_message or \
+                            current.T("Location is of incorrect level!"))
             else:
                 # Clear the Parent/Lat/Lon/Address
                 feature = Storage(lat = None,
