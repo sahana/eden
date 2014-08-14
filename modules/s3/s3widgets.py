@@ -4635,27 +4635,63 @@ class S3LocationSelectorWidget2(FormWidget):
             else:
                 # No Valid options!
                 raise SyntaxError
-            map = gis.show_map(id = "location_selector_%s" % fieldname,
-                               collapsed = True,
-                               height = 340,
-                               width = 480,
-                               add_feature = points,
-                               add_feature_active = add_feature_active,
-                               add_line = lines,
-                               add_line_active = add_line_active,
-                               add_polygon = polygons,
-                               add_polygon_active = add_polygon_active,
-                               catalogue_layers = self.catalog_layers,
-                               color_picker = self.color_picker,
-                               toolbar = toolbar,
-                               # Hide controls from toolbar
-                               nav = False,
-                               area = False,
-                               zoomWheelEnabled = False,
-                               # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
-                               # but use our one if we need to display a map by default
-                               callback = callback if use_callback else None,
-                               )
+            if not self.color_picker:
+                color_picker = False
+            else:
+                # Requires the custom controller to store this before calling the widget
+                # - a bit hacky, but can't think of a better option currently without rewriting completely as an S3SQLSubForm
+                record_id = s3.record_id
+                if not record_id:
+                    # Show Color Picker with default Style
+                    color_picker = True
+                else:
+                    # Do we have a style defined for this record?
+                    # @ToDo: Support Layers using alternate controllers/functions
+                    c, f = field.tablename.split("_", 1)
+                    ftable = s3db.gis_layer_feature
+                    query = (ftable.deleted == False) & \
+                            (ftable.controller == c) & \
+                            (ftable.function == f) & \
+                            (ftable.individual == True)
+                    rows = db(query).select(ftable.layer_id)
+                    if not rows:
+                        # Show Color Picker with default Style
+                        color_picker = True
+                    else:
+                        # @ToDo: Handle multiple rows?
+                        layer_id = rows.first().layer_id
+                        stable = s3db.gis_style
+                        query = (stable.deleted == False) & \
+                                (stable.layer_id == layer_id) & \
+                                (stable.record_id == record_id)
+                        rows = db(query).select(stable.style)
+                        row = rows.first()
+                        if row:
+                            color_picker = row.style
+                        else:
+                            # Show Color Picker with default Style
+                            color_picker = True
+            _map = gis.show_map(id = "location_selector_%s" % fieldname,
+                                collapsed = True,
+                                height = 340,
+                                width = 480,
+                                add_feature = points,
+                                add_feature_active = add_feature_active,
+                                add_line = lines,
+                                add_line_active = add_line_active,
+                                add_polygon = polygons,
+                                add_polygon_active = add_polygon_active,
+                                catalogue_layers = self.catalog_layers,
+                                color_picker = color_picker,
+                                toolbar = toolbar,
+                                # Hide controls from toolbar
+                                nav = False,
+                                area = False,
+                                zoomWheelEnabled = False,
+                                # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
+                                # but use our one if we need to display a map by default
+                                callback = callback if use_callback else None,
+                                )
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
             if use_wkt:
@@ -4707,7 +4743,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                     _id="%s_geocode" % fieldname,
                                     _class="controls geocode",
                                     ))
-            map_icon.append(map)
+            map_icon.append(_map)
         else:
             map_icon = ""
 
@@ -4733,7 +4769,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                        postcode_label,
                        postcode_row,
                        map_icon,
-                       requires=field.requires
+                       requires = field.requires
                        )
 
 # =============================================================================

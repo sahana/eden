@@ -1175,6 +1175,7 @@ def customise_org_organisation_controller(**attr):
 
                 crud_form = S3SQLCustomForm(*form_fields,
                                             postprocess = org_organisation_postprocess)
+
                 s3db.configure(tablename,
                                crud_form = crud_form,
                                )
@@ -1633,6 +1634,8 @@ def customise_stats_people_controller(**attr):
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
                 field.requires = IS_LOCATION_SELECTOR2(levels = levels)
+                # Inform S3LocationSelectorWidget2 of the record_id
+                s3.record_id = r.id
                 field.widget = S3LocationSelectorWidget2(levels = levels,
                                                          hide_lx = False,
                                                          polygons = True,
@@ -1658,28 +1661,28 @@ def customise_stats_people_controller(**attr):
                 table.person_id.comment = None
 
             # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                "parameter_id",
-                "value",
-                S3SQLInlineComponent(
-                    "people_group",
-                    label = T("Coalition"),
-                    fields = [("", "group_id")],
-                    multiple = False,
-                ),
-                "location_id",
-                "person_id",
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = [("", "file"),
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
+            crud_form = S3SQLCustomForm("name",
+                                        "parameter_id",
+                                        "value",
+                                        S3SQLInlineComponent(
+                                            "people_group",
+                                            label = T("Coalition"),
+                                            fields = [("", "group_id")],
+                                            multiple = False,
+                                            ),
+                                        "location_id",
+                                        "person_id",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "file",
+                                            label = T("Files"),
+                                            fields = [("", "file"),
+                                                      #"comments",
+                                                      ],
+                                            ),
+                                        "comments",
+                                        postprocess = s3db.gis_style_postprocess,
+                                        )
 
             s3db.configure(tablename,
                            crud_form = crud_form,
@@ -1973,6 +1976,8 @@ def customise_vulnerability_risk_controller(**attr):
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
                 field.requires = IS_LOCATION_SELECTOR2(levels = levels)
+                # Inform S3LocationSelectorWidget2 of the record_id
+                s3.record_id = r.id
                 field.widget = S3LocationSelectorWidget2(levels = levels,
                                                          hide_lx = False,
                                                          reverse_lx = True,
@@ -1984,26 +1989,26 @@ def customise_vulnerability_risk_controller(**attr):
                                                          )
 
             # Custom Crud Form
-            crud_form = S3SQLCustomForm(
-                "name",
-                #"hazard_id",
-                S3SQLInlineComponent(
-                    "risk_group",
-                    label = T("Coalition"),
-                    fields = [("", "group_id")],
-                    multiple = False,
-                ),
-                "location_id",
-                S3SQLInlineComponent(
-                    "document",
-                    name = "file",
-                    label = T("Files"),
-                    fields = [("", "file"),
-                              #"comments",
-                              ],
-                ),
-                "comments",
-            )
+            crud_form = S3SQLCustomForm("name",
+                                        #"hazard_id",
+                                        S3SQLInlineComponent(
+                                            "risk_group",
+                                            label = T("Coalition"),
+                                            fields = [("", "group_id")],
+                                            multiple = False,
+                                            ),
+                                        "location_id",
+                                        S3SQLInlineComponent(
+                                            "document",
+                                            name = "file",
+                                            label = T("Files"),
+                                            fields = [("", "file"),
+                                                      #"comments",
+                                                      ],
+                                            ),
+                                        "comments",
+                                        postprocess = s3db.gis_style_postprocess,
+                                        )
 
             s3db.configure(tablename,
                            crud_form = crud_form,

@@ -27,8 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3WaterModel",
-           ]
+__all__ = ("S3WaterModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -41,13 +40,13 @@ class S3WaterModel(S3Model):
         Water Sources
     """
 
-    names = ["water_zone_type",
+    names = ("water_zone_type",
              "water_zone",
              "water_river",
              "water_gauge",
              #"water_debris_basin",
              #"water_reservoir",
-             ]
+             )
 
     def model(self):
 

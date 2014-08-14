@@ -6075,7 +6075,8 @@ class GIS(object):
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param area: Show the Area tool on the Toolbar
-            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelectorWidget2)
+            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelectorWidget2...pick up in postprocess)
+                                 If a style is provided then this is used as the default style
             @param nav: Show the Navigation controls on the Toolbar
             @param save: Show the Save tool on the Toolbar
             @param search: Show the Geonames search box (requires a username to be configured)
@@ -6479,8 +6480,11 @@ class MAP(DIV):
                 i18n["gis_area_tooltip"] = T("Measure Area: Click the points around the polygon & end with a double-click")
 
             # Show Color Picker?
-            if opts.get("color_picker", False):
+            color_picker = opts.get("color_picker", False)
+            if color_picker:
                 options["color_picker"] = True
+                if color_picker is not True:
+                    options["draft_style"] = json.loads(color_picker)
                 #i18n["gis_color_picker_tooltip"] = T("Select Color")
                 i18n["gis_cancelText"] = T("cancel")
                 i18n["gis_chooseText"] = T("choose")
@@ -7140,7 +7144,8 @@ def addFeatureResources(feature_resources):
                 url = "%s&track=1" % url
             opacity = layer.get("opacity", row.opacity)
             cluster_attribute = layer.get("cluster_attribute",
-                                          row.cluster_attribute) or CLUSTER_ATTRIBUTE
+                                          row.cluster_attribute) or \
+                                CLUSTER_ATTRIBUTE
             cluster_distance = layer.get("cluster_distance",
                                          row.cluster_distance)
             cluster_threshold = layer.get("cluster_threshold",

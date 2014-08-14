@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3TranslateModel"]
+__all__ = ("S3TranslateModel",)
 
 import sys
 
@@ -38,9 +38,9 @@ from ..s3 import *
 # =============================================================================
 class S3TranslateModel(S3Model):
 
-    names = ["translate_language",
+    names = ("translate_language",
              "translate_percentage",
-             ]
+             )
 
     def model(self):
 

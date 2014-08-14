@@ -1668,17 +1668,21 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // DraftLayer
     // Used for drawing Points/Polygons & for HTML5 GeoLocation
     var addDraftLayer = function(map) {
-        var options = map.s3.options;
-        if ((options.draw_polygon) && (!options.draw_feature)) {
-            // No Marker for Polygons
-            var marker;
-        } else {
+        // Styling
+        var marker,
+            style,
+            options = map.s3.options;
+        if (options.draw_feature) {
             // Marker for Points
             var marker = options.marker_default;
         }
-        // Styling
+        if (options.draft_style) {
+            // Custom Style for Draft Layer (e.g. LocationSelectorWidget2)
+            var style = options.draft_style;
+        }
         var layer = {
-            'marker': marker
+            'marker': marker,
+            'style': style
             };
         var response = createStyleMap(map, layer);
         var featureStyleMap = response[0];
@@ -4726,19 +4730,36 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         return dfd.promise();
     };
 
+    var hex2rgb = function(hex) {
+        var bigint = parseInt(hex, 16);
+        var r = (bigint >> 16) & 255;
+        var g = (bigint >> 8) & 255;
+        var b = bigint & 255;
+        return [r, g, b].join();
+    }
+
     var rgb2hex = function(r,g,b) {
-        if (g !== undefined) 
-            return Number(0x1000000 + r*0x10000 + g*0x100 + b).toString(16).substring(1);
-        else 
-            return Number(0x1000000 + r[0]*0x10000 + r[1]*0x100 + r[2]).toString(16).substring(1);
+        return Number(0x1000000 + r*0x10000 + g*0x100 + b).toString(16).substring(1);
     }
 
     // ColorPicker to style Features
     // - currently used just by S3LocationSelectorWidget2
+    // - need to pickup in postprocess
     var addColorPickerControl = function(map, toolbar) {
-        var map_id = map.s3.id;
+        var s3 = map.s3;
+        var map_id = s3.id;
+        var draft_style = s3.options.draft_style;
+        if (draft_style) {
+            if (draft_style.fillOpacity) {
+                var value = 'rgba(' + hex2rgb(draft_style.fill) + ',' + draft_style.fillOpacity + ')';
+            } else {
+                var value = 'rgb(' + hex2rgb(draft_style.fill) + ')';
+            }
+        } else {
+            var value = '';
+        }
         var colorPickerButton = new Ext.Toolbar.Item({
-            html: '<input class="gis_colorpicker" name="colour" />'
+            html: '<input class="gis_colorpicker" name="colour" value="' + value + '"/>'
         });
         toolbar.add(colorPickerButton);
         $.when(uiLoaded(map_id)).then(
@@ -4775,7 +4796,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         };
                         var response = createStyleMap(map, layer);
                         var featureStyleMap = response[0];
-                        var draftLayer = map.s3.draftLayer;
+                        var draftLayer = s3.draftLayer;
                         draftLayer.styleMap = featureStyleMap;
                         draftLayer.redraw();
                     }

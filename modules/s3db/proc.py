@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ProcurementModel",
+__all__ = ("S3ProcurementModel",
            "proc_rheader"
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -53,9 +53,9 @@ class S3ProcurementModel(S3Model):
             Purchase Orders (PO)
     """
 
-    names = ["proc_plan",
+    names = ("proc_plan",
              "proc_plan_item"
-             ]
+             )
 
     def model(self):
 

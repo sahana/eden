@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ClimateModel",
+__all__ = ("S3ClimateModel",
            "climate_first_run",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -55,7 +55,7 @@ class S3ClimateModel(S3Model):
         @ToDo: Deprecate raw SQL (Tested only on PostgreSQL)
     """
 
-    names = ["climate_place",
+    names = ("climate_place",
              "climate_place_elevation",
              "climate_place_station_name",
              "climate_place_station_id",
@@ -65,7 +65,7 @@ class S3ClimateModel(S3Model):
              "climate_prices",
              "climate_purchase",
              "climate_save_query",
-             ]
+             )
 
     def model(self):
 

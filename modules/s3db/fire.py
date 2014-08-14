@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3FireModel",
+__all__ = ("S3FireModel",
            "S3FireStationModel",
-           ]
+           )
 
 from gluon import *
 from gluon.dal import Row
@@ -43,9 +43,9 @@ class S3FireModel(S3Model):
         Fire Zones: Burn Perimeter, Burnt zone, Evacuation Zone, etc
     """
 
-    names = ["fire_zone_type",
+    names = ("fire_zone_type",
              "fire_zone",
-             ]
+             )
 
     def model(self):
 
@@ -159,12 +159,12 @@ class S3FireStationModel(S3Model):
         http://eden.sahanafoundation.org/wiki/Deployments/Bombeiros
     """
 
-    names = ["fire_station",
+    names = ("fire_station",
              "fire_station_vehicle",
              "fire_water_source",
              "fire_hazard_point",
              "fire_staff_on_duty"
-             ]
+             )
 
     def model(self):
 

@@ -1030,7 +1030,8 @@ class S3XML(S3Codec):
                 # Add Styles
                 style = styles[tablename].get(record_id)
                 if style:
-                    attr[ATTRIBUTE.style] = style
+                    _style = etree.SubElement(map_data, "style")
+                    _style.set("value", style)
 
             # Use the current controller for map popup URLs to get
             # the controller settings applied even for map popups

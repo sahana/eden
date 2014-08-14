@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SupportModel"]
+__all__ = ("S3SupportModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -43,7 +43,7 @@ class S3SupportModel(S3Model):
                  a central ticketing system
     """
 
-    names = ["support_req"]
+    names = ("support_req",)
 
     def model(self):
 

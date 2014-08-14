@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3HierarchyModel"]
+__all__ = ("S3HierarchyModel",)
 
 from gluon import *
 from ..s3 import *
@@ -36,7 +36,7 @@ from ..s3 import *
 class S3HierarchyModel(S3Model):
     """ Model for stored object hierarchies, experimental """
 
-    names = ["s3_hierarchy"]
+    names = ("s3_hierarchy",)
 
     def model(self):
 

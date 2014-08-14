@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3MembersModel",
+__all__ = ("S3MembersModel",
            "member_rheader"
-           ]
+           )
 
 import datetime
 from gluon import *
@@ -42,9 +42,9 @@ class S3MembersModel(S3Model):
     """
     """
 
-    names = ["member_membership_type",
+    names = ("member_membership_type",
              "member_membership",
-             ]
+             )
 
     def model(self):
 

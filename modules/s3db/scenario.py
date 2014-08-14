@@ -27,14 +27,14 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ScenarioModel",
+__all__ = ("S3ScenarioModel",
            "S3ScenarioAssetModel",
            "S3ScenarioHRModel",
            "S3ScenarioMapModel",
            "S3ScenarioOrganisationModel",
            "S3ScenarioSiteModel",
            "S3ScenarioTaskModel",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -51,9 +51,9 @@ class S3ScenarioModel(S3Model):
         the system to be more modular
     """
 
-    names = ["scenario_scenario",
+    names = ("scenario_scenario",
              "scenario_scenario_id",
-             ]
+             )
 
     def model(self):
 
@@ -216,7 +216,7 @@ class S3ScenarioAssetModel(S3Model):
         Link Assets to Scenarios
     """
 
-    names = ["scenario_asset"]
+    names = ("scenario_asset",)
 
     def model(self):
 
@@ -261,7 +261,7 @@ class S3ScenarioHRModel(S3Model):
         Link Human Resources (Staff/Volunteers) to Scenarios
     """
 
-    names = ["scenario_human_resource"]
+    names = ("scenario_human_resource",)
 
     def model(self):
 
@@ -300,7 +300,7 @@ class S3ScenarioMapModel(S3Model):
         Link Map Configs to Scenarios
     """
 
-    names = ["scenario_config"]
+    names = ("scenario_config",)
 
     def model(self):
 
@@ -342,7 +342,7 @@ class S3ScenarioOrganisationModel(S3Model):
         - people to mobilise
     """
 
-    names = ["scenario_organisation"]
+    names = ("scenario_organisation",)
 
     def model(self):
 
@@ -381,7 +381,7 @@ class S3ScenarioSiteModel(S3Model):
         Link Sites (Facilities) to Scenarios
     """
 
-    names = ["scenario_site"]
+    names = ("scenario_site",)
 
     def model(self):
 
@@ -422,7 +422,7 @@ class S3ScenarioTaskModel(S3Model):
         @ToDo: Task Templates (like CAP Templates)
     """
 
-    names = ["scenario_task"]
+    names = ("scenario_task",)
 
     def model(self):
 

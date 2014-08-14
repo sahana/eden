@@ -402,6 +402,7 @@
     <xsl:template name="Properties">
         <!--<xsl:param name="uuid"/>-->
         <xsl:variable name="attributes" select="./map[1]/@attributes"/>
+        <xsl:variable name="style" select="./map[1]/style/@value"/>
 
         <!-- We don't need the UUID, so save bandwidth
         <id>-->
@@ -434,9 +435,12 @@
             </url>
         </xsl:if>
 
-        <xsl:if test="map[1]/@style!=''">
+        <xsl:if test="$style!=''">
+            <!-- Use pre-prepared JSON -->
             <style>
-                <xsl:value-of select="map[1]/@style"/>
+                <xsl:attribute name="value">
+                    <xsl:value-of select="$style"/>
+                </xsl:attribute>
             </style>
         </xsl:if>
 

@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DelphiModel",
+__all__ = ("S3DelphiModel",
            "S3DelphiUser",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -41,7 +41,7 @@ class S3DelphiModel(S3Model):
         Delphi Decision Maker
     """
 
-    names = ["delphi_group",
+    names = ("delphi_group",
              "delphi_membership",
              "delphi_problem",
              "delphi_solution",
@@ -49,7 +49,7 @@ class S3DelphiModel(S3Model):
              "delphi_comment",
              "delphi_solution_represent",
              "delphi_DelphiUser",
-             ]
+             )
 
     def model(self):
 

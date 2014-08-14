@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3PatientModel"]
+__all__ = ("S3PatientModel",)
 
 from gluon import *
 from gluon.dal import Row
@@ -39,10 +39,10 @@ class S3PatientModel(S3Model):
     """
     """
 
-    names = ["patient_patient",
+    names = ("patient_patient",
              "patient_relative",
              "patient_home",
-            ]
+             )
 
     def model(self):
 

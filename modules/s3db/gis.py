@@ -4434,7 +4434,6 @@ class S3MapModel(S3Model):
             @ToDo: Check if the file has changed & run the normal onaccept if-so
         """
 
-        shape = form.vars.shape
         S3MapModel.gis_layer_shapefile_onaccept(form)
 
 # =============================================================================
@@ -4446,7 +4445,9 @@ class S3GISStyleModel(S3Model):
         - @ToDo: can be standalone, named styles for re-use (link vs copy)
     """
 
-    names = ("gis_style",)
+    names = ("gis_style",
+             "gis_style_postprocess",
+             )
 
     def model(self):
 
@@ -4506,7 +4507,70 @@ class S3GISStyleModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return dict(gis_style_postprocess = self.gis_style_postprocess,
+                    )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def gis_style_postprocess(form):
+        """
+            Extract the style from a LocationSelectorWidget2
+            & create/update the style record
+        """
+
+        # Collect the Style
+        colour = current.request.post_vars.colour
+        if not colour:
+            return
+
+        # Format the style
+        def rgb2hex(r, g, b):
+            """
+                Given an rgb or rgba sequence of 0-1 floats, return the hex string
+            """
+            return "%02x%02x%02x" % (r, g, b)
+
+        try:
+            parts = colour.split("(", 1)[1][:-1].split(",")
+        except:
+            current.log.error("invalid colour: %s" % colour)
+            return
+
+        fill = rgb2hex(int(parts[0]), int(parts[1]), int(parts[2]))
+        style = dict(fill = fill)
+        if len(parts) == 4:
+            style["fillOpacity"] = float(parts[3])
+        style = json.dumps(style, separators=SEPARATORS)
+
+        db = current.db
+        s3db = current.s3db
+
+        # Which Layer(s) should we add to?
+        # @ToDo: Support for different controller/function than the table
+        c, f = str(form.table).split("_", 1)
+        ftable = s3db.gis_layer_feature
+        query = (ftable.deleted != True) & \
+                (ftable.controller == c) & \
+                (ftable.function == f) & \
+                (ftable.individual == True)
+        rows = db(query).select(ftable.layer_id)
+
+        # Insert the Style record(s)
+        stable = s3db.gis_style
+        record_id = form.vars.id
+        for row in rows:
+            layer_id = row.layer_id
+            query = (stable.layer_id == layer_id) & \
+                    (stable.record_id == record_id)
+            exists = db(query).select(stable.id,
+                                      limitby=(0, 1)).first()
+            if exists:
+                exists.update_record(style = style)
+            else:
+                stable.insert(layer_id = layer_id,
+                              record_id = record_id,
+                              style = style,
+                              )
 
 # =============================================================================
 class S3GISThemeModel(S3Model):

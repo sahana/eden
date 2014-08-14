@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AuthModel",
-           "S3UserOptions",
+__all__ = ("S3AuthModel",
+           "S3AuthUserOptions",
            "auth_user_options_get_osm"
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -39,7 +39,7 @@ from ..s3 import *
 # =============================================================================
 class S3AuthModel(S3Model):
 
-    names = ["auth_organisation"]
+    names = ("auth_organisation",)
 
     def model(self):
 
@@ -92,9 +92,9 @@ class S3AuthModel(S3Model):
 
 
 # =============================================================================
-class S3UserOptions(S3Model):
+class S3AuthUserOptions(S3Model):
 
-    names = ["auth_user_options"]
+    names = ("auth_user_options",)
 
     def model(self):
 

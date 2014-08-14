@@ -27,8 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3TransportModel",
-           ]
+__all__ = ("S3TransportModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -41,10 +40,10 @@ class S3TransportModel(S3Model):
         http://eden.sahanafoundation.org/wiki/BluePrint/Transport
     """
 
-    names = ["transport_airport",
+    names = ("transport_airport",
              "transport_heliport",
              "transport_seaport",
-             ]
+             )
 
     def model(self):
 

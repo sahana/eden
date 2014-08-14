@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SecurityModel"]
+__all__ = ("S3SecurityModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -39,11 +39,11 @@ class S3SecurityModel(S3Model):
     """
     """
 
-    names = ["security_zone_type",
+    names = ("security_zone_type",
              "security_zone",
              "security_staff_type",
              "security_staff",
-             ]
+             )
 
     def model(self):
 
