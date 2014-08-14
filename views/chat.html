@@ -1,7 +1,7 @@
 {{if auth.is_logged_in():}}
 {{chat_server = settings.get_chat_server()}}
 {{if chat_server:}} 
-{{chat_jid = auth.user.username}}
+{{chat_jid = auth.user.email.replace("@","_")}}
 {{chat_pass = auth.user.password}}
 {{if s3.debug:}}
 {{main_css = "<link href='/%s/static/styles/plugins/converse.css' rel='stylesheet' type='text/css'/>" % appname}}
