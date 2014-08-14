@@ -7161,14 +7161,22 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
 
     # Job title as card title, indicate employment type if given
     if raw["hrm_experience.job_title_id"]:
-        job_title = record["hrm_experience.job_title_id"]
+        title = record["hrm_experience.job_title_id"]
+        job_title = card_line("icon-star", title)
     else:
-        # Try free-text field
-        job_title = raw["hrm_experience.job_title"] or ""
+        title = ""
+        job_title = ""
+    position = raw["hrm_experience.job_title"]
+    if position:
+        title = position
+    else:
+        job_title = ""
     if raw["hrm_experience.employment_type"]:
-        title = " %s (%s)" % (job_title, record["hrm_experience.employment_type"])
-    else:
-        title = " %s" % job_title
+        employment_type = record["hrm_experience.employment_type"]
+        if title:
+            title = "%s (%s)" % (title, employment_type)
+        else:
+            title = employment_type
 
     # Edit Bar
     permit = current.auth.s3_has_permission
@@ -7209,6 +7217,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
                            date,
                            hours,
                            supervisor,
+                           job_title,
                            responsibilities,
                            P(SPAN(comments),
                              " ",
