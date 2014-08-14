@@ -156,6 +156,7 @@ settings.frontpage.rss = [
 ##		"server_db_username" : "",
 ##		"server_db_password": "",
 ##		"server_db_port" : 3306,
+##      "server_db_ip" : "127.0.0.1"
 #        }
 
 # GeoServer (Currently used by GeoExplorer. Will allow REST control of GeoServer.)

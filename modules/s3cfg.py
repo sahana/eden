@@ -575,14 +575,14 @@ class S3Config(Storage):
             db_string = "mysql://%s:%s@%s:%s/%s" % \
             (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
                 chat_server["server_db_password"] if chat_server["server_db_password"] else  self.database.get("password", "password"),
-                chat_server["ip"] if chat_server["ip"] else self.database.get("host", "localhost"),
+                chat_server["server_db_ip"] if chat_server["server_db_ip"] else self.database.get("host", "localhost"),
                 chat_server["server_db_port"] if chat_server["server_db_port"] else self.database.get("port", 3306),
                 chat_server["server_db"] if chat_server["server_db"] else self.database.get("database", "openfiredb"))
         elif (chat_server["server_db_type"] == "postgres"):
             db_string = "postgres://%s:%s@%s:%s/%s" % \
             (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
                 chat_server["server_db_password"] if chat_server["server_db_password"] else  self.database.get("password", "password"),
-                chat_server["ip"] if chat_server["ip"] else self.database.get("host", "localhost"),
+                chat_server["server_db_ip"] if chat_server["server_db_ip"] else self.database.get("host", "localhost"),
                 chat_server["server_db_port"] if chat_server["server_db_port"] else self.database.get("port", 5432),
                 chat_server["server_db"] if chat_server["server_db"] else self.database.get("database", "openfiredb"))
         else:
