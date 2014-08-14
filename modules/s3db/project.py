@@ -495,7 +495,7 @@ class S3ProjectModel(S3Model):
                 (table.project_id == project_id)
         sum_field = table.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field]
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def project_total_annual_budget(row):
@@ -894,7 +894,7 @@ class S3ProjectActivityModel(S3Model):
                          (T("Year"), "year"),
                          ]
         rappend = report_fields.append
-        
+
         fact_fields = [(T("Number of Activities"), "count(id)"),
                        ]
 
@@ -952,7 +952,7 @@ class S3ProjectActivityModel(S3Model):
                             options = project_activity_year_options,
                             ),
             )
-            
+
         if use_projects and settings.get_project_mode_drr():
             rappend(("project_id$hazard_project.hazard_id"))
             rappend((T("HFA"), "project_id$drr.hfa"))
@@ -1120,7 +1120,7 @@ class S3ProjectActivityModel(S3Model):
             msg_record_deleted = T("Activity Type removed from Activity"),
             msg_list_empty = T("No Activity Types found for this Activity")
         )
-        
+
         # Pass names back to global scope (s3.*)
         return dict(project_activity_id = activity_id,
                     )
@@ -1323,7 +1323,7 @@ class S3ProjectActivityTypeModel(S3Model):
                                               ondelete = "CASCADE",
                                               ),
                      *s3_meta_fields())
-        
+
         # ---------------------------------------------------------------------
         # Activity Type - Project Link Table
         #
@@ -1853,7 +1853,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                             # Format for OptionsFilter
                             project_beneficiary_activity_type = "beneficiary_id",
                             )
-        
+
         # ---------------------------------------------------------------------
         # Beneficiary <> Activity Link Table
         #
@@ -2376,7 +2376,7 @@ class S3ProjectFrameworkModel(S3Model):
         #                 comment = T("Search for a Policy or Strategy by name or description."),
         #                ),
         #]
-        
+
         self.configure(tablename,
                        super_entity="doc_entity",
                        crud_form = crud_form,
@@ -2813,7 +2813,7 @@ class S3ProjectLocationModel(S3Model):
                                                   label = T("Sector"),
                                                   hidden = True,
                                                   ))
-            
+
         filter_widgets.extend((
             # This is only suitable for deployments with a few projects
             #S3OptionsFilter("project_id",
@@ -3863,7 +3863,7 @@ class S3ProjectDRRPPModel(S3Model):
                                 #comment = DIV(_class="tooltip",
                                 #              _title="%s|%s" % (T("Parent Project"),
                                 #                                T("The parent project or programme which this project is implemented under"))),
-                                ), 
+                                ),
                           Field("duration", "integer",
                                 label = T("Duration (months)"),
                                 represent = lambda v: v or NONE,
@@ -4062,6 +4062,7 @@ class S3ProjectTaskModel(S3Model):
              "project_task_tag",
              "project_task_represent_w_project",
              "project_task_active_statuses",
+             "project_task_project_opts",
              )
 
     def model(self):
@@ -4347,7 +4348,7 @@ class S3ProjectTaskModel(S3Model):
                                          fields = [("", "project_id")],
                                          multiple = False,
                                          ))
-                               
+
         if settings.get_project_activities():
             lappend("task_activity.activity_id")
             fappend(S3OptionsFilter("task_activity.activity_id",
@@ -4417,7 +4418,7 @@ class S3ProjectTaskModel(S3Model):
                            }
                 jquery_ready_append('''$.filterOptionsS3(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
-                                   
+
         list_fields.extend(("name",
                             "pe_id",
                             "date_due",
@@ -4525,7 +4526,7 @@ class S3ProjectTaskModel(S3Model):
 
         # Representation with project name, for time log form
         project_task_represent_w_project = project_TaskRepresent(show_project=True)
-        
+
         # Custom Methods
         set_method("project", "task",
                    method = "dispatch",
@@ -4835,6 +4836,7 @@ class S3ProjectTaskModel(S3Model):
             project_task_id = task_id,
             project_task_active_statuses = project_task_active_statuses,
             project_task_represent_w_project = project_task_represent_w_project,
+            project_task_project_opts = self.project_task_project_opts
         )
 
     # -------------------------------------------------------------------------
@@ -4854,14 +4856,14 @@ class S3ProjectTaskModel(S3Model):
     @staticmethod
     def project_task_task_id(row):
         """ The record ID of a task as separate column in the data table """
-        
+
         if hasattr(row, "project_task"):
             row = row.project_task
         try:
             return row.id
         except AttributeError:
             return None
-            
+
     # -------------------------------------------------------------------------
     @staticmethod
     def project_task_project_opts():
@@ -5723,7 +5725,7 @@ class project_TaskRepresent(S3Represent):
         self.show_project = show_project
         if show_project:
             self.project_represent = S3Represent(lookup = "project_project")
-            
+
         self.project_first = project_first
 
     # -------------------------------------------------------------------------
@@ -5737,7 +5739,7 @@ class project_TaskRepresent(S3Represent):
         """
 
         s3db = current.s3db
-        
+
         ttable = s3db.project_task
         fields = [ttable.id, ttable.name]
 
@@ -5774,9 +5776,9 @@ class project_TaskRepresent(S3Represent):
         """
 
         output = row["project_task.name"]
-        
+
         if self.show_project:
-            
+
             project_id = row["project_task_project.project_id"]
             if self.project_first:
                 if project_id:
@@ -5792,7 +5794,7 @@ class project_TaskRepresent(S3Represent):
             output = strfmt % {"task": s3_unicode(output),
                                "project": self.project_represent(project_id),
                                }
-                               
+
         return output
 
 # =============================================================================
@@ -6412,7 +6414,7 @@ def project_task_controller():
 def project_theme_help_fields(options):
     """
         Provide the tooltips for the Theme filter
-        
+
         @param options: the options to generate tooltips for, from
                         S3GroupedOptionsWidget: list of tuples (key, represent)
     """
@@ -6530,7 +6532,7 @@ def project_project_filters(org_label):
 
     T = current.T
     settings = current.deployment_settings
-    
+
     filter_widgets = [
         S3TextFilter(["name",
                       "code",
@@ -6555,7 +6557,7 @@ def project_project_filters(org_label):
         ]
 
     append_filter = filter_widgets.append
-    
+
     if settings.get_project_sectors():
         if settings.get_ui_label_cluster():
             sector = T("Cluster")
@@ -6569,7 +6571,7 @@ def project_project_filters(org_label):
                             hidden = True,
                             )
         )
-        
+
     mode_drr = settings.get_project_mode_drr()
     if mode_drr:
         append_filter(
@@ -6580,7 +6582,7 @@ def project_project_filters(org_label):
                             hidden = True,
                             )
         )
-        
+
     if settings.get_project_mode_3w():
         append_filter(
             S3OptionsFilter("theme_project.theme_id",
@@ -6590,7 +6592,7 @@ def project_project_filters(org_label):
                             hidden = True,
                             )
         )
-    
+
     if mode_drr:
         hfa_opts = project_hfa_opts()
         options = dict((key, "HFA %s" % key) for key in hfa_opts)
@@ -6618,9 +6620,9 @@ def project_project_filters(org_label):
                             hidden = True,
                             )
         )
-                
+
     return filter_widgets
-    
+
 # =============================================================================
 def project_project_list_layout(list_id, item_id, resource, rfields, record,
                                 icon="tasks"):
@@ -6772,14 +6774,14 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     else:
         project = ""
 
-    if priority in (1, 2): 
+    if priority in (1, 2):
         # Urgent / High
         priority_icon = DIV(I(" ", _class="icon-exclamation"),
-                            _class="task_priority") 
+                            _class="task_priority")
     elif priority == 4:
         # Low
         priority_icon = DIV(I(" ", _class ="icon-arrow-down"),
-                            _class="task_priority") 
+                            _class="task_priority")
     else:
         priority_icon = ""
     # @ToDo: Support more than just the Wrike/MCOP statuses
@@ -6793,7 +6795,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                          ("-empty" if status in active_statuses else "" )),
                        _class="task_status",
                        _style="background-color:%s" % (status_icon_colour.get(status, "none"))
-                       ) 
+                       )
 
     location = record["project_task.location_id"]
     location_id = raw["project_task.location_id"]
@@ -6840,7 +6842,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                        )
     else:
         delete_btn = ""
-        
+
     if source_url:
         source_btn =  A(I(" ", _class="icon icon-link"),
                        _title=source_url,
