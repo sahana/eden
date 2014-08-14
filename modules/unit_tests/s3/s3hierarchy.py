@@ -8,6 +8,7 @@
 import unittest
 from gluon.dal import Query
 from s3.s3utils import *
+from s3.s3rest import s3_request
 from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_uid
 from lxml import etree
 
@@ -159,6 +160,30 @@ class S3HierarchyTests(unittest.TestCase):
         nodes = h.nodes
         assertEqual(len(nodes), len(uids))
         assertTrue(all(node_id in nodes for node_id in uids.values()))
+
+    # -------------------------------------------------------------------------
+    def testPreprocessCreateNode(self):
+        """ Test preprocessing of a create-node request """
+
+        r = s3_request("test", "hierarchy", http="POST")
+        parent_node = self.rows["HIERARCHY1"]
+
+        h = S3Hierarchy("test_hierarchy")
+        link = h.preprocess_create_node(r, r.table, parent_node)
+        self.assertEqual(link, None)
+        
+        parent_id = parent_node.id
+        
+        assertEqual = self.assertEqual
+        
+        post_vars = r.post_vars
+        assertEqual(post_vars["parent"], parent_id)
+
+        field = r.table.parent
+        assertEqual(field.default, parent_id)
+        assertEqual(field.update, parent_id)
+        self.assertFalse(field.readable)
+        self.assertFalse(field.writable)
 
     # -------------------------------------------------------------------------
     def testCategory(self):
@@ -588,6 +613,23 @@ class S3LinkedHierarchyTests(unittest.TestCase):
         nodes = h.nodes
         assertEqual(len(nodes), len(uids))
         assertTrue(all(node_id in nodes for node_id in uids.values()))
+
+    # -------------------------------------------------------------------------
+    def testPreprocessCreateNode(self):
+        """ Test preprocessing of a create-node request """
+
+        r = s3_request("test", "lhierarchy", http="POST")
+        parent_node = self.rows["LHIERARCHY1"]
+
+        h = S3Hierarchy("test_lhierarchy")
+        link = h.preprocess_create_node(r, r.table, parent_node)
+        
+        self.assertNotEqual(link, None)
+        assertEqual = self.assertEqual
+        assertEqual(link["linktable"], "test_lhierarchy_link")
+        assertEqual(link["lkey"], "child_id")
+        assertEqual(link["rkey"], "parent_id")
+        assertEqual(link["parent_id"], parent_node.id)
 
     # -------------------------------------------------------------------------
     def testCategory(self):

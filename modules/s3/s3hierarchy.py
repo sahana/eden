@@ -259,6 +259,8 @@ class S3Hierarchy(object):
         self.__fkey = None
         self.__ckey = None
 
+        self.__link = DEFAULT
+        self.__lkey = DEFAULT
         self.__left = DEFAULT
 
     # -------------------------------------------------------------------------
@@ -339,13 +341,34 @@ class S3Hierarchy(object):
 
     # -------------------------------------------------------------------------
     @property
+    def link(self):
+        """
+            The name of the link table containing the foreign key, or
+            None if the foreign key is in the hierarchical table itself
+        """
+
+        if self.__link is DEFAULT:
+            self.__keys()
+        return self.__link
+
+    # -------------------------------------------------------------------------
+    @property
+    def lkey(self):
+        """ The key in the link table referencing the child """
+
+        if self.__lkey is DEFAULT:
+            self.__keys()
+        return self.__lkey
+
+    # -------------------------------------------------------------------------
+    @property
     def left(self):
         """ The left join with the link table containing the foreign key """
 
         if self.__left is DEFAULT:
             self.__keys()
         return self.__left
-        
+
     # -------------------------------------------------------------------------
     @property
     def ckey(self):
@@ -612,12 +635,16 @@ class S3Hierarchy(object):
 
             if rfield.tname == resource.tablename:
                 fkey = rfield.field
+                self.__link = None
+                self.__lkey = None
                 self.__left = None
             else:
                 alias = rfield.tname.split("_", 1)[1]
                 link = resource.links.get(alias)
                 if link:
                     fkey = rfield.field
+                    self.__link = rfield.tname
+                    self.__lkey = link.fkey
                     self.__left = rfield.left.get(rfield.tname)
 
         if not fkey:
@@ -648,6 +675,37 @@ class S3Hierarchy(object):
         self.__pkey = pkey
         self.__fkey = fkey
         return
+
+    # -------------------------------------------------------------------------
+    def preprocess_create_node(self, r, table, parent):
+        """
+            Pre-process a CRUD request to create a new node
+
+            @param r: the request
+            @param table: the hierarchical table
+            @param parent: the parent node (Row)
+        """
+
+        parent_id = parent[self.pkey]
+
+        link = self.link
+        fkey = self.fkey
+        if self.link is None:
+            # Parent field in table
+            fkey.default = fkey.update = parent_id
+            fkey.comment = None
+            if r.http == "POST":
+                r.post_vars[fkey.name] = parent_id
+            fkey.readable = fkey.writable = False
+            link = None
+        else:
+            # Parent field in link table
+            link = {"linktable": self.link,
+                    "rkey": fkey.name,
+                    "lkey": self.lkey,
+                    "parent_id": parent_id,
+                    }
+        return link
 
     # -------------------------------------------------------------------------
     def add(self, node_id, parent_id=None, category=None):
