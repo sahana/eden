@@ -2145,141 +2145,181 @@ settings.customise_gis_config_controller = customise_gis_config_controller
 # -----------------------------------------------------------------------------
 # Site Activity Log
 #
-def render_log(list_id, item_id, resource, rfields, record):
-    """
-        Custom dataList item renderer for 'Site Activity Logs' on
-        the Home page.
+class ActivityLogLayout(S3DataListLayout):
 
-        @param list_id: the HTML ID of the list
-        @param item_id: the HTML ID of the item
-        @param resource: the S3Resource to render
-        @param rfields: the S3ResourceFields to render
-        @param record: the record as dict
-    """
-
-    #item_class = "thumbnail"
     item_class = ""
 
-    raw = record._row
-    author = record["s3_audit.user_id"]
-    author_id = raw["s3_audit.user_id"]
-    method = raw["s3_audit.method"]
-    tablename = raw["s3_audit.tablename"]
-    record_id = raw["s3_audit.record_id"]
+    # -------------------------------------------------------------------------
+    def __init__(self):
+        """ Constructor """
 
-    T = current.T
-    db = current.db
-    s3db = current.s3db
+        super(ActivityLogLayout, self).__init__()
 
-    if tablename == "pr_filter":
-        label = T("Saved Filters")
-        url = URL(c="default", f="index", args=["filters"])
-        if method == "create":
-            body = T("Saved a Filter")
-        elif method == "update":
-            body = T("Updated a Filter")
-    elif tablename == "gis_config":
-        table = s3db[tablename]
-        row = db(table.id == record_id).select(table.name,
-                                               limitby=(0, 1)
-                                               ).first()
-        if row:
-            label = row.name or ""
-        else:
-            label = ""
-        url = URL(c="gis", f="index", vars={"config": record_id})
-        if method == "create":
-            body = T("Saved a Map")
-        elif method == "update":
-            body = T("Updated a Map")
-    else:
-        table = s3db[tablename]
-        row = db(table.id == record_id).select(table.name,
-                                               limitby=(0, 1)
-                                               ).first()
-        if row:
-            label = row.name or ""
-        else:
-            label = ""
-        c, f = tablename.split("_", 1)
-        url = URL(c=c, f=f, args=[record_id, "read"])
-        if tablename == "org_facility":
+        self.names = {}
+        self.authors = {}
+
+    # ---------------------------------------------------------------------
+    def prep(self, resource, records):
+
+        # Lookup "name" field for each record if table != pr_filter
+        names = {}
+        authors = {}
+        for record in records:
+            raw = record._row
+            tablename = raw["s3_audit.tablename"]
+            if tablename == "pr_filter":
+                continue
+            if tablename not in names:
+                names[tablename] = {}
+            names[tablename][raw["s3_audit.record_id"]] = ""
+            authors[raw["s3_audit.user_id"]] = (None, None)
+
+        db = current.db
+        s3db = current.s3db
+        for tablename, records in names.items():
+            table = s3db[tablename]
+            if "name" not in table.fields:
+                continue
+            query = table._id.belongs(records)
+            rows = db(query).select(table._id, table.name)
+            for row in rows:
+                names[tablename][row[table._id]] = row[table.name]
+
+        # Lookup avatars and person_id for each author_id
+        ptable = s3db.pr_person
+        ltable = db.pr_person_user
+        query = (ltable.user_id.belongs(authors.keys())) & \
+                (ltable.pe_id == ptable.pe_id)
+        rows = db(query).select(ltable.user_id, ptable.id)
+
+        for row in rows:
+            user_id = row[ltable.user_id]
+            avatar = s3_avatar_represent(user_id,
+                                         _class="media-object",
+                                         _style="width:50px;padding:5px;padding-top:0px;")
+            person_id = row[ptable.id]
+            if person_id:
+                person_url = URL(c="pr", f="person", args=[person_id])
+            else:
+                person_url = "#"
+            authors[user_id] = (avatar, person_url)
+
+        self.authors = authors
+        self.names = names
+        return
+
+    # ---------------------------------------------------------------------
+    def activity_label(self, tablename, method):
+        """
+            Get a label for the activity
+
+            @param tablename: the tablename
+            @param method: the method ("create" or "update")
+        """
+
+        activity = None
+        if tablename == "pr_filter":
             if method == "create":
-                body = T("Added a Place")
+                activity = T("Saved a Filter")
             elif method == "update":
-                body = T("Edited a Place")
+                activity = T("Updated a Filter")
+        elif tablename == "gis_config":
+            if method == "create":
+                activity = T("Saved a Map")
+            elif method == "update":
+                activity = T("Updated a Map")
+        elif tablename == "org_facility":
+            if method == "create":
+                activity = T("Added a Place")
+            elif method == "update":
+                activity = T("Edited a Place")
         elif tablename == "org_organisation":
             if method == "create":
-                body = T("Added an Organization")
+                activity = T("Added an Organization")
             elif method == "update":
-                body = T("Edited an Organization")
+                activity = T("Edited an Organization")
         elif tablename == "project_activity":
             if method == "create":
-                body = T("Added an Activity")
+                activity = T("Added an Activity")
             elif method == "update":
-                body = T("Edited an Activity")
+                activity = T("Edited an Activity")
         elif tablename == "stats_people":
             if method == "create":
-                body = T("Added People")
+                activity = T("Added People")
             elif method == "update":
-                body = T("Edited People")
+                activity = T("Edited People")
         elif tablename == "vulnerability_evac_route":
             if method == "create":
-                body = T("Added an Evacuation Route")
+                activity = T("Added an Evacuation Route")
             elif method == "update":
-                body = T("Edited an Evacuation Route")
+                activity = T("Edited an Evacuation Route")
         elif tablename == "vulnerability_risk":
             if method == "create":
-                body = T("Added a Hazard")
+                activity = T("Added a Hazard")
             elif method == "update":
-                body = T("Edited a Hazard")
+                activity = T("Edited a Hazard")
+        return activity
 
-    body = P(body,
-             BR(),
-             A(label,
-               _href=url),
-             )
+    # ---------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
 
-    # @ToDo: Optimise by not doing DB lookups (especially duplicate) within render, but doing these in the bulk query
-    avatar = s3_avatar_represent(author_id,
-                                 _class="media-object",
-                                 _style="width:50px;padding:5px;padding-top:0px;")
-    ptable = s3db.pr_person
-    ltable = db.pr_person_user
-    query = (ltable.user_id == author_id) & \
-            (ltable.pe_id == ptable.pe_id)
-    row = db(query).select(ptable.id,
-                           limitby=(0, 1)
-                           ).first()
-    if row:
-        person_url = URL(c="pr", f="person", args=[row.id])
-    else:
-        person_url = "#"
-    author = A(author,
-               _href=person_url,
-               )
-    avatar = A(avatar,
-               _href=person_url,
-               _class="pull-left",
-               )
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
 
-    # Render the item
-    item = DIV(DIV(avatar,
-  		           DIV(H5(author,
-                          _class="media-heading"),
+        raw = record._row
+        author = record["s3_audit.user_id"]
+        timestmp = record["s3_audit.timestmp"]
+        author_id = raw["s3_audit.user_id"]
+        method = raw["s3_audit.method"]
+        tablename = raw["s3_audit.tablename"]
+        record_id = raw["s3_audit.record_id"]
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        if tablename == "pr_filter":
+            label = T("Saved Filters")
+            url = URL(c="default", f="index", args=["filters"])
+        elif tablename == "gis_config":
+            label = self.names[tablename][record_id]
+            url = URL(c="gis", f="index", vars={"config": record_id})
+        else:
+            label = self.names[tablename][record_id]
+            c, f = tablename.split("_", 1)
+            url = URL(c=c, f=f, args=[record_id, "read"])
+
+        body = P(self.activity_label(tablename, method),
+                 BR(),
+                 A(label, _href=url),
+                 )
+
+        avatar, person_url = self.authors[author_id]
+        author = A(author, _href=person_url)
+        avatar = A(avatar, _href=person_url, _class="pull-left")
+
+        # Render the item
+        item = DIV(avatar,
+                   DIV(H5(author,
+                          _class="media-heading",
+                          ),
+                       P(timestmp, _class="activity-timestmp"),
                        body,
                        _class="media-body",
                        ),
                    _class="media",
-                   ),
-               _class=item_class,
-               _id=item_id,
-               )
+                   )
 
-    return item
+        return item
 
-# For access from custom controllers
-current.response.s3.render_log = render_log
+# For access from custom controllers (e.g. homepage)
+current.response.s3.render_log = ActivityLogLayout()
 
 # -----------------------------------------------------------------------------
 def customise_s3_audit_controller(**attr):
@@ -2289,16 +2329,18 @@ def customise_s3_audit_controller(**attr):
 
     current.response.s3.filter = (FS("~.method") != "delete")
 
+    T = current.T
     tablename = "s3_audit"
     current.s3db.configure(tablename,
                            insertable = False,
                            list_fields = ["id",
+                                          (T("Date/Time"), "timestmp"),
+                                          (T("User"), "user_id"),
                                           "method",
-                                          "user_id",
                                           "tablename",
-                                          "record_id",
+                                          (T("Record ID"), "record_id"),
                                           ],
-                           list_layout = render_log,
+                           list_layout = current.response.s3.render_log,
                            orderby = "s3_audit.timestmp desc",
                            )
 

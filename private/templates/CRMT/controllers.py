@@ -86,6 +86,7 @@ for(var i=0,len=layers.length;i<len;i++){
         orderby = "s3_audit.timestmp desc"
         list_fields = ["id",
                        "method",
+                       "timestmp",
                        "user_id",
                        "tablename",
                        "record_id",

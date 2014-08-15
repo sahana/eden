@@ -67,7 +67,7 @@ from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
 from s3track import S3Tracker
-from s3utils import s3_addrow, s3_get_extension, s3_mark_required
+from s3utils import s3_addrow, S3DateTime, s3_get_extension, s3_mark_required
 
 DEBUG = False
 if DEBUG:
@@ -6569,7 +6569,9 @@ class S3Audit(object):
         db = current.db
         if tablename not in db:
             db.define_table(tablename,
-                            Field("timestmp", "datetime"),
+                            Field("timestmp", "datetime",
+                                  represent = S3DateTime.datetime_represent,
+                                  ),
                             Field("user_id", db.auth_user),
                             Field("method"),
                             Field("tablename"),

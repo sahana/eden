@@ -1206,6 +1206,7 @@ def audit():
 
     return s3_rest_controller("s3", "audit")
 
+# -----------------------------------------------------------------------------
 def get_settings():
     """
        Function to respond to get requests. Requires admin permissions

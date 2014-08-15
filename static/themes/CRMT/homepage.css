@@ -204,3 +204,8 @@ div.map {
 .community-data h5 {
     margin-bottom: 0;
 }
+.updates .activity-timestmp {
+    font-size: small;
+    font-style: italic;
+    color: #aaa;
+}
