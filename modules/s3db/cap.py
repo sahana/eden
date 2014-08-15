@@ -1145,8 +1145,9 @@ def cap_rheader(r):
                                                  args=["%s.cap" % record_id]),
                                        _target="_blank",
                                        )
-                        s3db = current.s3db
-                        publish_permit = current.auth.s3_has_permission("publish", s3db.cap_alert)
+                        publish_permit = current.auth.s3_has_permission("publish",
+                                                                        current.s3db.cap_alert
+                                                                        )
                         if publish_permit:
                             publish_btn = A(DIV(T("Publish Alert"),
                                                 _class="action-btn",
@@ -1781,8 +1782,7 @@ class CAPPublish(S3Method):
                               form=form)
     
                 if form.accepts(r.vars, current.session):
-                    form_vars = form.vars
-                    channel = form_vars.get("channel", None)
+                    channel = form.vars.get("channel", None)
                     if channel is not None:
                         if channel in settings.get_cap_publishing_brokers().keys():
                             alert_url = r.url(method="read",

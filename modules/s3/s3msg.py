@@ -1372,7 +1372,7 @@ class S3Msg(object):
             brokers = settings.get_cap_publishing_brokers()
             hub_url = brokers[channel]
             
-            def log_alert(channel, alert_id, status):
+            def log_alert(status):
                 _id = table.insert(alert_id=alert_id,
                                    to_broker=channel,
                                    broker_url=brokers[channel],
@@ -1391,22 +1391,24 @@ class S3Msg(object):
                               status = status,
                               contact_method = "CAPALERT",
                               )
-            
-            def publish_alert(alert_id, params=None, headers=None):
-                import requests
-                status = requests.post(url=hub_url, headers=headers, params=params)
-                log_alert(channel, alert_id, status.status_code)
-                    
+                
             if channel and alert_url:
-                if channel == "Pubsubhubbub":
-                    # Publish the feed to Pubsubhubbub
-                    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-                    params = {"hub.mode" : "publish", "hub.url" : alert_url}
-                    publish_alert(alert_id, params=params, headers=headers)
-                elif channel == "Alerthub":
-                    # Publish the feed to Alerthub
-                    params = {"hub.mode" : "publish", "hub.url" : alert_url}
-                    publish_alert(alert_id, params=params)
+                import urllib
+                import urllib2
+                
+                data = urllib.urlencode({'hub.url': alert_url,
+                                         'hub.mode': 'publish'}, 
+                                        doseq=True
+                                        )
+                request = urllib2.Request(url=brokers[channel],
+                                          data=data
+                                          )
+                request.add_header("Content-Type",
+                                   "application/x-www-form-urlencoded")
+                request.get_method = lambda: "POST"
+                opener = urllib2.build_opener(urllib2.HTTPHandler())
+                connection = opener.open(request)
+                log_alert(connection.getcode())
             else:
                 current.log.error("Incorrect parameters")
     

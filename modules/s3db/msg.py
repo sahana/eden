@@ -1353,10 +1353,6 @@ class S3CAPModel(S3Model):
     def model(self):
 
         T = current.T
-
-        define_table = self.define_table
-        set_method = self.set_method
-        super_link = self.super_link
         
         # ---------------------------------------------------------------------
         # CAP Alert: InBox & Outbox
@@ -1373,9 +1369,6 @@ class S3CAPModel(S3Model):
                                 label = T("Alert Issuer")),
                           Field("to_broker",
                                 label = T("Channel Name"),
-                                ),
-                          Field("broker_url",
-                                label = T("Broker Url"),
                                 ),
                           Field("success_status",
                                 "integer",
