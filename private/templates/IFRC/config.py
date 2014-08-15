@@ -317,6 +317,8 @@ settings.hrm.skill_types = True
 settings.hrm.staff_experience = False
 # Uncomment to disable the use of HR Skills
 settings.hrm.use_skills = False
+# Activity types for experience record
+settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
 # -----------------------------------------------------------------------------
 def ns_only(f, required=True, branches=True, updateable=True):
@@ -599,7 +601,8 @@ def _customise_assignment_fields(**attr):
                               current.messages.AUTOCOMPLETE_HELP))
 
     from s3 import IS_ONE_OF
-    atable = current.s3db.deploy_assignment
+    s3db = current.s3db
+    atable = s3db.deploy_assignment
     atable.human_resource_id.label = MEMBER
     atable.human_resource_id.comment = hr_comment
     field = atable.job_title_id
@@ -610,6 +613,11 @@ def _customise_assignment_fields(**attr):
                                filterby = "type",
                                filter_opts = (4,),
                                )
+                               
+    # Default activity_type when creating experience records from assignments
+    activity_type = s3db.hrm_experience.activity_type
+    activity_type.default = activity_type.update = "rdrt"
+
     return
 
 # -----------------------------------------------------------------------------
@@ -686,7 +694,7 @@ def customise_deploy_assignment_controller(**attr):
     from s3 import S3Represent
     field = s3db.deploy_mission.location_id
     field.represent = S3Represent(lookup="gis_location", translate=True)
-    
+
     return attr
 
 settings.customise_deploy_assignment_controller = customise_deploy_assignment_controller

@@ -554,6 +554,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.teams = False
 # Uncomment to disable the use of HR Trainings
 #settings.hrm.use_trainings = False
+# Uncomment to use activity types in experience record, specify as {"code":"label", ...}
+#settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
 # -----------------------------------------------------------------------------
 # Inventory Management

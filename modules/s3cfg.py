@@ -2113,6 +2113,13 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_trainings", True)
 
+    def get_hrm_activity_types(self):
+        """
+            HRM Activity Types (for experience record),
+            a dict {"code": "label"}, None to deactivate (default)
+        """
+        return self.hrm.get("activity_types", None)
+
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #

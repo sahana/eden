@@ -3368,6 +3368,19 @@ class S3HRExperienceModel(S3Model):
         #
         hr_type = self.hrm_human_resource.type
 
+        activity_types = settings.get_hrm_activity_types()
+        if not isinstance(activity_types, dict):
+            activity_type_requires = None
+            activity_type_represent = None
+            use_activity_types = False
+        else:
+            activity_type_opts = {} #{"other": T("Other")}
+            for k, v in activity_types.items():
+                activity_type_opts[k] = T(v)
+            activity_type_requires = IS_EMPTY_OR(IS_IN_SET(activity_type_opts))
+            activity_type_represent = S3Represent(options=activity_type_opts)
+            use_activity_types = True
+
         tablename = "hrm_experience"
         self.define_table(tablename,
                           person_id(),
@@ -3376,6 +3389,14 @@ class S3HRExperienceModel(S3Model):
                                 default = hr_type.default,
                                 represent = hr_type.represent,
                                 requires = hr_type.requires,
+                                ),
+                          # Activity type (e.g. "RDRT Mission")
+                          Field("activity_type",
+                                represent = activity_type_represent,
+                                requires = activity_type_requires,
+                                # Expose only when there are options defined
+                                readable = use_activity_types,
+                                writable = use_activity_types,
                                 ),
                           # For Events
                           Field("code",
@@ -5667,6 +5688,7 @@ def hrm_human_resource_controller(extra_filter=None):
             s3db.configure("hrm_experience",
                            list_fields = [#"code",
                                           "employment_type",
+                                          "activity_type",
                                           "organisation_id",
                                           "organisation",
                                           "job_title_id",
@@ -7088,10 +7110,11 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
                                      )
 
     # Organisation
-    organisation_id = raw["hrm_experience.organisation_id"]
+    colname = "hrm_experience.organisation_id"
+    organisation_id = raw[colname]
     if organisation_id:
         org_url = URL(c="org", f="organisation", args=[organisation_id])
-        organisation = A(record["hrm_experience.organisation_id"], _href=org_url)
+        organisation = A(record[colname], _href=org_url)
     else:
         # Try free-text field
         organisation = raw["hrm_experience.organisation"]
@@ -7100,20 +7123,30 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     else:
         organisation = ""
 
+    # Activity Type
+    colname = "hrm_experience.activity_type"
+    activity_type = raw[colname]
+    if activity_type:
+        activity_type = card_line("icon-tag", record[colname])
+    else:
+        activity_type = ""
+        
     # Key Responsibilities
-    responsibilities = record["hrm_experience.responsibilities"]
+    colname = "hrm_experience.responsibilities"
+    responsibilities = raw[colname]
     if responsibilities:
-        responsibilities = card_line("icon-cog", responsibilities)
+        responsibilities = card_line("icon-briefcase", record[colname])
     else:
         responsibilities = ""
 
     # Location
-    location_id = raw["hrm_experience.location_id"]
+    colname = "hrm_experience.location_id"
+    location_id = raw[colname]
     if location_id:
         #location_url = URL(c="gis", f="location", args=[location_id, "profile"])
         location_url = URL(c="gis", f="location", args=[location_id])
         location = card_line("icon-globe",
-                             A(record["hrm_experience.location_id"],
+                             A(record[colname],
                                _href=location_url,
                                ),
                              )
@@ -7128,28 +7161,31 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
         hours = ""
 
     # Start and End Dates
-    start_date = raw["hrm_experience.start_date"]
-    end_date = raw["hrm_experience.end_date"]
+    colname_start = "hrm_experience.start_date"
+    colname_end = "hrm_experience.end_date"
+    start_date = raw[colname_start]
+    end_date = raw[colname_end]
     if start_date or end_date:
         if start_date and end_date:
-            dates = "%s - %s" % (record["hrm_experience.start_date"],
-                                 record["hrm_experience.end_date"],
+            dates = "%s - %s" % (record[colname_start],
+                                 record[colname_end],
                                  )
         elif start_date:
-            dates = "%s - " % record["hrm_experience.start_date"]
+            dates = "%s - " % record[colname_start]
         else:
-            dates = " - %s" % record["hrm_experience.end_date"]
+            dates = " - %s" % record[colname_end]
         date = card_line("icon-calendar", dates)
     else:
         date = ""
 
     # Supervisor
-    supervisor_id = raw["hrm_experience.supervisor_id"]
+    colname = "hrm_experience.supervisor_id"
+    supervisor_id = raw[colname]
     if supervisor_id:
         #person_url = URL(c="hrm", f="person", args=[supervisor_id, "profile"])
         person_url = URL(c="hrm", f="person", args=[supervisor_id])
         supervisor = card_line("icon-user",
-                               A(record["hrm_experience.supervisor_id"],
+                               A(record[colname],
                                  _href=person_url,
                                  ),
                               )
@@ -7160,8 +7196,9 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     comments = raw["hrm_experience.comments"] or ""
 
     # Job title as card title, indicate employment type if given
-    if raw["hrm_experience.job_title_id"]:
-        title = record["hrm_experience.job_title_id"]
+    colname = "hrm_experience.job_title_id"
+    if raw[colname]:
+        title = record[colname]
         job_title = card_line("icon-star", title)
     else:
         title = ""
@@ -7171,8 +7208,9 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
         title = position
     else:
         job_title = ""
-    if raw["hrm_experience.employment_type"]:
-        employment_type = record["hrm_experience.employment_type"]
+    colname = "hrm_experience.employment_type"
+    if raw[colname]:
+        employment_type = record[colname]
         if title:
             title = "%s (%s)" % (title, employment_type)
         else:
@@ -7217,6 +7255,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
                            date,
                            hours,
                            supervisor,
+                           activity_type,
                            job_title,
                            responsibilities,
                            P(SPAN(comments),

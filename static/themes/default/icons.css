@@ -73,6 +73,9 @@
   /* Used to show that there is not yet a bookmark, & allow it's addition */
   content: "\f097";
 }
+.icon-briefcase:before {
+  content: "\f0b1";
+}
 .icon-calendar:before {
   /* Used for Planned Events & Date fields */
   content: "\f073";
