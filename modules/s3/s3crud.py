@@ -269,13 +269,29 @@ class S3CRUD(S3Method):
                 else:
                     link = Storage(resource=resource.link, master=r.record)
 
+            get_vars = r.get_vars
+
+            # Hierarchy parent
+            hierarchy = None
+            link_to_parent = get_vars.get("link_to_parent")
+            if link_to_parent:
+                try:
+                    parent = long(link_to_parent)
+                except ValueError:
+                    pass
+                else:
+                    from s3hierarchy import S3Hierarchy
+                    h = S3Hierarchy(tablename)
+                    if h.config:
+                        hierarchy = h.preprocess_create_node(r, table, parent)
+
             # Copy record
             from_table = None
-            from_record = r.get_vars.get("from_record", None)
-            map_fields = r.get_vars.get("from_fields", None)
+            from_record = get_vars.get("from_record")
+            map_fields = get_vars.get("from_fields")
 
             if from_record:
-                del r.get_vars["from_record"] # forget it
+                del get_vars["from_record"] # forget it
                 if from_record.find(".") != -1:
                     from_table, from_record = from_record.split(".", 1)
                     from_table = current.db.get(from_table, None)
@@ -346,6 +362,7 @@ class S3CRUD(S3Method):
                                           onvalidation=onvalidation,
                                           onaccept=onaccept,
                                           link=link,
+                                          hierarchy=hierarchy,
                                           message=message,
                                           subheadings=subheadings,
                                           format=representation)

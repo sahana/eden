@@ -40,6 +40,8 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
+from gluon.storage import Storage
+from gluon.tools import callback
 from s3utils import s3_unicode
 from s3rest import S3Method
 from s3widgets import SEPARATORS
@@ -677,16 +679,16 @@ class S3Hierarchy(object):
         return
 
     # -------------------------------------------------------------------------
-    def preprocess_create_node(self, r, table, parent):
+    def preprocess_create_node(self, r, table, parent_id):
         """
             Pre-process a CRUD request to create a new node
 
             @param r: the request
             @param table: the hierarchical table
-            @param parent: the parent node (Row)
-        """
+            @param parent_id: the parent ID
 
-        parent_id = parent[self.pkey]
+            @todo: make sure that the parent exists
+        """
 
         link = self.link
         fkey = self.fkey
@@ -706,6 +708,48 @@ class S3Hierarchy(object):
                     "parent_id": parent_id,
                     }
         return link
+
+    # -------------------------------------------------------------------------
+    def postprocess_create_node(self, link, node):
+        """
+            Create a link table entry for a new node
+
+            @param link: the link information (as returned from
+                         preprocess_create_node)
+            @param node: the new node
+        """
+
+        try:
+            node_id = node[self.pkey.name]
+        except (AttributeError, KeyError):
+            return
+
+        s3db = current.s3db
+        tablename = link["linktable"]
+        linktable = s3db.table(tablename)
+        if not linktable:
+            return
+
+        lkey = link["lkey"]
+        rkey = link["rkey"]
+        data = {rkey: link["parent_id"],
+                lkey: node_id,
+                }
+
+        # Create the link if it does not already exist
+        query = ((linktable[lkey] == data[lkey]) &
+                 (linktable[rkey] == data[rkey]))
+        row = current.db(query).select(linktable._id, limitby=(0, 1)).first()
+        if not row:
+            onaccept = s3db.get_config(tablename, "create_onaccept")
+            if onaccept is None:
+                onaccept = s3db.get_config(tablename, "onaccept")
+            link_id = linktable.insert(**data)
+            data[linktable._id.name] = link_id
+            s3db.update_super(linktable, data)
+            if link_id and onaccept:
+                callback(onaccept, Storage(vars=Storage(data)))
+        return
 
     # -------------------------------------------------------------------------
     def add(self, node_id, parent_id=None, category=None):

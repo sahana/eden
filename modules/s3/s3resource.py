@@ -3458,21 +3458,22 @@ class S3Resource(object):
 
         ltable = self.table
         ltn = ltable._tablename
-        s3db = current.s3db
-        onaccept = s3db.get_config(ltn, "create_onaccept",
-                   s3db.get_config(ltn, "onaccept", None))
 
         # Create the link if it does not already exist
         query = ((ltable[lkey] == _lkey) &
                  (ltable[rkey] == _rkey))
         row = current.db(query).select(ltable._id, limitby=(0, 1)).first()
         if not row:
-            form = Storage(vars=Storage({lkey:_lkey, rkey:_rkey}))
-            link_id = ltable.insert(**form.vars)
-            form.vars[ltable._id.name] = link_id
-            s3db.update_super(ltable, form)
+            s3db = current.s3db
+            onaccept = s3db.get_config(ltn, "create_onaccept")
+            if onaccept is None:
+                onaccept = s3db.get_config(ltn, "onaccept")
+            data = {lkey:_lkey, rkey:_rkey}
+            link_id = ltable.insert(**data)
+            data[ltable._id.name] = link_id
+            s3db.update_super(ltable, data)
             if link_id and onaccept:
-                callback(onaccept, form)
+                callback(onaccept, Storage(vars=Storage(data)))
         else:
             link_id = row[ltable._id.name]
         return link_id

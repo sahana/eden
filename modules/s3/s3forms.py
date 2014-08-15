@@ -407,13 +407,15 @@ class S3SQLDefaultForm(S3SQLForm):
         logged = False
         if not readonly:
             _get = options.get
-            link = _get("link", None)
-            onvalidation = _get("onvalidation", None)
-            onaccept = _get("onaccept", None)
+            link = _get("link")
+            hierarchy = _get("hierarchy")
+            onvalidation = _get("onvalidation")
+            onaccept = _get("onaccept")
             success, error = self.process(form,
                                           request.post_vars,
                                           onvalidation = onvalidation,
                                           onaccept = onaccept,
+                                          hierarchy = hierarchy,
                                           link = link,
                                           http = request.http,
                                           format = format,
@@ -554,6 +556,7 @@ class S3SQLDefaultForm(S3SQLForm):
     def process(self, form, vars,
                 onvalidation = None,
                 onaccept = None,
+                hierarchy = None,
                 link = None,
                 http = "POST",
                 format = None,
@@ -565,6 +568,7 @@ class S3SQLDefaultForm(S3SQLForm):
             @param vars: request POST variables
             @param onvalidation: callback(function) upon successful form validation
             @param onaccept: callback(function) upon successful form acceptance
+            @param hierarchy: the data for the hierarchy link to create
             @param link: component link
             @param http: HTTP method
             @param format: request extension
@@ -622,8 +626,15 @@ class S3SQLDefaultForm(S3SQLForm):
                 master = link.master
                 resource.update_link(master, form_vars)
 
+
             if form_vars.id:
                 if record_id is None:
+                    # Create hierarchy link
+                    if hierarchy:
+                        from s3hierarchy import S3Hierarchy
+                        h = S3Hierarchy(tablename)
+                        if h.config:
+                            h.postprocess_create_node(hierarchy, form_vars)
                     # Set record owner
                     auth = current.auth
                     auth.s3_set_record_owner(table, form_vars.id)
@@ -951,8 +962,9 @@ class S3SQLCustomForm(S3SQLForm):
                         keepvalues=False,
                         hideerror=False):
 
-            link = options.get("link", None)
-            self.accept(form, format=format, link=link)
+            link = options.get("link")
+            hierarchy = options.get("hierarchy")
+            self.accept(form, format=format, link=link, hierarchy=hierarchy)
             # Post-process the form submission after all records have
             # been accepted and linked together (self.accept() has
             # already updated the form data with any new keys here):
@@ -1043,13 +1055,14 @@ class S3SQLCustomForm(S3SQLForm):
         return
 
     # -------------------------------------------------------------------------
-    def accept(self, form, format=None, link=None):
+    def accept(self, form, format=None, link=None, hierarchy=None):
         """
             Create/update all records from the form.
 
             @param form: the form
             @param format: data format extension (for audit)
             @param link: resource.link for linktable components
+            @param hierarchy: the data for the hierarchy link to create
         """
 
         db = current.db
@@ -1060,7 +1073,9 @@ class S3SQLCustomForm(S3SQLForm):
         master_id, master_form_vars = self._accept(self.record_id,
                                                    main_data,
                                                    format=format,
-                                                   link=link)
+                                                   link=link,
+                                                   hierarchy=hierarchy,
+                                                   )
         if not master_id:
             return
         else:
@@ -1145,7 +1160,13 @@ class S3SQLCustomForm(S3SQLForm):
             return subform
 
     # -------------------------------------------------------------------------
-    def _accept(self, record_id, data, alias=None, format=None, link=None):
+    def _accept(self,
+                record_id,
+                data,
+                alias=None,
+                format=None,
+                hierarchy=None,
+                link=None):
         """
             Create or update a record
 
@@ -1153,6 +1174,7 @@ class S3SQLCustomForm(S3SQLForm):
             @param data: the data
             @param alias: the component alias
             @param format: the request format (for audit)
+            @param hierarchy: the data for the hierarchy link to create
             @param link: resource.link for linktable components
         """
 
@@ -1193,7 +1215,8 @@ class S3SQLCustomForm(S3SQLForm):
 
         data[table._id.name] = accept_id
         prefix, name = tablename.split("_", 1)
-        form = Storage(vars=Storage(data), record=oldrecord)
+        form_vars = Storage(data)
+        form = Storage(vars=form_vars, record=oldrecord)
 
         # Audit
         if record_id is None:
@@ -1204,16 +1227,22 @@ class S3SQLCustomForm(S3SQLForm):
                           record=accept_id, representation=format)
 
         # Update super entity links
-        s3db.update_super(table, form.vars)
+        s3db.update_super(table, form_vars)
 
         # Update component link
         if link and link.postprocess is None:
             resource = link.resource
             master = link.master
-            resource.update_link(master, form.vars)
+            resource.update_link(master, form_vars)
         
         if accept_id:
             if record_id is None:
+                # Create hierarchy link
+                if hierarchy:
+                    from s3hierarchy import S3Hierarchy
+                    h = S3Hierarchy(tablename)
+                    if h.config:
+                        h.postprocess_create_node(hierarchy, form_vars)
                 # Set record owner
                 auth = current.auth
                 auth.s3_set_record_owner(table, accept_id)
@@ -1222,7 +1251,7 @@ class S3SQLCustomForm(S3SQLForm):
                 # Update realm
                 update_realm = get_config(table, "update_realm")
                 if update_realm:
-                    current.auth.set_realm_entity(table, form.vars,
+                    current.auth.set_realm_entity(table, form_vars,
                                                   force_update=True)
 
             # Store session vars
