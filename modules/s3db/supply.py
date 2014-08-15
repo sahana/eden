@@ -306,9 +306,9 @@ class S3SupplyModel(S3Model):
                                            sortby = "name",
                                            )
         item_category_script = '''
-S3OptionsFilter({
- 'triggerName':'catalog_id',
- 'targetName':'item_category_id',
+$.filterOptionsS3({
+ 'trigger':'catalog_id',
+ 'target':'item_category_id',
  'lookupPrefix':'supply',
  'lookupResource':'item_category',
 })'''
@@ -655,7 +655,7 @@ S3OptionsFilter({
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
                     sortby="name",
                     # Do not display any packs initially
-                    # will be populated by S3OptionsFilter
+                    # will be populated by filterOptionsS3
                     requires = IS_ONE_OF_EMPTY_SELECT(db,
                                          "supply_item_pack.id",
                                          item_pack_represent,
@@ -673,9 +673,9 @@ S3OptionsFilter({
                     #                          title=T("Item Packs"),
                     #                          tooltip=T("The way in which an item is normally distributed")),
                     script = '''
-S3OptionsFilter({
- 'triggerName':'item_id',
- 'targetName':'item_pack_id',
+$.filterOptionsS3({
+ 'trigger':'item_id',
+ 'target':'item_pack_id',
  'lookupPrefix':'supply',
  'lookupResource':'item_pack',
  'msgNoRecords':i18n.no_packs,
