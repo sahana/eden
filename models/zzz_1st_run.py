@@ -225,6 +225,7 @@ if len(pop_list) > 0:
     s3.import_user = bi.import_user
     s3.import_image = bi.import_image
     s3.import_remote_csv = bi.import_remote_csv
+    s3.import_script = bi.import_script
 
     # Relax strict email-matching rule for import updates of person records
     email_required = settings.get_pr_import_update_requires_email()

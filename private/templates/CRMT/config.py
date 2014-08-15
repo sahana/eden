@@ -22,7 +22,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ("CRMT", "demo/users")
+settings.base.prepopulate = ("CRMT", "demo/users", "CRMT/Test")
 
 settings.base.system_name = T("Community Resilience Mapping Tool")
 settings.base.system_name_short = T("CRMT")
