@@ -112,14 +112,20 @@ class S3HierarchyCRUD(S3Method):
         output["form"] = form
 
         # Widget options and scripts
+        # @todo: simplify CRUD URL handlign
         T = current.T
+        crud_string = lambda name: self.crud_string(tablename, name)
         widget_opts = {
             "widgetID": widget_id,
             "openLabel": str(T("Open")),
             "openURL": r.url(method="read", id="[id]"),
             "ajaxURL": r.url(id=None, representation="json"),
             "editLabel": str(T("Edit")),
+            "editTitle": str(crud_string("title_update")),
             "editURL": r.url(method="update", id="[id]", representation="popup"),
+            "addLabel": str(T("Add")),
+            "addTitle": str(crud_string("label_create")),
+            "addURL": r.url(method="create", representation="popup"),
         }
         self.include_scripts(widget_id, widget_opts)
         
@@ -156,6 +162,18 @@ class S3HierarchyCRUD(S3Method):
                 label = h.label(node_id)
                 data["label"] = str(label) if label else None
                 data["parent"] = h.parent(node_id)
+
+                children = h.children(node_id)
+                if children:
+                    nodes = []
+                    h._represent(node_ids=children)
+                    for child_id in children:
+                        label = h.label(child_id)
+                        nodes.append({"node": child_id,
+                                      "label": str(label) if label else None,
+                                      })
+                    data["children"] = nodes
+
         current.response.headers["Content-Type"] = "application/json"
         return json.dumps(data, separators = SEPARATORS)
 

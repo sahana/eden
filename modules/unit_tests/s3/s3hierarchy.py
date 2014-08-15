@@ -631,6 +631,36 @@ class S3LinkedHierarchyTests(unittest.TestCase):
         assertEqual(link["parent_id"], parent_node.id)
 
     # -------------------------------------------------------------------------
+    def testPostprocessCreateNode(self):
+        """ Test postprocessing of a create-node request """
+
+        r = s3_request("test", "lhierarchy", http="POST")
+        parent_node = self.rows["LHIERARCHY1"]
+
+        h = S3Hierarchy("test_lhierarchy")
+        link = h.preprocess_create_node(r, r.table, parent_node.id)
+
+        row = None
+        record_id = None
+        db = current.db
+        table = db.test_lhierarchy
+        linktable = db.test_lhierarchy_link
+        try:
+            record = {"uuid": "LHIERARCHYNEW", "name": "NewNode"}
+            record_id = table.insert(**record)
+            record["id"] = record_id
+            h.postprocess_create_node(link, record)
+            query = (linktable.parent_id == parent_node.id) & \
+                    (linktable.child_id == record_id)
+            row = db(query).select(linktable.id, limitby=(0, 1)).first()
+            self.assertNotEqual(row, None)
+        finally:
+            if row:
+                row.delete_record()
+            if record_id:
+                db(table.id == record_id).delete()
+
+    # -------------------------------------------------------------------------
     def testCategory(self):
         """ Test node category lookup """
 

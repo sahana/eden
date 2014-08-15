@@ -21,6 +21,7 @@
          * Default options
          *
          * @todo document options
+         * @todo simplify CRUD URL handling
          */
         options: {
             widgetID: null,
@@ -32,6 +33,7 @@
             editURL: null,
             deleteLabel: 'Delete',
             deleteURL: null,
+            addTitle: 'Add Record',
             addLabel: 'Add',
             addURL: null,
             themesFolder: 'static/styles/jstree',
@@ -44,8 +46,13 @@
          */
         _create: function() {
 
+            var el = $(this.element);
+            
+            this.treeID = el.attr('id') + '-tree';
+
             this.id = hierarchicalcrudID;
             hierarchicalcrudID += 1;
+            
         },
 
         /**
@@ -125,7 +132,9 @@
                             },
                             "add": {
                                 label: self.options.addLabel,
-                                _disabled: true
+                                action: function(obj) {
+                                    self._addNode($node);
+                                }
                             }
                         };
                     },
@@ -172,14 +181,43 @@
             var record_id = parseInt(id.split('-').pop());
             if (record_id) {
                 ajaxURL = ajaxURL + '?node=' + record_id;
-                var tree = this.tree;
+                var tree = this.tree,
+                    treeID = this.treeID;
                 $.getJSONS3(ajaxURL, function (data) {
                     if (data.label) {
                         tree.jstree('rename_node', node, data.label);
                     }
+                    var children = data.children;
+                    if (children) {
+                        // Must render existing children so they can be updated,
+                        // otherwise would add duplicates
+                        tree.jstree('open_node', node, false, false);
+                        var child, childID, childNode, added = 0;
+                        for (var i=0, len=children.length; i<len; i++) {
+                            child = children[i];
+                            childID = treeID + '-' + child.node;
+                            childNode = tree.jstree('get_node', '#' + childID, true);
+                            if (childNode) {
+                                tree.jstree('rename_node', childNode, child.label);
+                            } else {
+                                tree.jstree('create_node', node, {
+                                    id: childID,
+                                    text: child.label,
+                                    li_attr: {
+                                        // HTML attributes of the new node
+                                        rel: 'leaf'
+                                    }
+                                });
+                                added++;
+                            }
+                        }
+                        if (added) {
+                            tree.jstree('open_node', node);
+                            node.attr({rel: 'parent'});
+                        }
+                    }
                 });
             }
-            
         },
 
         /**
@@ -207,34 +245,69 @@
                 var uid = S3.uid();
                 var dialog = $('<iframe id="' + uid + '" src=' + url + ' onload="S3.popup_loaded(\'' + uid + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
                             .appendTo('body');
-                            
-                dialog.dialog({
-                    // add a close listener to prevent adding multiple divs to the document
-                    close: function(event, ui) {
-                        if (self.parent) {
-                            // There is a parent modal: refresh it to fix layout
-                            var iframe = self.parent.$('iframe.ui-dialog-content');
-                            var width = iframe.width();
-                            iframe.width(0);
-                            window.setTimeout(function() {
-                                iframe.width(width);
-                            }, 300);
-                        }
-                        // Remove div with all data and events
-                        dialog.remove();
-                    },
-                    minHeight: 480,
-                    modal: true,
-                    open: function(event, ui) {
-                        $('.ui-widget-overlay').bind('click', function() {
-                            dialog.dialog('close');
-                        });
-                    },
-                    title: this.options.editTitle,
-                    minWidth: 320,
-                    closeText: ''
-                });
+                this._openPopup(dialog, this.options.editTitle);
             }
+        },
+
+        /**
+         * Add a node in a popup and refresh the parent node
+         *
+         * @param {jQuery} node - the parent node object (li element)
+         */
+        _addNode: function(parent) {
+
+            var addURL = this.options.addURL,
+                parent_id = parent.id;
+            if (!addURL || !parent_id) {
+                return;
+            }
+            var record_id = parseInt(parent_id.split('-').pop());
+            if (record_id) {
+                var url = addURL.split('?')[0];
+                url += '?node=' + parent_id + '&link_to_parent=' + record_id + '&hierarchy=' + this.options.widgetID;
+
+                // Open a jQueryUI Dialog showing a spinner until iframe is loaded
+                var uid = S3.uid();
+                var dialog = $('<iframe id="' + uid + '" src=' + url + ' onload="S3.popup_loaded(\'' + uid + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
+                            .appendTo('body');
+                this._openPopup(dialog, this.options.addTitle);
+            }
+        },
+
+        /**
+         * Open an iframe overlay as jQuery dialog, used by _addNode and _editNode
+         *
+         * @param {jQuery} dialog - the dialog
+         * @param {string} title - the dialog title
+         */
+        _openPopup: function(dialog, title) {
+            
+            dialog.dialog({
+                // add a close listener to prevent adding multiple divs to the document
+                close: function(event, ui) {
+                    if (self.parent) {
+                        // There is a parent modal: refresh it to fix layout
+                        var iframe = self.parent.$('iframe.ui-dialog-content');
+                        var width = iframe.width();
+                        iframe.width(0);
+                        window.setTimeout(function() {
+                            iframe.width(width);
+                        }, 300);
+                    }
+                    // Remove div with all data and events
+                    dialog.remove();
+                },
+                minHeight: 480,
+                modal: true,
+                open: function(event, ui) {
+                    $('.ui-widget-overlay').bind('click', function() {
+                        dialog.dialog('close');
+                    });
+                },
+                title: title,
+                minWidth: 320,
+                closeText: ''
+            });
         },
 
         /**
