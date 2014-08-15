@@ -1773,6 +1773,8 @@ settings.customise_survey_series_controller = customise_survey_series_controller
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
 settings.project.mode_drr = True
+# Uncomment this to use Activity Types for Activities & Projects
+settings.project.activity_types = True
 # Uncomment this to use Codes for projects
 settings.project.codes = True
 # Uncomment this to call project locations 'Communities'

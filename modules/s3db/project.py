@@ -1236,6 +1236,8 @@ class S3ProjectActivityTypeModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True,
                            label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1628,6 +1630,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                      super_link("parameter_id", "stats_parameter"),
                      Field("name", length=128, unique=True,
                            label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
                            requires = IS_NOT_IN_DB(db,
                                                    "project_beneficiary_type.name"),
                            ),
@@ -2459,7 +2463,10 @@ class S3ProjectHazardModel(S3Model):
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
                            ),
-                     s3_comments(),
+                     s3_comments(
+                        represent = lambda v: T(v) if v is not None \
+                                                   else NONE,
+                        ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -3477,7 +3484,10 @@ class S3ProjectThemeModel(S3Model):
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
                            ),
-                     s3_comments(),
+                     s3_comments(
+                        represent = lambda v: T(v) if v is not None \
+                                                   else NONE,
+                        ),
                      *s3_meta_fields())
 
         # CRUD Strings

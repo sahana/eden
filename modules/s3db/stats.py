@@ -71,7 +71,7 @@ class S3StatsModel(S3Model):
         super_entity = self.super_entity
         super_link = self.super_link
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Super entity: stats_parameter
         #
         sp_types = Storage(org_resource_type = T("Organization Resource Type"),
@@ -100,7 +100,7 @@ class S3StatsModel(S3Model):
         table = db[tablename]
         table.instance_type.readable = True
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Super entity: stats_data
         #
         sd_types = Storage(org_resource = T("Organization Resource"),
@@ -231,9 +231,10 @@ class S3StatsDemographicModel(S3Model):
 
         location_id = self.gis_location_id
 
-        stats_parameter_represent = S3Represent(lookup="stats_parameter")
+        stats_parameter_represent = S3Represent(lookup="stats_parameter",
+                                                translate=True)
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Demographic
         #
         tablename = "stats_demographic"
@@ -241,18 +242,23 @@ class S3StatsDemographicModel(S3Model):
                      # Instance
                      super_link("parameter_id", "stats_parameter"),
                      Field("name",
-                           label = T("Name")),
+                           label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                    else NONE,
+                           ),
                      s3_comments("description",
-                                 label = T("Description")),
+                                 label = T("Description"),
+                                 ),
                      # Link to the Demographic which is the Total, so that we can calculate percentages
                      Field("total_id", self.stats_parameter,
+                           label = T("Total"),
+                           represent = stats_parameter_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "stats_parameter.parameter_id",
                                                   stats_parameter_represent,
                                                   instance_types = ("stats_demographic",),
                                                   sort=True)),
-                           represent=stats_parameter_represent,
-                           label=T("Total")),
+                           ),
                      *s3_meta_fields()
                      )
 
@@ -276,7 +282,7 @@ class S3StatsDemographicModel(S3Model):
                   requires_approval = True,
                   )
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Demographic Data
         #
         tablename = "stats_demographic_data"
