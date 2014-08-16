@@ -160,7 +160,7 @@ function s3_popup_refresh_main_form() {
         var url = new String(self.location);
         rel_url = url.replace(re, '');
         args = rel_url.split('?')[0].split('/');
-        var request_function = args[1];
+        var request_function = args[1].split(".")[0];
         child_resource = request_function + '_id';
     } else {
         // Use manual override
