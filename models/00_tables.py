@@ -46,6 +46,7 @@ import s3db.req
 import s3db.s3
 import s3db.scenario
 import s3db.security
+import s3db.setup
 import s3db.stats
 import s3db.supply
 import s3db.support

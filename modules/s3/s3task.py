@@ -299,7 +299,8 @@ class S3Task(object):
                       timeout=None,
                       enabled=None, # None = Enabled
                       group_name=None,
-                      ignore_duplicate=False):
+                      ignore_duplicate=False,
+                      sync_output=0):
         """
             Schedule a task in web2py Scheduler
 
@@ -316,6 +317,7 @@ class S3Task(object):
             @param enabled: enabled flag for the scheduled task
             @param group_name: group_name for the scheduled task
             @param ignore_duplicate: disable or enable duplicate checking
+            @param sync_output: sync output every n seconds (0 = disable sync)
         """
 
         kwargs = {}
@@ -361,6 +363,9 @@ class S3Task(object):
             # if duplicate task exists, do not insert a new one
             current.log.warning("Duplicate Task, Not Inserted", value=task)
             return False
+
+        if sync_output != 0:
+            kwargs["sync_output"] = sync_output
 
         auth = current.auth
         if auth.is_logged_in():
