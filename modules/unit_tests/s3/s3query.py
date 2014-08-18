@@ -1646,6 +1646,7 @@ class URLQueryParserTests(unittest.TestCase):
         parse = S3URLQuery.parse_value
 
         items = [
+            ("Liquiçá,Other", ["Liquiçá", "Other"]),
             ("123", "123"),
             ("1,2,3", ["1", "2", "3"]),
             ('"1,2",3', ["1,2", "3"]),

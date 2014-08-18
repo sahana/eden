@@ -2133,7 +2133,7 @@ class S3URLQuery(object):
             w = ""
             quote = False
             ignore_quote = False
-            for c in item:
+            for c in s3_unicode(item):
                 if c == '"' and not ignore_quote:
                     w += c
                     quote = not quote
