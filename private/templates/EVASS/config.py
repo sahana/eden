@@ -43,12 +43,28 @@ settings.auth.always_notify_approver = False
 
 # The name of the teams that users are added to when they opt-in to receive alerts
 #settings.auth.opt_in_team_list = ["Updates"]
+# Should users be allowed to register themselves?
+#settings.security.self_registration = False
 # Uncomment this to set the opt in default to True
 #settings.auth.opt_in_default = True
 # Uncomment this to request the Mobile Phone when a user registers
 settings.auth.registration_requests_mobile_phone = True
 # Uncomment this to have the Mobile Phone selection during registration be mandatory
 settings.auth.registration_mobile_phone_mandatory = True
+# Uncomment this to request the Organisation when a user registers
+#settings.auth.registration_requests_organisation = True
+# Uncomment this to have the Organisation selection during registration be mandatory
+#settings.auth.registration_organisation_required = True
+# Uncomment this to have the Organisation input hidden unless the user enters a non-whitelisted domain
+#settings.auth.registration_organisation_hidden = True
+# Uncomment this to default the Organisation during registration
+#settings.auth.registration_organisation_default = "My Organisation"
+# Uncomment this to request the Organisation Group when a user registers
+#settings.auth.registration_requests_organisation_group = True
+# Uncomment this to have the Organisation Group selection during registration be mandatory
+#settings.auth.registration_organisation_group_required = True
+# Uncomment this to request the Site when a user registers
+#settings.auth.registration_requests_site = True
 # Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
 #settings.auth.admin_sees_organisation = True
 # Uncomment to set the default role UUIDs assigned to newly-registered users
@@ -56,13 +72,20 @@ settings.auth.registration_mobile_phone_mandatory = True
 # The key 0 implies not realm restricted
 # The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
 #settings.auth.registration_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
-# Should users be allowed to register themselves?
-#settings.security.self_registration = False
-# Do new users need to verify their email address?
-#settings.auth.registration_requires_verification = True
-# Do new users need to be approved by an administrator prior to being able to login?
-#settings.auth.registration_requires_approval = True
+# Uncomment this to enable record approval
+#settings.auth.record_approval = True
+# Uncomment this and specify a list of tablenames for which record approval is required
+#settings.auth.record_approval_required_for = ["project_project"]
+# Uncomment this to request an image when users register
+#settings.auth.registration_requests_image = True
+# Uncomment this to direct newly-registered users to their volunteer page to be able to add extra details
+# NB This requires Verification/Approval to be Off
+# @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
+#settings.auth.registration_volunteer = True
 
+# Terms of Service to be able to Register on the system
+# uses <template>/views/tos.html
+settings.auth.terms_of_service = True
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -144,7 +167,7 @@ settings.cr.shelter_housing_unit_management = True
 
 # Events
 # Make Event Types Hierarchical
-settings.event.types_hierarchical = True
+#settings.event.types_hierarchical = True
 
 # -----------------------------------------------------------------------------
 # Evacuees

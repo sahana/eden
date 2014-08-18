@@ -1,14 +1,65 @@
-uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-AUTHENTICATED,"Authenticated",,"gis",,,"READ","READ|CREATE|UPDATE|DELETE",,,,"Authenticated users can see the Map"
-AUTHENTICATED,"Authenticated",,"gis","location",,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
-AUTHENTICATED,"Authenticated",,"pr",,,"READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,"Authenticated",,,,"pr_person","READ|UPDATE",,,,,"Authenticated users can only see/edit their own PR records"
-AUTHENTICATED,"Authenticated",,"pr","person",,"CREATE","READ|UPDATE",,,,"But need to be able to add/edit addresses"
-AUTHENTICATED,"Authenticated",,"pr","pentity",,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,"Authenticated",,"pr","person_search",,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,"Authenticated",,"msg","search",,"READ",,,,,"Custom Controller to allow access to PR via JSON for AutoComplete"
-AUTHENTICATED,"Authenticated",,"supply",,,"READ|CREATE",,,,,"Authenticated  users can see the Supply Catalogue"
-AUTHENTICATED,"Authenticated",,"hrm",,,"READ|UPDATE",,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,"Authenticated",,"hrm","person",,,"READ|UPDATE",,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,"Authenticated",,"hrm","staff",,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,"Authenticated",,"hrm","volunteer",,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,,,gis_location,,READ|CREATE|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,gis,index,,,READ,,,,,
+AUTHENTICATED,Authenticated,,gis,location,,,READ,,,,,
+CR_EVR_READER_PA,Public Authority Reader,"Public Authority User, User able to access to Evacuee and Shelter Modules",cr,,,,READ,READ,,,,
+CR_EVR_READER_PA,Public Authority Reader,"Public Authority User, User able to access to Evacuee and Shelter Modules",evr,,,,READ,READ,,,,
+CR_EVR_READER_PA,Public Authority Reader,"Public Authority User, User able to access to Evacuee and Shelter Modules",evr,,evr_medical_details,,NONE,NONE,,,,
+CR_EVR_READER_PA,Public Authority Reader,"Public Authority User, User able to access to Evacuee and Shelter Modules",gis,poi,,,READ,READ,,,,
+CR_EVR_READER_PA,Public Authority Reader,"Public Authority User, User able to access to Evacuee and Shelter Modules",gis,poi_type,,,READ,READ,,,,
+CR_EVR_EDITOR_PA,Public Authority Admin,"Public Authority User, User able to edit Evacuee and Shelter Modules",cr,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_PA,Public Authority Admin,"Public Authority User, User able to edit Evacuee and Shelter Modules",evr,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_PA,Public Authority Admin,"Public Authority User, User able to edit Evacuee and Shelter Modules",evr,,evr_medical_details,,NONE,NONE,,,,
+CR_EVR_EDITOR_PA,Public Authority Admin,"Public Authority User, User able to edit Evacuee and Shelter Modules",gis,poi,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_PA,Public Authority Admin,"Public Authority User, User able to edit Evacuee and Shelter Modules",gis,poi_type,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_READER_V,Volunteer Reader,"Volunteer User, User able to access to Evacuee and Shelter Modules",cr,,,,READ,READ,,,,
+CR_EVR_READER_V,Volunteer Reader,"Volunteer User, User able to access to Evacuee and Shelter Modules",evr,,,,READ,READ,,,,
+CR_EVR_READER_V,Volunteer Reader,"Volunteer User, User able to access to Evacuee and Shelter Modules",evr,,evr_medical_details,,NONE,NONE,,,,
+CR_EVR_READER_V,Volunteer Reader,"Volunteer User, User able to access to Evacuee and Shelter Modules",gis,poi,,,READ,READ,,,,
+CR_EVR_READER_V,Volunteer Reader,"Volunteer User, User able to access to Evacuee and Shelter Modules",gis,poi_type,,,READ,READ,,,,
+CR_EVR_EDITOR_V,Volunteer Admin,"Volunteer User, User able to edit Evacuee and Shelter Modules",cr,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_V,Volunteer Admin,"Volunteer User, User able to edit Evacuee and Shelter Modules",evr,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_V,Volunteer Admin,"Volunteer User, User able to edit Evacuee and Shelter Modules",evr,,evr_medical_details,,NONE,NONE,,,,
+CR_EVR_EDITOR_V,Volunteer Admin,"Volunteer User, User able to edit Evacuee and Shelter Modules",gis,poi,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_V,Volunteer Admin,"Volunteer User, User able to edit Evacuee and Shelter Modules",gis,poi_type,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_READER_PU,Private User Reader,"Private User, User able to access to Evacuee and Shelter Modules",cr,,,,READ,READ,,,,
+CR_EVR_READER_PU,Private User Reader,"Private User, User able to access to Evacuee and Shelter Modules",evr,,,,READ,READ,,,,
+CR_EVR_READER_PU,Private User Reader,"Private User, User able to access to Evacuee and Shelter Modules",evr,,evr_medical_details,,NONE,NONE,,,,
+CR_EVR_READER_PU,Private User Reader,"Private User, User able to access to Evacuee and Shelter Modules",gis,poi,,,READ,READ,,,,
+CR_EVR_READER_PU,Private User Reader,"Private User, User able to access to Evacuee and Shelter Modules",gis,poi_type,,,READ,READ,,,,
+CR_EVR_EDITOR_PU,Private User Admin,"Private User, User able to edit Evacuee and Shelter Modules",cr,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_PU,Private User Admin,"Private User, User able to edit Evacuee and Shelter Modules",evr,,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+CR_EVR_EDITOR_PU,Private User Admin,"Private User, User able to edit Evacuee and Shelter Modules",evr,,evr_medical_details,,NONE,NONE,,,,
+CR_EVR_EDITOR_PU,Private User Admin,"Private User, User able to edit Evacuee and Shelter Modules",gis,poi,,,READ,READ,,,,
+CR_EVR_EDITOR_PU,Private User Admin,"Private User, User able to edit Evacuee and Shelter Modules",gis,poi_type,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",hrm,,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",vol,,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",pr,,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",evr,,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",evr,,evr_medical_details,,NONE,NONE,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",cr,,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",gis,poi,,,READ,READ,,,,
+HR_READER,Staff Reader,"User able to access to all human resource modules (Staff, Volunteers and Evacuees)",gis,poi_type,,,READ,READ,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",hrm,,,,ALL,ALL,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",vol,,,,ALL,ALL,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",pr,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",evr,,,,ALL,ALL,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",evr,,evr_medical_details,,any,READ|CREATE|UPDATE,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",cr,,,,ALL,ALL,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",gis,poi,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+HR_EDITOR,Staff Admin,"User able to edit all human resource modules (Staff, Volunteers and Evacuees)",gis,poi_type,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+ORG_READER,Organisation Reader,User able to read organization hierarchy and organization events,event,,,,READ,READ,,,,
+ORG_READER,Organisation Reader,User able to read organization hierarchy and organization events,org,,,,READ,READ,,,,
+ORG_READER,Organisation Reader,User able to read organization hierarchy and organization events,gis,poi,,,READ,READ,,,,
+ORG_READER,Organisation Reader,User able to read organization hierarchy and organization events,gis,poi_type,,,READ,READ,,,,
+ORG_ADMIN,Organisation Admin,User able to edit organization hierarchy and organization events,org,,,,ALL,ALL,,,,
+ORG_ADMIN,Organisation Admin,User able to edit organization hierarchy and organization events,event,,,,ALL,ALL,,,,
+ORG_ADMIN,Organisation Admin,User able to edit organization hierarchy and organization events,gis,poi,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+ORG_ADMIN,Organisation Admin,User able to edit organization hierarchy and organization events,gis,poi_type,,,READ|CREATE|UPDATE|DELETE,READ|CREATE|UPDATE|DELETE,,,,
+MEDIC,Medical Details Admin,User able to read and edit evacuee medical details,evr,,evr_medical_details,,ALL,ALL,,,,
+NOTIFICATION,Notification Sender,User able to send notifications,event,compose,,,ALL,ALL,,,,
+NOTIFICATION,Notification Sender,User able to send notifications,hrm,compose,,,ALL,ALL,,,,
+NOTIFICATION,Notification Sender,User able to send notifications,msg,,,,ALL,ALL,,,,
+NOTIFICATION,Notification Sender,User able to send notifications,vol,compose,,,ALL,ALL,,,,
+MAP_ADMIN,Map Admin,Can manage and configure all map layers,gis,,,,ALL,ALL,,,,
