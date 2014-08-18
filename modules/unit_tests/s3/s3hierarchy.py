@@ -170,7 +170,7 @@ class S3HierarchyTests(unittest.TestCase):
         parent_id = parent_node.id
 
         h = S3Hierarchy("test_hierarchy")
-        link = h.preprocess_create_node(r, r.table, parent_id)
+        link = h.preprocess_create_node(r, parent_id)
         self.assertEqual(link, None)
         
         assertEqual = self.assertEqual
@@ -621,7 +621,7 @@ class S3LinkedHierarchyTests(unittest.TestCase):
         parent_node = self.rows["LHIERARCHY1"]
 
         h = S3Hierarchy("test_lhierarchy")
-        link = h.preprocess_create_node(r, r.table, parent_node.id)
+        link = h.preprocess_create_node(r, parent_node.id)
         
         self.assertNotEqual(link, None)
         assertEqual = self.assertEqual
@@ -638,7 +638,7 @@ class S3LinkedHierarchyTests(unittest.TestCase):
         parent_node = self.rows["LHIERARCHY1"]
 
         h = S3Hierarchy("test_lhierarchy")
-        link = h.preprocess_create_node(r, r.table, parent_node.id)
+        link = h.preprocess_create_node(r, parent_node.id)
 
         row = None
         record_id = None

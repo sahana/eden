@@ -283,7 +283,7 @@ class S3CRUD(S3Method):
                     from s3hierarchy import S3Hierarchy
                     h = S3Hierarchy(tablename)
                     if h.config:
-                        hierarchy = h.preprocess_create_node(r, table, parent)
+                        hierarchy = h.preprocess_create_node(r, parent)
 
             # Copy record
             from_table = None

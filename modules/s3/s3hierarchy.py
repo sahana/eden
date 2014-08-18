@@ -84,7 +84,6 @@ class S3HierarchyCRUD(S3Method):
 
         output = {}
 
-        s3 = current.response.s3
         tablename = self.resource.tablename
 
         # Widget ID
@@ -122,13 +121,15 @@ class S3HierarchyCRUD(S3Method):
             "ajaxURL": r.url(id=None, representation="json"),
             "editLabel": str(T("Edit")),
             "editTitle": str(crud_string("title_update")),
-            "editURL": r.url(method="update", id="[id]", representation="popup"),
+            "editURL": r.url(method="update",
+                             id="[id]",
+                             representation="popup"),
             "addLabel": str(T("Add")),
             "addTitle": str(crud_string("label_create")),
             "addURL": r.url(method="create", representation="popup"),
         }
         self.include_scripts(widget_id, widget_opts)
-        
+
         # View
         current.response.view = self._view(r, "hierarchy.html")
 
@@ -340,7 +341,7 @@ class S3Hierarchy(object):
 
         nodes = self.nodes
         return self.__roots
-        
+
     # -------------------------------------------------------------------------
     @property
     def pkey(self):
@@ -697,7 +698,7 @@ class S3Hierarchy(object):
         return
 
     # -------------------------------------------------------------------------
-    def preprocess_create_node(self, r, table, parent_id):
+    def preprocess_create_node(self, r, parent_id):
         """
             Pre-process a CRUD request to create a new node
 
@@ -852,7 +853,7 @@ class S3Hierarchy(object):
         self.__roots = roots
         self.__nodes = subset
         return
-        
+
     # -------------------------------------------------------------------------
     def category(self, node_id):
         """
@@ -968,7 +969,7 @@ class S3Hierarchy(object):
         """
             Get the root node for a node. Returns the node if it is the
             root node itself.
-            
+
             @param node_id: the node ID
             @param category: find the closest node of this category rather
                              than the absolute root
@@ -991,7 +992,7 @@ class S3Hierarchy(object):
         if not parent_id:
             return this if category is DEFAULT else default
         return self.root(parent_id, category=category, classify=classify)
-        
+
     # -------------------------------------------------------------------------
     def siblings(self,
                  node_id,
@@ -1011,10 +1012,10 @@ class S3Hierarchy(object):
             @param return: a set of node IDs
                            (or tuples (id, category), respectively)
         """
-        
+
         result = set()
         nodes = self.nodes
-        
+
         node = nodes.get(node_id)
         if not node:
             return result
@@ -1036,7 +1037,7 @@ class S3Hierarchy(object):
             if category is DEFAULT or category == sibling_node["c"]:
                 sibling = (sibling_id, sibling_node["c"]) \
                           if classify else sibling_id
-                result.add(sibling)
+                add(sibling)
         return result
 
     # -------------------------------------------------------------------------
@@ -1059,7 +1060,6 @@ class S3Hierarchy(object):
 
         result = set()
         findall = self.findall
-        
         if hasattr(node_id, "__iter__"):
             for n in node_id:
                 result |= findall(n,
