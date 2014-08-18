@@ -962,7 +962,7 @@ class S3Msg(object):
         # to hex-encode the text and activate unicode=1, but this
         # would limit messages to 70 characters, and many mobile
         # phones can't display unicode anyway.
-        
+
         # To be however able to send messages with at least special
         # European characters like á or ø,  we convert the UTF-8 to
         # the default ISO-8859-1 (latin-1) here:
@@ -1814,7 +1814,7 @@ class S3Msg(object):
         if etag:
             data["etag"] = etag
         db(query).update(**data)
-        
+
         from time import mktime, struct_time
         gis = current.gis
         geocode_r = gis.geocode_r
@@ -1926,7 +1926,7 @@ class S3Msg(object):
                 if parser:
                     pinsert(message_id = exists.message_id,
                             channel_id = channel_id)
-                
+
             else:
                 _id = minsert(channel_id = channel_id,
                               title = entry.title,
@@ -2530,7 +2530,7 @@ class S3Compose(S3CRUD):
             else:
                 # @ToDo A new widget (tree?) required to handle multiple persons and groups
                 pe_field.widget = S3PentityAutocompleteWidget()
-                
+
             pe_field.comment = DIV(_class="tooltip",
                                    _title="%s|%s" % \
                 (T("Recipients"),

@@ -968,7 +968,7 @@ class GIS(object):
             http://eden.sahanafoundation.org/wiki/HaitiGISToDo#HierarchicalTrees
 
             @param: level - optionally filter by level
-            
+
             @return: Rows object containing IDs & Names
                       Note: This does NOT include the parent location itself
         """
@@ -1908,12 +1908,12 @@ class GIS(object):
     def get_bounds_from_radius(lat, lon, radius):
         """
             Compute a bounding box given a Radius (in km) of a LatLon Location
-            
+
             Note the order of the parameters.
-            
+
             @return a dict containing the bounds with keys min_lon, max_lon,
             min_lat, max_lat
-            
+
             See:
             http://janmatuschek.de/LatitudeLongitudeBoundingCoordinates
         """
@@ -1958,12 +1958,12 @@ class GIS(object):
         minLon = degrees(minLon)
         maxLat = degrees(maxLat)
         maxLon = degrees(maxLon)
-        
+
         return dict(lat_min = minLat,
                     lat_max = maxLat,
                     lon_min = minLon,
                     lon_max = maxLon)
-    
+
     # -------------------------------------------------------------------------
     def get_features_in_radius(self, lat, lon, radius, tablename=None, category=None):
         """
@@ -2060,7 +2060,7 @@ class GIS(object):
             # @ToDo: Support optional Category (make this a generic filter?)
 
             bbox = get_bounds_from_radius(lat, lon, radius)
-            
+
             # shortcut
             locations = db.gis_location
 
@@ -6373,12 +6373,12 @@ class MAP(DIV):
                                              h = config.marker_height,
                                              w = config.marker_width,
                                              )
-        # @ToDo: show_map() opts with fallback to settings 
+        # @ToDo: show_map() opts with fallback to settings
         # Keep these in sync with scaleImage() in s3.gis.js
-        marker_max_height = settings.get_gis_marker_max_height() 
+        marker_max_height = settings.get_gis_marker_max_height()
         if marker_max_height != 35:
             options["max_h"] = marker_max_height
-        marker_max_width = settings.get_gis_marker_max_width() 
+        marker_max_width = settings.get_gis_marker_max_width()
         if marker_max_width != 30:
             options["max_w"] = marker_max_width
 
@@ -6387,16 +6387,16 @@ class MAP(DIV):
         #########
 
         # Keep these in sync with s3.gis.js
-        cluster_fill = settings.get_gis_cluster_fill() 
+        cluster_fill = settings.get_gis_cluster_fill()
         if cluster_fill and cluster_fill != '8087ff':
             options["cluster_fill"] = cluster_fill
-        cluster_stroke = settings.get_gis_cluster_stroke() 
+        cluster_stroke = settings.get_gis_cluster_stroke()
         if cluster_stroke and cluster_stroke != '2b2f76':
             options["cluster_stroke"] = cluster_stroke
-        select_fill = settings.get_gis_select_fill() 
+        select_fill = settings.get_gis_select_fill()
         if select_fill and select_fill != 'ffdc33':
             options["select_fill"] = select_fill
-        select_stroke = settings.get_gis_select_stroke() 
+        select_stroke = settings.get_gis_select_stroke()
         if select_stroke and select_stroke != 'ff9933':
             options["select_stroke"] = select_stroke
         if not settings.get_gis_cluster_label():
@@ -8300,7 +8300,7 @@ class LayerShapefile(Layer):
                       # Shapefile layers don't alter their contents, so don't refresh
                       "refresh": 0,
                       }
-            
+
             # Attributes which are defaulted client-side if not set
             self.add_attributes_if_not_default(
                 output,
@@ -8488,7 +8488,7 @@ class LayerWMS(Layer):
                         queryable = (self.queryable, (False,)),
                         desc = (self.description, (None, "")),
                         )
-            
+
             if current.deployment_settings.get_gis_layer_metadata():
                 # Use CMS to add info about sources
                 attr["post_id"] = (self.post_id, (None, ""))
@@ -8642,7 +8642,7 @@ class S3Map(S3Method):
         """
             Render a Map widget suitable for use in an S3Filter-based page
             such as S3Summary
-            
+
             @param r: the S3Request
             @param method: the widget method
             @param widget_id: the widget ID
@@ -8657,7 +8657,7 @@ class S3Map(S3Method):
         gis = current.gis
         s3db = current.s3db
         tablename = self.tablename
-        
+
         ftable = s3db.gis_layer_feature
 
         def lookup_layer(prefix, name):

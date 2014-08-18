@@ -121,7 +121,7 @@ class S3Request(object):
 
         # Attached files
         self.files = Storage()
-        
+
         # Allow override of controller/function
         self.controller = c or self.controller
         self.function = f or self.function
@@ -158,7 +158,7 @@ class S3Request(object):
             self.vars = vars
             self.get_vars = vars
             self.post_vars = Storage()
-            
+
         self.extension = extension or current.request.extension
         self.http = http or current.request.env.request_method
 
@@ -423,7 +423,7 @@ class S3Request(object):
             resource = self.resource
         prefix, name = self.prefix, self.name
         component_name = self.component_name
-                
+
         custom_action = current.s3db.get_method(prefix,
                                                 name,
                                                 component_name=component_name,
@@ -721,7 +721,7 @@ class S3Request(object):
             s3_remove_last_record_id(self.tablename)
             self.next = URL(r=self, f=self.name)
             return lambda r, **attr: None
-            
+
         elif self.transformable():
             transform = True
 
@@ -1140,12 +1140,12 @@ class S3Request(object):
             hierarchy = get_vars["hierarchy"].lower() not in ("false", "0")
         else:
             hierarchy = False
-            
+
         if "only_last" in get_vars:
             only_last = get_vars["only_last"].lower() not in ("false", "0")
         else:
             only_last = False
-            
+
         if "show_uids" in get_vars:
             show_uids = get_vars["show_uids"].lower() not in ("false", "0")
         else:
@@ -1170,7 +1170,7 @@ class S3Request(object):
                                            only_last=only_last,
                                            hierarchy=hierarchy,
                                            as_json=as_json)
-            
+
         current.response.headers["Content-Type"] = content_type
         return output
 
@@ -1192,13 +1192,13 @@ class S3Request(object):
             Called upon S3Request.<key> - looks up the value for the <key>
             attribute. Falls back to current.request if the attribute is
             not defined in this S3Request.
-            
+
             @param key: the key to lookup
         """
 
         if key in self.__dict__:
             return self.__dict__[key]
-            
+
         sentinel = object()
         value = getattr(current.request, key, sentinel)
         if value is sentinel:
@@ -1386,7 +1386,7 @@ class S3Request(object):
             component = None
         if cname and cname != component or not component:
             component_id = 0
-        
+
         # component_id
         if component_id is None:
             component_id = self.component_id
@@ -1550,7 +1550,7 @@ class S3Request(object):
                                 - master
                                 - active component
                                 - active link table
-                              (in this order) 
+                              (in this order)
 
             Resource customization functions can be defined like:
 
@@ -1571,7 +1571,7 @@ class S3Request(object):
 
         if tablename is None:
             customise = self.customise_resource
-            
+
             customise(self.resource.tablename)
             component = self.component
             if component:
@@ -1678,7 +1678,7 @@ class S3Method(object):
             #                           use special alias _default
             #                           to specify an alternative
             #                           default
-            #   
+            #
             hide_filter = attr.get("hide_filter")
             if isinstance(hide_filter, dict):
                 component_name = r.component_name
@@ -1738,9 +1738,9 @@ class S3Method(object):
         """
             Stub, to be implemented in subclass. This method is used
             by other method handlers to embed this method as widget.
-            
+
             @note:
-            
+
                 For "html" format, the widget method must return an XML
                 component that can be embedded in a DIV. If a dict is
                 returned, it will be rendered against the view template
@@ -1816,7 +1816,7 @@ class S3Method(object):
 
                 if not master_access:
                     return False
-                    
+
         return has_permission(method, table, record_id=record_id)
 
     # -------------------------------------------------------------------------

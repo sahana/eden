@@ -91,7 +91,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         xml = current.xml
         repository = self.repository
-        
+
         resource_name = task.resource_name
         current.log.debug("S3SyncCommandBridge.push(%s, %s)" %
                           (repository.url, resource_name))
@@ -116,10 +116,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         filters = current.sync.get_filters(task.id)
 
         settings = current.deployment_settings
-        
+
         identifiers = settings.get_sync_mcb_resource_identifiers()
         resources = "".join("[%s:%s]" % (k, v) for k, v in identifiers.items())
-        
+
         identifiers = settings.get_sync_mcb_domain_identifiers()
         domains = "".join("[%s:%s]" % (k, v) for k, v in identifiers.items())
 

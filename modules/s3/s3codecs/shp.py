@@ -211,7 +211,7 @@ class S3SHP(S3Codec):
         fzip.close()
         # Restore path
         os.chdir(web2py_path)
-        
+
         # Response headers
         disposition = "attachment; filename=\"%s\"" % filename
         response = current.response
@@ -295,8 +295,8 @@ class S3SHP(S3Codec):
                                                         errors="strict")
 
             wktnode = etree.SubElement(featurenode, "wkt")
-            geom = feat.GetGeometryRef()	
-            wktnode.text = geom.ExportToWkt()    
+            geom = feat.GetGeometryRef()
+            wktnode.text = geom.ExportToWkt()
 
         # @ToDo: Convert using XSLT
 

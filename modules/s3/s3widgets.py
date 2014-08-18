@@ -546,7 +546,7 @@ class S3AddPersonWidget(FormWidget):
                                separator = "",
                                record_id = record_id,
                                *fields)
-                               
+
         if request.env.request_method == "POST":
             # Read POST data
             post_vars = request.post_vars
@@ -1180,7 +1180,7 @@ class S3ColorPickerWidget(FormWidget):
                        )
 
         attr = StringWidget._attributes(field, default, **attributes)
-        
+
         widget = INPUT(**attr)
 
         if "_id" in attr:
@@ -1286,7 +1286,7 @@ class S3DateWidget(FormWidget):
                        )
 
         attr = StringWidget._attributes(field, default, **attributes)
-        
+
         widget = INPUT(**attr)
         widget.add_class("date")
 
@@ -2961,7 +2961,7 @@ class S3LocationLatLonWidget(FormWidget):
         if not empty:
             label = DIV(label,
                         SPAN(" *", _class="req"))
-        
+
         row = formstyle(id, label, widget, comment)
         if isinstance(row, tuple):
             for r in row:
@@ -4007,7 +4007,7 @@ class S3LocationSelectorWidget2(FormWidget):
         translate = settings.get_L10n_translate_gis_location()
         language = current.session.s3.language
         if language == settings.get_L10n_default_language():
-            translate = False 
+            translate = False
 
         # Should we use a Geocoder?
         geocoder = config.geocoder and show_address
@@ -4816,7 +4816,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                 * Ensure the Create option doesn't get filtered out when searching for items
                 * Style option to make it clearer that it's an Action item
         """
-                     
+
         self.filter = filter
         self.header = header
         self.multiple = multiple
@@ -4854,7 +4854,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                          requires = field.requires)
 
         # Filter and header for multiselect options list
-        filter_opt = self.filter 
+        filter_opt = self.filter
         header_opt = self.header
         if not multiple_opt and header_opt is True:
             # Select All / Unselect All doesn't make sense if multiple == False
@@ -4868,7 +4868,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         if filter_opt is True and header_opt is False:
             # Must have at least "" as header to show the filter
             header_opt = ""
-            
+
         # Other options:
         # * Show Selected List
         if header_opt is True:
@@ -5403,7 +5403,7 @@ class S3PentityAutocompleteWidget(FormWidget):
             dict(controller = self.c,
                  fn = self.f,
                  input = real_input)
-        
+
         options = ""
         post_process = self.post_process
         delay = self.delay

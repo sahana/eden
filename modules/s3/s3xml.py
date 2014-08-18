@@ -213,7 +213,7 @@ class S3XML(S3Codec):
         self.domain = current.request.env.server_name
         self.error = None
         self.filter_mci = False # Set to true to suppress export at MCI<0
-        
+
         self.show_ids = False
         self.show_urls = True
 
@@ -258,7 +258,7 @@ class S3XML(S3Codec):
             _args = dict((k, "'%s'" % args[k]) for k in args)
         else:
             _args = None
-            
+
         if isinstance(stylesheet_path, (etree._ElementTree, etree._Element)):
             # Pre-parsed stylesheet
             stylesheet = stylesheet_path
@@ -523,7 +523,7 @@ class S3XML(S3Codec):
         else:
             fields = [f for f in fields if f in record and record[f]]
             #replace = False
-            
+
         if not fields:
             return reference_map
 
@@ -571,7 +571,7 @@ class S3XML(S3Codec):
             if not ktablename:
                 # Not a foreign key
                 continue
-            
+
             val = ids = ogetattr(record, f)
 
             ktable = load_table(ktablename)
@@ -603,28 +603,28 @@ class S3XML(S3Codec):
                                            limitby=(0, 1)).first()
                 if not srecord:
                     continue
-                    
+
                 ktablename = srecord.instance_type
                 uid = ogetattr(srecord, UID)
-                
+
                 if ktablename == tablename and \
                    UID in record and ogetattr(record, UID) == uid and \
                    not self.show_ids:
                     # Super key in the main instance record, never export
                     continue
-                
+
                 ktable = load_table(ktablename)
                 if not ktable:
                     continue
-                    
+
                 # Make sure the referenced record is accessible:
                 query = current.auth.s3_accessible_query("read", ktable) & \
                         (ktable[UID] == uid)
                 krecord = db(query).select(ktable._id, limitby=(0, 1)).first()
-                
+
                 if not krecord:
                     continue
-                    
+
                 ids = [krecord[ktable._id]]
                 uids = [export_uid(uid)]
 
@@ -638,14 +638,14 @@ class S3XML(S3Codec):
                 else:
                     query &= (k_id == ids)
                     limitby = (0, 1)
-                    
+
                 if DELETED in ktable_fields:
                     query = (ktable.deleted != True) & query
                 if filter_mci and MCI in ktable_fields:
                     query = (ktable.mci >= 0) & query
 
                 if UID in ktable_fields:
-                    
+
                     krecords = db(query).select(ogetattr(ktable, UID),
                                                 limitby=limitby)
                     if krecords:
@@ -655,7 +655,7 @@ class S3XML(S3Codec):
                     else:
                         continue
                 else:
-                    
+
                     krecord = db(query).select(k_id, limitby=(0, 1)).first()
                     if not krecord:
                         continue
@@ -708,14 +708,14 @@ class S3XML(S3Codec):
 
         UID = self.UID
         REPLACEDBY = self.REPLACEDBY
-        
+
         as_json = json.dumps
         SubElement = etree.SubElement
 
         for i in xrange(0, len(rmap)):
 
             r = rmap[i]
-            
+
             f = r.field
             if f == REPLACEDBY:
                 element.set(RB, r.uid[0])
@@ -734,7 +734,7 @@ class S3XML(S3Codec):
                 attr[ID] = ids
 
             if r.uid:
-                
+
                 if r.multiple:
                     uids = str(as_json(r.uid))
                 else:
@@ -762,9 +762,9 @@ class S3XML(S3Codec):
 
             @param rmap: the reference map of the tree
         """
-        
+
         ATTRIBUTE = self.ATTRIBUTE
-        
+
         locations = {}
         for reference in rmap:
             if reference.table == "gis_location" and len(reference.id) == 1:
@@ -1180,7 +1180,7 @@ class S3XML(S3Codec):
                     v = 0
                 attrib[MCI] = str(int(v) + 1)
                 continue
-            
+
             if v is None or not hasattr(table, f):
                 continue
 
@@ -1245,7 +1245,7 @@ class S3XML(S3Codec):
                     # If not static - construct default download URL
                     if fileurl is None:
                         fileurl = "%s/%s" % (download_url, v)
-                        
+
                     data = SubElement(elem, DATA)
                     attr = data.attrib
                     attr[FIELD] = f
@@ -1362,7 +1362,7 @@ class S3XML(S3Codec):
             it
 
             @param table: the database table
-            
+
             @param element: the element
             @param original: the original record
             @param files: list of attached upload files
@@ -1400,7 +1400,7 @@ class S3XML(S3Codec):
         # Attributes
         deleted = False
         for f in cls.ATTRIBUTES_TO_FIELDS:
-            
+
             if f == DELETED:
                 if f in table and \
                    element.get(f, "false").lower() == "true":
@@ -1411,7 +1411,7 @@ class S3XML(S3Codec):
                     break
                 else:
                     continue
-                
+
             if f == APPROVED:
                 # Override default-approver:
                 if "approved_by" in table:
@@ -1421,10 +1421,10 @@ class S3XML(S3Codec):
                         if table["approved_by"].default == None:
                             auth.permission.set_default_approver(table)
                 continue
-            
+
             if f in IGNORE_FIELDS or f in skip:
                 continue
-            
+
             elif f in USER_FIELDS:
                 v = element.get(f, None)
                 if v and utable and "email" in utable:
@@ -1433,7 +1433,7 @@ class S3XML(S3Codec):
                     if user:
                         record[f] = user.id
                 continue
-            
+
             elif f == OGROUP:
                 v = element.get(f, None)
                 if v and gtable and "role" in gtable:
@@ -1442,7 +1442,7 @@ class S3XML(S3Codec):
                     if role:
                         record[f] = role.id
                 continue
-            
+
             if hasattr(table, f): # f in table.fields:
                 v = value = element.get(f, None)
                 if value is not None:
@@ -1649,10 +1649,10 @@ class S3XML(S3Codec):
 
         TAG = cls.TAG
         if options:
-            
+
             ATTRIBUTE = cls.ATTRIBUTE
             UID = cls.UID
-            
+
             SubElement = etree.SubElement
 
             # Create the <select> element
@@ -1700,7 +1700,7 @@ class S3XML(S3Codec):
                 # Create <option> element
                 option = SubElement(select, OPTION)
                 option.text = s3_unicode(s3_strip_markup(text))
-                
+
                 attr = option.attrib
 
                 # Add value-attribute
@@ -1718,10 +1718,10 @@ class S3XML(S3Codec):
                     p = parents[value]
                     if p:
                         attr[PARENT] = str(p)
-                
+
         elif parent is not None:
             select = None
-            
+
         else:
             select = etree.Element(TAG.select)
 
@@ -2267,7 +2267,7 @@ class S3XML(S3Codec):
         """
 
         import xlrd
-        
+
         # Shortcuts
         ATTRIBUTE = cls.ATTRIBUTE
         FIELD = ATTRIBUTE.field
@@ -2352,7 +2352,7 @@ class S3XML(S3Codec):
             # Lambda to decode XLS dates into an ISO datetime-string
             decode_date = lambda v: datetime.datetime(
                                     *xlrd.xldate_as_tuple(v, wb.datemode))
-                                    
+
             encode_iso_datetime = cls.encode_iso_datetime
             def decode(t, v):
                 """
@@ -2398,7 +2398,7 @@ class S3XML(S3Codec):
                 # Read types and values
                 types = s.row_types(ridx, *cols)
                 values = s.row_values(ridx, *cols)
-                
+
                 if header_row and record_idx == 0:
                     # Read column headers
                     if not fields:
@@ -2422,7 +2422,7 @@ class S3XML(S3Codec):
                         else:
                             add_col(orow, name, t, v)
                     check_headers = False
-                            
+
                     # Add extra data
                     if extra_fields:
                         for key in extra_fields:
@@ -2430,7 +2430,7 @@ class S3XML(S3Codec):
                 record_idx += 1
 
         return  etree.ElementTree(root)
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def csv2tree(cls, source,
@@ -2546,7 +2546,7 @@ class S3XMLFormat(object):
         if not self.tree:
             current.log.error("%s parse error: %s" %
                               (stylesheet, current.xml.error))
-        
+
         self.select = None
         self.skip = None
 
@@ -2592,7 +2592,7 @@ class S3XMLFormat(object):
 
         select = find_match(self.select, tablename, None)
         skip = find_match(self.skip, tablename, set())
-        
+
         if skip:
             if select:
                 include = [fn for fn in select if fn not in skip]
@@ -2626,7 +2626,7 @@ class S3XMLFormat(object):
             fields = element.get("select", None)
             if fields is not None and fields != ALL:
                 fields = set([f.strip() for f in fields.split(",")])
-                
+
             exclude = element.get("exclude", None)
             if exclude is not None:
                 exclude = set([f.strip() for f in exclude.split(",")])
@@ -2637,7 +2637,7 @@ class S3XMLFormat(object):
                     select[tablename] = None if fields == ALL else fields
                 if exclude:
                     skip[tablename] = exclude
-                
+
         self.select = select
         self.skip = skip
         return

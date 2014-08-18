@@ -108,7 +108,7 @@ class S3CRUD(S3Method):
             output = self.read(r, **attr)
         elif method == "update":
             output = self.update(r, **attr)
-            
+
         # Standard list view: list-type and hide-filter set by controller
         # (default: list_type="datatable", hide_filter=None)
         elif method == "list":
@@ -127,7 +127,7 @@ class S3CRUD(S3Method):
             if method == "datalist_f":
                 self.hide_filter = False
             output = self.select(r, **_attr)
-            
+
         elif method == "validate":
             output = self.validate(r, **attr)
         elif method == "review":
@@ -160,7 +160,7 @@ class S3CRUD(S3Method):
 
         _attr = Storage(attr)
         _attr["list_id"] = widget_id
-        
+
         if method == "datatable":
             output = self._datatable(r, **_attr)
             if isinstance(output, dict):
@@ -350,7 +350,7 @@ class S3CRUD(S3Method):
 
             # Interim save button
             self._interim_save_button()
-            
+
             # Get the form
             output["form"] = self.sqlform(request=request,
                                           resource=resource,
@@ -416,7 +416,7 @@ class S3CRUD(S3Method):
                                           message=message,
                                           subheadings=subheadings,
                                           format=representation)
-            
+
         elif representation == "csv":
             import cgi
             import csv
@@ -486,7 +486,7 @@ class S3CRUD(S3Method):
                             raise
                     elif isinstance(populate, dict):
                         self.data = populate
-                        
+
                 response = current.response
                 view = response.view
 
@@ -494,7 +494,7 @@ class S3CRUD(S3Method):
                 s3 = response.s3
                 cancel = s3.cancel
                 s3.cancel = {"hide": "list-add", "show": "show-add-btn"}
-                
+
                 form = self.create(r, **attr).get("form", None)
                 if form and form.accepted and self.next:
                     # Tell the summary handler that we're done
@@ -504,7 +504,7 @@ class S3CRUD(S3Method):
                 # Restore standard view and cancel-config
                 response.view = view
                 s3.cancel = cancel
-                
+
                 if form is not None:
                     output["form"] = form
                     output["showadd_btn"] = self.crud_button(tablename=tablename,
@@ -517,11 +517,11 @@ class S3CRUD(S3Method):
                         # Always show the form if there was a form error
                         script = '''$('#list-add').show();$('#show-add-btn').hide()'''
                         s3.jquery_ready.append(script)
-                        
+
                     # Add-button script
                     script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown('medium',function(){$('#show-add-btn').hide()})})'''
                     s3.jquery_ready.append(script)
-                    
+
             elif addbtn:
                 # No form, just Add-button linked to create-view
                 add_btn = self.crud_button(
@@ -593,7 +593,7 @@ class S3CRUD(S3Method):
 
             # Redirect to update if user has permission unless
             # a method has been specified in the URL
-            # MH: Is this really desirable? Many users would prefer to open as read 
+            # MH: Is this really desirable? Many users would prefer to open as read
             if not r.method or r.method == "review":
                 authorised = self._permitted("update")
                 if authorised and representation == "html" and editable:
@@ -1018,7 +1018,7 @@ class S3CRUD(S3Method):
     def select(self, r, **attr):
         """
             Filtered datatable/datalist
-        
+
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
         """
@@ -1043,7 +1043,7 @@ class S3CRUD(S3Method):
                 # Apply filter defaults (before rendering the data!)
                 from s3filter import S3FilterForm
                 S3FilterForm.apply_filter_defaults(r, resource)
-            
+
             # Data
             list_type = attr.get("list_type", "datatable")
             if list_type == "datalist":
@@ -1147,7 +1147,7 @@ class S3CRUD(S3Method):
                                                        icon="icon-plus",
                                                        _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
-                        
+
                     # Restore the view
                     response.view = view
                     s3.cancel = cancel
@@ -1268,7 +1268,7 @@ class S3CRUD(S3Method):
                 return S3Notifications.send(r, resource)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
-            
+
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
 
@@ -1294,7 +1294,7 @@ class S3CRUD(S3Method):
 
         # List ID
         list_id = attr.get("list_id", "datatable")
-        
+
         # List fields
         list_fields = resource.list_fields()
 
@@ -1630,7 +1630,7 @@ class S3CRUD(S3Method):
                 vars = dict((k,v) for k, v in r.get_vars.iteritems()
                                   if k not in ("start", "limit"))
                 ajax_url = r.url(representation="dl", vars=vars)
-                    
+
             # Render the list (even if empty => Ajax-section is required
             # in any case to be able to Ajax-refresh e.g. after adding
             # new records or changing the filter)
@@ -1730,7 +1730,7 @@ class S3CRUD(S3Method):
         else:
             # Use defaults
             start = None
-            
+
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
@@ -2283,7 +2283,7 @@ class S3CRUD(S3Method):
         representation = r.representation
 
         url = r.url
-        
+
         remove_filters = self._remove_filters
         crud_string = self.crud_string
         config = self._config
@@ -2361,7 +2361,7 @@ class S3CRUD(S3Method):
                                       _href=_href,
                                       _id="edit-btn")
                 output[EDIT_BTN] = btn
-                
+
         # Delete button
         if "delete" in buttons and config("deletable", True):
             DELETE_BTN = "delete_btn"
@@ -2515,7 +2515,7 @@ class S3CRUD(S3Method):
                         rappend(str(row_id))
                 s3crud.action_button(labels.DELETE, delete_url,
                                      _class="delete-btn",
-                                     icon=icon, 
+                                     icon=icon,
                                      restrict=restrict,
                                      **target
                                      )
@@ -2530,7 +2530,7 @@ class S3CRUD(S3Method):
         if copyable and has_permission("create", table):
             if not copy_url:
                 copy_url = iframe_safe(URL(args = args + ["copy"]))
-            s3crud.action_button(labels.COPY, 
+            s3crud.action_button(labels.COPY,
                                  copy_url,
                                  icon="copy",
                                  **target
@@ -2731,7 +2731,7 @@ class S3CRUD(S3Method):
                 value, error = s3_validate(table, k, form_vars[k])
                 if not error:
                     form_vars[k] = value
-            
+
             _form = Storage(vars = form_vars, errors = Storage())
             if _form.vars:
                 if selected:
@@ -2927,7 +2927,7 @@ class S3CRUD(S3Method):
             deletable = dresource.get_config("deletable", True)
             if not deletable:
                 r.error(403, current.ERROR.NOT_PERMITTED)
-                
+
             # Permitted to delete this record?
             authorised = current.auth.s3_has_permission("delete",
                                                         dresource.table,

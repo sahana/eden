@@ -125,7 +125,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 success = True
                 message = None
             skip = True
-            
+
         else:
             repository.refresh_token = None
             self.access_token = None
@@ -570,7 +570,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param data: the nested dict
             @param keys: the mapping of dict keys to SubElement names
         """
-        
+
         if not isinstance(data, dict):
             return
         SubElement = etree.SubElement

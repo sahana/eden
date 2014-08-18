@@ -485,7 +485,7 @@ class S3Model(object):
         components = current.model.components
 
         master = master._tablename if type(master) is Table else master
-        
+
         hooks = components.get(master)
         if hooks is None:
             hooks = Storage()
@@ -496,7 +496,7 @@ class S3Model(object):
                 ll = [ll]
 
             for link in ll:
-                
+
                 if isinstance(link, str):
                     alias = name
 
@@ -772,7 +772,7 @@ class S3Model(object):
         """
 
         components = current.model.components
-        
+
         table = cls.table(tablename)
         if not table:
             return None
@@ -793,7 +793,7 @@ class S3Model(object):
                 return alias
         else:
             hooks = []
-                        
+
         supertables = cls.get_config(tablename, "super_entity")
         if supertables:
             if not isinstance(supertables, (list, tuple)):
@@ -807,7 +807,7 @@ class S3Model(object):
                     alias = get_alias(hooks, link)
                     if alias:
                         return alias
-                        
+
         return None
 
     # -------------------------------------------------------------------------
@@ -1164,7 +1164,7 @@ class S3Model(object):
             return True
         if not isinstance(supertables, (list, tuple)):
             supertables = [supertables]
-            
+
         # Get the keys for all super-tables
         keys = {}
         load = {}
@@ -1207,7 +1207,7 @@ class S3Model(object):
                 #        anyway in this case, which would automatically restore
                 update_record(**{key: value})
                 return False
-                
+
         return True
 
     # -------------------------------------------------------------------------

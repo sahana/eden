@@ -202,7 +202,7 @@ class S3Sync(S3Method):
 
         success = True
         for task in tasks:
-            
+
             # Pull
             mtime = None
             if task.mode in (1, 3):
@@ -307,7 +307,7 @@ class S3Sync(S3Method):
         _debug("S3Sync.__send")
 
         resource = r.resource
-        
+
         # Identify the requesting repository
         repository_id = None
         if "repository" in r.vars:
@@ -505,7 +505,7 @@ class S3Sync(S3Method):
             message = "%s" % resource.error
             for element in resource.error_tree.findall("resource"):
                 error_msg = element.get("error", "unknown error")
-                
+
                 error_fields = element.findall("data[@error]")
                 if error_fields:
                     for field in error_fields:
@@ -632,7 +632,7 @@ class S3Sync(S3Method):
                                                 row.filter_string)
             else:
                 filters[tablename] = row.filter_string
-                
+
         parse_url = S3URLQuery.parse_url
         for tablename in filters:
             filters[tablename] = parse_url(filters[tablename])
@@ -789,14 +789,14 @@ class S3SyncRepository(object):
         self.refresh_token = repository.refresh_token
         self.proxy = repository.proxy
         self.apitype = repository.apitype
-        
+
         import sync_adapter
         api = sync_adapter.__dict__.get(self.apitype)
         if api:
             adapter = api.S3SyncAdapter(self)
         else:
             adapter = S3SyncBaseAdapter(self)
-            
+
         self.adapter = adapter
 
     # -------------------------------------------------------------------------
@@ -811,7 +811,7 @@ class S3SyncRepository(object):
             row = current.db().select(table.ALL, limitby=(0, 1)).first()
             self._config = row
         return self._config
-            
+
     # -------------------------------------------------------------------------
     def __getattr__(self, name):
         """
@@ -829,7 +829,7 @@ class S3SyncBaseAdapter(object):
 
         self.repository = repository
         self.log = repository.log
-    
+
     # -------------------------------------------------------------------------
     def register(self):
 

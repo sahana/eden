@@ -301,14 +301,14 @@ class S3Merge(S3Method):
                                count=True,
                                represent=True)
 
-        
+
         displayrows = data["numrows"]
         if totalrows is None:
             totalrows = displayrows
 
         # Generate a datatable
         dt = S3DataTable(data["rfields"], data["rows"])
-        
+
         datatable_id = "s3merge_1"
 
         if representation == "aadata":
@@ -318,7 +318,7 @@ class S3Merge(S3Method):
                              sEcho,
                              dt_bulk_actions = [(current.T("Merge"),
                                                  "merge", "pair-action")])
-                                                 
+
         elif representation == "html":
             # Initial HTML response
             T = current.T

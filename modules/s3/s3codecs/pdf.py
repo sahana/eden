@@ -121,9 +121,9 @@ class S3RL_PDF(S3Codec):
             @keyword method: "read" to not include a list view when no
                              component is specified
             @keyword list_fields: fields to include in lists
-            
+
             @keyword pdf_componentname: enforce this component
-            
+
             @keyword pdf_groupby: how to group the results
             @keyword pdf_orderby: how to sort rows (within any level of grouping)
 
@@ -131,7 +131,7 @@ class S3RL_PDF(S3Codec):
 
             @keyword pdf_title: the title of the report
             @keyword pdf_filename: the filename for the report
-            
+
             @keyword rheader: HTML page header (override by pdf_header)
             @keyword rfooter: HTML page footer (override by pdf_footer)
             @keyword pdf_header: callback to generate the HTML header

@@ -1371,7 +1371,7 @@ class Pootle:
                 r = requests.get(link)
             except:
                 current.log.error("Connection Error")
-                return False		
+                return False
 
             zipf = zipfile.ZipFile(StringIO.StringIO(r.content))
             zipf.extractall()
@@ -1531,23 +1531,23 @@ class TranslateReportStatus(object):
         # The list of all strings
         all_strings = []
         addstring = all_strings.append
-        
+
         # Dictionary of {module: indices of strings used in this module}
         indices = {}
 
         # Helper dict for fast lookups
         string_indices = {}
-        
+
         index = 0
         get_strings_by_module = api.get_strings_by_module
         for module in modules:
 
             module_indices = []
             addindex = module_indices.append
-            
+
             strings = get_strings_by_module(module)
             for (origin, string) in strings:
-                
+
                 # Remove outermost quotes around the string
                 if (string[0] == '"' and string[-1] == '"') or\
                    (string[0] == "'" and string[-1] == "'"):
@@ -1561,7 +1561,7 @@ class TranslateReportStatus(object):
                     index += 1
                 else:
                     addindex(string_index)
-                    
+
             indices[module] = module_indices
 
         # Save all_strings and string_dict as pickle objects in a file
@@ -1572,7 +1572,7 @@ class TranslateReportStatus(object):
         pickle.dump(all_strings, f)
         pickle.dump(indices, f)
         f.close()
-        
+
         # Mark all string counts as dirty
         ptable = current.s3db.translate_percentage
         current.db(ptable.id > 0).update(dirty=True)
@@ -1637,7 +1637,7 @@ class TranslateReportStatus(object):
                 record.update_record(**data)
             else:
                 ptable.insert(**data)
-                
+
         return
 
     # -------------------------------------------------------------------------
@@ -1677,9 +1677,9 @@ class TranslateReportStatus(object):
 
             num_translated = row.translated
             num_untranslated = row.untranslated
-            
+
             total_strings += num_translated + num_untranslated
-            
+
             if not num_untranslated:
                 percentage[row.module] = 100
             else:

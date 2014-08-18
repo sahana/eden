@@ -368,7 +368,7 @@ class S3FieldPath(object):
             # Resolve the tail
             op = tokens.pop(0)
             if tokens:
-                
+
                 if op == ".":
                     # head is a component or linktable alias, and tokens is
                     # a field expression in the component/linked table
@@ -382,11 +382,11 @@ class S3FieldPath(object):
                     # a field expression in the referenced table
                     ktable, join = self._resolve_key(table, head)
                     self.distinct = True
-                    
+
                 if join is not None:
                     self.joins[ktable._tablename] = join
                 tail = S3FieldPath(None, ktable, tokens)
-                
+
             else:
                 raise SyntaxError("trailing operator")
 
@@ -506,10 +506,10 @@ class S3FieldPath(object):
             return resource.table, None, False, False
 
         multiple = True
-        
+
         linked = resource.linked
         if linked and linked.alias == alias:
-            
+
             # It's the linked table
             linktable = resource.table
 
@@ -643,7 +643,7 @@ class S3ResourceField(object):
         self.colname = lf.colname
 
         self._joins = lf.joins
-        
+
         self.distinct = lf.distinct
         self.multiple = lf.multiple
 
@@ -716,7 +716,7 @@ class S3ResourceField(object):
 
         if self._join is not None:
             return self._join
-            
+
         join = self._join = {}
         for tablename, joins in self._joins.items():
             query = None
@@ -728,7 +728,7 @@ class S3ResourceField(object):
             if query:
                 join[tablename] = query
         return join
-            
+
     # -------------------------------------------------------------------------
     @property
     def left(self):
@@ -841,7 +841,7 @@ class S3Joins(object):
 
         master = self.tablename
         joins_dict = self.joins
-        
+
         tables = current.db._adapter.tables
 
         joins_dict[tablename] = joins
@@ -889,7 +889,7 @@ class S3Joins(object):
             Add joins to this collection
 
             @param joins: a join or a list/tuple of joins
-            
+
             @return: the list of names of all tables for which joins have
                      been added to the collection
         """
@@ -969,7 +969,7 @@ class S3Joins(object):
             tablenames = self.tables
         else:
             tablenames = set(tablenames)
-            
+
         skip = set()
         if prefer:
             preferred_joins = prefer.as_list(tablenames=tablenames)
@@ -980,7 +980,7 @@ class S3Joins(object):
                     tname = str(join.first)
                 skip.add(tname)
         tablenames -= skip
-        
+
         joins = self.joins
 
         # Resolve dependencies
@@ -1134,7 +1134,7 @@ class S3ResourceQuery(object):
 
     # -------------------------------------------------------------------------
     def _joins(self, resource, left=False):
-        
+
         op = self.op
         l = self.left
         r = self.right
@@ -1148,12 +1148,12 @@ class S3ResourceQuery(object):
                 rjoins, rd = r._joins(resource, left=left)
             else:
                 rjoins, rd = {}, False
-            
+
             ljoins = dict(ljoins)
             ljoins.update(rjoins)
-            
+
             return (ljoins, ld or rd)
-            
+
         elif op == self.NOT:
             if isinstance(l, S3ResourceQuery):
                 return l._joins(resource, left=left)
@@ -1173,7 +1173,7 @@ class S3ResourceQuery(object):
                     joins = rfield._joins
 
         return (joins, distinct)
-        
+
     # -------------------------------------------------------------------------
     def fields(self):
         """ Get all field selectors involved with this query """
@@ -1473,7 +1473,7 @@ class S3ResourceQuery(object):
             @param l: the left operator
             @param r: the right operator
         """
-        
+
         from s3hierarchy import S3Hierarchy
 
         tablename = l.tablename
@@ -1573,7 +1573,7 @@ class S3ResourceQuery(object):
 
         expr = None
         none = False
-        
+
         if not isinstance(r, (list, tuple, set)):
             items = [r]
         else:
@@ -1581,9 +1581,9 @@ class S3ResourceQuery(object):
         if None in items:
             none = True
             items = [item for item in items if item is not None]
-            
+
         wildcard = False
-        
+
         if str(l.type) in ("string", "text"):
             for item in items:
                 if isinstance(item, basestring):
@@ -1601,12 +1601,12 @@ class S3ResourceQuery(object):
                     _expr = (field.like(s))
                 else:
                     _expr = (field == s)
-                    
+
                 if expr is None:
                     expr = _expr
                 else:
                     expr |= _expr
-                    
+
         if not wildcard:
             if len(items) == 1:
                 # Don't use belongs() for single value
@@ -1755,7 +1755,7 @@ class S3ResourceQuery(object):
         if op == self.CONTAINS:
             r = convert(l, r)
             result = self._probe_contains(l, r)
-            
+
         elif op == self.ANYOF:
             if not isinstance(r, (list, tuple, set)):
                 r = [r]
@@ -1766,17 +1766,17 @@ class S3ResourceQuery(object):
                 elif l == v:
                     return True
             return False
-            
+
         elif op == self.BELONGS:
             if not isinstance(r, (list, tuple, set)):
                 r = [r]
             r = convert(l, r)
             result = self._probe_contains(r, l)
-            
+
         elif op == self.LIKE:
             pattern = re.escape(str(r)).replace("\\%", ".*").replace(".*.*", "\\%")
             return re.match(pattern, str(l)) is not None
-            
+
         else:
             r = convert(l, r)
             if op == self.LT:
@@ -1791,7 +1791,7 @@ class S3ResourceQuery(object):
                 result = l >= r
             elif op == self.GT:
                 result = l > r
-                
+
         return result
 
     # -------------------------------------------------------------------------

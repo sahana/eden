@@ -1234,7 +1234,7 @@ class S3SQLCustomForm(S3SQLForm):
             resource = link.resource
             master = link.master
             resource.update_link(master, form_vars)
-        
+
         if accept_id:
             if record_id is None:
                 # Create hierarchy link
@@ -1390,7 +1390,7 @@ class S3SQLFormElement(object):
                 comment = None
         else:
             comment = field.comment
-            
+
         f = Field(str(name),
                   type = field.type,
                   length = field.length,
@@ -1683,7 +1683,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             component = resource.components[component_name]
             options = self.options
-            
+
             if component.link:
                 link = options.get("link", True)
                 if link:
@@ -2108,7 +2108,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         prefix, name = component.prefix, component.name
 
         xml_decode = current.xml.xml_decode
-        
+
         if len(fields) == 1 and self.options.get("render_list", False):
 
             # Render as comma-separated list of values (no header)
@@ -2124,7 +2124,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 for f in fields:
                     t.append([XML(xml_decode(item[f["name"]]["text"])), " "])
                 elements.append([TAG[""](list(chain.from_iterable(t))[:-1]), ", "])
-                
+
             return DIV(list(chain.from_iterable(elements))[:-1],
                        _class="embeddedComponent")
 
@@ -2727,7 +2727,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         """
 
         field = table[fieldname]
-        
+
         formname = self._formname()
         upload = "upload_%s_%s_%s" % (formname, fieldname, rowindex)
 
@@ -2970,7 +2970,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                     for record_id in insert:
                         record = {component.fkey: record_id}
                         link.update_link(master, record)
-                        
+
                 success = True
 
         return success

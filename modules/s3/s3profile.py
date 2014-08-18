@@ -71,11 +71,11 @@ class S3Profile(S3CRUD):
 
                 # Render page
                 output = self.profile(r, **attr)
-                
+
             elif r.representation not in ("dl", "aadata"):
                 # Redirect to the List View
                 redirect(r.url(method=""))
-                
+
             else:
                 # No point redirecting
                 r.error(404, current.ERROR.BAD_RECORD)
@@ -140,7 +140,7 @@ class S3Profile(S3CRUD):
 
         else:
             # Default page-load
-            
+
             # Page Title
             title = get_config(tablename, "profile_title")
             if not title:
@@ -182,7 +182,7 @@ class S3Profile(S3CRUD):
                     hidden = True
                     label = show
                     style_hide, style_show = "display:none", None
-                    
+
                 toggle = A(SPAN(label,
                                 data = {"on": show,
                                         "off": hide,
@@ -299,7 +299,7 @@ class S3Profile(S3CRUD):
         # Define target resource
         resource = current.s3db.resource(tablename, filter=query)
         return resource, query
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def _comments(r, widget, **attr):
@@ -342,7 +342,7 @@ class S3Profile(S3CRUD):
         """
 
         T = current.T
-        
+
         context = widget.get("context", None)
         tablename = widget.get("tablename", None)
         resource, context = self._resolve_context(r, tablename, context)
@@ -352,9 +352,9 @@ class S3Profile(S3CRUD):
         # 2nd choice: get_config
         # 3rd choice: Default
         config = resource.get_config
-        list_fields = widget.get("list_fields", 
+        list_fields = widget.get("list_fields",
                                  config("list_fields", None))
-        list_layout = widget.get("list_layout", 
+        list_layout = widget.get("list_layout",
                                  config("list_layout", None))
         orderby = widget.get("orderby",
                              config("list_orderby",
@@ -557,10 +557,10 @@ class S3Profile(S3CRUD):
             start = None
 
         dtargs = attr.get("dtargs", {})
-        
+
         if r.interactive:
             s3 = current.response.s3
-            
+
             # How many records per page?
             if s3.dataTable_iDisplayLength:
                 display_length = s3.dataTable_iDisplayLength
@@ -655,7 +655,7 @@ class S3Profile(S3CRUD):
             # Parse datatable filter/sort query
             searchq, orderby, left = resource.datatable_filter(list_fields,
                                                                get_vars)
-                                                               
+
             # ORDERBY fallbacks - datatable->widget->resource->default
             if not orderby:
                 orderby = widget.get("orderby")
@@ -681,7 +681,7 @@ class S3Profile(S3CRUD):
                                                           getids=False)
             else:
                 dt, displayrows = None, 0
-                
+
             if totalrows is None:
                 totalrows = displayrows
 
@@ -703,7 +703,7 @@ class S3Profile(S3CRUD):
                        '"aaData":[]}' % (totalrows, list_id, sEcho)
 
             return data
-            
+
         else:
             # Really raise an exception here?
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -800,7 +800,7 @@ class S3Profile(S3CRUD):
         icon = widget.get("icon", "")
         if icon:
             icon = TAG[""](I(_class=icon), " ")
-            
+
         context = widget.get("context", None)
         # Map widgets have no separate tablename
         tablename = r.tablename
@@ -1025,10 +1025,10 @@ class S3Profile(S3CRUD):
 
         create = ""
         insert = widget.get("insert", True)
-        
+
         table = resource.table
         tablename = resource.tablename
-        
+
         # Default to primary REST controller for the resource being added
         c, f = tablename.split("_", 1)
         c = widget.get("create_controller", c)
@@ -1036,7 +1036,7 @@ class S3Profile(S3CRUD):
 
         if insert and \
            current.auth.s3_has_permission("create", table, c=c, f=f):
-            
+
             #if tablename = "org_organisation":
                 # @ToDo: Special check for creating resources on Organisation profile
 
@@ -1083,7 +1083,7 @@ class S3Profile(S3CRUD):
             if callable(insert):
                 # Custom widget
                 create = insert(r, list_id, label_create, add_url)
-                
+
             elif current.deployment_settings.ui.formstyle == "bootstrap":
                 # Bootstrap-style action icon
                 create = A(I(_class="icon icon-plus-sign small-add"),
@@ -1099,7 +1099,7 @@ class S3Profile(S3CRUD):
                            )
 
             if widget.get("type") == "datalist":
-                
+
                 # If this is a multiple=False widget and we already
                 # have a record, we hide the create-button
                 multiple = widget.get("multiple", True)

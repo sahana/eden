@@ -140,7 +140,7 @@ class S3SVG(S3Codec):
         wkt = items[0]["gis_location.wkt"]
         if not wkt:
             current.log.error("No Geometry!")
-        
+
         # Convert to SVG
         title = attr.get("title", resource._ids[0])
         filename = "%s.svg" % title

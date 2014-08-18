@@ -614,7 +614,7 @@ class S3Trackable(object):
         # => this can happen table-wise = less queries
         track_ids = [r[TRACK_ID] for r in self.records if TRACK_ID in r]
         rows = db(self.table[TRACK_ID].belongs(track_ids)).select()
-        
+
         tables = []
         append = tables.append
         types = set()

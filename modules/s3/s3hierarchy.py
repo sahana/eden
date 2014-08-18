@@ -493,7 +493,7 @@ class S3Hierarchy(object):
         theset = self.theset
         if not self.__status("dbupdate"):
             return
-            
+
         # Serialize the theset
         nodes_dict = dict()
         for node_id, node in theset.items():
@@ -524,7 +524,7 @@ class S3Hierarchy(object):
         # Update status
         self.__status(dirty=False, dbupdate=None, dbstatus=True)
         return
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def dirty(cls, tablename):
@@ -542,7 +542,7 @@ class S3Hierarchy(object):
         config = s3db.get_config(tablename, "hierarchy")
         if not config:
             return
-        
+
         hierarchies = current.model.hierarchies
         if tablename in hierarchies:
             hierarchy = hierarchies[tablename]
@@ -593,7 +593,7 @@ class S3Hierarchy(object):
         rows = current.db(query).select(left = self.left, *fields)
 
         self.__theset.clear()
-        
+
         add = self.add
         cfield = table[ckey]
         for row in rows:
@@ -611,13 +611,13 @@ class S3Hierarchy(object):
         # Remove subset
         self.__roots = None
         self.__nodes = None
-        
+
         return
 
     # -------------------------------------------------------------------------
     def __keys(self):
         """ Introspect the key fields in the hierarchical table """
-        
+
         tablename = self.tablename
         if not tablename:
             return
@@ -807,7 +807,7 @@ class S3Hierarchy(object):
         """ Generate the subset of accessible nodes which match the filter """
 
         theset = self.theset
-        
+
         roots = set()
         subset = {}
 
