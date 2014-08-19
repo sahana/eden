@@ -46,6 +46,7 @@ Check For Invalidity
     Run Keyword Unless  ${passed}  Return From Keyword  ${0}
     ${message}=  Get Text  xpath=/html/body/h1
     Log  FAILED: ${Failed URL} - ${message}  WARN
+    Append To File  ${Log File}  FAILED: ${Failed URL} - ${message}\n
     [Return]  ${1}
 
 Check For Errors
@@ -59,7 +60,8 @@ Check For Errors
     Return From Keyword If  ${passed}==${1}  ${1}
 
     ${passed}=  Check For Ticket And Catch Exception  ${Failed URL}
-    Return From Keyword If  ${passed}==${1}  ${1}
+    Run Keyword If  ${passed}!=0  Append To File  ${Log File}  @{passed}[0]@{passed}[1]
+    Return From Keyword If  ${passed}!=${0}  ${1}
 
     [Return]  ${0}
 
@@ -77,10 +79,11 @@ Visit URLs And Return ToVisit
 
     :FOR  ${Url}  In  @{URL List}
     \  Go To  ${Url}
+    \  Append To file  ${Log File}  ${URL}\n
     \  ${status}=  Check For Errors  ${Url}
     \  ${URLs Failed}=  Increment URLs Failed  ${URLs Failed}  ${status}
-    \  Run Keyword If  ${status}==0  Append To File  ${Log File}  ${URL} - PASSED \n
-    \  Run Keyword If  ${status}!=0  Append To File  ${Log File}  ${URL} - FAILED \n
+    \  Run Keyword If  ${status}==0  Append To File  ${Log File}  Status: PASSED\n\n
+    \  Run Keyword If  ${status}!=0  Append To File  ${Log File}  Status: FAILED\n\n
     \  Continue For Loop If  ${status}!=0
     \  Append To List  ${ALREADY VISITED}  ${Url}
     \  ${Current Urls}=  Get All URLs From Current Page
