@@ -4645,7 +4645,12 @@ def hrm_compose():
     db = current.db
     s3db = current.s3db
     vars = current.request.vars
-
+    response = current.response
+    s3 = response.s3
+    
+    representation = s3_get_extension()
+    response.headers["Content-Type"] = s3.content_type.get(representation,
+                                                           "text/html")
     if "human_resource.id" in vars:
         fieldname = "human_resource.id"
         id = vars.get(fieldname)
