@@ -378,24 +378,32 @@ class S3OrganisationModel(S3Model):
                      #Field("archived", "boolean", default=False),
                      *s3_meta_fields())
 
-        crud_form = S3SQLCustomForm("name",
-                                    "acronym",
-                                    S3SQLInlineLink(
-                                        "organisation_type",
-                                        field = "organisation_type_id",
-                                        label = T("Type"),
-                                        multiple = multiple_organisation_types,
-                                        widget = type_widget,
-                                    ),
-                                    "region_id",
-                                    "country",
-                                    "phone",
-                                    "website",
-                                    "year",
-                                    "logo",
-                                    "comments",
-                                    )
+        form_fields = [ "name",
+                        "acronym",
+                        S3SQLInlineLink(
+                            "organisation_type",
+                            field = "organisation_type_id",
+                            label = T("Type"),
+                            multiple = multiple_organisation_types,
+                            widget = type_widget,
+                        ),
+                        "region_id",
+                        "country",
+                        "phone",
+                        "website",
+                        "year",
+                        "logo",
+                        "comments",
+                        ]
 
+        if settings.get_org_summary():
+            # Include Summary fields in form 
+            position = form_fields.index("year")
+            form_fields.insert(position+1, "summary.national_staff")
+            form_fields.insert(position+2, "summary.international_staff")
+
+        crud_form = S3SQLCustomForm(*form_fields
+                                    )
         # CRUD strings
         ADD_ORGANIZATION = T("Create Organization")
         crud_strings[tablename] = Storage(
@@ -655,6 +663,7 @@ class S3OrganisationModel(S3Model):
             add_components(tablename,
                            org_organisation_summary = {"name": "summary",
                                                        "joinby": "organisation_id",
+                                                       "multiple": False,
                                                        },
                            )
 
@@ -5083,84 +5092,14 @@ def org_organisation_controller():
     # Post-process
     def postp(r, output):
         if r.interactive:
-            if not r.component and \
-               settings.get_org_summary():
-                # Insert fields to view/record the summary data
-                # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
-                table = s3db.org_organisation_summary
-                field1 = table.national_staff
-                field2 = table.international_staff
-                row = None
-                if r.id:
-                    query = (table.organisation_id == r.id)
-                    row = db(query).select(field1,
-                                           field2,
-                                           limitby=(0, 1)).first()
-                s3_formstyle = settings.get_ui_formstyle()
-                if r.method == "read" and \
-                   "item" in output:
-                    for field in [field1, field2]:
-                        if row:
-                            widget = row[field]
-                        else:
-                            widget = current.messages["NONE"]
-                        field_id = "%s_%s" % (table._tablename, field.name)
-                        label = field.label
-                        label = LABEL(label, _for=field_id,
-                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        comment = ""
-                        rows = s3_formstyle(row_id, label, widget, comment)
-                        try:
-                            # Insert Label row
-                            output["item"][0].insert(-2, rows[0])
-                        except:
-                            pass
-                        try:
-                            # Insert Widget row
-                            output["item"][0].insert(-2, rows[1])
-                        except:
-                            # A non-standard formstyle with just a single row
-                            pass
-
-                elif r.method != "import" and \
-                     "form" in output:
-
-                    sep = ": "
-                    for field in [field1, field2]:
-                        if row:
-                            default = row[field]
-                        else:
-                            default = field.default
-                        widget = field.widget or SQLFORM.widgets.integer.widget(field, default)
-                        field_id = "%s_%s" % (table._tablename, field.name)
-                        label = field.label
-                        label = LABEL(label, label and sep, _for=field_id,
-                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-                        comment = field.comment or ""
-                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        rows = s3_formstyle(row_id, label, widget, comment)
-                        try:
-                            # Insert Label row
-                            output["form"][0].insert(-4, rows[0])
-                        except:
-                            pass
-                        try:
-                            # Insert Widget row
-                            output["form"][0].insert(-4, rows[1])
-                        except:
-                            # A non-standard formstyle with just a single row
-                            pass
-
-            else:
-                cname = r.component_name
-                if cname == "human_resource":
-                    # Modify action button to open staff instead of human_resource
-                    # (Delete not overridden to keep errors within Tab)
-                    read_url = URL(c="hrm", f="staff", args=["[id]"])
-                    update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                    S3CRUD.action_buttons(r, read_url=read_url,
-                                             update_url=update_url)
+            cname = r.component_name
+            if cname == "human_resource":
+                # Modify action button to open staff instead of human_resource
+                # (Delete not overridden to keep errors within Tab)
+                read_url = URL(c="hrm", f="staff", args=["[id]"])
+                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+                S3CRUD.action_buttons(r, read_url=read_url,
+                                         update_url=update_url)
 
         return output
     s3.postp = postp
