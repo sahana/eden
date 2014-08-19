@@ -55,13 +55,13 @@ class S3EVRCaseModel(S3Model):
         #
         enable_evr_organisation = settings.get_evr_link_to_organisation()
         organisation_label = settings.get_hrm_organisation_label()
-  
+
         org_organisation_represent = self.org_OrganisationRepresent()
         org_widget = S3HierarchyWidget(lookup="org_organisation",
                                        represent=org_organisation_represent,
                                        multiple=False,
-                                       leafonly=False,)        
-        
+                                       leafonly=False,)
+
         tablename = "evr_case"
         define_table(tablename,
                      person_id(ondelete = "CASCADE"),
@@ -74,7 +74,7 @@ class S3EVRCaseModel(S3Model):
                                                         T("Organisation designed to take care of evacuee"))),
                         widget = org_widget,
                         readable = enable_evr_organisation,
-                        writable = enable_evr_organisation, 
+                        writable = enable_evr_organisation,
                         ),
                      Field("fiscal_code", "string", length=16,
                            label = T("Fiscal Code"),
@@ -305,7 +305,7 @@ class S3EVRCaseModel(S3Model):
         if fiscal_code == "" or fiscal_code == None:
             return
         fiscal_code = fiscal_code.upper()
-        
+
         MALE = 3
         CONSONANTS = "BCDFGHJKLMNPQRSTVWXYZ"
         VOWELS = "AEIOU"
@@ -402,7 +402,7 @@ def evr_rheader(r):
 
     T = current.T
     settings = current.deployment_settings
-    
+
     if r.representation != "html" or not r.record:
         return None
 
@@ -422,13 +422,13 @@ def evr_rheader(r):
                 (T("Images"), "image"),
                 (T("Medical Information"), "medical_details"),
                 (T("Socio-Economic Background"), "background"),
-                ]                   
+                ]
         if settings.get_evr_show_physical_description():
             tabs.append((T("Physical Description"), "physical_description"))
-        
+
         if settings.has_module("cr"):
-            tabs.append((T("Shelter Registration"), "shelter_registration"))    
-        
+            tabs.append((T("Shelter Registration"), "shelter_registration"))
+
         rheader_fields = [["first_name", "last_name"],
                           ["date_of_birth"],
                           ]
@@ -448,7 +448,7 @@ def evr_rheader(r):
                       _class="th",
                       _href=URL(f="person", args=[r.id, "image", "create"]),
                       )
-            
+
         return DIV(DIV(image, _style="float:left"),
                    S3ResourceHeader(rheader_fields, tabs)(r))
 
@@ -469,7 +469,7 @@ def evr_rheader(r):
                           ]
 
         return S3ResourceHeader(rheader_fields, tabs)(r)
-        
+
     return None
 
 # =============================================================================
@@ -505,7 +505,7 @@ class evr_AddGroupMembers(S3Method):
         """
             Add-members action: renders a filtered multi-select datatable
             form, and creates group_memberships on POST
-            
+
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
 
@@ -578,12 +578,12 @@ class evr_AddGroupMembers(S3Method):
             else:
                 session.confirmation = T("%(number)s Members added to Group") % \
                                         dict(number=added)
-                                        
+
             # Go back to list of existing group members
             redirect(r.url(method = "",
                            id = group_id,
                            component = "group_membership"))
-            
+
         else:
             resource = s3db.resource("pr_person", vars=r.get_vars)
             resource.add_filter(unaffiliated)
@@ -701,7 +701,7 @@ class evr_AddGroupMembers(S3Method):
                                                _class="filter-form",
                                                _id="datatable-filter-form",
                                                )
-                                            
+
                     # Render filter form
                     fresource = s3db.resource(resource.tablename)
                     alias = resource.alias if r.component else None

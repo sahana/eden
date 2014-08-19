@@ -72,11 +72,11 @@ def person():
                          ]
         if settings.get_cr_shelter_housing_unit_management():
             report_fields.append("shelter_registration.shelter_unit_id")
-        
+
         for level in levels:
             lfield = "location_id$%s" % level
             report_fields.append(lfield)
-  
+
         report_options = Storage(
                                  rows=report_fields,
                                  cols=report_fields,
@@ -101,79 +101,95 @@ def person():
             list_fields.append("shelter_registration.shelter_unit_id")
         list_fields.append("shelter_registration.check_in_date")
         list_fields.append("shelter_registration.check_out_date")
-                  
+
         r.resource.configure(list_fields = list_fields,
                              report_options = report_options)
 
-        if r.interactive and not r.component:
+        if r.interactive:
+            if not r.component:
 
-            resource = r.resource
+                resource = r.resource
 
-            # Filter widgets
-            from s3 import S3OptionsFilter, S3TextFilter, S3LocationFilter, S3DateFilter
-            filter_widgets = [
-                S3TextFilter(["first_name",
-                              #"middle_name",
-                              "last_name",
-                              #"local_name",
-                              "identity.value",
-                              "case.fiscal_code",
-                              ],
-                              label = T("Name and/or ID"),
-                              comment = T("To search for a person, enter any of the "
-                                          "first, middle or last names and/or an ID "
-                                          "number of a person, separated by spaces. "
-                                          "You may use % as wildcard."),
-                              ),
-                S3LocationFilter("address.location_id",
-                                 label = T("Current Residence"),
-                                 levels = levels,
-                                 ),
-                S3DateFilter("date_of_birth",
-                             label = T("Date Of Birth")
-                             ),
-                S3OptionsFilter("person_details.nationality",
-                                label = T("Nationality"),
+                # Filter widgets
+                from s3 import S3OptionsFilter, S3TextFilter, S3LocationFilter, S3DateFilter
+                filter_widgets = [
+                    S3TextFilter(["first_name",
+                                #"middle_name",
+                                "last_name",
+                                #"local_name",
+                                "identity.value",
+                                "case.fiscal_code",
+                                ],
+                                label = T("Name and/or ID"),
+                                comment = T("To search for a person, enter any of the "
+                                            "first, middle or last names and/or an ID "
+                                            "number of a person, separated by spaces. "
+                                            "You may use % as wildcard."),
                                 ),
-                S3OptionsFilter("case.organisation_id",
-                                label = T("Organisation"),
+                    S3LocationFilter("address.location_id",
+                                    label = T("Current Residence"),
+                                    levels = levels,
+                                    ),
+                    S3DateFilter("date_of_birth",
+                                label = T("Date Of Birth")
                                 ),
-                S3OptionsFilter("shelter_registration.shelter_id",
-                                label = T("Shelter"),
-                                ),
-                S3OptionsFilter("shelter_registration.registration_status",
-                                label = T("Registration Status"),
-                                ),                            
-            ]
+                    S3OptionsFilter("person_details.nationality",
+                                    label = T("Nationality"),
+                                    ),
+                    S3OptionsFilter("case.organisation_id",
+                                    label = T("Organisation"),
+                                    ),
+                    S3OptionsFilter("shelter_registration.shelter_id",
+                                    label = T("Shelter"),
+                                    ),
+                    S3OptionsFilter("shelter_registration.registration_status",
+                                    label = T("Registration Status"),
+                                    ),
+                ]
 
-            # Custom Form for Persons
-            from s3 import S3SQLCustomForm, S3SQLInlineComponent
-            crud_form = S3SQLCustomForm("case.organisation_id",
-                                        "first_name",
-                                        #"middle_name",
-                                        "last_name",
-                                        "date_of_birth",
-                                        "location_id",
-                                        "person_details.place_of_birth",                                    
-                                        "case.fiscal_code",
-                                        S3SQLInlineComponent(
-                                            "identity",
-                                            label = T("Identity Documents"),
-                                            fields = ["type",
-                                                      "value",
-                                                      ],
-                                        ),
-                                        "person_details.nationality",
-                                        "gender",
-                                        "person_details.marital_status",                                    
-                                        "person_details.religion",
-                                        "person_details.occupation",
-                                        #"person_details.company",
-                                        "comments",
-                                        )
-            resource.configure(crud_form = crud_form,
-                               filter_widgets = filter_widgets,
-                               )
+                # Custom Form for Persons
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                crud_form = S3SQLCustomForm("case.organisation_id",
+                                            "first_name",
+                                            #"middle_name",
+                                            "last_name",
+                                            "date_of_birth",
+                                            "location_id",
+                                            "person_details.place_of_birth",
+                                            "case.fiscal_code",
+                                            S3SQLInlineComponent(
+                                                "identity",
+                                                label = T("Identity Documents"),
+                                                fields = ["type",
+                                                        "value",
+                                                        ],
+                                            ),
+                                            "person_details.nationality",
+                                            "gender",
+                                            "person_details.marital_status",
+                                            "person_details.religion",
+                                            "person_details.occupation",
+                                            #"person_details.company",
+                                            "comments",
+                                            )
+                resource.configure(crud_form = crud_form,
+                                   filter_widgets = filter_widgets,
+                                   )
+
+            elif r.component_name == "shelter_registration":
+
+                if settings.get_cr_shelter_housing_unit_management():
+                    # Dynamically update options for shelter_unit_id
+                    # when a shelter_id gets selected
+                    from s3 import SEPARATORS
+                    options = {"trigger": "shelter_id",
+                               "target": "shelter_unit_id",
+                               "lookupPrefix": "cr",
+                               "lookupResource": "shelter_unit",
+                               }
+                    s3.jquery_ready.append('''$.filterOptionsS3(%s)''' % \
+                                           json.dumps(options,
+                                                      separators=SEPARATORS))
 
         elif r.representation in ("pdf", "xls"):
             # List fields
@@ -273,7 +289,7 @@ def group():
 
     output = s3_rest_controller("pr", "group",
                                 rheader = s3db.evr_rheader)
-    
+
     return output
 
 # END =========================================================================

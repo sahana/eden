@@ -46,9 +46,17 @@ def shelter_service():
     output = s3_rest_controller()
     return output
 
+# -----------------------------------------------------------------------------
+def shelter_unit():
+    """ REST controller to retrieve options for shelter unit selection """
+
+    # JSON only
+    s3.prep = lambda r: r.representation == "json"
+
+    return s3_rest_controller()
+
 # =============================================================================
 def shelter():
-
     """
         RESTful CRUD controller
     """
@@ -99,6 +107,14 @@ def shelter():
                         db.assess_rat.staff_id.default = staff_id.id
 
                 elif r.component.name == "shelter_registration":
+                    if settings.get_cr_shelter_housing_unit_management():
+                        # Filter housing units to units of this shelter
+                        field = s3db.cr_shelter_registration.shelter_unit_id
+                        dbset = db(s3db.cr_shelter_unit.shelter_id == r.id)
+                        field.requires = IS_NULL_OR(IS_ONE_OF(dbset, "cr_shelter_unit.id",
+                                                              field.represent,
+                                                              sort=True,
+                                                              ))
                     s3.crud_strings.cr_shelter_registration = Storage(
                         label_create = T("Register Person"),
                         title_display = T("Registration Details"),
