@@ -1618,3 +1618,8 @@ button.toggle-text {
 .video-header {
     padding-top: 50px;
 }
+
+/* Avatar Img div */
+.avatar_img_div {
+    padding-bottom: 10px;
+}
