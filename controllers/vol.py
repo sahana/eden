@@ -129,7 +129,10 @@ def volunteer():
                     vars = {"human_resource.id": r.id,
                             "group": "volunteer"
                             }
-                    redirect(URL(f="person", vars=vars))
+                    if r.representation == "iframe":
+                        vars["format"] = "iframe"
+                        args = [r.method]
+                    redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
                     # Redirect to person controller
