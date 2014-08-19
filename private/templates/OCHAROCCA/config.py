@@ -363,17 +363,16 @@ def customise_gis_location_controller(**attr):
             levels = current.gis.get_location_hierarchy()
             table.level.represent = lambda l: levels[l] if l else NONE
         
-            field = table.inherited
-            field.label =  T("Mapped?")
-            field.represent =  lambda inherited: T("No") if inherited else T("Yes")
-        
-            filter_widgets = s3db.get_config("gis_location", 
-                                             "filter_widgets")
+            #field = table.inherited
+            #field.label =  T("Mapped?")
+            #field.represent =  lambda v: T("No") if v else T("Yes")
+
+            filter_widgets = s3db.get_config("gis_location", "filter_widgets")
             # Remove L2 & L3 filters 
             # NB Fragile: dependent on filters defined in gis/location controller
             filter_widgets.pop()
             filter_widgets.pop()
-        
+
             s3db.configure("gis_location",
                            crud_form = crud_form,
                            filter_widgets = filter_widgets,

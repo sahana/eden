@@ -4642,15 +4642,9 @@ def hrm_compose():
     """
 
     T = current.T
-    db = current.db
     s3db = current.s3db
     vars = current.request.vars
-    response = current.response
-    s3 = response.s3
     
-    representation = s3_get_extension()
-    response.headers["Content-Type"] = s3.content_type.get(representation,
-                                                           "text/html")
     if "human_resource.id" in vars:
         fieldname = "human_resource.id"
         id = vars.get(fieldname)
@@ -4669,6 +4663,7 @@ def hrm_compose():
         current.session.error = T("Record not found")
         redirect(URL(f="index"))
 
+    db = current.db
     pe = db(query).select(table.pe_id,
                           limitby=(0, 1)).first()
     if not pe:
@@ -4698,7 +4693,13 @@ def hrm_compose():
                                  url = url)
 
     output["title"] = title
-    current.response.view = "msg/compose.html"
+
+    response = current.response
+    representation = s3_get_extension()
+    response.headers["Content-Type"] = \
+        response.s3.content_type.get(representation, "text/html")
+    response.view = "msg/compose.html"
+
     return output
 
 # =============================================================================

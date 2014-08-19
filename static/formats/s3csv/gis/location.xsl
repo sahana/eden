@@ -306,6 +306,8 @@
                 </xsl:call-template>
             </xsl:variable>
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
+            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
+            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -374,11 +376,11 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="col[@field='Start Date']!=''">
-                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        <xsl:if test="$start!=''">
+                            <data field="start_date"><xsl:value-of select="$start"/></data>
                         </xsl:if>
-                        <xsl:if test="col[@field='End Date']!=''">
-                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        <xsl:if test="$end!=''">
+                            <data field="end_date"><xsl:value-of select="$end"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Comments']!=''">
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
@@ -407,6 +409,8 @@
             </xsl:variable>
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
+            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
+            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -486,11 +490,11 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="col[@field='Start Date']!=''">
-                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        <xsl:if test="$start!=''">
+                            <data field="start_date"><xsl:value-of select="$start"/></data>
                         </xsl:if>
-                        <xsl:if test="col[@field='End Date']!=''">
-                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        <xsl:if test="$end!=''">
+                            <data field="end_date"><xsl:value-of select="$end"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Comments']!=''">
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
@@ -520,6 +524,8 @@
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
             <xsl:variable name="l3" select="col[@field='L3']/text()"/>
+            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
+            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -603,11 +609,11 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="col[@field='Start Date']!=''">
-                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        <xsl:if test="$start!=''">
+                            <data field="start_date"><xsl:value-of select="$start"/></data>
                         </xsl:if>
-                        <xsl:if test="col[@field='End Date']!=''">
-                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        <xsl:if test="$end!=''">
+                            <data field="end_date"><xsl:value-of select="$end"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Comments']!=''">
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
@@ -638,6 +644,8 @@
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
             <xsl:variable name="l3" select="col[@field='L3']/text()"/>
             <xsl:variable name="l4" select="col[@field='L4']/text()"/>
+            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
+            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -729,11 +737,11 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="col[@field='Start Date']!=''">
-                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        <xsl:if test="$start!=''">
+                            <data field="start_date"><xsl:value-of select="$start"/></data>
                         </xsl:if>
-                        <xsl:if test="col[@field='End Date']!=''">
-                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        <xsl:if test="$end!=''">
+                            <data field="end_date"><xsl:value-of select="$end"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Comments']!=''">
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
@@ -765,6 +773,8 @@
             <xsl:variable name="l3" select="col[@field='L3']/text()"/>
             <xsl:variable name="l4" select="col[@field='L4']/text()"/>
             <xsl:variable name="l5" select="col[@field='L5']/text()"/>
+            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
+            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -864,11 +874,11 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="col[@field='Start Date']!=''">
-                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
+                        <xsl:if test="$start!=''">
+                            <data field="start_date"><xsl:value-of select="$start"/></data>
                         </xsl:if>
-                        <xsl:if test="col[@field='End Date']!=''">
-                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
+                        <xsl:if test="$end!=''">
+                            <data field="end_date"><xsl:value-of select="$end"/></data>
                         </xsl:if>
                         <xsl:if test="col[@field='Comments']!=''">
                             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>

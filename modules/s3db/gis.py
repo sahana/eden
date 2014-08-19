@@ -202,8 +202,8 @@ class S3LocationModel(S3Model):
                   ),
             Field("inherited", "boolean",
                   default = False,
-                  label = T("Inherited?"),
-                  represent = s3_yes_no_represent,
+                  label = T("Mapped?"),
+                  represent = lambda v: T("No") if v else T("Yes"),
                   writable = False,
                   ),
             # Bounding box

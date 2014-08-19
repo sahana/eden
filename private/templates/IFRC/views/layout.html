@@ -37,7 +37,7 @@
 {{else:}}
 <body>
  <div id='container'>
-  <div id='header'>{{org_menu = current.menu.org.render()}}
+  <div id='header'>{{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
 
    <div id='society-icon'>{{=org_menu[1]}}</div>
    <div id='logo'>
