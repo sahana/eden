@@ -104,6 +104,7 @@ def staff():
                         "human_resource.id": r.id,
                         "group": "staff"
                     }
+                    args = []
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
                         args = [r.method]

@@ -129,6 +129,7 @@ def volunteer():
                     vars = {"human_resource.id": r.id,
                             "group": "volunteer"
                             }
+                    args = []
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
                         args = [r.method]
