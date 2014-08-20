@@ -124,6 +124,7 @@ class S3Config(Storage):
         self.sync = Storage()
         self.ui = Storage()
         self.vulnerability = Storage()
+        self.transport = Storage()
 
     # -------------------------------------------------------------------------
     # Template
@@ -2845,6 +2846,27 @@ class S3Config(Storage):
     #
     def get_vulnerability_indicator_hierarchical(self):
         return self.vulnerability.get("indicator_hierarchical", False)
+
+    # -------------------------------------------------------------------------
+    # Transport
+    #
+    def get_transport_airport_code_unique(self):
+        """
+            Whether Airport code is unique
+        """
+        return self.transport.get("airport_code_unique", False)
+    
+    def get_transport_heliport_code_unique(self):
+        """
+            Whether Heliport code is unique
+        """
+        return self.transport.get("heliport_code_unique", False)
+    
+    def get_transport_seaport_code_unique(self):
+        """
+            Whether Seaport code is unique
+        """
+        return self.transport.get("seaport_code_unique", False)
 
     # -------------------------------------------------------------------------
     # Utilities

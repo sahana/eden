@@ -56,6 +56,8 @@ class S3TransportModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
         super_link = self.super_link
+        settings = current.deployment_settings
+        db = current.db
 
         # ---------------------------------------------------------------------
         # Airports
@@ -69,6 +71,10 @@ class S3TransportModel(S3Model):
             2: T("number of planes"),
             3: T("m3")
         }
+        if settings.get_transport_airport_code_unique():
+            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_airport.code"))
+        else:
+            code_requires = None
 
         tablename = "transport_airport"
         define_table(tablename,
@@ -82,9 +88,9 @@ class S3TransportModel(S3Model):
                            #readable=False,
                            #writable=False,
                            # Mayon compatibility
-                           # @ToDo: Deployment Setting to add validator to make these unique
                            #notnull=True,
                            #unique=True,
+                           requires = code_requires,
                            label=T("Code")),
                      organisation_id(),
                      location_id(),
@@ -158,6 +164,11 @@ class S3TransportModel(S3Model):
         # ---------------------------------------------------------------------
         # Heliports
         #
+        if settings.get_transport_heliport_code_unique():
+            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_heliport.code"))
+        else:
+            code_requires = None
+
         tablename = "transport_heliport"
         define_table(tablename,
                      super_link("site_id", "org_site"),
@@ -170,9 +181,9 @@ class S3TransportModel(S3Model):
                            #readable=False,
                            #writable=False,
                            # Mayon compatibility
-                           # @ToDo: Deployment Setting to add validator to make these unique
                            #notnull=True,
                            #unique=True,
+                           requires = code_requires,
                            label=T("Code")),
                      organisation_id(),
                      location_id(),
@@ -218,6 +229,10 @@ class S3TransportModel(S3Model):
             1: T("ft"),
             2: T("m")
         }
+        if settings.get_transport_seaport_code_unique():
+            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_seaport.code"))
+        else:
+            code_requires = None
 
         tablename = "transport_seaport"
         define_table(tablename,
@@ -231,9 +246,9 @@ class S3TransportModel(S3Model):
                            #readable=False,
                            #writable=False,
                            # Mayon compatibility
-                           # @ToDo: Deployment Setting to add validator to make these unique
                            #notnull=True,
                            #unique=True,
+                           requires = code_requires,
                            label=T("Code")),
                      Field("ownership_type", "integer",
                            requires = IS_IN_SET(ownership_opts, zero=None),
