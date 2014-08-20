@@ -57,7 +57,7 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
 }
 /* ========================================================================= */
 /* HUMAN RESOURCES MODULE */
-.hrm_avatar {
+.hrm-avatar {
     float: left;
     clear: right;
 }

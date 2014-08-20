@@ -1103,7 +1103,7 @@ li input + a {
 }
 
 /* HRM RHeader */
-.hrm_avatar {
+.hrm-avatar {
     float: left;
     clear: right;
     padding-bottom: 5px;
@@ -1619,7 +1619,3 @@ button.toggle-text {
     padding-top: 50px;
 }
 
-/* Avatar Img div */
-.avatar_img_div {
-    padding-bottom: 10px;
-}
