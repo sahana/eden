@@ -201,7 +201,6 @@ def define_map(height = None,
             s3.scripts.append(script)
 
     # Are we wanting to display a specific PoI Marker?
-    # @ToDo: Generalise with feature/tablename?
     poi = get_vars.get("poi", None)
     if poi:
         ptable = s3db.gis_poi
@@ -216,13 +215,18 @@ def define_map(height = None,
             lat = record.lat
             lon = record.lon
             filter_url = "~.id=%s" % poi
-            feature_resources = [dict(name = T("PoI"),
-                                      id = "PoI",
-                                      layer_id = layer.layer_id,
-                                      filter = filter_url,
-                                      active = True,
-                                      ),
-                                 ]
+            # @ToDo: Generalise with feature/tablename?
+            layer = db(ftable.name == "PoIs").select(ftable.layer_id,
+                                                     limitby=(0, 1)
+                                                     ).first()
+            if layer:
+                feature_resources = [dict(name = T("PoI"),
+                                          id = "PoI",
+                                          layer_id = layer.layer_id,
+                                          filter = filter_url,
+                                          active = True,
+                                          ),
+                                     ]
         else:
             lat = None
             lon = None
