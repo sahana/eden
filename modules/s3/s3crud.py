@@ -461,6 +461,8 @@ class S3CRUD(S3Method):
             @param attr: dictionary of parameters for the method handler
         """
 
+        response = current.response
+
         resource = self.resource
         get_config = resource.get_config
         tablename = resource.tablename
@@ -487,7 +489,6 @@ class S3CRUD(S3Method):
                     elif isinstance(populate, dict):
                         self.data = populate
 
-                response = current.response
                 view = response.view
 
                 # JS Cancel (no redirect with embedded form)
