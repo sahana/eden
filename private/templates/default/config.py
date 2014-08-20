@@ -751,6 +751,15 @@ settings.gis.geonames_username = "eden_test"
 #settings.irs.vehicle = True
 
 # -----------------------------------------------------------------------------
+# Transport
+# Uncomment to make Airport codes unique
+#settings.transport.airport_code_unique = True
+# Uncomment to make Seaport codes unique
+#settings.transport.seaport_code_unique = True
+# Uncomment to make Heliport codes unique
+#settings.transport.heliport_code_unique = True
+
+# -----------------------------------------------------------------------------
 # Filter Manager
 #settings.search.filter_manager = False
 
