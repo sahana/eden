@@ -95,7 +95,7 @@ class S3Report(S3Method):
                 from s3filter import S3FilterForm
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
-                
+
         # Filter
         response = current.response
         s3_filter = response.s3.filter
@@ -126,7 +126,7 @@ class S3Report(S3Method):
 
         # Generate the pivot table
         if get_vars:
-            
+
             rows = get_vars.get("rows", None)
             cols = get_vars.get("cols", None)
             layer = get_vars.get("fact", "id")
@@ -166,7 +166,7 @@ class S3Report(S3Method):
         if r.representation in ("html", "iframe"):
 
             tablename = resource.tablename
-            
+
             output["title"] = self.crud_string(tablename, "title_report")
 
             # Filter widgets
@@ -203,7 +203,7 @@ class S3Report(S3Method):
             ajaxurl = attr.get("ajaxurl", r.url(method="report",
                                                 representation="json",
                                                 vars=ajax_vars))
-                                                
+
             output["form"] = S3ReportForm(resource) \
                                     .html(pivotdata,
                                           get_vars = get_vars,
@@ -221,14 +221,14 @@ class S3Report(S3Method):
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
-            
+
         return output
 
     # -------------------------------------------------------------------------
     def widget(self, r, method=None, widget_id=None, visible=True, **attr):
         """
             Pivot table report widget
-        
+
             @param r: the S3Request
             @param method: the widget method
             @param widget_id: the widget ID
@@ -265,7 +265,7 @@ class S3Report(S3Method):
                               defaults.get("chart", None))
         get_vars["table"] = r.get_vars.get("table",
                               defaults.get("table", None))
-                              
+
         # Generate the pivot table
         if get_vars:
 
@@ -355,7 +355,7 @@ class S3ReportForm(object):
              filter_tab=None,
              widget_id=None):
         """
-            Render the form for the report 
+            Render the form for the report
 
             @param get_vars: the GET vars if the request (as dict)
             @param widget_id: the HTML element base ID for the widgets
@@ -466,7 +466,7 @@ class S3ReportForm(object):
             "renderChart": True,
             "collapseChart": True,
             "defaultChart": None,
-            
+
             "exploreChart": True,
             "filterURL": filter_url,
             "filterTab": filter_tab,
@@ -715,9 +715,9 @@ class S3ReportForm(object):
             mlabel = mname(method)
             flabel = rfield.label if rfield.label != "Id" else RECORDS
             return T("%s (%s)") % (flabel, mlabel)
-        
+
         prefix = resource.prefix_selector
-        
+
         layer_opts = []
         for layer in layers:
 
@@ -731,7 +731,7 @@ class S3ReportForm(object):
                 s, m = match.group(2), match.group(1)
             else:
                 m = None
-                
+
             # Resolve the selector
             selector = prefix(s)
             rfield = resource.resolve_selector(selector)
@@ -811,7 +811,7 @@ class S3ReportForm(object):
                                           _name="fact",
                                           _class="pt-fact")
             single = False
-            
+
         return widget, single
 
     # -------------------------------------------------------------------------
@@ -829,7 +829,7 @@ class S3ReportForm(object):
         T = current.T
         SHOW = T("Show")
         HIDE = T("Hide")
-        
+
         return FIELDSET(LEGEND(title,
                                BUTTON(SHOW,
                                       _type="button",

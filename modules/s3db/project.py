@@ -4815,11 +4815,6 @@ class S3ProjectTaskModel(S3Model):
                                                      #label = T("Sector"),
                                                      ))
 
-        # Custom Methods
-        set_method("project", "time",
-                   method = "effort",
-                   action = self.project_time_effort_report)
-
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = report_fields,
@@ -5325,37 +5320,6 @@ class S3ProjectTaskModel(S3Model):
             # Update the Activity
             query = (atable.id == activity_id)
             db(query).update(time_actual=hours)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_time_effort_report(r, **attr):
-        """
-            Provide a Report on Effort by week
-
-            @ToDo: https://sahana.mybalsamiq.com/projects/sandbox/Effort
-        """
-
-        if r.representation == "html":
-
-            T = current.T
-            request = current.request
-            resource = r.resource
-            output = {}
-
-            from s3.s3data import S3PivotTable
-            rows = "person_id"
-            cols = "week"
-            layers = [("hours", "sum")]
-            pivot = S3PivotTable(resource, rows, cols, layers)
-            _table = pivot.html()
-
-            output["items"] = _table
-            output["title"] = T("Effort Report")
-            current.response.view = "list.html"
-            return output
-
-        else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3ProjectTaskHRMModel(S3Model):

@@ -223,7 +223,7 @@ class S3Represent(object):
         @group Internal Methods: _setup,
                                  _lookup
     """
-    
+
     def __init__(self,
                  lookup=None,
                  key=None,
@@ -284,7 +284,7 @@ class S3Represent(object):
         self.lazy_show_link = False
 
         self.rows = {}
-        
+
         # Attributes to simulate being a function for sqlhtml's represent()
         # Make sure we indicate only 1 position argument
         self.func_code = Storage(co_argcount = 1)
@@ -348,10 +348,10 @@ class S3Represent(object):
             output = current.T(v)
         else:
             output = v
-            
+
         if prefix and self.hierarchy:
             return self.htemplate % (prefix, output)
-                
+
         return output
 
     # -------------------------------------------------------------------------
@@ -713,7 +713,7 @@ class S3Represent(object):
                 for k, row in rows.items():
                     lookup.pop(k, None)
                     items[keys.get(k, k)] = theset[k] = represent_row(row)
-                    
+
         if lookup:
             for k in lookup:
                 items[keys.get(k, k)] = self.default
@@ -736,12 +736,12 @@ class S3Represent(object):
 
         if value in theset:
             return theset[value]
-            
+
         represent_row = self.represent_row
 
         prefix = None
         parent = hierarchy.parent(value)
-        
+
         if parent:
             if parent in theset:
                 prefix = theset[parent]

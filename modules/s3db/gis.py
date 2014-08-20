@@ -202,8 +202,8 @@ class S3LocationModel(S3Model):
                   ),
             Field("inherited", "boolean",
                   default = False,
-                  label = T("Inherited?"),
-                  represent = s3_yes_no_represent,
+                  label = T("Mapped?"),
+                  represent = lambda v: T("No") if v else T("Yes"),
                   writable = False,
                   ),
             # Bounding box
@@ -351,16 +351,16 @@ class S3LocationModel(S3Model):
         list_fields = ["id",
                        "name",
                        "level",
-                       #"parent",
                        "L0",
                        "L1",
                        "L2",
                        "L3",
                        "L4",
+                       "inherited",
+                       #"lat",
+                       #"lon",
                        "start_date",
                        "end_date",
-                       "lat",
-                       "lon",
                        ]
         if settings.get_L10n_translate_gis_location():
             list_fields.insert(2, "name.name_l10n")

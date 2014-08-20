@@ -69,7 +69,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """ Register at the repository """
 
         repository = self.repository
-        
+
         if not repository.url:
             return True
 

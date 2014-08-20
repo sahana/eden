@@ -107,7 +107,7 @@ class S3TimePlot(S3Method):
             @param r: the S3Request instance
             @param attr: controller attributes for the request
         """
-        
+
         output = {}
 
         # Extract the relevant GET vars
@@ -230,9 +230,9 @@ class S3TimePlot(S3Method):
         # Render output
         if r.representation in ("html", "iframe"):
             # Page load
-            
+
             output["title"] = self.crud_string(tablename, "title_report")
-            
+
             # Filter widgets
             if show_filter_form:
                 advanced = False
@@ -281,7 +281,7 @@ class S3TimePlot(S3Method):
             # View
             response = current.response
             response.view = self._view(r, "timeplot.html")
-       
+
         elif r.representation == "json":
             # Ajax load
 
@@ -377,7 +377,7 @@ class S3TimePlot(S3Method):
 
         # Extract the records
         data = resource.select(fields)
-        
+
         # Remove the filter we just added
         resource.rfilter.filters.pop()
         resource.rfilter.query = None
@@ -395,7 +395,7 @@ class S3TimePlot(S3Method):
 
         # Use table name as event type
         tablename = resource.tablename
-        
+
         # Create the events
         events = []
         add_event = events.append
@@ -419,7 +419,7 @@ class S3TimePlot(S3Method):
         if events:
             event_frame.extend(events)
         return data
-        
+
     # -------------------------------------------------------------------------
     def create_event_frame(self,
                            resource,
@@ -589,7 +589,7 @@ class S3TimePlot(S3Method):
             groups = match.groups()
             year = int(groups[0])
             return tp_datetime(year, 1, 1, 0, 0, 0)
-        
+
         # Date, e.g. "2013-01-04"
         match = regex.DATE.match(timestr)
         if match:
@@ -608,7 +608,7 @@ class S3TimePlot(S3Method):
         xml = current.xml
         dt = xml.decode_iso_datetime(str(timestr))
         return xml.as_utc(dt)
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def resolve_timestamp(resource, timestamp):
@@ -744,7 +744,7 @@ class S3TimePlotForm(S3ReportForm):
         # @todo: chart title
         # @todo: empty-section
         # @todo: CSS
-        
+
         # Report form submit element
         resource = self.resource
         submit = resource.get_config("report_submit", True)
@@ -787,7 +787,7 @@ class S3TimePlotForm(S3ReportForm):
                    _class="tp-container",
                    _id=widget_id
                )
-        
+
         # Script to attach the timeplot widget
 
         settings = current.deployment_settings
@@ -803,7 +803,7 @@ class S3TimePlotForm(S3ReportForm):
         current.response.s3.jquery_ready.append(script)
 
         return form
-        
+
     # -------------------------------------------------------------------------
     def report_options(self, get_vars=None, widget_id="timeplot"):
         """
@@ -893,7 +893,7 @@ class S3TimePlotForm(S3ReportForm):
         for opt in opts:
             label, start, end, slots = opt
             widget_opts.append(("|".join((start, end, slots)), T(label)))
-        
+
         # Get current value
         if get_vars:
             start = get_vars.get("start", "")
@@ -914,7 +914,7 @@ class S3TimePlotForm(S3ReportForm):
                                     _name="time",
                                     _class="tp-time",
                                     )
-                                    
+
 # =============================================================================
 class S3TimePlotEvent(object):
     """ Class representing an event """
@@ -940,9 +940,9 @@ class S3TimePlotEvent(object):
 
         self.start = tp_tzsafe(start)
         self.end = tp_tzsafe(end)
-        
+
         self.values = values if values is not None else {}
-        
+
     # -------------------------------------------------------------------------
     def __lt__(self, other):
 
@@ -955,7 +955,7 @@ class S3TimePlotEvent(object):
         else:
             result = this < that
         return result
-        
+
     # -------------------------------------------------------------------------
     def __getitem__(self, field):
         """
@@ -1082,7 +1082,7 @@ class S3TimePlotPeriod(object):
                 values.append((base_value, slope_value, duration))
 
             return self._aggregate(method, values)
-                
+
         else:
             events = self.current_events(event_type=event_type)
             field = fields[0] if fields else None
@@ -1150,7 +1150,7 @@ class S3TimePlotPeriod(object):
                              interval=num)
         else:
             return None
-            
+
     # -------------------------------------------------------------------------
     @staticmethod
     def _aggregate(method, values):
@@ -1262,7 +1262,7 @@ class S3TimePlotEventFrame(object):
     def __init__(self, start, end, slots=None):
         """
             Constructor
-            
+
             @param start: start of the time frame (datetime.datetime)
             @param end: end of the time frame (datetime.datetime)
             @param slot: length of time slots within the event frame,
@@ -1282,7 +1282,7 @@ class S3TimePlotEventFrame(object):
 
         self.empty = True
         self.baseline = None
-        
+
         self.slots = slots
         self.periods = {}
 
@@ -1381,7 +1381,7 @@ class S3TimePlotEventFrame(object):
 
         self.empty = empty
         return
-        
+
     # -------------------------------------------------------------------------
     def __iter__(self):
         """
@@ -1406,7 +1406,7 @@ class S3TimePlotEventFrame(object):
             # @todo: continuous periods
             # sort actual periods and iterate over them
             raise NotImplementedError
-            
+
         return
 
 # END =========================================================================

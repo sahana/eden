@@ -1291,7 +1291,7 @@ class S3Importer(S3Method):
                                orderby=orderby,
                                left=left)
         rows = data["rows"]
-        
+
         displayrows = data["numrows"]
         if totalrows is None:
             totalrows = displayrows
@@ -1694,7 +1694,7 @@ class S3Importer(S3Method):
                             Field("completed_details", "text",
                                   readable=False,
                                   writable=False))
-                          
+
         return db[cls.UPLOAD_TABLE_NAME]
 
 # =============================================================================
@@ -1804,7 +1804,7 @@ class S3ImportItem(object):
         xml = current.xml
 
         ERROR = xml.ATTRIBUTE["error"]
-        
+
         self.element = element
         if table is None:
             tablename = element.get(xml.ATTRIBUTE["name"], None)
@@ -1902,7 +1902,7 @@ class S3ImportItem(object):
                     self.method = DELETE
             else:
                 self.method = UPDATE
-                
+
         else:
             if data[DELETED]:
                 if data[REPLACEDBY]:
@@ -2002,7 +2002,7 @@ class S3ImportItem(object):
         if self.method in (DELETE, MERGE):
             self.accepted = True if self.id else False
             return True
-                
+
         # Set dynamic defaults for new records
         if not self.id:
             self._dynamic_defaults(self.data)
@@ -2047,7 +2047,7 @@ class S3ImportItem(object):
 
         missing = [fname for fname in required_fields
                          if fname not in all_fields]
-            
+
         if missing:
             original = self.original
             if original:
@@ -2175,7 +2175,7 @@ class S3ImportItem(object):
                 element = parent.element
                 if not element.get(ATTRIBUTE.error, False):
                     element.set(ATTRIBUTE.error, str(parent.error))
-                    
+
             return ignore_errors
 
         elif self.method not in (MERGE, DELETE) and self.components:
@@ -2458,7 +2458,7 @@ class S3ImportItem(object):
                                                self.skip and "skippe" or \
                                                method))
             return True
-            
+
         else:
             raise RuntimeError("unknown import method: %s" % method)
 
@@ -3103,19 +3103,19 @@ class S3ImportJob():
         TAG = xml.TAG
         UID = xml.UID
         reference_list = []
-        
+
         root = None
         if tree is not None:
             if isinstance(tree, etree._Element):
                 root = tree
             else:
                 root = tree.getroot()
-                
+
         if lookup:
             references = [lookup]
         else:
             references = element.findall("reference")
-            
+
         for reference in references:
 
             if lookup:
@@ -3327,7 +3327,7 @@ class S3ImportJob():
         for item_id in import_list:
             item = items[item_id]
             error = None
-            
+
             if item.accepted is not False:
                 logged = False
                 success = item.commit(ignore_errors=ignore_errors)
@@ -3338,7 +3338,7 @@ class S3ImportJob():
 
             if not success:
                 failed = True
-                
+
             error = item.error
             if error:
                 current.log.error(error)
@@ -3349,7 +3349,7 @@ class S3ImportJob():
                         element.set(ATTRIBUTE.error, str(self.error))
                     if not logged:
                         self.error_tree.append(deepcopy(element))
-                    
+
             elif item.tablename == tablename:
                 count += 1
                 if mtime is None or item.mtime > mtime:
@@ -3361,10 +3361,10 @@ class S3ImportJob():
                         updated.append(item.id)
                     elif item.method in (METHOD.MERGE, METHOD.DELETE):
                         deleted.append(item.id)
-                        
+
         if failed:
             return False
-            
+
         self.count = count
         self.mtime = mtime
         self.created = created
@@ -3394,7 +3394,7 @@ class S3ImportJob():
                             Field("tablename"),
                             Field("timestmp", "datetime",
                                   default=datetime.utcnow()))
-                                  
+
         return db[cls.JOB_TABLE_NAME]
 
     # -------------------------------------------------------------------------
@@ -3417,7 +3417,7 @@ class S3ImportJob():
                             Field("ritems", "list:string"),
                             Field("citems", "list:string"),
                             Field("parent", length=128))
-                            
+
         return db[cls.ITEM_TABLE_NAME]
 
     # -------------------------------------------------------------------------
@@ -3655,7 +3655,7 @@ class S3BulkImporter(object):
                         self.errorList.append(
                         "Failed to find a transform file %s, Giving up." % xslFileName)
                         return
-            
+
             if argCnt == 5:
                 extra_data = details[4]
             else:
@@ -3789,7 +3789,7 @@ class S3BulkImporter(object):
                 if errors:
                     self.errorList.extend(errors)
                 current.db.rollback()
-                
+
             auth.rollback = False
 
             # Restore the view
@@ -3962,12 +3962,12 @@ class S3BulkImporter(object):
                      imagefield):
         """
             Import images, such as a logo or person image
-            
+
             filename     a CSV list of records and filenames
             tablename    the name of the table
             idfield      the field used to identify the record
             imagefield   the field to where the image will be added
-            
+
             Example:
             bi.import_image ("org_logos.csv", "org_organisation", "name", "logo")
             and the file org_logos.csv may look as follows

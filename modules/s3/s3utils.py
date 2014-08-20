@@ -72,7 +72,7 @@ URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
 
 RCVARS = "rcvars"
-                           
+
 # =============================================================================
 def s3_debug(message, value=None):
     """
@@ -119,7 +119,7 @@ def s3_store_last_record_id(tablename, record_id):
     """
 
     session = current.session
-    
+
     if RCVARS not in session:
         session[RCVARS] = Storage({tablename: record_id})
     else:
@@ -135,7 +135,7 @@ def s3_remove_last_record_id(tablename=None):
     """
 
     session = current.session
-    
+
     if tablename:
         if RCVARS in session and tablename in session[RCVARS]:
             del session[RCVARS][tablename]
@@ -143,7 +143,7 @@ def s3_remove_last_record_id(tablename=None):
         if RCVARS in session:
             del session[RCVARS]
     return True
-    
+
 # =============================================================================
 def s3_validate(table, field, value, record=None):
     """
@@ -252,7 +252,7 @@ def s3_represent_value(field,
             text = val = record[field.name]
     else:
         text = val = value
-        
+
     ftype = str(field.type)
     if ftype[:5] == "list:" and not isinstance(val, list):
         # Default list representation can't handle single values
@@ -345,7 +345,7 @@ def s3_set_default_filter(selector, value, tablename=None):
         filter_defaults = filter_defaults[level]
     filter_defaults[selector] = value
     return
-    
+
 # =============================================================================
 def s3_dev_toolbar():
     """
@@ -571,9 +571,9 @@ def s3_trunk8(selector=None, lines=None, less=None, more=None):
         @param selector: the jQuery selector (default: .s3-truncate)
         @param lines: maximum number of lines (default: 1)
     """
-    
+
     T = current.T
-    
+
     s3 = current.response.s3
     scripts = s3.scripts
     script = "/%s/static/scripts/trunk8.js" % current.request.application
@@ -760,7 +760,7 @@ def s3_URLise(text):
     output = URLSCHEMA.sub(lambda m: '<a href="%s" target="_blank">%s</a>' %
                           (m.group(0), m.group(0)), text)
     return output
-    
+
 # =============================================================================
 def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
     """
@@ -978,7 +978,7 @@ def s3_include_ext():
         PATH = "http://cdn.sencha.com/ext/gpl/3.4.1.1"
     else:
         PATH = "/%s/static/scripts/ext" % appname
-        
+
     if s3.debug:
         # Provide debug versions of CSS / JS
         adapter = "%s/adapter/jquery/ext-jquery-adapter-debug.js" % PATH
@@ -1263,7 +1263,7 @@ def s3_orderby_fields(table, orderby, expr=False):
     db = current.db
     COMMA = db._adapter.COMMA
     INVERT = db._adapter.INVERT
-    
+
     if isinstance(orderby, str):
         items = orderby.split(",")
     elif type(orderby) is Expression:
@@ -1322,7 +1322,7 @@ def s3_get_extension(request=None):
 
     if request is None:
         request = current.request
-        
+
     extension = request.extension
     if request.function == "ticket" and request.controller == "admin":
         extension = "html"
@@ -1358,7 +1358,7 @@ def s3_set_extension(url, extension=None):
         #extension = ""
 
     u = urlparse.urlparse(url)
-    
+
     path = u.path
     if path:
         if "." in path:

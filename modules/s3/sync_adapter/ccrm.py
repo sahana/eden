@@ -243,7 +243,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         xml = current.xml
         repository = self.repository
-        
+
         log = repository.log
         resource_name = task.resource_name
 

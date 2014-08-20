@@ -301,14 +301,14 @@ class S3Merge(S3Method):
                                count=True,
                                represent=True)
 
-        
+
         displayrows = data["numrows"]
         if totalrows is None:
             totalrows = displayrows
 
         # Generate a datatable
         dt = S3DataTable(data["rfields"], data["rows"])
-        
+
         datatable_id = "s3merge_1"
 
         if representation == "aadata":
@@ -318,7 +318,7 @@ class S3Merge(S3Method):
                              sEcho,
                              dt_bulk_actions = [(current.T("Merge"),
                                                  "merge", "pair-action")])
-                                                 
+
         elif representation == "html":
             # Initial HTML response
             T = current.T
@@ -395,17 +395,16 @@ class S3Merge(S3Method):
 
         # Process the post variables
         post_vars = r.post_vars
-        if "mode" in post_vars:
-            mode = post_vars["mode"]
-        if "selected" in post_vars:
-            selected = post_vars["selected"]
-        else:
-            selected = ""
+        mode = post_vars.get("mode")
+        selected = post_vars.get("selected", "")
         selected = selected.split(",")
         if mode == "Inclusive":
             ids = selected
         elif mode == "Exclusive":
             ids = [i for i in record_ids if i not in selected]
+        else:
+            # Error
+            ids = []
         if len(ids) != 2:
             r.error(501, T("Please select exactly two records"),
                     next = r.url(id=0, vars={}))

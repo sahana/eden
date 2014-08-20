@@ -104,7 +104,7 @@ class S3Summary(S3Method):
 
         # Dynamic filtering (e.g. plot-click in report widget)
         attr["filter_form"] = form_id = "summary-filter-form"
-        
+
         for section in config:
 
             common = section.get("common")
@@ -112,7 +112,7 @@ class S3Summary(S3Method):
             # Section container
             section_id = section["name"]
             s = DIV(_class="section-container", _id=section_id)
-            
+
             if not common:
                 # Label
                 label = section["label"]
@@ -270,7 +270,7 @@ class S3Summary(S3Method):
             # which are rendered empty and need a trigger to Ajax-load
             # their data layer (e.g. maps, reports):
             pending = ",".join(pending) if pending else "null"
-            
+
             # Render the Sections as Tabs
             script = '''S3.search.summary_tabs("%s",%s,"%s")''' % \
                      (form_id, active_tab, pending)

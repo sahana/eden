@@ -271,13 +271,13 @@ class S3NavigationItem(object):
         item = self.__class__()
         item.label = self.label
         item.tags = self.tags
-        
+
         item.r = self.r
-        
+
         item.application = self.application
         item.controller = self.controller
         item.function = self.function
-        
+
         item.match_controller = [c for c in self.match_controller]
         item.match_function = [f for f in self.match_function]
 

@@ -2093,7 +2093,7 @@ class S3PDF(S3Method):
         """
 
         r = self.r
-        
+
         s3xml_etree = self.resource.export_struct(options=True,
                                                   references=True,
                                                   stylesheet=None,

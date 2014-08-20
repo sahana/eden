@@ -78,7 +78,7 @@ class S3XLS(S3Codec):
         """
 
         title = self.crud_string(resource.tablename, "title_list")
-        
+
         vars = Storage(current.request.vars)
         vars["iColumns"] = len(list_fields)
         filter, orderby, left = resource.datatable_filter(list_fields, vars)
@@ -98,7 +98,7 @@ class S3XLS(S3Codec):
 
         rfields = result["rfields"]
         rows = result["rows"]
-        
+
         types = []
         lfields = []
         heading = {}

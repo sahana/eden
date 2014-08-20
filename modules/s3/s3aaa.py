@@ -591,7 +591,7 @@ Thank you"""
             if buttons:
                 submit_button = INPUT(_type="submit", _value=T("Login"))
                 buttons.insert(0, submit_button)
-            
+
             form = SQLFORM(utable,
                            fields = [userfield, passfield],
                            hidden = dict(_next=request.vars._next),
@@ -836,7 +836,7 @@ Thank you"""
                     next = replace_id(next, form)
                 redirect(next, client_side=settings.client_side)
         return form
-        
+
     # -------------------------------------------------------------------------
     def request_reset_password(self,
                                next=DEFAULT,
@@ -986,7 +986,7 @@ Thank you"""
             ignore_levels_for_presence = deployment_settings.get_auth_ignore_levels_for_presence()
             greatCircleDistance = gis.greatCircleDistance
             for location in locations:
-                if location.level not in ignore_levels_for_presence: 
+                if location.level not in ignore_levels_for_presence:
                     if closestpoint != 0:
                         currentdistance = greatCircleDistance(closestpoint.lat,
                                                               closestpoint.lon,
@@ -999,7 +999,7 @@ Thank you"""
                         closestpoint = location
 
             s3tracker = S3Tracker()
-            if closestpoint == 0 and deployment_settings.get_auth_create_unknown_locations(): 
+            if closestpoint == 0 and deployment_settings.get_auth_create_unknown_locations():
                 # There wasn't any near-by location, so create one
                 newpoint = {"lat": userlat,
                             "lon": userlon,
@@ -1008,7 +1008,7 @@ Thank you"""
                 closestpoint = current.s3db.gis_location.insert(**newpoint)
                 s3tracker(db.pr_person,
                           self.user.id).set_location(closestpoint,
-                                                     timestmp=request.utcnow)             
+                                                     timestmp=request.utcnow)
             else:
                 s3tracker(db.pr_person,
                           self.user.id).set_location(closestpoint.id,
@@ -1321,11 +1321,11 @@ Thank you"""
 
              @param user: the auth_user record (Row)
         """
-        
+
         mailer = self.settings.mailer
         if not mailer:
             return False
-            
+
         import time
         reset_password_key = str(int(time.time())) + '-' + web2py_uuid()
         reset_password_url = "%s/default/user/reset_password/%s" % \
@@ -1337,7 +1337,7 @@ Thank you"""
                        message=message):
             user.update_record(reset_password_key=reset_password_key)
             return True
-            
+
         return False
 
     # -------------------------------------------------------------------------
@@ -1576,7 +1576,7 @@ Thank you"""
         """
             Configure User Fields - for registration & user administration
 
-            pe_ids: an optional list of pe_ids for the Org Filter 
+            pe_ids: an optional list of pe_ids for the Org Filter
                     i.e. org_admin coming from admin.py/user()
         """
 
@@ -1655,7 +1655,7 @@ Thank you"""
         #utable.reset_password_key.label = messages.label_registration_key
 
         # Organisation
-        if self.s3_has_role("ADMIN"):         
+        if self.s3_has_role("ADMIN"):
             show_org = deployment_settings.get_auth_admin_sees_organisation()
         else:
             show_org = deployment_settings.get_auth_registration_requests_organisation()
@@ -2018,7 +2018,7 @@ S3OptionsFilter({
                 # Using RawSQL as table not created in web2py
                 sql_query="insert into ofGroupUser values (\'%s\',\'%s\' ,0);" % (chat_server["groupname"], chat_username)
                 chatdb.executesql(sql_query)
-    
+
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):
         """
@@ -2294,7 +2294,7 @@ S3OptionsFilter({
         if user.organisation_id and \
            "org_organisation" in deployment_settings.get_auth_record_approval_required_for():
             s3db.resource("org_organisation", user.organisation_id, unapproved=True).approve()
-        
+
         user_email = db(utable.id == user_id).select(utable.email).first().email
         self.auth_user_onaccept(user_email, user_id)
         # Send Welcome mail
@@ -4205,7 +4205,7 @@ S3OptionsFilter({
         def decorator(action):
 
             def f(*a, **b):
-                
+
                 if self.override:
                     return action(*a, **b)
 
@@ -5501,7 +5501,7 @@ class S3Permission(object):
         if "ANY" in acls:
             # User is permitted access for all Realms
             return None
-        
+
         entities = []
         for entity in acls:
             acl = acls[entity]
@@ -5622,7 +5622,7 @@ class S3Permission(object):
             @param t: the table or tablename
             @param record: the record or record ID (None for any record)
         """
-        
+
         # Multiple methods?
         if isinstance(method, (list, tuple)):
             #query = None
@@ -7055,7 +7055,7 @@ class S3RoleManager(S3Method):
             s3.no_formats = True
             s3.actions = []
             s3.no_sspag = True
-            
+
             from s3data import S3DataTable
             dt = S3DataTable.htmlConfig(items, "datatable", [[1, "asc"]],
                                         dt_pagination=False)

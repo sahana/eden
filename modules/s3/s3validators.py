@@ -81,7 +81,7 @@ from gluon.storage import Storage
 from gluon.validators import Validator
 
 from s3utils import S3DateTime, s3_orderby_fields, s3_unicode, s3_validate
-    
+
 def translate(text):
     if text is None:
         return None
@@ -213,7 +213,7 @@ class IS_LAT(Validator):
                 e = int(sec)/60 #formula to get back decimal degree
                 f = int(mins) + e #formula
                 g = int(f) / 60 #formula
-                value = int(deg) + g                
+                value = int(deg) + g
                 return (value, None)
 
 # =============================================================================
@@ -282,7 +282,7 @@ class IS_LON(Validator):
                 e = int(sec) / 60 #formula to get back decimal degree
                 f = int(mins) + e #formula
                 g = int(f) / 60 #formula
-                value = int(deg) + g                
+                value = int(deg) + g
                 return (value, None)
 
 # =============================================================================
@@ -717,7 +717,7 @@ class IS_ONE_OF_EMPTY(Validator):
             if db._dbname not in ("gql", "gae"):
                 orderby = self.orderby or reduce(lambda a, b: a|b, fields)
                 groupby = self.groupby
-                
+
                 dd = dict(orderby=orderby, groupby=groupby)
                 query, left = self.query(table, fields=fields, dd=dd)
 
@@ -735,7 +735,7 @@ class IS_ONE_OF_EMPTY(Validator):
                         self.left = left
                 if self.left is not None:
                     dd.update(left=self.left)
-                    
+
                 # Make sure we have all ORDERBY fields in the query
                 # (otherwise postgresql will complain)
                 fieldnames = [str(f) for f in fields]
@@ -784,7 +784,7 @@ class IS_ONE_OF_EMPTY(Validator):
             if labels and self.sort:
 
                 items = zip(self.theset, self.labels)
-                
+
                 # Alternative variant that handles generator objects,
                 # doesn't seem necessary, retained here just in case:
                 #orig_labels = self.labels
@@ -841,9 +841,9 @@ class IS_ONE_OF_EMPTY(Validator):
 
         filterby = self.filterby
         if filterby and filterby in table:
-            
+
             filter_opts = self.filter_opts
-            
+
             if filter_opts:
                 if None in filter_opts:
                     # Needs special handling (doesn't show up in 'belongs')
@@ -854,7 +854,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     query &= _query
                 else:
                     query &= (table[filterby].belongs(filter_opts))
-                    
+
             if not self.orderby and \
                fields is not None and dd is not None:
                 filterby_field = table[filterby]
@@ -866,9 +866,9 @@ class IS_ONE_OF_EMPTY(Validator):
 
         not_filterby = self.not_filterby
         if not_filterby and not_filterby in table:
-            
+
             not_filter_opts = self.not_filter_opts
-            
+
             if not_filter_opts:
                 if None in not_filter_opts:
                     # Needs special handling (doesn't show up in 'belongs')
@@ -879,7 +879,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     query &= (~_query)
                 else:
                     query &= (~(table[not_filterby].belongs(not_filter_opts)))
-                    
+
             if not self.orderby and \
                fields is not None and dd is not None:
                 filterby_field = table[not_filterby]
@@ -890,7 +890,7 @@ class IS_ONE_OF_EMPTY(Validator):
                     all_fields.append(str(filterby_field))
 
         return query, left
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def accessible_query(cls, method, table, instance_types=None):
@@ -2325,7 +2325,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
 
         self.error_message = error_message
         self.allow_empty = allow_empty
-        
+
         # Tell s3_mark_required that this validator doesn't accept NULL values
         self.mark_required = not allow_empty
 
@@ -3197,7 +3197,7 @@ class IS_PHONE_NUMBER(Validator):
 
         T = current.T
         error_message = self.error_message
-        
+
         number = str(value).strip()
         number, error = s3_single_phone_requires(number)
         if not error:

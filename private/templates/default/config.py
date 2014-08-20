@@ -498,6 +498,10 @@ settings.gis.geonames_username = "eden_test"
 #     "vol_volunteer_cluster.vol_cluster_id"          : [],
 #     "vol_volunteer_cluster.vol_cluster_position_id" : [],
 #     }
+# Uncomment to make Office codes unique
+#settings.org.office_code_unique = True
+# Uncomment to make Facility codes unique
+#settings.org.facility_code_unique = True
 
 # -----------------------------------------------------------------------------
 # Human Resource Management

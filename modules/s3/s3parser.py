@@ -117,15 +117,15 @@ class S3Parsing(object):
         login = False
         email = None
         password = None
-        
+
         if "LOGIN" in [word.upper() for word in words]:
-            login = True 
+            login = True
         if len(words) == 2 and login:
             password = words[1]
         elif len(words) == 3 and login:
             email = words[1]
             password = words[2]
-        if login:    
+        if login:
             if password and not email:
                 email = message.from_address
             return email, password
@@ -157,7 +157,7 @@ class S3Parsing(object):
                 email = record.email
                 break
             else:
-                record.update_record(is_expired = True) 
+                record.update_record(is_expired = True)
 
         return email
 
