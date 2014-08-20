@@ -109,6 +109,10 @@ div#rheader td {
 }
 div#rheader th {
 }
+.rheader-avatar {
+    float: left;
+    clear: right;
+}
 
 /* Tabs */
 div.tabs {

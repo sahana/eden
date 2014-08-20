@@ -1102,13 +1102,14 @@ li input + a {
     width: 55px;
 }
 
-/* HRM RHeader */
-.hrm-avatar {
+.rheader-avatar {
     float: left;
     clear: right;
     padding-bottom: 5px;
     padding-right: 10px;
 }
+
+/* HRM RHeader */
 .comment-box {
     overflow: hidden;
     padding: 15px 0;
