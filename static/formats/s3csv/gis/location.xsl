@@ -8,21 +8,27 @@
          CSV fields:
          ISO2...............ISO2 country code - only for use with Countries, where it is required
          L0.................L0 Name or ISO2 code (latter preferred except when importing countries)
+         L0 alt_name........L0 alt_name
          L0 KV:XX...........L0 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L0 L10n:XX.........L0 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L1.................L1 Name
+         L1 alt_name........L1 alt_name
          L1 KV:XX ..........L1 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L1 L10n:XX.........L1 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L2.................L2 Name
+         L2 alt_name........L2 alt_name
          L2 KV:XX ..........L2 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L2 L10n:XX.........L2 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L3.................L3 Name
+         L3 alt_name........L3 alt_name
          L3 KV:XX ..........L3 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L3 L10n:XX.........L3 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L4.................L4 Name
+         L4 alt_name........L4 alt_name
          L4 KV:XX ..........L4 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L4 L10n:XX.........L4 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L5.................L5 Name
+         L5 alt_name........L5 alt_name
          L5 KV:XX ..........L5 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L5 L10n:XX.........L5 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For specific locations:
@@ -281,6 +287,12 @@
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
                             </resource>
                         </xsl:if>
+                        <!-- Alt Name -->
+                        <xsl:if test="col[@field='L0 alt_name']!=''">
+                            <resource name="gis_location_name_alt">
+                                <data field="name_alt"><xsl:value-of select="col[@field='L0 alt_name']"/></data>
+                            </resource>
+                        </xsl:if>
                         <!-- L10n -->
                         <xsl:for-each select="col[starts-with(@field, 'L0 L10n')]">
                             <xsl:call-template name="L10n"/>
@@ -345,6 +357,12 @@
                             <xsl:value-of select="$country"/>
                         </xsl:attribute>
                     </reference>
+                </xsl:if>
+                <!-- Alt Name -->
+                <xsl:if test="col[@field='L1 alt_name']!=''">
+                    <resource name="gis_location_name_alt">
+                        <data field="name_alt"><xsl:value-of select="col[@field='L1 alt_name']"/></data>
+                    </resource>
                 </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L1 KV')]">
@@ -459,6 +477,12 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Alt Name -->
+                <xsl:if test="col[@field='L2 alt_name']!=''">
+                    <resource name="gis_location_name_alt">
+                        <data field="name_alt"><xsl:value-of select="col[@field='L2 alt_name']"/></data>
+                    </resource>
+                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L2 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -578,6 +602,12 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Alt Name -->
+                <xsl:if test="col[@field='L3 alt_name']!=''">
+                    <resource name="gis_location_name_alt">
+                        <data field="name_alt"><xsl:value-of select="col[@field='L3 alt_name']"/></data>
+                    </resource>
+                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L3 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -706,6 +736,12 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Alt Name -->
+                <xsl:if test="col[@field='L4 alt_name']!=''">
+                    <resource name="gis_location_name_alt">
+                        <data field="name_alt"><xsl:value-of select="col[@field='L4 alt_name']"/></data>
+                    </resource>
+                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L4 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -843,6 +879,12 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- Alt Name -->
+                <xsl:if test="col[@field='L5 alt_name']!=''">
+                    <resource name="gis_location_name_alt">
+                        <data field="name_alt"><xsl:value-of select="col[@field='L5 alt_name']"/></data>
+                    </resource>
+                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L5 KV')]">
                     <xsl:call-template name="KeyValue"/>
