@@ -234,7 +234,7 @@ S3.addModals = function() {
         });
         // Prevent browser from following link
         return false;
-    })
+    });
 };
 S3.popup_loaded = function(id) {
     // Resize the iframe to fit the Dialog
@@ -275,7 +275,7 @@ S3.redraw = function() {
     for (var i=0; i < len; i++) {
         S3[redraw_fns[i]]();
     }
-}
+};
 
 // Geolocation
 // - called from Auth.login()
@@ -553,7 +553,7 @@ S3.fieldError = function(selector, error) {
     // @ToDo: Are we using a Bootstrap or normal Theme?
     // Display the Error
     $(selector).after('<div class="error" style="display: block;">' + error + '</div>');
-}
+};
 
 // ============================================================================
 var s3_viewMap = function(feature_id) {
@@ -991,7 +991,6 @@ var S3OptionsFilter = function(settings) {
  *   - Task Form: Activity options filtered by Project selection
  * 
  * => Replacement for the S3OptionsFilter script
- * @todo: implement first-run (see $.filterOptionsS3)
  * @todo: test with S3SQLInlineLink
  * @todo: migrate use-cases
  * @todo: fix updateAddResourceLink
@@ -1210,14 +1209,16 @@ var S3OptionsFilter = function(settings) {
         }
 
         // Update the target field options
-        if (options !== '') {
-            widget.html(options)
-                  .val(newValue)
-                  .change()
-                  .prop('disabled', false);
-        } else {
-            // No options available => disable the target field
-            widget.prop('disabled', true);
+        widget.html(options)
+              .val(newValue)
+              .change()
+              .prop('disabled', options === '');
+        
+        // Refresh groupedopts or multiselect
+        if (widget.hasClass('groupedopts-widget')) {
+            widget.groupedopts('refresh');
+        } else if (widget.hasClass('multiselect-widget')) {
+            widget.multiselect('refresh');
         }
     };
 
@@ -1355,12 +1356,19 @@ var S3OptionsFilter = function(settings) {
 
             // Hide all visible targets and show throbber (remember visibility)
             target.each(function() {
-                var widget = $(this);
-                if (widget.is(':visible')) {
+                var widget = $(this), 
+                    visible = true;
+                if (widget.hasClass('groupedopts-widget')) {
+                    visible = widget.groupedopts('visible');
+                } else {
+                    visible = widget.is(':visible');
+                }
+                if (visible) {
                     widget.data('visible', true);
-                    widget.hide();
                     if (widget.hasClass('groupedopts-widget')) {
                         widget.groupedopts('hide');
+                    } else {
+                        widget.hide();
                     }
                     addThrobber(widget, lookupResource);
                 } else {
@@ -1388,9 +1396,12 @@ var S3OptionsFilter = function(settings) {
 
                         // Show the widget if it was visible before
                         if (widget.data('visible')) {
-                            widget.show();
                             if (widget.hasClass('groupedopts-widget')) {
-                                widget.groupedopts('show');
+                                if (!empty) {
+                                    widget.groupedopts('show');
+                                }
+                            } else {
+                                widget.show();
                             }
                         }
 
@@ -1413,14 +1424,22 @@ var S3OptionsFilter = function(settings) {
             // Find the target widget
             var targetName = settings.targetWidget || target.attr('name');
             var widget = $('[name = "' + targetName + '"]'),
+                visible = true,
                 show_widget = false;
 
             // Hide the widget if it is visible, add throbber
-            if (widget.is(':visible')) {
+            if (widget.hasClass('groupedopts-widget')) {
+                visible = widget.groupedopts('visible');
+            } else {
+                visible = widget.is(':visible');
+            }
+            if (visible) {
                 show_widget = true;
-                widget.hide();
+                widget.data('visible', true);
                 if (widget.hasClass('groupedopts-widget')) {
                     widget.groupedopts('hide');
+                } else {
+                    widget.hide();
                 }
                 addThrobber(widget, lookupResource);
             }
@@ -1436,9 +1455,12 @@ var S3OptionsFilter = function(settings) {
 
                     // Show the widget if it was visible before, remove throbber
                     if (show_widget) {
-                        widget.show();
                         if (widget.hasClass('groupedopts-widget')) {
-                            widget.groupedopts('show');
+                            if (!empty) {
+                                widget.groupedopts('show');
+                            }
+                        } else {
+                            widget.show();
                         }
                     }
                     removeThrobber(widget, lookupResource);
@@ -1879,7 +1901,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             if (S3.FocusOnFirstField != false) {
                 // Focus On First Field
                 $('input:text:visible:first').focus();
-            };
+            }
         }
 
         // Accept comma as thousands separator

@@ -1,7 +1,7 @@
 /**
  * jQuery UI GroupedOpts Widget for S3GroupedOptionsWidget
  * 
- * @copyright: 2013 (c) Sahana Software Foundation
+ * @copyright: 2013-14 (c) Sahana Software Foundation
  * @license: MIT
  *
  * requires: jQuery 1.9.1+
@@ -13,39 +13,67 @@
 
     var groupedoptsID = 0;
 
+    /**
+     * GroupedOpts widget, renders a SELECT as groups of checkboxes/radio buttons.
+     */
     $.widget('s3.groupedopts', {
 
-        // default options
+        /**
+         * Default options
+         *
+         * @prop {number} columns - the number of columns
+         * @prop {string} emptyText - message to show when no options are available
+         * @prop {string} order - the ordering direction, 
+         *                        'columns' (columns=>rows) or 'rows' (rows=>columns)
+         * @prop {bool} sort - alpha-sort the options
+         */
         options: {
             columns: 3,
-            emptyText: 'No options available'
+            emptyText: 'No options available',
+            order: 'columns',
+            sort: true
         },
 
+        /**
+         * Create the widget
+         */
         _create: function() {
-            // create the widget
+
             var el = this.element.hide();
 
             this.id = groupedoptsID;
             groupedoptsID += 1;
 
             var multiple = el.attr('multiple');
-            this.multiple = (typeof multiple != 'undefined') ? true : false;
+            if (multiple !== undefined) {
+                this.multiple = true;
+            } else {
+                this.multiple = false;
+            }
             this.menu = null;
         },
 
+        /**
+         * Update widget options
+         */
         _init: function() {
-            // update widget options
+
             this.refresh();
         },
 
+        /**
+         * Remove generated elements & reset other changes
+         */
         _destroy: function() {
-            // remove generated elements & reset other changes
             this.menu.remove();
             this.element.show();
         },
 
+        /**
+         * Re-draw contents
+         */
         refresh: function() {
-            // re-draw contents
+
             var el = this.element;
 
             this.index = 0;
@@ -79,18 +107,37 @@
             this._bindEvents();
         },
 
+        /**
+         * Hide the menu
+         */
         hide: function() {
-            // Hide the menu
+
             this.menu.hide();
         },
 
+        /**
+         * Show (un-hide) the menu
+         */
         show: function() {
-            // Hide the menu
+
             this.menu.show();
         },
 
+        /**
+         * Test whether the menu is currently visible
+         */
+        visible: function() {
+
+            return this.menu.is(':visible');
+        },
+
+        /**
+         * Render a group
+         * 
+         * @param {jQuery} optgroup - the optgroup element
+         */
         _renderGroup: function(optgroup) {
-            // Render a group
+
             var label = $(optgroup).attr('label'),
                 items = $(optgroup).find('option');
 
@@ -104,35 +151,72 @@
             }
         },
 
+        /**
+         * Render all rows in a group
+         * 
+         * @param {jQuery} items - the option elements in the group
+         * @param {jQuery} group - the target table element
+         */
         _renderRows: function(items, group) {
-            // Render all rows in a group
-            var cols = this.options.columns,
-                       head = [],
-                       tail = items,
-                       pos = 0,
-                       size,
-                       item;
 
-            while(tail.length) {
-                size = Math.min(cols, tail.length);
-                if (tail.length > size) {
-                    head = tail.slice(0, size);
-                    tail = tail.slice(size, tail.length);
-                } else {
-                    head = tail;
-                    tail = [];
+            var numcols = this.options.columns,
+                tail = $.makeArray(items);
+
+            if (this.options.sort) {
+                tail.sort(function(x, y) {
+                    if ($(x).text() < $(y).text()) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                });
+            }
+
+            var rows = [], i, j;
+            if (this.options.order == 'columns') {
+                // Order items as columns=>rows
+                numrows = Math.floor(tail.length / numcols);
+                for (i = 0; i < numcols; i++) {
+                    for (j = 0; j < numrows; j++) {
+                        if (tail.length) {
+                            if (rows.length < j + 1) {
+                                rows.push([]);
+                            }
+                            rows[j].push(tail.shift());
+                        }
+                    }
                 }
-                var row = $('<tr/>');
-                for (var i=0; i < head.length; i++) {
-                    item = head[i];
-                    this._renderItem(item, row);
+            } else {
+                // Order items as rows=>columns
+                while(tail.length) {
+                    row = [];
+                    for (i=0; i<numcols; i++) {
+                        if (!tail.length) {
+                            break;
+                        }
+                        row.push(tail.shift());
+                    }
+                    rows.push(row);
                 }
-                group.append(row);
+            }
+            // Render the rows
+            for (i = 0; i<rows.length; i++) {
+                var tr = $('<tr/>');
+                for (j = 0; j<rows[i].length; j++) {
+                    item = rows[i][j];
+                    this._renderItem(item, tr);
+                }
+                group.append(tr);
             }
         },
 
+        /**
+         * Render one checkbox/radio item
+         * 
+         * @param {jQuery} item - the option element
+         * @param {jQuery} row - the target tr element
+         */
         _renderItem: function(item, row) {
-            // Render one checkbox/radio item
 
             var multiple = this.multiple;
 
@@ -148,7 +232,7 @@
                 selected = this.selected;
 
             var olabel = '<label for="' + id + '"';
-            if (title && title != '') {
+            if (title && title !== '') {
                 olabel += ' title="' + title + '"';
             }
             if ((!multiple) && (value != selected)) {
@@ -178,8 +262,10 @@
             row.append(widget);
         },
 
+        /**
+         * Bind events to generated elements
+         */
         _bindEvents: function() {
-            // bind events to generated elements
 
             var self = this;
             self.menu.find('.s3-groupedopts-option').click(function() {

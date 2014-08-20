@@ -1948,11 +1948,13 @@ class S3GroupedOptionsWidget(FormWidget):
                     append(option)
 
         widget.add_class("groupedopts-widget")
-
-        empty_text = current.T("No options available")
-
-        script = '''$('#%s').groupedopts({columns:%s,emptyText:"%s"})''' % \
-                 (_id, self.cols, empty_text)
+        widget_opts = {"columns": self.cols,
+                       "emptyText": str(current.T("No options available")),
+                       "order": "columns",
+                       "sort": True,
+                       }
+        script = '''$('#%s').groupedopts(%s)''' % \
+                 (_id, json.dumps(widget_opts, separators=SEPARATORS))
         jquery_ready = current.response.s3.jquery_ready
         if script not in jquery_ready:
             jquery_ready.append(script)
