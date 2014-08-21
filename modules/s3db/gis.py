@@ -390,6 +390,10 @@ class S3LocationModel(S3Model):
                        gis_location_name = {"name": "name",
                                             "joinby": "location_id",
                                             },
+                       # Alternate Names
+                       gis_location_name_alt = {"name": "name_alt",
+                                                "joinby": "location_id",
+                                                },
                        # Child Locations
                        #gis_location = {"joinby": "parent",
                        #                "multiple": False,
@@ -5525,6 +5529,7 @@ def gis_rheader(r, tabs=[]):
     if resourcename == "location":
         tabs = [(T("Location Details"), None),
                 (T("Local Names"), "name"),
+                (T("Alternate Names"), "name_alt"),
                 (T("Key Value pairs"), "tag"),
                 (T("Import from OpenStreetMap"), "import_poi"),
                 ]
