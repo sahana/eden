@@ -368,6 +368,8 @@ class S3SQLDefaultForm(S3SQLForm):
                     # Default script: hide form, show add-button
                     script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
                 s3.jquery_ready.append(script % cancel)
+            elif s3.cancel is True:
+                cancel_button.add_class("s3-cancel")
             else:
                 cancel_button.update(_href=s3.cancel)
             buttons.append(cancel_button)
@@ -921,6 +923,8 @@ class S3SQLCustomForm(S3SQLForm):
             if isinstance(cancel, dict):
                 script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})''' % cancel
                 s3.jquery_ready.append(script)
+            elif s3.cancel is True:
+                cancel_button.add_class("s3-cancel")
             else:
                 cancel_button.update(_href=s3.cancel)
             buttons = [submit_button, cancel_button]

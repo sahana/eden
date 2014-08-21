@@ -351,6 +351,10 @@ class S3CRUD(S3Method):
             # Interim save button
             self._interim_save_button()
 
+            # Default Cancel Button
+            if r.representation == "html" and r.method == "create":
+                self._default_cancel_button(r)
+
             # Get the form
             output["form"] = self.sqlform(request=request,
                                           resource=resource,
@@ -855,6 +859,10 @@ class S3CRUD(S3Method):
 
             # Interim save button
             self._interim_save_button()
+
+            # Default Cancel Button
+            if r.representation == "html" and r.method == "update":
+                self._default_cancel_button(r)
 
             # Get the form
             form = self.sqlform(request=self.request,
@@ -2541,6 +2549,65 @@ class S3CRUD(S3Method):
         if custom_actions:
             s3.actions = s3.actions + custom_actions
         return
+
+    # -------------------------------------------------------------------------
+    def _default_cancel_button(self, r):
+        """
+            Show a default cancel button in standalone create/update forms.
+            Individual controllers can override this by setting
+            response.s3.cancel = False.
+
+            @param r: the S3Request
+        """
+
+        if r.representation != "html":
+            return False
+
+        s3 = current.response.s3
+
+        cancel = s3.cancel
+        if cancel is False or isinstance(cancel, dict):
+            success = False
+        elif cancel is True or \
+             current.deployment_settings.get_ui_default_cancel_button():
+
+            if isinstance(cancel, basestring):
+                default_url = cancel
+            else:
+                method = r.method
+                if method == "create":
+                    if r.component:
+                        default_url = r.url(method = "",
+                                            component_id= "",
+                                            vars = {},
+                                            )
+                    else:
+                        config = self._config("summary")
+                        if config or \
+                           current.deployment_settings.get_ui_summary():
+                            default_url = r.url(method="summary", id=0)
+                        else:
+                            default_url = r.url(method="", id=0)
+                elif method == "update":
+                    if r.component:
+                        default_url = r.url(method = "",
+                                            component_id= "",
+                                            vars = {},
+                                            )
+                    else:
+                        default_url = r.url(method="read")
+            if default_url:
+                script = '''$.cancelButtonS3('%s')''' % default_url
+            else:
+                script = '''$.cancelButtonS3()'''
+            jquery_ready = current.response.s3.jquery_ready
+            if script not in jquery_ready:
+                jquery_ready.append(script)
+            success = s3.cancel = True
+        else:
+            success = False
+
+        return success
 
     # -------------------------------------------------------------------------
     def import_csv(self, file, table=None):

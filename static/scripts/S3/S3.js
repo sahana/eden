@@ -625,7 +625,7 @@ var s3_showMap = function(feature_id) {
  * - Item Packs filtered by Item
  * - Rooms filtered by Site
  * - Themes filtered by Sector
- * 
+ *
  * @todo: deprecate, replace by $.filterOptionsS3
  **/
 
@@ -829,7 +829,7 @@ var S3OptionsFilter = function(settings) {
                     if (settings.showEmptyField === 'undefined') {
                         var showEmptyField = true;
                     } else {
-                        var showEmptyField = settings.showEmptyField;   
+                        var showEmptyField = settings.showEmptyField;
                     }
                     var fncPrep = settings.fncPrep || function(data) { return null; };
                     var fncRepresent = settings.fncRepresent || function(record) { return record.name; };
@@ -989,7 +989,7 @@ var S3OptionsFilter = function(settings) {
  * Filter options of a drop-down field (=target) by the selection made
  * in another field (=trigger), e.g.:
  *   - Task Form: Activity options filtered by Project selection
- * 
+ *
  * => Replacement for the S3OptionsFilter script
  * @todo: test with S3SQLInlineLink
  * @todo: migrate use-cases
@@ -1213,7 +1213,7 @@ var S3OptionsFilter = function(settings) {
               .val(newValue)
               .change()
               .prop('disabled', options === '');
-        
+
         // Refresh groupedopts or multiselect
         if (widget.hasClass('groupedopts-widget')) {
             widget.groupedopts('refresh');
@@ -1356,7 +1356,7 @@ var S3OptionsFilter = function(settings) {
 
             // Hide all visible targets and show throbber (remember visibility)
             target.each(function() {
-                var widget = $(this), 
+                var widget = $(this),
                     visible = true;
                 if (widget.hasClass('groupedopts-widget')) {
                     visible = widget.groupedopts('visible');
@@ -1491,7 +1491,7 @@ var S3OptionsFilter = function(settings) {
      * @returns {array} [triggerField, triggerValue]
      */
     var getTriggerData = function(trigger) {
-        
+
         var triggerField = trigger,
             triggerValue = '';
         if (triggerField.attr('type') == 'checkbox') {
@@ -1624,6 +1624,46 @@ var S3OptionsFilter = function(settings) {
             updateTarget(target, lookupKey, triggerValue, settings, true);
         });
     };
+})(jQuery);
+
+// ============================================================================
+/**
+ * Link any action buttons/link with the s3-cancel class to the referrer
+ * (if on the same server and application), or to a default URL (if given),
+ * or hide them if neither referrer nor default URL are available.
+ */
+(function() {
+
+    /**
+     * Main entry point
+     *
+     * @param {string} defaultURL - the default URL
+     */
+    $.cancelButtonS3 = function(defaultURL) {
+
+        var cancelButtons = $('.s3-cancel');
+        if (!cancelButtons.length) {
+            return;
+        }
+        var referrer = document.referrer;
+        if (referrer && referrer != document.URL) {
+            var anchor = document.createElement('a');
+            anchor.href = referrer;
+            if (anchor.host == window.location.host &&
+                anchor.pathname.lastIndexOf(S3.Ap, 0) === 0) {
+                cancelButtons.attr('href', referrer);
+            } else if (defaultURL) {
+                cancelButtons.attr('href', defaultURL);
+            } else {
+                cancelButtons.hide();
+            }
+        } else if (defaultURL) {
+            cancelButtons.attr('href', defaultURL);
+        } else {
+            cancelButtons.hide();
+        }
+    };
+
 })(jQuery);
 
 // ============================================================================
@@ -1983,7 +2023,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
 
         // Event Handlers for the page
         S3.redraw();
-        
+
         // Popovers (Bootstrap themes only)
         if (typeof($.fn.popover) != 'undefined') {
             // Applies to elements created after $(document).ready

@@ -20,7 +20,7 @@ s3 = current.response.s3
 settings = current.deployment_settings
 
 """
-    Puget Sound Common Maritime Operating Picture (MCOP) 
+    Puget Sound Common Maritime Operating Picture (MCOP)
 """
 
 # -----------------------------------------------------------------------------
@@ -67,8 +67,11 @@ settings.ui.formstyle = "bootstrap"
 settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 
-# @ToDo: Investigate 
+# @ToDo: Investigate
 settings.ui.use_button_glyphicons = True
+
+# Uncomment to show a default cancel button in standalone create/update forms
+settings.ui.default_cancel_button = True
 
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
@@ -321,14 +324,14 @@ def customise_cms_post_resource(r, tablename):
                                                     ).first()
         if incident:
             table.location_id.default = incident.location_id
-        
+
         # Add link onaccept
         def create_onaccept(form):
             current.s3db.event_post.insert(incident_id=incident_id,
                                            post_id=form.vars.id)
 
         s3db.configure("cms_post",
-                       create_onaccept = create_onaccept, 
+                       create_onaccept = create_onaccept,
                        )
     else:
         # Insert into Form
@@ -735,7 +738,7 @@ def customise_org_organisation_resource(r, tablename):
             # 2-column datalist, 6 rows per page
             s3.dl_pagelength = 12
             s3.dl_rowsize = 3
-    
+
             from s3 import S3TextFilter, S3OptionsFilter
             filter_widgets = [S3TextFilter(["name",
                                             "acronym",
@@ -918,7 +921,7 @@ def customise_org_resource_resource(r, tablename):
             msg_record_modified = T("Inventory Resource updated"),
             msg_record_deleted = T("Inventory Resource deleted"),
             msg_list_empty = T("No Resources in Inventory"))
-        
+
         location_field = table.location_id
         # Filter from a Profile page?
         # If so, then default the fields we know
@@ -932,7 +935,7 @@ def customise_org_resource_resource(r, tablename):
         if location_id:
             location_field.default = location_id
             # We still want to be able to specify a precise location
-            #location_field.readable = location_field.writable = False    
+            #location_field.readable = location_field.writable = False
         from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
         location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
         location_field.widget = S3LocationSelectorWidget2(levels=levels,
@@ -1037,7 +1040,7 @@ def customise_project_task_resource(r, tablename):
 
     s3db = current.s3db
     table = s3db.project_task
-    
+
     s3 = current.response.s3
 
     if r.tablename == "event_incident" and r.method == "profile":
@@ -1091,7 +1094,7 @@ def customise_project_task_resource(r, tablename):
                                            task_id=form.vars.id)
 
         s3db.configure("project_task",
-                       create_onaccept = create_onaccept, 
+                       create_onaccept = create_onaccept,
                        )
     else:
         # Insert into Form
@@ -1244,7 +1247,7 @@ def customise_pr_person_resource(r, tablename):
     site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                     represent,
                                     orderby = "org_site.name")
-    
+
     from s3layouts import S3AddResourceLink
     site_field.comment = S3AddResourceLink(c="org", f="facility",
                                            vars={"child": "site_id"},
@@ -1271,7 +1274,7 @@ def customise_pr_person_resource(r, tablename):
         field.readable = field.writable = False
         hr_fields.remove("organisation_id")
 
-    
+
     from s3 import S3SQLCustomForm, S3SQLInlineComponent
     s3_sql_custom_fields = [
             "first_name",
@@ -1303,7 +1306,7 @@ def customise_pr_person_resource(r, tablename):
                    (T("Job Title"), "human_resource.job_title_id"),
                    (T("Facility"), "human_resource.site_id"),
                    ]
-    
+
     # Don't include Email/Phone for unauthenticated users
     if current.auth.is_logged_in():
         list_fields += [(MOBILE, "phone.value"),
@@ -1519,7 +1522,7 @@ def render_contacts(list_id, item_id, resource, rfields, record):
 
     item = DIV(DIV(SPAN(fullname,
                         " ",
-                        job_title, 
+                        job_title,
                         _class="card-title"),
                    edit_bar,
                    _class="card-header",
