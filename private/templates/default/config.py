@@ -178,6 +178,8 @@ settings.L10n.decimal_separator = "."
 #settings.L10n.translate_gis_layer = True
 # Uncomment this to Translate Location Names
 #settings.L10n.translate_gis_location = True
+# Uncomment this for Alternate Location Names
+#settings.L10n.name_alt_gis_location = True
 
 # Finance settings
 #settings.fin.currencies = {

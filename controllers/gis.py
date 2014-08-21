@@ -289,6 +289,8 @@ def location():
                      ]
     if settings.get_L10n_translate_gis_location():
         search_fields.append("name.name_l10n")
+    if settings.get_L10n_name_alt_gis_location():
+        search_fields.append("name_alt.name_alt")
 
     filter_level_widgets = []
     for level, level_label in location_hierarchy.items():
