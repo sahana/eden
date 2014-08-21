@@ -362,9 +362,13 @@ class S3LocationModel(S3Model):
                        "start_date",
                        "end_date",
                        ]
+        position = 2
         if settings.get_L10n_translate_gis_location():
-            list_fields.insert(2, "name.name_l10n")
-            
+            list_fields.insert(position, "name.name_l10n")
+            position += 1
+        if settings.get_L10n_name_alt_gis_location():
+            list_fields.insert(position, "name_alt.name_alt")
+
         self.configure(tablename,
                        context = {"location": "parent",
                                   },
@@ -5513,6 +5517,8 @@ def gis_layer_represent(id, row=None, show_link=True):
 # =============================================================================
 def gis_rheader(r, tabs=[]):
     """ GIS page headers """
+    
+    settings = current.deployment_settings
 
     if r.representation != "html":
         # RHeaders only used in interactive views
@@ -5528,11 +5534,17 @@ def gis_rheader(r, tabs=[]):
 
     if resourcename == "location":
         tabs = [(T("Location Details"), None),
-                (T("Local Names"), "name"),
-                (T("Alternate Names"), "name_alt"),
                 (T("Key Value pairs"), "tag"),
                 (T("Import from OpenStreetMap"), "import_poi"),
                 ]
+        # Insert the tabs based on Deployment settings
+        position = 1
+        if settings.get_L10n_translate_gis_location():
+            tabs.insert(position, (T("Local Names"), "name"))
+            position += 1
+        if settings.get_L10n_name_alt_gis_location():
+            tabs.insert(position, (T("Alternate Names"), "name_alt"))
+
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
