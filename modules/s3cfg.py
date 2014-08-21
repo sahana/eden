@@ -571,7 +571,7 @@ class S3Config(Storage):
 
     def get_chatdb_string(self):
         chat_server = self.base.get("chat_server",False)
-                
+
         if(chat_server["server_db_type"] == "mysql"):
             db_string = "mysql://%s:%s@%s:%s/%s" % \
             (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
@@ -1304,6 +1304,13 @@ class S3Config(Storage):
                 return formstyles[setting]
         return setting
 
+    def get_ui_default_cancel_button(self):
+        """
+            Whether to show a default cancel button in standalone
+            create/update forms
+        """
+        return self.ui.get("default_cancel_button", False)
+
     # -------------------------------------------------------------------------
     def get_ui_auth_user_represent(self):
         """
@@ -1850,14 +1857,14 @@ class S3Config(Storage):
             "population_night".
         """
         return self.cr.get("shelter_population_dynamic", False)
-    
+
     def get_cr_shelter_housing_unit_management(self):
         """
-            Enable the use of tab "Housing Unit" and enable the housing unit 
+            Enable the use of tab "Housing Unit" and enable the housing unit
             selection during evacuees registration.
         """
         return self.cr.get("shelter_housing_unit_management", False)
-    
+
     # -------------------------------------------------------------------------
     # Deployments
     #
@@ -1901,16 +1908,16 @@ class S3Config(Storage):
                                             8 :T("Hospital"),
                                             9 :T("Orphanage")
                                             })
-    
+
     def get_evr_show_physical_description(self):
         """
             Show Evacuees physical description
         """
         return self.evr.get("physical_description", True)
-    
+
     def get_evr_link_to_organisation(self):
         """
-            Link evacuees to Organisations.  
+            Link evacuees to Organisations.
         """
         return self.evr.get("link_to_organisation", False)
 
@@ -2423,7 +2430,7 @@ class S3Config(Storage):
 
     def get_org_office_code_unique(self):
         """
-            Whether Office code is unique            
+            Whether Office code is unique
         """
         return self.org.get("office_code_unique", False)
 
@@ -2855,13 +2862,13 @@ class S3Config(Storage):
             Whether Airport code is unique
         """
         return self.transport.get("airport_code_unique", False)
-    
+
     def get_transport_heliport_code_unique(self):
         """
             Whether Heliport code is unique
         """
         return self.transport.get("heliport_code_unique", False)
-    
+
     def get_transport_seaport_code_unique(self):
         """
             Whether Seaport code is unique
