@@ -215,7 +215,6 @@ class S3MainMenu(object):
             menu_auth = MM(auth.user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
                             MM("User Profile", m="profile"),
                             MM("Personal Data", c="default", f="person", m="update"),
                             MM("Contact Details", c="pr", f="person",
@@ -225,6 +224,7 @@ class S3MainMenu(object):
                                 #args="pe_subscription",
                                 #vars={"person.pe_id" : auth.user.pe_id}),
                             MM("Change Password", m="change_password"),
+                            MM("Logout", m="logout", _id="auth_menu_logout"),
                             SEP(),
                             MM({"name": current.T("Rapid Data Entry"),
                                "id": "rapid_toggle",
