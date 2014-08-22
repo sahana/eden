@@ -21,6 +21,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
+#settings.base.prepopulate = ("IFRC", "IFRC/Train", "IFRC/Demo")
 settings.base.prepopulate = ("IFRC", "IFRC/Train")
 
 settings.base.system_name = T("Resource Management System")
