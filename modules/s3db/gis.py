@@ -845,6 +845,7 @@ class S3LocationModel(S3Model):
         response = current.response
         resource = r.resource
         table = r.resource.table
+        settings = current.deployment_settings
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -872,6 +873,7 @@ class S3LocationModel(S3Model):
 
         search_l10n = None
         translate = None
+        name_alt = settings.get_L10n_name_alt_gis_location()
         levels = _vars.get("levels", None)
         loc_select = _vars.get("loc_select", None)
         if loc_select:
@@ -894,7 +896,6 @@ class S3LocationModel(S3Model):
             multi_country = len(current.deployment_settings.get_gis_countries()) != 1
             if multi_country:
                 fields.append("L0")
-            settings = current.deployment_settings
             if settings.get_L10n_translate_gis_location():
                 search_l10n = True
                 language = current.session.s3.language
@@ -938,8 +939,12 @@ class S3LocationModel(S3Model):
         elif loc_select:
             fields.append("level")
             fields.append("parent")
-        elif search_l10n:
-            query |= FS("name.name_l10n").lower().like(value + "%")
+        else:
+            if search_l10n:
+                query |= FS("name.name_l10n").lower().like(value + "%")
+            if name_alt:
+                query |= FS("name_alt.name_alt").lower().like(value + "%")
+        
         resource.add_filter(query)
 
         if level:
