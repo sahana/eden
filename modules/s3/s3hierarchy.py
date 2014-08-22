@@ -128,6 +128,12 @@ class S3HierarchyCRUD(S3Method):
             "addTitle": str(crud_string("label_create")),
             "addURL": r.url(method="create", representation="popup"),
         }
+        theme = current.deployment_settings.get_ui_hierarchy_theme()
+        if theme and hasattr(theme, "rsplit"):
+            folder, theme = ([None] + theme.rsplit("/", 1))[-2:]
+            if folder:
+                widget_opts["themesFolder"] = folder
+            widget_opts["theme"] = theme
         self.include_scripts(widget_id, widget_opts)
 
         # View
