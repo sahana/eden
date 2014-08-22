@@ -2556,13 +2556,14 @@ class S3XML(S3Codec):
                 if i == 0:
                     # Auto-detect hashtags
                     items = dict((k, s3_unicode(v.strip()))
-                                 for k, v in r.items() if v and v.strip())
+                                 for k, v in r.items() if k and v and v.strip())
                     if all(v[0] == '#' for v in items.values()):
                         hashtags.update(items)
                         continue
                 row = SubElement(root, ROW)
                 for k in r:
-                    add_col(row, k, r[k], hashtags=hashtags)
+                    if k:
+                        add_col(row, k, r[k], hashtags=hashtags)
                 if extra_data:
                     for key in extra_data:
                         if key not in r:

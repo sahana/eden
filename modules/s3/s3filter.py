@@ -1723,6 +1723,8 @@ class S3HierarchyFilter(S3FilterWidget):
 
             lookup              name of the lookup table
             represent           representation method for the key
+            multiple            allow selection of multiple options
+            leafonly            only lead nodes can be selected
     """
 
     _class = "hierarchy-filter"
