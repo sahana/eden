@@ -899,7 +899,7 @@ class S3PersonModel(S3Model):
                        main = "first_name",
                        extra = "last_name",
                        onaccept = self.pr_person_onaccept,
-                       realm_components = ["presence"],
+                       realm_components = ("presence",),
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 

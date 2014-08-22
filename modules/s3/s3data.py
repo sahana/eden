@@ -1493,8 +1493,6 @@ class S3PivotTable(object):
         rfields = self.rfields
         resource = self.resource
 
-        #tablename = resource.tablename
-
         T = current.T
         OTHER = "__other__"
 
@@ -1525,7 +1523,7 @@ class S3PivotTable(object):
             else:
                 row_repr = col_repr = lambda v: s3_unicode(v)
 
-            others = s3_unicode(current.T("Others"))
+            others = s3_unicode(T("Others"))
 
             irows = self.row
             icols = self.col
@@ -2313,7 +2311,7 @@ class S3PivotTable(object):
         self.cols = cols = self.cols and prefix(self.cols) or None
 
         if not fields:
-            fields = []
+            fields = ()
 
         # dfields (data-fields): fields to generate the layers
         dfields = [prefix(s) for s in fields]

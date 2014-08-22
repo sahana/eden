@@ -302,7 +302,7 @@ class S3WarehouseModel(S3Model):
                                "email"
                                ],
                   onaccept = self.inv_warehouse_onaccept,
-                  realm_components = ["contact_emergency",
+                  realm_components = ("contact_emergency",
                                       "physical_description",
                                       "config",
                                       "image",
@@ -318,7 +318,7 @@ class S3WarehouseModel(S3Model):
                                       "document",
                                       "recv",
                                       "address",
-                                      ],
+                                      ),
                   super_entity = ("pr_pentity", "org_site"),
                   update_realm = True,
                   )

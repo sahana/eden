@@ -4937,6 +4937,7 @@ class GIS(object):
                     L2_name = Lx.L2
                     L3_name = Lx.name
                     _path = Lx.path
+                    # @ToDo: Cannot assume that all levels are filled
                     if _path and L0_name and L1_name and L2_name:
                         _path = "%s/%s" % (_path, id)
                     else:

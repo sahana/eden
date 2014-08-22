@@ -380,7 +380,7 @@ $.filterOptionsS3({
                   list_fields = list_fields,
                   mark_required = ("organisation_id",),
                   onaccept = self.asset_onaccept,
-                  realm_components = ["log", "presence"],
+                  realm_components = ("log", "presence"),
                   report_options = report_options,
                   summary = summary,
                   super_entity = ("supply_item_entity", "sit_trackable"),

@@ -708,7 +708,8 @@ class S3HRModel(S3Model):
             crud_fields.append("code")
 
         if group == "volunteer":
-            location_context = "person_id$address.location_id" # When not using S3Track()
+            # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
+            #location_context = "person_id$address.location_id" # When not using S3Track()
             crud_fields.extend(("details.availability",
                                 "details.card",
                                 "volunteer_cluster.vol_cluster_type_id",
@@ -726,7 +727,8 @@ class S3HRModel(S3Model):
             report_fields_extra = ["person_id$date_of_birth"]
         else:
             # Staff
-            location_context = "site_id$location_id" # When not using S3Track()
+            # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
+            #location_context = "site_id$location_id" # When not using S3Track()
             crud_fields.insert(1, "site_id")
             crud_fields.insert(4, "department_id")
             report_fields.extend(("site_id",
@@ -751,7 +753,7 @@ class S3HRModel(S3Model):
             mark_required = None
 
         configure(tablename,
-                  context = {"location": location_context,
+                  context = {#"location": location_context,
                              "organisation": "organisation_id",
                              "person": "person_id",
                              "site": "site_id",
@@ -765,18 +767,18 @@ class S3HRModel(S3Model):
                   mark_required = mark_required,
                   onaccept = hrm_human_resource_onaccept,
                   ondelete = self.hrm_human_resource_ondelete,
-                  realm_components = ["presence"],
+                  realm_components = ("presence",),
                   report_fields = report_fields_extra,
                   report_options = Storage(
                     rows = report_fields,
                     cols = report_fields,
                     fact = report_fields,
-                    methods = ["count", "list"],
+                    methods = ("count", "list",),
                     defaults = Storage(
                         rows = "organisation_id",
                         cols = "training.course_id",
-                        fact = "person_id",
-                        aggregate = "count")
+                        fact = "count(person_id)",
+                        )
                     ),
                   # Default summary
                   summary = [{"name": "addform",
