@@ -29,3 +29,9 @@ PyRTF>=0.45
 TwitterSearch>=0.78.4
 # Warning: Messaging unresolved dependency: requests required for posting to Facebook
 requests>=2.3.0
+# Warning: Setup unresolved dependency: ansible required for Setup Module
+ansible>=1.6.2
+# Warning: Setup unresolved dependency: PyYAML required for Setup Module
+PyYAML>=3.11
+# Warning: Setup unresolved dependency: boto required for Setup Module
+boto>=2.32.1
