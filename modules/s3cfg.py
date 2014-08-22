@@ -912,7 +912,7 @@ class S3Config(Storage):
             - more than this will prompt the user to zoom in to load the layer
             Lower this number to get extra performance from an overloaded server.
         """
-        return self.gis.get("max_features", 1000)
+        return self.gis.get("max_features", 2000)
 
     def get_gis_legend(self):
         """

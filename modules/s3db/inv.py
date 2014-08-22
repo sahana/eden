@@ -1415,7 +1415,7 @@ class S3InventoryTrackingModel(S3Model):
                                  "sender_id",
                                  "comments"
                                  ],
-                  mark_required = ["from_site_id", "organisation_id"],
+                  mark_required = ("from_site_id", "organisation_id"),
                   onvalidation = self.inv_recv_onvalidation,
                   onaccept = self.inv_recv_onaccept,
                   filter_widgets = filter_widgets,

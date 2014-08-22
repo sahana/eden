@@ -378,7 +378,7 @@ $.filterOptionsS3({
                   deduplicate = self.asset_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
-                  mark_required = ["organisation_id"],
+                  mark_required = ("organisation_id",),
                   onaccept = self.asset_onaccept,
                   realm_components = ["log", "presence"],
                   report_options = report_options,

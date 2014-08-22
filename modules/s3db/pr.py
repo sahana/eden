@@ -2519,7 +2519,7 @@ class S3PersonImageModel(S3Model):
                        onaccept = self.pr_image_onaccept,
                        onvalidation = self.pr_image_onvalidation,
                        ondelete = self.pr_image_ondelete,
-                       #mark_required = ["url", "image"],
+                       #mark_required = ("url", "image"),
                        list_fields=["id",
                                     "title",
                                     "profile",

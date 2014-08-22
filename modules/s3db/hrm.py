@@ -708,6 +708,7 @@ class S3HRModel(S3Model):
             crud_fields.append("code")
 
         if group == "volunteer":
+            location_context = "person_id$address.location_id" # When not using S3Track()
             crud_fields.extend(("details.availability",
                                 "details.card",
                                 "volunteer_cluster.vol_cluster_type_id",
@@ -725,6 +726,7 @@ class S3HRModel(S3Model):
             report_fields_extra = ["person_id$date_of_birth"]
         else:
             # Staff
+            location_context = "site_id$location_id" # When not using S3Track()
             crud_fields.insert(1, "site_id")
             crud_fields.insert(4, "department_id")
             report_fields.extend(("site_id",
@@ -744,12 +746,12 @@ class S3HRModel(S3Model):
         crud_form = S3SQLCustomForm(*crud_fields)
 
         if settings.get_hrm_org_required():
-            mark_required = ["organisation_id"]
+            mark_required = ("organisation_id",)
         else:
-            mark_required = []
+            mark_required = None
 
         configure(tablename,
-                  context = {"location": "site_id$location_id",
+                  context = {"location": location_context,
                              "organisation": "organisation_id",
                              "person": "person_id",
                              "site": "site_id",
