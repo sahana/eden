@@ -20,7 +20,7 @@ ROW = "row"
 COL = "col"
 FIELD = "field"
 TAG = "tag"
-HASHTAG = "tag"
+HASHTAG = "hashtag"
 
 # -----------------------------------------------------------------------------
 def xml_encode(s):
