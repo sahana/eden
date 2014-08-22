@@ -53,12 +53,12 @@ try:
     import ansible.inventory
     from ansible import callbacks
 except ImportError:
-    print >> sys.stderr, "ERROR: ansible module needed for Deployment"
+    current.log.warning("ansible module needed for Setup")
 
 try:
     import yaml
 except ImportError:
-    print >> sys.stderr, "ERROR: PyYAML module needed for Deployment"
+    current.log.warning("PyYAML module needed for Setup")
 
 TIME_FORMAT = "%b %d %Y %H:%M:%S"
 MSG_FORMAT = "%(now)s - %(category)s - %(data)s\n\n"
