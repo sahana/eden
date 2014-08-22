@@ -1635,6 +1635,17 @@ var S3OptionsFilter = function(settings) {
 (function() {
 
     /**
+     * Strip query and hash from a URL
+     * 
+     * @param {string} url - the URL
+     */
+    var stripQuery = function(url) {
+
+        var newurl = url.split('?')[0].split('#')[0];
+        return newurl;
+    }
+
+    /**
      * Main entry point
      *
      * @param {string} defaultURL - the default URL
@@ -1646,7 +1657,7 @@ var S3OptionsFilter = function(settings) {
             return;
         }
         var referrer = document.referrer;
-        if (referrer && referrer != document.URL) {
+        if (referrer && stripQuery(referrer) != stripQuery(document.URL)) {
             var anchor = document.createElement('a');
             anchor.href = referrer;
             if (anchor.host == window.location.host &&
@@ -1663,7 +1674,6 @@ var S3OptionsFilter = function(settings) {
             cancelButtons.hide();
         }
     };
-
 })(jQuery);
 
 // ============================================================================
