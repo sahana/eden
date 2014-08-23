@@ -307,7 +307,18 @@
             return item.label;
         }
         if (item.name) {
-            var name = item.name;
+            var name;
+            if(item.match_type) {
+                if(item.next_string) {
+                    name = item.match_string + "<b>" + item.next_string + "</b>";
+                }
+                else {
+                    name = item.match_string;
+                }
+            }
+            else {
+                name = item.name;
+            }
         } else {
             // Site contents
             var name = ''
@@ -485,7 +496,7 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
-            var label = represent(item);
+            var label = represent_location(item);
             return $('<li>').data('item.autocomplete', item)
                             .append('<a>' + label + '</a>')
                             .appendTo(ul);

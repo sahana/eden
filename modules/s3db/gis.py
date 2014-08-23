@@ -63,6 +63,7 @@ from gluon.dal import Row, Rows
 from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
+from s3.s3widgets import set_match_strings
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -845,6 +846,7 @@ class S3LocationModel(S3Model):
         response = current.response
         resource = r.resource
         table = r.resource.table
+        settings = current.deployment_settings
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
@@ -872,6 +874,7 @@ class S3LocationModel(S3Model):
 
         search_l10n = None
         translate = None
+        name_alt = settings.get_L10n_name_alt_gis_location()
         levels = _vars.get("levels", None)
         loc_select = _vars.get("loc_select", None)
         if loc_select:
@@ -894,7 +897,6 @@ class S3LocationModel(S3Model):
             multi_country = len(current.deployment_settings.get_gis_countries()) != 1
             if multi_country:
                 fields.append("L0")
-            settings = current.deployment_settings
             if settings.get_L10n_translate_gis_location():
                 search_l10n = True
                 language = current.session.s3.language
@@ -938,8 +940,14 @@ class S3LocationModel(S3Model):
         elif loc_select:
             fields.append("level")
             fields.append("parent")
-        elif search_l10n:
-            query |= FS("name.name_l10n").lower().like(value + "%")
+        else:
+            if search_l10n:
+                query |= FS("name.name_l10n").lower().like(value + "%")
+                fields.append("name.name_l10n")
+            if name_alt:
+                query |= FS("name_alt.name_alt").lower().like(value + "%")
+                fields.append("name_alt.name_alt")
+
         resource.add_filter(query)
 
         if level:
@@ -1085,8 +1093,40 @@ class S3LocationModel(S3Model):
                             item["L0"] = loc["name_l10n"]
                     else:
                         item["L0"] = L0
+                
+                _name_alt = row.get("gis_location_name_alt.name_alt", None)
+                _name_l10n = row.get("gis_location_name.name_l10n", None)
+                if isinstance(_name_alt, basestring):
+                    # Convert into list
+                    _name_alt = [ _name_alt ]
+                if isinstance(_name_l10n, basestring):
+                    _name_l10n = [ _name_l10n ]
+                
+                alternate = dict(item)
+                location_names = []
+                l = len(value)
+                
+                if _name_alt:
+                    location_names += _name_alt
+                if _name_l10n:
+                    location_names += _name_l10n
+    
+                if location_names:
+                    # Remove the Actual Location Name
+                    alternate.pop("name", None)
+                    for name in location_names:
+                        _alternate = dict(alternate)
+                        if name[:l].lower() == value:
+                            # Insert other possible names, if matched
+                            _alternate["name"] = name
+                            # Populate match information
+                            set_match_strings(_alternate, value)
+                            iappend(_alternate)
 
-                iappend(item)
+                if item["name"][:l].lower() == value:
+                    # Include Actual name also, if matched
+                    set_match_strings(item, value)
+                    iappend(item)
 
             output = json.dumps(items, separators=SEPARATORS)
                                        
