@@ -310,7 +310,7 @@
             var name;
             if(item.match_type) {
                 if(item.next_string) {
-                    name = item.match_string + "<b>" + item.next_string + "</b>";
+                    name = item.match_string + '<b>' + item.next_string + '</b>';
                 }
                 else {
                     name = item.match_string;

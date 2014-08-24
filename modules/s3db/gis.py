@@ -1111,17 +1111,16 @@ class S3LocationModel(S3Model):
                 if _name_l10n:
                     location_names += _name_l10n
     
-                if location_names:
-                    # Remove the Actual Location Name
-                    alternate.pop("name", None)
-                    for name in location_names:
-                        _alternate = dict(alternate)
-                        if name[:l].lower() == value:
-                            # Insert other possible names, if matched
-                            _alternate["name"] = name
-                            # Populate match information
-                            set_match_strings(_alternate, value)
-                            iappend(_alternate)
+                # Remove the Actual Location Name
+                alternate.pop("name", None)
+                for name in location_names:
+                    _alternate = dict(alternate)
+                    if name[:l].lower() == value:
+                        # Insert other possible names, if matched
+                        _alternate["name"] = name
+                        # Populate match information
+                        set_match_strings(_alternate, value)
+                        iappend(_alternate)
 
                 if item["name"][:l].lower() == value:
                     # Include Actual name also, if matched
