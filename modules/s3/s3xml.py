@@ -873,32 +873,16 @@ class S3XML(S3Codec):
             else:
                 # Lookup record by record :/
                 table = resource.table
-                query = (table._id == record_id)
-                if settings.get_gis_spatialdb():
-                    # Do the Simplify direct from the DB
-                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                           limitby=(0, 1)).first()
-                    if row:
-                        # Convert the WKT in XSLT
-                        attr[ATTRIBUTE.wkt] = row.wkt
-                        # Locate the attributes
-                        #row = row[tablename]
-                else:
-                    row = db(query).select(table[WKTFIELD],
-                                           limitby=(0, 1)).first()
-                    if row:
-                        wkt = row[WKTFIELD]
-                        if wkt:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(wkt)
-                            # Convert the WKT in XSLT
-                            attr[ATTRIBUTE.wkt] = wkt
+                wkts = gis.get_locations(table,
+                                         (table._id == record_id),
+                                         join=False,
+                                         geojson=False)
+                # Convert the WKT in XSLT
+                attr[ATTRIBUTE.wkt] = wkts[tablename][record_id]
 
             if format == "kml":
                 # GIS marker
-                marker = current.gis.get_marker() # Default Marker
+                marker = gis.get_marker() # Default Marker
                 # Quicker to download Icons from Static
                 # also doesn't require authentication so KML files can work in
                 # Google Earth
@@ -942,38 +926,12 @@ class S3XML(S3Codec):
             else:
                 # Lookup record by record :/
                 table = resource.table
-                query = (table._id == record_id)
-                #fields = []
-                #fappend = fields.append
-                #for f in table.fields:
-                #    if f not in ("id", "layer_id", "lat", "lon", "wkt"):
-                #        fappend(f)
-                if settings.get_gis_spatialdb():
-                    # Do the Simplify direct from the DB
-                    #fields.remove("the_geom")
-                    #_fields = [table[f] for f in fields]
-                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                           #*_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        # Convert the WKT in XSLT
-                        attr[ATTRIBUTE.wkt] = row.wkt
-                        # Locate the attributes
-                        #row = row[tablename]
-                else:
-                    # _fields = [table[f] for f in fields]
-                    row = db(query).select(table[WKTFIELD],
-                                           #*_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        wkt = row[WKTFIELD]
-                        if wkt:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(wkt)
-                            # Convert the WKT in XSLT
-                            attr[ATTRIBUTE.wkt] = wkt
+                wkts = gis.get_locations(table,
+                                         (table._id == record_id),
+                                         join=False,
+                                         geojson=False)
+                # Convert the WKT in XSLT
+                attr[ATTRIBUTE.wkt] = wkts[tablename][record_id]
 
             # End: Shapefile data
             return
