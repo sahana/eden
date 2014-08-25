@@ -127,46 +127,42 @@ class S3XML(S3Codec):
         ]
 
     TAG = Storage(
-        root="s3xml",
-        resource="resource",
-        reference="reference",
-        description="description",
+        col="col",
         contents="contents",
-        meta="meta",
         data="data",
-        list="list",
-        item="item",
-        object="object",
-        select="select",
+        description="description",
         field="field",
+        fields="fields",
+        item="item",
+        list="list",
+        meta="meta",
+        object="object",
         option="option",
         options="options",
-        fields="fields",
-        table="table",
+        reference="reference",
+        resource="resource",
+        root="s3xml",
         row="row",
-        col="col",
+        select="select",
+        table="table",
         )
 
     ATTRIBUTE = Storage(
-        id="id",
-        name="name",
-        table="table",
-        field="field",
-        value="value",
         alias="alias",
-        resource="resource",
-        ref="ref",
+        attributes="attributes", # for GeoJSON exports
+        comment="comment",
         domain="domain",
-        url="url",
-        filename="filename",
         error="error",
-        start="start",
-        limit="limit",
-        success="success",
-        results="results",
+        field="field",
+        filename="filename",
+        has_options="has_options",
+        hashtag="hashtag",
+        id="id",
+        label="label",
         lat="lat",
         latmin="latmin",
         latmax="latmax",
+        limit="limit",
         lon="lon",
         lonmin="lonmin",
         lonmax="lonmax",
@@ -174,21 +170,26 @@ class S3XML(S3Codec):
         marker_url="marker_url",
         marker_height="marker_height",
         marker_width="marker_width",
+        name="name",
         parent="parent",
-        #popup="popup",          # for GIS Feature Layers/Queries
-        popup_url="popup_url",  # for map popups
-        sym="sym",              # for GPS
-        attributes="attributes",# For GeoJSON exports
-        style="style",          # For GeoJSON exports
+        #popup="popup", # for GIS Feature Layers/Queries
+        popup_url="popup_url", # for map popups
+        ref="ref",
+        replaced_by="replaced_by",
+        resource="resource",
+        results="results",
+        sym="sym", # for GPS
+        start="start",
+        style="style", # For GeoJSON exports
+        success="success",
+        table="table",
+        tuid="tuid",
         type="type",
         readable="readable",
+        url="url",
+        value="value",
         writable="writable",
         wkt="wkt",
-        has_options="has_options",
-        tuid="tuid",
-        label="label",
-        comment="comment",
-        replaced_by="replaced_by"
         )
 
     ACTION = Storage(
@@ -199,10 +200,10 @@ class S3XML(S3Codec):
         )
 
     PREFIX = Storage(
-        resource="$",
+        attribute="@",
         options="$o",
         reference="$k",
-        attribute="@",
+        resource="$",
         text="$",
         )
 
@@ -872,32 +873,16 @@ class S3XML(S3Codec):
             else:
                 # Lookup record by record :/
                 table = resource.table
-                query = (table._id == record_id)
-                if settings.get_gis_spatialdb():
-                    # Do the Simplify direct from the DB
-                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                           limitby=(0, 1)).first()
-                    if row:
-                        # Convert the WKT in XSLT
-                        attr[ATTRIBUTE.wkt] = row.wkt
-                        # Locate the attributes
-                        #row = row[tablename]
-                else:
-                    row = db(query).select(table[WKTFIELD],
-                                           limitby=(0, 1)).first()
-                    if row:
-                        wkt = row[WKTFIELD]
-                        if wkt:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(wkt)
-                            # Convert the WKT in XSLT
-                            attr[ATTRIBUTE.wkt] = wkt
+                wkts = gis.get_locations(table,
+                                         (table._id == record_id),
+                                         join=False,
+                                         geojson=False)
+                # Convert the WKT in XSLT
+                attr[ATTRIBUTE.wkt] = wkts[tablename][record_id]
 
             if format == "kml":
                 # GIS marker
-                marker = current.gis.get_marker() # Default Marker
+                marker = gis.get_marker() # Default Marker
                 # Quicker to download Icons from Static
                 # also doesn't require authentication so KML files can work in
                 # Google Earth
@@ -941,38 +926,12 @@ class S3XML(S3Codec):
             else:
                 # Lookup record by record :/
                 table = resource.table
-                query = (table._id == record_id)
-                #fields = []
-                #fappend = fields.append
-                #for f in table.fields:
-                #    if f not in ("id", "layer_id", "lat", "lon", "wkt"):
-                #        fappend(f)
-                if settings.get_gis_spatialdb():
-                    # Do the Simplify direct from the DB
-                    #fields.remove("the_geom")
-                    #_fields = [table[f] for f in fields]
-                    row = db(query).select(table.the_geom.st_simplify(0.01).st_astext().with_alias("wkt"),
-                                           #*_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        # Convert the WKT in XSLT
-                        attr[ATTRIBUTE.wkt] = row.wkt
-                        # Locate the attributes
-                        #row = row[tablename]
-                else:
-                    # _fields = [table[f] for f in fields]
-                    row = db(query).select(table[WKTFIELD],
-                                           #*_fields,
-                                           limitby=(0, 1)).first()
-                    if row:
-                        wkt = row[WKTFIELD]
-                        if wkt:
-                            # Simplify the polygon to reduce download size
-                            # & also to work around the recursion limit in libxslt
-                            # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                            wkt = gis.simplify(wkt)
-                            # Convert the WKT in XSLT
-                            attr[ATTRIBUTE.wkt] = wkt
+                wkts = gis.get_locations(table,
+                                         (table._id == record_id),
+                                         join=False,
+                                         geojson=False)
+                # Convert the WKT in XSLT
+                attr[ATTRIBUTE.wkt] = wkts[tablename][record_id]
 
             # End: Shapefile data
             return
@@ -2229,6 +2188,7 @@ class S3XML(S3Codec):
     def xls2tree(cls, source,
                  resourcename=None,
                  extra_data=None,
+                 hashtags=None,
                  sheet=None,
                  rows=None,
                  cols=None,
@@ -2245,7 +2205,8 @@ class S3XML(S3Codec):
             @param source: the XLS source (stream, or XLRD book, or
                            None if sheet is an open XLRD sheet)
             @param resourcename: the resource name
-            @param extra_data: dict of extra cols to add to each row
+            @param extra_data: dict of extra cols {key:value} to add to each row
+            @param hashtags: dict of hashtags for extra cols {key:hashtag}
             @param sheet: sheet name or index, or an open XLRD sheet
                           (open work sheet overrides source)
             @param rows: Rows range, integer (length from 0) or
@@ -2271,6 +2232,7 @@ class S3XML(S3Codec):
         # Shortcuts
         ATTRIBUTE = cls.ATTRIBUTE
         FIELD = ATTRIBUTE.field
+        HASHTAG = ATTRIBUTE.hashtag
         TAG = cls.TAG
         COL = TAG.col
         SubElement = etree.SubElement
@@ -2376,7 +2338,7 @@ class S3XML(S3Codec):
                         text = str(value).lower()
                 return text
 
-            def add_col(row, name, t, v):
+            def add_col(row, name, t, v, hashtags=None):
                 """
                     Helper method to add a column to an output row
 
@@ -2387,7 +2349,13 @@ class S3XML(S3Codec):
                 """
                 col = SubElement(row, COL)
                 col.set(FIELD, name)
+                if hashtags:
+                    hashtag = hashtags.get(name)
+                    if hashtag and hashtag[1:]:
+                        col.set(HASHTAG, hashtag)
                 col.text = decode(t, v)
+
+            hashtags = dict(hashtags) if hashtags else {}
 
             # Process the rows
             ROW = TAG.row
@@ -2409,6 +2377,21 @@ class S3XML(S3Codec):
                                 extra_fields.discard(header)
                         check_headers = False
                 else:
+                    if not fields and \
+                       (header_row and record_idx == 1 or record_idx == 0):
+                        # Autodetect hashtags
+                        items = {}
+                        for cidx, name in headers.items():
+                            try:
+                                t = types[cidx]
+                                v = values[cidx]
+                            except IndexError:
+                                continue
+                            if v:
+                                items[name] = v
+                        if items and all(v[0] == '#' for v in items.values()):
+                            hashtags.update(items)
+                            continue
                     # Add output row
                     orow = SubElement(root, ROW)
                     for cidx, name in headers.items():
@@ -2420,14 +2403,17 @@ class S3XML(S3Codec):
                         except IndexError:
                             pass
                         else:
-                            add_col(orow, name, t, v)
+                            add_col(orow, name, t, v, hashtags=hashtags)
                     check_headers = False
 
                     # Add extra data
                     if extra_fields:
                         for key in extra_fields:
-                            add_col(orow, key, None, extra_data[key])
+                            add_col(orow, key, None, extra_data[key], hashtags=hashtags)
                 record_idx += 1
+
+        # Use this to debug the source tree if needed:
+        #print >>sys.stderr, cls.tostring(root, pretty_print=True)
 
         return  etree.ElementTree(root)
 
@@ -2436,6 +2422,7 @@ class S3XML(S3Codec):
     def csv2tree(cls, source,
                  resourcename=None,
                  extra_data=None,
+                 hashtags=None,
                  delimiter=",",
                  quotechar='"'):
         """
@@ -2444,7 +2431,8 @@ class S3XML(S3Codec):
 
             @param source: the source (file-like object)
             @param resourcename: the resource name
-            @param extra_data: dict of extra cols to add to each row
+            @param extra_data: dict of extra cols {key:value} to add to each row
+            @param hashtags: dict of hashtags for extra cols {key:hashtag}
             @param delimiter: delimiter for values
             @param quotechar: quotation character
 
@@ -2453,12 +2441,13 @@ class S3XML(S3Codec):
 
         import csv
 
-        # Increase field sixe to be able to import WKTs
+        # Increase field size to be able to import WKTs
         csv.field_size_limit(2**20 * 100)  # 100 megs
 
         # Shortcuts
         ATTRIBUTE = cls.ATTRIBUTE
         FIELD = ATTRIBUTE.field
+        HASHTAG = ATTRIBUTE.hashtag
         TAG = cls.TAG
         COL = TAG.col
         SubElement = etree.SubElement
@@ -2467,9 +2456,13 @@ class S3XML(S3Codec):
         if resourcename is not None:
             root.set(ATTRIBUTE.name, resourcename)
 
-        def add_col(row, key, value):
+        def add_col(row, key, value, hashtags=None):
             col = SubElement(row, COL)
             col.set(FIELD, s3_unicode(key))
+            if hashtags:
+                hashtag = hashtags.get(key)
+                if hashtag and hashtag[1:]:
+                    col.set(HASHTAG, hashtag)
             if value:
                 text = s3_unicode(value).strip()
                 if text[:6].lower() not in ("null", "<null>"):
@@ -2506,6 +2499,9 @@ class S3XML(S3Codec):
                     else:
                         e = encoding
                         break
+
+        hashtags = dict(hashtags) if hashtags else {}
+
         try:
             import StringIO
             if not isinstance(source, StringIO.StringIO):
@@ -2514,14 +2510,22 @@ class S3XML(S3Codec):
                                     delimiter=delimiter,
                                     quotechar=quotechar)
             ROW = TAG.row
-            for r in reader:
+            for i, r in enumerate(reader):
+                if i == 0:
+                    # Auto-detect hashtags
+                    items = dict((k, s3_unicode(v.strip()))
+                                 for k, v in r.items() if k and v and v.strip())
+                    if all(v[0] == '#' for v in items.values()):
+                        hashtags.update(items)
+                        continue
                 row = SubElement(root, ROW)
                 for k in r:
-                    add_col(row, k, r[k])
+                    if k:
+                        add_col(row, k, r[k], hashtags=hashtags)
                 if extra_data:
                     for key in extra_data:
                         if key not in r:
-                            add_col(row, key, extra_data[key])
+                            add_col(row, key, extra_data[key], hashtags=hashtags)
         except csv.Error:
             e = sys.exc_info()[1]
             raise HTTP(400, body=cls.json_message(False, 400, e))

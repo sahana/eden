@@ -302,7 +302,7 @@ class S3WarehouseModel(S3Model):
                                "email"
                                ],
                   onaccept = self.inv_warehouse_onaccept,
-                  realm_components = ["contact_emergency",
+                  realm_components = ("contact_emergency",
                                       "physical_description",
                                       "config",
                                       "image",
@@ -318,7 +318,7 @@ class S3WarehouseModel(S3Model):
                                       "document",
                                       "recv",
                                       "address",
-                                      ],
+                                      ),
                   super_entity = ("pr_pentity", "org_site"),
                   update_realm = True,
                   )
@@ -1415,7 +1415,7 @@ class S3InventoryTrackingModel(S3Model):
                                  "sender_id",
                                  "comments"
                                  ],
-                  mark_required = ["from_site_id", "organisation_id"],
+                  mark_required = ("from_site_id", "organisation_id"),
                   onvalidation = self.inv_recv_onvalidation,
                   onaccept = self.inv_recv_onaccept,
                   filter_widgets = filter_widgets,

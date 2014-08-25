@@ -2208,6 +2208,75 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def get_locations(table,
+                      query,
+                      join = True,
+                      geojson = True,
+                      ):
+        """
+            Returns the locations for an XML export
+            - used by GIS.get_location_data() and S3PivotTable.geojson()
+        """
+
+        db = current.db
+        gtable = current.s3db.gis_location
+        settings = current.deployment_settings
+        tolerance = settings.get_gis_simplify_tolerance()
+
+        output = {}
+
+        if settings.get_gis_spatialdb():
+            if geojson:
+                # Do the Simplify & GeoJSON direct from the DB
+                # @ToDo: Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
+                rows = db(query).select(table.id,
+                                        gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                for row in rows:
+                    output[row[tablename].id] = row.geojson
+            else:
+                # Do the Simplify direct from the DB
+                rows = db(query).select(table.id,
+                                        gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
+                for row in rows:
+                    output[row[tablename].id] = row.wkt
+        else:
+            rows = db(query).select(table.id,
+                                    gtable.wkt)
+            simplify = GIS.simplify
+            if geojson:
+                # Simplify the polygon to reduce download size
+                if join:
+                    for row in rows:
+                        g = simplify(row["gis_location"].wkt,
+                                     tolerance=tolerance,
+                                     output="geojson")
+                        if g:
+                            output[row[tablename].id] = g
+                else:
+                    for row in rows:
+                        g = simplify(row.wkt,
+                                     tolerance=tolerance,
+                                     output="geojson")
+                        if g:
+                            output[row.id] = g
+            else:
+                # Simplify the polygon to reduce download size
+                # & also to work around the recursion limit in libxslt
+                # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                if join:
+                    for row in rows:
+                        wkt = simplify(row["gis_location"].wkt)
+                        if wkt:
+                            output[row[tablename].id] = wkt
+                else:
+                    for row in rows:
+                        wkt = simplify(row.wkt)
+                        if wkt:
+                            output[row.id] = wkt
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def get_location_data(resource):
         """
             Returns the locations, markers and popup tooltips for an XML export
@@ -2517,56 +2586,10 @@ class GIS(object):
                     return None
 
             if polygons:
-                settings = current.deployment_settings
-                tolerance = settings.get_gis_simplify_tolerance()
-                if settings.get_gis_spatialdb():
-                    if geojson:
-                        # Do the Simplify & GeoJSON direct from the DB
-                        # @ToDo: Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
-                        rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
-                        for row in rows:
-                            geojsons[row[tablename].id] = row.geojson
-                    else:
-                        # Do the Simplify direct from the DB
-                        rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
-                        for row in rows:
-                            wkts[row[tablename].id] = row.wkt
+                if geojson:
+                    geojsons[tablename] = GIS.get_locations(table, query, join, geojson)
                 else:
-                    rows = db(query).select(table.id,
-                                            gtable.wkt)
-                    simplify = GIS.simplify
-                    if geojson:
-                        # Simplify the polygon to reduce download size
-                        if join:
-                            for row in rows:
-                                g = simplify(row["gis_location"].wkt,
-                                             tolerance=tolerance,
-                                             output="geojson")
-                                if g:
-                                    geojsons[row[tablename].id] = g
-                        else:
-                            for row in rows:
-                                g = simplify(row.wkt,
-                                             tolerance=tolerance,
-                                             output="geojson")
-                                if g:
-                                    geojsons[row.id] = g
-                    else:
-                        # Simplify the polygon to reduce download size
-                        # & also to work around the recursion limit in libxslt
-                        # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
-                        if join:
-                            for row in rows:
-                                wkt = simplify(row["gis_location"].wkt)
-                                if wkt:
-                                    wkts[row[tablename].id] = wkt
-                        else:
-                            for row in rows:
-                                wkt = simplify(row.wkt)
-                                if wkt:
-                                    wkts[row.id] = wkt
+                    wkts[tablename] = GIS.get_locations(table, query, join, geojson)
 
             else:
                 # Points
@@ -2587,12 +2610,6 @@ class GIS(object):
         _latlons = {}
         if latlons:
             _latlons[tablename] = latlons
-        _wkts = {}
-        if wkts:
-            _wkts[tablename] = wkts
-        _geojsons = {}
-        if geojsons:
-            _geojsons[tablename] = geojsons
 
         #if DEBUG:
         #    end = datetime.datetime.now()
@@ -2602,9 +2619,9 @@ class GIS(object):
         #            (layer_name, duration))
 
         # Used by S3XML's gis_encode()
-        return dict(geojsons = _geojsons,
+        return dict(geojsons = geojsons,
                     latlons = _latlons,
-                    wkts = _wkts,
+                    wkts = wkts,
                     attributes = attributes,
                     markers = markers,
                     styles = styles,
@@ -4937,6 +4954,7 @@ class GIS(object):
                     L2_name = Lx.L2
                     L3_name = Lx.name
                     _path = Lx.path
+                    # @ToDo: Cannot assume that all levels are filled
                     if _path and L0_name and L1_name and L2_name:
                         _path = "%s/%s" % (_path, id)
                     else:

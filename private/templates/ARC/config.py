@@ -64,7 +64,7 @@ def ifrc_realm_entity(table, row):
     tablename = table._tablename
 
     # Do not apply realms for Master Data
-    # @ToDo: Restore Realms and add a role/functionality support for Master Data  
+    # @ToDo: Restore Realms and add a role/functionality support for Master Data
     if tablename in ("hrm_certificate",
                      "hrm_department",
                      "hrm_job_title",
@@ -149,7 +149,7 @@ def ifrc_realm_entity(table, row):
             #else:
             # Continue to loop through the rest of the default_fks
             # Fall back to default get_realm_entity function
-    
+
     use_user_organisation = False
     # Suppliers & Partners are owned by the user's organisation
     if realm_entity == 0 and tablename == "org_organisation":
@@ -170,7 +170,7 @@ def ifrc_realm_entity(table, row):
 
     user = current.auth.user
     if use_user_organisation and user:
-        # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org 
+        # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org
         realm_entity = s3db.pr_get_pe_id("org_organisation",
                                          user.organisation_id)
 
@@ -336,7 +336,7 @@ settings.cms.person = "person_id"
 
 # -----------------------------------------------------------------------------
 # Shelters
-# Uncomment to use a dynamic population estimation by calculations based on registrations  
+# Uncomment to use a dynamic population estimation by calculations based on registrations
 #settings.cr.shelter_population_dynamic = True
 
 # -----------------------------------------------------------------------------
@@ -739,9 +739,9 @@ settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 def customise_deploy_assignment_controller(**attr):
 
     s3db = current.s3db
-    table = s3db.deploy_assignment
 
     # Labels
+    #table = s3db.deploy_assignment
     #table.job_title_id.label = T("RDRT Type")
     #table.start_date.label = T("Deployment Date")
     #table.end_date.label = T("EOM")
@@ -783,7 +783,7 @@ def customise_deploy_assignment_controller(**attr):
                          totals=True
                          )
         )
-            
+
     s3db.configure("deploy_assignment",
                    list_fields = list_fields,
                    report_options = report_options,
@@ -796,9 +796,7 @@ settings.customise_deploy_assignment_controller = customise_deploy_assignment_co
 # -----------------------------------------------------------------------------
 def customise_deploy_mission_controller(**attr):
 
-    db = current.db
     s3db = current.s3db
-    s3 = current.response.s3
 
     table = s3db.deploy_mission
     table.code.label = T("Appeal Code")
@@ -897,12 +895,12 @@ def customise_gis_poi_resource(r, tablename):
         # Type is Feeding Route
         s3db = current.s3db
         table = s3db.gis_poi_type
-        type = current.db(table.name == "Feeding Route").select(table.id,
-                                                                limitby=(0, 1)
-                                                                ).first()
-        if type:
+        poi_type = current.db(table.name == "Feeding Route").select(table.id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+        if poi_type:
             field = s3db.gis_poi.poi_type_id
-            field.default = type.id
+            field.default = poi_type.id
             field.readable = field.writable = False
 
 settings.customise_gis_poi_resource = customise_gis_poi_resource
@@ -1050,7 +1048,7 @@ def customise_hrm_human_resource_controller(**attr):
                     widgets.append(widget)
             if profile_widgets:
                 widgets.extend(profile_widgets)
-            
+
             # Custom list fields for RDRT
             phone_label = settings.get_ui_label_mobile_phone()
             list_fields = ["person_id",
@@ -1105,7 +1103,7 @@ def customise_hrm_job_title_controller(**attr):
         ns_only(table.organisation_id,
                 required = False,
                 )
-    
+
     # Custom prep
     standard_prep = s3.prep
     def custom_prep(r):
@@ -1257,7 +1255,7 @@ def customise_org_organisation_controller(**attr):
                                (T("Facebook"), "facebook.value"),
                                (T("Twitter"), "twitter.value"),
                                ]
-                
+
                 type_filter = r.get_vars.get("organisation_type.name",
                                              None)
                 type_label = T("Type")
@@ -1528,7 +1526,7 @@ def customise_project_project_controller(**attr):
     f.label = T("Lead Organization")
 
     # Custom Crud Form
-    from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
     crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
@@ -1549,40 +1547,38 @@ def customise_project_project_controller(**attr):
             #comment = "Bob",
             fields = ["name", "status"],
         ),
-        S3SQLInlineComponentCheckbox(
+        S3SQLInlineLink(
             "hazard",
             label = T("Hazards"),
             field = "hazard_id",
             cols = 4,
             translate = True,
         ),
-        S3SQLInlineComponentCheckbox(
+        S3SQLInlineLink(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
             cols = 4,
             translate = True,
+            #widget = "groupedopts",
         ),
-        S3SQLInlineComponentCheckbox(
+        S3SQLInlineLink(
             "theme",
             label = T("Themes"),
             field = "theme_id",
             cols = 4,
             translate = True,
             # Filter Theme by Sector
-            filter = {"linktable": "project_theme_sector",
-                      "lkey": "theme_id",
-                      "rkey": "sector_id",
-                      },
+            filterby = "theme_id:project_theme_sector.sector_id",
+            match = "sector_project.sector_id",
             script = '''
-S3OptionsFilter({
- 'triggerName':'defaultsector-sector_id',
- 'targetName':'defaulttheme-theme_id',
- 'targetWidget':'defaulttheme-theme_id_widget',
- 'lookupResource':'theme',
- 'lookupURL':S3.Ap.concat('/project/theme_sector_widget?sector_ids='),
- 'getWidgetHTML':true,
- 'showEmptyField':false
+$.filterOptionsS3({
+  'trigger': {'alias': 'sector', 'name': 'sector_id', 'inlineType': 'link'},
+  'target': {'alias': 'theme', 'name': 'theme_id', 'inlineType': 'link'},
+  'lookupPrefix': 'project',
+  'lookupResource':'theme',
+  'lookupKey': 'theme_id:project_theme_sector.sector_id',
+  'showEmptyField':false
 })'''
         ),
         #"drr.hfa",
@@ -1753,7 +1749,7 @@ def customise_project_beneficiary_resource(r, tablename):
         resource.configure(filter_widgets = filter_widgets,
                            report_options = report_options,
                            )
-            
+
 
 settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 

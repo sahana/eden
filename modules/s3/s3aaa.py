@@ -4335,7 +4335,7 @@ S3OptionsFilter({
 
             # Update realm-components
             if success and update and REALM in data:
-                rc = s3db.get_config(table, "realm_components", [])
+                rc = s3db.get_config(table, "realm_components", ())
                 resource = s3db.resource(table, components=rc)
                 realm = {REALM:data[REALM]}
                 for component in resource.components.values():

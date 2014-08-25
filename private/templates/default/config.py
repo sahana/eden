@@ -178,6 +178,8 @@ settings.L10n.decimal_separator = "."
 #settings.L10n.translate_gis_layer = True
 # Uncomment this to Translate Location Names
 #settings.L10n.translate_gis_location = True
+# Uncomment this for Alternate Location Names
+#settings.L10n.name_alt_gis_location = True
 
 # Finance settings
 #settings.fin.currencies = {
@@ -377,6 +379,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.multiselect_widget = True
 # Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
 #settings.ui.hierarchy_theme = "default"
+# Uncomment to show a default cancel button in standalone create/update forms
+#settings.ui.default_cancel_button = True
 
 # -----------------------------------------------------------------------------
 # CMS
@@ -406,7 +410,7 @@ settings.gis.geonames_username = "eden_test"
 
 # -----------------------------------------------------------------------------
 # Shelters
-# Uncomment to use a dynamic population estimation by calculations based on registrations  
+# Uncomment to use a dynamic population estimation by calculations based on registrations
 #settings.cr.shelter_population_dynamic = True
 
 # -----------------------------------------------------------------------------
@@ -423,7 +427,7 @@ settings.gis.geonames_username = "eden_test"
 
 # -----------------------------------------------------------------------------
 # Persons
-# Uncomment to allow person imports to match even without email addresses 
+# Uncomment to allow person imports to match even without email addresses
 #settings.pr.import_update_requires_email = False
 # Uncomment to a fuzzy search for duplicates in the new AddPersonWidget2
 #settings.pr.lookup_duplicates = True
@@ -620,7 +624,7 @@ settings.gis.geonames_username = "eden_test"
 #settings.req.requester_optional = True
 # Uncomment if the User Account logging the Request is NOT normally the Requester
 #settings.req.requester_is_author = False
-# Filter Requester as being from the Site 
+# Filter Requester as being from the Site
 #settings.req.requester_from_site = True
 # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
 #settings.req.requester_to_site = True
@@ -740,15 +744,24 @@ settings.gis.geonames_username = "eden_test"
 #settings.project.organisation_lead_role = 1
 # Uncomment to customise the list of options for the Priority of a Task.
 # NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
-#settings.project.task_priority_opts = 
+#settings.project.task_priority_opts =
 # Uncomment to customise the list of options for the Status of a Task.
 # NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
-#settings.project.task_status_opts = 
+#settings.project.task_status_opts =
 
 # -----------------------------------------------------------------------------
 # Incidents
 # Uncomment this to use vehicles when responding to Incident Reports
 #settings.irs.vehicle = True
+
+# -----------------------------------------------------------------------------
+# Transport
+# Uncomment to make Airport codes unique
+#settings.transport.airport_code_unique = True
+# Uncomment to make Seaport codes unique
+#settings.transport.seaport_code_unique = True
+# Uncomment to make Heliport codes unique
+#settings.transport.heliport_code_unique = True
 
 # -----------------------------------------------------------------------------
 # Filter Manager

@@ -428,7 +428,7 @@ def customise_org_organisation_resource(r, tablename):
         else:
             # Create form: Default
             rss_import = None
-    
+
     crud_form = S3SQLCustomForm(
         "name",
         "acronym",
@@ -603,7 +603,7 @@ def customise_org_organisation_resource(r, tablename):
                    filter_widgets = filter_widgets,
                    list_fields = list_fields,
                    )
-    
+
 settings.customise_org_organisation_resource = customise_org_organisation_resource
 
 # -----------------------------------------------------------------------------
@@ -794,7 +794,7 @@ def customise_org_group_controller(**attr):
                         filterby = dict(field = "name",
                                         options="iCal"
                                         )
-                    ),                                                                
+                    ),
                     S3SQLInlineComponent(
                         "document",
                         name = "data",
@@ -804,7 +804,7 @@ def customise_org_group_controller(**attr):
                         filterby = dict(field = "name",
                                         options="Data"
                                         )
-                    ),                                                                
+                    ),
                     S3SQLInlineComponent(
                         "contact",
                         name = "twitter",
@@ -969,11 +969,12 @@ def customise_pr_person_controller(**attr):
 
                 s3db.configure(r.tablename,
                                crud_form = crud_form,
+                               list_fields = list_fields,
                                )
 
             elif r.component_name == "group_membership":
                 s3db.pr_group_membership.group_head.label = T("Group Chairperson")
-            
+
 
         return result
     s3.prep = custom_prep
@@ -1002,7 +1003,7 @@ settings.customise_pr_person_controller = customise_pr_person_controller
 # Groups
 def chairperson(row):
     """
-       Virtual Field to show the chairperson of a group 
+       Virtual Field to show the chairperson of a group
     """
 
     if hasattr(row, "pr_group"):
@@ -1325,9 +1326,9 @@ def customise_hrm_human_resource_controller(**attr):
                 # Use a hierarchical dropdown instead of AC
                 field.widget = None
                 script = \
-'''S3OptionsFilter({
- 'triggerName':'organisation_id',
- 'targetName':'site_id',
+'''$.filterOptionsS3({
+ 'trigger':'organisation_id',
+ 'target':'site_id',
  'lookupResource':'site',
  'lookupURL':'/%s/org/sites_for_org/',
  'optional':true
@@ -1444,7 +1445,7 @@ def customise_project_project_controller(**attr):
             table = r.table
             tablename = "project_project"
             table.code.label = T("Project blurb (max. 100 characters)")
-            table.code.max_length = 100 
+            table.code.max_length = 100
             table.comments.label = T("How people can help")
 
             script = '''$('#project_project_code').attr('maxlength','100')'''
@@ -1453,7 +1454,7 @@ def customise_project_project_controller(**attr):
             crud_form = S3SQLCustomForm(
                 "organisation_id",
                 "name",
-                "code",        
+                "code",
                 "description",
                 "status_id",
                 "start_date",
@@ -1490,7 +1491,7 @@ def customise_project_project_controller(**attr):
                               "comments",
                               ],
                     filterby = dict(field = "name")
-                ),                                                                
+                ),
                 S3SQLInlineComponentCheckbox(
                     "activity_type",
                     label = T("Categories"),
@@ -1506,7 +1507,7 @@ def customise_project_project_controller(**attr):
                 #"currency",
                 "comments",
             )
-            
+
             from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter, S3DateFilter
             filter_widgets = [
                 S3TextFilter(["name",
@@ -1581,7 +1582,7 @@ settings.req.items_ask_purpose = False
 #settings.req.use_req_number = False
 # Label for Requester
 settings.req.requester_label = "Site Contact"
-# Filter Requester as being from the Site 
+# Filter Requester as being from the Site
 settings.req.requester_from_site = True
 # Label for Inventory Requests
 settings.req.type_inv_label = "Supplies"

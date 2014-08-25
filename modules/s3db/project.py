@@ -300,7 +300,7 @@ class S3ProjectModel(S3Model):
                   list_fields = list_fields,
                   list_layout = project_project_list_layout,
                   onaccept = self.project_project_onaccept,
-                  realm_components = ["human_resource",
+                  realm_components = ("human_resource",
                                       "task",
                                       "organisation",
                                       "activity",
@@ -312,7 +312,7 @@ class S3ProjectModel(S3Model):
                                       "theme_percentage",
                                       "document",
                                       "image",
-                                      ],
+                                      ),
                   report_options = Storage(
                     rows=report_fields,
                     cols=report_fields,

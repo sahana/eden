@@ -2324,14 +2324,49 @@ current.response.s3.render_log = ActivityLogLayout()
 # -----------------------------------------------------------------------------
 def customise_s3_audit_controller(**attr):
 
-    from s3 import s3_auth_user_represent_name, FS
+    from s3 import s3_auth_user_represent_name, FS, S3OptionsFilter, S3DateFilter
     current.db.s3_audit.user_id.represent = s3_auth_user_represent_name
-
-    current.response.s3.filter = (FS("~.method") != "delete")
 
     T = current.T
     tablename = "s3_audit"
+    
+    s3 = current.response.s3
+    s3.filter = (FS("~.method") != "delete")
+    s3.crud_strings[tablename] = {
+        "title_list": T("Activity Log"),
+    }
+    
+    USER = T("User")
+    filter_widgets = [S3OptionsFilter("user_id",
+                                      label = USER,
+                                      ),
+                      S3OptionsFilter("tablename"),
+                      S3OptionsFilter("method"),
+                      S3DateFilter("timestmp",
+                                   label = None,
+                                   hide_time = True,
+                                   input_labels = {"ge": "From", "le": "To"},
+                                   ),
+                      ]
+
+    report_fields = ["tablename", "method", (USER, "user_id")]
+    report_options = Storage(
+            rows = report_fields,
+            cols = report_fields,
+            fact = [(T("Number of Records"), "count(id)"),
+                    (T("Number of Tables"), "count(tablename)"),
+                    ],
+            defaults = Storage(rows = "tablename",
+                               cols = "method",
+                               fact = "count(id)",
+                               chart = "breakdown:rows",
+                               table = "collapse",
+                               totals = True,
+                               )
+                )
     current.s3db.configure(tablename,
+                           filter_widgets = filter_widgets,
+                           filter_formstyle = filter_formstyle,
                            insertable = False,
                            list_fields = ["id",
                                           (T("Date/Time"), "timestmp"),
@@ -2342,6 +2377,16 @@ def customise_s3_audit_controller(**attr):
                                           ],
                            list_layout = current.response.s3.render_log,
                            orderby = "s3_audit.timestmp desc",
+                           report_options = report_options,
+                           summary = [{"name": "table",
+                                       "label": "Table",
+                                       "widgets": [{"method": "datatable"}]
+                                       },
+                                      {"name": "charts",
+                                       "label": "Charts",
+                                       "widgets": [{"method": "report", "ajax_init": True}]
+                                       },
+                                      ],
                            )
 
     return attr

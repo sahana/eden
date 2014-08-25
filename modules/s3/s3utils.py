@@ -405,7 +405,7 @@ def s3_dev_toolbar():
 
 # =============================================================================
 def s3_mark_required(fields,
-                     mark_required=[],
+                     mark_required=None,
                      label_html=(lambda field_label:
                                  # @ToDo: DRY this setting with s3.locationselector.widget2.js
                                  DIV("%s:" % field_label,
@@ -422,6 +422,8 @@ def s3_mark_required(fields,
         @todo: complete parameter description?
     """
 
+    if not mark_required:
+        mark_required = ()
     labels = dict()
 
     # Do we have any required fields?

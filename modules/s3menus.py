@@ -1674,6 +1674,11 @@ class S3OptionsMenu(object):
                         M("Map", m="map"),
                         M("Import", m="import", restrict=[ADMIN]),
                     ),
+                    M("Heliports", f="heliport")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        M("Import", m="import", restrict=[ADMIN]),
+                    ),
                     M("Seaports", f="seaport")(
                         M("Create", m="create"),
                         M("Map", m="map"),

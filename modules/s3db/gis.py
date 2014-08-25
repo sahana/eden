@@ -362,9 +362,13 @@ class S3LocationModel(S3Model):
                        "start_date",
                        "end_date",
                        ]
+        position = 2
         if settings.get_L10n_translate_gis_location():
-            list_fields.insert(2, "name.name_l10n")
-            
+            list_fields.insert(position, "name.name_l10n")
+            position += 1
+        if settings.get_L10n_name_alt_gis_location():
+            list_fields.insert(position, "name_alt.name_alt")
+
         self.configure(tablename,
                        context = {"location": "parent",
                                   },
@@ -390,6 +394,10 @@ class S3LocationModel(S3Model):
                        gis_location_name = {"name": "name",
                                             "joinby": "location_id",
                                             },
+                       # Alternate Names
+                       gis_location_name_alt = {"name": "name_alt",
+                                                "joinby": "location_id",
+                                                },
                        # Child Locations
                        #gis_location = {"joinby": "parent",
                        #                "multiple": False,
@@ -1090,42 +1098,71 @@ class S3LocationNameModel(S3Model):
     """
         Location Names model
         - local/alternate names for Locations
-
-        @ToDo: Change lookup to be a full set of languages,
-               not just those we are using in the interface
     """
 
-    names = ("gis_location_name",)
+    names = ("gis_location_name",
+             "gis_location_name_alt",
+             )
 
     def model(self):
 
         T = current.T
+        configure = self.configure
+        define_table = self.define_table
+        location_id = self.gis_location_id
+
+        # @ToDo: Change lookup to be a full set of languages,
+        #        not just those we are using in the interface
         l10n_languages = current.response.s3.l10n_languages
 
         # ---------------------------------------------------------------------
-        # Local/Alternate Names
+        # Local Names
         #
         tablename = "gis_location_name"
-        self.define_table(tablename,
-                          self.gis_location_id(empty = False,
-                                               ondelete = "CASCADE",
-                                               ),
-                          Field("language",
-                                label = T("Language"),
-                                represent = lambda opt: \
-                                            l10n_languages.get(opt,
+        define_table(tablename,
+                     location_id(empty = False,
+                                 ondelete = "CASCADE",
+                                 ),
+                     Field("language",
+                           label = T("Language"),
+                           represent = lambda opt: l10n_languages.get(opt,
                                                current.messages.UNKNOWN_OPT),
-                                requires = IS_IN_SET(l10n_languages),
-                                ),
-                          Field("name_l10n",
-                                label = T("Local Name"),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
+                           requires = IS_IN_SET(l10n_languages),
+                           ),
+                     Field("name_l10n",
+                           label = T("Local Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
-        self.configure(tablename,
-                       deduplicate = self.gis_location_name_deduplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.gis_location_name_deduplicate,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Alternate Names
+        #
+        # @ToDo: Include these in Search
+        #
+        tablename = "gis_location_name_alt"
+        define_table(tablename,
+                     location_id(empty = False,
+                                 ondelete = "CASCADE",
+                                 ),
+                     Field("name_alt",
+                           label = T("Alternate Name"),
+                           ),
+                     Field("old_name", "boolean",
+                           default = False,
+                           label = T("Old?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = self.gis_location_name_alt_deduplicate,
+                  )
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -1147,6 +1184,31 @@ class S3LocationNameModel(S3Model):
                 return
 
             query = (table.language == language) & \
+                    (table.location_id == location)
+
+            _duplicate = current.db(query).select(table.id,
+                                                  limitby=(0, 1)).first()
+            if _duplicate:
+                job.id = _duplicate.id
+                job.method = job.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_location_name_alt_deduplicate(job):
+        """
+           If the record is a duplicate then it will set the job method to update
+        """
+
+        if job.tablename == "gis_location_name_alt":
+            table = job.table
+            data = job.data
+            location = data.get("location", None)
+            name_alt = data.get("name_alt", None)
+
+            if not name_alt or not location:
+                return
+
+            query = (table.name_alt == name_alt) & \
                     (table.location_id == location)
 
             _duplicate = current.db(query).select(table.id,
@@ -5455,6 +5517,8 @@ def gis_layer_represent(id, row=None, show_link=True):
 # =============================================================================
 def gis_rheader(r, tabs=[]):
     """ GIS page headers """
+    
+    settings = current.deployment_settings
 
     if r.representation != "html":
         # RHeaders only used in interactive views
@@ -5470,10 +5534,17 @@ def gis_rheader(r, tabs=[]):
 
     if resourcename == "location":
         tabs = [(T("Location Details"), None),
-                (T("Local Names"), "name"),
                 (T("Key Value pairs"), "tag"),
                 (T("Import from OpenStreetMap"), "import_poi"),
                 ]
+        # Insert the tabs based on Deployment settings
+        position = 1
+        if settings.get_L10n_translate_gis_location():
+            tabs.insert(position, (T("Local Names"), "name"))
+            position += 1
+        if settings.get_L10n_name_alt_gis_location():
+            tabs.insert(position, (T("Alternate Names"), "name_alt"))
+
         rheader_tabs = s3_rheader_tabs(r, tabs)
 
         rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),

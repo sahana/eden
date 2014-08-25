@@ -4441,10 +4441,10 @@ class S3ResourceFilter(object):
                         minLat = float(minLat)
                         maxLat = float(maxLat)
                         bbox = POLYGON % (minLon, minLat,
-                                            minLon, maxLat,
-                                            maxLon, maxLat,
-                                            maxLon, minLat,
-                                            minLon, minLat)
+                                          minLon, maxLat,
+                                          maxLon, maxLat,
+                                          maxLon, minLat,
+                                          minLon, minLat)
                         try:
                             # Spatial DAL & Database
                             bbox_filter = gtable.the_geom \

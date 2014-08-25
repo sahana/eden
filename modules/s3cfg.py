@@ -124,6 +124,7 @@ class S3Config(Storage):
         self.sync = Storage()
         self.ui = Storage()
         self.vulnerability = Storage()
+        self.transport = Storage()
 
     # -------------------------------------------------------------------------
     # Template
@@ -570,7 +571,7 @@ class S3Config(Storage):
 
     def get_chatdb_string(self):
         chat_server = self.base.get("chat_server",False)
-                
+
         if(chat_server["server_db_type"] == "mysql"):
             db_string = "mysql://%s:%s@%s:%s/%s" % \
             (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
@@ -911,7 +912,7 @@ class S3Config(Storage):
             - more than this will prompt the user to zoom in to load the layer
             Lower this number to get extra performance from an overloaded server.
         """
-        return self.gis.get("max_features", 1000)
+        return self.gis.get("max_features", 2000)
 
     def get_gis_legend(self):
         """
@@ -1226,7 +1227,11 @@ class S3Config(Storage):
             Whether to translate Location names
         """
         return self.L10n.get("translate_gis_location", False)
-
+    def get_L10n_name_alt_gis_location(self):
+        """
+            Whether to use Alternate Location names
+        """
+        return self.L10n.get("name_alt_gis_location", False)
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
@@ -1302,6 +1307,13 @@ class S3Config(Storage):
             elif setting in formstyles:
                 return formstyles[setting]
         return setting
+
+    def get_ui_default_cancel_button(self):
+        """
+            Whether to show a default cancel button in standalone
+            create/update forms
+        """
+        return self.ui.get("default_cancel_button", False)
 
     # -------------------------------------------------------------------------
     def get_ui_auth_user_represent(self):
@@ -1849,14 +1861,14 @@ class S3Config(Storage):
             "population_night".
         """
         return self.cr.get("shelter_population_dynamic", False)
-    
+
     def get_cr_shelter_housing_unit_management(self):
         """
-            Enable the use of tab "Housing Unit" and enable the housing unit 
+            Enable the use of tab "Housing Unit" and enable the housing unit
             selection during evacuees registration.
         """
         return self.cr.get("shelter_housing_unit_management", False)
-    
+
     # -------------------------------------------------------------------------
     # Deployments
     #
@@ -1900,16 +1912,16 @@ class S3Config(Storage):
                                             8 :T("Hospital"),
                                             9 :T("Orphanage")
                                             })
-    
+
     def get_evr_show_physical_description(self):
         """
             Show Evacuees physical description
         """
         return self.evr.get("physical_description", True)
-    
+
     def get_evr_link_to_organisation(self):
         """
-            Link evacuees to Organisations.  
+            Link evacuees to Organisations.
         """
         return self.evr.get("link_to_organisation", False)
 
@@ -2422,7 +2434,7 @@ class S3Config(Storage):
 
     def get_org_office_code_unique(self):
         """
-            Whether Office code is unique            
+            Whether Office code is unique
         """
         return self.org.get("office_code_unique", False)
 
@@ -2845,6 +2857,27 @@ class S3Config(Storage):
     #
     def get_vulnerability_indicator_hierarchical(self):
         return self.vulnerability.get("indicator_hierarchical", False)
+
+    # -------------------------------------------------------------------------
+    # Transport
+    #
+    def get_transport_airport_code_unique(self):
+        """
+            Whether Airport code is unique
+        """
+        return self.transport.get("airport_code_unique", False)
+
+    def get_transport_heliport_code_unique(self):
+        """
+            Whether Heliport code is unique
+        """
+        return self.transport.get("heliport_code_unique", False)
+
+    def get_transport_seaport_code_unique(self):
+        """
+            Whether Seaport code is unique
+        """
+        return self.transport.get("seaport_code_unique", False)
 
     # -------------------------------------------------------------------------
     # Utilities

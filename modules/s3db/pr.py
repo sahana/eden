@@ -899,7 +899,7 @@ class S3PersonModel(S3Model):
                        main = "first_name",
                        extra = "last_name",
                        onaccept = self.pr_person_onaccept,
-                       realm_components = ["presence"],
+                       realm_components = ("presence",),
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 
@@ -2519,7 +2519,7 @@ class S3PersonImageModel(S3Model):
                        onaccept = self.pr_image_onaccept,
                        onvalidation = self.pr_image_onvalidation,
                        ondelete = self.pr_image_ondelete,
-                       #mark_required = ["url", "image"],
+                       #mark_required = ("url", "image"),
                        list_fields=["id",
                                     "title",
                                     "profile",

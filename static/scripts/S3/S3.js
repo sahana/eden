@@ -234,7 +234,7 @@ S3.addModals = function() {
         });
         // Prevent browser from following link
         return false;
-    })
+    });
 };
 S3.popup_loaded = function(id) {
     // Resize the iframe to fit the Dialog
@@ -275,7 +275,7 @@ S3.redraw = function() {
     for (var i=0; i < len; i++) {
         S3[redraw_fns[i]]();
     }
-}
+};
 
 // Geolocation
 // - called from Auth.login()
@@ -553,7 +553,7 @@ S3.fieldError = function(selector, error) {
     // @ToDo: Are we using a Bootstrap or normal Theme?
     // Display the Error
     $(selector).after('<div class="error" style="display: block;">' + error + '</div>');
-}
+};
 
 // ============================================================================
 var s3_viewMap = function(feature_id) {
@@ -625,7 +625,7 @@ var s3_showMap = function(feature_id) {
  * - Item Packs filtered by Item
  * - Rooms filtered by Site
  * - Themes filtered by Sector
- * 
+ *
  * @todo: deprecate, replace by $.filterOptionsS3
  **/
 
@@ -829,7 +829,7 @@ var S3OptionsFilter = function(settings) {
                     if (settings.showEmptyField === 'undefined') {
                         var showEmptyField = true;
                     } else {
-                        var showEmptyField = settings.showEmptyField;   
+                        var showEmptyField = settings.showEmptyField;
                     }
                     var fncPrep = settings.fncPrep || function(data) { return null; };
                     var fncRepresent = settings.fncRepresent || function(record) { return record.name; };
@@ -989,9 +989,8 @@ var S3OptionsFilter = function(settings) {
  * Filter options of a drop-down field (=target) by the selection made
  * in another field (=trigger), e.g.:
  *   - Task Form: Activity options filtered by Project selection
- * 
+ *
  * => Replacement for the S3OptionsFilter script
- * @todo: implement first-run (see $.filterOptionsS3)
  * @todo: test with S3SQLInlineLink
  * @todo: migrate use-cases
  * @todo: fix updateAddResourceLink
@@ -1210,14 +1209,16 @@ var S3OptionsFilter = function(settings) {
         }
 
         // Update the target field options
-        if (options !== '') {
-            widget.html(options)
-                  .val(newValue)
-                  .change()
-                  .prop('disabled', false);
-        } else {
-            // No options available => disable the target field
-            widget.prop('disabled', true);
+        widget.html(options)
+              .val(newValue)
+              .change()
+              .prop('disabled', options === '');
+
+        // Refresh groupedopts or multiselect
+        if (widget.hasClass('groupedopts-widget')) {
+            widget.groupedopts('refresh');
+        } else if (widget.hasClass('multiselect-widget')) {
+            widget.multiselect('refresh');
         }
     };
 
@@ -1355,12 +1356,19 @@ var S3OptionsFilter = function(settings) {
 
             // Hide all visible targets and show throbber (remember visibility)
             target.each(function() {
-                var widget = $(this);
-                if (widget.is(':visible')) {
+                var widget = $(this),
+                    visible = true;
+                if (widget.hasClass('groupedopts-widget')) {
+                    visible = widget.groupedopts('visible');
+                } else {
+                    visible = widget.is(':visible');
+                }
+                if (visible) {
                     widget.data('visible', true);
-                    widget.hide();
                     if (widget.hasClass('groupedopts-widget')) {
                         widget.groupedopts('hide');
+                    } else {
+                        widget.hide();
                     }
                     addThrobber(widget, lookupResource);
                 } else {
@@ -1388,9 +1396,12 @@ var S3OptionsFilter = function(settings) {
 
                         // Show the widget if it was visible before
                         if (widget.data('visible')) {
-                            widget.show();
                             if (widget.hasClass('groupedopts-widget')) {
-                                widget.groupedopts('show');
+                                if (!empty) {
+                                    widget.groupedopts('show');
+                                }
+                            } else {
+                                widget.show();
                             }
                         }
 
@@ -1413,14 +1424,22 @@ var S3OptionsFilter = function(settings) {
             // Find the target widget
             var targetName = settings.targetWidget || target.attr('name');
             var widget = $('[name = "' + targetName + '"]'),
+                visible = true,
                 show_widget = false;
 
             // Hide the widget if it is visible, add throbber
-            if (widget.is(':visible')) {
+            if (widget.hasClass('groupedopts-widget')) {
+                visible = widget.groupedopts('visible');
+            } else {
+                visible = widget.is(':visible');
+            }
+            if (visible) {
                 show_widget = true;
-                widget.hide();
+                widget.data('visible', true);
                 if (widget.hasClass('groupedopts-widget')) {
                     widget.groupedopts('hide');
+                } else {
+                    widget.hide();
                 }
                 addThrobber(widget, lookupResource);
             }
@@ -1436,9 +1455,12 @@ var S3OptionsFilter = function(settings) {
 
                     // Show the widget if it was visible before, remove throbber
                     if (show_widget) {
-                        widget.show();
                         if (widget.hasClass('groupedopts-widget')) {
-                            widget.groupedopts('show');
+                            if (!empty) {
+                                widget.groupedopts('show');
+                            }
+                        } else {
+                            widget.show();
                         }
                     }
                     removeThrobber(widget, lookupResource);
@@ -1469,7 +1491,7 @@ var S3OptionsFilter = function(settings) {
      * @returns {array} [triggerField, triggerValue]
      */
     var getTriggerData = function(trigger) {
-        
+
         var triggerField = trigger,
             triggerValue = '';
         if (triggerField.attr('type') == 'checkbox') {
@@ -1601,6 +1623,56 @@ var S3OptionsFilter = function(settings) {
             var target = $scope.find(targetSelector);
             updateTarget(target, lookupKey, triggerValue, settings, true);
         });
+    };
+})(jQuery);
+
+// ============================================================================
+/**
+ * Link any action buttons/link with the s3-cancel class to the referrer
+ * (if on the same server and application), or to a default URL (if given),
+ * or hide them if neither referrer nor default URL are available.
+ */
+(function() {
+
+    /**
+     * Strip query and hash from a URL
+     * 
+     * @param {string} url - the URL
+     */
+    var stripQuery = function(url) {
+
+        var newurl = url.split('?')[0].split('#')[0];
+        return newurl;
+    }
+
+    /**
+     * Main entry point
+     *
+     * @param {string} defaultURL - the default URL
+     */
+    $.cancelButtonS3 = function(defaultURL) {
+
+        var cancelButtons = $('.s3-cancel');
+        if (!cancelButtons.length) {
+            return;
+        }
+        var referrer = document.referrer;
+        if (referrer && stripQuery(referrer) != stripQuery(document.URL)) {
+            var anchor = document.createElement('a');
+            anchor.href = referrer;
+            if (anchor.host == window.location.host &&
+                anchor.pathname.lastIndexOf(S3.Ap, 0) === 0) {
+                cancelButtons.attr('href', referrer);
+            } else if (defaultURL) {
+                cancelButtons.attr('href', defaultURL);
+            } else {
+                cancelButtons.hide();
+            }
+        } else if (defaultURL) {
+            cancelButtons.attr('href', defaultURL);
+        } else {
+            cancelButtons.hide();
+        }
     };
 })(jQuery);
 
@@ -1879,7 +1951,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             if (S3.FocusOnFirstField != false) {
                 // Focus On First Field
                 $('input:text:visible:first').focus();
-            };
+            }
         }
 
         // Accept comma as thousands separator
@@ -1961,7 +2033,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
 
         // Event Handlers for the page
         S3.redraw();
-        
+
         // Popovers (Bootstrap themes only)
         if (typeof($.fn.popover) != 'undefined') {
             // Applies to elements created after $(document).ready
