@@ -35,10 +35,10 @@ def project():
     if "tasks" in get_vars:
         # Open-Tasks-For-Project Selector
         return open_tasks_for_project()
-        
+
     # Pre-process
     def prep(r):
-        
+
         # Location Filter
         s3db.gis_location_filter(r)
 
@@ -88,9 +88,7 @@ def project():
                             (table.deleted == False)
                     rows = db(query).select(table.sector_id)
                     sector_ids = [row.sector_id for row in rows]
-                else:
-                    sector_ids = []
-                set_theme_requires(sector_ids)
+                    set_theme_requires(sector_ids)
 
             if not r.component:
                 if r.method in ("create", "update"):
@@ -109,7 +107,7 @@ def project():
                 if r.id:
                     r.table.human_resource_id.represent = \
                         s3db.hrm_HumanResourceRepresent(show_link=True)
-                    
+
                 elif r.get_vars.get("project.status_id", None):
                     stable = s3db.project_status
                     status = get_vars.get("project.status_id")
@@ -118,7 +116,7 @@ def project():
                     if row:
                         r.table.status_id.default = row.id
                         r.table.status_id.writable = False
-                        
+
             elif component_name == "organisation":
                 if r.method != "update":
                     allowed_roles = dict(settings.get_project_organisation_roles())
@@ -180,7 +178,7 @@ def project():
                         requires = requires.other
                     if hasattr(requires, "set_filter"):
                         requires.set_filter(**options_filter)
-                                            
+
             elif component_name == "beneficiary":
                 # Filter the location selector to the project's locations
                 component.table.project_location_id.requires = \
@@ -240,9 +238,9 @@ def project():
 
     # Post-process
     def postp(r, output):
-        
+
         if r.interactive:
-            
+
             if not r.component:
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
@@ -253,12 +251,12 @@ def project():
                     s3_action_buttons(r,
                                       read_url=read_url,
                                       update_url=update_url)
-                                              
+
             elif r.component_name == "beneficiary":
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
-                
+
         return output
     s3.postp = postp
 
@@ -274,7 +272,7 @@ def open_tasks_for_project():
         Simplified controller to select a project and open the
         list of open tasks for it
     """
-    
+
     def prep(r):
         tablename = "project_project"
         s3.crud_strings[tablename].title_list = T("Open Tasks for Project")
@@ -296,7 +294,7 @@ def open_tasks_for_project():
                               update_url=tasklist_url)
         return output
     s3.postp = postp
-    
+
     return s3_rest_controller(module, "project",
                               hide_filter=False,
                              )
@@ -309,13 +307,13 @@ def set_theme_requires(sector_ids):
     ttable = s3db.project_theme
     tstable = s3db.project_theme_sector
 
-    # All themes linked to the project's sectors or to no sectors 
+    # All themes linked to the project's sectors or to no sectors
     rows = db().select(ttable.id,
                        tstable.sector_id,
                        left=tstable.on(ttable.id == tstable.theme_id))
     sector_ids = sector_ids or []
-    theme_ids = [row.project_theme.id for row in rows 
-                 if not row.project_theme_sector.sector_id or 
+    theme_ids = [row.project_theme.id for row in rows
+                 if not row.project_theme_sector.sector_id or
                     row.project_theme_sector.sector_id in sector_ids]
     table = s3db.project_theme_project
     table.theme_id.requires = IS_EMPTY_OR(
@@ -337,12 +335,12 @@ def set_activity_type_requires(tablename, sector_ids):
     if sector_ids:
         atstable = s3db.project_activity_type_sector
 
-        # All activity_types linked to the projects sectors or to no sectors 
+        # All activity_types linked to the projects sectors or to no sectors
         rows = db().select(attable.id,
                            atstable.sector_id,
                            left=atstable.on(attable.id == atstable.activity_type_id))
-        activity_type_ids = [row.project_activity_type.id for row in rows 
-                     if not row.project_activity_type_sector.sector_id or 
+        activity_type_ids = [row.project_activity_type.id for row in rows
+                     if not row.project_activity_type_sector.sector_id or
                         row.project_activity_type_sector.sector_id in sector_ids]
     else:
         activity_type_ids = []
@@ -354,26 +352,6 @@ def set_activity_type_requires(tablename, sector_ids):
                                               sort=True,
                                               )
                                     )
-
-# -----------------------------------------------------------------------------
-def project_theme_id_widget():
-    """
-        Used by the project controller to return dynamically generated 
-        theme_id widget based on sector_id
-        - deprecated?
-    """
-
-    table = s3db.project_theme_project
-    sector_ids = [int(id) for id in request.vars.sector_ids.split(",") if id]
-    if "value" in request.vars:
-        value = [int(id) for id in request.vars.value.split(",") if id]
-    else:
-        value = []
-    
-    set_theme_requires(sector_ids)
-    widget = table.theme_id.widget(table.theme_id,
-                                   value)
-    return widget
 
 # =============================================================================
 def sector():
@@ -417,40 +395,6 @@ def theme_sector():
     s3.prep = prep
 
     return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def theme_sector_widget():
-    """ Render a Widget with Theme options filtered by Sector """
-
-    try:
-        values = get_vars.sector_ids.split(",")
-        values = [int(v) for v in values]
-    except:
-        values = []
-
-    widget = s3base.s3forms.S3SQLInlineComponentCheckbox(
-        "theme",
-        label = T("Themes"),
-        field = "theme_id",
-        cols = 4,
-        translate = True,
-        # Filter Theme by Sector
-        filter = {"linktable": "project_theme_sector",
-                  "lkey": "theme_id",
-                  "rkey": "sector_id",
-                  "values": values
-                  }
-        )
-
-    resource = s3db.resource("project_project")
-    instance, fieldname, field = widget.resolve(resource)
-    
-    value = widget.extract(resource, record_id=None)
-    output = widget(s3db.project_theme_project.theme_id,
-                    value,
-                    _name=field.name)
-
-    return output
 
 # -----------------------------------------------------------------------------
 def hazard():
@@ -861,8 +805,8 @@ def time():
         s3.crud_strings["project_time"].title_list = T("My Logged Hours")
         person_id = auth.s3_logged_in_person()
         if person_id:
-            # @ToDo: Use URL filter instead, but the Search page will have 
-            # to populate it's widgets based on the URL filter  
+            # @ToDo: Use URL filter instead, but the Search page will have
+            # to populate it's widgets based on the URL filter
             s3.filter = (table.person_id == person_id)
             # Log time with just this user's open tasks visible
             ttable = db.project_task

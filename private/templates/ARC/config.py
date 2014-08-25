@@ -1573,11 +1573,11 @@ def customise_project_project_controller(**attr):
             match = "sector_project.sector_id",
             script = '''
 $.filterOptionsS3({
-  'trigger': {'alias': 'sector', 'name': 'sector_id', 'inlineType': 'link'},
-  'target': {'alias': 'theme', 'name': 'theme_id', 'inlineType': 'link'},
-  'lookupPrefix': 'project',
+  'trigger':{'alias':'sector','name':'sector_id','inlineType':'link'},
+  'target':{'alias':'theme','name':'theme_id','inlineType':'link'},
+  'lookupPrefix':'project',
   'lookupResource':'theme',
-  'lookupKey': 'theme_id:project_theme_sector.sector_id',
+  'lookupKey':'theme_id:project_theme_sector.sector_id',
   'showEmptyField':false
 })'''
         ),

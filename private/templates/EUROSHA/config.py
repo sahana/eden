@@ -90,7 +90,7 @@ def eurosha_realm_entity(table, row):
     tablename = table._tablename
 
     # Do not apply realms for Master Data
-    # @ToDo: Restore Realms and add a role/functionality support for Master Data  
+    # @ToDo: Restore Realms and add a role/functionality support for Master Data
     if tablename in [#"hrm_certificate",
                      "hrm_department",
                      "hrm_job_title",
@@ -267,9 +267,9 @@ def customise_org_organisation_controller(**attr):
                            "country",
                            "website"
                            ]
-            
+
             s3db.configure("org_organisation", list_fields=list_fields)
-        
+
         if r.interactive:
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
             crud_form = S3SQLCustomForm(
@@ -297,7 +297,7 @@ def customise_org_organisation_controller(**attr):
                 "comments",
             )
             s3db.configure("org_organisation", crud_form=crud_form)
-            
+
         return result
     s3.prep = custom_prep
 
@@ -307,7 +307,7 @@ settings.customise_org_organisation_controller = customise_org_organisation_cont
 
 # -----------------------------------------------------------------------------
 def customise_project_project_resource(r, tablename):
-    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponentCheckbox
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink
     crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
@@ -316,13 +316,13 @@ def customise_project_project_resource(r, tablename):
         "status_id",
         "start_date",
         "end_date",
-        #S3SQLInlineComponentCheckbox(
-        #    "hazard",
+        #S3SQLInlineLink(
+        #   "hazard",
         #    label = T("Hazards"),
         #    field = "hazard_id",
         #    cols = 4,
         #),
-        S3SQLInlineComponentCheckbox(
+        S3SQLInlineLink(
             "sector",
             label = T("Sectors"),
             field = "sector_id",
@@ -333,25 +333,23 @@ def customise_project_project_resource(r, tablename):
         #    label = T("Locations"),
         #    fields = ["location_id"],
         #),
-        S3SQLInlineComponentCheckbox(
+        S3SQLInlineLink(
             "theme",
             label = T("Themes"),
             field = "theme_id",
             cols = 4,
+            translate = True,
             # Filter Theme by Sector
-#            filter = {"linktable": "project_theme_sector",
-#                      "lkey": "theme_id",
-#                      "rkey": "sector_id",
-#                      },
+#            filterby = "theme_id:project_theme_sector.sector_id",
+#            match = "sector_project.sector_id",
 #            script = '''
-#S3OptionsFilter({
-# 'triggerName':'defaultsector-sector_id',
-# 'targetName':'defaulttheme-theme_id',
-# 'targetWidget':'defaulttheme-theme_id_widget',
-# 'lookupResource':'theme',
-# 'lookupURL':S3.Ap.concat('/project/theme_sector_widget?sector_ids='),
-# 'getWidgetHTML':true,
-# 'showEmptyField':false
+#$.filterOptionsS3({
+#  'trigger':{'alias':'sector','name':'sector_id','inlineType':'link'},
+#  'target':{'alias':'theme','name':'theme_id','inlineType':'link'},
+#  'lookupPrefix':'project',
+#  'lookupResource':'theme',
+#  'lookupKey':'theme_id:project_theme_sector.sector_id',
+#  'showEmptyField':false
 #})'''
         ),
         #"drr.hfa",
