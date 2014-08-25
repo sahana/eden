@@ -40,7 +40,7 @@ settings.mail.auth_user_in_email_subject = True
 
 # -----------------------------------------------------------------------------
 # Authentication settings
-settings.auth.registration_roles = {"organisation_id": ["CR_EVR_READER_V",
+settings.auth.registration_roles = {"organisation_id": ["VOL_READER",
                                                         ],
                                     }
 settings.auth.registration_requests_mobile_phone = True
@@ -119,7 +119,7 @@ settings.hrm.vol_experience = False
 settings.hrm.show_organisation = True
 settings.hrm.use_awards = False
 settings.hrm.use_certificates = False
-settings.hrm.use_skills = False
+settings.hrm.use_skills = True
 settings.hrm.use_trainings = False
 
 #*****************************Frontpage settings*************************
