@@ -2948,7 +2948,7 @@ def poi():
                     popup_edit_url = r.url(method="update",
                                            representation="popup",
                                            )
-                    
+
                 s3db.configure("gis_poi",
                                popup_edit_url = popup_edit_url,
                                )
@@ -3024,6 +3024,7 @@ def display_feature():
     # zoom = config.zoom + 2
     bounds = gis.get_bounds(features=[feature])
 
+    response.view = "gis/iframe.html"
     map = gis.show_map(
         features = [feature.wkt],
         lat = lat,
