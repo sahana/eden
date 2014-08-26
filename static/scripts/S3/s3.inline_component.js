@@ -816,12 +816,11 @@ $(function() {
                 $(this).unbind('change.inline');
             });
         });
-        $('.edit-row select.multiselect-widget').bind('open.multiselect', function() {
-            $(this).one('change.inline', function() {
+        $('.edit-row select.multiselect-widget').bind('multiselectopen', function() {
+            $(this).unbind('change.inline')
+                   .one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
-            }).one('close.multiselect', function() {
-                $(this).unbind('change.inline');
             });
         });
         $('.add-row input[type="text"], .add-row textarea').bind('input', function() {
@@ -836,12 +835,11 @@ $(function() {
                 $(this).unbind('change.inline');
             });
         });
-        $('.add-row select.multiselect-widget').bind('open.multiselect', function() {
-            $(this).one('change.inline', function() {
+        $('.add-row select.multiselect-widget').bind('multiselectopen', function() {
+            $(this).unbind('change.inline')
+                   .one('change.inline', function() {
                 inline_mark_changed(this);
                 inline_catch_submit(this);
-            }).one('close.multiselect', function() {
-                $(this).unbind('change.inline');
             });
         });
         // Chrome doesn't mark row as changed when just file input added
