@@ -7,7 +7,7 @@
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
  * requires jQuery jstree 3.0.3
- * 
+ *
  */
 (function($, undefined) {
 
@@ -39,7 +39,7 @@
          * Create the widget
          */
         _create: function() {
-            
+
             var el = $(this.element),
                 opts = this.options;
 
@@ -47,7 +47,7 @@
             hierarchicaloptsID += 1;
 
             this._namespace = '.hierarchicalopts' + hierarchicaloptsID;
-            
+
             this.treeID = el.attr('id') + '-tree';
 
             // The hidden input field
@@ -75,7 +75,7 @@
          * Update the widget options
          */
         _init: function() {
-            
+
             this.refresh();
         },
 
@@ -85,7 +85,7 @@
         _destroy: function() {
 
             $.Widget.prototype.destroy.call(this);
-            
+
             this._unbindEvents();
             $(this.button).remove();
             $(this.noopts).remove();
@@ -131,7 +131,7 @@
 
             var multiple = opts.multiple,
                 leafonly = opts.leafonly;
-            
+
             tree.jstree({
                 'core': {
                     'themes': {
@@ -150,7 +150,7 @@
                 },
                 'plugins': ['sort', 'checkbox']
             });
-            
+
             var selected = tree.jstree('get_checked');
             this._updateButtonText(selected);
 
@@ -194,7 +194,7 @@
                 leafonly = this.options.leafonly;
 
             var nodes = tree.jstree('get_checked', true);
-                
+
             $(nodes).each(function() {
                 var id = $(this).attr('id');
                 if (id && (!leafonly || tree.jstree('is_leaf', this))) {
@@ -205,7 +205,7 @@
                     }
                 }
             });
-            
+
             var changed = false,
                 diff = $(new_selected).not(old_selected).get();
             if (diff.length) {
@@ -251,7 +251,7 @@
             } else {
                 text = options.noneSelectedText;
             }
-            
+
             this.buttonText.text(text);
         },
 
@@ -367,7 +367,7 @@
                     rel: 'leaf'
                 }
             }, "last");
-            
+
             // Update the parent relationship and open the parent node
             if (parent) {
                 parentNode.attr({rel: 'parent'});
