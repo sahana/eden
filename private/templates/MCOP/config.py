@@ -128,7 +128,7 @@ settings.gis.geonames_username = "mcop"
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Uncomment to prevent showing LatLon in Location Represents
-settings.gis.location_represent_address_only = True
+settings.gis.location_represent_address_only = "icon"
 # Resources which can be directly added to the main map
 settings.gis.poi_create_resources = None
 

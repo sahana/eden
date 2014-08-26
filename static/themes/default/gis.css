@@ -68,6 +68,13 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     padding-right: 2px;
 }
 
+/* gis_LocationRepresent with icon to display the feature */
+.gis-display-feature i.icon-map-marker {
+    cursor: pointer;
+    cursor: hand;
+    padding-left: 5px;
+}
+
 .embeddedComponent .map_wrapper {
     width: 100%;
 }
@@ -272,11 +279,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 .olLayerGoogleCopyright {
     right: 3px;
     bottom: 2px;
-    left: auto;  
+    left: auto;
 }
 .olLayerGooglePoweredBy {
     left: 2px;
-    bottom: 2px;   
+    bottom: 2px;
 }
 .olForeignContainer div.olControlMousePosition {
     bottom: 28px;
@@ -518,7 +525,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 */
 
 /* Print Preview
-.x-btn .icon-print { 
+.x-btn .icon-print {
     background-image: url(../../img/silk/printer.png);
 }
 
@@ -533,9 +540,9 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 }
 
 .gx-map-overlay {
-    z-index: 1000; 
-    position: absolute; 
-    right: 10px; 
+    z-index: 1000;
+    position: absolute;
+    right: 10px;
     bottom: 10px;
     text-align: left;
 }

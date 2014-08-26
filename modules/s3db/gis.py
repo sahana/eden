@@ -507,7 +507,7 @@ class S3LocationModel(S3Model):
                 if parent:
                     Lx_ids = gis.get_parents(parent, ids_only=True)
                     if Lx_ids:
-                       Lx_ids.append(parent) 
+                       Lx_ids.append(parent)
                     else:
                         Lx_ids = [parent]
                 else:
@@ -734,7 +734,7 @@ class S3LocationModel(S3Model):
                                                      table.name,
                                                      orderby=~table.end_date,
                                                      limitby=(0, 1)).first()
-                
+
                 if duplicate:
                     # @ToDo: Import Log
                     #current.log.debug("Location PCode Match")
@@ -1028,7 +1028,7 @@ class S3LocationModel(S3Model):
                 if translate:
                     path = row["gis_location.path"]
                     ids = path.split("/")
-                    loc = l10n.get(int(ids.pop()), None) 
+                    loc = l10n.get(int(ids.pop()), None)
                     if loc:
                         item["name"] = loc["name_l10n"]
                     else:
@@ -1038,7 +1038,7 @@ class S3LocationModel(S3Model):
                 L5 = row.get("gis_location.L5", None)
                 if L5 and level != "L5":
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             item["L5"] = loc["name_l10n"]
                         else:
@@ -1048,7 +1048,7 @@ class S3LocationModel(S3Model):
                 L4 = row.get("gis_location.L4", None)
                 if L4 and level != "L4":
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             item["L4"] = loc["name_l10n"]
                         else:
@@ -1058,7 +1058,7 @@ class S3LocationModel(S3Model):
                 L3 = row.get("gis_location.L3", None)
                 if L3 and level != "L3":
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             item["L3"] = loc["name_l10n"]
                         else:
@@ -1068,7 +1068,7 @@ class S3LocationModel(S3Model):
                 L2 = row.get("gis_location.L2", None)
                 if L2 and level != "L2":
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             item["L2"] = loc["name_l10n"]
                         else:
@@ -1078,7 +1078,7 @@ class S3LocationModel(S3Model):
                 L1 = row.get("gis_location.L1", None)
                 if L1 and level != "L1":
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             item["L1"] = loc["name_l10n"]
                         else:
@@ -1088,12 +1088,12 @@ class S3LocationModel(S3Model):
                 L0 = row.get("gis_location.L0", None)
                 if L0 and level != "L0":
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             item["L0"] = loc["name_l10n"]
                     else:
                         item["L0"] = L0
-                
+
                 _name_alt = row.get("gis_location_name_alt.name_alt", None)
                 _name_l10n = row.get("gis_location_name.name_l10n", None)
                 if isinstance(_name_alt, basestring):
@@ -1101,16 +1101,16 @@ class S3LocationModel(S3Model):
                     _name_alt = [ _name_alt ]
                 if isinstance(_name_l10n, basestring):
                     _name_l10n = [ _name_l10n ]
-                
+
                 alternate = dict(item)
                 location_names = []
                 l = len(value)
-                
+
                 if _name_alt:
                     location_names += _name_alt
                 if _name_l10n:
                     location_names += _name_l10n
-    
+
                 # Check for matches in other(if any) names
                 alternate.pop("name", None)
                 for name in location_names:
@@ -1128,7 +1128,7 @@ class S3LocationModel(S3Model):
                     iappend(item)
 
             output = json.dumps(items, separators=SEPARATORS)
-                                       
+
         response.headers["Content-Type"] = "application/json"
         return output
 
@@ -2461,7 +2461,7 @@ class gis_MarkerRepresent(S3Represent):
     """
 
     def __init__(self):
-        
+
         super(gis_MarkerRepresent, self).__init__(lookup="gis_marker",
                                                   fields=["image"])
 
@@ -2582,7 +2582,7 @@ class S3LayerEntityModel(S3Model):
                                    "key": "post_id",
                                    },
                        )
-                      
+
         # =====================================================================
         #  Layer Config link table
 
@@ -2693,7 +2693,7 @@ class S3LayerEntityModel(S3Model):
             style = style.replace("'", "\"")
             try:
                 json.loads(style)
-            except ValueError, e: 
+            except ValueError, e:
                 form.errors.style = "%s: %s" % (current.T("Style invalid"), e)
             form.vars.style = style
 
@@ -3742,7 +3742,7 @@ class S3MapModel(S3Model):
                              cluster_distance()(),
                              cluster_threshold()(),
                              s3_role_required(), # Single Role
-                             *s3_meta_fields())  
+                             *s3_meta_fields())
 
         configure(tablename,
                   create_onaccept = self.gis_layer_shapefile_onaccept,
@@ -4238,7 +4238,7 @@ class S3MapModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_layer_openstreetmap_deduplicate(item):
@@ -4260,7 +4260,7 @@ class S3MapModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_layer_wfs_deduplicate(item):
@@ -4284,7 +4284,7 @@ class S3MapModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gis_layer_shapefile_deduplicate(item):
@@ -5224,7 +5224,12 @@ class gis_LocationRepresent(S3Represent):
         # Translation uses gis_location_name & not T()
         translate = settings.get_L10n_translate_gis_location()
 
-        self.address_only = address_only or settings.get_gis_location_represent_address_only()
+        address_only = address_only or \
+                       settings.get_gis_location_represent_address_only()
+        show_marker_icon = True if address_only == "icon" else False
+        self.address_only = address_only
+        self.show_marker_icon = show_marker_icon
+
         self.sep = sep
         self.show_name = show_name
 
@@ -5241,7 +5246,7 @@ class gis_LocationRepresent(S3Represent):
                       "L5",
                       ]
             self.multi_country = len(current.deployment_settings.get_gis_countries()) != 1
-        elif address_only:
+        elif address_only and not show_marker_icon:
             fields = ["id",
                       "name",
                       "level",
@@ -5398,35 +5403,35 @@ class gis_LocationRepresent(S3Represent):
             L5 = row.L5
             if L5 and level != "L5":
                 if translate:
-                    loc = l10n.get(int(ids.pop()), None) 
+                    loc = l10n.get(int(ids.pop()), None)
                     if loc:
                         L5 = loc["name_l10n"]
                 lappend(L5)
             L4 = row.L4
             if L4 and level != "L4":
                 if translate:
-                    loc = l10n.get(int(ids.pop()), None) 
+                    loc = l10n.get(int(ids.pop()), None)
                     if loc:
                         L4 = loc["name_l10n"]
                 lappend(L4)
             L3 = row.L3
             if L3 and level != "L3":
                 if translate:
-                    loc = l10n.get(int(ids.pop()), None) 
+                    loc = l10n.get(int(ids.pop()), None)
                     if loc:
                         L3 = loc["name_l10n"]
                 lappend(L3)
             L2 = row.L2
             if L2 and level != "L2":
                 if translate:
-                    loc = l10n.get(int(ids.pop()), None) 
+                    loc = l10n.get(int(ids.pop()), None)
                     if loc:
                         L2 = loc["name_l10n"]
                 lappend(L2)
             L1 = row.L1
             if L1 and level != "L1":
                 if translate:
-                    loc = l10n.get(int(ids.pop()), None) 
+                    loc = l10n.get(int(ids.pop()), None)
                     if loc:
                         L1 = loc["name_l10n"]
                 lappend(L1)
@@ -5434,7 +5439,7 @@ class gis_LocationRepresent(S3Represent):
                 L0 = row.L0
                 if L0:
                     if translate:
-                        loc = l10n.get(int(ids.pop()), None) 
+                        loc = l10n.get(int(ids.pop()), None)
                         if loc:
                             L0 = loc["name_l10n"]
                     lappend(L0)
@@ -5473,6 +5478,8 @@ class gis_LocationRepresent(S3Represent):
                 # Specific location:
                 # Don't duplicate the Resource Name
                 # Street address or lat/lon as base
+                has_lat_lon = row.get("lat") is not None and \
+                              row.get("lon") is not None
                 represent = ""
                 if row.addr_street:
                     # Get the 1st line of the street address.
@@ -5482,8 +5489,7 @@ class gis_LocationRepresent(S3Represent):
                 if (not represent) and \
                    (not self.address_only) and \
                    (row.inherited == False) and \
-                   (row.lat is not None) and \
-                   (row.lon is not None):
+                   has_lat_lon:
                     represent = self.lat_lon_represent(row)
                 if row.parent:
                     if row.path:
@@ -5505,8 +5511,19 @@ class gis_LocationRepresent(S3Represent):
                 if not represent:
                     represent = name or "ID: %s" % row.id
 
+                if has_lat_lon and self.show_marker_icon:
+                    script = '''s3_showMap(%i);return false''' % row.id
+                    represent = SPAN(s3_unicode(represent),
+                                     I(_class="icon icon-map-marker",
+                                       _title=self.lat_lon_represent(row),
+                                       _onclick=script,
+                                       ),
+                                     _class="gis-display-feature",
+                                     )
+                    return represent
+
         return s3_unicode(represent)
-        
+
 # =============================================================================
 def gis_layer_represent(id, row=None, show_link=True):
     """ Represent a Layer  """
@@ -5556,7 +5573,7 @@ def gis_layer_represent(id, row=None, show_link=True):
 # =============================================================================
 def gis_rheader(r, tabs=[]):
     """ GIS page headers """
-    
+
     settings = current.deployment_settings
 
     if r.representation != "html":
