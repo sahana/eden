@@ -66,8 +66,10 @@ class S3Profile(S3CRUD):
             if r.record:
                 # Initialize CRUD form
                 self.settings = current.response.s3.crud
-                sqlform = self._config("crud_form")
-                self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
+                self.sqlform = sqlform = self._config("crud_form")
+                if not sqlform:
+                    from s3forms import S3SQLDefaultForm
+                    self.sqlform = S3SQLDefaultForm()
 
                 # Render page
                 output = self.profile(r, **attr)

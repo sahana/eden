@@ -878,7 +878,8 @@ class S3XML(S3Codec):
                                          join=False,
                                          geojson=False)
                 # Convert the WKT in XSLT
-                attr[ATTRIBUTE.wkt] = wkts[tablename][record_id]
+                if record_id in wkts:
+                    attr[ATTRIBUTE.wkt] = wkts[record_id]
 
             if format == "kml":
                 # GIS marker
@@ -931,7 +932,8 @@ class S3XML(S3Codec):
                                          join=False,
                                          geojson=False)
                 # Convert the WKT in XSLT
-                attr[ATTRIBUTE.wkt] = wkts[tablename][record_id]
+                if record_id in wkts:
+                    attr[ATTRIBUTE.wkt] = wkts[record_id]
 
             # End: Shapefile data
             return
