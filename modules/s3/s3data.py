@@ -1476,9 +1476,9 @@ class S3PivotTable(object):
         # The layer
         if layer is None:
             layer = self.layers[0]
-        field, method = layer
+        #field, method = layer
 
-        # The rows_dim
+        # The rows dimension
         # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
         context = resource.get_config("context")
         if context and "location" in context:
@@ -1491,7 +1491,6 @@ class S3PivotTable(object):
 
         db = current.db
         gtable = current.s3db.gis_location
-        query = (gtable.level == level) & (gtable.deleted == False)
 
         # The data
         attributes = {}
@@ -1523,12 +1522,13 @@ class S3PivotTable(object):
             self._sortdim(rows, self.rfields[rows_dim])
 
             # Aggregate the grouped values
+            query = (gtable.level == level) & (gtable.deleted == False)
             for rindex, rtotal, rtitle in rows:
                 rval = rtitle.value
                 if rval:
                     # @ToDo: Handle duplicate names ;)
                     if rval in ids:
-                        id = ids[rval]
+                        _id = ids[rval]
                     else:
                         q = query & (gtable.name == rval)
                         row = db(q).select(gtable.id,
@@ -1536,18 +1536,18 @@ class S3PivotTable(object):
                                            limitby=(0, 1)
                                            ).first()
                         try:
-                            id = row.id
+                            _id = row.id
                             # Cache
-                            ids[rval] = id
+                            ids[rval] = _id
                         except:
                             continue
 
                     attribute = dict(name=s3_unicode(rval),
                                      value=rtotal)
-                    attributes[id] = attribute
+                    attributes[_id] = attribute
 
-            ids = [ids[r] for r in ids]
-            query = (gtable.id.belongs(ids))
+            location_ids = [ids[r] for r in ids]
+            query = (gtable.id.belongs(location_ids))
             geojsons = current.gis.get_locations(gtable,
                                                  query,
                                                  join=False,
@@ -1555,12 +1555,11 @@ class S3PivotTable(object):
 
         # Prepare for export via xml.gis_encode() and geojson/export.xsl
         location_data = {}
-        #tablename = resource.tablename
-        tablename = "gis_location"
-        location_data[tablename] = {}
-        location_data[tablename]["geojsons"] =  geojsons
-        location_data[tablename]["attributes"] = attributes
-        return ids, location_data
+        geojsons = dict(gis_location = geojsons)
+        location_data["geojsons"] = geojsons
+        attributes = dict(gis_location = attributes)
+        location_data["attributes"] = attributes
+        return location_ids, location_data
 
     # -------------------------------------------------------------------------
     def json(self,

@@ -29,6 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import os
 import re
 
 try:
@@ -236,22 +237,41 @@ class S3Report(S3Method):
         """
 
         resource = self.resource
+        response = current.response
+        s3 = response.s3
+
+        # Filter
+        s3_filter = s3.filter
+        if s3_filter is not None:
+            resource.add_filter(s3_filter)
 
         # Extract the relevant GET vars
-        report_vars = ("rows", "cols", "fact", "level")
+        report_vars = ("fact", "level")
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
                         if k in report_vars)
 
         # Fall back to report options defaults
-        report_options = resource.get_config("report_options", {})
+        get_config = resource.get_config
+        report_options = get_config("report_options", {})
         defaults = report_options.get("defaults", {})
 
-        if not any (k in get_vars for k in ("rows", "cols", "fact")):
+        if not any (k in get_vars for k in ("rows", "fact")):
             get_vars = defaults
 
+        # The rows dimension
+        level = get_vars.get("level", "L0")
+        # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
+        context = get_config("context")
+        if context and "location" in context:
+            rows = "(location)$%s" % level
+        else:
+            # Fallback to location_id
+            rows = "location_id$%s" % level
+            # Fallback we can add if-required
+            #rows = "site_id$location_id$%s" % level
+
         # Build the Pivot Table
-        rows = get_vars.get("rows", None)
-        cols = get_vars.get("cols", None)
+        cols = None
         layer = get_vars.get("fact", "count(id)")
         m = layer_pattern.match(layer)
         selector, method = m.group(2), m.group(1)
@@ -261,15 +281,32 @@ class S3Report(S3Method):
         pivottable = resource.pivottable(rows, cols, [layer])
 
         # Extract the Location Data
-        level = get_vars.get("level", "L0")
         ids, location_data = pivottable.geojson(layer=layer, level=level)
 
         # Debug
         #output = json.dumps(location_data, separators=SEPARATORS)
         #return output
 
-        resource = current.s3db.resource("gis_location", id=ids)
-        resource.export_xml(location_data=location_data)
+        # Set XSLT stylesheet
+        stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")
+
+        gresource = current.s3db.resource("gis_location", id=ids)
+        output = gresource.export_xml(fields=[],
+                                      mcomponents=None,
+                                      references=[],
+                                      stylesheet=stylesheet,
+                                      as_json=True,
+                                      location_data=location_data,
+                                      )
+        # Set response headers
+        response.headers["Content-Type"] = s3.content_type.get("geojson",
+                                                               "application/json")
+
+        # Transformation error?
+        if not output:
+            r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
+
+        return output
 
     # -------------------------------------------------------------------------
     def widget(self, r, method=None, widget_id=None, visible=True, **attr):

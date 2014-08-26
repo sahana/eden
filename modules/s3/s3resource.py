@@ -1734,7 +1734,8 @@ class S3Resource(object):
                                 references=references,
                                 filters=filters,
                                 maxbounds=maxbounds,
-                                xmlformat=xmlformat)
+                                xmlformat=xmlformat,
+                                location_data=location_data)
         #if DEBUG:
             #end = datetime.datetime.now()
             #duration = end - _start
@@ -1872,35 +1873,35 @@ class S3Resource(object):
         # Total number of results
         results = self.count()
 
-        format = current.auth.permission.format
-        if format == "geojson" and not location_data:
-            if results > current.deployment_settings.get_gis_max_features():
-                # @ToDo: Option to fallback automatically to the /report method where we have the polygon info?
-                headers = {"Content-Type": "application/json"}
-                message = "Too Many Records"
-                status = 509
-                raise HTTP(status,
-                           body=xml.json_message(success=False,
-                                                 statuscode=status,
-                                                 message=message),
-                           web2py_error=message,
-                           **headers)
-            # Lookups per layer not per record
-            if tablename == "gis_layer_shapefile":
-                # GIS Shapefile Layer
-                location_data = current.gis.get_shapefile_geojson(self) or {}
-            elif tablename == "gis_theme_data":
-                # GIS Theme Layer
-                location_data = current.gis.get_theme_geojson(self) or {}
-            else:
-                # e.g. GIS Feature Layer
-                # e.g. Search results
+        if not location_data:
+            format = current.auth.permission.format
+            if format == "geojson":
+                if results > current.deployment_settings.get_gis_max_features():
+                    headers = {"Content-Type": "application/json"}
+                    message = "Too Many Records"
+                    status = 509
+                    raise HTTP(status,
+                               body=xml.json_message(success=False,
+                                                     statuscode=status,
+                                                     message=message),
+                               web2py_error=message,
+                               **headers)
+                # Lookups per layer not per record
+                if tablename == "gis_layer_shapefile":
+                    # GIS Shapefile Layer
+                    location_data = current.gis.get_shapefile_geojson(self) or {}
+                elif tablename == "gis_theme_data":
+                    # GIS Theme Layer
+                    location_data = current.gis.get_theme_geojson(self) or {}
+                else:
+                    # e.g. GIS Feature Layer
+                    # e.g. Search results
+                    location_data = current.gis.get_location_data(self) or {}
+            elif format in ("georss", "kml", "gpx"):
                 location_data = current.gis.get_location_data(self) or {}
-        elif format in ("georss", "kml", "gpx"):
-            location_data = current.gis.get_location_data(self) or {}
-        else:
-            # @ToDo: Bulk lookup of LatLons for S3XML.latlon()
-            location_data = {}
+            else:
+                # @ToDo: Bulk lookup of LatLons for S3XML.latlon()
+                location_data = {}
 
         # Build the tree
         #if DEBUG:

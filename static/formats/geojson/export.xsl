@@ -102,7 +102,7 @@
     <xsl:template match="resource[@name='gis_location']">
         <xsl:variable name="uuid" select="./@uuid"/>
         <xsl:variable name="geometry" select="./map[1]/geometry/@value"/>
-        <xsl:variable name="attributes" select="map[1]/@attributes"/>
+        <xsl:variable name="attributes" select="./map[1]/@attributes"/>
         <xsl:choose>
             <xsl:when test="//reference[@resource='gis_location' and @uuid=$uuid]">
                 <xsl:for-each select="//reference[@resource='gis_location' and @uuid=$uuid]">
@@ -120,41 +120,7 @@
                     </xsl:attribute>
                 </geometry>
                 <properties>
-                    <id>
-                        <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
-                    </id>
-                    <!-- Generic marker not used in GeoJSON
-                    <xsl:if test="@marker!=''">
-                        <marker>
-                            <xsl:value-of select="@marker"/>
-                        </marker>
-                    </xsl:if>-->
-                    <xsl:if test="map[1]/@popup_url!=''">
-                        <url>
-                            <xsl:value-of select="map[1]/@popup_url"/>
-                        </url>
-                    </xsl:if>
-                    
-                    <!-- Per-feature Marker not used for gis_location
-                    <xsl:if test="@marker_url">
-                        <marker_url>
-                            <xsl:value-of select="@marker_url"/>
-                        </marker_url>
-                        <marker_height>
-                            <xsl:value-of select="@marker_height"/>
-                        </marker_height>
-                        <marker_width>
-                            <xsl:value-of select="@marker_width"/>
-                        </marker_width>
-                    </xsl:if>-->
-
-                    <xsl:if test="$attributes!=''">
-                        <xsl:call-template name="Attributes">
-                            <xsl:with-param name="attributes">
-                                <xsl:value-of select="$attributes"/>
-                            </xsl:with-param>
-                        </xsl:call-template>
-                    </xsl:if>
+                    <xsl:call-template name="Properties"/>
                 </properties>
             </xsl:when>
             <xsl:otherwise>
@@ -171,18 +137,7 @@
                     </coordinates>
                 </geometry>
                 <properties>
-                    <id>
-                        <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
-                    </id>
-                    <name>
-                        <xsl:value-of select="data[@field='name']"/>
-                    </name>
-                    <marker>
-                        <xsl:value-of select="map[1]/@marker"/>
-                    </marker>
-                    <url>
-                        <xsl:value-of select="map[1]/@popup_url"/>
-                    </url>
+                    <xsl:call-template name="Properties"/>
                 </properties>
             </xsl:otherwise>
         </xsl:choose>
@@ -357,10 +312,6 @@
                 </geometry>
                 <properties>
                     <xsl:call-template name="Properties"/>
-                        <!--<xsl:with-param name="uuid">
-                            <xsl:value-of select="./@uuid"/>
-                        </xsl:with-param>
-                    </xsl:call-template>-->
                 </properties>
             </xsl:when>
             <xsl:when test="./map[1]/@wkt!='null'">
@@ -388,10 +339,6 @@
                 </geometry>
                 <properties>
                     <xsl:call-template name="Properties"/>
-                        <!--<xsl:with-param name="uuid">
-                            <xsl:value-of select="./@uuid"/>
-                        </xsl:with-param>
-                    </xsl:call-template>-->
                 </properties>
             </xsl:when>
             <!-- xsl:otherwise skip -->

@@ -821,13 +821,11 @@ class S3XML(S3Codec):
             # Requires no special handling: XSLT uses normal fields
             return
 
-        db = current.db
         gis = current.gis
         request = current.request
         settings = current.deployment_settings
 
         ATTRIBUTE = self.ATTRIBUTE
-        WKTFIELD = self.WKT
 
         # Retrieve data prepared earlier in gis.get_location_data()
         latlons = location_data.get("latlons", [])
@@ -854,21 +852,22 @@ class S3XML(S3Codec):
                     geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
 
-                # Use the current controller for map popup URLs to get
-                # the controller settings applied even for map popups
-                url = URL(request.controller,
-                          request.function).split(".", 1)[0]
-                # Assume being used within the Sahana Mapping client
-                # so use local URLs to keep filesize down
-                url = "%s/%i.plain" % (url, record_id)
-                attr[ATTRIBUTE.popup_url] = url
-
             elif tablename in wkts:
                 # Nothing gets here currently
                 # tbc: KML Polygons (or we should also do these outside XSLT)
                 wkt = wkts[tablename][record_id]
                 # Convert the WKT in XSLT
                 attr[ATTRIBUTE.wkt] = wkt
+
+            elif tablename in latlons:
+                # These have been looked-up in bulk
+                LatLon = latlons[tablename].get(record_id, None)
+                if LatLon:
+                    lat = LatLon[0]
+                    lon = LatLon[1]
+                    if lat is not None and lon is not None:
+                        attr[ATTRIBUTE.lat] = "%.4f" % lat
+                        attr[ATTRIBUTE.lon] = "%.4f" % lon
 
             else:
                 # Lookup record by record :/
@@ -881,7 +880,52 @@ class S3XML(S3Codec):
                 if record_id in wkts:
                     attr[ATTRIBUTE.wkt] = wkts[record_id]
 
-            if format == "kml":
+            if format == "geojson":
+                if tablename in attributes:
+                    # Add Attributes
+                    attrs = attributes[tablename][record_id]
+                    if attrs:
+                        # Encode in a way which we can decode in static/formats/geojson/export.xsl
+                        # - double up all tokens to reduce chances of them being within represents
+                        _attr = json.dumps(attrs, separators=(",,", "::"))
+                        attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
+
+                if tablename in markers:
+                    _markers = markers[tablename]
+                    if _markers.get("image", None):
+                        # Single Marker here
+                        m = _markers
+                    else:
+                        # We have a separate Marker per-Feature
+                        m = _markers[record_id]
+                    if m:
+                        # Assume being used within the Sahana Mapping client
+                        # so use local URLs to keep filesize down
+                        download_url = "/%s/static/img/markers" % \
+                            request.application
+                        attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
+                                                                m["image"])
+                        attr[ATTRIBUTE.marker_height] = str(m["height"])
+                        attr[ATTRIBUTE.marker_width] = str(m["width"])
+
+                if tablename in styles:
+                    # Add Styles
+                    style = styles[tablename].get(record_id)
+                    if style:
+                        _style = etree.SubElement(map_data, "style")
+                        _style.set("value", style)
+
+                # Use gis/location controller even in reports
+                url = URL(c="gis", f="location").split(".", 1)[0]
+                # Assume being used within the Sahana Mapping client
+                # so use local URLs to keep filesize down
+                url = "%s/%i.plain" % (url, record_id)
+                attr[ATTRIBUTE.popup_url] = url
+
+                # End: format == "geojson"
+                return
+
+            elif format == "kml":
                 # GIS marker
                 marker = gis.get_marker() # Default Marker
                 # Quicker to download Icons from Static
@@ -892,6 +936,7 @@ class S3XML(S3Codec):
                      request.application)
                 marker_url = "%s/%s" % (marker_download_url, marker.image)
                 attr[ATTRIBUTE.marker] = marker_url
+
             elif format =="gpx":
                 symbol = "White Dot"
                 attr[ATTRIBUTE.sym] = symbol
