@@ -220,6 +220,8 @@ settings.L10n.mandatory_lastname = True
 settings.L10n.translate_gis_layer = True
 # Translate Location Names
 settings.L10n.translate_gis_location = True
+# Uncomment this for Alternate Location Names
+settings.L10n.name_alt_gis_location = True
 
 # -----------------------------------------------------------------------------
 # Finance settings

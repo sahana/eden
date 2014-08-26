@@ -66,7 +66,10 @@ class S3Report(S3Method):
         """
 
         if r.http == "GET":
-            output = self.report(r, **attr)
+            if r.representation == "geojson":
+                output = self.geojson(r, **attr)
+            else:
+                output = self.report(r, **attr)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
@@ -221,6 +224,18 @@ class S3Report(S3Method):
             r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def geojson(self, r, **attr):
+        """
+            Render the pivot table data as a dict ready to be exported as
+            GeoJSON for display on a Map.
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def widget(self, r, method=None, widget_id=None, visible=True, **attr):

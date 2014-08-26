@@ -1861,6 +1861,7 @@ class S3Resource(object):
         format = current.auth.permission.format
         if format == "geojson":
             if results > current.deployment_settings.get_gis_max_features():
+                # @ToDo: Option to fallback automatically to the /report method where we have the polygon info?
                 headers = {"Content-Type": "application/json"}
                 message = "Too Many Records"
                 status = 509
