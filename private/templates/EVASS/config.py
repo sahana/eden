@@ -20,76 +20,54 @@ settings = current.deployment_settings
     Settings for the EVASS template:
         http://eden.sahanafoundation.org/wiki/Deployments/Italy/EVASS
 """
-
+# -----------------------------------------------------------------------------
 # Pre-Populate
 settings.base.prepopulate = ["EVASS", "demo/users"]
 
 settings.base.system_name = T("EVASS - Sahana Eden for Italy")
 settings.base.system_name_short = T("Sahana Eden for Italy")
 
-# Use system_name_short as default email subject (Appended).
-settings.mail.default_email_subject = True
-# Append name and surname of logged in user to email subject
-settings.mail.auth_user_in_email_subject = True
-
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "EVASS"
 settings.ui.formstyle = "foundation"
 settings.ui.filter_formstyle = "foundation_inline"
+settings.ui.hierarchy_theme = "default"
 
+# -----------------------------------------------------------------------------
+# Email settings
+settings.mail.default_email_subject = True
+settings.mail.auth_user_in_email_subject = True
+
+# -----------------------------------------------------------------------------
 # Authentication settings
-# Always notify the approver of a new (verified) user, even if the user is automatically approved
-settings.auth.always_notify_approver = False
-
-# The name of the teams that users are added to when they opt-in to receive alerts
-#settings.auth.opt_in_team_list = ["Updates"]
-# Uncomment this to set the opt in default to True
-#settings.auth.opt_in_default = True
-# Uncomment this to request the Mobile Phone when a user registers
+settings.auth.registration_roles = {"organisation_id": ["VOL_READER",
+                                                        ],
+                                    }
 settings.auth.registration_requests_mobile_phone = True
-# Uncomment this to have the Mobile Phone selection during registration be mandatory
 settings.auth.registration_mobile_phone_mandatory = True
-# Uncomment this to allow Admin to see Organisations in user Admin even if the Registration doesn't request this
-#settings.auth.admin_sees_organisation = True
-# Uncomment to set the default role UUIDs assigned to newly-registered users
-# This is a dictionary of lists, where the key is the realm that the list of roles applies to
-# The key 0 implies not realm restricted
-# The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
-#settings.auth.registration_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
-# Should users be allowed to register themselves?
-#settings.security.self_registration = False
-# Do new users need to verify their email address?
-#settings.auth.registration_requires_verification = True
-# Do new users need to be approved by an administrator prior to being able to login?
-#settings.auth.registration_requires_approval = True
+settings.auth.registration_requests_organisation = True
+# Uncomment this to have the Organisation selection during registration be mandatory
+#settings.auth.registration_organisation_required = True
+settings.auth.always_notify_approver = False
+settings.security.self_registration = False
 
+# Security Policy
+# http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
+settings.security.policy = 7
 
+# -----------------------------------------------------------------------------
 # L10n settings
-# Languages used in the deployment (used for Language Toolbar & GIS Locations)
-# http://www.loc.gov/standards/iso639-2/php/code_list.php
 settings.L10n.languages = OrderedDict([
     ("en", "English"),
     ("it", "Italiano"),
 ])
-# Default language for Language Toolbar (& GIS Locations in future)
 settings.L10n.default_language = "en"
-# Default timezone for users
 settings.L10n.utc_offset = "UTC +0100"
-# Uncomment these to use US-style dates in English (localisations can still convert to local format)
-#settings.L10n.time_format = T("%H:%M:%S")
 settings.L10n.date_format = T("%d/%m/%Y")
-# Number formats (defaults to ISO 31-0)
-# Decimal separator for numbers (defaults to ,)
 settings.L10n.decimal_separator = ","
-# Thousands separator for numbers (defaults to space)
 settings.L10n.thousands_separator = "."
-# Default Country Code for telephone numbers
-settings.L10n.default_country_code = +39
-# Make last name in person/user records mandatory
+settings.L10n.default_country_code = 39
 settings.L10n.mandatory_lastname = True
-# Uncomment this to Translate Layer Names
-#settings.L10n.translate_gis_layer = True
-# Uncomment this to Translate Location Names
 settings.L10n.translate_gis_location = True
 
 # Finance settings
@@ -100,127 +78,48 @@ settings.fin.currencies = {
     "USD": T("United States Dollars"),
 }
 
+# -----------------------------------------------------------------------------
 # GIS (Map) settings
 # GeoNames username
-settings.gis.geonames_username = "evass"
-# Restrict the Location Selector to just certain countries
-# NB This can also be over-ridden for specific contexts later
-# e.g. Activities filtered to those of parent Project
+settings.gis.geonames_username = "geoname_username"
 settings.gis.countries = ["IT"]
-
-# Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
-# Hide unnecessary Toolbar items
 settings.gis.nav_controls = False
-
-# AAA Settings
-
-# Security Policy
-# http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
-# 1: Simple (default): Global as Reader, Authenticated as Editor
-# 2: Editor role required for Update/Delete, unless record owned by session
-# 3: Apply Controller ACLs
-# 4: Apply both Controller & Function ACLs
-# 5: Apply Controller, Function & Table ACLs
-# 6: Apply Controller, Function, Table ACLs and Entity Realm
-# 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
-# 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-#
-settings.security.policy = 7
-
-# Ownership-rule for records without owner:
-# True = not owned by any user (strict ownership, default)
-# False = owned by any authenticated user
-#settings.security.strict_ownership = False
 
 # -----------------------------------------------------------------------------
 # Shelters
-# Uncomment to use a dynamic population estimation by calculations based on registrations  
 settings.cr.shelter_population_dynamic = True
-# Uncomment to activate the housing units management. 
 settings.cr.shelter_housing_unit_management = True
 
 # -----------------------------------------------------------------------------
-
 # Events
-# Make Event Types Hierarchical
 settings.event.types_hierarchical = True
 
 # -----------------------------------------------------------------------------
 # Evacuees
-# Group Types
-#settings.evr.group_types = {1: T("other"),
-#                            2: T("Family"),
-#                            3: T("Tourist group"),
-#                            4: T("Society"),
-#                            5: T("Company"),
-#                            6: T("Convent"),
-#                            7: T("Hotel"),
-#                            8: T("Hospital"),
-#                            9: T("Orphanage")
-#                            }
-# Uncomment to hide evacuees physical description in Evacuees page
 settings.evr.physical_description = False
-# Uncomment to hide Emergency Contacts in Person Contacts page
 settings.pr.show_emergency_contacts = False
-# Uncomment to link evacuees to Organisations
 settings.evr.link_to_organisation= True
+
 # -----------------------------------------------------------------------------
 # Organisations
-# Enable the use of Organisation Branches
 settings.org.branches = True
-# Show branches as tree rather than as table
-#settings.org.branches_tree_view = True
-# Enable the use of Organisation Groups & what their name is
-#settings.org.groups = "Coalition"
-# Make Facility Types Hierarchical
+settings.org.branches_tree_view = True
 settings.org.facility_types_hierarchical = True
-
-# Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
-settings.ui.hierarchy_theme = "default"
 
 # -----------------------------------------------------------------------------
 # Human Resource Management
-# Uncomment to allow Staff & Volunteers to be registered without an email address
 settings.hrm.email_required = False
-# Uncomment to allow Staff & Volunteers to be registered without an Organisation
 settings.hrm.org_required = False
-# Uncomment to allow HR records to be deletable rather than just marking them as obsolete
 settings.hrm.deletable = True
-# Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
-#settings.hrm.filter_certificates = True
-# Uncomment to allow HRs to have multiple Job Titles
 settings.hrm.multiple_job_titles = True
-# Uncomment to have each root Org use a different Job Title Catalog
-#settings.hrm.org_dependent_job_titles = True
-# Uncomment to hide the Staff resource
-#settings.hrm.show_staff = False
-# Uncomment to disable Staff experience
 settings.hrm.staff_experience = False
-# Uncomment to enable Volunteer 'active' field
-# - can also be made a function which is called to calculate the status based on recorded hours
 settings.hrm.vol_active = True
-# Uncomment to define a Tooltip to show when viewing the Volunteer 'active' field
-#settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
-# Uncomment to disable Volunteer experience
 settings.hrm.vol_experience = False
-# Uncomment to show the Organisation name in HR represents
-#settings.hrm.show_organisation = True
-# Uncomment to disable the use of Volunteer Awards
+settings.hrm.show_organisation = True
 settings.hrm.use_awards = False
-# Uncomment to disable the use of HR Certificates
 settings.hrm.use_certificates = False
-# Uncomment to enable the use of Staff/Volunteer IDs
-#settings.hrm.use_code = True
-# Uncomment to disable the use of HR Credentials
-#settings.hrm.use_credentials = False
-# Uncomment to disable the use of HR Description
-#settings.hrm.use_description = False
-# Uncomment to disable the use of HR ID
-#settings.hrm.use_id = False
-# Uncomment to disable the use of HR Skills
-settings.hrm.use_skills = False
-# Uncomment to disable the use of HR Trainings
+settings.hrm.use_skills = True
 settings.hrm.use_trainings = False
 
 #*****************************Frontpage settings*************************
