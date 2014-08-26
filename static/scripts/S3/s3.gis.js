@@ -1734,24 +1734,29 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Default to visible
             var visibility = true;
         }
-        if (undefined != layer.cluster_attribute) {
-            var cluster_attribute = layer.cluster_attribute;
+        if (undefined != layer.report) {
+            // Report layers don't cluster
+            var cluster_threshold = 0;
         } else {
-            // Default to global settings
-            //var cluster_attribute = cluster_attribute_default;
-            var cluster_attribute = 'colour';
-        }
-        if (undefined != layer.cluster_distance) {
-            var cluster_distance = layer.cluster_distance;
-        } else {
-            // Default to global settings
-            var cluster_distance = cluster_distance_default;
-        }
-        if (undefined != layer.cluster_threshold) {
-            var cluster_threshold = layer.cluster_threshold;
-        } else {
-            // Default to global settings
-            var cluster_threshold = cluster_threshold_default;
+            if (undefined != layer.cluster_attribute) {
+                var cluster_attribute = layer.cluster_attribute;
+            } else {
+                // Default to global settings
+                //var cluster_attribute = cluster_attribute_default;
+                var cluster_attribute = 'colour';
+            }
+            if (undefined != layer.cluster_distance) {
+                var cluster_distance = layer.cluster_distance;
+            } else {
+                // Default to global settings
+                var cluster_distance = cluster_distance_default;
+            }
+            if (undefined != layer.cluster_threshold) {
+                var cluster_threshold = layer.cluster_threshold;
+            } else {
+                // Default to global settings
+                var cluster_threshold = cluster_threshold_default;
+            }
         }
         if (undefined != layer.popup_format) {
             var popup_format = layer.popup_format;
@@ -1806,6 +1811,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Strategies
         var strategies = [
             // Need to be uniquely instantiated
+            //new OpenLayers.Strategy.ZoomBBOX({
             new OpenLayers.Strategy.BBOX({
                 // load features for a wider area than the visible extent to reduce calls
                 ratio: 1.5

@@ -7769,8 +7769,13 @@ class LayerFeature(Layer):
             else:
                 maxdepth = 0
                 show_ids = ""
-            url = "%s.geojson?layer=%i&components=None&maxdepth=%s%s" % \
-                (URL(self.controller, self.function), self.id, maxdepth, show_ids)
+            if self.aggregate:
+                url = "%s.geojson?" % URL(c=self.controller,
+                                          f=self.function,
+                                          args="report")
+            else:
+                url = "%s.geojson?layer=%i&components=None&maxdepth=%s%s" % \
+                    (URL(self.controller, self.function), self.id, maxdepth, show_ids)
             if self.filter:
                 url = "%s&%s" % (url, self.filter)
             if self.trackable:
@@ -7812,7 +7817,10 @@ class LayerFeature(Layer):
 
             # Attributes which are defaulted client-side if not set
             self.setup_folder_visibility_and_opacity(output)
-            self.setup_clustering(output)
+            if self.aggregate:
+                output["report"] = 1
+            else:
+                self.setup_clustering(output)
             if not popup_format:
                 output["no_popups"] = 1
             style = self.style

@@ -205,6 +205,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
             'gis/openlayers/lib/OpenLayers/Strategy/BBOX.js',
             //'gis/openlayers/lib/OpenLayers/Strategy/Save.js',
             'gis/openlayers/lib/OpenLayers/Strategy/Refresh.js',
+            'gis/openlayers/lib/OpenLayers/Strategy/ZoomBBOX.js',
             'gis/openlayers/lib/OpenLayers/Filter.js',
             //'gis/openlayers/lib/OpenLayers/Filter/FeatureId.js',
             //'gis/openlayers/lib/OpenLayers/Filter/Logical.js',

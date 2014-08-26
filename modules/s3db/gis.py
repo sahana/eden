@@ -2774,6 +2774,14 @@ class S3FeatureLayerModel(S3Model):
                                                                 "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Wiki</a>" % \
                                                                 T("Uses the REST Query Format defined in"))),
                                 ),
+                          Field("aggregate", "boolean",
+                                default = False,
+                                label = T("Aggregate"),
+                                represent = s3_yes_no_represent,
+                                comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Aggregate"),
+                                                                T("Instead of showing individual features, aggregate by Location Hierarchy"))),
+                                ),
                           # @ToDo: Deprecate (replaced by popup_format)
                           Field("popup_label",
                                 label = T("Popup Label"),
@@ -2947,15 +2955,19 @@ class S3FeatureLayerModel(S3Model):
         """
 
         if item.tablename == "gis_layer_feature":
-            # Match if controller, function & filter are identical
+            # Match if controller, function, filter, aggregate and polygons are identical
             table = item.table
             data = item.data
             controller = data.controller
             function = data.function
             filter = data.filter
+            aggregate = data.aggregate
+            polygons = data.polygons
             query = (table.controller.lower() == controller.lower()) & \
                     (table.function.lower() == function.lower()) & \
-                    (table.filter == filter)
+                    (table.filter == filter) & \
+                    (table.aggregate == aggregate) & \
+                    (table.polygons == polygons)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:

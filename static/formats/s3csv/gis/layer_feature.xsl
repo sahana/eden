@@ -14,12 +14,13 @@
          GPS Marker...........string..........Layer Symbology GPS Marker
          Controller...........string..........Layer Controller
          Function.............string..........Layer Function
+         Filter...............string..........Layer Filter
+         Aggregate............string..........Layer Aggregate
          Popup Format.........string..........Layer Popup Format
          OR
          Popup Label..........string..........Layer Popup Label
          Popup Fields.........comma-sep list..Layer Popup Fields (Fields to build feature OnHover tooltip)
          Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to be visible to Styler)
-         Filter...............string..........Layer Filter
          Default..............boolean.........Layer Default
          Individual...........boolean.........Layer Individual
          Polygons.............boolean.........Layer Polygons
@@ -140,6 +141,9 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <xsl:if test="col[@field='Aggregate']">
+                <data field="aggregate"><xsl:value-of select="col[@field='Aggregate']"/></data>
+            </xsl:if>
             <xsl:if test="col[@field='Default']">
                 <data field="style_default"><xsl:value-of select="col[@field='Default']"/></data>
             </xsl:if>

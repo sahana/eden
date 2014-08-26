@@ -255,9 +255,6 @@ class S3Report(S3Method):
         report_options = get_config("report_options", {})
         defaults = report_options.get("defaults", {})
 
-        if not any (k in get_vars for k in ("rows", "fact")):
-            get_vars = defaults
-
         # The rows dimension
         level = get_vars.get("level", "L0")
         # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
@@ -272,7 +269,9 @@ class S3Report(S3Method):
 
         # Build the Pivot Table
         cols = None
-        layer = get_vars.get("fact", "count(id)")
+        layer = get_vars.get("fact",
+                             defaults.get("fact",
+                                          "count(id)"))
         m = layer_pattern.match(layer)
         selector, method = m.group(2), m.group(1)
         prefix = resource.prefix_selector
@@ -282,10 +281,6 @@ class S3Report(S3Method):
 
         # Extract the Location Data
         ids, location_data = pivottable.geojson(layer=layer, level=level)
-
-        # Debug
-        #output = json.dumps(location_data, separators=SEPARATORS)
-        #return output
 
         # Set XSLT stylesheet
         stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")

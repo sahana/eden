@@ -278,6 +278,7 @@
                 "OpenLayers/Strategy/BBOX.js",
                 "OpenLayers/Strategy/Save.js",
                 "OpenLayers/Strategy/Refresh.js",
+                "OpenLayers/Strategy/ZoomBBOX.js",
                 "OpenLayers/Filter.js",
                 //"OpenLayers/Filter/FeatureId.js",
                 //"OpenLayers/Filter/Logical.js",
