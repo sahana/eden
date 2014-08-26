@@ -132,10 +132,10 @@ class S3Report(S3Method):
             cols = get_vars.get("cols", None)
             layer = get_vars.get("fact", "id")
 
-            # Backward-compatiblity: alternative "aggregate" option
             if layer is not None:
                 m = layer_pattern.match(layer)
                 if m is None:
+                    # Backward-compatiblity: alternative "aggregate" option
                     selector = layer
                     if get_vars and "aggregate" in get_vars:
                         method = get_vars["aggregate"]
@@ -197,10 +197,10 @@ class S3Report(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
+            filter_url = r.url(method="",
+                               representation="",
+                               vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                        if k not in report_vars)))
             ajaxurl = attr.get("ajaxurl", r.url(method="report",
                                                 representation="json",
                                                 vars=ajax_vars))
@@ -235,7 +235,41 @@ class S3Report(S3Method):
             @param attr: controller attributes for the request
         """
 
-        raise NotImplementedError
+        resource = self.resource
+
+        # Extract the relevant GET vars
+        report_vars = ("rows", "cols", "fact", "level")
+        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
+                        if k in report_vars)
+
+        # Fall back to report options defaults
+        report_options = resource.get_config("report_options", {})
+        defaults = report_options.get("defaults", {})
+
+        if not any (k in get_vars for k in ("rows", "cols", "fact")):
+            get_vars = defaults
+
+        # Build the Pivot Table
+        rows = get_vars.get("rows", None)
+        cols = get_vars.get("cols", None)
+        layer = get_vars.get("fact", "count(id)")
+        m = layer_pattern.match(layer)
+        selector, method = m.group(2), m.group(1)
+        prefix = resource.prefix_selector
+        selector = prefix(selector)
+        layer = (selector, method)
+        pivottable = resource.pivottable(rows, cols, [layer])
+
+        # Extract the Location Data
+        level = get_vars.get("level", "L0")
+        ids, location_data = pivottable.geojson(layer=layer, level=level)
+
+        # Debug
+        #output = json.dumps(location_data, separators=SEPARATORS)
+        #return output
+
+        resource = current.s3db.resource("gis_location", id=ids)
+        resource.export_xml(location_data=location_data)
 
     # -------------------------------------------------------------------------
     def widget(self, r, method=None, widget_id=None, visible=True, **attr):

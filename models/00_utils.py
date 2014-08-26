@@ -280,14 +280,15 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                             vars={"from_record":r.id})))
     set_handler("deduplicate", s3base.S3Merge)
     set_handler("filter", s3base.S3Filter)
+    set_handler("hierarchy", s3base.S3HierarchyCRUD)
     set_handler("import", s3base.S3Importer)
     set_handler("map", s3base.S3Map)
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)
+    set_handler("report", s3base.S3Report, transform=True)
     set_handler("timeplot", s3base.S3TimePlot) # temporary setting for testing
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
-    set_handler("hierarchy", s3base.S3HierarchyCRUD)
     
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method

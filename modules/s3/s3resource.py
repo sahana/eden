@@ -1679,6 +1679,7 @@ class S3Resource(object):
                    maxbounds=False,
                    filters=None,
                    pretty_print=False,
+                   location_data=None,
                    **args):
         """
             Export this resource as S3XML
@@ -1687,19 +1688,26 @@ class S3Resource(object):
             @param limit: maximum number of records to export (slicing)
             @param msince: export only records which have been modified
                             after this datetime
+            @param fields: data fields to include (default: all)
             @param dereference: include referenced resources
+            @param maxdepth: 
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
                                 for all
             @param rcomponents: components of referenced resources to
                                 include (list of tablenames), empty list
                                 for all
+            @param references: foreign keys to include (default: all)
             @param stylesheet: path to the XSLT stylesheet (if required)
             @param as_tree: return the ElementTree (do not convert into string)
             @param as_json: represent the XML tree as JSON
+            @param maxbounds: include lat/lon boundaries in the top
+                              level element (off by default)
             @param filters: additional URL filters (Sync), as dict
                             {tablename: {url_var: string}}
             @param pretty_print: insert newlines/indentation in the output
+            @param location_data: dictionary of location data which has been
+                                  looked-up in bulk ready for xml.gis_encode()
             @param args: dict of arguments to pass to the XSLT stylesheet
         """
 
@@ -1787,7 +1795,9 @@ class S3Resource(object):
                     rcomponents=None,
                     filters=None,
                     maxbounds=False,
-                    xmlformat=None):
+                    xmlformat=None,
+                    location_data=None,
+                    ):
         """
             Export the resource as element tree
 
@@ -1797,6 +1807,7 @@ class S3Resource(object):
             @param fields: data fields to include (default: all)
             @param references: foreign keys to include (default: all)
             @param dereference: also export referenced records
+            @param maxdepth: 
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
                                 for all
@@ -1807,6 +1818,9 @@ class S3Resource(object):
                             {tablename: {url_var: string}}
             @param maxbounds: include lat/lon boundaries in the top
                               level element (off by default)
+            @param xmlformat: 
+            @param location_data: dictionary of location data which has been
+                                  looked-up in bulk ready for xml.gis_encode()
         """
 
         xml = current.xml
@@ -1859,7 +1873,7 @@ class S3Resource(object):
         results = self.count()
 
         format = current.auth.permission.format
-        if format == "geojson":
+        if format == "geojson" and not location_data:
             if results > current.deployment_settings.get_gis_max_features():
                 # @ToDo: Option to fallback automatically to the /report method where we have the polygon info?
                 headers = {"Content-Type": "application/json"}
@@ -1885,7 +1899,7 @@ class S3Resource(object):
         elif format in ("georss", "kml", "gpx"):
             location_data = current.gis.get_location_data(self) or {}
         else:
-            # @ToDo: Bulk lookup of LatLons for S3XML LatLon-encode
+            # @ToDo: Bulk lookup of LatLons for S3XML.latlon()
             location_data = {}
 
         # Build the tree
@@ -2089,6 +2103,7 @@ class S3Resource(object):
             @param base_url: the base URL of the resource
             @param reference_map: the reference map of the request
             @param export_map: the export map of the request
+            @param lazy: 
             @param components: list of components to include from referenced
                                resources (tablenames)
             @param filters: additional URL filters (Sync), as dict
@@ -2096,6 +2111,7 @@ class S3Resource(object):
             @param msince: the minimum update datetime for exported records
             @param master: True of this is the master resource
             @param location_data: the location_data for GIS encoding
+            @param xmlformat: 
         """
 
         xml = current.xml

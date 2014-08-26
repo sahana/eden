@@ -1464,6 +1464,8 @@ class S3PivotTable(object):
             Render the pivot table data as a dict ready to be exported as
             GeoJSON for display on a Map.
 
+            Called by S3Report.geojson()
+
             @param layer: the layer. e.g. ("id", "count")
                           - we only support methods "count" & "sum"
             @param level: the aggregation level (defaults to Country)
@@ -1544,7 +1546,8 @@ class S3PivotTable(object):
                                      value=rtotal)
                     attributes[id] = attribute
 
-            query = (gtable.id.belongs([ids[r] for r in ids]))
+            ids = [ids[r] for r in ids]
+            query = (gtable.id.belongs(ids))
             geojsons = current.gis.get_locations(gtable,
                                                  query,
                                                  join=False,
@@ -1552,11 +1555,12 @@ class S3PivotTable(object):
 
         # Prepare for export via xml.gis_encode() and geojson/export.xsl
         location_data = {}
-        tablename = resource.tablename
+        #tablename = resource.tablename
+        tablename = "gis_location"
         location_data[tablename] = {}
         location_data[tablename]["geojsons"] =  geojsons
         location_data[tablename]["attributes"] = attributes
-        return location_data
+        return ids, location_data
 
     # -------------------------------------------------------------------------
     def json(self,

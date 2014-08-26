@@ -798,7 +798,7 @@ class S3XML(S3Codec):
                    resource,
                    record,
                    element,
-                   location_data = {},
+                   location_data={},
                    ):
         """
             GIS-encodes the master resource so that it can be transformed into
