@@ -1,8 +1,7 @@
-Organisation,Branch,Acronym,Type,Sector,Country,Website,Twitter,Donation Phone,Comments
-Governo della Repubblica Italiana,,Govt,Government,,IT,,,,
-Vigili Del Fuoco,,VVF,Government,,IT,http://www.vigilfuoco.it/aspx/Home.aspx,,,
-Dipartimento della Protezione Civile,,DPC,Government,,IT,http://www.protezionecivile.it,,,
-Croce Rossa Italiana,,CRI,Government,Healt,IT,http://www.cri.it,,,
-Confederazione Nazionale delle Misericordie d'Italia,,,,,IT,,,,
-
-
+Organisation,Branch,SubBranch,SubSubBranch,SubSubSubBranch,SubSubSubSubBranch,Acronym,Type,Region,Country,Website,Facebook,Twitter,Domain
+DI_Coma_C_nome,,,,,,,Government,,IT,,,,
+DI_Coma_C_nome,Regione_nome,,,,,,Government,,IT,,,,
+DI_Coma_C_nome,Regione_nome,CCS_nome,,,,,,,IT,,,,
+DI_Coma_C_nome,Regione_nome,CCS_nome,COM_nome,,,,,,IT,,,,
+DI_Coma_C_nome,Regione_nome,CCS_nome,COM_nome,COC_nome,,,,,IT,,,,
+DI_Coma_C_nome,Regione_nome,CCS_nome,COM_nome,COC_nome,Locale_nome,,,,IT,,,,
