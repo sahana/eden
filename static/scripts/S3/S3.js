@@ -555,6 +555,24 @@ S3.fieldError = function(selector, error) {
     $(selector).after('<div class="error" style="display: block;">' + error + '</div>');
 };
 
+S3.unmask = function(table, field) {
+    // toggle between * and readable characters
+    caller = table + '_' + field + '_' + 'unmask';
+    target = table + '_' + field;
+    state = $('#' + caller).text();
+    if (state == 'View') {
+        // Unmask the password
+        state = 'Mask';
+        $('#' + target).attr('type', 'text');
+        $('#' + caller).text('Mask');        
+    }
+    else {
+        // Mask the password
+        state = 'View';
+        $('#' + target).attr('type', 'password');
+        $('#' + caller).text('View');
+    }
+};
 // ============================================================================
 var s3_viewMap = function(feature_id) {
     // Display a Feature on a BaseMap within an iframe

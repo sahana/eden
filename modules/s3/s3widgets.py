@@ -55,6 +55,7 @@ __all__ = ("S3ACLWidget",
            "S3LocationAutocompleteWidget",
            "S3LocationDropdownWidget",
            "S3LocationLatLonWidget",
+           "S3PasswordWidget",
            "S3LocationSelectorWidget",
            "S3LocationSelectorWidget2",
            "S3MultiSelectWidget",
@@ -5816,6 +5817,25 @@ class CheckboxesWidgetS3(OptionsWidget):
         if opts:
             opts[-1][0][0]["hideerror"] = False
         return TABLE(*opts, **attr)
+
+# =============================================================================
+class S3PasswordWidget(FormWidget):
+    """
+        Widget for password fields, allows unmasking of passwords
+    """
+    def __call__(self, field, value, **attributes):
+        return INPUT(_name=field.name,
+                     _id="%s_%s" % (field._tablename, field.name),
+                     _type="password",
+                     _value=value,
+                     requires=field.requires,
+                     )
+    @staticmethod
+    def unmask(tablename, fieldname):
+        return A("View",
+                 _onclick='''S3.unmask('%s','%s')''' % (tablename, fieldname),
+                 _id="%s_%s_unmask" % (tablename, fieldname),
+                 )
 
 # =============================================================================
 def s3_comments_widget(field, value, **attr):
