@@ -48,6 +48,7 @@ __all__ = ("S3ChannelModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
+from ..s3.s3widgets import S3PasswordWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -1715,6 +1716,7 @@ class S3TwitterModel(S3Model):
         # ---------------------------------------------------------------------
         # Twitter Channel
         #
+        password_widget = S3PasswordWidget()
         tablename = "msg_twitter_channel"
         define_table(tablename,
                      #Instance
@@ -1729,10 +1731,30 @@ class S3TwitterModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      Field("twitter_account"),
-                     Field("consumer_key", "password"),
-                     Field("consumer_secret", "password"),
-                     Field("access_token", "password"),
-                     Field("access_token_secret", "password"),
+                     Field("consumer_key", 
+                           "password", 
+                           widget = password_widget,
+                           comment = password_widget.unmask(tablename, 
+                                                            "consumer_key"),
+                           ),
+                     Field("consumer_secret", 
+                           "password",
+                           widget = password_widget,
+                           comment = password_widget.unmask(tablename,
+                                                            "consumer_secret"),
+                           ),
+                     Field("access_token", 
+                           "password",
+                           widget = password_widget,
+                           comment = password_widget.unmask(tablename, 
+                                                            "access_token"), 
+                           ),
+                     Field("access_token_secret", 
+                           "password",
+                           widget = password_widget,
+                           comment = password_widget.unmask(tablename, 
+                                                            "access_token_secret"),
+                           ),
                      *s3_meta_fields())
 
         configure(tablename,
