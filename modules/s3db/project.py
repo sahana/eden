@@ -6512,7 +6512,7 @@ def project_project_filters(org_label):
                       "code",
                       "description",
                      ],
-                     label = T("Description"),
+                     label = T("Search"),
                      comment = T("Search for a Project by name, code, or description."),
                      ),
         S3OptionsFilter("status_id",

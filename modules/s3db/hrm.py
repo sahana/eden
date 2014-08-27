@@ -5342,7 +5342,7 @@ def hrm_competency_controller():
                               "person_id$last_name",
                               "person_id$hrm_human_resource.job_title_id$name",
                              ],
-                             label = T("Name"),
+                             label = T("Search"),
                              comment = T("You can search by job title or person name - enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all persons."),
                              ),
                 S3OptionsFilter("skill_id",
@@ -7444,7 +7444,7 @@ def hrm_human_resource_filters(resource_type=None,
                                     "person_id$middle_name",
                                     "person_id$last_name",
                                     ],
-                                   label = T("Name"),
+                                   label = T("Search"),
                                    ),
                       ]
     append_filter = filter_widgets.append
