@@ -1324,11 +1324,12 @@ class S3DateWidget(FormWidget):
 '''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
  dateFormat:'%(format)s',
  minDate:%(past)s,
- maxDate:%(future)s})''' % dict(selector = selector,
-                                format = format,
-                                past = minDate,
-                                future = maxDate,
-                                )
+ maxDate:%(future)s}).one('click',function(){$(this).focus()})''' % \
+            dict(selector = selector,
+                 format = format,
+                 past = minDate,
+                 future = maxDate,
+                 )
 
         if script not in jquery_ready: # Prevents loading twice when form has errors
             jquery_ready.append(script)

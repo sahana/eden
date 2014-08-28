@@ -462,7 +462,6 @@ def customise_pr_person_controller(**attr):
             if r.method in ("create", "update"):
                 # Custom Widgets/Validators
                 widgets = True
-                from s3 import IS_ONE_OF, S3MultiSelectWidget, S3AddResourceLink
             else:
                 widgets = False
 
@@ -473,6 +472,8 @@ def customise_pr_person_controller(**attr):
             represent = S3Represent(lookup="org_site")
             site_field.represent = represent
             if widgets:
+                from s3 import IS_ONE_OF, S3MultiSelectWidget
+                from s3layouts import S3AddResourceLink
                 htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
                 site_field.widget = S3MultiSelectWidget(multiple=False)
                 site_field.requires = IS_ONE_OF(db, "org_site.site_id",
