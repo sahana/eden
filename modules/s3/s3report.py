@@ -46,6 +46,7 @@ from gluon.html import *
 from gluon.sqlhtml import OptionsWidget
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
+from s3query import FS
 from s3rest import S3Method
 
 layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
@@ -240,10 +241,18 @@ class S3Report(S3Method):
         response = current.response
         s3 = response.s3
 
+        # Set response headers
+        response.headers["Content-Type"] = s3.content_type.get("geojson",
+                                                               "application/json")
+
         # Filter
         s3_filter = s3.filter
         if s3_filter is not None:
             resource.add_filter(s3_filter)
+
+        if not resource.count():
+            # No Data
+            return json.dumps({})
 
         # Extract the relevant GET vars
         report_vars = ("fact", "level")
@@ -257,15 +266,40 @@ class S3Report(S3Method):
 
         # The rows dimension
         level = get_vars.get("level", "L0")
-        # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
+
         context = get_config("context")
         if context and "location" in context:
+            # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
             rows = "(location)$%s" % level
         else:
             # Fallback to location_id
             rows = "location_id$%s" % level
             # Fallback we can add if-required
             #rows = "site_id$location_id$%s" % level
+
+        # Filter out null values
+        resource.add_filter(FS(rows) != None)
+
+        # Do we have any data at this level of aggregation?
+        while resource.count() == 0:
+            level = int(level[1:])
+            if level == 0:
+                # Nothing we can display
+                return json.dumps({})
+            # Try a lower level of aggregation
+            resource.clear_query()
+            if s3_filter is not None:
+                resource.add_filter(s3_filter)
+            level = "L%s" % (level - 1)
+            if context and "location" in context:
+                # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
+                rows = "(location)$%s" % level
+            else:
+                # Fallback to location_id
+                rows = "location_id$%s" % level
+                # Fallback we can add if-required
+                #rows = "site_id$location_id$%s" % level
+            resource.add_filter(FS(rows) != None)
 
         # Build the Pivot Table
         cols = None
@@ -294,9 +328,6 @@ class S3Report(S3Method):
                                       as_json=True,
                                       location_data=location_data,
                                       )
-        # Set response headers
-        response.headers["Content-Type"] = s3.content_type.get("geojson",
-                                                               "application/json")
 
         # Transformation error?
         if not output:

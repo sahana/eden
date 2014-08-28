@@ -32,9 +32,15 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
 
     /**
      * Property: level
-     * {String} Last level; detect level changes
+     * {Integer} Last level; detect level changes
      */
     level: null,
+
+    /**
+     * Property: pixels
+     * {Float} Last Area in pixels^2
+     */
+    pixels: null,
 
     /**
      * Property: levels
@@ -81,20 +87,78 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      * zoom - {Integer}
      *
      * Returns:
-     * {<OpenLayers.Protocol.Response>} The protocol response object
-     *      returned by the layer protocol.
+     * {String} The level we should be requesting.
      */
     getLevel: function(center, zoom) {
-        // @ToDo: If we have feastures then vary the zoom, based on their size
-        // (i.e. Do this introspectively not by pre-planned exceptions)
-        //var features = this.layer.features;
-        //for
-        //var size = feature.geometry.getBounds().getSize()
-        //if (feature.geometry.intersects(geom))
-        var level = 'L' + this.levels[zoom];
-        return level;
+        if (zoom == this.zoom) {
+            // Return the previously-calculated value
+            return this.level;
+        }
+        var features = this.layer.features;
+        var len = features.length;
+        if (!len) {
+            // No features to introspect
+            // - do a simple lookup
+            // @ToDo: Lookup Exceptions?
+            //if (feature.geometry.intersects(geom))
+            return this.levels[zoom];
+        } else {
+            // Introspect the features to see if we should modify the Lx level
+            var empty = 0;
+            var total = 0;
+            for (var i=0; i < len; i++) {
+                var pixels = this.toPixel(features[i].geometry, zoom);
+                if (pixels) {
+                    total += pixels;
+                } else {
+                    // Don't include point features in the mean
+                    empty++;
+                }
+            }
+            var mean = total / (len - empty);
+            s3_debug(mean);
+            if (zoom > this.zoom) {
+                // We're zooming-in
+                if (mean > 500000) {
+                    // Show more detail
+                    return Math.min(this.level + 1, 5);
+                } else {
+                    // Keep it the same
+                    return this.level;
+                }
+            } else {
+                // We must be zooming-out
+                if (mean < 500000) {
+                    // Show less detail
+                    return Math.max(this.level - 1, 0);
+                } else {
+                    // Keep it the same
+                    return this.level;
+                }
+            }
+        }
     },
  
+    /**
+     * Method: toPixel
+     *
+     * Parameters:
+     * lat - {Float} of whatever units is used on the map
+     * zoom - {Integer}
+     *
+     * Returns:
+     * {Integer} The number of pixels
+     */
+    toPixel: function(geometry, zoom) {
+        var lat = geometry.getCentroid().y;
+        var C = 6372798.2; // Radius of the Earth (in meters)
+        var m_per_pixel = C * Math.cos(lat) / Math.pow(2, zoom + 8);
+        var area = geometry.getArea(); // m2
+        var length = Math.sqrt(area) / m_per_pixel; // pixels
+        var pixels = Math.pow(length, 2); // pixels ^2
+        return pixels;
+    },
+
     /**
      * Method: update
      * Callback function called on "moveend" or "refresh" layer events.
@@ -109,7 +173,7 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      */
     update: function(options) {
         var layer = this.layer;
-        var old_level = this.getLevel(this.center, this.zoom);
+        var old_level = this.level || this.getLevel(this.center, this.zoom);
         var center = layer.map.getCenter();
         var zoom = layer.map.getZoom();
         var new_level = this.getLevel(center, zoom);
@@ -150,7 +214,7 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
             OpenLayers.Util.applyDefaults({
                 filter: evt.filter,
                 callback: this.merge,
-                params: {level: this.level},
+                params: {level: 'L' + this.level},
                 scope: this
         }, options));
     },

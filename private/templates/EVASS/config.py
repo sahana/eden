@@ -60,7 +60,7 @@ def evass_realm_entity(table, row):
     db = current.db
     s3db = current.s3db
     tablename = table._tablename
-    
+
     realm_entity = None
     # Realm is the organization assigned during the record registration/update    
     if tablename in ("event_event",
@@ -76,9 +76,10 @@ def evass_realm_entity(table, row):
             org = db(otable.id == organisation_id).select(otable.realm_entity,
                                                           limitby=(0, 1)).first()
             realm_entity = org.realm_entity
-    # Incident realm is the related event realm 
-    # (assigned during incident registration/update    
+
     elif tablename == "event_incident":
+        # Incident realm is the related event realm 
+        # (assigned during incident registration/update    
         etable = db.event_event
         try:
             incident_id = row.id
@@ -89,14 +90,16 @@ def evass_realm_entity(table, row):
             realm_entity = event.realm_entity
         except:
             return
-    # Group realm is the user's organisation    
+
     elif tablename == "pr_group":
+    # Group realm is the user's organisation    
         user = current.auth.user
         if user:
             realm_entity = s3db.pr_get_pe_id("org_organisation",
                                              user.organisation_id)  
     elif tablename == "org_organisation":
         realm_entity = row.pe_id
+
     return realm_entity
 
 settings.auth.realm_entity = evass_realm_entity

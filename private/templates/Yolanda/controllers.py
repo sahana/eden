@@ -4,7 +4,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3.s3utils import S3CustomController
+from s3 import S3CustomController
 
 THEME = "Yolanda"
 
@@ -31,7 +31,7 @@ class index(S3CustomController):
         resource = s3db.resource("req_req")
         s3db.req_customise_req_fields()
         list_fields = s3db.get_config("req_req", "list_fields")
-        from s3.s3query import FS
+        from s3 import FS
         resource.add_filter(FS("cancel") != True)
         # Order with most recent first
         orderby = "date desc"
@@ -109,7 +109,7 @@ def latest_records(resource, layout, list_id, limit, list_fields, orderby):
                                                layout=layout)
     if numrows == 0:
         # Empty table or just no match?
-        from s3.s3crud import S3CRUD
+        from s3 import S3CRUD
         table = resource.table
         if "deleted" in table:
             available_records = current.db(table.deleted != True)
@@ -163,7 +163,7 @@ class subscriptions(S3CustomController):
         # @note: subscription manager has no resource context, so
         #        must configure fixed options or lookup resources
         #        for filter widgets which need it.
-        from s3.s3filter import S3LocationFilter
+        from s3 import S3LocationFilter
         filters = [S3LocationFilter("location_id",
                                     label=T("Location(s)"),
                                     # @ToDo: Deeper levels
@@ -222,7 +222,7 @@ class subscriptions(S3CustomController):
 
         from gluon.sqlhtml import SQLFORM
         from gluon.validators import IS_IN_SET
-        from s3.s3widgets import S3GroupedOptionsWidget
+        from s3 import S3GroupedOptionsWidget
 
         # L10n
         T = current.T
@@ -273,7 +273,7 @@ class subscriptions(S3CustomController):
         # form.append(fieldset)
 
         # Filters
-        from s3.s3filter import S3FilterForm
+        from s3 import S3FilterForm
         filter_form = S3FilterForm(filters, clear=False)
         fieldset = FIELDSET(filter_form.fields(None,
                                                subscription["get_vars"]),
