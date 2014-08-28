@@ -134,7 +134,7 @@ class SyncDataModel(S3Model):
             "wrike": "Wrike",
             "mcb": "Mariner CommandBridge",
         }
-
+        password_widget = S3PasswordWidget()
         tablename = "sync_repository"
         define_table(tablename,
                      Field("name", length=64, notnull=True,
@@ -167,6 +167,7 @@ class SyncDataModel(S3Model):
                                                 T("Username to use for authentication at the remote site."))),
                            ),
                      Field("password", "password",
+                           widget = password_widget,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (
                                                 T("Password"),
@@ -180,6 +181,7 @@ class SyncDataModel(S3Model):
                                                 T("The client ID to use for authentication at the remote site (if required for this type of repository)."))),
                            ),
                      Field("client_secret", "password",
+                           widget = password_widget,
                            label = T("Client Secret"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (

@@ -1620,3 +1620,8 @@ button.toggle-text {
     padding-top: 50px;
 }
 
+/* Password Widget-Unmask */
+.s3-unmask {
+    margin-left: 10px;
+    cursor: pointer;
+}
