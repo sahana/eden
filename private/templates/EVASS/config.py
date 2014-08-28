@@ -40,9 +40,6 @@ settings.mail.auth_user_in_email_subject = True
 
 # -----------------------------------------------------------------------------
 # Authentication settings
-settings.auth.registration_roles = {"organisation_id": ["VOL_READER",
-                                                        ],
-                                    }
 settings.auth.registration_requests_mobile_phone = True
 settings.auth.registration_mobile_phone_mandatory = True
 settings.auth.registration_requests_organisation = True
@@ -54,6 +51,55 @@ settings.security.self_registration = False
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
 settings.security.policy = 7
+
+def evass_realm_entity(table, row):
+    """
+        Assign a Realm Entity to records
+    """
+
+    db = current.db
+    s3db = current.s3db
+    tablename = table._tablename
+    
+    realm_entity = None
+    # Realm is the organization assigned during the record registration/update    
+    if tablename in ("event_event",
+                     "evr_case",
+                     "cr_shelter",
+                     "hrm_human_resource",
+                     "org_facility",
+                     "org_office",
+                     ):
+        otable = s3db.org_organisation
+        organisation_id = row.organisation_id
+        if organisation_id:  
+            org = db(otable.id == organisation_id).select(otable.realm_entity,
+                                                          limitby=(0, 1)).first()
+            realm_entity = org.realm_entity
+    # Incident realm is the related event realm 
+    # (assigned during incident registration/update    
+    elif tablename == "event_incident":
+        etable = db.event_event
+        try:
+            incident_id = row.id
+            query = (table.id == incident_id) & \
+                    (etable.id == table.event_id) 
+            event = db(query).select(etable.realm_entity,
+                                     limitby=(0, 1)).first()
+            realm_entity = event.realm_entity
+        except:
+            return
+    # Group realm is the user's organisation    
+    elif tablename == "pr_group":
+        user = current.auth.user
+        if user:
+            realm_entity = s3db.pr_get_pe_id("org_organisation",
+                                             user.organisation_id)  
+    elif tablename == "org_organisation":
+        realm_entity = row.pe_id
+    return realm_entity
+
+settings.auth.realm_entity = evass_realm_entity
 
 # -----------------------------------------------------------------------------
 # L10n settings
@@ -180,7 +226,7 @@ def customise_pr_person_resource(r, tablename):
         dob_requires.error_message = T("Please enter a date of birth")
         table.date_of_birth.requires = dob_requires
 
-            # Enable Location_id
+        # Enable Location_id
         from gluon import DIV
         from s3.s3widgets import S3LocationSelectorWidget2
         levels = ("L1","L2","L3",)
@@ -191,7 +237,7 @@ def customise_pr_person_resource(r, tablename):
                                                        lines=True,
                                                        )
         location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
-            # Enable place of birth
+        # Enable place of birth
         place_of_birth = s3db.pr_person_details.place_of_birth
         place_of_birth.label = "Specify a Different Place of Birth"
         place_of_birth.comment = DIV(_class="tooltip",
@@ -199,10 +245,10 @@ def customise_pr_person_resource(r, tablename):
                                                       T("Specify a different place of birth (foreign country, village, hamlet)")))
         place_of_birth.readable = place_of_birth.writable = True
             
-            # Disable religion selection
+        # Disable religion selection
         s3db.pr_person_details.religion.readable = False
         s3db.pr_person_details.religion.writable = False
-        
+
     # Disable unneeded physical details
     pdtable = s3db.pr_physical_description
     hide_fields = [
@@ -248,15 +294,24 @@ def customise_pr_person_resource(r, tablename):
 settings.customise_pr_person_resource = customise_pr_person_resource
 
 def customise_cr_shelter_resource(r, tablename):
-    
+
     s3db = current.s3db
+    from s3 import S3HierarchyWidget
     s3db.cr_shelter.capacity_day.writable = s3db.cr_shelter.capacity_night.writable = False 
     s3db.cr_shelter.cr_shelter_environment_id.readable = s3db.cr_shelter.cr_shelter_environment_id.writable = True
-    
+    organisation_represent = current.s3db.org_OrganisationRepresent
+    node_represent = organisation_represent(parent=False)
+    org_widget = S3HierarchyWidget(lookup="org_organisation",
+                                   represent=node_represent,
+                                   multiple=False,
+                                   leafonly=False,
+                                   )
+    s3db.cr_shelter.organisation_id.widget = org_widget
+
 settings.customise_cr_shelter_resource = customise_cr_shelter_resource
 
 def customise_pr_group_resource(r, tablename):
-    
+
     messages = current.messages
     field = r.table.group_type
     pr_group_types = {1 : T("Family"),
@@ -277,15 +332,24 @@ def customise_event_event_resource(r, tablename):
     table = r.table
     table.exercise.default = True
     table.organisation_id.readable = table.organisation_id.writable = True
-        
+
 settings.customise_event_event_resource = customise_event_event_resource
 
 def customise_event_incident_resource(r, tablename):
 
+    from s3 import IS_ONE_OF
+    db = current.db
     table = r.table
     table.exercise.default = True
     table.event_id.readable = table.event_id.writable = True
-        
+    represent = S3Represent(lookup=tablename)
+    table.event_id.requires = IS_ONE_OF(db, "event_event.id",
+                                        represent,
+                                        filterby="closed",
+                                        filter_opts=(False,),
+                                        orderby="event_event.name",
+                                        sort=True)
+
 settings.customise_event_incident_resource = customise_event_incident_resource
 # -----------------------------------------------------------------------------
 def customise_project_location_resource(r, tablename):
