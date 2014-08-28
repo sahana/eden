@@ -887,7 +887,9 @@ class S3XML(S3Codec):
                     if attrs:
                         # Encode in a way which we can decode in static/formats/geojson/export.xsl
                         # - double up all tokens to reduce chances of them being within represents
-                        _attr = json.dumps(attrs, separators=(",,", "::"))
+                        # NB Ensure we don't double-encode unicode!
+                        _attr = json.dumps(attrs, separators=(",,", "::"),
+                                           ensure_ascii=False)
                         attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
 
                 if tablename in markers:
@@ -959,7 +961,9 @@ class S3XML(S3Codec):
                         if attrs:
                             # Encode in a way which we can decode in static/formats/geojson/export.xsl
                             # - double up all tokens to reduce chances of them being within represents
-                            _attr = json.dumps(attrs, separators=(",,", "::"))
+                            # NB Ensure we don't double-encode unicode!
+                            _attr = json.dumps(attrs, separators=(",,", "::"),
+                                               ensure_ascii=False)
                             attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
 
             elif tablename in wkts:
@@ -1011,7 +1015,9 @@ class S3XML(S3Codec):
                 if attrs:
                     # Encode in a way which we can decode in static/formats/geojson/export.xsl
                     # - double up all tokens to reduce chances of them being within represents
-                    _attr = json.dumps(attrs, separators=(",,", "::"))
+                    # NB Ensure we don't double-encode unicode!
+                    _attr = json.dumps(attrs, separators=(",,", "::"),
+                                       ensure_ascii=False)
                     attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
 
             if tablename in markers:

@@ -285,6 +285,7 @@ class S3Report(S3Method):
         # Set XSLT stylesheet
         stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")
 
+        # Export as GeoJSON
         gresource = current.s3db.resource("gis_location", id=ids)
         output = gresource.export_xml(fields=[],
                                       mcomponents=None,

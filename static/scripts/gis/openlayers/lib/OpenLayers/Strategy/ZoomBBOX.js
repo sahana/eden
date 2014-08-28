@@ -5,7 +5,6 @@
 
 /**
  * @requires OpenLayers/Strategy/BBOX.js
- * @requires OpenLayers/Filter/Spatial.js
  */
 
 /**
@@ -29,18 +28,29 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      * Property: levels
      * {Array} Mapping of zoom levels to Location Hierarchy levels
      *
-     * @ToDo: This needs to vary by BBOX as different countries vary a lot here
+     * @ToDo: This needs to vary by center point as different countries vary a lot here
      */
-    /*
-    levels: {0-3: 0,
-             4-6: 1,
-             7-8: 2,
-             9-12: 3,
-             13-14: 4,
-             15-16: 4,
-             17-18: 10, // Individual Features (Clustered if-necessary)
+    levels: {0: 0,
+             1: 0,
+             2: 0,
+             3: 0,
+             4: 1,
+             5: 1,
+             6: 1,
+             7: 2,
+             8: 2,
+             9: 3,
+             10: 3,
+             11: 3,
+             12: 3,
+             13: 4,
+             14: 4,
+             15: 5,
+             16: 5,
+             // @ToDo: Individual Features (Clustered if-necessary)
+             17: 6,
+             18: 6
              },
-    */
 
     /**
      * Method: update
@@ -55,11 +65,17 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      * noAbort - {Boolean} if true, do not abort previous requests.
      */
     update: function(options) {
+        var layer = this.layer;
         var mapBounds = this.getMapBounds();
+        var old_level = this.levels[this.zoom];
+        var zoom = layer.map.getZoom();
+        var new_level = this.levels[zoom];
+        this.zoom = zoom;
         if (mapBounds !== null && ((options && options.force) ||
-          (this.layer.visibility && this.layer.calculateInRange() && this.invalidBounds(mapBounds)))) {
+            (layer.visibility && layer.calculateInRange() && this.invalidBounds(mapBounds)) ||
+            new_level != old_level)) {
             this.calculateBounds(mapBounds);
-            this.resolution = this.layer.map.getResolution(); 
+            this.resolution = layer.map.getResolution();
             this.triggerRead(options);
         }
     },
@@ -76,17 +92,21 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      *      returned by the layer protocol.
      */
     triggerRead: function(options) {
-        if (this.response && !(options && options.noAbort === true)) {
-            this.layer.protocol.abort(this.response);
-            this.layer.events.triggerEvent("loadend");
+        var layer = this.layer;
+        var response = this.response;
+        if (response && !(options && options.noAbort === true)) {
+            layer.protocol.abort(response);
+            layer.events.triggerEvent('loadend');
         }
         var evt = {filter: this.createFilter()};
-        this.layer.events.triggerEvent("loadstart", evt);
-        this.response = this.layer.protocol.read(
+        layer.events.triggerEvent('loadstart', evt);
+        //var center = layer.map.getCenter();
+        var level = 'L' + this.levels[this.zoom];
+        response = layer.protocol.read(
             OpenLayers.Util.applyDefaults({
                 filter: evt.filter,
                 callback: this.merge,
-                params: {level: 'L1'},
+                params: {level: level},
                 scope: this
         }, options));
     },

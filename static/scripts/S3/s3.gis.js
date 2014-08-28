@@ -1312,7 +1312,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             var layerLegends_len = layerLegends.length;
             for (i=0; i < layerLegends_len; i++) {
                 layerLegend = layerLegends[i];
-                if (layerLegend.layer.s3_layer_id == s3_layer_id) {
+                if ((layerLegend.layer) && (layerLegend.layer.s3_layer_id == s3_layer_id)) {
                     layerLegend.rules = rules;
                     layerLegend.update();
                     break;
@@ -1811,8 +1811,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Strategies
         var strategies = [
             // Need to be uniquely instantiated
-            //new OpenLayers.Strategy.ZoomBBOX({
-            new OpenLayers.Strategy.BBOX({
+            new OpenLayers.Strategy.ZoomBBOX({
+            //new OpenLayers.Strategy.BBOX({
                 // load features for a wider area than the visible extent to reduce calls
                 ratio: 1.5
                 // don't fetch features after every resolution change

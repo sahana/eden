@@ -76,7 +76,7 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
 from gluon.dal import Rows
-from gluon.languages import lazyT
+from gluon.languages import lazyT, regex_translate
 from gluon.storage import Storage
 
 from s3fields import s3_all_meta_field_names
@@ -7239,6 +7239,11 @@ def addFeatureResources(feature_resources):
         if opacity != 1:
             _layer["opacity"] = "%.1f" % opacity
         if popup_format:
+            if "T(" in popup_format:
+                # i18n
+                parts = popup_format.split("T(")
+                parts2 = parts[1].split(")", 1)
+                popup_format = "%s%s%s" % (parts[0], current.T(parts2[0]), parts2[1])
             _layer["popup_format"] = popup_format
         if cluster_attribute != CLUSTER_ATTRIBUTE:
             _layer["cluster_attribute"] = cluster_attribute
@@ -7801,6 +7806,13 @@ class LayerFeature(Layer):
             popup_format = self.popup_format
             if popup_format:
                 # New-style
+                if "T(" in popup_format:
+                    # i18n
+                    T = current.T
+                    items = regex_translate.findall(popup_format)
+                    for item in items:
+                        titem = str(T(item[1:-1]))
+                        popup_format = popup_format.replace("T(%s)" % item, titem)
                 output["popup_format"] = popup_format
             else:
                 popup_fields = self.popup_fields

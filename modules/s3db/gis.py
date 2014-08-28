@@ -2961,13 +2961,11 @@ class S3FeatureLayerModel(S3Model):
             controller = data.controller
             function = data.function
             filter = data.filter
-            aggregate = data.aggregate
-            polygons = data.polygons
+            name = data.name
             query = (table.controller.lower() == controller.lower()) & \
                     (table.function.lower() == function.lower()) & \
                     (table.filter == filter) & \
-                    (table.aggregate == aggregate) & \
-                    (table.polygons == polygons)
+                    (table.name == name)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:

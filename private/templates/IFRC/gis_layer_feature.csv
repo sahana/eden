@@ -7,7 +7,7 @@ PoIs,,gis,poi,IFRC,,,,,{name} ({poi_type_id}),"name,poi_type_id",,,,"[{'prop':'p
 Project Communities,,project,location,IFRC,project,,Project Community,location_id,,,,,,,,False,
 Staff,All Active Staff,hrm,staff,IFRC,staff,"Contact, Dreadlocks",Staff,"person_id,job_title_id",,,~.status=1,,True,,,False,
 Volunteers,All Active Volunteers,vol,volunteer,IFRC,volunteer,"Contact, Dreadlocks",Volunteer,person_id,,,~.status=1,,,,,False,
-Volunteers  by Lx,All Active Volunteers - Aggregated,vol,volunteer,,,,Volunteers,name,,,~.status=1,True,,"[{'prop':'value','fillOpacity':0.5}]",,False,
+Volunteers  by Lx,All Active Volunteers - Aggregated,vol,volunteer,,,,,,"{name}: {value} T('volunteers')",,~.status=1,True,,"[{'prop':'value','fillOpacity':0.5}]",,False,
 Warehouses,All Active Warehouses,inv,warehouse,IFRC,warehouse,Building,Warehouse,"name,organisation_id",,,~.obsolete=False,,,,,False,
 Stock Items,Used for Search Results,inv,inv_item,IFRC,,,Stock Item,"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,,False,False
 Training Events,Used for Search Results,hrm,training_event,IFRC,,,Training Event,"course_id,site_id,start_date",,,,,,,,False,False

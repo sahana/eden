@@ -1468,6 +1468,7 @@ class S3PivotTable(object):
 
             @param layer: the layer. e.g. ("id", "count")
                           - we only support methods "count" & "sum"
+                          - @ToDo: Support density: 'per sqkm' and 'per population'
             @param level: the aggregation level (defaults to Country)
         """
 
