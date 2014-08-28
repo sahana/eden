@@ -6401,7 +6401,7 @@ def pr_filter_list_layout(list_id, item_id, resource, rfields, record):
     if crud_strings:
         resource_name = crud_strings.title_list
     else:
-        resource_name = string.capwords(resource.name, "_")
+        resource_name = " ".join(s.capitalize() for s in resource.name.split("_"))
 
     # Filter title
     title = record["pr_filter.title"]
