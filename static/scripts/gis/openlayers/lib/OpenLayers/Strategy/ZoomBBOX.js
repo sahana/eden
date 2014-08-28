@@ -20,15 +20,28 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
     
     /**
      * Property: zoom
-     * {Integer} Last zoom; detect zoom changes
+     * {Integer} Last zoom
      */
     zoom: null,
 
     /**
+     * Property: center
+     * {Integer} Last center
+     */
+    center: null,
+
+    /**
+     * Property: level
+     * {String} Last level; detect level changes
+     */
+    level: null,
+
+    /**
      * Property: levels
-     * {Array} Mapping of zoom levels to Location Hierarchy levels
+     * {Array} Default Mapping of Zoom levels to Location Hierarchy levels
      *
      * @ToDo: This needs to vary by center point as different countries vary a lot here
+     *        - have a default lookup list and then allow specification of Polygons (e.g. BBOXes) for exception cases
      */
     levels: {0: 0,
              1: 0,
@@ -48,10 +61,40 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
              15: 5,
              16: 5,
              // @ToDo: Individual Features (Clustered if-necessary)
-             17: 6,
-             18: 6
+             17: 5,
+             18: 5
              },
 
+    /**
+     * Property: exceptions
+     * {Array} Exception Mappings of Zoom levels to Location Hierarchy levels
+     * - provides OpenLayers.Geometry areas which have a different set of mappings
+     *
+     */
+    exceptions: {},
+
+    /**
+     * Method: getLevel
+     *
+     * Parameters:
+     * center - {OpenLayers.LonLat}
+     * zoom - {Integer}
+     *
+     * Returns:
+     * {<OpenLayers.Protocol.Response>} The protocol response object
+     *      returned by the layer protocol.
+     */
+    getLevel: function(center, zoom) {
+        // @ToDo: If we have feastures then vary the zoom, based on their size
+        // (i.e. Do this introspectively not by pre-planned exceptions)
+        //var features = this.layer.features;
+        //for
+        //var size = feature.geometry.getBounds().getSize()
+        //if (feature.geometry.intersects(geom))
+        var level = 'L' + this.levels[zoom];
+        return level;
+    },
+ 
     /**
      * Method: update
      * Callback function called on "moveend" or "refresh" layer events.
@@ -66,11 +109,14 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      */
     update: function(options) {
         var layer = this.layer;
-        var mapBounds = this.getMapBounds();
-        var old_level = this.levels[this.zoom];
+        var old_level = this.getLevel(this.center, this.zoom);
+        var center = layer.map.getCenter();
         var zoom = layer.map.getZoom();
-        var new_level = this.levels[zoom];
+        var new_level = this.getLevel(center, zoom);
+        this.level = new_level;
+        this.center = center;
         this.zoom = zoom;
+        var mapBounds = this.getMapBounds();
         if (mapBounds !== null && ((options && options.force) ||
             (layer.visibility && layer.calculateInRange() && this.invalidBounds(mapBounds)) ||
             new_level != old_level)) {
@@ -100,13 +146,11 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
         }
         var evt = {filter: this.createFilter()};
         layer.events.triggerEvent('loadstart', evt);
-        //var center = layer.map.getCenter();
-        var level = 'L' + this.levels[this.zoom];
         response = layer.protocol.read(
             OpenLayers.Util.applyDefaults({
                 filter: evt.filter,
                 callback: this.merge,
-                params: {level: level},
+                params: {level: this.level},
                 scope: this
         }, options));
     },

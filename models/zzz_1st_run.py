@@ -149,24 +149,6 @@ if len(pop_list) > 0:
     # Synchronisation
     db.sync_config.insert() # Defaults are fine
 
-    # Person Registry
-    tablename = "pr_person"
-    # Add extra indexes on search fields
-    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
-    field = "first_name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-    field = "middle_name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-    field = "last_name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-
-    # GIS
-    # Add extra index on search field
-    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
-    tablename = "gis_location"
-    field = "name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-
     # Messaging Module
     if has_module("msg"):
         update_super = s3db.update_super
@@ -329,6 +311,33 @@ if len(pop_list) > 0:
     except AttributeError:
         # older Python
         print >> sys.stdout, "Pre-populate completed in %s" % duration
+
+    # =========================================================================
+    # Indexes
+    #
+
+    # Person Registry
+    tablename = "pr_person"
+    # Add extra indexes on search fields
+    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
+    field = "first_name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+    field = "middle_name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+    field = "last_name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+
+    # GIS
+    # Add extra index on search field
+    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
+    tablename = "gis_location"
+    field = "name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+    if settings.get_gis_spatialdb():
+        # Add Spatial Index (PostgreSQL-only currently)
+        db.executesql("CREATE INDEX gis_location_gist on %s USING GIST (the_geom);")
+        # Ensure the Planner takes this into consideration
+        db.executesql("VACUUM ANALYZE;")
 
     # Restore view
     response.view = "default/index.html"
