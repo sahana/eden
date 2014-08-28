@@ -1715,6 +1715,7 @@ class S3TwitterModel(S3Model):
         # ---------------------------------------------------------------------
         # Twitter Channel
         #
+        password_widget = S3PasswordWidget()
         tablename = "msg_twitter_channel"
         define_table(tablename,
                      #Instance
@@ -1729,10 +1730,18 @@ class S3TwitterModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      Field("twitter_account"),
-                     Field("consumer_key", "password"),
-                     Field("consumer_secret", "password"),
-                     Field("access_token", "password"),
-                     Field("access_token_secret", "password"),
+                     Field("consumer_key", "password", 
+                           widget = password_widget,
+                           ),
+                     Field("consumer_secret", "password",
+                           widget = password_widget,
+                           ),
+                     Field("access_token", "password",
+                           widget = password_widget,
+                           ),
+                     Field("access_token_secret", "password",
+                           widget = password_widget,
+                           ),
                      *s3_meta_fields())
 
         configure(tablename,

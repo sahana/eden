@@ -1411,7 +1411,7 @@ def twitter_search():
 
         try:
             supported_languages = map(lambda x: str(x["code"]), twitter_api.supported_languages())
-        except tweepy.TweepError:
+        except (tweepy.TweepError, AttributeError):
             # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
             pass
 
