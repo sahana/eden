@@ -12,6 +12,7 @@ Shelters,All Active Shelters,cr,shelter,US,shelter,Campground,,Shelter,"name,pop
 Staff,All Active Staff,hrm,staff,US,staff,"Contact, Dreadlocks",,Staff,"person_id,job_title_id,organisation_id",,~.status=1,,True,,,False,
 Stock Items,Used for Search Results,inv,inv_item,US,,,,Stock Item,"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,False,False
 Training Events,Used for Search Results,hrm,training_event,US,,,,Training Event,"course_id,site_id,start_date",,,,,,,False,False
+Tweets,All Tweets,msg,twitter_result,US,twitter,,,Tweet,body,,,,,,,False,
 Vehicles,,vehicle,vehicle,US,vehicle,Car,,Vehicle,"number,person_id",,,,True,,,False,
 Volunteers,All Active Volunteers,vol,volunteer,US,volunteer,"Contact, Dreadlocks",,Volunteer,"person_id,organisation_id",,~.status=1,,True,,,False,
 Warehouses,All Active Warehouses,inv,warehouse,US,warehouse,Building,,Office,"name,organisation_id",,~.obsolete=False,,,,,False,
