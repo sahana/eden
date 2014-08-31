@@ -713,9 +713,10 @@ button.close {
 }
 
 /* Throbber */
-/* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
+/* Used by Autocompletes, map popups, map toolbar, dropdown widgets , tweets */
 .throbber,
 .layer_throbber,
+.s3-twitter-throbber,
 .map_loader {
     background-image: url(../../img/ajax-loader.gif);
     background-repeat: no-repeat;
@@ -733,6 +734,12 @@ button.close {
     width: 24px;
     display: inline-block;
     margin: 0 0 -11px -24px;
+}
+.s3-twitter-throbber {
+    height: 0px;
+    margin: 66px 0 0 42px;
+    padding: 20px;
+    width: 0px;
 }
 
 /* Resource Header */
@@ -1624,4 +1631,10 @@ button.toggle-text {
 .s3-unmask {
     margin-left: 10px;
     cursor: pointer;
+}
+
+/* Tweet Display */
+.s3-twitter-container {
+    width: 350px;
+    height: 130px;
 }

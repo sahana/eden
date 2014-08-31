@@ -20,3 +20,9 @@
 	margin: 10px;
 	padding: 4px;
 }
+
+/* Sunflower Throbber */
+.s3-twitter-throbber {
+    background-image: url(../../img/sunflower_spin_throbber.gif);
+    background-repeat: no-repeat;
+}
