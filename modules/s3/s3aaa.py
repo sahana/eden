@@ -1068,6 +1068,7 @@ Thank you"""
         labels, required = s3_mark_required(utable)
 
         formstyle = deployment_settings.get_ui_formstyle()
+        current.response.form_label_separator = ""
         form = SQLFORM(utable,
                        hidden = dict(_next=request.vars._next),
                        labels = labels,
@@ -1075,7 +1076,7 @@ Thank you"""
                        showid = settings.showid,
                        submit_button = T("Register"),
                        delete_label = messages.delete_label,
-                       formstyle = formstyle
+                       formstyle = formstyle,
                        )
 
         # Identify form for CSS & JS Validation

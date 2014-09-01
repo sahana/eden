@@ -377,6 +377,7 @@ class S3SQLDefaultForm(S3SQLForm):
         # Generate the form
         if record is None:
             record = record_id
+        response.form_label_separator = ""
         form = SQLFORM(table,
                        record = record,
                        record_id = record_id,
@@ -931,6 +932,7 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Render the form
         tablename = self.tablename
+        response.form_label_separator = ""
         form = SQLFORM.factory(*formfields,
                                record = data,
                                showid = False,

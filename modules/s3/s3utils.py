@@ -404,26 +404,35 @@ def s3_dev_toolbar():
     )
 
 # =============================================================================
+def s3_required_label(field_label):
+    """ Default HTML for labels of required form fields """
+
+    return TAG[""]("%s:" % field_label, SPAN(" *", _class="req"))
+
+# =============================================================================
 def s3_mark_required(fields,
                      mark_required=None,
-                     label_html=(lambda field_label:
-                                 # @ToDo: DRY this setting with s3.locationselector.widget2.js
-                                 DIV("%s:" % field_label,
-                                     SPAN(" *", _class="req"))),
+                     label_html=None,
                      map_names=None):
     """
         Add asterisk to field label if a field is required
 
         @param fields: list of fields (or a table)
         @param mark_required: list of field names which are always required
-
-        @return: dict of labels
-
-        @todo: complete parameter description?
+        @param label_html: function to render labels of requried fields
+        @param map_names: dict of alternative field names and labels
+                          {fname: (name, label)}, used for inline components
+        @return: tuple, (dict of form labels, has_required) with has_required
+                 indicating whether there are required fields in this form
     """
 
     if not mark_required:
         mark_required = ()
+
+    if label_html is None:
+        # @ToDo: DRY this setting with s3.locationselector.widget2.js
+        label_html = s3_required_label
+
     labels = dict()
 
     # Do we have any required fields?
