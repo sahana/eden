@@ -2267,6 +2267,8 @@ class S3Compose(S3CRUD):
 
         T = current.T
         auth = current.auth
+        vars = current.request.vars
+        response = current.response
 
         self.url = url = r.url()
 
@@ -2312,11 +2314,14 @@ class S3Compose(S3CRUD):
             r.error(501, current.ERROR.BAD_METHOD)
 
         # Complete the page
-        if r.representation == "html":
+        if r.interactive:
             title = self.crud_string(self.tablename, "title_compose")
+            if "human_resource.id" in vars:
+                title = T("Send a message to this person")
+            elif "group_id" in vars:
+                title = T("Send a message to this team")
             if not title:
                 title = T("Send Message")
-
             # subtitle = self.crud_string(self.tablename, "subtitle_compose")
             # if not subtitle:
                 # subtitle = ""
@@ -2331,7 +2336,7 @@ class S3Compose(S3CRUD):
             #output["subtitle"] = subtitle
             #output["form"] = form
             #current.response.view = self._view(r, "list_filter.html")
-            current.response.view = self._view(r, "create.html")
+            current.response.view = self._view(r, "msg/compose.html")
 
         return output
 
@@ -2432,12 +2437,32 @@ class S3Compose(S3CRUD):
             elif "person_id" in get_vars:
                 # @ToDo
                 pass
-            elif "group_id" in get_vars:
-                # @ToDo
-                pass
-            elif "human_resource.id" in get_vars:
-                # @ToDo
-                pass
+            else:
+                if "group_id" in get_vars or \
+                   "human_resource.id" in get_vars:
+                    if "group_id" in get_vars:
+                        fieldname = "group_id"
+                        id = get_vars.get(fieldname)
+                        table = s3db.pr_group
+                        query = (table.id == id)
+                    elif "human_resource.id" in get_vars:
+                        fieldname = "human_resource.id"
+                        id = get_vars.get(fieldname)
+                        table = s3db.pr_person
+                        htable = s3db.hrm_human_resource
+                        query = (htable.id == id) & \
+                                (htable.person_id == table.id)
+                    else:
+                        current.session.error = T("Record not found")
+                        redirect(URL(f="index"))
+
+                    pe = db(query).select(table.pe_id,
+                                          limitby=(0, 1)).first()               
+                    if not pe:
+                        current.session.error = T("Record not found")
+                        redirect(URL(f="index"))
+                    
+                    recipient = pe.pe_id
 
         if recipient:
             recipients = [recipient]

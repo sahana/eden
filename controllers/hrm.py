@@ -104,10 +104,9 @@ def staff():
                         "human_resource.id": r.id,
                         "group": "staff"
                     }
-                    args = []
+                    args = [r.method]
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
-                        args = [r.method]
                     redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
@@ -181,11 +180,10 @@ def staff():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules and \
-                   auth.permission.has_permission("update", c="hrm", f="compose"):
+                   auth.permission.has_permission("create", c="msg", f="compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append(
-                        {"url": URL(f="compose",
-                                    vars = {"human_resource.id": "[id]"}),
+                        {"url": URL(args = ["[id]", "compose"]),
                          "_class": "action-btn send",
                          "label": str(T("Send Message"))
                         })
@@ -634,13 +632,5 @@ def staff_for_site():
 
     response.headers["Content-Type"] = "application/json"
     return result
-
-# =============================================================================
-# Messaging
-# =============================================================================
-def compose():
-    """ Send message to people/teams """
-
-    return s3db.hrm_compose()
 
 # END =========================================================================

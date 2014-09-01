@@ -4659,7 +4659,7 @@ def pr_rheader(r, tabs=[]):
         - used in PR, HRM, DVI, MPR, MSG, VOL
     """
 
-    if r.representation == "html":
+    if r.representation == "html" and r.method != "compose":
         tablename, record = s3_rheader_resource(r)
         if record:
             rheader_tabs = s3_rheader_tabs(r, tabs)
