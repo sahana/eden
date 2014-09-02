@@ -91,6 +91,18 @@
 .tp-form fieldset legend button:first-child {
     display: none;
 }
+.pt-tooltip {
+    text-align: center;
+    padding: 4px;
+}
+.pt-tooltip-label {
+    font-weight: bold;
+}
+.pt-tooltip-label,
+.pt-tooltip-text {
+    max-width: 175px;
+    white-space: normal;
+}
 
 .chart-icon {
     cursor: default;

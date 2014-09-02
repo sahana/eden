@@ -351,10 +351,10 @@ def location():
                        report_options = Storage(
                                 rows = ["name"],
                                 cols = [],
-                                fact = [("population", "sum", T("Total Population"))],
+                                fact = [(T("Total Population"), "sum(population)")],
                                 defaults = Storage(rows="name",
                                                    cols=None,
-                                                   fact="sum:population",
+                                                   fact="sum(population)",
                                                    totals=True
                                                    )
                                 ),

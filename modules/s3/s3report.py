@@ -610,13 +610,14 @@ class S3ReportForm(object):
         s3 = current.response.s3
         scripts = s3.scripts
         if s3.debug:
+            # @todo: support CDN
+            script = "/%s/static/scripts/d3/d3.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+            script = "/%s/static/scripts/d3/nv.d3.js" % appname
+            if script not in scripts:
+                scripts.append(script)
             script = "/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname
-            if script not in scripts:
-                scripts.append(script)
-            script = "/%s/static/scripts/flot/jquery.flot.js" % appname
-            if script not in scripts:
-                scripts.append(script)
-            script = "/%s/static/scripts/flot/jquery.flot.pie.js" % appname
             if script not in scripts:
                 scripts.append(script)
         else:
