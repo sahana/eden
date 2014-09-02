@@ -423,11 +423,10 @@ def req_controller(template = False):
                                               filter_opts = [req_id],
                                               sort=True
                                               )
-                    
                     s3.jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'req_item_id',
- 'targetName':'item_pack_id',
+$.filterOptionsS3({
+ 'trigger':'req_item_id',
+ 'target':'item_pack_id',
  'lookupPrefix':'req',
  'lookupResource':'req_item_packs',
  'lookupKey':'req_item_id',
@@ -974,9 +973,9 @@ $('#req_commit_site_id_link').click(function(){
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
                     jappend('''
-S3OptionsFilter({
-'triggerName':'req_item_id',
-'targetName':'item_pack_id',
+$.filterOptionsS3({
+'trigger':'req_item_id',
+'target':'item_pack_id',
 'lookupPrefix':'req',
 'lookupResource':'req_item_packs',
 'lookupKey':'req_item_id',

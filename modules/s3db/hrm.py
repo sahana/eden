@@ -2633,9 +2633,9 @@ class S3HRSkillModel(S3Model):
         if current.deployment_settings.get_hrm_skill_types():
             s3.js_global.append('''i18n.no_ratings="%s"''' % T("No Ratings for Skill Type"))
             s3.jquery_ready.append(
-'''S3OptionsFilter({
- 'triggerName':'skill_id',
- 'targetName':'competency_id',
+'''$.filterOptionsS3({
+ 'trigger':'skill_id',
+ 'target':'competency_id',
  'lookupResource':'competency',
  'lookupURL':S3.Ap.concat('/%s/skill_competencies/'),
  'msgNoRecords':i18n.no_ratings

@@ -3596,9 +3596,9 @@ class S3RoomModel(S3Model):
                                          tooltip=T("Select a Room from the list or click 'Create Room'")),
                            # Filters Room based on site
                            SCRIPT(
-'''S3OptionsFilter({
- 'triggerName':'site_id',
- 'targetName':'room_id',
+'''$.filterOptionsS3({
+ 'trigger':'site_id',
+ 'target':'room_id',
  'lookupPrefix':'org',
  'lookupResource':'room'
 })''')

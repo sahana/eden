@@ -222,6 +222,12 @@ def person():
 def room():
     """ RESTful CRUD controller """
 
+    def prep(r):
+        field = r.table.site_id
+        field.readable = field.writable = True
+        return True
+    s3.prep = prep
+    
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

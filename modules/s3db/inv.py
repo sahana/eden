@@ -531,9 +531,9 @@ class S3InventoryModel(S3Model):
                                                                       T("Select Stock from this Warehouse"))),
                                       ondelete = "CASCADE",
                                       script = '''
-S3OptionsFilter({
- 'triggerName':'inv_item_id',
- 'targetName':'item_pack_id',
+$.filterOptionsS3({
+ 'trigger':'inv_item_id',
+ 'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
@@ -1558,9 +1558,9 @@ class S3InventoryTrackingModel(S3Model):
                                                         orderby="inv_inv_item.id",
                                                         sort=True)),
                                  script = '''
-S3OptionsFilter({
- 'triggerName':'send_inv_item_id',
- 'targetName':'item_pack_id',
+$.filterOptionsS3({
+ 'trigger':'send_inv_item_id',
+ 'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/inv/inv_item_packs/'),
