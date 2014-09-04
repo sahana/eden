@@ -319,9 +319,9 @@ def customise_cms_post_resource(r, tablename):
         # Coming from Profile page
         # Default location to Incident Location
         itable = s3db.event_incident
-        incident = db(itable == incident_id).select(itable.location_id,
-                                                    limitby=(0, 1)
-                                                    ).first()
+        incident = db(itable.id == incident_id).select(itable.location_id,
+                                                       limitby=(0, 1)
+                                                       ).first()
         if incident:
             table.location_id.default = incident.location_id
 
