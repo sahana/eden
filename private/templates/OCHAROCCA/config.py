@@ -263,6 +263,22 @@ def customise_gis_location_controller(**attr):
 
         s3db = current.s3db
 
+        # Hack to provide additional languages for L10n location names
+        # without activating them in the GUI
+        l10n_languages = dict(settings.L10n.languages)
+        l10n_languages["ky"] = "Kyrgyz"
+        l10n_languages["ru"] = "Russian"
+        l10n_languages["hy"] = "Armenian"
+        l10n_languages["az"] = "Azerbaijani"
+        l10n_languages["ka"] = "Georgian"
+        l10n_languages["kk"] = "Kazakh"
+        l10n_languages["tg"] = "Tajik"
+        l10n_languages["tk"] = "Turkmen"
+        l10n_languages["uk"] = "Ukraine"
+        l10n_languages["uz"] = "Uzbek"
+        from s3 import IS_ISO639_2_LANGUAGE_CODE
+        s3db.gis_location_name.language.requires = IS_ISO639_2_LANGUAGE_CODE(select=l10n_languages)
+
         if r.interactive or r.representation == "aadata":
             if r.vars.get("location.level__ne"):
                 s3.crud_strings["gis_location"] = Storage(
@@ -282,23 +298,7 @@ def customise_gis_location_controller(**attr):
                 filter_widgets = s3db.get_config("gis_location", "filter_widgets")
                 # NB Fragile: dependent on filters defined in gis/location controller
                 filter_widgets.pop(1)
-
-        if r.method == "import":
-            l10n_languages = settings.L10n.languages
-            l10n_languages["ky"] = "Kyrgyz"
-            l10n_languages["ru"] = "Russian"
-            l10n_languages["hy"] = "Armenian"
-            l10n_languages["az"] = "Azerbaijani"
-            l10n_languages["ka"] = "Georgian"
-            l10n_languages["kk"] = "Kazakh"
-            l10n_languages["tg"] = "Tajik"
-            l10n_languages["tk"] = "Turkmen"
-            l10n_languages["uk"] = "Ukraine"
-            l10n_languages["uz"] = "Uzbek"
-            from gluon import IS_IN_SET
-            s3db.gis_location_name.language.requires = IS_IN_SET(l10n_languages)
-
-        else:
+        if r.method != "import":
             table = s3db.gis_location
             # Custom filtered components for custom list_fields
             s3db.add_components("gis_location",

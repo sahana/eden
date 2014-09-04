@@ -1150,10 +1150,6 @@ class S3LocationNameModel(S3Model):
         define_table = self.define_table
         location_id = self.gis_location_id
 
-        # @ToDo: Change lookup to be a full set of languages,
-        #        not just those we are using in the interface
-        l10n_languages = current.response.s3.l10n_languages
-
         # ---------------------------------------------------------------------
         # Local Names
         #
@@ -1166,7 +1162,7 @@ class S3LocationNameModel(S3Model):
                            label = T("Language"),
                            represent = lambda opt: l10n_languages.get(opt,
                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(l10n_languages),
+                           requires = IS_ISO639_2_LANGUAGE_CODE(),
                            ),
                      Field("name_l10n",
                            label = T("Local Name"),
