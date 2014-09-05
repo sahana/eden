@@ -22,7 +22,7 @@ settings = current.deployment_settings
 """
 
 # PrePopulate data
-settings.base.prepopulate = ("skeleton", "demo/users")
+settings.base.prepopulate = ("skeleton", "default/users")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "skeleton"

@@ -46,8 +46,6 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      * Property: levels
      * {Array} Default Mapping of Zoom levels to Location Hierarchy levels
      *
-     * @ToDo: This needs to vary by center point as different countries vary a lot here
-     *        - have a default lookup list and then allow specification of Polygons (e.g. BBOXes) for exception cases
      */
     levels: {0: 0,
              1: 0,
@@ -66,18 +64,9 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
              14: 4,
              15: 5,
              16: 5,
-             // @ToDo: Individual Features (Clustered if-necessary)
              17: 5,
              18: 5
              },
-
-    /**
-     * Property: exceptions
-     * {Array} Exception Mappings of Zoom levels to Location Hierarchy levels
-     * - provides OpenLayers.Geometry areas which have a different set of mappings
-     *
-     */
-    exceptions: {},
 
     /**
      * Method: getLevel
@@ -116,10 +105,13 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
                 }
             }
             var mean = total / (len - empty);
-            s3_debug(mean);
+            //s3_debug(mean);
             if (zoom > this.zoom) {
                 // We're zooming-in
-                if (mean > 500000) {
+                if (mean > 25000000) {
+                    // Show a lot more detail
+                    return Math.min(this.level + 2, 5);
+                } else if (mean > 1000000) {
                     // Show more detail
                     return Math.min(this.level + 1, 5);
                 } else {
@@ -128,7 +120,14 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
                 }
             } else {
                 // We must be zooming-out
-                if (mean < 500000) {
+                if (!mean) {
+                    // We only have points
+                    // Show less detail
+                    return Math.max(this.level - 1, 0);
+                } else if (mean < 1000000) {
+                    // Show much less detail
+                    return Math.max(this.level - 2, 0);
+                } else if (mean < 25000000) {
                     // Show less detail
                     return Math.max(this.level - 1, 0);
                 } else {

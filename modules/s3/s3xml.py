@@ -173,7 +173,7 @@ class S3XML(S3Codec):
         name="name",
         parent="parent",
         #popup="popup", # for GIS Feature Layers/Queries
-        popup_url="popup_url", # for map popups
+        #popup_url="popup_url", # for map popups
         ref="ref",
         replaced_by="replaced_by",
         resource="resource",
@@ -830,7 +830,7 @@ class S3XML(S3Codec):
         # Retrieve data prepared earlier in gis.get_location_data()
         latlons = location_data.get("latlons", [])
         geojsons = location_data.get("geojsons", [])
-        wkts = location_data.get("wkts", [])
+        #wkts = location_data.get("wkts", [])
         attributes = location_data.get("attributes", [])
         markers = location_data.get("markers", [])
         styles = location_data.get("styles", [])
@@ -852,12 +852,11 @@ class S3XML(S3Codec):
                     geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
 
-            elif tablename in wkts:
-                # Nothing gets here currently
-                # tbc: KML Polygons (or we should also do these outside XSLT)
-                wkt = wkts[tablename][record_id]
-                # Convert the WKT in XSLT
-                attr[ATTRIBUTE.wkt] = wkt
+            #  @ToDo: KML/GPX/GeoRSS Polygons (or we should also do these outside XSLT)
+            #elif tablename in wkts:
+            #    wkt = wkts[tablename][record_id]
+            #    # Convert the WKT in XSLT
+            #    attr[ATTRIBUTE.wkt] = wkt
 
             elif tablename in latlons:
                 # These have been looked-up in bulk
@@ -871,14 +870,16 @@ class S3XML(S3Codec):
 
             else:
                 # Lookup record by record :/
-                table = resource.table
-                wkts = gis.get_locations(table,
-                                         (table._id == record_id),
-                                         join=False,
-                                         geojson=False)
-                # Convert the WKT in XSLT
-                if record_id in wkts:
-                    attr[ATTRIBUTE.wkt] = wkts[record_id]
+                # Nothing should get here
+                return
+                #table = resource.table
+                #wkts = gis.get_locations(table,
+                #                         (table._id == record_id),
+                #                         join=False,
+                #                         geojson=False)
+                ## Convert the WKT in XSLT
+                #if record_id in wkts:
+                #    attr[ATTRIBUTE.wkt] = wkts[record_id]
 
             if format == "geojson":
                 if tablename in attributes:
@@ -917,12 +918,13 @@ class S3XML(S3Codec):
                         _style = etree.SubElement(map_data, "style")
                         _style.set("value", style)
 
-                # Use gis/location controller even in reports
-                url = URL(c="gis", f="location").split(".", 1)[0]
+                # Now built client-side from the id (=> saves bandwidth)
+                # Use gis/location controller in all reports
+                #url = URL(c="gis", f="location").split(".", 1)[0]
                 # Assume being used within the Sahana Mapping client
                 # so use local URLs to keep filesize down
-                url = "%s/%i.plain" % (url, record_id)
-                attr[ATTRIBUTE.popup_url] = url
+                #url = "%s/%i.plain" % (url, record_id)
+                #attr[ATTRIBUTE.popup_url] = url
 
                 # End: format == "geojson"
                 return
@@ -966,23 +968,24 @@ class S3XML(S3Codec):
                                                ensure_ascii=False)
                             attr[ATTRIBUTE.attributes] = "{%s}" % _attr.replace('"', "||")
 
-            elif tablename in wkts:
-                # Nothing gets here currently
-                # tbc: KML Polygons (or we should also do these outside XSLT)
-                wkt = wkts[tablename][record_id]
-                # Convert the WKT in XSLT
-                attr[ATTRIBUTE.wkt] = wkt
+            #  @ToDo: KML/GPX/GeoRSS Polygons (or we should also do these outside XSLT)
+            #elif tablename in wkts:
+            #    wkt = wkts[tablename][record_id]
+            #    # Convert the WKT in XSLT
+            #    attr[ATTRIBUTE.wkt] = wkt
 
             else:
                 # Lookup record by record :/
-                table = resource.table
-                wkts = gis.get_locations(table,
-                                         (table._id == record_id),
-                                         join=False,
-                                         geojson=False)
-                # Convert the WKT in XSLT
-                if record_id in wkts:
-                    attr[ATTRIBUTE.wkt] = wkts[record_id]
+                # Nothing should get here
+                return
+                #table = resource.table
+                #wkts = gis.get_locations(table,
+                #                         (table._id == record_id),
+                #                         join=False,
+                #                         geojson=False)
+                ## Convert the WKT in XSLT
+                #if record_id in wkts:
+                #    attr[ATTRIBUTE.wkt] = wkts[record_id]
 
             # End: Shapefile data
             return
@@ -1045,14 +1048,15 @@ class S3XML(S3Codec):
                     _style = etree.SubElement(map_data, "style")
                     _style.set("value", style)
 
+            # Now built client-side from the id (=> saves bandwidth)
             # Use the current controller for map popup URLs to get
             # the controller settings applied even for map popups
-            url = URL(request.controller,
-                      request.function).split(".", 1)[0]
+            # url = URL(request.controller,
+            #           request.function).split(".", 1)[0]
             # Assume being used within the Sahana Mapping client
             # so use local URLs to keep filesize down
-            url = "%s/%i.plain" % (url, record_id)
-            attr[ATTRIBUTE.popup_url] = url
+            #url = "%s/%i.plain" % (url, record_id)
+            #attr[ATTRIBUTE.popup_url] = url
             # End: format == "geojson"
             return
 
@@ -1066,12 +1070,11 @@ class S3XML(S3Codec):
                     attr[ATTRIBUTE.lat] = "%.4f" % lat
                     attr[ATTRIBUTE.lon] = "%.4f" % lon
 
-        elif tablename in wkts:
-            # Nothing gets here currently
-            # tbc: KML Polygons (or we should also do these outside XSLT)
-            wkt = wkts[tablename][record_id]
-            # Convert the WKT in XSLT
-            attr[ATTRIBUTE.wkt] = wkt
+        #  @ToDo: KML/GPX/GeoRSS Polygons (or we should also do these outside XSLT)
+        #elif tablename in wkts:
+        #    wkt = wkts[tablename][record_id]
+        #    # Convert the WKT in XSLT
+        #    attr[ATTRIBUTE.wkt] = wkt
 
         else:
             # Lookup record by record :/
@@ -2181,6 +2184,9 @@ class S3XML(S3Codec):
             native = False
 
         root_dict = cls.__element2json(root, native=native)
+        if "s3" in root_dict:
+            # Don't double JSON-encode
+            root_dict["s3"] = json.loads(root_dict["s3"])
 
         if pretty_print:
             js = json.dumps(root_dict, indent=4)

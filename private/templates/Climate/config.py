@@ -17,7 +17,7 @@ settings = current.deployment_settings
     Climate Data Portal settings
 """
 
-settings.base.prepopulate = ["Climate"]
+settings.base.prepopulate = ("Climate",)
 
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled

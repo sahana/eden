@@ -1,7 +1,7 @@
-Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Format,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
-Alerts,,cms,post,DRMP,,Danger Area,"{body} (Alert)<br/>{date}","body,date,age","~.series_id$name=Alert&~.expired=False",,"[{'prop':'age','cat':'1','label':'<2 days','externalGraphic':'img/markers/DRMP/Alert_Red.png'},{'prop':'age','cat':'2','label':'2-7 days','externalGraphic':'img/markers/DRMP/Alert_Yellow.png'},{'prop':'age','cat':'3','label':'>7 days','externalGraphic':'img/markers/DRMP/Alert_Green.png'}]",,"False",,,
-Facilities,"All Active Facilities",org,facility,DRMP,office,Building,"{name} (Facility)<br/>{organisation_id}","name,organisation_id","~.obsolete=False",,,,"False",,,
-Incidents,,event,incident,DRMP,incident,,"{name} (Incident)<br/>{location_id}","name,location_id",,,,,"False",,,
-Tasks,,project,task,DRMP,training,,"{name} (Task)<br/>{location_id}","name,location_id",,,,,"False",,,
-Resource Inventory,,org,resource,DRMP,resource,,"{value} {parameter_id} (Resource)<br/>{comments}","parameter_id,value,comments",,,,,"False",,,
-Resources Responding,,event,resource,DRMP,resource,,"{name} ({parameter_id})<br/>{comments}","parameter_id,name,comments",,,,,"False",,,
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Alerts,,cms,post,,Danger Area,{body} (Alert)<br/>{date},"body,date,age",~.series_id$name=Alert&~.expired=False,"[{'prop':'age','cat':'1','label':'<2 days','externalGraphic':'img/markers/DRMP/Alert_Red.png'},{'prop':'age','cat':'2','label':'2-7 days','externalGraphic':'img/markers/DRMP/Alert_Yellow.png'},{'prop':'age','cat':'3','label':'>7 days','externalGraphic':'img/markers/DRMP/Alert_Green.png'}]",,False,,,
+Facilities,All Active Facilities,org,facility,office,Building,{name} (Facility)<br/>{organisation_id},"name,organisation_id",~.obsolete=False,,,False,,,
+Incidents,,event,incident,incident,,{name} (Incident)<br/>{location_id},"name,location_id",,,,False,,,
+Tasks,,project,task,training,,{name} (Task)<br/>{location_id},"name,location_id",,,,False,,,
+Resource Inventory,,org,resource,resource,,{value} {parameter_id} (Resource)<br/>{comments},"parameter_id,value,comments",,,,False,,,
+Resources Responding,,event,resource,resource,,{name} ({parameter_id})<br/>{comments},"parameter_id,name,comments",,,,False,,,

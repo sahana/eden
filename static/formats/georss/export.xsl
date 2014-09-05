@@ -4,10 +4,9 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- **********************************************************************
-
          GeoRSS Export Templates for S3XRC
 
-         Copyright (c) 2011 Sahana Software Foundation
+         Copyright (c) 2011-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation

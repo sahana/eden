@@ -221,7 +221,7 @@ if os.path.exists(path):
 
 # e.g.
 #settings.base.system_name = T("Sahana TEST")
-#settings.base.prepopulate = ["demo"]
+#settings.base.prepopulate = ("default", "default/users")
 #settings.base.theme = "default"
 #settings.L10n.default_language = "en"
 #settings.security.policy = 7 # Organisation-ACLs

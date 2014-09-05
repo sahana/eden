@@ -146,6 +146,7 @@ class S3SupplyModel(S3Model):
         represent = S3Represent(lookup=tablename)
         brand_id = S3ReusableField("brand_id", "reference %s" % tablename,
             label = T("Brand"),
+            ondelete = "RESTRICT",
             represent = represent,
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "supply_brand.id",
@@ -157,7 +158,6 @@ class S3SupplyModel(S3Model):
                                         label=ADD_BRAND,
                                         title=T("Brand"),
                                         tooltip=T("The list of Brands are maintained by the Administrators.")),
-            ondelete = "RESTRICT",
             )
 
         # =====================================================================
@@ -189,7 +189,10 @@ class S3SupplyModel(S3Model):
         # Reusable Field
         represent = S3Represent(lookup=tablename)
         catalog_id = S3ReusableField("catalog_id", "reference %s" % tablename,
-            sortby="name",
+            default = 1,
+            label = T("Catalog"),
+            ondelete = "RESTRICT",
+            represent = represent,
             requires = IS_EMPTY_OR(
                         IS_ONE_OF(db, "supply_catalog.id",
                                   represent,
@@ -197,24 +200,21 @@ class S3SupplyModel(S3Model):
                                   # Restrict to catalogs the user can update
                                   updateable=True,
                                   )),
-            represent = represent,
-            default = 1,
-            label = T("Catalog"),
+            sortby = "name",
             comment=S3AddResourceLink(c="supply",
                                       f="catalog",
                                       label=ADD_CATALOG,
                                       title=T("Catalog"),
                                       tooltip=T("The list of Catalogs are maintained by the Administrators.")),
-            ondelete = "RESTRICT",
             )
 
         # Components
         add_components(tablename,
                        # Categories
-                       supply_item_category="catalog_id",
+                       supply_item_category = "catalog_id",
                        # Catalog Items
-                       supply_catalog_item="catalog_id",
-                      )
+                       supply_catalog_item = "catalog_id",
+                       )
 
         # =====================================================================
         # Item Category
@@ -316,8 +316,8 @@ $.filterOptionsS3({
         # Components
         add_components(tablename,
                        # Child categories
-                       supply_item_category="parent_item_category_id",
-                      )
+                       supply_item_category = "parent_item_category_id",
+                       )
 
         def supply_item_category_onvalidate(form):
             """
@@ -429,6 +429,7 @@ $.filterOptionsS3({
         supply_item_id = S3ReusableField("item_id",
             "reference %s" % tablename, # 'item_id' for backwards-compatibility
             label = T("Item"),
+            ondelete = "RESTRICT",
             represent = supply_item_represent,
             requires = IS_ONE_OF(db, "supply_item.id",
                                  supply_item_represent,
@@ -440,7 +441,6 @@ $.filterOptionsS3({
                                       label=ADD_ITEM,
                                       title=T("Item"),
                                       tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")),
-            ondelete = "RESTRICT",
             )
 
         # ---------------------------------------------------------------------
@@ -505,27 +505,27 @@ $.filterOptionsS3({
         # Components
         add_components(tablename,
                        # Catalog Items
-                       supply_catalog_item="item_id",
+                       supply_catalog_item = "item_id",
                        # Packs
-                       supply_item_pack="item_id",
+                       supply_item_pack = "item_id",
                        # Inventory Items
-                       inv_inv_item="item_id",
+                       inv_inv_item = "item_id",
                        # Order Items
-                       inv_track_item="item_id",
+                       inv_track_item = "item_id",
                        # Procurement Plan Items
-                       proc_plan_item="item_id",
+                       proc_plan_item = "item_id",
                        # Request Items
-                       req_req_item="item_id",
+                       req_req_item = "item_id",
                        # Supply Kit Items
-                       supply_kit_item="parent_item_id",
+                       supply_kit_item = "parent_item_id",
                        # Supply Kit Items (with link table)
-                       #supply_item={"name": "kit_item",
-                       #             "link": "supply_kit_item",
-                       #             "joinby": "parent_item_id",
-                       #             "key": "item_id"
-                       #             "actuate": "hide",
-                       #            },
-                      )
+                       #supply_item = {"name": "kit_item",
+                       #               "link": "supply_kit_item",
+                       #               "joinby": "parent_item_id",
+                       #               "key": "item_id"
+                       #               "actuate": "hide",
+                       #               },
+                       )
 
         # Optional components
         if settings.get_supply_use_alt_name():
@@ -653,7 +653,8 @@ $.filterOptionsS3({
         # Reusable Field
         item_pack_represent = self.item_pack_represent
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
-                    sortby="name",
+                    label = T("Pack"),
+                    represent = item_pack_represent,
                     # Do not display any packs initially
                     # will be populated by filterOptionsS3
                     requires = IS_ONE_OF_EMPTY_SELECT(db,
@@ -665,8 +666,7 @@ $.filterOptionsS3({
                                          # filterby = "item_id",
                                          # filter_opts = (....),
                                          ),
-                    represent = item_pack_represent,
-                    label = T("Pack"),
+                    sortby = "name",
                     #comment=S3AddResourceLink(c="supply",
                     #                          f="item_pack",
                     #                          label=ADD_ITEM_PACK,
@@ -690,8 +690,8 @@ $.filterOptionsS3({
         # Components
         add_components(tablename,
                        # Inventory Items
-                       inv_inv_item="item_pack_id",
-                      )
+                       inv_inv_item = "item_pack_id",
+                       )
 
         # =====================================================================
         # Supply Kit Item Table

@@ -5,10 +5,10 @@
 
 
 /**
- * @requires OpenLayers/Control.js
- * @requires OpenLayers/Feature/Vector.js
- * @requires OpenLayers/Handler/Feature.js
- * @requires OpenLayers/Layer/Vector/RootContainer.js
+ * requires OpenLayers/Control.js
+ * requires OpenLayers/Feature/Vector.js
+ * requires OpenLayers/Handler/Feature.js
+ * requires OpenLayers/Layer/Vector/RootContainer.js
  */
 
 /**

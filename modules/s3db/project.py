@@ -4443,6 +4443,9 @@ class S3ProjectTaskModel(S3Model):
                                                label = T("Assigned To"),
                                                none = T("Unassigned"),
                                                ),
+                               S3OptionsFilter("status",
+                                               options = project_task_status_opts,
+                                               ),
                                S3OptionsFilter("created_by",
                                                label = T("Created By"),
                                                hidden = True,
@@ -4461,9 +4464,6 @@ class S3ProjectTaskModel(S3Model):
                                             hide_time = True,
                                             hidden = True,
                                             ),
-                               S3OptionsFilter("status",
-                                               options = project_task_status_opts,
-                                               ),
                                ))
 
         crud_fields.extend(("time_estimated",

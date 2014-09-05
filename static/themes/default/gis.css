@@ -117,6 +117,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 .x-tree-node-ct {
     margin: 0;
 }
+/* Override NVD3 (now done in there)
+svg[id^=OpenLayers] {
+    height: auto;
+    width: auto;
+} */
 
 /* Legend */
 .map_legend_div {

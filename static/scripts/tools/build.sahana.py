@@ -354,7 +354,7 @@ def dojs(dogis = False, warnings = True):
             pass
         shutil.move(outputFilename, "../../themes/Vulnerability/js")
         print "Compressing Vulnerability GIS"
-        sourceDirectory = "../../themes/Vulnerability/js"
+        sourceDirectory = "../.."
         configFilename = "sahana.js.vulnerability_gis.cfg"
         outputFilename = "OpenLayers.js"
         merged = mergejs.run(sourceDirectory,

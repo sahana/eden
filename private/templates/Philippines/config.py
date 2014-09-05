@@ -32,7 +32,7 @@ datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["Philippines", "demo/users"]
+settings.base.prepopulate = ("Philippines", "default/users")
 
 settings.base.system_name = T("Sahana")
 settings.base.system_name_short = T("Sahana")

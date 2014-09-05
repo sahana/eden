@@ -16,6 +16,7 @@ settings = current.deployment_settings
 
 
 settings.base.system_name = T("Sahana Eden Deployment")
+settings.base.theme = "default"
 
 # -----------------------------------------------------------------------------
 settings.modules = OrderedDict([

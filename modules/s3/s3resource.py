@@ -88,6 +88,9 @@ ogetattr = object.__getattribute__
 
 MAXDEPTH = 10
 
+# Compact JSON encoding
+#SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3Resource(object):
     """
@@ -1529,7 +1532,10 @@ class S3Resource(object):
                 lids = [r[rkey] for r in c.link if master_id == r[lkey]]
                 rows = [record for record in rows if record[fkey] in lids]
             else:
-                rows = [record for record in rows if master_id == record[fkey]]
+                try:
+                    rows = [record for record in rows if master_id == record[fkey]]
+                except AttributeError:
+                    # Most likely need to tweak static/formats/geoson/export.xsl                    raise AttributeError("Component %s records are missing fkey %s" % (component, fkey))
         else:
             rows = []
         return rows
@@ -1680,6 +1686,7 @@ class S3Resource(object):
                    filters=None,
                    pretty_print=False,
                    location_data=None,
+                   map_data=None,
                    **args):
         """
             Export this resource as S3XML
@@ -1708,6 +1715,7 @@ class S3Resource(object):
             @param pretty_print: insert newlines/indentation in the output
             @param location_data: dictionary of location data which has been
                                   looked-up in bulk ready for xml.gis_encode()
+            @param map_data: dictionary of options which can be read by the map
             @param args: dict of arguments to pass to the XSLT stylesheet
         """
 
@@ -1735,7 +1743,8 @@ class S3Resource(object):
                                 filters=filters,
                                 maxbounds=maxbounds,
                                 xmlformat=xmlformat,
-                                location_data=location_data)
+                                location_data=location_data,
+                                map_data=map_data)
         #if DEBUG:
             #end = datetime.datetime.now()
             #duration = end - _start
@@ -1798,6 +1807,7 @@ class S3Resource(object):
                     maxbounds=False,
                     xmlformat=None,
                     location_data=None,
+                    map_data=None,
                     ):
         """
             Export the resource as element tree
@@ -1822,6 +1832,7 @@ class S3Resource(object):
             @param xmlformat: 
             @param location_data: dictionary of location data which has been
                                   looked-up in bulk ready for xml.gis_encode()
+            @param map_data: dictionary of options which can be read by the map
         """
 
         xml = current.xml
@@ -1908,6 +1919,13 @@ class S3Resource(object):
         #    _start = datetime.datetime.now()
 
         root = etree.Element(xml.TAG.root)
+
+        if map_data:
+            # Gets loaded before re-dumping, so no need to compact or avoid double-encoding
+            # NB Ensure we don't double-encode unicode!
+            #root.set("map", json.dumps(map_data, separators=SEPARATORS,
+            #                           ensure_ascii=False))
+            root.set("map", json.dumps(map_data))
 
         export_map = Storage()
         all_references = []
@@ -4987,15 +5005,18 @@ class S3ResourceData(object):
         tablename = table._tablename
         pkey = str(table._id)
 
-        field_data = {pkey: ({}, {}, False, False, False)}
+        field_data = {pkey: ({}, {}, False, False, False, False)}
         effort = {pkey: 0}
         for dfield in rfields:
             colname = dfield.colname
             effort[colname] = 0
+            ftype = dfield.ftype[:4]
             field_data[colname] = ({}, {},
                                    dfield.tname != tablename,
-                                   dfield.ftype[:5] == "list:",
-                                   dfield.virtual)
+                                   ftype == "list",
+                                   dfield.virtual,
+                                   ftype == "json",
+                                   )
 
         self.field_data = field_data
         self.effort = effort
@@ -5401,7 +5422,7 @@ class S3ResourceData(object):
             group = list(g)
             record = records.get(k, {})
             for idx, col in enumerate(columns):
-                fvalues, frecords, joined, list_type, virtual = field_data[col]
+                fvalues, frecords, joined, list_type, virtual, json_type = field_data[col]
                 values = record.get(col, {})
                 lazy = False
                 for row in group:
@@ -5425,6 +5446,13 @@ class S3ResourceData(object):
                                 values[v] = None
                             if represent and v not in fvalues:
                                 fvalues[v] = None
+                    elif json_type:
+                        # Returns unhashable types
+                        value = json.dumps(value)
+                        if value not in values:
+                            values[value] = None
+                        if represent and value not in fvalues:
+                            fvalues[value] = None
                     else:
                         if value not in values:
                             values[value] = None
@@ -5462,7 +5490,7 @@ class S3ResourceData(object):
         colname = rfield.colname
 
         field_data = self.field_data
-        fvalues, frecords, joined, list_type, virtual = field_data[colname]
+        fvalues, frecords, joined, list_type, virtual, json_type = field_data[colname]
 
         # Get the renderer
         renderer = rfield.represent
@@ -5483,7 +5511,7 @@ class S3ResourceData(object):
         # Render all unique values
         if hasattr(renderer, "bulk") and not list_type:
             per_row_lookup = False
-            fvalues = renderer.bulk(fvalues.keys(), list_type = False)
+            fvalues = renderer.bulk(fvalues.keys(), list_type=False)
         elif not per_row_lookup:
             for value in fvalues:
                 try:

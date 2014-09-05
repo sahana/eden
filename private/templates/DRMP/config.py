@@ -31,7 +31,7 @@ datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["DRMP", "demo/users"]
+settings.base.prepopulate = ("DRMP", "default/users")
 
 settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System")
 settings.base.system_name_short = T("DRMIS")

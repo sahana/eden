@@ -56,7 +56,6 @@ def create():
 def marker_fn(record):
     """
         Function to decide which Marker to use for Requests Map
-        @ToDo: Use Symbology
     """
 
     # Base Icon based on Type

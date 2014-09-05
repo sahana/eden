@@ -19,7 +19,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["uvg", "users"]
+settings.base.prepopulate = ("uvg", "default/users")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "uvg"

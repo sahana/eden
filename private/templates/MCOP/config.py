@@ -25,7 +25,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ("MCOP", "demo/users")
+settings.base.prepopulate = ("MCOP", "default/users")
 
 settings.base.system_name = T("Sahana: Puget Sound Common Maritime Operating Picture (MCOP)")
 settings.base.system_name_short = T("Sahana")

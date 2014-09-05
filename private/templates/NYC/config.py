@@ -221,7 +221,6 @@ def facility_marker_fn(record):
     """
         Function to decide which Marker to use for Facilities Map
         @ToDo: Legend
-        @ToDo: Use Symbology
     """
 
     db = current.db

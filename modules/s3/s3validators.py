@@ -66,6 +66,8 @@ import re
 import time
 from datetime import datetime, timedelta
 
+JSONErrors = (NameError, TypeError, ValueError, AttributeError,
+              KeyError)
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -73,6 +75,8 @@ except ImportError:
         import simplejson as json # try external module
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
+        from gluon.contrib.simplejson.decoder import JSONDecodeError
+        JSONErrors += (JSONDecodeError,)
 
 from gluon import *
 #from gluon import current

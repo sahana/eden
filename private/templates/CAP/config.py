@@ -22,7 +22,7 @@ settings = current.deployment_settings
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["CAP", "demo/users"]
+settings.base.prepopulate = ("CAP", "default/users")
 
 # Theme (folder to use for views/layout.html)
 #settings.base.theme = "default"

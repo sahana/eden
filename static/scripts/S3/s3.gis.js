@@ -1191,6 +1191,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     /**
      * Callback for all layers on 'loadend'
      * - cancel Throbber (unless other layers have a lock on it still)
+     * - report if too many features to download and display
+     * - parse S3 custom parameters
      */
     var hideThrobber = function(layer) {
         var s3 = layer.map.s3;
@@ -1200,16 +1202,158 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             $('#' + s3.id + ' .layer_throbber').hide().addClass('hide');
         }
     };
+
     var layer_loadend = function(event) {
-        var layer = event.object;
+        var layer = event.object,
+            response = event.response;
+        if (response && response.priv) {
+            var priv = response.priv;
+            try {
+                var s3 = JSON.parse(priv.responseText).s3;
+            } catch(e) {}
+        } else {
+            // e.g. WMS layers (response is undefined)
+            var priv = {status: 200};
+        }
+        if (undefined != s3) {
+            // Read custom data in GeoJSON response
+            //s3_debug(s3);
+            if (undefined != s3.level) {
+                // We are displaying aggregated data
+                // - update the strategy with the level of aggregation
+                var strategy,
+                    strategies = layer.strategies;
+                for (var i=0, len=strategies.length; i < len; i++) {
+                    strategy = strategies[i];
+                    if (strategy.CLASS_NAME == 'OpenLayers.Strategy.ZoomBBOX') {
+                        strategy.level = s3.level;
+                        break;
+                    }
+                }
+            }
+            if (undefined != s3.style) {
+                // Apply the style to the layer
+                var restyle = true;
+                var style = s3.style;
+                var result = createStyleMap(layer.map, style);
+                var marker_url = result[1];
+                layer.legendURL = marker_url;
+                layer.styleMap = result[0]; // featureStyleMap
+                layer.s3_popup_format = style.popup_format;
+                layer.s3_style = style.style;
+                layer.s3_url_format = style.url_format;
+                // Update the cluster strategy
+                var strategy,
+                    strategies = layer.strategies;
+                for (var i=0, len=strategies.length; i < len; i++) {
+                    strategy = strategies[i];
+                    if (strategy.CLASS_NAME == 'OpenLayers.Strategy.AttributeCluster') {
+                        if (style.cluster_threshold != undefined) {
+                            var cluster_threshold = style.cluster_threshold;
+                        } else {
+                            var cluster_threshold = cluster_threshold_default;
+                        }
+                        if (cluster_threshold) {
+                            var cluster_distance = style.cluster_distance || cluster_distance_default;
+                            if ((!strategy.active) || (cluster_distance != strategy.distance) || (cluster_threshold != strategy.threshold)) {
+                                // Configure
+                                strategy.distance = cluster_distance;
+                                strategy.threshold = cluster_threshold;
+                                // Enable
+                                strategy.activate();
+                                // cacheFeatures
+                                strategy.features = layer.features;
+                                // Re-Cluster
+                                strategy.recluster();
+                            }
+                        } else if (strategy.active) {
+                            // Disable
+                            strategy.deactivate();
+                            // Remove existing clusters & restore member features
+                            var features = layer.features;
+                            var i,
+                                j,
+                                cluster,
+                                clusters = [],
+                                cluster_len,
+                                new_features = [],
+                                features_len = features.length;
+                            for (i = 0; i < features_len; i++) {
+                                if (features[i].cluster) {
+                                    cluster = features[i];
+                                    cluster_len = cluster.length;
+                                    for (j = 0; j < cluster_len; j++) {
+                                        new_features.push(cluster[j]);
+                                    }
+                                    clusters.push(cluster);
+                                }
+                            }
+                            layer.removeFeatures(clusters);
+                            layer.addFeatures(new_features);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
         hideThrobber(layer);
-        if (event.response != undefined && event.response.priv.status == 509) {
+        if (priv.status == 509) {
             S3.showAlert(i18n.gis_too_many_features, 'warning');
         } else {
             // Do we need to re-calculate the style for coloured Polygons?
-            var style = layer.s3_style;
-            if (style && Object.prototype.toString.call(style) === '[object Array]' && style.length == 1) {
-                reStyle(layer);
+            var s3_style = layer.s3_style;
+            if (s3_style && Object.prototype.toString.call(s3_style) === '[object Array]' && s3_style.length == 1) {
+                var rules = reStyle(layer);
+                var restyle = true;
+            }
+        }
+        if (undefined != restyle) {
+            // Redraw the features with the new styleMap
+            var features = layer.features;
+            var i,
+                features_len = features.length;
+            for (i = 0; i < features_len; i++) {
+                layer.drawFeature(features[i]);
+            }
+
+            // Redraw the Legend
+            var legendPanel = layer.map.s3.mapPanel.legendPanel;
+            if (legendPanel) {
+                // Find the right layerLegend
+                var layerLegend,
+                    layerLegends = legendPanel.items.items,
+                    s3_layer_id = layer.s3_layer_id;
+                var layerLegends_len = layerLegends.length;
+                for (i=0; i < layerLegends_len; i++) {
+                    layerLegend = layerLegends[i];
+                    if ((layerLegend.layer) && (layerLegend.layer.s3_layer_id == s3_layer_id)) {
+                        // @ToDo: Fix this - not currently working
+                        if (undefined != rules) {
+                            if (layerLegend.xtype == 'gx_vectorlegend') {
+                                layerLegend.rules = rules;
+                                layerLegend.update();
+                            } else {
+                                // Need to change the type
+                                var record = layerLegend.layerRecord;
+                                legendPanel.removeLegend(record);
+                                legendPanel.addLegend(record, i);
+                            }
+                        }
+                        if (undefined != marker_url) {
+                            if (layerLegend.xtype == 'gx_urllegend') {
+                                layerLegend.layerRecord.data.legendURL = marker_url;
+                                layerLegend.update();
+                            } else {
+                                // Need to change the type
+                                var record = layerLegend.layerRecord;
+                                record.data.legendURL = marker_url;
+                                legendPanel.removeLegend(record);
+                                legendPanel.addLegend(record, i);
+                            }
+                        }
+                        break;
+                    }
+                }
             }
         }
     };
@@ -1297,28 +1441,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var rules = styleRules(_layer);
         layer.styleMap.styles['default'].rules = rules;
 
-        // Redraw the features with the new styleMap
-        for (i = 0; i < features_len; i++) {
-            layer.drawFeature(features[i]);
-        }
-
-        // Redraw the Legend
-        var legendPanel = layer.map.s3.mapPanel.legendPanel;
-        if (legendPanel) {
-            // Find the right layerLegend
-            var layerLegend,
-                layerLegends = legendPanel.items.items,
-                s3_layer_id = layer.s3_layer_id;
-            var layerLegends_len = layerLegends.length;
-            for (i=0; i < layerLegends_len; i++) {
-                layerLegend = layerLegends[i];
-                if ((layerLegend.layer) && (layerLegend.layer.s3_layer_id == s3_layer_id)) {
-                    layerLegend.rules = rules;
-                    layerLegend.update();
-                    break;
-                }
-            }
-        }
+        return rules;
     };
 
     /**
@@ -1734,36 +1857,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Default to visible
             var visibility = true;
         }
-        if (undefined != layer.report) {
-            // Report layers don't cluster
-            var cluster_threshold = 0;
-        } else {
-            if (undefined != layer.cluster_attribute) {
-                var cluster_attribute = layer.cluster_attribute;
-            } else {
-                // Default to global settings
-                //var cluster_attribute = cluster_attribute_default;
-                var cluster_attribute = 'colour';
-            }
-            if (undefined != layer.cluster_distance) {
-                var cluster_distance = layer.cluster_distance;
-            } else {
-                // Default to global settings
-                var cluster_distance = cluster_distance_default;
-            }
-            if (undefined != layer.cluster_threshold) {
-                var cluster_threshold = layer.cluster_threshold;
-            } else {
-                // Default to global settings
-                var cluster_threshold = cluster_threshold_default;
-            }
-        }
-        if (undefined != layer.popup_format) {
-            var popup_format = layer.popup_format;
+
+        if (undefined != layer.cluster_attribute) {
+            var cluster_attribute = layer.cluster_attribute;
         } else {
             // Default to global settings
-            var popup_format = '';
+            //var cluster_attribute = cluster_attribute_default;
+            var cluster_attribute = 'colour';
         }
+        if (undefined != layer.cluster_distance) {
+            var cluster_distance = layer.cluster_distance;
+        } else {
+            // Default to global settings
+            var cluster_distance = cluster_distance_default;
+        }
+        if (undefined != layer.cluster_threshold) {
+            var cluster_threshold = layer.cluster_threshold;
+        } else {
+            // Default to global settings
+            var cluster_threshold = cluster_threshold_default;
+        }
+
         if (undefined != layer.projection) {
             var projection = layer.projection;
         } else {
@@ -1863,12 +1977,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 // Used to Save State & locate Layer to Activate/Refresh
                 s3_layer_id: layer.id,
                 s3_layer_type: layer_type,
-                s3_popup_format: popup_format,
-                s3_style: layer.style
+                s3_style: layer.style,
+                s3_url_format: layer.url_format
             }
         );
         // This gets picked up after mapPanel instantiates & copied to it's layerRecords
         geojsonLayer.legendTitle = legendTitle;
+        // Set the popup_format, even if empty
+        // - leave if not set (e.g. Feature Queries)
+        if (undefined != layer.popup_format) {
+            geojsonLayer.s3_popup_format = layer.popup_format;
+        }
         geojsonLayer.setVisibility(visibility);
         geojsonLayer.events.on({
             // We use featureclick.js on Map instead
@@ -3425,10 +3544,28 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             } else {
                 // @ToDo: disambiguate these by type
                 if (undefined != feature.attributes.url) {
-                    // Popup contents are pulled via AJAX
+                    // Feature Query with Popup contents pulled via AJAX
                     popup_url = feature.attributes.url;
                     // Defaulted within addPopup()
                     //contents = i18n.gis_loading + "...<div class='throbber'></div>";
+                } else if (undefined != feature.layer.s3_url_format) {
+                    // Feature Layer or Feature Resource
+                    // Popup contents are pulled via AJAX
+                    _.templateSettings = {interpolate: /\{(.+?)\}/g};
+                    //var attributes = feature.attributes;
+                    //var s3_url_format = feature.layer.s3_url_format;
+                    var template = _.template(feature.layer.s3_url_format);
+                    // Ensure we have all keys (we don't transmit empty attr)
+                    /* Only needed once we start getting non-id formats
+                    var defaults = {},
+                        key,
+                        keys = s3_popup_format.split('{');
+                    for (var j = 0; j < keys.length; j++) {
+                        key = keys[j].split('}')[0];
+                        defaults[key] = '';
+                    }
+                    _.defaults(attributes, defaults);*/
+                    popup_url = template(feature.attributes);
                 } else {
                     // Popup contents are built from the attributes
                     var attributes = feature.attributes;

@@ -873,7 +873,7 @@ class S3OptionsMenu(object):
                         M("PoI Types", f="poi_type",
                           check=[pois]),
                         M("Projections", f="projection"),
-                        M("Symbology", f="symbology"),
+                        M("Styles", f="style"),
                     )
                 )
 

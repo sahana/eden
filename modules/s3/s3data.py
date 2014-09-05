@@ -1472,8 +1472,6 @@ class S3PivotTable(object):
             @param level: the aggregation level (defaults to Country)
         """
 
-        resource = self.resource
-
         # The layer
         if layer is None:
             layer = self.layers[0]
@@ -1481,7 +1479,7 @@ class S3PivotTable(object):
 
         # The rows dimension
         # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
-        context = resource.get_config("context")
+        context = self.resource.get_config("context")
         if context and "location" in context:
             rows_dim = "(location)$%s" % level
         else:
@@ -1490,15 +1488,13 @@ class S3PivotTable(object):
             # Fallback we can add if-required
             #rows_dim = "site_id$location_id$%s" % level
 
-        db = current.db
-        gtable = current.s3db.gis_location
-
         # The data
         attributes = {}
         geojsons = {}
 
-        if not self.empty:
-
+        if self.empty:
+            location_ids = []
+        else:
             numeric = lambda x: isinstance(x, (int, long, float))
             row_repr = lambda v: s3_unicode(v)
 
@@ -1523,6 +1519,8 @@ class S3PivotTable(object):
             self._sortdim(rows, self.rfields[rows_dim])
 
             # Aggregate the grouped values
+            db = current.db
+            gtable = current.s3db.gis_location
             query = (gtable.level == level) & (gtable.deleted == False)
             for rindex, rtotal, rtitle in rows:
                 rval = rtitle.value

@@ -43,11 +43,13 @@ except ImportError:
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import *
+from gluon.languages import regex_translate
 from gluon.sqlhtml import OptionsWidget
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
 from s3query import FS
 from s3rest import S3Method
+from s3xml import S3XMLFormat
 
 layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
 
@@ -255,9 +257,9 @@ class S3Report(S3Method):
             return json.dumps({})
 
         # Extract the relevant GET vars
-        report_vars = ("fact", "level")
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
+        get_vars = r.get_vars
+        layer_id = r.get_vars.get("layer", None)
+        level = get_vars.get("level", "L0")
 
         # Fall back to report options defaults
         get_config = resource.get_config
@@ -265,8 +267,6 @@ class S3Report(S3Method):
         defaults = report_options.get("defaults", {})
 
         # The rows dimension
-        level = get_vars.get("level", "L0")
-
         context = get_config("context")
         if context and "location" in context:
             # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
@@ -280,58 +280,149 @@ class S3Report(S3Method):
         # Filter out null values
         resource.add_filter(FS(rows) != None)
 
-        # Do we have any data at this level of aggregation?
-        while resource.count() == 0:
-            level = int(level[1:])
-            if level == 0:
-                # Nothing we can display
-                return json.dumps({})
-            # Try a lower level of aggregation
-            resource.clear_query()
-            if s3_filter is not None:
-                resource.add_filter(s3_filter)
-            level = "L%s" % (level - 1)
-            if context and "location" in context:
-                # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
-                rows = "(location)$%s" % level
-            else:
-                # Fallback to location_id
-                rows = "location_id$%s" % level
-                # Fallback we can add if-required
-                #rows = "site_id$location_id$%s" % level
-            resource.add_filter(FS(rows) != None)
-
-        # Build the Pivot Table
-        cols = None
-        layer = get_vars.get("fact",
-                             defaults.get("fact",
-                                          "count(id)"))
-        m = layer_pattern.match(layer)
-        selector, method = m.group(2), m.group(1)
-        prefix = resource.prefix_selector
-        selector = prefix(selector)
-        layer = (selector, method)
-        pivottable = resource.pivottable(rows, cols, [layer])
-
-        # Extract the Location Data
-        ids, location_data = pivottable.geojson(layer=layer, level=level)
-
         # Set XSLT stylesheet
         stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")
 
-        # Export as GeoJSON
-        gresource = current.s3db.resource("gis_location", id=ids)
-        output = gresource.export_xml(fields=[],
-                                      mcomponents=None,
-                                      references=[],
-                                      stylesheet=stylesheet,
-                                      as_json=True,
-                                      location_data=location_data,
-                                      )
+        # Do we have any data at this level of aggregation?
+        fallback_to_points = True # @ToDo: deployment_setting?
+        output = None
+        if fallback_to_points:
+            if resource.count() == 0:
+                # Show Points
+                resource.clear_query()
+                if s3_filter is not None:
+                    resource.add_filter(s3_filter)
 
-        # Transformation error?
+                # Extract the Location Data
+                xmlformat = S3XMLFormat(stylesheet)
+                include, exclude = xmlformat.get_fields(resource.tablename)
+                resource.load(fields=include,
+                              skip=exclude,
+                              start=0,
+                              limit=None,
+                              orderby=None,
+                              virtual=False,
+                              cacheable=True)
+                gis = current.gis
+                attr_fields = []
+                style = gis.get_style(layer_id=layer_id,
+                                      aggregate=False)
+                popup_format = style.popup_format
+                if popup_format:
+                    if "T(" in popup_format:
+                        # i18n
+                        T = current.T
+                        items = regex_translate.findall(popup_format)
+                        for item in items:
+                            titem = str(T(item[1:-1]))
+                            popup_format = popup_format.replace("T(%s)" % item,
+                                                                titem)
+                        style.popup_format = popup_format
+                    # Extract the attr_fields
+                    parts = popup_format.split("{")
+                    # Skip the first part
+                    parts = parts[1:]
+                    for part in parts:
+                        attribute = part.split("}")[0]
+                        attr_fields.append(attribute)
+                    attr_fields = ",".join(attr_fields)
+
+                location_data = gis.get_location_data(resource,
+                                                      attr_fields=attr_fields)
+
+                # Export as GeoJSON
+                current.xml.show_ids = True
+                output = resource.export_xml(fields=include,
+                                             mcomponents=None,
+                                             references=[],
+                                             stylesheet=stylesheet,
+                                             as_json=True,
+                                             location_data=location_data,
+                                             map_data=dict(style=style),
+                                             )
+                # Transformation error?
+                if not output:
+                    r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
+
+        else:
+            while resource.count() == 0:
+                # Try a lower level of aggregation
+                level = int(level[1:])
+                if level == 0:
+                    # Nothing we can display
+                    return json.dumps({})
+                resource.clear_query()
+                if s3_filter is not None:
+                    resource.add_filter(s3_filter)
+                level = "L%s" % (level - 1)
+                if context and "location" in context:
+                    # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
+                    rows = "(location)$%s" % level
+                else:
+                    # Fallback to location_id
+                    rows = "location_id$%s" % level
+                    # Fallback we can add if-required
+                    #rows = "site_id$location_id$%s" % level
+                resource.add_filter(FS(rows) != None)
+
         if not output:
-            r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
+            # Build the Pivot Table
+            cols = None
+            layer = get_vars.get("fact",
+                                 defaults.get("fact",
+                                              "count(id)"))
+            m = layer_pattern.match(layer)
+            selector, method = m.group(2), m.group(1)
+            prefix = resource.prefix_selector
+            selector = prefix(selector)
+            layer = (selector, method)
+            pivottable = resource.pivottable(rows, cols, [layer])
+
+            # Extract the Location Data
+            #attr_fields = []
+            style = current.gis.get_style(layer_id=layer_id,
+                                          aggregate=True)
+            popup_format = style.popup_format
+            if popup_format:
+                if"T(" in popup_format:
+                    # i18n
+                    T = current.T
+                    items = regex_translate.findall(popup_format)
+                    for item in items:
+                        titem = str(T(item[1:-1]))
+                        popup_format = popup_format.replace("T(%s)" % item,
+                                                            titem)
+                    style.popup_format = popup_format
+                    # Extract the attr_fields
+                    # No need as defaulted inside S3PivotTable.geojson()
+                    #parts = popup_format.split("{")
+                    ## Skip the first part
+                    #parts = parts[1:]
+                    #for part in parts:
+                    #    attribute = part.split("}")[0]
+                    #    attr_fields.append(attribute)
+                    #attr_fields = ",".join(attr_fields)
+
+            ids, location_data = pivottable.geojson(layer=layer, level=level)
+
+            # Export as GeoJSON
+            current.xml.show_ids = True
+            gresource = current.s3db.resource("gis_location", id=ids)
+            output = gresource.export_xml(fields=[],
+                                          mcomponents=None,
+                                          references=[],
+                                          stylesheet=stylesheet,
+                                          as_json=True,
+                                          location_data=location_data,
+                                          # Tell the client that we are
+                                          # displaying aggregated data and
+                                          # the level it is aggregated at
+                                          map_data=dict(level=int(level[1:]),
+                                                        style=style),
+                                          )
+            # Transformation error?
+            if not output:
+                r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
 
         return output
 

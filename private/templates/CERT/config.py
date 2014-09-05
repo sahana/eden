@@ -18,7 +18,7 @@ T = current.T
 """
 
 # Pre-Populate
-settings.base.prepopulate = ["CERT", "demo/users"]
+settings.base.prepopulate = ("CERT", "default/users")
 
 # Theme
 settings.base.theme = "CERT"

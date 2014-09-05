@@ -168,20 +168,21 @@ class S3WarehouseModel(S3Model):
         #represent = S3Represent(lookup=tablename, translate=True)
 
         #warehouse_type_id = S3ReusableField("warehouse_type_id", "reference %s" % tablename,
-        #                        sortby="name",
+        #                        label = T("Warehouse Type"),
+        #                        ondelete = "SET NULL",
+        #                        represent = represent,
         #                        requires = IS_EMPTY_OR(
         #                                    IS_ONE_OF(db, "inv_warehouse_type.id",
         #                                              represent,
         #                                              sort=True
         #                                              )),
-        #                        represent = represent,
-        #                        label = T("Warehouse Type"),
+        #                        sortby = "name",
         #                        comment = S3AddResourceLink(c="inv",
         #                                    f="warehouse_type",
         #                                    label=T("Add Warehouse Type"),
         #                                    title=T("Warehouse Type"),
         #                                    tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Warehouse Type'.")),
-        #                        ondelete = "SET NULL")
+        #                        )
 
         #configure(tablename,
         #          deduplicate = self.inv_warehouse_type_duplicate,
@@ -520,16 +521,16 @@ class S3InventoryModel(S3Model):
         # Reusable Field
         inv_item_represent = inv_InvItemRepresent()
         inv_item_id = S3ReusableField("inv_item_id", "reference %s" % tablename,
+                                      label = INV_ITEM,
+                                      ondelete = "CASCADE",
+                                      represent = inv_item_represent,
                                       requires = IS_ONE_OF(db, "inv_inv_item.id",
                                                            inv_item_represent,
                                                            orderby="inv_inv_item.id",
                                                            sort=True),
-                                      represent = inv_item_represent,
-                                      label = INV_ITEM,
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (INV_ITEM,
                                                                       T("Select Stock from this Warehouse"))),
-                                      ondelete = "CASCADE",
                                       script = '''
 $.filterOptionsS3({
  'trigger':'inv_item_id',
@@ -919,13 +920,13 @@ class S3InventoryTrackingModel(S3Model):
 
         send_ref = S3ReusableField("send_ref",
                                    label = T(settings.get_inv_send_ref_field_name()),
-                                   writable = False,
                                    represent = self.inv_send_ref_represent,
+                                   writable = False,
                                    )
         recv_ref = S3ReusableField("recv_ref",
                                    label = T("%(GRN)s Number") % dict(GRN=settings.get_inv_recv_shortname()),
-                                   writable = False,
                                    represent = self.inv_recv_ref_represent,
+                                   writable = False,
                                    )
         purchase_ref = S3ReusableField("purchase_ref",
                                        label = T("%(PO)s Number") % dict(PO=settings.get_proc_shortname()),
@@ -1127,20 +1128,21 @@ class S3InventoryTrackingModel(S3Model):
 
         # Reusable Field
         send_id = S3ReusableField("send_id", "reference %s" % tablename,
-                                  sortby="date",
+                                  label = T("Send Shipment"),
+                                  ondelete = "RESTRICT",
+                                  represent = self.inv_send_represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_send.id",
                                                           self.inv_send_represent,
                                                           orderby="inv_send_id.date",
                                                           sort=True)),
-                                  represent = self.inv_send_represent,
-                                  label = T("Send Shipment"),
-                                  ondelete = "RESTRICT")
+                                  sortby = "date",
+                                  )
 
         # Components
         add_components(tablename,
-                       inv_track_item="send_id",
-                      )
+                       inv_track_item = "send_id",
+                       )
 
         # Custom methods
         # Generate Consignment Note
@@ -1327,15 +1329,16 @@ class S3InventoryTrackingModel(S3Model):
 
         # Reusable Field
         recv_id = S3ReusableField("recv_id", "reference %s" % tablename,
-                                  sortby="date",
+                                  label = recv_id_label,
+                                  ondelete = "RESTRICT",
+                                  represent = self.inv_recv_represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_recv.id",
                                                           self.inv_recv_represent,
                                                           orderby="inv_recv.date",
                                                           sort=True)),
-                                  represent = self.inv_recv_represent,
-                                  label = recv_id_label,
-                                  ondelete = "RESTRICT")
+                                  sortby = "date",
+                                  )
 
         # Search Method
         if settings.get_inv_shipment_name() == "order":
@@ -1426,21 +1429,21 @@ class S3InventoryTrackingModel(S3Model):
 
         # Components
         add_components(tablename,
-                       inv_track_item="recv_id",
-                      )
+                       inv_track_item = "recv_id",
+                       )
 
         # Custom methods
         # Print Forms
         set_method("inv", "recv",
-                   method="form",
-                   action=self.inv_recv_form)
+                   method = "form",
+                   action = self.inv_recv_form)
 
         set_method("inv", "recv",
-                   method="cert",
-                   action=self.inv_recv_donation_cert )
+                   method = "cert",
+                   action = self.inv_recv_donation_cert )
 
         set_method("inv", "recv",
-                   method= "timeline",
+                   method = "timeline",
                    action = self.inv_timeline)
 
         # ---------------------------------------------------------------------
@@ -3888,20 +3891,21 @@ class S3InventoryAdjustModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            inv_adj_item="adj_id",
-                           )
+                            inv_adj_item = "adj_id",
+                            )
 
         # Reusable Field
         adj_id = S3ReusableField("adj_id", "reference %s" % tablename,
-                                 sortby="date",
+                                 label = T("Inventory Adjustment"),
+                                 ondelete = "RESTRICT",
+                                 represent = self.inv_adj_represent,
                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "inv_adj.id",
                                                           self.inv_adj_represent,
                                                           orderby="inv_adj.adjustment_date",
                                                           sort=True)),
-                                 represent = self.inv_adj_represent,
-                                 label = T("Inventory Adjustment"),
-                                 ondelete = "RESTRICT")
+                                 sortby = "date",
+                                 )
 
         adjust_reason = {0 : T("Unknown"),
                          1 : T("None"),
@@ -4018,15 +4022,16 @@ class S3InventoryAdjustModel(S3Model):
                      
         # Reusable Field
         adj_item_id = S3ReusableField("adj_item_id", "reference %s" % tablename,
-                                      sortby="item_id",
+                                      label = T("Inventory Adjustment Item"),
+                                      ondelete = "RESTRICT",
+                                      represent = self.inv_adj_item_represent,
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "inv_adj_item.id",
                                                               self.inv_adj_item_represent,
                                                               orderby="inv_adj_item.item_id",
                                                               sort=True)),
-                                      represent = self.inv_adj_item_represent,
-                                      label = T("Inventory Adjustment Item"),
-                                      ondelete = "RESTRICT")
+                                      sortby = "item_id",
+                                      )
 
         # CRUD strings
         crud_strings["inv_adj_item"] = Storage(

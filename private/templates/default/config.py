@@ -28,9 +28,7 @@ settings = current.deployment_settings
 # /private/templates/
 # eg:
 # ["default"] (1 is a shortcut for this)
-# ["Standard"]
-# ["IFRC, IFRC/Train"]
-# ["roles", "demo/users"]
+# ["default", "default/users"]
 # Unless doing a manual DB migration, where prepopulate = 0
 # In Production, prepopulate = 0 (to save 1x DAL hit every page)
 #settings.base.prepopulate = 1

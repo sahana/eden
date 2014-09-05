@@ -66,7 +66,6 @@
             <data field="source_url"><xsl:value-of select="col[@field='Source URL']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="layers"><xsl:value-of select="col[@field='Layers']"/></data>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="base"><xsl:value-of select="col[@field='Base']"/></data>
             <data field="transparent"><xsl:value-of select="col[@field='Transparent']"/></data>
             <data field="opacity"><xsl:value-of select="col[@field='Opacity']"/></data>
@@ -110,6 +109,9 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <xsl:if test="col[@field='Folder']!=''">
+                <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            </xsl:if>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>

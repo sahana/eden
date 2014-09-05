@@ -40,7 +40,6 @@ def building_marker_fn(record):
         Function to decide which Marker to use for Building Assessments Map
         @ToDo: Legend
         @ToDo: Move to Templates
-        @ToDo: Use Symbology
     """
 
     # Use Marker in preferential order

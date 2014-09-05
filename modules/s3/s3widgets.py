@@ -2534,7 +2534,7 @@ i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
             if image_bounds:
                 canvas.attributes["_width"] = image_bounds[0]
                 canvas.attributes["_height"] = image_bounds[1]
-                canvas.attributes["_style"] = "background:black;"
+                canvas.attributes["_style"] = "background:black"
             append(INPUT(**attr))
             append(INPUT(_type="hidden",
                          _name="imagecrop-data",

@@ -66,6 +66,9 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <xsl:if test="col[@field='Folder']!=''">
+                <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+            </xsl:if>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>

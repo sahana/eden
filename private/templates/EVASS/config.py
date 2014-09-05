@@ -22,7 +22,7 @@ settings = current.deployment_settings
 """
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ["EVASS", "demo/users"]
+settings.base.prepopulate = ("EVASS", "default/users")
 
 settings.base.system_name = T("EVASS - Sahana Eden for Italy")
 settings.base.system_name_short = T("Sahana Eden for Italy")

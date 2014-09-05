@@ -1,2 +1,0 @@
-Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
-Demographics,"2012 Census",stats,demographic_data,,,,,"location_id,value",value,,TRUE,"[{'prop':'value','fillOpacity':0.5}]",,False,False,0,0
