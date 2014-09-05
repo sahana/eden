@@ -27,6 +27,17 @@ form {
         background: $form_error_bgcolor;
         color: white;
     }
+    .date-clear-btn {
+        font-size: 0.75rem;
+        margin-left: 0.15rem !important;
+    }
+    .action-lnk {
+        font-weight: normal;
+        font-size: 0.75rem;
+    }
+    table.embeddedComponent {
+        border-collapse: separate;
+    }
 }
 
 /* General Widgets */
@@ -48,6 +59,23 @@ select {
   height: 1.75rem;
   padding: 0.25rem;
   margin: 0;
+  display: inline-block;
+}
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+select {
+    width: auto !important;
 }
 
 /* Form and Item containers */
@@ -66,17 +94,21 @@ select {
         input.string:not(.date),
         textarea {
             margin: 0;
-            width: 100%;
         }
         .ui-multiselect {
             max-width: 100%;
+        }
+        &:not(.filter-form):not(.auth_login):not(.auth_register) {
+            input[type="text"]:not(.double):not(.datetimepicker):not(.date) {
+                width: 500px !important;
+            }
         }
     }
 }
 .item-container .controls {
     background: $item_container_controls_bgcolor;
-    padding: 0.35em;
-    min-height: 1.7em;
+    padding: 0.35rem;
+    min-height: 1.7rem;
 }
 
 /* Filter forms */
@@ -85,6 +117,9 @@ select {
     table tr,
     .ui-multiselect {
         max-width: 60%;
+    }
+    .inline-tooltip {
+        padding-top: 0.2rem;
     }
 }
 
@@ -96,16 +131,16 @@ select {
 }
 
 /* Help Popup */
-.tooltip,
-.tooltipbody,
-.stickytip,
-.ajaxtip {
-    display: block;
-    padding: 0;
-}
 .inline-tooltip {
-    padding-top: 1.6em;
-}
-.filter-form .inline-tooltip {
-    padding-top: 0.2em;
+    display: inline-block;
+    vertical-align: top;
+    padding-left: 0.75rem;
+    .tooltip,
+    .tooltipbody,
+    .stickytip,
+    .ajaxtip {
+        display: block;
+        padding: 0;
+        width: 60px;
+    }
 }

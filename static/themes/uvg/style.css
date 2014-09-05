@@ -89,6 +89,17 @@ form .error {
   background: #c60f13;
   color: white;
 }
+form .date-clear-btn {
+  font-size: 0.75rem;
+  margin-left: 0.15rem !important;
+}
+form .action-lnk {
+  font-weight: normal;
+  font-size: 0.75rem;
+}
+form table.embeddedComponent {
+  border-collapse: separate;
+}
 
 /* General Widgets */
 input[type="text"],
@@ -109,6 +120,24 @@ select {
   height: 1.75rem;
   padding: 0.25rem;
   margin: 0;
+  display: inline-block;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="time"],
+input[type="url"],
+select {
+  width: auto !important;
 }
 
 /* Form and Item containers */
@@ -127,22 +156,27 @@ select {
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
-  width: 100%;
 }
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
+.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date) {
+  width: 500px !important;
+}
 
 .item-container .controls {
   background: #fafafa;
-  padding: 0.35em;
-  min-height: 1.7em;
+  padding: 0.35rem;
+  min-height: 1.7rem;
 }
 
 /* Filter forms */
 .filter-form table tr,
 .filter-form .ui-multiselect {
   max-width: 60%;
+}
+.filter-form .inline-tooltip {
+  padding-top: 0.2rem;
 }
 
 /* Login/Registration box */
@@ -153,20 +187,18 @@ select {
 }
 
 /* Help Popup */
-.tooltip,
-.tooltipbody,
-.stickytip,
-.ajaxtip {
+.inline-tooltip {
+  display: inline-block;
+  vertical-align: top;
+  padding-left: 0.75rem;
+}
+.inline-tooltip .tooltip,
+.inline-tooltip .tooltipbody,
+.inline-tooltip .stickytip,
+.inline-tooltip .ajaxtip {
   display: block;
   padding: 0;
-}
-
-.inline-tooltip {
-  padding-top: 1.6em;
-}
-
-.filter-form .inline-tooltip {
-  padding-top: 0.2em;
+  width: 60px;
 }
 
 /* Rheader */
@@ -412,14 +444,19 @@ div.tabs span.tab_other a:hover {
 }
 
 /* Datatables */
+.dataTables_length {
+  float: left !important;
+}
 .dataTables_length label {
+  font-size: 0.75rem;
   white-space: nowrap;
   margin-right: 10em;
-  margin-bottom: 1em;
+  margin-bottom: 0.3em;
 }
-.dataTables_length label select {
+.dataTables_length select {
   height: auto;
   padding: 2px;
+  font-size: 0.75rem;
 }
 
 table.dataTable th, table.dataTable td {
@@ -428,7 +465,6 @@ table.dataTable th, table.dataTable td {
 }
 table.dataTable thead th, table.dataTable thead td {
   background-color: white;
-  font-size: 1.0em;
 }
 table.dataTable tbody tr.even {
   background-color: white;
@@ -456,6 +492,23 @@ table.dataTable .selected-action {
 
 .dataTables_processing {
   padding: 14px 0 28px;
+}
+
+.dataTables_filter {
+  text-align: left;
+  font-size: 0.75rem;
+  margin-right: 3rem;
+}
+
+.dt-export-options {
+  float: right;
+}
+.dt-export-options .list_formats {
+  padding-top: 0;
+  margin-left: 5px;
+}
+.dt-export-options .dt-export {
+  margin: 0 0.085rem;
 }
 
 /* Empty-sections */

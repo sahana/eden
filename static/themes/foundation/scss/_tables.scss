@@ -1,13 +1,19 @@
 /* Datatables */
-.dataTables_length label {
-    white-space: nowrap;
-    margin-right: 10em;
-    margin-bottom: 1em;
+.dataTables_length {
+    float: left !important;
+    label {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        margin-right: 10em;
+        margin-bottom: 0.3em;
+    }
     select {
         height: auto;
         padding: 2px;
+        font-size: 0.75rem;
     }
 }
+
 table.dataTable {
     th, td {
         border: 1px solid $datatables_border_color;
@@ -16,7 +22,6 @@ table.dataTable {
     thead {
         th, td {
             background-color: $datatables_bgcolor_head;
-            font-size: 1.0em;
         }
     }
     tbody {
@@ -52,6 +57,21 @@ table.dataTable {
 }
 .dataTables_processing {
      padding: 14px 0 28px;
+}
+.dataTables_filter {
+    text-align: left;
+    font-size: 0.75rem;
+    margin-right: 3rem;
+}
+.dt-export-options {
+    float: right;
+    .list_formats {
+        padding-top: 0;
+        margin-left: 5px;
+    }
+    .dt-export {
+        margin: 0 0.085rem;
+    }
 }
 
 /* Empty-sections */
