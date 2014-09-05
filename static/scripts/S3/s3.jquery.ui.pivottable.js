@@ -833,6 +833,7 @@
 
                 d3.select($(chart).get(0))
                   .append('svg')
+                  .attr('class', 'nv')
                   .datum(items)
                   .transition().duration(1200)
                   .call(reportChart);
@@ -923,6 +924,7 @@
                 // Render the chart
                 d3.select($(chart).get(0))
                   .append('svg')
+                  .attr('class', 'nv')
                   .datum([{key: "reportChart", values: items}])
                   .transition().duration(500)
                   .call(reportChart);
@@ -1089,6 +1091,7 @@
                 // Render the chart
                 d3.select($(chart).get(0))
                   .append('svg')
+                  .attr('class', 'nv')
                   .datum(matrix)
                   .call(reportChart);
 
