@@ -5735,8 +5735,8 @@ def hrm_human_resource_controller(extra_filter=None):
 
             comments = table.organisation_id.represent(record.organisation_id)
             if record.job_title_id:
-                comments = "%s, %s" % \
-                           (s3_unicode(table.job_title_id.represent(record.job_title_id)),
+                comments = (SPAN("%s, " % \
+                                 s3_unicode(table.job_title_id.represent(record.job_title_id))),
                             comments)
 
             # Configure widgets

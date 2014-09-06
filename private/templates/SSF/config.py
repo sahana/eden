@@ -593,6 +593,15 @@ def customise_pr_person_controller(**attr):
     s3 = current.response.s3
     s3db = current.s3db
 
+    # Change the tabs in the rheader
+    tabs = [(T("Basic Details"), None),
+            ]
+    has_permission = current.auth.s3_has_permission
+    if has_permission("read", "pr_contact"):
+        tabs.append((T("Contact Details"), "contacts"))
+
+    attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
+
     # Custom Prep
     standard_prep = s3.prep
     def custom_prep(r):
@@ -680,25 +689,6 @@ def customise_pr_person_controller(**attr):
                            )
         return True
     s3.prep = custom_prep
-
-    # Custom postp
-    standard_postp = s3.postp
-    def custom_postp(r, output):
-        # Call standard postp
-        if callable(standard_postp):
-            output = standard_postp(r, output)
-
-        if r.interactive and isinstance(output, dict):
-            # Change the tabs in the rheader
-            tabs = [(T("Basic Details"), None),
-                    ]
-            has_permission = current.auth.s3_has_permission
-            if has_permission("read", "pr_contact"):
-                tabs.append((T("Contact Details"), "contacts"))
-            output["rheader"] = s3db.pr_rheader(r, tabs=tabs)
-
-        return output
-    s3.postp = custom_postp
 
     return attr
 
