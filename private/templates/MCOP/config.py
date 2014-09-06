@@ -766,7 +766,7 @@ def customise_org_organisation_resource(r, tablename):
             #customise_org_office_fields()
             s3db.org_customise_org_resource_fields("profile")
 
-            from s3 import FS
+            #from s3 import FS
             contacts_widget = dict(label = "Directory",
                                    label_create = "Create Contact",
                                    type = "datalist",
@@ -778,13 +778,13 @@ def customise_org_organisation_resource(r, tablename):
                                    show_on_map = False, # Since they will show within Offices
                                    list_layout = render_contacts,
                                    )
-            map_widget = dict(label = "Map",
-                              type = "map",
-                              context = "organisation",
-                              icon = "icon-map",
-                              height = 383,
-                              width = 568,
-                              )
+            #map_widget = dict(label = "Map",
+            #                  type = "map",
+            #                  context = "organisation",
+            #                  icon = "icon-map",
+            #                  height = 383,
+            #                  width = 568,
+            #                  )
             facilities_widget = dict(label = "Facilities",
                                      label_create = "Create Facility",
                                      type = "datalist",
@@ -1041,8 +1041,6 @@ def customise_project_task_resource(r, tablename):
     s3db = current.s3db
     table = s3db.project_task
 
-    s3 = current.response.s3
-
     if r.tablename == "event_incident" and r.method == "profile":
         # Set list_fields for renderer (project_task_list_layout)
         list_fields = ["name",
@@ -1214,7 +1212,6 @@ def customise_pr_person_resource(r, tablename):
     s3 = current.response.s3
 
     tablename = "pr_person"
-    table = s3db.pr_person
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -1430,7 +1427,7 @@ def render_contacts(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     #author = record["hrm_human_resource.modified_by"]
-    date = record["hrm_human_resource.modified_on"]
+    #date = record["hrm_human_resource.modified_on"]
     fullname = record["hrm_human_resource.person_id"]
     job_title = raw["hrm_human_resource.job_title_id"] or ""
     if job_title:
@@ -1439,11 +1436,11 @@ def render_contacts(list_id, item_id, resource, rfields, record):
     organisation_id = raw["hrm_human_resource.organisation_id"]
     #org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
     person_id = raw["hrm_human_resource.person_id"]
-    location = record["org_site.location_id"]
-    location_id = raw["org_site.location_id"]
-    location_url = URL(c="gis", f="location",
-                       args=[location_id, "profile"])
-    address = raw["gis_location.addr_street"] or T("no facility assigned")
+    #location = record["org_site.location_id"]
+    #location_id = raw["org_site.location_id"]
+    #location_url = URL(c="gis", f="location",
+    #                   args=[location_id, "profile"])
+    #address = raw["gis_location.addr_street"] or T("no facility assigned")
     email = raw["pr_email_contact.value"] or T("no email address")
     if isinstance(email, list):
         email = email[0]
@@ -1568,17 +1565,17 @@ def render_facilities(list_id, item_id, resource, rfields, record):
 
     raw = record._row
     name = record["org_facility.name"]
-    author = record["org_facility.modified_by"]
-    date = record["org_facility.modified_on"]
-    organisation = record["org_facility.organisation_id"]
+    #author = record["org_facility.modified_by"]
+    #date = record["org_facility.modified_on"]
+    #organisation = record["org_facility.organisation_id"]
     organisation_id = raw["org_facility.organisation_id"]
-    location = record["org_facility.location_id"]
-    location_id = raw["org_facility.location_id"]
-    location_url = URL(c="gis", f="location",
-                       args=[location_id, "profile"])
+    #location = record["org_facility.location_id"]
+    #location_id = raw["org_facility.location_id"]
+    #location_url = URL(c="gis", f="location",
+    #                   args=[location_id, "profile"])
     address = raw["gis_location.addr_street"]
     phone = raw["org_facility.phone1"]
-    facility_type = record["org_facility.facility_type_id"]
+    #facility_type = record["org_facility.facility_type_id"]
     logo = raw["org_organisation.logo"]
 
     org_url = URL(c="org", f="organisation", args=[organisation_id, "profile"])
@@ -1624,7 +1621,7 @@ def render_facilities(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    avatar = logo
+    #avatar = logo
     body = TAG[""](#P(I(_class="icon-flag"),
                    #  " ",
                    #  SPAN(facility_type),

@@ -2,7 +2,6 @@
 
 from gluon import current
 from gluon.html import *
-from gluon.storage import Storage
 
 from s3 import FS, S3CustomController
 
@@ -161,7 +160,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl);
         from s3db.cms import S3CMS
         resource_content = S3CMS.resource_content
         for item in response.menu:
-            item["cms"] = resource_content(module = item["c"], 
+            item["cms"] = resource_content(module = item["c"],
                                            resource = item["f"])
 
         return output

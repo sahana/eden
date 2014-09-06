@@ -40,7 +40,7 @@ import re
 import sys
 
 from gluon import current
-from gluon.dal import Row, Field, Query
+from gluon.dal import Row, Field
 from gluon.storage import Storage
 
 from s3fields import S3RepresentLazy

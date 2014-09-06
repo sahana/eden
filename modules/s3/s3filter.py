@@ -2868,12 +2868,12 @@ class S3FilterString(object):
             for v in value:
                 try:
                     append(convert(ftype, v))
-                except TypeError, ValueError:
+                except (TypeError, ValueError):
                     continue
         else:
             try:
                 output = convert(ftype, value)
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 output = None
         return output
 

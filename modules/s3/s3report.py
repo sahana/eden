@@ -517,10 +517,11 @@ class S3Report(S3Method):
             ajax_vars.update(get_vars)
             filter_form = attr.get("filter_form", None)
             filter_tab = attr.get("filter_tab", None)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
+            filter_url = r.url(method="",
+                               representation="",
+                               vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                        if k not in report_vars)),
+                               )
             ajaxurl = attr.get("ajaxurl", r.url(method="report",
                                                 representation="json",
                                                 vars=ajax_vars))
@@ -571,10 +572,6 @@ class S3ReportForm(object):
                                              widget_id = widget_id)
 
         # Pivot data
-        if pivotdata is not None:
-            labels = pivotdata["labels"]
-        else:
-            labels = None
         hidden = {"pivotdata": json.dumps(pivotdata, separators=SEPARATORS)}
 
         empty = T("No report specified.")

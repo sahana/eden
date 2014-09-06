@@ -39,7 +39,7 @@ __all__ = ("S3AxisFilter",
 import datetime
 import sys
 
-from itertools import chain, groupby
+from itertools import chain
 
 try:
     from cStringIO import StringIO # Faster, where available
@@ -1535,7 +1535,8 @@ class S3Resource(object):
                 try:
                     rows = [record for record in rows if master_id == record[fkey]]
                 except AttributeError:
-                    # Most likely need to tweak static/formats/geoson/export.xsl                    raise AttributeError("Component %s records are missing fkey %s" % (component, fkey))
+                    # Most likely need to tweak static/formats/geoson/export.xsl
+                    raise AttributeError("Component %s records are missing fkey %s" % (component, fkey))
         else:
             rows = []
         return rows
@@ -2850,7 +2851,7 @@ class S3Resource(object):
                         h = None
                     elif h.pkey.name != lookupfield.name:
                         # Also extract the node key for the hierarchy
-                        fields.append(k.pkey)
+                        fields.append(h.pkey)
 
                 # Get the latest record
                 # NB: this assumes that the lookupfield is auto-incremented
@@ -2952,12 +2953,12 @@ class S3Resource(object):
         for component in self.components.values():
             prefix = component.prefix
             name = component.name
-            sub = xml.get_struct(prefix, name,
-                                 alias=component.alias,
-                                 parent=main,
-                                 meta=meta,
-                                 options=options,
-                                 references=references)
+            xml.get_struct(prefix, name,
+                           alias = component.alias,
+                           parent = main,
+                           meta = meta,
+                           options = options,
+                           references = references)
 
         # Transformation
         tree = etree.ElementTree(root)
@@ -5418,6 +5419,7 @@ class S3ResourceData(object):
         getkey = get(pkey)
         getval = [get(c) for c in columns]
 
+        from itertools import groupby
         for k, g in groupby(rows, key=getkey):
             group = list(g)
             record = records.get(k, {})
