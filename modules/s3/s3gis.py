@@ -6748,8 +6748,8 @@ class MAP(DIV):
         db = current.db
         ltable = db.gis_layer_config
         etable = db.gis_layer_entity
-        query = (etable.layer_id == ltable.layer_id) & \
-                (ltable.deleted == False)
+        query = (ltable.deleted == False)
+        join = [etable.on(etable.layer_id == ltable.layer_id)]
         fields = [etable.instance_type,
                   ltable.layer_id,
                   ltable.enabled,
@@ -6762,8 +6762,8 @@ class MAP(DIV):
             # Add all enabled Layers from the Catalogue
             stable = db.gis_style
             mtable = db.gis_marker
-            query &= (ltable.config_id.belongs(config.ids)) & \
-                     (ctable.id == ltable.config_id)
+            query &= (ltable.config_id.belongs(config.ids))
+            join.append(ctable.on(ctable.id == ltable.config_id))
             fields.extend((stable.style,
                            stable.cluster_distance,
                            stable.cluster_threshold,
@@ -6802,10 +6802,11 @@ class MAP(DIV):
 
         layer_types = []
         lappend = layer_types.append
-        layers = db(query).select(*fields,
+        layers = db(query).select(join=join,
                                   left=left,
                                   limitby=limitby,
-                                  orderby=orderby)
+                                  orderby=orderby,
+                                  *fields)
         if not layers:
             # Use Site Default base layer
             # (Base layer doesn't need a style)
