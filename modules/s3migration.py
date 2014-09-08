@@ -360,7 +360,7 @@ class S3Migration(object):
                     rows = db(stable._id > 0).select(stable.instance_type)
                     for row in rows:
                         etable = db[row[instance_type]]
-                        _fields = [f in fields if f in etable.fields]
+                        _fields = [f for f in fields if f in etable.fields]
                         record = db(etable._id == row[superkey]).select(etable[lookup_field], *_fields)
                         record_id = record[lookup_field]
                         if record_id in data:
