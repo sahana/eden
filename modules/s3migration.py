@@ -360,7 +360,7 @@ class S3Migration(object):
                     superkey = stable._id.name
                     rows = db_bak(stable._id > 0).select(stable.instance_type)
                     for row in rows:
-                        etable = db_bak[row[instance_type]]
+                        etable = db_bak[row["instance_type"]]
                         _fields = [f for f in fields if f in etable.fields]
                         table_fields = [etable[f] for f in _fields]
                         record = db_bak(etable._id == row[superkey]).select(etable[lookup_field], *table_fields)
