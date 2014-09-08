@@ -187,7 +187,7 @@ class S3Migration(object):
         news = self.news
         strints = self.strints
         strbools = self.strbools
-        if not moves not news and and not strbools and not strints:
+        if not moves and not news and not strbools and not strints:
             # Nothing to backup
             return
 
