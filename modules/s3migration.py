@@ -309,8 +309,8 @@ class S3Migration(object):
             for tablename in moves:
                 table = db_bak[tablename]
                 move = moves[tablename]
-                for i in move:
-                    fieldname, new_tablename, link_fieldname = move[i]
+                for field in move:
+                    fieldname, new_tablename, link_fieldname = field
                     if isinstance(fieldname, (tuple, list)):
                         fieldname, new_fieldname = fieldname
                     else:
