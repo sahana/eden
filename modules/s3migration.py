@@ -334,7 +334,8 @@ class S3Migration(object):
                     #for f in fields:
                     #    if isinstance(f, (tuple, list)):
                     table = db_bak[t]
-                    rows = db_bak(table._id > 0).select(lookup_field, *fields)
+                    table_fields = [table[f] for f in fields]
+                    rows = db_bak(table._id > 0).select(lookup_field, *table_fields)
                     for row in rows:
                         record_id = row[lookup_field]
                         if record_id in data:
@@ -359,7 +360,8 @@ class S3Migration(object):
                     for row in rows:
                         etable = db_bak[row[instance_type]]
                         _fields = [f for f in fields if f in etable.fields]
-                        record = db_bak(etable._id == row[superkey]).select(etable[lookup_field], *_fields)
+                        table_fields = [etable[f] for f in _fields]
+                        record = db_bak(etable._id == row[superkey]).select(etable[lookup_field], *table_fields)
                         record_id = record[lookup_field]
                         if record_id in data:
                             _new = False
