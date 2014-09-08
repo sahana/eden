@@ -345,7 +345,8 @@ class S3Migration(object):
                             _new = True
                             _data = {}
                         for f in fields:
-                            _data[f] = row[f]
+                            if f in row:
+                                _data[f] = row[f]
                         if _new:
                             data[record_id] = _data
 
@@ -370,7 +371,8 @@ class S3Migration(object):
                             _new = True
                             _data = {}
                         for f in _fields:
-                            _data[f] = record[f]
+                            if f in record:
+                                _data[f] = record[f]
                         if _new:
                             data[record_id] = _data
 
