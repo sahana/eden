@@ -308,20 +308,18 @@ class S3Migration(object):
         if moves:
             for tablename in moves:
                 table = db_bak[tablename]
-                move = moves[tablename]
-                for field in move:
-                    fieldname, new_tablename, link_fieldname = field
-                    if isinstance(fieldname, (tuple, list)):
-                        fieldname, new_fieldname = fieldname
-                    else:
-                        new_fieldname = fieldname
-                    old_field = table[fieldname]
-                    new_linkfield = db[new_tablename][link_fieldname]
-                    rows = db(table._id > 0).select(old_field, link_fieldname)
-                    for row in rows:
-                        update_vars = {}
-                        update_vars[new_fieldname] = row[old_field]
-                        db(new_linkfield == row[link_fieldname]).update(**update_vars)
+                fieldname, new_tablename, link_fieldname = moves[tablename]
+                if isinstance(fieldname, (tuple, list)):
+                    fieldname, new_fieldname = fieldname
+                else:
+                    new_fieldname = fieldname
+                old_field = table[fieldname]
+                new_linkfield = db[new_tablename][link_fieldname]
+                rows = db(table._id > 0).select(old_field, link_fieldname)
+                for row in rows:
+                    update_vars = {}
+                    update_vars[new_fieldname] = row[old_field]
+                    db(new_linkfield == row[link_fieldname]).update(**update_vars)
 
         if news:
             for tablename in news:
