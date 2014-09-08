@@ -2416,12 +2416,11 @@ class S3LayerEntityModel(S3Model):
         #  Layer Entity
 
         # @ToDo: Scanned images
-        layer_types = Storage(gis_layer_feature = T("Feature Layer"),
-                              gis_layer_arcrest = T("ArcGIS REST Layer"),
+        layer_types = Storage(gis_layer_arcrest = T("ArcGIS REST Layer"),
                               gis_layer_bing = T("Bing Layer"),
                               gis_layer_coordinate = T("Coordinate Layer"),
                               gis_layer_empty = T("No Base Layer"),
-                              gis_layer_openstreetmap = T("OpenStreetMap Layer"),
+                              gis_layer_feature = T("Feature Layer"),
                               gis_layer_geojson = T("GeoJSON Layer"),
                               gis_layer_georss = T("GeoRSS Layer"),
                               gis_layer_google = T("Google Layer"),
@@ -2429,6 +2428,7 @@ class S3LayerEntityModel(S3Model):
                               gis_layer_js = T("JS Layer"),
                               gis_layer_kml = T("KML Layer"),
                               gis_layer_mgrs = T("MGRS Layer"),
+                              gis_layer_openstreetmap = T("OpenStreetMap Layer"),
                               gis_layer_openweathermap = T("OpenWeatherMap Layer"),
                               gis_layer_shapefile = T("Shapefile Layer"),
                               gis_layer_theme = T("Theme Layer"),
@@ -3431,6 +3431,42 @@ class S3MapModel(S3Model):
         #               )
 
         # ---------------------------------------------------------------------
+        # JS
+        # - raw JavaScript code for advanced users
+        # @ToDo: Move to a Plugin (more flexible)
+        #
+        tablename = "gis_layer_js"
+        define_table(tablename,
+                     layer_id,
+                     name_field()(),
+                     desc_field()(),
+                     Field("code", "text",
+                           default = "var myNewLayer = new OpenLayers.Layer.XYZ();\nmap.addLayer(myNewLayer);",
+                           label = T("Code"),
+                           ),
+                     s3_role_required(),       # Single Role
+                     #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = gis_layer_onaccept,
+                  super_entity = "gis_layer_entity",
+                  )
+
+        # Components (already done at Super Entity level)
+        #add_components(tablename,
+        #               # Configs
+        #               gis_config = {"link": "gis_layer_config",
+        #                             "pkey": "layer_id",
+        #                             "joinby": "layer_id",
+        #                             "key": "config_id",
+        #                             "actuate": "hide",
+        #                             "autocomplete": "name",
+        #                             "autodelete": False,
+        #                             },
+        #               )
+
+        # ---------------------------------------------------------------------
         # KML
         #
         tablename = "gis_layer_kml"
@@ -3479,42 +3515,6 @@ class S3MapModel(S3Model):
         #                             },
         #               # Styles
         #               gis_style = "layer_id",
-        #               )
-
-        # ---------------------------------------------------------------------
-        # JS
-        # - raw JavaScript code for advanced users
-        # @ToDo: Move to a Plugin (more flexible)
-        #
-        tablename = "gis_layer_js"
-        define_table(tablename,
-                     layer_id,
-                     name_field()(),
-                     desc_field()(),
-                     Field("code", "text",
-                           default = "var myNewLayer = new OpenLayers.Layer.XYZ();\nmap.addLayer(myNewLayer);",
-                           label = T("Code"),
-                           ),
-                     s3_role_required(),       # Single Role
-                     #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  onaccept = gis_layer_onaccept,
-                  super_entity = "gis_layer_entity",
-                  )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
         #               )
 
         # ---------------------------------------------------------------------

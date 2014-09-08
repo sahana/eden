@@ -29,7 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Migration"]
+__all__ = ("S3Migration",)
 
 import os
 
@@ -53,6 +53,8 @@ class S3Migration(object):
         m = local_import("s3migration")
         migrate = m.S3Migration()
         migrate.prep(foreigns=[],
+                     moves=[],
+                     news=[],
                      ondeletes=[],
                      strbools=[],
                      strints=[],
@@ -114,138 +116,63 @@ class S3Migration(object):
                       )
 
     # -------------------------------------------------------------------------
-    def prep(self, foreigns=[],
-                   ondeletes=[],
-                   strbools=[],
-                   strints=[],
-                   uniques=[],
+    def prep(self, foreigns=None,
+                   moves=None,
+                   news=None,
+                   ondeletes=None,
+                   strbools=None,
+                   strints=None,
+                   uniques=None,
                    ):
         """
             Preparation before migration
 
             @param foreigns  : List of tuples (tablename, fieldname) to have the foreign keys removed
                               - if tablename == "all" then all tables are checked
-            @param ondeletes : List of tuples (tablename, fieldname, reftable, ondelete) to have the ondelete modified to
-            @param strbools  : List of tuples (tablename, fieldname) to convert from string/integer to bools
-            @param strints   : List of tuples (tablename, fieldname) to convert from string to integer
-            @param uniques   : List of tuples (tablename, fieldname) to have the unique indices removed,
+            @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
+                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+            @param news      : List of dicts {new_tablename: {'lookup_field': '',
+                                                              'tables': [tablename: [fieldname]],
+                                                              'supers': [tablename: [fieldname]],
+                                                              } to create new records from 1 or more old tables (inc all instances of an SE)
+                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+            @param ondeletes : List of tuples [(tablename, fieldname, reftable, ondelete)] to have the ondelete modified to
+            @param strbools  : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
+            @param strints   : List of tuples [(tablename, fieldname)] to convert from string to integer
+            @param uniques   : List of tuples [(tablename, fieldname)] to have the unique indices removed,
         """
 
         # Backup current database
+        self.moves = moves
+        self.news = news
+        self.strbools = strbools
+        self.strints = strints
         self.backup()
 
-        # Remove Foreign Key constraints which need to go in next code
-        for tablename, fieldname in foreigns:
-            self.remove_foreign(tablename, fieldname)
+        if foreigns:
+            # Remove Foreign Key constraints which need to go in next code
+            for tablename, fieldname in foreigns:
+                self.remove_foreign(tablename, fieldname)
 
-        # Remove Unique indices which need to go in next code
-        for tablename, fieldname in uniques:
-            self.remove_unique(tablename, fieldname)
+        if uniques:
+            # Remove Unique indices which need to go in next code
+            for tablename, fieldname in uniques:
+                self.remove_unique(tablename, fieldname)
 
-        # Modify ondeletes
-        for tablename, fieldname, reftable, ondelete in uniques:
-            self.ondelete(tablename, fieldname, reftable, ondelete)
+        if ondeletes:
+            # Modify ondeletes
+            for tablename, fieldname, reftable, ondelete in ondeletes:
+                self.ondelete(tablename, fieldname, reftable, ondelete)
 
         # Remove fields which need to be altered in next code
-        for tablename, fieldname in strbools:
-            self.drop(tablename, fieldname)
-        for tablename, fieldname in strints:
-            self.drop(tablename, fieldname)
+        if strbools:
+            for tablename, fieldname in strbools:
+                self.drop(tablename, fieldname)
+        if strints:
+            for tablename, fieldname in strints:
+                self.drop(tablename, fieldname)
 
         self.db.commit()
-
-    # -------------------------------------------------------------------------
-    def migrate(self):
-        """
-            Perform the migration
-            @ToDo
-        """
-
-        # Update code: git pull
-        # run_models_in(environment)
-        # or
-        # Set migrate=True in models/000_config.py
-        # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
-        # Set migrate=False in models/000_config.py
-        pass
-
-    # -------------------------------------------------------------------------
-    def post(self, strbools=[],
-                   strints=[],
-                   ):
-        """
-            Cleanup after migration
-
-            @param strbools : List of tuples (tablename, fieldname) to convert from string/integer to bools
-            @param strints : List of tuples (tablename, fieldname) to convert from string to integer
-        """
-
-        db = self.db
-
-        # @ToDo: Do prepops of new tables
-
-        # Restore data from backup
-        folder = "%s/databases/backup" % current.request.folder
-        db_bak = DAL("sqlite://backup.db",
-                     folder=folder,
-                     auto_import=True,
-                     migrate=False)
-
-        for tablename, fieldname in strints:
-            newtable = db[tablename]
-            newrows = db(newtable.id > 0).select(newtable.id)
-            oldtable = db_bak[tablename]
-            oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
-                                                     oldtable[fieldname])
-            oldvals = oldrows.as_dict()
-            for row in newrows:
-                id = row.id
-                val = oldvals[id][fieldname]
-                if not val:
-                    continue
-                try:
-                    vars = {fieldname : int(val)}
-                except:
-                    current.log.warning("S3Migrate: Unable to convert %s to an integer - skipping" % val)
-                else:
-                    db(newtable.id == id).update(**vars)
-
-        for tablename, fieldname in strbools:
-            to_bool = self.to_bool
-            newtable = db[tablename]
-            newrows = db(newtable.id > 0).select(newtable.id)
-            oldtable = db_bak[tablename]
-            oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
-                                                     oldtable[fieldname])
-            oldvals = oldrows.as_dict()
-            for row in newrows:
-                id = row.id
-                val = oldvals[id][fieldname]
-                if not val:
-                    continue
-                val = to_bool(val)
-                if val:
-                    vars = {fieldname : val}
-                    db(newtable.id == id).update(**vars)
-
-        db.commit()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def to_bool(value):
-        """
-           Converts 'something' to boolean. Raises exception for invalid formats
-            Possible True  values: 1, True, "1", "TRue", "yes", "y", "t"
-            Possible False values: 0, False, "0", "faLse", "no", "n", "f", 0.0
-        """
-
-        val = str(value).lower()
-        if val in ("yes", "y", "true",  "t", "1"):
-            return True
-        elif val in ("no",  "n", "false", "f", "0", "0.0"):
-            return False
-        else:
-            return None
 
     # -------------------------------------------------------------------------
     def backup(self):
@@ -255,6 +182,14 @@ class S3Migration(object):
             @ToDo: Option to use a temporary DB in Postgres/MySQL as this takes
                    too long for a large DB
         """
+
+        moves = self.moves
+        news = self.news
+        strints = self.strints
+        strbools = self.strbools
+        if not moves not news and and not strbools and not strints:
+            # Nothing to backup
+            return
 
         import os
 
@@ -281,20 +216,228 @@ class S3Migration(object):
             else:
                 db_bak.define_table(tablename, db[tablename])
 
+        # Which tables do we need to backup?
+        tables = []
+        if moves:
+            for tablename in moves:
+                tables.append(tablename)
+        if news:
+            for tablename in news:
+                new = news[tablename]
+                for t in new["tables"]:
+                    tables.append(t)
+                for s in new["supers"]:
+                    stable = db[s]
+                    rows = db(stable._id > 0).select(stable.instance_type)
+                    instance_types = set([r.instance_type for r in rows])
+                    for t in instance_types:
+                        tables.append(t)
+        if strbools:
+            for tablename, fieldname in strints:
+                tables.append(tablename)
+        if strints:
+            for tablename, fieldname in strints:
+                tables.append(tablename)
+
+        # Remove duplicates
+        tables = set(tables)
+
         # Copy Data
         import csv
         csv.field_size_limit(2**20 * 100)  # 100 megs
-        filename = "%s/data.csv" % folder
-        file = open(filename, "w")
-        db.export_to_csv_file(file)
-        file.close()
-        file = open(filename, "r")
-        db_bak.import_from_csv_file(file, unique="uuid2") # designed to fail
-        file.close()
-        db_bak.commit()
+        for tablename in tables:
+            filename = "%s/%s.csv" % (folder, tablename)
+            file = open(filename, "w")
+            rows = db(db[tablename].id > 0).select()
+            rows.export_to_csv_file(file)
+            file.close()
+            file = open(filename, "r")
+            db_bak.import_from_csv_file(file, unique="uuid2") # uuid2 designed to not hit!
+            file.close()
+            db_bak.commit()
 
         # Pass handle back to other functions
         self.db_bak = db_bak
+
+    # -------------------------------------------------------------------------
+    def migrate(self):
+        """
+            Perform the migration
+            @ToDo
+        """
+
+        # Update code: git pull
+        # run_models_in(environment)
+        # or
+        # Set migrate=True in models/000_config.py
+        # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
+        # Set migrate=False in models/000_config.py
+        pass
+
+    # -------------------------------------------------------------------------
+    def post(self, moves=None,
+                   news=None,
+                   strbools=None,
+                   strints=None,
+                   ):
+        """
+            Cleanup after migration
+
+            @param moves     : List of dicts {tablename: [(fieldname, new_tablename, link_fieldname)]} to move a field from 1 table to another
+                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+            @param news      : List of dicts {new_tablename: {'lookup_field': '',
+                                                              'tables': [tablename: [fieldname]],
+                                                              'supers': [tablename: [fieldname]],
+                                                              } to create new records from 1 or more old tables (inc all instances of an SE)
+                              - fieldname can be a tuple if the fieldname changes: (fieldname, new_fieldname)
+            @param strbools : List of tuples [(tablename, fieldname)] to convert from string/integer to bools
+            @param strints  : List of tuples [(tablename, fieldname)] to convert from string to integer
+        """
+
+        db = self.db
+
+        # @ToDo: Do prepops of new tables
+
+        # Restore data from backup
+        folder = "%s/databases/backup" % current.request.folder
+        db_bak = DAL("sqlite://backup.db",
+                     folder=folder,
+                     auto_import=True,
+                     migrate=False)
+
+        if moves:
+            for tablename in moves:
+                table = db_bak[tablename]
+                move = moves[tablename]
+                for i in move:
+                    fieldname, new_tablename, link_fieldname = move[i]
+                    if isinstance(fieldname, (tuple, list)):
+                        fieldname, new_fieldname = fieldname
+                    else:
+                        new_fieldname = fieldname
+                    old_field = table[fieldname]
+                    new_linkfield = db[new_tablename][link_fieldname]
+                    rows = db(table._id > 0).select(old_field, link_fieldname)
+                    for row in rows:
+                        update_vars = {}
+                        update_vars[new_fieldname] = row[old_field]
+                        db(new_linkfield == row[link_fieldname]).update(**update_vars)
+
+        if news:
+            for tablename in news:
+                # Read Data
+                data = {}
+                new = news[tablename]
+                lookup_field = new["lookup_field"]
+                _tables = new["tables"]
+                for t in _tables:
+                    fields = _tables[t]
+                    # @ToDo: Support tuples
+                    #for f in fields:
+                    #    if isinstance(f, (tuple, list)):
+                    table = db_bak[t]
+                    rows = db(table._id > 0).select(lookup_field, *fields)
+                    for row in rows:
+                        record_id = row[lookup_field]
+                        if record_id in data:
+                            new = False
+                            _data = data[record_id]
+                        else:
+                            new = True
+                            _data = {}
+                        for f in fields:
+                            _data[f] = row[f]
+                        if new:
+                            data[record_id] = _data
+
+                for s in new["supers"]:
+                    fields = new["supers"][s]
+                    # @ToDo: Support tuples
+                    #for f in fields:
+                    #    if isinstance(f, (tuple, list)):
+                    stable = db[s]
+                    superkey = stable._id.name
+                    rows = db(stable._id > 0).select(stable.instance_type)
+                    for row in rows:
+                        etable = db[row[instance_type]]
+                        _fields = [f in fields if f in etable.fields]
+                        record = db(etable._id == row[superkey]).select(etable[lookup_field], *_fields)
+                        record_id = record[lookup_field]
+                        if record_id in data:
+                            new = False
+                            _data = data[record_id]
+                        else:
+                            new = True
+                            _data = {}
+                        for f in _fields:
+                            _data[f] = record[f]
+                        if new:
+                            data[record_id] = _data
+
+                # Create Records
+                table = db[tablename]
+                for record_id in data:
+                    update_vars = data[record_id]
+                    update_vars[lookup_field] = record_id
+                    table.insert(**update_vars)
+
+        if strints:
+            for tablename, fieldname in strints:
+                newtable = db[tablename]
+                newrows = db(newtable.id > 0).select(newtable.id)
+                oldtable = db_bak[tablename]
+                oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
+                                                         oldtable[fieldname])
+                oldvals = oldrows.as_dict()
+                for row in newrows:
+                    _id = row.id
+                    val = oldvals[_id][fieldname]
+                    if not val:
+                        continue
+                    try:
+                        update_vars = {fieldname : int(val)}
+                    except:
+                        current.log.warning("S3Migrate: Unable to convert %s to an integer - skipping" % val)
+                    else:
+                        db(newtable.id == _id).update(**update_vars)
+
+        if strbools:
+            for tablename, fieldname in strbools:
+                to_bool = self.to_bool
+                newtable = db[tablename]
+                newrows = db(newtable.id > 0).select(newtable.id)
+                oldtable = db_bak[tablename]
+                oldrows = db_bak(oldtable.id > 0).select(oldtable.id,
+                                                         oldtable[fieldname])
+                oldvals = oldrows.as_dict()
+                for row in newrows:
+                    _id = row.id
+                    val = oldvals[_id][fieldname]
+                    if not val:
+                        continue
+                    val = to_bool(val)
+                    if val:
+                        update_vars = {fieldname : val}
+                        db(newtable.id == _id).update(**update_vars)
+
+        db.commit()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def to_bool(value):
+        """
+           Converts 'something' to boolean. Raises exception for invalid formats
+            Possible True  values: 1, True, "1", "TRue", "yes", "y", "t"
+            Possible False values: 0, False, "0", "faLse", "no", "n", "f", 0.0
+        """
+
+        val = str(value).lower()
+        if val in ("yes", "y", "true",  "t", "1"):
+            return True
+        elif val in ("no",  "n", "false", "f", "0", "0.0"):
+            return False
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def drop(self, tablename, fieldname):
