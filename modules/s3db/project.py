@@ -4922,51 +4922,6 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.milestone_id == mtable.id)
         rows = db(query).select(mtable.id, mtable.name)
         return dict((row.id, row.name) for row in rows)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_assignee_represent(id, row=None):
-        """
-            FK representation
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            id = row.pe_id
-            instance_type = row.instance_type
-        elif id:
-            if isinstance(id, Row):
-                instance_type = id.instance_type
-                id = id.pe_id
-            else:
-                instance_type = None
-        else:
-            return current.messages["NONE"]
-
-        db = current.db
-        s3db = current.s3db
-        if not instance_type:
-            table = s3db.pr_pentity
-            r = db(table._id == id).select(table.instance_type,
-                                           limitby=(0, 1)).first()
-            instance_type = r.instance_type
-
-        if instance_type == "pr_person":
-            # initials?
-            return s3_fullname(pe_id=id) or current.messages.UNKNOWN_OPT
-        elif instance_type in ("pr_group", "org_organisation"):
-            # Team or Organisation
-            table = s3db[instance_type]
-            r = db(table.pe_id == id).select(table.name,
-                                             limitby=(0, 1)).first()
-            try:
-                return r.name
-            except:
-                return current.messages.UNKNOWN_OPT
-        else:
-            return current.messages.UNKNOWN_OPT
-
     # -------------------------------------------------------------------------
     @staticmethod
     def project_task_realm_entity(table, record):
@@ -5681,6 +5636,43 @@ class project_TaskRepresent(S3Represent):
                  show_link=False,
                  show_project=False,
                  project_first=True):
+                     
+                     
+        if row:
+            id = row.pe_id
+            instance_type = row.instance_type
+        elif id:
+            if isinstance(id, Row):
+                instance_type = id.instance_type
+                id = id.pe_id
+            else:
+                instance_type = None
+        else:
+            return current.messages["NONE"]
+
+        db = current.db
+        s3db = current.s3db
+        if not instance_type:
+            table = s3db.pr_pentity
+            r = db(table._id == id).select(table.instance_type,
+                                           limitby=(0, 1)).first()
+            instance_type = r.instance_type
+
+        if instance_type == "pr_person":
+            # initials?
+            return s3_fullname(pe_id=id) or current.messages.UNKNOWN_OPT
+        elif instance_type in ("pr_group", "org_organisation"):
+            # Team or Organisation
+            table = s3db[instance_type]
+            r = db(table.pe_id == id).select(table.name,
+                                             limitby=(0, 1)).first()
+            try:
+                return r.name
+            except:
+                return current.messages.UNKNOWN_OPT
+        else:
+            return current.messages.UNKNOWN_OPT
+            
         """
             Constructor
 
