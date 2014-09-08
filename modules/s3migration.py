@@ -315,7 +315,7 @@ class S3Migration(object):
                     new_fieldname = fieldname
                 old_field = table[fieldname]
                 new_linkfield = db[new_tablename][link_fieldname]
-                rows = db(table._id > 0).select(old_field, link_fieldname)
+                rows = db_bak(table._id > 0).select(old_field, link_fieldname)
                 for row in rows:
                     update_vars = {}
                     update_vars[new_fieldname] = row[old_field]
@@ -334,7 +334,7 @@ class S3Migration(object):
                     #for f in fields:
                     #    if isinstance(f, (tuple, list)):
                     table = db_bak[t]
-                    rows = db(table._id > 0).select(lookup_field, *fields)
+                    rows = db_bak(table._id > 0).select(lookup_field, *fields)
                     for row in rows:
                         record_id = row[lookup_field]
                         if record_id in data:
@@ -353,13 +353,13 @@ class S3Migration(object):
                     # @ToDo: Support tuples
                     #for f in fields:
                     #    if isinstance(f, (tuple, list)):
-                    stable = db[s]
+                    stable = db_bak[s]
                     superkey = stable._id.name
-                    rows = db(stable._id > 0).select(stable.instance_type)
+                    rows = db_bak(stable._id > 0).select(stable.instance_type)
                     for row in rows:
-                        etable = db[row[instance_type]]
+                        etable = db_bak[row[instance_type]]
                         _fields = [f for f in fields if f in etable.fields]
-                        record = db(etable._id == row[superkey]).select(etable[lookup_field], *_fields)
+                        record = db_bak(etable._id == row[superkey]).select(etable[lookup_field], *_fields)
                         record_id = record[lookup_field]
                         if record_id in data:
                             new = False
