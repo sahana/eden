@@ -338,14 +338,14 @@ class S3Migration(object):
                     for row in rows:
                         record_id = row[lookup_field]
                         if record_id in data:
-                            new = False
+                            _new = False
                             _data = data[record_id]
                         else:
-                            new = True
+                            _new = True
                             _data = {}
                         for f in fields:
                             _data[f] = row[f]
-                        if new:
+                        if _new:
                             data[record_id] = _data
 
                 for s in new["supers"]:
@@ -362,14 +362,14 @@ class S3Migration(object):
                         record = db_bak(etable._id == row[superkey]).select(etable[lookup_field], *_fields)
                         record_id = record[lookup_field]
                         if record_id in data:
-                            new = False
+                            _new = False
                             _data = data[record_id]
                         else:
-                            new = True
+                            _new = True
                             _data = {}
                         for f in _fields:
                             _data[f] = record[f]
-                        if new:
+                        if _new:
                             data[record_id] = _data
 
                 # Create Records
