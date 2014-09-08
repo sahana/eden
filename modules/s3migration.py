@@ -227,6 +227,7 @@ class S3Migration(object):
                 for t in new["tables"]:
                     tables.append(t)
                 for s in new["supers"]:
+                    tables.append(s)
                     stable = db[s]
                     rows = db(stable._id > 0).select(stable.instance_type)
                     instance_types = set([r.instance_type for r in rows])
@@ -380,8 +381,9 @@ class S3Migration(object):
                 table = db[tablename]
                 for record_id in data:
                     update_vars = data[record_id]
-                    update_vars[lookup_field] = record_id
-                    table.insert(**update_vars)
+                    if update_vars:
+                        update_vars[lookup_field] = record_id
+                        table.insert(**update_vars)
 
         if strints:
             for tablename, fieldname in strints:
