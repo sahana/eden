@@ -252,7 +252,7 @@ class S3Migration(object):
             rows.export_to_csv_file(file)
             file.close()
             file = open(filename, "r")
-            db_bak.import_from_csv_file(file, unique="uuid2") # uuid2 designed to not hit!
+            db_bak[tablename].import_from_csv_file(file, unique="uuid2") # uuid2 designed to not hit!
             file.close()
             db_bak.commit()
 
