@@ -74,7 +74,7 @@ class S3Migration(object):
 
     def __init__(self):
 
-        request= current.request
+        request = current.request
 
         # Load s3cfg
         name = "applications.%s.modules.s3cfg" % request.application
@@ -205,16 +205,61 @@ class S3Migration(object):
         os.mkdir(folder)
 
         # Setup backup database
-        db_bak = DAL("sqlite://backup.db", folder=folder)
+        db_bak = DAL("sqlite://backup.db", folder=folder, adapter_args={"foreign_keys": False})
 
         # Copy Table structure
+        skip = []
         for tablename in db.tables:
             if tablename == "gis_location":
                 table = db[tablename]
                 fields = [table[field] for field in table.fields if field != "the_geom"]
-                db_bak.define_table(tablename, *fields)
+                try:
+                    db_bak.define_table(tablename, *fields)
+                except KeyError:
+                    # Can't resolve reference yet
+                    # Cleanup
+                    del db_bak[tablename]
+                    # Try later
+                    skip.append(tablename)
             else:
-                db_bak.define_table(tablename, db[tablename])
+                try:
+                    db_bak.define_table(tablename, db[tablename])
+                except KeyError:
+                    # Can't resolve reference yet
+                    # Cleanup
+                    del db_bak[tablename]
+                    # Try later
+                    skip.append(tablename)
+        while skip:
+            _skip = []
+            for tablename in skip:
+                if tablename == "gis_location":
+                    table = db[tablename]
+                    fields = [table[field] for field in table.fields if field != "the_geom"]
+                    try:
+                        db_bak.define_table(tablename, *fields)
+                    except KeyError:
+                        # Can't resolve reference yet
+                        # Cleanup
+                        del db_bak[tablename]
+                        # Try later
+                        _skip.append(tablename)
+                    except:
+                        import sys
+                        print "Skipping %s: %s" % (tablename, sys.exc_info()[1])
+                else:
+                    try:
+                        db_bak.define_table(tablename, db[tablename])
+                    except KeyError:
+                        # Can't resolve reference yet
+                        # Cleanup
+                        del db_bak[tablename]
+                        # Try later
+                        _skip.append(tablename)
+                    except:
+                        import sys
+                        print "Skipping %s: %s" % (tablename, sys.exc_info()[1])
+            skip = _skip
 
         # Which tables do we need to backup?
         tables = []
@@ -358,24 +403,28 @@ class S3Migration(object):
                     #    if isinstance(f, (tuple, list)):
                     stable = db_bak[s]
                     superkey = stable._id.name
-                    rows = db_bak(stable._id > 0).select(stable.instance_type)
+                    rows = db_bak(stable._id > 0).select(stable._id,
+                                                         stable.instance_type)
                     for row in rows:
                         etable = db_bak[row["instance_type"]]
                         _fields = [f for f in fields if f in etable.fields]
                         table_fields = [etable[f] for f in _fields]
-                        record = db_bak(etable._id == row[superkey]).select(etable[lookup_field], *table_fields)
-                        record_id = record[lookup_field]
-                        if record_id in data:
-                            _new = False
-                            _data = data[record_id]
-                        else:
-                            _new = True
-                            _data = {}
-                        for f in _fields:
-                            if f in record:
-                                _data[f] = record[f]
-                        if _new:
-                            data[record_id] = _data
+                        record = db_bak(etable[superkey] == row[superkey]).select(etable[lookup_field],
+                                                                                  *table_fields
+                                                                                  ).first()
+                        if record:
+                            record_id = record[lookup_field]
+                            if record_id in data:
+                                _new = False
+                                _data = data[record_id]
+                            else:
+                                _new = True
+                                _data = {}
+                            for f in _fields:
+                                if f in record:
+                                    _data[f] = record[f]
+                            if _new:
+                                data[record_id] = _data
 
                 # Create Records
                 table = db[tablename]

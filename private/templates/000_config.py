@@ -130,6 +130,7 @@ settings.frontpage.rss = [
 #settings.base.instance_name = "test"
 
 # Bing API Key (for Map layers)
+# http://www.microsoft.com/maps/create-a-bing-maps-key.aspx
 #settings.gis.api_bing = ""
 # Google API Key (for Earth & MapMaker Layers)
 # default works for localhost

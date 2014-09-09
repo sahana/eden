@@ -3147,7 +3147,7 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # Bing tiles
         #
-        bing_layer_types = ["aerial", "road", "hybrid"]
+        bing_layer_types = ("aerial", "road", "hybrid")
 
         tablename = "gis_layer_bing"
         define_table(tablename,
@@ -3337,9 +3337,9 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # Google tiles
         #
-        google_layer_types = ["satellite", "maps", "hybrid", "terrain",
+        google_layer_types = ("satellite", "maps", "hybrid", "terrain",
                               "mapmaker", "mapmakerhybrid",
-                              "earth", "streetview"]
+                              "earth", "streetview")
 
         tablename = "gis_layer_google"
         define_table(tablename,
@@ -3617,7 +3617,7 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # OpenWeatherMap
         #
-        openweathermap_layer_types = ["station", "city"]
+        openweathermap_layer_types = ("station", "city")
 
         tablename = "gis_layer_openweathermap"
         define_table(tablename,
@@ -3896,9 +3896,9 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # WMS
         #
-        wms_img_formats = ["image/jpeg", "image/jpeg;mode=24bit", "image/png",
+        wms_img_formats = ("image/jpeg", "image/jpeg;mode=24bit", "image/png",
                            "image/gif", "image/bmp", "image/tiff",
-                           "image/svg+xml"]
+                           "image/svg+xml")
 
         tablename = "gis_layer_wms"
         define_table(tablename,
