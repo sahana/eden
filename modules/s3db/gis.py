@@ -2964,10 +2964,17 @@ class S3FeatureLayerModel(S3Model):
             # Match if controller, function, filter and name are identical
             table = item.table
             data = item.data
-            query = (table.controller.lower() == data.controller.lower()) & \
-                    (table.function.lower() == data.function.lower()) & \
-                    (table.filter == data.filter) & \
-                    (table.name == data.name)
+            query = (table.name == data.name)
+            controller = data.controller
+            if controller:
+                query &= (table.controller.lower() == controller.lower())
+            function = data.function
+            if function:
+                query &= (table.function.lower() == function.lower())
+            filter = data.filter
+            if filter:
+                query &= (table.filter == filter)
+
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:

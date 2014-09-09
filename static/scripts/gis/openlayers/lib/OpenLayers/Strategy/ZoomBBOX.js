@@ -202,14 +202,15 @@ OpenLayers.Strategy.ZoomBBOX = OpenLayers.Class(OpenLayers.Strategy.BBOX, {
      */
     triggerRead: function(options) {
         var layer = this.layer;
-        var response = this.response;
-        if (response && !(options && options.noAbort === true)) {
-            layer.protocol.abort(response);
+        // Can't do this or it breaks ability to Abort
+        //var response = this.response;
+        if (this.response && !(options && options.noAbort === true)) {
+            layer.protocol.abort(this.response);
             layer.events.triggerEvent('loadend');
         }
         var evt = {filter: this.createFilter()};
         layer.events.triggerEvent('loadstart', evt);
-        response = layer.protocol.read(
+        this.response = layer.protocol.read(
             OpenLayers.Util.applyDefaults({
                 filter: evt.filter,
                 callback: this.merge,

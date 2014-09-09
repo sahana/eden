@@ -1274,6 +1274,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             var i,
                                 j,
                                 cluster,
+                                _cluster,
                                 clusters = [],
                                 cluster_len,
                                 new_features = [],
@@ -1281,9 +1282,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             for (i = 0; i < features_len; i++) {
                                 if (features[i].cluster) {
                                     cluster = features[i];
-                                    cluster_len = cluster.length;
+                                    _cluster = cluster.cluster;
+                                    cluster_len = _cluster.length;
                                     for (j = 0; j < cluster_len; j++) {
-                                        new_features.push(cluster[j]);
+                                        new_features.push(_cluster[j]);
                                     }
                                     clusters.push(cluster);
                                 }
@@ -1338,8 +1340,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                 legendPanel.removeLegend(record);
                                 legendPanel.addLegend(record, i);
                             }
-                        }
-                        if (undefined != marker_url) {
+                        } else if (undefined != marker_url) {
                             if (layerLegend.xtype == 'gx_urllegend') {
                                 layerLegend.layerRecord.data.legendURL = marker_url;
                                 layerLegend.update();
@@ -1949,7 +1950,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 //}
             }));
         }
-        if (cluster_threshold) {
+        if (cluster_threshold || layer.cluster) {
             // Common Cluster Strategy for all layers
             //s3.common_cluster_strategy
             strategies.push(new OpenLayers.Strategy.AttributeCluster({

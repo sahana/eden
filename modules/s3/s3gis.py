@@ -7869,6 +7869,10 @@ class LayerFeature(Layer):
             # Attributes which are defaulted client-side if not set
             self.setup_folder_visibility_and_opacity(output)
             self.setup_clustering(output)
+            if self.aggregate:
+                # Enable the Cluster Strategy, so that it can be enabled/disabled
+                # depending on the zoom level & hence Points or Polygons
+                output["cluster"] = 1
             if not popup_format:
                 output["no_popups"] = 1
             if self.style:
@@ -8845,8 +8849,6 @@ class Style(object):
         if style:
             if style.marker_id:
                 style.marker = Marker(marker_id=style.marker_id)
-            else:
-                style.marker = None
             if aggregate is True:
                 # Use gis/location controller in all reports
                 style.url_format = "%s/{id}.plain" % URL(c="gis", f="location")
@@ -8875,7 +8877,7 @@ class Style(object):
         output = Storage()
         if not style:
             return output
-        if style.marker:
+        if hasattr(style, "marker"):
             output.marker = style.marker.as_json_dict()
         opacity = style.opacity
         if opacity and opacity not in (1, 1.0):

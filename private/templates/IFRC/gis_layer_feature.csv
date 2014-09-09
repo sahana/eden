@@ -1,4 +1,4 @@
-Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Aggregate,Trackable,Style,Folder,Visible,Enabled,Refresh
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Aggregate,Trackable,Style,Folder,Visible,Enabled,Refresh,Cluster Threshold
 Assets,,asset,asset,asset,,"{item_id} (T('Asset'))<br />{number}","item_id,number",,,True,,,False,,
 Incidents,,irs,ireport,incident,Danger Area,"{name} (T('Incident'))<br />{category}","name,category",,,,,,False,,
 Members,All Active Members,member,membership,member,"Contact, Dreadlocks",{person_id} (T('Member'))<br />{type},"person_id,type",~.end_date=NONE,,,,,False,,
@@ -7,7 +7,7 @@ PoIs,,gis,poi,,,"{name} ({poi_type_id})","name,poi_type_id",,,,"[{'prop':'poi_ty
 Project Communities,,project,location,project,,"{location_id} (T('Project Community'))",location_id,,,,,,False,,
 Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks","{person_id} (T('Staff'))<br />{job_title_id}","person_id,job_title_id",~.status=1,,True,,,False,,
 Volunteers,All Active Volunteers,vol,volunteer,volunteer,"Contact, Dreadlocks","{person_id} (T('Volunteer'))",person_id,~.status=1,,,,,False,,
-Volunteers Report,All Active Volunteers - Aggregated,vol,volunteer,,,"{name}: {value} T('volunteers')",,~.status=1,True,"[{'prop':'value','fillOpacity':0.5}]",,,False,,0
+Volunteers Report,All Active Volunteers - Aggregated,vol,volunteer,,,"{name}: {value} T('volunteers')",,~.status=1,True,,"[{'prop':'value','fillOpacity':0.5}]",,False,,0,0
 Warehouses,All Active Warehouses,inv,warehouse,warehouse,Building,"{name} (T('Warehouse'))<br />{organisation_id}","name,organisation_id",~.obsolete=False,,,,,False,,
 Stock Items,Used for Search Results,inv,inv_item,,,"{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date}","item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,False,False,
 Training Events,Used for Search Results,hrm,training_event,,,"{course_id} (T('Training Event'))<br />{site_id}<br />{start_date}","course_id,site_id,start_date",,,,,,False,False,

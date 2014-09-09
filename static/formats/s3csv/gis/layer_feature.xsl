@@ -14,22 +14,22 @@
          Controller...........string..........Layer Controller
          Function.............string..........Layer Function
          Filter...............string..........Layer Filter
-         Aggregate............string..........Layer Aggregate
+         Aggregate............string..........Layer/Style Aggregate (define the non-aggregate style as a row in a separate style.csv)
          Popup Format.........string..........Style Popup Format
          Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to use for Popup Format &/or Style)
          Default..............boolean.........Layer Default
          Individual...........boolean.........Layer Individual
          Trackable............boolean.........Layer Trackable
          Site.................boolean.........Layer Site (use Site for location)
-         Style................string..........Layer Style
+         Style................string..........Style Style
          Opacity..............string..........Style Opacity (set here to make selectStyle just remove Opacity rather than change colour)
          Folder...............string..........Layer Config Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
          Cluster Attribute....string..........Layer Cluster Attribute: The attribute to use for clustering
-         Cluster Distance.....integer.........Layer Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
-         Cluster Threshold....integer.........Layer Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
+         Cluster Distance.....integer.........Style Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
+         Cluster Threshold....integer.........Style Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
          Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
 
     *********************************************************************** -->
@@ -80,6 +80,7 @@
                 <data field="name"><xsl:value-of select="$Config"/></data>
             </resource>
         </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -163,12 +164,18 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:if> -->
+                <xsl:if test="col[@field='Aggregate']!=''">
+                    <data field="aggregate"><xsl:value-of select="col[@field='Aggregate']"/></data>
+                </xsl:if>
                 <xsl:if test="$Marker!=''">
                     <reference field="marker_id" resource="gis_marker">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="$Marker"/>
                         </xsl:attribute>
                     </reference>
+                </xsl:if>
+                <xsl:if test="col[@field='GPS Marker']!=''">
+                    <data field="gps_marker"><xsl:value-of select="col[@field='GPS Marker']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Opacity']!=''">
                     <data field="opacity"><xsl:value-of select="col[@field='Opacity']"/></data>
@@ -204,6 +211,7 @@
                 <data field="name"><xsl:value-of select="$Marker"/></data>
             </resource>
         </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

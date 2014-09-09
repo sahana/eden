@@ -33,6 +33,8 @@ __all__ = ("S3Migration",)
 
 import os
 
+from uuid import uuid4
+
 from gluon import current, DAL, Field
 from gluon.cfs import getcfs
 from gluon.compileapp import build_environment
@@ -61,7 +63,9 @@ class S3Migration(object):
                      uniques=[],
                      )
         #migrate.migrate()
-        migrate.post(strbools=[],
+        migrate.post(moves=[],
+                     news=[],
+                     strbools=[],
                      strints=[],
                      )
 
@@ -432,6 +436,8 @@ class S3Migration(object):
                     update_vars = data[record_id]
                     if update_vars:
                         update_vars[lookup_field] = record_id
+                        # Can't rely on the default as this will always be identical as auto_import doesn't see SQLCustomTypes
+                        update_vars["uuid"] = uuid4().urn
                         table.insert(**update_vars)
 
         if strints:
