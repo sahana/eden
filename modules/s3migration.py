@@ -388,8 +388,8 @@ class S3Migration(object):
                     #    if isinstance(f, (tuple, list)):
                     table = db_bak[t]
                     table_fields = [table[f] for f in fields]
-                    rows = db_bak(table._id > 0).select(table[lookup_field],
-                                                        *table_fields)
+                    rows = db_bak(table.deleted == False).select(table[lookup_field],
+                                                                 *table_fields)
                     for row in rows:
                         record_id = row[lookup_field]
                         if record_id in data:
@@ -400,7 +400,11 @@ class S3Migration(object):
                             _data = {}
                         for f in fields:
                             if f in row:
-                                _data[f] = row[f] or None # JSON type doesn't like ""
+                                if row[f] == "":
+                                    # JSON type doesn't like ""
+                                    _data[f] = None
+                                else:
+                                    _data[f] = row[f]
                         if _new:
                             data[record_id] = _data
 
@@ -411,8 +415,8 @@ class S3Migration(object):
                     #    if isinstance(f, (tuple, list)):
                     stable = db_bak[s]
                     superkey = stable._id.name
-                    rows = db_bak(stable._id > 0).select(stable._id,
-                                                         stable.instance_type)
+                    rows = db_bak(stable.deleted == False).select(stable._id,
+                                                                  stable.instance_type)
                     for row in rows:
                         etable = db_bak[row["instance_type"]]
                         _fields = [f for f in fields if f in etable.fields]
@@ -430,7 +434,11 @@ class S3Migration(object):
                                 _data = {}
                             for f in _fields:
                                 if f in record:
-                                    _data[f] = record[f] or None # JSON type doesn't like ""
+                                    if record[f] == "":
+                                        # JSON type doesn't like ""
+                                        _data[f] = None
+                                    else:
+                                        _data[f] = record[f]
                             if _new:
                                 data[record_id] = _data
 
