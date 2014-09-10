@@ -564,7 +564,7 @@ S3.unmask = function(table, field) {
         // Unmask the password
         state = i18n.password_mask;
         $('#' + target).attr('type', 'text');
-        $('#' + caller).text(state);        
+        $('#' + caller).text(state);
     }
     else {
         // Mask the password
@@ -638,379 +638,10 @@ var s3_showMap = function(feature_id) {
 
 // ============================================================================
 /**
- * Filter a select field based on a "filter field", eg:
- * - Competency Ratings filtered by Skill Type
- * - Item Packs filtered by Item
- * - Rooms filtered by Site
- * - Themes filtered by Sector
- *
- * @todo: deprecate, replace by $.filterOptionsS3
- **/
-
-var S3OptionsFilter = function(settings) {
-    /**
-     * Settings:
-     *          triggerName: the trigger field name (not the HTML element name)
-     *          targetName: the target field name (not the HTML element name)
-     *
-     *          lookupPrefix: the lookup controller prefix
-     *          lookupResource: the lookup resource (=function to call)
-     *          lookupKey: the lookup key field name (default=triggerName)
-     *          lookupField: the field to look up (default="id")
-     *
-     *          lookupURL: the lookup URL (optional)
-     *          getWidgetHTML: the lookup URL returns the options widget as HTML
-     *
-     *          optional: target field value is optional (i.e. can be '', default=false)
-     *          showEmptyField: show the empty options list (default=true)
-     *          msgNoRecords: internationalized message for "no records"
-     *          targetWidget: the target widget (if different from target field)
-     *          fncPrep: function to pre-process the target options
-     *          fncRepresent: function to represent the target options
-     */
-
-    var triggerName = settings.triggerName;
-    var targetName = settings.targetName;
-
-    // Selector for regular form fields: prefix_field
-    var triggerSelector = '[name="' + triggerName + '"]';
-    // Selector for inline-form fields: prefix_alias_field
-    triggerSelector += ',[name*="_i_' + triggerName + '_edit_"]';
-
-    // Find the trigger field
-    var triggerField = $(triggerSelector);
-    if (triggerField.length === 0) {
-        // Trigger field not present
-        return;
-    }
-
-    // Flag to show whether this is the first run
-    var first = true;
-
-    // Function to call when trigger field is changed
-    var triggerFieldChange = function(event) {
-
-        if (first) {
-            var $triggerField = triggerField;
-        } else {
-            // Select the specific triggerField (inline form can contain multiple)
-            var $triggerField = $(this);
-        }
-        var triggerFieldName = $triggerField.attr('name');
-
-        // Find the target field
-        if (triggerFieldName == triggerName) {
-            // Regular form field
-            var targetField = $('[name="' + targetName + '"]');
-            if (targetField.length === 0) {
-                return;
-            }
-            var targetSelector = targetField.attr('name');
-        } else {
-            // Inline field
-            var names = triggerFieldName.split('_');
-            var prefix = names[0];
-            var rowindex = names.pop();
-            var targetField = $('[name*="' + prefix + '_"][name*="_i_' + targetName + '_edit_' + rowindex + '"]');
-            if (targetField.length === 0) {
-                return;
-            }
-            var targetSelector = targetField.attr('name');
-        }
-
-        // Cancel previous Ajax request
-        try {
-            S3.JSONRequest[targetField.attr('id')].abort();
-        } catch(err) {}
-
-        // Get the lookup value from the trigger field
-        var lookupValue = '';
-        if ($triggerField.attr('type') == 'checkbox') {
-            checkboxesWidget = $triggerField.closest('.checkboxes-widget-s3');
-            if (checkboxesWidget) {
-                $triggerField = checkboxesWidget;
-            }
-        }
-        if ($triggerField.length == 1 && !$triggerField.hasClass('checkboxes-widget-s3')) {
-            // SELECT
-            lookupValue = $triggerField.val();
-        } else if ($triggerField.length > 1) {
-            // Checkboxes
-            lookupValue = new Array();
-            $triggerField.filter('input:checked').each(function() {
-                lookupValue.push($(this).val());
-            });
-        } else if ($triggerField.hasClass('checkboxes-widget-s3')) {
-            lookupValue = new Array();
-            $triggerField.find('input:checked').each(function() {
-                lookupValue.push($(this).val());
-            });
-        }
-
-        // Disable the target field if no value selected
-        if (lookupValue === '' || lookupValue === undefined) {
-            targetField.prop('disabled', true);
-            return;
-        }
-
-        // Get the current value of the target field
-        var currentValue = '';
-        if (targetField.length == 1) {
-            // SELECT
-            currentValue = targetField.val();
-            if (!currentValue) {
-                // Options list not populated yet?
-                currentValue = targetField.attr('value'); // jQuery Migrate doesn't like this
-            }
-        } else if (targetField.length > 1) {
-            // Checkboxes
-            currentValue = new Array();
-            targetField.filter('input:checked').each(function() {
-                currentValue.push($(this).val());
-            });
-        }
-
-        // Construct the URL for the Ajax request
-        var lookupResource = settings.lookupResource;
-        var url;
-        if (settings.lookupURL) {
-            url = settings.lookupURL;
-            if (lookupValue) {
-                url = url.concat(lookupValue);
-            }
-        } else {
-            var lookupPrefix = settings.lookupPrefix;
-            url = S3.Ap.concat('/', lookupPrefix, '/', lookupResource, '.json');
-            // Append lookup key to the URL
-            var q;
-            if (lookupValue) {
-                var lookupKey;
-                if (typeof settings.lookupKey == 'undefined') {
-                    // Same field name in both tables
-                    lookupKey = settings.triggerName;
-                } else {
-                    lookupKey = settings.lookupKey;
-                }
-                q = lookupResource + '.' + lookupKey + '=' + lookupValue;
-                if (url.indexOf('?') != -1) {
-                    url = url.concat('&' + q);
-                } else {
-                    url = url.concat('?' + q);
-                }
-            }
-            // Append the current value to the URL (what for?)
-            if (currentValue) {
-                q = 'value=' + currentValue;
-                if (url.indexOf('?') != -1) {
-                    url = url.concat('&' + q);
-                } else {
-                    url = url.concat('?' + q);
-                }
-            }
-        }
-
-        // Find the target widget and replace it by a throbber
-        var targetWidget = settings.targetWidget || targetSelector;
-        var widget = $('[name = "' + targetWidget + '"]');
-        widget.hide();
-
-        // Do we have a groupedopts or multiselect widget?
-        var is_groupedopts = false,
-            is_multiselect = false;
-        if (widget.hasClass('groupedopts-widget')) {
-            is_groupedopts = true;
-            widget.groupedopts('hide');
-        } else if (widget.hasClass('multiselect-widget')) {
-            is_multiselect = true;
-        }
-
-        // Store selected values before Ajax-refresh
-        var widget_value = null;
-        if (widget.prop('tagName').toLowerCase() == 'select') {
-            widget_value = widget.val();
-        }
-
-        // Show throbber while loading
-        if ($('#' + lookupResource + '_throbber').length === 0 ) {
-            widget.after('<div id="' + lookupResource + '_throbber" class="throbber"/>');
-        }
-
-
-        if (!settings.getWidgetHTML) {
-            // URL returns the widget options as JSON
-            S3.JSONRequest[targetField.attr('id')] = $.ajaxS3({
-                url: url,
-                dataType: 'json',
-                // gets moved to .done() inside .ajaxS3
-                success: function(data) {
-                    // Read relevant options
-                    if (settings.showEmptyField === 'undefined') {
-                        var showEmptyField = true;
-                    } else {
-                        var showEmptyField = settings.showEmptyField;
-                    }
-                    var fncPrep = settings.fncPrep || function(data) { return null; };
-                    var fncRepresent = settings.fncRepresent || function(record) { return record.name; };
-                    var lookupField = settings.lookupField || 'id';
-                    var newValue;
-                    var options = '';
-                    var prepResult;
-
-                    // Render options list
-                    if (data.length === 0) {
-                        // No options available
-                        if (showEmptyField) {
-                            newValue = 0;
-                            var msgNoRecords = settings.msgNoRecords || '-';
-                            options = '<option value="">' + msgNoRecords + '</options>';
-                        }
-                    } else {
-                        // Render the options
-                        // Pre-process the data
-                        try {
-                            prepResult = fncPrep(data);
-                        } catch (e) {
-                            prepResult = null;
-                        }
-                        options = '';
-                        for (var i = 0; i < data.length; i++) {
-                            if (i === 0) {
-                                newValue = data[i][lookupField];
-                            }
-                            options += '<option value="' + data[i][lookupField] + '">';
-                            options += fncRepresent(data[i], prepResult);
-                            options += '</option>';
-                        }
-                        if (settings.optional) {
-                            newValue = 0;
-                            options = '<option value=""></option>' + options;
-                        }
-                        if (currentValue) {
-                            newValue = currentValue;
-                        }
-                    }
-
-                    // Convert IS_ONE_OF_EMPTY INPUT to a SELECT (better to do this server-side where-possible)
-                    var html = targetField.parent().html();
-                    if (html.slice(1, 6) == 'input') {
-                        html = html.replace('<input', '<select');
-                        targetField.parent().html(html);
-
-                        // Re-apply event handlers (tooltips & modals)
-                        S3.redraw();
-
-                        // reselect since changed
-                        targetField = $('[name = "' + targetSelector + '"]');
-                    }
-                    if (options !== '') {
-                        targetField.html(options)
-                                   // Set the current field value
-                                   .val(newValue)
-                                   .change()
-                                   .prop('disabled', false)
-                                   .show();
-                    } else {
-                        // No options available => disable the target field
-                        targetField.prop('disabled', true)
-                                   .show();
-                    }
-
-                    // Modify URL for Add-link and show the Add-link
-                    var targetFieldAdd = $('#' + lookupResource + '_add');
-                    if (targetFieldAdd.length !== 0) {
-                        var href = targetFieldAdd.attr('href');
-                        if (href.indexOf(triggerName) == -1) {
-                            // Add to URL
-                            href += '&' + triggerName + '=' + $triggerField.val();
-                        } else {
-                            // Update URL
-                            var re = new RegExp(triggerName + '=.*', 'g');
-                            href = href.replace(re, triggerName + '=' + $triggerField.val());
-                        }
-                        targetFieldAdd.attr('href', href)
-                                      .show();
-                    }
-
-                    // Remove the throbber
-                    $('#' + lookupResource + '_throbber').remove();
-                    if (first) {
-                        // Don't include this change in the deliberate changes
-                        S3ClearNavigateAwayConfirm();
-                        first = false;
-                    }
-                }
-            });
-        } else {
-            // URL returns the widget as HTML
-            S3.JSONRequest[targetField.attr('id')] = $.ajaxS3({
-                url: url,
-                dataType: 'html',
-                // gets moved to .done() inside .ajaxS3
-                success: function(data) {
-                    if (data !== '') {
-                        // Replace the target field with the HTML returned
-                        widget.html(data)
-                              .change()
-                              .prop('disabled', false);
-
-                        if (is_groupedopts || is_multiselect) {
-                            // groupedopts or multiselect => refresh widget
-                            if (widget_value) {
-                                // Restore selected values if the options are still
-                                // available
-                                var new_value = [];
-                                for (var i=0, len=widget_value.length, val; i<len; i++) {
-                                    val = widget_value[i];
-                                    if (widget.find('option[value=' + val + ']').length) {
-                                        new_value.push(val);
-                                    }
-                                }
-                                widget.val(new_value).change();
-                            }
-                            if (is_groupedopts) {
-                                widget.groupedopts('refresh');
-                            } else {
-                                widget.multiselect('refresh');
-                            }
-                        } else {
-                            widget.show();
-                        }
-                    } else {
-                        // Disable the target field
-                        widget.prop('disabled', true);
-                    }
-                    // Remove Throbber
-                    $('#' + lookupResource + '_throbber').remove();
-                    if (first) {
-                        // Don't include this change in the deliberate changes
-                        S3ClearNavigateAwayConfirm();
-                        first = false;
-                    }
-                    // Restore event handlers (@todo: deprecate)
-                    if (S3.inline_checkbox_events) {
-                        S3.inline_checkbox_events();
-                    }
-                }
-            });
-        }
-    };
-
-    // Call function when trigger field changed
-    triggerField.change(triggerFieldChange);
-
-    // If the field value is empty - disable - but keep initial value
-    triggerFieldChange();
-};
-
-// ============================================================================
-/**
  * Filter options of a drop-down field (=target) by the selection made
  * in another field (=trigger), e.g.:
  *   - Task Form: Activity options filtered by Project selection
  *
- * => Replacement for the S3OptionsFilter script
- * @todo: test with S3SQLInlineLink
- * @todo: migrate use-cases
  * @todo: fix updateAddResourceLink
  * @todo: move into separate file and load only when needed?
  * @todo: S3SQLInlineComponentCheckboxes not supported (but to be
@@ -1187,7 +818,8 @@ var S3OptionsFilter = function(settings) {
         }
 
         var options = data.options,
-            newValue = data.defaultValue;
+            newValue = data.defaultValue,
+            hasCurrentValue = false;
 
         // Get the current value of the target field
         if (!empty) {
@@ -1206,11 +838,12 @@ var S3OptionsFilter = function(settings) {
                     // Options list not populated yet?
                     currentValue = widget.prop('value');
                 }
+                if (currentValue && $(options).filter('option[value=' + currentValue + ']').length) {
+                    hasCurrentValue = true;
+                }
             }
-            if (currentValue) {
+            if (hasCurrentValue) {
                 // Retain selected value
-                // @todo: only meaningful if selected value is present in
-                //        new options! => check that
                 newValue = currentValue;
             }
         }
@@ -1221,6 +854,7 @@ var S3OptionsFilter = function(settings) {
             var select = $('<select/>').addClass(widget.attr('class'))
                                        .attr('id', widget.attr('id'))
                                        .attr('name', widget.attr('name'))
+                                       .data('visible', widget.data('visible'))
                                        .hide();
             widget.replaceWith(select);
             widget = select;
@@ -1238,6 +872,7 @@ var S3OptionsFilter = function(settings) {
         } else if (widget.hasClass('multiselect-widget')) {
             widget.multiselect('refresh');
         }
+        return widget;
     };
 
     /**
@@ -1295,6 +930,7 @@ var S3OptionsFilter = function(settings) {
             // Disable the widget
             widget.prop('disabled', true);
         }
+        return widget;
     };
 
     /**
@@ -1410,7 +1046,7 @@ var S3OptionsFilter = function(settings) {
                         var widget = $(this);
 
                         // Update the widget
-                        updateOptions(widget, options, empty);
+                        widget = updateOptions(widget, options, empty);
 
                         // Show the widget if it was visible before
                         if (widget.data('visible')) {
@@ -1469,7 +1105,7 @@ var S3OptionsFilter = function(settings) {
                 success: function(data) {
 
                     // Replace the widget HTML
-                    replaceWidgetHTML(widget, data, settings);
+                    widget = replaceWidgetHTML(widget, data, settings);
 
                     // Show the widget if it was visible before, remove throbber
                     if (show_widget) {
@@ -1654,7 +1290,7 @@ var S3OptionsFilter = function(settings) {
 
     /**
      * Strip query and hash from a URL
-     * 
+     *
      * @param {string} url - the URL
      */
     var stripQuery = function(url) {

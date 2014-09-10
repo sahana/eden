@@ -1752,9 +1752,9 @@ Thank you"""
                         site_optional = ''',
  'optional': true'''
                     current.response.s3.jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'organisation_id',
- 'targetName':'site_id',
+$.filterOptionsS3({
+ 'trigger':'organisation_id',
+ 'target':'site_id',
  'lookupField':'site_id',
  'lookupResource':'site',
  'lookupURL':S3.Ap.concat('/org/sites_for_org/')%s

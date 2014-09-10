@@ -564,7 +564,7 @@ class S3RequestModel(S3Model):
                                                "joinby": "req_id",
                                                "key": "item_category_id",
                                                },
-                                            
+
                        **{# Scheduler Jobs (for recurring requests)
                           S3Task.TASK_TABLENAME: {"name": "job",
                                                   "joinby": "req_id",
@@ -635,9 +635,9 @@ class S3RequestModel(S3Model):
                                                                        parent="req"),
                                                            title=s3.crud_strings["pr_person"].label_create)
             s3.jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'site_id',
- 'targetName':'requester_id',
+$.filterOptionsS3({
+ 'trigger':'site_id',
+ 'target':'requester_id',
  'lookupResource':'staff',
  'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',
@@ -711,9 +711,10 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
             itable.item_id.widget = None
             jquery_ready = s3.jquery_ready
             jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'item_id',
- 'targetName':'item_pack_id',
+$.filterOptionsS3({
+ 'trigger':{'alias':'req_item','name':'item_id'},
+ 'target':{'alias':'req_item','name':'item_pack_id'},
+ 'scope':'row',
  'lookupPrefix':'supply',
  'lookupResource':'item_pack',
  'msgNoRecords':i18n.no_packs,
@@ -751,24 +752,24 @@ S3OptionsFilter({
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
                     table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
-                                                                   vars = dict(child="requester_id",
-                                                                               parent="req"),
-                                                                   title=s3.crud_strings["pr_person"].label_create)
+                                                                    vars = dict(child="requester_id",
+                                                                                parent="req"),
+                                                                    title=s3.crud_strings["pr_person"].label_create)
                     jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'site_id',
- 'targetName':'requester_id',
+$.filterOptionsS3({
+ 'trigger':'site_id',
+ 'target':'requester_id',
  'lookupResource':'staff',
  'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',
  'optional':true,
 })''' % T("No contacts yet defined for this site"))
                     table.site_id.comment = A(T("Set as default Site"),
-                                      _id="req_req_site_id_link",
-                                      _target="_blank",
-                                      _href=URL(c="default",
-                                                f="user",
-                                                args=["profile"]))
+                                              _id="req_req_site_id_link",
+                                              _target="_blank",
+                                              _href=URL(c="default",
+                                                        f="user",
+                                                        args=["profile"]))
 
             if settings.get_req_items_ask_purpose():
                 fields.insert(6, "purpose")
@@ -823,9 +824,9 @@ S3OptionsFilter({
                                                                                parent="req"),
                                                                    title=s3.crud_strings["pr_person"].label_create)
                     s3.jquery_ready.append('''
-S3OptionsFilter({
- 'triggerName':'site_id',
- 'targetName':'requester_id',
+$.filterOptionsS3({
+ 'trigger':'site_id',
+ 'target':'requester_id',
  'lookupResource':'staff',
  'lookupURL':S3.Ap.concat('/hrm/staff_for_site/'),
  'msgNoRecords':'%s',
@@ -1698,9 +1699,9 @@ class S3RequestItemModel(S3Model):
                                                                       T("Select Items from the Request"))),
                                       ondelete = "CASCADE",
                                       script = '''
-S3OptionsFilter({
- 'triggerName':'req_item_id',
- 'targetName':'item_pack_id',
+$.filterOptionsS3({
+ 'trigger':'req_item_id',
+ 'target':'item_pack_id',
  'lookupResource':'item_pack',
  'lookupPrefix':'supply',
  'lookupURL':S3.Ap.concat('/req/req_item_packs/'),
@@ -2033,7 +2034,7 @@ class S3RequestSkillModel(S3Model):
                        ]
         if use_commit:
             list_fields.insert(3, "quantity_commit")
-            
+
         # Filter Widgets
         filter_widgets = [
             S3OptionsFilter("req_id$fulfil_status",
@@ -3041,7 +3042,7 @@ class S3CommitItemModel(S3Model):
         insert = tracktable.insert
         for row in records:
             rim = row.req_req_item
-            # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition) 
+            # Now done as a VirtualField instead (looks better & updates closer to real-time, so less of a race condition)
             #quantity_shipped = max(rim.quantity_transit, rim.quantity_fulfil)
             #quantity_needed = rim.quantity - quantity_shipped
             id = insert(req_item_id = rim.id,
@@ -4111,7 +4112,7 @@ function(status){s3_debug(status)})''' % site_id
                    )
 
     return table
-    
+
 # =============================================================================
 def req_req_list_layout(list_id, item_id, resource, rfields, record):
     """
@@ -4484,7 +4485,7 @@ def req_customise_commit_fields():
                    )
 
     return table
-    
+
 # =============================================================================
 def req_commit_list_layout(list_id, item_id, resource, rfields, record):
     """
@@ -4552,7 +4553,7 @@ def req_commit_list_layout(list_id, item_id, resource, rfields, record):
         avatar = s3_avatar_represent(person_id,
                                      tablename="pr_person",
                                      _class="media-object")
-        
+
         avatar = A(avatar,
                    _href=person_url,
                    _class="pull-left",
