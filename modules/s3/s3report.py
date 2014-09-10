@@ -290,8 +290,8 @@ class S3Report(S3Method):
             if resource.count() == 0:
                 # Show Points
                 resource.clear_query()
-                if s3_filter is not None:
-                    resource.add_filter(s3_filter)
+                # Apply URL filters (especially BBOX)
+                resource.build_query(filter=s3_filter, vars=get_vars)
 
                 # Extract the Location Data
                 xmlformat = S3XMLFormat(stylesheet)
@@ -352,8 +352,8 @@ class S3Report(S3Method):
                     # Nothing we can display
                     return json.dumps({})
                 resource.clear_query()
-                if s3_filter is not None:
-                    resource.add_filter(s3_filter)
+                # Apply URL filters (especially BBOX)
+                resource.build_query(filter=s3_filter, vars=get_vars)
                 level = "L%s" % (level - 1)
                 if context and "location" in context:
                     # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired

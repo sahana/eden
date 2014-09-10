@@ -2376,7 +2376,7 @@ def customise_s3_audit_controller(**attr):
                                           "tablename",
                                           (T("Record ID"), "record_id"),
                                           ],
-                           list_layout = current.response.s3.render_log,
+                           list_layout = s3.render_log,
                            orderby = "s3_audit.timestmp desc",
                            report_options = report_options,
                            summary = [{"name": "table",

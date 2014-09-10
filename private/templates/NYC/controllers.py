@@ -141,7 +141,9 @@ $('#login-btn').click(function(){
                                                    limit=4,
                                                    list_id=list_id,
                                                    orderby=orderby,
-                                                   layout=s3.render_log)
+                                                   # @ToDo: Port this from CRMT to core
+                                                   #layout=s3.render_log
+                                                   )
 
         # Placeholder
         filter_form = DIV(_class="filter_form")

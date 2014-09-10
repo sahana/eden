@@ -93,7 +93,9 @@ class S3Migration(object):
         # Read settings
         model = "%s/models/000_config.py" % request.folder
         code = getcfs(model, model, None)
-        environment = build_environment(request, current.response,
+        response = current.response
+        response.s3 = Storage() # Needed as some Templates look at this & we don't wish to crash
+        environment = build_environment(request, response,
                                         current.session)
         environment["settings"] = settings
         def template_path():
