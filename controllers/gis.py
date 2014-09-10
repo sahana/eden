@@ -1159,9 +1159,9 @@ def config():
                                             )
                         if "base" in layer:
                             form_vars.base = layer["base"]
+                        if "dir" in layer:
+                            form_vars.dir = layer["dir"]
                         form_vars.visible = layer.get("visible", False)
-                        if "style" in layer:
-                            form_vars.style = json.dumps(layer["style"], separators=SEPARATORS)
                         # Update or Insert?
                         query = (ltable.config_id == config_id) & \
                                 (ltable.layer_id == layer_id)
@@ -1177,6 +1177,27 @@ def config():
                         # Ensure that Default Base processing happens properly
                         form.vars = form_vars
                         s3db.gis_layer_config_onaccept(form)
+                        if "style" in layer:
+                            form_vars = Storage(config_id = config_id,
+                                                layer_id = layer_id,
+                                                )
+                            form_vars.style = json.dumps(layer["style"],
+                                                         separators=SEPARATORS)
+                            # Update or Insert?
+                            stable = s3db.gis_style
+                            query = (stable.config_id == config_id) & \
+                                    (stable.layer_id == layer_id)
+                            record = db(query).select(stable.id,
+                                                      limitby=(0, 1)).first()
+                            if record:
+                                #record_id = record.id
+                                #form_vars.id = record_id
+                                #db(stable.id == record_id).update(**form_vars)
+                                record.update_record(**form_vars)
+                            else:
+                                # New Style
+                                #form_vars.id = stable.insert(**form_vars)
+                                stable.insert(**form_vars)
 
         return output
     s3.postp = postp
