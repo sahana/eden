@@ -399,7 +399,7 @@ class S3Migration(object):
                             _data = {}
                         for f in fields:
                             if f in row:
-                                _data[f] = row[f]
+                                _data[f] = row[f] or None # JSON type doesn't like ""
                         if _new:
                             data[record_id] = _data
 
@@ -429,7 +429,7 @@ class S3Migration(object):
                                 _data = {}
                             for f in _fields:
                                 if f in record:
-                                    _data[f] = record[f]
+                                    _data[f] = record[f] or None # JSON type doesn't like ""
                             if _new:
                                 data[record_id] = _data
 
