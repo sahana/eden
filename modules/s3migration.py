@@ -31,6 +31,7 @@
 
 __all__ = ("S3Migration",)
 
+import datetime
 import os
 
 from uuid import uuid4
@@ -439,8 +440,12 @@ class S3Migration(object):
                     update_vars = data[record_id]
                     if update_vars:
                         update_vars[lookup_field] = record_id
-                        # Can't rely on the default as this will always be identical as auto_import doesn't see SQLCustomTypes
-                        update_vars["uuid"] = uuid4().urn
+                        # Can't rely on the defaults as auto_import doesn't see DAL defaults
+                        update_vars["created_on"] = datetime.datetime.utcnow()
+                        update_vars["deleted"] = False
+                        update_vars["mci"] = 0
+                        update_vars["modified_on"] = datetime.datetime.utcnow()
+                        update_vars["uuid"] = uuid4().urn # Would always be identical otherwise
                         table.insert(**update_vars)
 
         if strints:
