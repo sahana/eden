@@ -151,6 +151,10 @@ select {
   background: #fefefe;
   padding: 5px 10px;
 }
+.form-container .controls,
+.item-container .controls {
+  display: inline-block;
+}
 
 .form-container form select,
 .form-container form input.string:not(.date),

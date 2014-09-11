@@ -87,6 +87,9 @@ select {
     }
     width: auto;
     overflow: inherit;
+    .controls {
+        display: inline-block;
+    }
 }
 .form-container {
     form {

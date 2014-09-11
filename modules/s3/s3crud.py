@@ -278,12 +278,16 @@ class S3CRUD(S3Method):
                 try:
                     parent = long(link_to_parent)
                 except ValueError:
-                    pass
+                    r.error(400, "Invalid parent record ID: %s" % link_to_parent)
                 else:
                     from s3hierarchy import S3Hierarchy
                     h = S3Hierarchy(tablename)
                     if h.config:
-                        hierarchy = h.preprocess_create_node(r, parent)
+                        try:
+                            hierarchy = h.preprocess_create_node(r, parent)
+                        except KeyError:
+                            import sys
+                            r.error(404, sys.exc_info()[1])
 
             # Copy record
             from_table = None

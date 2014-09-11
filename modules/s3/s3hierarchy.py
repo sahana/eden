@@ -711,9 +711,17 @@ class S3Hierarchy(object):
             @param r: the request
             @param table: the hierarchical table
             @param parent_id: the parent ID
-
-            @todo: make sure that the parent exists
         """
+
+        # Make sure the parent record exists
+        table = current.s3db.table(self.tablename)
+        query = (table[self.pkey.name] == parent_id)
+        DELETED = current.xml.DELETED
+        if DELETED in table.fields:
+            query &= table[DELETED] != True
+        parent = current.db(query).select(table._id).first()
+        if not parent:
+            raise KeyError("Parent record not found")
 
         link = self.link
         fkey = self.fkey
