@@ -335,7 +335,7 @@ if len(pop_list) > 0:
     db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
     if settings.get_gis_spatialdb():
         # Add Spatial Index (PostgreSQL-only currently)
-        db.executesql("CREATE INDEX gis_location_gist on %s USING GIST (the_geom);")
+        db.executesql("CREATE INDEX gis_location_gist on %s USING GIST (the_geom);" % tablename)
         # Ensure the Planner takes this into consideration
         db.executesql("VACUUM ANALYZE;")
 
