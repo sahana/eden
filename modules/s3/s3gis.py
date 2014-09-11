@@ -7853,6 +7853,7 @@ class LayerFeature(Layer):
                                                             titem)
                 output["popup_format"] = popup_format
             else:
+                # @ToDo: Deprecate
                 popup_fields = self.popup_fields
                 if popup_fields:
                     # Old-style
@@ -7864,7 +7865,7 @@ class LayerFeature(Layer):
                         popup_format = "%s" % popup_fields[0]
                     for f in popup_fields[1:]:
                         popup_format = "%s<br/>{%s}" % (popup_format, f)
-                    output["popup_format"] = popup_format
+                output["popup_format"] = popup_format or ""
 
             # Attributes which are defaulted client-side if not set
             self.setup_folder_visibility_and_opacity(output)
@@ -7874,6 +7875,7 @@ class LayerFeature(Layer):
                 # depending on the zoom level & hence Points or Polygons
                 output["cluster"] = 1
             if not popup_format:
+                # Need this to differentiate from e.g. FeatureQueries
                 output["no_popups"] = 1
             if self.style:
                 output["style"] = self.style

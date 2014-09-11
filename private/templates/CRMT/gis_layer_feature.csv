@@ -5,7 +5,7 @@ Meetings (Community Data),,project,activity,activity,,{name},name,activity_type.
 Community Events (Community Data),,project,activity,activity,,{name},name,activity_type.name=Community Events,,,,Activities,False,,30,,
 Evacuation Routes (Community Data),,vulnerability,evac_route,evac_route,,{name},name,,,,,Evacuation,False,,30,,
 Organizations,used for Summary View,org,organisation,organization,Building,{name} (T('Organization')),name,,True,,,,False,False,30,,
-Places,used for Summary View,org,facility,place,Building,{name} (T('Place')),name,,True,,,,False,False,30,,
+Places,used for Summary View,org,facility,facility,Building,{name} (T('Place')),name,,True,,,,False,False,30,,
 Arts and Recreation (Community Data),,org,facility,arts,Building,{name} (T('Place')),name,facility_type.name__typeof=Arts and Recreation,,,,,False,,30,,
 Arts and Recreation (Community Data),,org,organisation,arts,Building,{name} (T('Organization')),name,service.name__typeof=Arts and Recreation,,,,Organizations,False,,30,,
 Communications (Community Data),,org,facility,communications,Building,{name} (T('Place')),name,facility_type.name__typeof=Communications,True,,,,False,,30,,
