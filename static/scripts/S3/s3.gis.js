@@ -3212,7 +3212,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             // Don't do anything here when drawing features
             return;
         }
-        if ((map.s3.layers_nopopups.indexOf(layer.name) != -1) && (feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip')) {
+        if (map.s3.layers_nopopups.indexOf(layer.name) != -1) {
             // Style the feature normally
             feature.renderIntent = 'default';
             layer.drawFeature(feature);
