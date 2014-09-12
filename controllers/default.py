@@ -231,7 +231,7 @@ def index():
                              for fac in facility_list]
             manage_facility_box = DIV(H3(T("Manage Your Facilities")),
                                       SELECT(_id = "manage_facility_select",
-                                             _style = "max-width:400px",
+                                             _style = "max-width:360px",
                                              *facility_opts
                                              ),
                                       A(T("Go"),

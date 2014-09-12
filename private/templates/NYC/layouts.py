@@ -103,6 +103,56 @@ class S3MainMenuLayout(S3NavigationItem):
 MM = S3MainMenuLayout
 
 # =============================================================================
+class S3OptionsMenuLayout(S3NavigationItem):
+    """
+        Controller Options Menu Layout
+    """
+
+    @staticmethod
+    def layout(item):
+
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized:
+            enabled = False
+            visible = False
+        elif item.enabled is None or item.enabled:
+            enabled = True
+            visible = True
+
+        if enabled and visible:
+
+            items = item.render_components()
+            if item.parent is not None:
+                if item.components:
+                    # Submenu
+                    _href = item.url()
+                    return LI(DIV(A(item.label,
+                                    _href=_href,
+                                    _id=item.attr._id),
+                                  _class="hoverable"),
+                              UL(items,
+                                 _class="submenu"))
+                else:
+                    # Menu item
+                    if item.parent.parent is None:
+                        # Top level item
+                        return LI(DIV(A(item.label,
+                                        _href=item.url(),
+                                        _id=item.attr._id),
+                                      _class="hoverable"))
+                    else:
+                        # Submenu item
+                        return LI(A(item.label,
+                                    _href=item.url(),
+                                    _id=item.attr._id))
+            else:
+                # Main menu
+                return UL(items, _id="subnav")
+
+        else:
+            return None
+
+# =============================================================================
 class S3HomeMenuLayout(S3NavigationItem):
 
     @staticmethod

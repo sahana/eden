@@ -35,6 +35,9 @@ settings = current.deployment_settings
 
 # Theme (folder to use for views/layout.html)
 #settings.base.theme = "default"
+settings.ui.formstyle = "foundation"
+settings.ui.filter_formstyle = "foundation_inline"
+settings.ui.hierarchy_theme = "default"
 
 # Enable Guided Tours
 settings.base.guided_tour = True

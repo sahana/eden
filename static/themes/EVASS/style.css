@@ -57,6 +57,10 @@
   margin-top: 10px;
   padding-left: 10px;
 }
+#content h3 {
+  font-size: 1.1em;
+  padding-bottom: 5px;
+}
 
 /* General forms */
 form {
@@ -228,7 +232,7 @@ div.tabs span {
   padding: 0.15em 6px 0.25em 5px;
 }
 div.tabs span a {
-  color: white !important;
+  color: #ffffff !important;
   text-decoration: none !important;
   background: transparent !important;
 }
@@ -236,13 +240,13 @@ div.tabs span a:hover {
   background: transparent !important;
 }
 div.tabs span.tab_here {
-  background: white;
+  background: #ffffff;
   border-color: #2ba6cb;
   border-style: solid;
   border-width: 2px 2px 0 3px;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  border-bottom-color: white;
+  border-bottom-color: #ffffff;
   bottom: 0;
   display: inline;
   font-weight: bold;
@@ -276,11 +280,11 @@ div.tabs span.tab_other:hover {
 }
 div.tabs span.tab_last a,
 div.tabs span.tab_other a {
-  color: white !important;
+  color: #ffffff !important;
 }
 div.tabs span.tab_last a:hover,
 div.tabs span.tab_other a:hover {
-  color: white !important;
+  color: #ffffff !important;
 }
 
 /* Action buttons */
@@ -304,42 +308,42 @@ div.tabs span.tab_other a:hover {
 .delete-btn[disabled]:hover,
 .selected-action[disabled],
 .selected-action[disabled]:hover {
-  color: white;
-  background-color: silver;
+  color: #ffffff;
+  background-color: #c0c0c0;
 }
 
 /* Default action buttons */
 .action-btn,
 .selected-action {
   background-color: #2ba6cb;
-  color: white !important;
+  color: #ffffff !important;
 }
 .action-btn:hover,
 .selected-action:hover {
   background-color: #1f7994;
-  color: white !important;
+  color: #ffffff !important;
 }
 
 /* Alert-style action buttons (e.g. delete) */
 .delete-btn-ajax,
 .delete-btn {
   background-color: #c60f13;
-  color: white !important;
+  color: #ffffff !important;
 }
 .delete-btn-ajax:hover,
 .delete-btn:hover {
   background-color: #a20c10 !important;
-  color: white !important;
+  color: #ffffff !important;
 }
 
 /* Action buttons in datatables */
 .dataTable .action-btn,
 .dataTable .selected-action {
-  color: white;
+  color: #ffffff;
 }
 .dataTable .delete-btn,
 .dataTable .delete-btn-ajax {
-  color: white;
+  color: #ffffff;
 }
 .dataTable td.actions {
   white-space: nowrap;
@@ -362,11 +366,11 @@ div.tabs span.tab_other a:hover {
   display: inline-block;
   margin-left: 2px;
   margin-right: 2px;
-  color: white;
+  color: #ffffff;
   background: #dddddd;
 }
 #footer button.btn:hover {
-  color: white;
+  color: #ffffff;
   background: #a0a0a0;
 }
 
@@ -384,19 +388,46 @@ div.tabs span.tab_other a:hover {
 
 /* Top bar */
 .top-bar {
+  color: #ffffff;
   background-color: #0c0e0f;
+}
+.top-bar .menu-toggle input {
+  margin-right: 5px;
 }
 
-.top-bar-section li:not(.has-form) a:not(.button) {
+.top-bar-section ul li:not(.has-form) a:not(.button) {
+  color: #ffffff;
   background-color: #0c0e0f;
 }
-.top-bar-section li:not(.has-form) a:not(.button):hover {
+.top-bar-section ul li:not(.has-form) a:not(.button):hover {
+  color: #ffffff;
   background-color: #bdb6b0;
 }
-.top-bar-section li.active:not(.has-form) a:not(.button) {
+.top-bar-section ul li.active:not(.has-form) a:not(.button) {
+  color: #ffffff;
   background-color: #73726f;
 }
-.top-bar-section li.active:not(.has-form) a:not(.button):hover {
+.top-bar-section ul li.active:not(.has-form) a:not(.button):hover {
+  color: #ffffff;
+  background-color: #bdb6b0;
+}
+.top-bar-section ul li.has-dropdown:hover > a {
+  background-color: #bdb6b0;
+}
+.top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
+  color: #ffffff;
+  background-color: #777879;
+}
+.top-bar-section ul.dropdown li:not(.has-form) a:not(.button):hover {
+  color: #ffffff;
+  background-color: #bdb6b0;
+}
+.top-bar-section ul.dropdown li.active:not(.has-form) a:not(.button) {
+  color: #ffffff;
+  background-color: #979899;
+}
+.top-bar-section ul.dropdown li.active:not(.has-form) a:not(.button):hover {
+  color: #ffffff;
   background-color: #bdb6b0;
 }
 .top-bar-section li.menu-home a {
@@ -411,23 +442,38 @@ div.tabs span.tab_other a:hover {
   margin-top: 10px;
 }
 
-.side-nav ul {
+.side-nav li {
+  line-height: 1.2;
   list-style-type: none;
   list-style-position: inside;
+  margin: 0;
+  padding: 0;
 }
-.side-nav li a:not(.button) {
-  color: #222222;
-  padding-left: 8px;
-  padding-right: 8px;
+.side-nav li:last-child {
+  margin-bottom: 4px;
 }
-.side-nav li a:not(.button):hover,
-.side-nav li a:not(.button):focus {
+.side-nav li > a:not(.button) {
+  padding: 3px;
   color: #222222;
-  background: #f1edec;
-  padding-left: 10px;
+  background-color: #bdb6b0;
+}
+.side-nav li:hover > a:not(.button) {
+  color: #222222;
+  background-color: #f1edec;
+}
+.side-nav li.heading {
+  text-transform: uppercase;
+  font-weight: bold;
+  border-top: 1px solid #ada6a0;
+}
+.side-nav li.heading > a:not(button) {
+  padding: 6px 3px 3px 6px;
+  color: #222222;
+  background-color: #bdb6b0;
 }
 .side-nav li.active > a:first-child:not(.button) {
-  color: white;
+  font-weight: bold;
+  color: #ffffff;
   background-color: #73726f;
 }
 .side-nav li.active > a:first-child:not(.button):hover {
@@ -435,15 +481,9 @@ div.tabs span.tab_other a:hover {
   background-color: #f1edec;
 }
 .side-nav li.divider {
-  border-top: 1px solid white;
+  border-top: 1px solid #ffffff;
   height: 0;
-  padding: 0;
   list-style: none;
-}
-.side-nav .heading {
-  text-transform: uppercase;
-  border-top: 1px solid #ada6a0;
-  margin-top: 5px;
 }
 
 /* Datatables */
@@ -467,10 +507,10 @@ table.dataTable th, table.dataTable td {
   padding: 0.7em 0.7em 0.7em 0.5em;
 }
 table.dataTable thead th, table.dataTable thead td {
-  background-color: white;
+  background-color: #ffffff;
 }
 table.dataTable tbody tr.even {
-  background-color: white;
+  background-color: #ffffff;
 }
 table.dataTable tbody tr.even td.sorting_1 {
   background-color: #fafafa;
@@ -601,7 +641,7 @@ input.date.hasDatepicker {
 }
 
 .ui-datepicker-trigger {
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
   background-image: url("../../img/bootstrap/calendar.gif");
   margin-left: 10px;
 }

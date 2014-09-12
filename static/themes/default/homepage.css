@@ -14,7 +14,7 @@
 }
 #menu_box_center .menu_box h3  {
     border-bottom: 0;
-    font-size: 1.6em;
+    font-size: 1.4em;
     text-align: center;
 }
 #menu_box_1 {
@@ -86,7 +86,7 @@
     display: block;
     white-space:nowrap;
     text-align: center;
-    font-size: 1.3em;
+/*     font-size: 1.3em; */
 }
 
 #login_form,

@@ -22,7 +22,7 @@ settings = current.deployment_settings
 settings.base.prepopulate = ("uvg", "default/users")
 
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "uvg"
+#settings.base.theme = "default"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -43,6 +43,7 @@ settings.L10n.decimal_separator = "."
 
 settings.ui.formstyle = "foundation"
 settings.ui.filter_formstyle = "foundation_inline"
+settings.ui.hierarchy_theme = "default"
 
 # Comment/uncomment modules here to disable/enable them
 # @ToDo: Have the system automatically enable migrate if a module is enabled

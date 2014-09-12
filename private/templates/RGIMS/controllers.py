@@ -5,8 +5,6 @@ from os import path
 from gluon import current
 from gluon.html import *
 
-from s3.s3utils import s3_register_validation
-
 # =============================================================================
 class index():
     """ Custom Home Page """
@@ -15,6 +13,7 @@ class index():
 
         T = current.T
         auth = current.auth
+        s3db = current.s3db
         db = current.db
         request = current.request
         appname = request.application
@@ -86,7 +85,7 @@ class index():
         AUTHENTICATED = _s3.system_roles.AUTHENTICATED
         roles = _s3.roles
         if AUTHENTICATED in roles and \
-           auth.s3_has_permission("read", db.org_organisation):
+           auth.s3_has_permission("read", s3db.org_organisation):
             auth.permission.controller = "org"
             auth.permission.function = "site"
             permitted_facilities = auth.permitted_facilities(redirect_on_error=False)
@@ -98,7 +97,7 @@ class index():
                                  for fac in facility_list]
                 manage_facility_box = DIV(H3(T("Manage Your Facilities")),
                                           SELECT(_id = "manage_facility_select",
-                                                 _style = "max-width:400px;",
+                                                 _style = "max-width:360px;",
                                                  *facility_opts
                                                  ),
                                           A(T("Go"),
