@@ -75,6 +75,9 @@ class S3Migration(object):
         (db_string, pool_size) = settings.get_database_string()
         prefix = hashlib.md5(db_string).hexdigest()
         filename = "%s_%s.table" % (prefix, tablename)
+
+        @ToDo: Function to ensure that roles match those in prepop
+        @ToDo: Function to dos elective additional prepop
     """
 
     def __init__(self):

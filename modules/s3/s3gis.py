@@ -2267,11 +2267,13 @@ class GIS(object):
         if layer_id:
             # Feature Layer
             # e.g. Search results loaded as a Feature Resource layer
-            layer = db(ftable.id == layer_id).select(ftable.attr_fields,
-                                                     ftable.popup_fields, # @ToDo: Deprecate
-                                                     ftable.individual,
-                                                     ftable.trackable,
-                                                     limitby=(0, 1)).first()
+            layer = db(ftable.layer_id == layer_id).select(ftable.attr_fields,
+                                                           # @ToDo: Deprecate
+                                                           ftable.popup_fields,
+                                                           ftable.individual,
+                                                           ftable.trackable,
+                                                           limitby=(0, 1)
+                                                           ).first()
 
         else:
             # e.g. KML, GeoRSS or GPX export
