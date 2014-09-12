@@ -8899,6 +8899,13 @@ class Style(object):
            cluster_threshold != CLUSTER_THRESHOLD:
             output.cluster_threshold = cluster_threshold
         if style.style:
+            if isinstance(style.style, basestring):
+                # Native JSON
+                try:
+                    style.style = json.loads(style.style)
+                except:
+                    current.log.error("Unable to decode Style: %s" % style.style)
+                    style.style = None
             output.style = style.style
         return output
 
