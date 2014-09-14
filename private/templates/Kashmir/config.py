@@ -34,6 +34,7 @@ settings.base.theme = "default"
 settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
 settings.auth.registration_requires_approval = True
+settings.auth.registration_requests_organisation = True
 
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"
@@ -89,7 +90,7 @@ settings.L10n.utc_offset = "UTC +0530"
 # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
 # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
-#settings.security.policy = 7 # Organisation-ACLs
+settings.security.policy = 6 # Organisation-ACLs
 
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
