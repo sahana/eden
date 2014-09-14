@@ -135,7 +135,14 @@ class IS_JSONS3(Validator):
     """
 
     def __init__(self, error_message="Invalid JSON"):
-        self.native_json = current.db._adapter.native_json
+        # Currently being reworked
+        #try:
+        #    # Newer Web2py
+        #    self.native_json = current.db._adapter.driver_auto_json_loads
+        #except:
+        #    # Older Web2py
+        #    self.native_json = current.db._adapter.native_json
+        self.native_json = False
         self.error_message = error_message
 
     # -------------------------------------------------------------------------
@@ -146,7 +153,8 @@ class IS_JSONS3(Validator):
             if self.native_json:
                 json.loads(value) # raises error in case of malformed JSON
                 return (value, None) #  the serialized value is not passed
-            return (json.loads(value), None)
+            else:
+                return (json.loads(value), None)
         except JSONErrors, e:
             return (value, "%s: %s" % (current.T(self.error_message), e))
 
@@ -154,7 +162,10 @@ class IS_JSONS3(Validator):
     def formatter(self, value):
         if value is None:
             return None
-        return json.dumps(value)
+        if self.native_json:
+            return value
+        else:
+            return json.dumps(value)
 
 # =============================================================================
 class IS_LAT(Validator):
