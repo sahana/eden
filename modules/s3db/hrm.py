@@ -2586,6 +2586,26 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def defaults():
+        """
+            Return safe defaults in case the model has been deactivated.
+        """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        dummy_listref = S3ReusableField("dummy_id", "list:reference",
+                                        readable = False,
+                                        writable = False)
+
+        return dict(hrm_course_id = lambda **attr: dummy("course_id"),
+                    hrm_skill_id = lambda **attr: dummy("skill_id"),
+                    hrm_multi_skill_id = lambda **attr: dummy_listref("skill_id"),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def skill_type_default():
         """ Lookup the default skill_type """
 

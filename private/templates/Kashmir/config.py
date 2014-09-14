@@ -22,10 +22,10 @@ settings = current.deployment_settings
 """
 
 # PrePopulate data
-settings.base.prepopulate = ("skeleton", "default/users")
+settings.base.prepopulate = ("Kashmir", "default/users")
 
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "skeleton"
+settings.base.theme = "default"
 
 # Authentication settings
 # Should users be allowed to register themselves?
@@ -38,7 +38,7 @@ settings.base.theme = "skeleton"
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-#settings.gis.countries = ["US"]
+settings.gis.countries = ["IN"]
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -135,25 +135,49 @@ settings.modules = OrderedDict([
         name_nice = T("Map"),
         #description = "Situation Awareness & Geospatial Analysis",
         restricted = True,
-        module_type = 6,     # 6th item in the menu
+        module_type = 1,     # 1st item in the menu
     )),
     ("pr", Storage(
         name_nice = T("Person Registry"),
         #description = "Central point to record details on People",
         restricted = True,
         access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-        module_type = 10
+        module_type = 10 # Accessible via Admin menu
     )),
     ("org", Storage(
         name_nice = T("Organizations"),
         #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
         restricted = True,
-        module_type = 1
+        module_type = 5
     )),
     #("hrm", Storage(
     #    name_nice = T("Staff"),
     #    #description = "Human Resources Management",
     #    restricted = True,
-    #    module_type = 2,
+    #    module_type = 10,
     #)),
+    ("cr", Storage(
+        name_nice = T("Shelters"),
+        #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+        restricted = True,
+        module_type = 3
+    )),
+    ("req", Storage(
+        name_nice = T("Requests"),
+        #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        restricted = True,
+        module_type = 2,
+    )),
+    ("supply", Storage(
+        name_nice = T("Supply Chain Management"),
+        #description = "Used within Inventory Management, Request Management and Asset Management",
+        restricted = True,
+        module_type = None, # Not displayed
+    )),
+    ("inv", Storage(
+        name_nice = T("Warehouses"),
+        #description = "Receiving and Sending Items",
+        restricted = True,
+        module_type = 4
+    )),
 ])
