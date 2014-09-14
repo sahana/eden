@@ -35,10 +35,13 @@ settings.base.theme = "skeleton"
 # Do new users need to be approved by an administrator prior to being able to login?
 #settings.auth.registration_requires_approval = True
 
+# Approval emails get sent to all admins
+settings.mail.approver = "ADMIN"
+
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-#settings.gis.countries = ["US"]
+#settings.gis.countries = ("US",)
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -72,6 +75,8 @@ settings.base.theme = "skeleton"
 #settings.L10n.default_language = "en"
 # Uncomment to Hide the language toolbar
 #settings.L10n.display_toolbar = False
+# Default timezone for users
+#settings.L10n.utc_offset = "UTC +0100"
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy

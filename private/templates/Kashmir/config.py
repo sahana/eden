@@ -35,18 +35,21 @@ settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
 settings.auth.registration_requires_approval = True
 
+# Approval emails get sent to all admins
+settings.mail.approver = "ADMIN"
+
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-settings.gis.countries = ["IN"]
+settings.gis.countries = ("IN",)
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
-#settings.L10n.languages = OrderedDict([
+settings.L10n.languages = OrderedDict([
 #    ("ar", "العربية"),
 #    ("bs", "Bosanski"),
-#    ("en", "English"),
+    ("en-gb", "English"),
 #    ("fr", "Français"),
 #    ("de", "Deutsch"),
 #    ("el", "ελληνικά"),
@@ -67,11 +70,13 @@ settings.gis.countries = ["IN"]
 #    ("vi", "Tiếng Việt"),
 #    ("zh-cn", "中文 (简体)"),
 #    ("zh-tw", "中文 (繁體)"),
-#])
+])
 # Default language for Language Toolbar (& GIS Locations in future)
-#settings.L10n.default_language = "en"
+settings.L10n.default_language = "en-gb"
 # Uncomment to Hide the language toolbar
-#settings.L10n.display_toolbar = False
+settings.L10n.display_toolbar = False
+# Default timezone for users
+settings.L10n.utc_offset = "UTC +0530"
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
