@@ -31,9 +31,9 @@ settings.base.theme = "default"
 # Should users be allowed to register themselves?
 #settings.security.self_registration = False
 # Do new users need to verify their email address?
-#settings.auth.registration_requires_verification = True
+settings.auth.registration_requires_verification = True
 # Do new users need to be approved by an administrator prior to being able to login?
-#settings.auth.registration_requires_approval = True
+settings.auth.registration_requires_approval = True
 
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
