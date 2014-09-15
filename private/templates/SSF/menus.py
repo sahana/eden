@@ -46,18 +46,19 @@ class S3MainMenu(default.S3MainMenu):
     def menu(cls):
         """ Compose Menu """
 
-        main_menu = MM()(
+        main_menu = MMO()(
 
             # Modules-menu, align-left
-            cls.menu_modules(),
+            MM()(
+                HM(),
+                cls.menu_modules(),
+            ),
 
             # Service menus, align-right
-            # Note: always define right-hand items in reverse order!
-            cls.menu_help(right=True),
-            cls.menu_lang(right=True),
-            cls.menu_auth(right=True),
-            cls.menu_admin(right=True),
-            cls.menu_gis(right=True)
+            MM(right=True)(
+                cls.menu_auth(),
+                cls.menu_lang(),
+            ),
         )
         return main_menu
 
@@ -72,15 +73,86 @@ class S3MainMenu(default.S3MainMenu):
         deployment_filter = {"sector.name" : "None,Deployment"}
 
         return [
-            homepage(),
-            homepage("hrm", name=T("Contributors")),
+            MM("Contributors", c="pr", f="person",
+                icon="icon-news"),
             MM("Deployments", c="project", f="project",
+                icon="icon-check",
                 vars=deployment_filter),
             MM("Projects", c="project", f="project",
+                icon="icon-project",
                 vars=project_filter),
-            MM("Tasks", c="project", f="task"),
-            homepage("org", name=T("Disaster Organisations")),
+            MM("Tasks", c="project", f="task",
+                icon="icon-pencil"),
+            MM("Disaster Organisations", c="org", f="organisation",
+                icon="icon-globe"),
         ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_auth(cls, **attr):
+        """ Auth Menu """
+
+        auth = current.auth
+        logged_in = auth.is_logged_in()
+        menu_auth = None
+
+        if not logged_in:
+            request = current.request
+            
+            if request.controller == "default" and request.function == "user" \
+                or "login" in request.args:
+                pass
+            else:
+                # Dropdown Login Form
+                menu_auth = ML() 
+        else:
+            # Logged-in
+            user = auth.user
+            options =[MM("Edit Profile", c="pr", f="person",
+                         args=[user.id],
+                         icon="icon-edit"),
+                      MM(user.email, c="default", f="user", m="profile",
+                         icon="icon-user"),
+                      MM("Notification Settings", c="default", f="index", 
+                         m="subscriptions",
+                         icon="icon-envelope"),
+                      MM("Change Password", c="default", f="user", 
+                         m="change_password",
+                         icon="icon-lock"),
+                      MM("Logout", c="default", f="user", m="logout",
+                         icon="icon-off"),
+                      ]
+            if auth.s3_has_role("ADMIN"):
+                options.insert(0, MM("Admin", c="admin", f="user",
+                                     icon="icon-cogs"))
+                options.insert(1, SEP())
+            menu_auth = MM("",icon="icon-cog")(*options)
+        
+        return menu_auth
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_lang(cls, **attr):
+        """ Language Menu """
+
+        settings = current.deployment_settings
+        if not settings.get_L10n_display_toolbar():
+            return None
+
+        s3 = current.response.s3
+        languages = s3.l10n_languages
+        lang = s3.language
+        request = current.request
+
+        menu_lang = MM("",icon="icon-comment-alt", **attr)
+        for language in languages:
+            menu_lang.append(MM(languages[language], r=request,
+                                translate=False,
+                                vars={"_language": language},
+                                ltr=True,
+                                icon="icon-check" if language == lang else "icon-check-empty"
+                                ))
+        return menu_lang
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
