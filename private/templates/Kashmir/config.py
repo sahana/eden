@@ -21,6 +21,9 @@ settings = current.deployment_settings
     Deployers should ideally not need to edit any other files outside of their template folder
 """
 
+settings.base.system_name = T("Sahana Kashmir")
+settings.base.system_name_short = T("Sahana")
+
 # PrePopulate data
 settings.base.prepopulate = ("Kashmir", "default/users")
 
@@ -91,6 +94,9 @@ settings.L10n.utc_offset = "UTC +0530"
 # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 #
 settings.security.policy = 6 # Organisation-ACLs
+
+# RSS feeds
+settings.frontpage.rss = []
 
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
