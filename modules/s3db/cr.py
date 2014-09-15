@@ -1191,7 +1191,7 @@ def cr_shelter_rheader(r, tabs=[]):
                     (T("People Registration"), "shelter_registration"),
                     (STAFF, "human_resource"),
                     ]
-            if current.auth.s3_has_permission("create", "hrm_human_resource_site"):
+            if "hrm" in current.deployment_settings.modules and current.auth.s3_has_permission("create", "hrm_human_resource_site"):
                 #tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
                 tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
             settings = current.deployment_settings

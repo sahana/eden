@@ -666,35 +666,53 @@ def requester_represent(id, show_link=True):
     if not id:
         return current.messages["NONE"]
 
-    htable = s3db.hrm_human_resource
+    
     ptable = s3db.pr_person
     ctable = s3db.pr_contact
 
-    query = (htable.person_id == ptable.id) & \
-            (ptable.id == id)
+    is_hrm = "hrm" in current.deployment_settings.modules 
+
+    if is_hrm:
+        htable = s3db.hrm_human_resource
+
+    query = (ptable.id == id)
+
+    if is_hrm:
+        query = query & (htable.person_id == ptable.id)
+
     left = ctable.on((ctable.pe_id == ptable.pe_id) & \
                      (ctable.contact_method == "SMS"))
-    row = db(query).select(htable.type,
-                           ptable.first_name,
-                           ptable.middle_name,
-                           ptable.last_name,
-                           ctable.value,
-                           left=left,
-                           limitby=(0, 1)).first()
-
-    try:
-        hr = row["hrm_human_resource"]
-    except:
-        return current.messages.UNKNOWN_OPT
+    if is_hrm:
+        row = db(query).select(htable.type,
+                               ptable.first_name,
+                               ptable.middle_name,
+                               ptable.last_name,
+                               ctable.value,
+                               left=left,
+                               limitby=(0, 1)).first()
+        try:
+            hr = row["hrm_human_resource"]
+        except:
+            return current.messages.UNKNOWN_OPT
+    else:
+        row = db(query).select(ptable.first_name,
+                               ptable.middle_name,
+                               ptable.last_name,
+                               ctable.value,
+                               left=left,
+                               limitby=(0, 1)).first()
 
     repr = s3_fullname(row.pr_person)
     if row.pr_contact.value:
         repr = "%s %s" % (repr, row.pr_contact.value)
     if show_link:
-        if hr.type == 1:
-            controller = "hrm"
+        if is_hrm:
+            if hr.type == 1:
+                controller = "hrm"
+            else:
+                controller = "vol"
         else:
-            controller = "vol"
+            controller = "pr"
         request.extension = "html"
         return A(repr,
                  _href = URL(c = controller,
