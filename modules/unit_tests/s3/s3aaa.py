@@ -1864,6 +1864,23 @@ class HasPermissionTests(unittest.TestCase):
         s3db.pr_remove_affiliation(self.org[2], user, role="TestStaff")
         auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
 
+    # -------------------------------------------------------------------------
+    def testWithUnavailableTable(self):
+        
+        auth = current.auth
+        s3db = current.s3db
+
+        has_permission = auth.s3_has_permission
+        c = "org"
+        f = "permission_test"
+        tablename = "org_permission_unavailable"
+
+        auth.s3_impersonate(None)
+        permitted = has_permission("read", c=c, f=f, table=tablename)
+        
+        # Should return None if the table doesn't exist
+        self.assertEqual(permitted, None)
+        
     ## -------------------------------------------------------------------------
     #def testPerformance(self):
         #""" Test has_permission performance """

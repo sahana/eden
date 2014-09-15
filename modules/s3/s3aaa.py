@@ -4034,9 +4034,8 @@ $.filterOptionsS3({
         sr = self.get_system_roles()
 
         if not hasattr(table, "_tablename"):
-            try:
-                table = current.s3db[table]
-            except:
+            table = current.s3db.table(table)
+            if table is None:
                 current.log.warning("Permission check on Table %s failed as couldn't load table. Module disabled?")
                 # Return a different Falsy value
                 return None
