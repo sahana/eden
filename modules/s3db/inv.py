@@ -3188,7 +3188,9 @@ def inv_rheader(r):
                 #(T("Contact Data"), "contact"),
                 (T("Staff"), "human_resource"),
                 ]
-        if current.auth.s3_has_permission("create", "hrm_human_resource"):
+        settings = current.deployment_settings
+        if settings.has_module("hrm") and \
+           current.auth.s3_has_permission("create", "hrm_human_resource_site"):
             tabs.append((T("Assign Staff"), "human_resource_site"))
         if settings.has_module("asset"):
             tabs.insert(6,(T("Assets"), "asset"))

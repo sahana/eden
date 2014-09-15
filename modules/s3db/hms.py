@@ -1251,7 +1251,8 @@ def hms_hospital_rheader(r, tabs=[]):
 
                 STAFF = settings.get_hrm_staff_label()
                 tabs.append((STAFF, "human_resource"))
-                if current.auth.s3_has_permission("create", "hrm_human_resource_site"):
+                if settings.has_module("hrm") and \
+                   current.auth.s3_has_permission("create", "hrm_human_resource_site"):
                     #tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
                     tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
 

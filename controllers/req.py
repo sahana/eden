@@ -661,40 +661,49 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
 def requester_represent(id, show_link=True):
     """
         Represent a Requester as Name + Tel#
+
+        @ToDo: Migrate to S3Represent
     """
 
     if not id:
         return current.messages["NONE"]
 
-    htable = s3db.hrm_human_resource
+    if settings.has_module("hrm"):
+        has_hrm = True
+    else:
+        has_hrm = False
+
     ptable = s3db.pr_person
     ctable = s3db.pr_contact
 
-    query = (htable.person_id == ptable.id) & \
-            (ptable.id == id)
+    query = (ptable.id == id)
     left = ctable.on((ctable.pe_id == ptable.pe_id) & \
                      (ctable.contact_method == "SMS"))
-    row = db(query).select(htable.type,
-                           ptable.first_name,
-                           ptable.middle_name,
-                           ptable.last_name,
-                           ctable.value,
+    fields = [ptable.first_name,
+              ptable.middle_name,
+              ptable.last_name,
+              ctable.value,
+              ]
+    if has_hrm:
+        htable = s3db.hrm_human_resource
+        query &= (htable.person_id == ptable.id)
+        fields.append(htable.type)
+    row = db(query).select(*fields,
                            left=left,
                            limitby=(0, 1)).first()
 
-    try:
-        hr = row["hrm_human_resource"]
-    except:
-        return current.messages.UNKNOWN_OPT
-
     repr = s3_fullname(row.pr_person)
-    if row.pr_contact.value:
-        repr = "%s %s" % (repr, row.pr_contact.value)
+    contact = row["pr_contact.value"]
+    if contact:
+        repr = "%s %s" % (repr, contact)
     if show_link:
-        if hr.type == 1:
-            controller = "hrm"
+        if has_hrm:
+            if row["hrm_human_resource.type"] == 1:
+                controller = "hrm"
+            else:
+                controller = "vol"
         else:
-            controller = "vol"
+            controller = "pr"
         request.extension = "html"
         return A(repr,
                  _href = URL(c = controller,

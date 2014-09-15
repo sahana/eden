@@ -4848,7 +4848,8 @@ def org_rheader(r, tabs=[]):
                 (STAFF, "human_resource"),
                 ]
         append = tabs.append
-        if current.auth.s3_has_permission("create", "hrm_human_resource_site"):
+        if settings.has_module("hrm") and \
+           current.auth.s3_has_permission("create", "hrm_human_resource_site"):
             #append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
             append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
         if settings.get_req_summary():
