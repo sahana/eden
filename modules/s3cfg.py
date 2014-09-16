@@ -51,11 +51,13 @@ class S3Config(Storage):
 
     # Used by modules/s3theme.py
     FORMSTYLE = {
+        "default": formstyle_foundation,
+        "default_inline": formstyle_foundation_inline,
         "bootstrap": formstyle_bootstrap,
         "foundation": formstyle_foundation,
         "foundation_inline": formstyle_foundation_inline,
-        "default": formstyle_default,
-        "default_inline": formstyle_default_inline,
+        "table": formstyle_table,
+        "table_inline": formstyle_table_inline,
     }
 
     # Formats from static/scripts/i18n/jquery-ui-i18n.js converted to Python style

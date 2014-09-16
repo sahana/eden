@@ -183,6 +183,11 @@ settings.auth.realm_entity = ifrc_realm_entity
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "IFRC"
 settings.base.xtheme = "IFRC/xtheme-ifrc.css"
+
+# Formstyle
+settings.ui.formstyle = "table"
+settings.ui.filter_formstyle = "table_inline"
+
 settings.gis.map_height = 600
 settings.gis.map_width = 869
 # Display Resources recorded to Admin-Level Locations on the map

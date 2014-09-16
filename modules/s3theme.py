@@ -46,7 +46,7 @@ class SECTION(DIV):
     tag = "section"
 
 # =============================================================================
-def formstyle_default(form, fields, *args, **kwargs):
+def formstyle_table(form, fields, *args, **kwargs):
     """
         Default Eden Form Style (Labels above the Inputs)
     """
@@ -84,7 +84,7 @@ def formstyle_default(form, fields, *args, **kwargs):
         return parent
 
 # =============================================================================
-def formstyle_default_inline(form, fields, *args, **kwargs):
+def formstyle_table_inline(form, fields, *args, **kwargs):
     """
         Default Eden Form Style (In-Line Labels)
     """
