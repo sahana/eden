@@ -1441,6 +1441,17 @@ def customise_pr_contact_resource(r, tablename):
 settings.customise_pr_contact_resource = customise_pr_contact_resource
 
 # -----------------------------------------------------------------------------
+def customise_pr_contact_emergency_resource(r, tablename):
+
+    # Special cases for different NS
+    root_org = current.auth.root_org_name()
+    if root_org == VNRC:
+        address = r.table.address
+        address.readable = address.writable = True
+
+settings.customise_pr_contact_emergency_resource = customise_pr_contact_emergency_resource
+
+# -----------------------------------------------------------------------------
 def customise_pr_group_controller(**attr):
 
     s3db = current.s3db
@@ -1683,6 +1694,10 @@ def customise_pr_person_controller(**attr):
                 settings.gis.building_name = False
                 settings.gis.latlon_selector = False
                 settings.gis.map_selector = False
+
+            elif r.method == "contacts":
+                table = s3db.pr_contact_emergency
+                table.address.readable = table.address.writable = True
 
             elif component_name == "identity":
                 controller = r.controller

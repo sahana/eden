@@ -2158,6 +2158,11 @@ class S3ContactModel(S3Model):
                            label = T("Phone"),
                            requires = IS_EMPTY_OR(s3_phone_requires),
                            ),
+                     Field("address",
+                           label = T("Address"),
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -4894,10 +4899,11 @@ def pr_contacts(r, **attr):
         fields = ["id",
                   "name",
                   "relationship",
+                  "address",
                   "phone",
                   ]
 
-        emergency = resource.select(fields)["rows"]
+        rows = resource.select(fields).rows
 
         emergency_wrapper = DIV(H2(T("Emergency Contacts")))
 
@@ -4908,21 +4914,17 @@ def pr_contacts(r, **attr):
                           _class="margin")
             emergency_wrapper.append(add_btn)
 
-        for contact in emergency:
-            name = contact["pr_contact_emergency.name"] or ""
-            if name:
-                name = "%s, " % name
-            relationship = contact["pr_contact_emergency.relationship"] or ""
-            if relationship:
-                relationship = "%s, " % relationship
-            id = contact.id
-            (edit_btn, delete_btn) = action_buttons(etable, id)
+        readable_fields = [f for f in fields if etable[f].readable and f != "id"]
+        for row in rows:
+            data = [row["pr_contact_emergency.%s" % f] or ""
+                    for f in readable_fields]
+            record_id = row["pr_contact_emergency.id"]
+            (edit_btn, delete_btn) = action_buttons(etable, record_id)
             emergency_wrapper.append(
-                P(
-                  SPAN("%s%s%s" % (name, relationship, contact["pr_contact_emergency.phone"])),
+                P(SPAN(", ".join(data)),
                   edit_btn,
                   delete_btn,
-                  _id="emergency-%s" % id,
+                  _id="emergency-%s" % record_id,
                   _class="emergency",
                 ))        
 
