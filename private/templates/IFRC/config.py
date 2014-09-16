@@ -1685,15 +1685,33 @@ def customise_pr_person_controller(**attr):
                 settings.gis.map_selector = False
 
             elif component_name == "identity":
-                table = s3db.pr_identity
-                table.description.readable = False
-                table.description.writable = False
+                controller = r.controller
+                table = r.component.table
+
+                # Limit options for identity document type
                 pr_id_type_opts = {1: T("Passport"),
                                    2: T("National ID Card"),
                                    }
                 from gluon.validators import IS_IN_SET
-                table.type.requires = IS_IN_SET(pr_id_type_opts,
-                                                zero=None)
+                table.type.requires = IS_IN_SET(pr_id_type_opts, zero=None)
+                
+                if controller == "hrm":
+                    # For staff, set default for ID document type and do not
+                    # allow selection of other options
+                    table.type.default = 2
+                    table.type.writable = False
+                    hide_fields = ("description", "valid_until", "country_code", "ia_name")
+                else:
+                    hide_fields = ("description",)
+                
+                # Hide unneeded fields
+                for fname in hide_fields:
+                    field = table[fname]
+                    field.readable = field.writable = False
+                list_fields = s3db.get_config("pr_identity", "list_fields")
+                hide_fields = set(hide_fields)
+                list_fields = (fs for fs in list_fields if fs not in hide_fields)
+                s3db.configure("pr_identity", list_fields = list_fields)
 
             elif component_name == "hours":
                 field = s3db.hrm_programme_hours.job_title_id
