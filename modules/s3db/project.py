@@ -3792,17 +3792,17 @@ class S3ProjectDRRModel(S3Model):
         T = current.T
 
         hfa_opts = project_hfa_opts()
-        hfa_opts = dict((opt, "HFA %s" % opt) for opt in hfa_opts)
+        options = dict((opt, "HFA %s" % opt) for opt in hfa_opts)
 
         tablename = "project_drr"
         self.define_table(tablename,
                           self.project_project_id(empty=False),
                           Field("hfa", "list:integer",
                                 label = T("HFA Priorities"),
-                                represent = S3Represent(options=hfa_opts,
+                                represent = S3Represent(options=options,
                                                         multiple=True),
                                 requires = IS_EMPTY_OR(IS_IN_SET(
-                                            hfa_opts,
+                                            options,
                                             multiple = True)),
                                 widget = S3GroupedOptionsWidget(
                                             cols=1,

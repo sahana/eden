@@ -758,7 +758,15 @@ class S3CRUD(S3Method):
 
         elif representation == "json":
             exporter = S3Exporter().json
-            return exporter(resource)
+
+            # Render extra "_tooltip" field for each row?
+            get_vars = request.get_vars
+            if "tooltip" in get_vars:
+                tooltip = get_vars["tooltip"]
+            else:
+                tooltip = None
+
+            return exporter(resource, tooltip=tooltip)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -1226,6 +1234,12 @@ class S3CRUD(S3Method):
             else:
                 start = None
 
+            # Render extra "_tooltip" field for each row?
+            if "tooltip" in get_vars:
+                tooltip = get_vars["tooltip"]
+            else:
+                tooltip = None
+
             fields = resource.list_fields(id_column=True)
             rfields = resource.resolve_selectors(fields,
                                                  extra_fields=False)[0]
@@ -1238,7 +1252,8 @@ class S3CRUD(S3Method):
                             start=start,
                             limit=limit,
                             fields=fields,
-                            orderby=orderby)
+                            orderby=orderby,
+                            tooltip=tooltip)
 
         elif representation == "pdf":
 

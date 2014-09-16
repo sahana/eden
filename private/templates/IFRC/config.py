@@ -1849,6 +1849,7 @@ def customise_project_project_controller(**attr):
 
     # Custom Crud Form
     from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+    s3db = current.s3db
     crud_form = S3SQLCustomForm(
         "organisation_id",
         "name",
@@ -1873,6 +1874,7 @@ def customise_project_project_controller(**attr):
             "hazard",
             label = T("Hazards"),
             field = "hazard_id",
+            help_field = s3db.project_hazard_help_fields,
             cols = 4,
             translate = True,
         ),
@@ -1887,6 +1889,7 @@ def customise_project_project_controller(**attr):
             "theme",
             label = T("Themes"),
             field = "theme_id",
+            help_field = s3db.project_theme_help_fields,
             cols = 4,
             translate = True,
             # Filter Theme by Sector
@@ -1899,7 +1902,8 @@ $.filterOptionsS3({
  'lookupPrefix':'project',
  'lookupResource':'theme',
  'lookupKey':'theme_id:project_theme_sector.sector_id',
- 'showEmptyField':false
+ 'showEmptyField':false,
+ 'tooltip':'project_theme_help_fields(id,name)'
 })'''
         ),
         "drr.hfa",

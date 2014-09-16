@@ -790,7 +790,13 @@ var s3_showMap = function(feature_id) {
                     defaultValue = value;
                 }
                 name = fncRepresent ? fncRepresent(record, prepResult) : record.name;
-                options.push('<option value="' + value + '">' + name + '</option>');
+                // Does the option have an onhover-tooltip?
+                if (record._tooltip) {
+                    title = ' title="' + record._tooltip + '"';
+                } else {
+                    title = ''
+                }
+                options.push('<option' + title + ' value="' + value + '">' + name + '</option>');
             }
             if (settings.optional) {
                 // Add (and default to) empty option
@@ -1004,6 +1010,15 @@ var s3_showMap = function(feature_id) {
                 }
             }
         }
+        var tooltip = settings.tooltip;
+        if (tooltip) {
+            tooltip = 'tooltip=' + tooltip;
+            if (url.indexOf('?') != -1) {
+                url = url.concat('&' + tooltip);
+            } else {
+                url = url.concat('?' + tooltip);
+            }
+        }
 
         var request = null;
         if (!settings.getWidgetHTML) {
@@ -1197,6 +1212,12 @@ var s3_showMap = function(feature_id) {
      * @param {string} settings.msgNoRecords - show this text for the None-option
      * @param {bool} settings.optional - add a None-option (without text) even when options
      *                                   are available (so the user can select None)
+     * @param {string} settings.tooltip - additional tooltip field to request from back-end,
+     *                                    either a field selector or an expression "f(k,v)"
+     *                                    where f is a function name that can be looked up
+     *                                    from s3db, and k,v are field selectors for the row,
+     *                                    f will be called with a list of tuples (k,v) for each
+     *                                    row and is expected to return a dict {k:tooltip}
      */
     $.filterOptionsS3 = function(settings) {
 
