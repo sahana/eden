@@ -308,6 +308,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         staff = {"group": "staff"}
 
+        is_not_vnrc = lambda i: current.auth.root_org_name() != "Viet Nam Red Cross"
+
         return M()(
                     M("Staff", c="hrm", f=("staff", "person"), m="summary",
                       check=manager_mode)(
@@ -372,7 +374,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", c="hrm", f="certificate",
-                      check=manager_mode)(
+                      check=[manager_mode, is_not_vnrc])(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         #M("Skill Equivalence", f="certificate_skill"),
