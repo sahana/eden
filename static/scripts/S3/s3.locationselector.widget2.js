@@ -195,6 +195,10 @@
         L5_select.change(function() {
             lx_select(fieldname, 5);
         });
+        var addressFields = $(selector + '_address' + ',' + selector + '_postcode');
+        addressFields.change(function() {
+            resetHidden(fieldname);
+        });
 
         // Form submission
         real_input.closest('form').submit(function() {
