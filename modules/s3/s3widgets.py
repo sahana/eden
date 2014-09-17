@@ -4064,7 +4064,16 @@ class S3LocationSelectorWidget2(FormWidget):
 
             level = record.level
             parent = record.parent
-            path = record.path.split("/")
+
+            path = record.path
+            if path is None:
+                # Not updated yet? => do it now
+                try:
+                    path = current.gis.update_location_tree({"id": value})
+                except ValueError:
+                    pass
+            path = [] if path is None else path.split("/")
+
             path_ok = True
             if level:
                 if len(path) != (int(level[1:]) + 1):
