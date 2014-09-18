@@ -120,92 +120,6 @@ def s3_get_utc_offset():
 # Store last value in session
 session.s3.utc_offset = s3_get_utc_offset()
 
-# =============================================================================
-# CRUD functions
-#
-def s3_barchart(r, **attr):
-    """
-        Provide simple barcharts for resource attributes
-        SVG representation uses the SaVaGe library
-        Need to request a specific value to graph in request.vars
-
-        used as REST method handler for S3Resources
-
-        @todo: replace by a S3MethodHandler
-    """
-
-    # Get all the variables and format them if needed
-    valKey = r.vars.get("value")
-
-    nameKey = r.vars.get("name")
-    if not nameKey and r.table.get("name"):
-        # Try defaulting to the most-commonly used:
-        nameKey = "name"
-
-    # The parameter value is required; it must be provided
-    # The parameter name is optional; it is useful, but we don't need it
-    # Here we check to make sure we can find value in the table,
-    # and name (if it was provided)
-    if not r.table.get(valKey):
-        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message="Need a Value for the Y axis"))
-    elif nameKey and not r.table.get(nameKey):
-        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message=nameKey + " attribute not found in this resource."))
-
-    start = request.vars.get("start")
-    if start:
-        start = int(start)
-
-    limit = r.vars.get("limit")
-    if limit:
-        limit = int(limit)
-
-    settings = r.vars.get("settings")
-    if settings:
-        settings = json.loads(settings)
-    else:
-        settings = {}
-
-    if r.representation.lower() == "svg":
-        r.response.headers["Content-Type"] = "image/svg+xml"
-
-        from savage import graph
-        bar = graph.BarGraph(settings=settings)
-
-        title = deployment_settings.modules.get(module).name_nice
-        bar.setTitle(title)
-
-        if nameKey:
-            xlabel = r.table.get(nameKey).label
-            if xlabel:
-                bar.setXLabel(str(xlabel))
-            else:
-                bar.setXLabel(nameKey)
-
-        ylabel = r.table.get(valKey).label
-        if ylabel:
-            bar.setYLabel(str(ylabel))
-        else:
-            bar.setYLabel(valKey)
-
-        try:
-            records = r.resource.load(start, limit)
-            for entry in r.resource:
-                val = entry[valKey]
-
-                # Can't graph None type
-                if not val is None:
-                    if nameKey:
-                        name = entry[nameKey]
-                    else:
-                        name = None
-                    bar.addBar(name, val)
-            return bar.save()
-        # If the field that was provided was not numeric, we have problems
-        except ValueError:
-            raise HTTP(400, "Bad Request")
-    else:
-        raise HTTP(501, ERROR.BAD_FORMAT)
-
 # -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
@@ -270,7 +184,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
     # Configure standard method handlers
     set_handler = r.set_handler
-    set_handler("barchart", s3_barchart)
     from s3db.cms import S3CMS
     set_handler("cms", S3CMS)
     set_handler("compose", s3base.S3Compose)
