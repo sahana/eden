@@ -2019,6 +2019,12 @@ class S3Config(Storage):
             - options are: False, "experience"
         """
         return self.hrm.get("staff_experience", "experience")
+        
+    def get_hrm_salary(self):
+        """
+            Whether to track salaries of staff
+        """
+        return self.hrm.get("salary", False)
 
     def get_hrm_vol_active(self):
         """

@@ -996,6 +996,8 @@ class S3PersonModel(S3Model):
                                     },
                        # HR Records
                        hrm_human_resource = "person_id",
+                       hrm_salary = "person_id",
+
                        # Skills
                        hrm_certification = "person_id",
                        hrm_competency = "person_id",

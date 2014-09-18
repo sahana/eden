@@ -1784,9 +1784,13 @@ def pr_rheader(r, vnrc):
     """
 
     controller = current.request.controller
-    if vnrc and controller == "vol":
-        # Simplify RHeader
-        settings.hrm.vol_experience = None
+    if vnrc :
+        if controller == "vol":
+            # Simplify RHeader
+            settings.hrm.vol_experience = None
+        elif controller == "hrm":
+            # Expose Salary Tab
+            settings.hrm.salary = True
 
     if controller == "member":
         return current.s3db.member_rheader(r)

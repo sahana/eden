@@ -556,6 +556,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.use_id = False
 # Uncomment to disable the use of HR Skills
 #settings.hrm.use_skills = False
+# Uncomment to enable tracking of staff salaries
+#settings.hrm.salary = True
 # Uncomment to disable the use of HR Teams
 #settings.hrm.teams = False
 # Uncomment to disable the use of HR Trainings
