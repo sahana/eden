@@ -22,9 +22,10 @@ class S3MainMenu(default.S3MainMenu):
             homepage(name="ATHEWAAS"),
             homepage("gis"),
             homepage("org"),
-            homepage("req"),
+            #homepage("hrm"),
             homepage("inv"),
-            homepage("hrm"),
+            homepage("cr"),
+            homepage("req"),
        ]
 
 # END =========================================================================

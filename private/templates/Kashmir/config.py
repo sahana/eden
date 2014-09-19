@@ -162,12 +162,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 5
     )),
-    #("hrm", Storage(
-    #    name_nice = T("Staff"),
-    #    #description = "Human Resources Management",
-    #    restricted = True,
-    #    module_type = 10,
-    #)),
+    ("hrm", Storage(
+       name_nice = T("Staff"),
+       #description = "Human Resources Management",
+       restricted = True,
+       module_type = 10,
+    )),
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",
