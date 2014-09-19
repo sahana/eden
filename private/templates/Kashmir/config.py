@@ -21,8 +21,8 @@ settings = current.deployment_settings
     Deployers should ideally not need to edit any other files outside of their template folder
 """
 
-settings.base.system_name = T("Athewaas")
-settings.base.system_name_short = T("Athewaas")
+settings.base.system_name = "Athewaas"
+settings.base.system_name_short = "Athewaas"
 
 # PrePopulate data
 settings.base.prepopulate = ("Kashmir", "default/users")
