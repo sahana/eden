@@ -1,0 +1,47 @@
+{{extend "layout.html"}}
+<div class='row home-top' style='margin-top:20px;'>
+  <div class='large-5 small-offset-1 columns'>
+    {{if AUTHENTICATED not in session.s3.roles:}}
+    <div id='login_box'>
+        {{if not self_registration or registered:}}
+        <div id='login_form'>
+            {{=login_div}}
+            {{include "auth/_login.html"}}
+        </div>
+        {{pass}}
+        {{if self_registration:}}
+        <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+            {{=register_div}}
+            {{include "auth/_register.html"}}
+        </div>
+        {{pass}}
+        {{if self_registration and not registered:}}
+        <div id='login_form' class='hide'>
+            {{=login_div}}
+            {{include "auth/_login.html"}}
+        </div>
+        {{pass}}
+    </div>
+    {{else:}}
+    <div>
+      <h4>Welcome to ATHEWAAS!</h4>
+    </div>
+    {{pass}}
+  </div>
+  <div class='large-5 columns end'>
+    <ul class='example-orbit' data-orbit>
+      <li>
+        <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "pic1.jpg"])}}' alt='slide 1' />
+        <!--<div class="orbit-caption">Caption One.</div>-->
+      </li>
+      <li>
+        <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "pic2.jpg"])}}' alt='slide 2' />
+        <!--<div class="orbit-caption">Caption One.</div>-->
+      </li>
+      <li>
+        <img src="{{=URL(c="static", f="themes", args=["Kashmir", "img", "pic3.jpg"])}}" alt="slide 3" />
+        <!--<div class="orbit-caption">Caption One.</div>-->
+      </li>
+    </ul>
+  </div>
+</div>

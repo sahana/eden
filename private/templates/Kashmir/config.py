@@ -21,8 +21,8 @@ settings = current.deployment_settings
     Deployers should ideally not need to edit any other files outside of their template folder
 """
 
-settings.base.system_name = T("Sahana Kashmir")
-settings.base.system_name_short = T("Sahana")
+settings.base.system_name = T("Athewaas")
+settings.base.system_name_short = T("Athewaas")
 
 # PrePopulate data
 settings.base.prepopulate = ("Kashmir", "default/users")
@@ -70,7 +70,7 @@ settings.L10n.languages = OrderedDict([
 #    ("ru", "русский"),
 #    ("tet", "Tetum"),
 #    ("tl", "Tagalog"),
-#    ("ur", "اردو"),
+    ("ur", "اردو"),
 #    ("vi", "Tiếng Việt"),
 #    ("zh-cn", "中文 (简体)"),
 #    ("zh-tw", "中文 (繁體)"),
