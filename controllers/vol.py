@@ -129,10 +129,9 @@ def volunteer():
                     vars = {"human_resource.id": r.id,
                             "group": "volunteer"
                             }
-                    args = []
+                    args = [r.method]
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
-                        args = [r.method]
                     redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
@@ -183,8 +182,7 @@ def volunteer():
             if "msg" in settings.modules:
                 # @ToDo: Remove this now that we have it in Events?
                 s3.actions.append({
-                        "url": URL(f="compose",
-                                    vars = {"human_resource.id": "[id]"}),
+                        "url": URL(args = ["[id]", "compose"]),
                         "_class": "action-btn send",
                         "label": str(T("Send Message"))
                     })
@@ -1009,13 +1007,5 @@ def task():
     """ Tasks controller """
 
     return s3db.project_task_controller()
-
-# =============================================================================
-# Messaging
-# =============================================================================
-def compose():
-    """ Send message to people/teams """
-
-    return s3db.hrm_compose()
 
 # END =========================================================================

@@ -39,7 +39,6 @@ __all__ = ("S3HRModel",
            #"hrm_TrainingEventRepresent",
            #"hrm_position_represent",
            "hrm_vars",
-           "hrm_compose",
            "hrm_map_popup",
            "hrm_rheader",
            "hrm_competency_controller",
@@ -4739,73 +4738,6 @@ def hrm_human_resource_onaccept(form):
         db(query).update(site_contact = False)
 
 # =============================================================================
-def hrm_compose():
-    """
-        Send message to people/teams
-    """
-
-    T = current.T
-    s3db = current.s3db
-    vars = current.request.vars
-    
-    if "human_resource.id" in vars:
-        fieldname = "human_resource.id"
-        id = vars.get(fieldname)
-        table = s3db.pr_person
-        htable = s3db.hrm_human_resource
-        query = (htable.id == id) & \
-                (htable.person_id == table.id)
-        title = T("Send a message to this person")
-    elif "group_id" in vars:
-        id = vars.group_id
-        fieldname = "group_id"
-        table = s3db.pr_group
-        query = (table.id == id)
-        title = T("Send a message to this team")
-    else:
-        current.session.error = T("Record not found")
-        redirect(URL(f="index"))
-
-    db = current.db
-    pe = db(query).select(table.pe_id,
-                          limitby=(0, 1)).first()
-    if not pe:
-        current.session.error = T("Record not found")
-        redirect(URL(f="index"))
-
-    pe_id = pe.pe_id
-
-    if "hrm_id" in vars:
-        # Get the individual's communications options & preference
-        ctable = s3db.pr_contact
-        contact = db(ctable.pe_id == pe_id).select(ctable.contact_method,
-                                                   orderby="priority",
-                                                   limitby=(0, 1)).first()
-        if contact:
-            s3db.msg_outbox.contact_method.default = contact.contact_method
-        else:
-            current.session.error = T("No contact method found")
-            redirect(URL(f="index"))
-
-    # URL to redirect to after message sent
-    url = URL(f="compose",
-              vars={fieldname: id})
-
-    # Create the form
-    output = current.msg.compose(recipient = pe_id,
-                                 url = url)
-
-    output["title"] = title
-
-    response = current.response
-    representation = s3_get_extension()
-    response.headers["Content-Type"] = \
-        response.s3.content_type.get(representation, "text/html")
-    response.view = "msg/compose.html"
-
-    return output
-
-# =============================================================================
 def hrm_map_popup(r):
     """
         Custom output to place inside a Map Popup
@@ -5049,8 +4981,8 @@ def hrm_rheader(r, tabs=[],
                 profile = False):
     """ Resource headers for component views """
 
-    if r.representation != "html":
-        # RHeaders only used in interactive views
+    if r.representation != "html" or r.method == "compose":
+        # No need of rheader
         return None
     record = r.record
     if record is None:
@@ -5713,11 +5645,10 @@ def hrm_group_controller():
                 update_url = URL(args=["[id]", "group_membership"])
                 S3CRUD.action_buttons(r, update_url=update_url)
                 if current.deployment_settings.has_module("msg") and \
-                   current.auth.permission.has_permission("update", c="hrm",
+                   current.auth.permission.has_permission("create", c="msg",
                                                           f="compose"):
                     s3.actions.append({
-                        "url": URL(f="compose",
-                                   vars = {"group_id": "[id]"}),
+                        "url": URL(args = ["[id]", "compose"]),
                         "_class": "action-btn send",
                         "label": str(T("Send Message"))})
 
@@ -6085,7 +6016,11 @@ def hrm_human_resource_controller(extra_filter=None):
                 vars = {"human_resource.id" : r.id,
                         "group" : "staff"
                         }
+                args = [r.method]
+                if r.representation == "iframe":
+                    vars["format"] = "iframe"
                 redirect(URL(f="person",
+                             args=args,
                              vars=vars))
 
         elif r.representation == "xls" and not r.component:
@@ -6157,12 +6092,10 @@ def hrm_human_resource_controller(extra_filter=None):
                                       read_url = read_url,
                                       update_url = update_url)
                 if "msg" in settings.modules and \
-                   current.auth.permission.has_permission("update",
-                                                          c="hrm",
-                                                          f="compose"):
+                   current.auth.permission.has_permission("create",
+                                                          c="msg", f="compose"):
                     s3.actions.append({
-                        "url": URL(f="compose",
-                                   vars = {"human_resource.id": "[id]"}),
+                        "url": URL(args = ["[id]", "compose"]),
                         "_class": "action-btn send",
                         "label": str(T("Send Message"))})
 
