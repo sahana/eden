@@ -9340,91 +9340,77 @@ class S3ImportPOI(S3Method):
             s3db = current.s3db
             request = current.request
             response = current.response
+            settings = current.deployment_settings
+            s3 = current.response.s3
 
             title = T("Import from OpenStreetMap")
 
-            # @ToDo: use settings.get_ui_formstyle()
-            res_select = [TR(TD(B("%s: " % T("Select resources to import")),
-                                _colspan=3))]
-            for resource in current.deployment_settings.get_gis_poi_export_resources():
-                _id = "res_" + resource
-                res_select.append(TR(TD(LABEL(resource, _for=_id)),
-                                     TD(INPUT(_type="checkbox",
-                                              _name=id,
-                                              _id=_id,
-                                              _checked=True)),
-                                     TD()))
-
-            form = FORM(
-                    TABLE(
-                        TR(TD(T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
-                              _colspan=3),
-                           ),
-                        TR(TD(B("%s: " % T("File"))),
-                           TD(INPUT(_type="file", _name="file", _size="50")),
-                           TD(SPAN("*", _class="req",
-                                   _style="padding-right:5px"))
-                           ),
-                        TR(TD(),
-                           TD(T("or")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("Host"))),
-                           TD(INPUT(_type="text", _name="host",
-                                    _id="host", _value="localhost")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("Database"))),
-                           TD(INPUT(_type="text", _name="database",
-                                    _id="database", _value="osm")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("User"))),
-                           TD(INPUT(_type="text", _name="user",
-                                    _id="user", _value="osm")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("Password"))),
-                           TD(INPUT(_type="text", _name="password",
-                                    _id="password", _value="planet")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("Ignore Errors?"))),
-                           TD(INPUT(_type="checkbox", _name="ignore_errors",
-                                    _id="ignore_errors")),
-                           TD(),
-                           ),
-                        res_select,
-                        TR(TD(),
-                           TD(INPUT(_type="submit", _value=T("Import"))),
-                           TD(),
-                           )
-                        )
-                    )
-
+            resources_list = settings.get_gis_poi_export_resources()
+            uploadpath = os.path.join(request.folder,"uploads/")
+            from s3utils import s3_yes_no_represent
+ 
+            fields = [Field("text1", # Dummy Field to add text inside the Form
+                            label = "",
+                            default = T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
+                            writable = False),
+                      Field("file", "upload",
+                            uploadfolder = uploadpath,
+                            label = T("File")),
+                      Field("text2", # Dummy Field to add text inside the Form
+                            label = "",
+                            default = "Or",
+                            writable = False),
+                      Field("host",
+                            default = "localhost",
+                            label = T("Host")),
+                      Field("database",
+                            default = "osm",
+                            label = T("Database")),
+                      Field("user",
+                            default = "osm",
+                            label = T("User")),
+                      Field("password", "string",
+                            default = "planet",
+                            label = T("Password")),
+                      Field("ignore_errors", "boolean",
+                            label = T("Ignore Errors?"),
+                            represent = s3_yes_no_represent),
+                      Field("resources",
+                            label = T("Select resources to import"),
+                            requires = IS_IN_SET(resources_list, multiple=True),
+                            default = resources_list,
+                            widget = SQLFORM.widgets.checkboxes.widget)
+                      ] 
+            
             if not r.id:
                 from s3validators import IS_LOCATION
                 from s3widgets import S3LocationAutocompleteWidget
                 # dummy field
                 field = s3db.org_office.location_id
                 field.requires = IS_EMPTY_OR(IS_LOCATION())
-                widget = S3LocationAutocompleteWidget()(field, None)
-                row = TR(TD(B("%s: " % T("Location"))),
-                         TD(widget),
-                         TD(SPAN("*", _class="req",
-                                 _style="padding-right:5px"))
-                         )
-                form[0].insert(3, row)
+                field.widget = S3LocationAutocompleteWidget()
+                fields.insert(3, field)
 
+            from s3utils import s3_mark_required
+            labels, required = s3_mark_required(fields, ["file", "location_id"])
+            s3.has_required = True
+
+            form = SQLFORM.factory(*fields,
+                                   formstyle = settings.get_ui_formstyle(),
+                                   submit_button = T("Import"),
+                                   labels = labels,
+                                   separator = "",
+                                   table_name = "import_poi" # Dummy table name
+                                   )
+ 
             response.view = "create.html"
             output = dict(title=title,
                           form=form)
-
+            
             if form.accepts(request.vars, current.session):
-
                 form_vars = form.vars
                 if form_vars.file != "":
-                    File = form_vars.file.file
+                    File = open(uploadpath + form_vars.file, "r")
                 else:
                     # Create .poly file
                     if r.record:
@@ -9494,10 +9480,8 @@ class S3ImportPOI(S3Method):
                 response.error = ""
                 import_count = 0
 
-                import_res = []
-                for resource in current.deployment_settings.get_gis_poi_resources():
-                    if getattr(form_vars, "res_" + resource):
-                        import_res.append(resource)
+                import_res = list(set(form_vars["resources"]) & \
+                                  set(resources_list))
 
                 for tablename in import_res:
                     try:

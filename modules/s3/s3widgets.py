@@ -5568,23 +5568,19 @@ class S3SliderWidget(FormWidget):
     """
         Standard Slider Widget
 
-        @ToDo: The range of the slider should ideally be picked up from the
-               Validator
+        The range of the Slider is derived from the Validator
     """
 
     def __init__(self,
-                 min,
-                 max,
                  step = 1,
                  type = "int",
                  ):
-        self.min = min
-        self.max = max
         self.step = step
         self.type = type
 
     def __call__(self, field, value, **attributes):
 
+        validator = field.requires
         field = str(field)
         fieldname = field.replace(".", "_")
         input = INPUT(_name = field.split(".")[1],
@@ -5595,6 +5591,18 @@ class S3SliderWidget(FormWidget):
         slider = DIV(_id="%s_slider" % fieldname, **attributes)
 
         s3 = current.response.s3
+
+        if isinstance(validator, IS_EMPTY_OR):
+            validator = validator.other
+        
+        self.min = validator.minimum
+
+        # Max Value depends upon validator type
+        if isinstance(validator, IS_INT_IN_RANGE):
+            self.max = validator.maximum - 1
+        elif isinstance(validator, IS_FLOAT_IN_RANGE):
+            self.max = validator.maximum 
+
         if value is None:
             # JSONify
             value = "null"
