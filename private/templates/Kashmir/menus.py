@@ -18,8 +18,9 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        sysname = current.deployment_settings.get_system_name_short()
         return [
-            homepage(name="ATHEWAAS"),
+            homepage(name=sysname),
             homepage("gis"),
             homepage("org"),
             #homepage("hrm"),
