@@ -686,7 +686,7 @@ def requester_represent(id, show_link=True):
               ]
     if has_hrm:
         htable = s3db.hrm_human_resource
-        query &= (htable.person_id == ptable.id)
+        left = [left, htable.on(htable.person_id == ptable.id)]
         fields.append(htable.type)
     row = db(query).select(*fields,
                            left=left,
@@ -697,8 +697,9 @@ def requester_represent(id, show_link=True):
     if contact:
         repr = "%s %s" % (repr, contact)
     if show_link:
-        if has_hrm:
-            if row["hrm_human_resource.type"] == 1:
+        hr_type = row["hrm_human_resource.type"]
+        if has_hrm and hr_type:
+            if hr_type == 1:
                 controller = "hrm"
             else:
                 controller = "vol"
