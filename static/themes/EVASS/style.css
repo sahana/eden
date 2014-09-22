@@ -390,6 +390,7 @@ div.tabs span.tab_other a:hover {
 .top-bar {
   color: #ffffff;
   background-color: #0c0e0f;
+  z-index: 1000;
 }
 .top-bar .menu-toggle input {
   margin-right: 5px;
