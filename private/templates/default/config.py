@@ -410,6 +410,8 @@ settings.gis.geonames_username = "eden_test"
 # Shelters
 # Uncomment to use a dynamic population estimation by calculations based on registrations
 #settings.cr.shelter_population_dynamic = True
+# Uncomment to disable people registration in shelters
+#settings.cr.people_registration = False
 
 # -----------------------------------------------------------------------------
 # Events

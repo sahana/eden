@@ -98,6 +98,9 @@ settings.security.policy = 7
 # RSS feeds
 settings.frontpage.rss = []
 
+# Disable people registration in shelters
+settings.cr.people_registration = False
+
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([

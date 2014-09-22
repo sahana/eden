@@ -1862,7 +1862,16 @@ class S3Config(Storage):
             "population_day",
             "population_night".
         """
+        # Only together with people registration:
+        if not self.get_cr_shelter_people_registration():
+            return False
         return self.cr.get("shelter_population_dynamic", False)
+    
+    def get_cr_shelter_people_registration(self):
+        """
+            Disable functionality to track individuals in shelters
+        """
+        return self.cr.get("people_registration", True)
 
     def get_cr_shelter_housing_unit_management(self):
         """
