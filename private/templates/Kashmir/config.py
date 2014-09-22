@@ -25,7 +25,7 @@ settings.base.system_name = "Athewaas"
 settings.base.system_name_short = "Athewaas"
 
 # PrePopulate data
-settings.base.prepopulate = ("Kashmir", "default/users")
+settings.base.prepopulate = ("Kashmir", "Kashmir/Demo", "default/users")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "default"
