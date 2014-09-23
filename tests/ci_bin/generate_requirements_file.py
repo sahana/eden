@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # usage - python generate_requirements.py [folder where the file should be generated] [list of requirements file]
-# example - python ci_bin/generate_requirements_file.py ci_bin requirements.txt optional_requirements.txt
+# example - python tests/ci_bin/generate_requirements_file.py tests/ci_bin requirements.txt optional_requirements.txt
 
 from sys import argv
 

@@ -23,20 +23,20 @@ notifications:
 
 # install web2py
 before_install:
- - chmod +x ci_bin/*
- - sudo ci_bin/install_web2py.sh
+ - chmod +x tests/ci_bin/*
+ - sudo tests/ci_bin/install_web2py.sh
 
 # install Eden. This generates generated_requirements.txt which is given as an
 # argument to pip
 install:
-  - sudo ci_bin/install_eden.sh
+  - sudo tests/ci_bin/install_eden.sh
 
 # set up the testing environment
 before_script:
  - cd ../../web2py/
  - sudo chown -R ${USER} .
  # configure DB settings based on the env. variable
- - ./applications/eden/ci_bin/configure_db.sh
+ - ./applications/eden/tests/ci_bin/configure_db.sh
  # for debugging in the logs
  - cat ./applications/eden/models/000_config.py
  # prepop

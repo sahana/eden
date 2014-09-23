@@ -22,16 +22,18 @@ EOF
 echo "installing eden dependencies"
 echo "=========================="
 
-python ci_bin/generate_requirements_file.py ci_bin requirements.txt optional_requirements.txt
-pip install -q -r ci_bin/generated_requirements.txt
-
-echo "Packages installed:"
-cat ci_bin/generated_requirements.txt
-
 # matplotlib, lxml take a lot of time to build. So, installing from binaries
 # numpy installed by default
+# apt-get install numpy
 apt-get install python-matplotlib python-lxml -q
-# apt-get install numpy #already present
+
+
+python tests/ci_bin/generate_requirements_file.py tests/ci_bin requirements.txt optional_requirements.txt
+pip install -q -r tests/ci_bin/generated_requirements.txt
+
+echo "Packages installed:"
+cat tests/ci_bin/generated_requirements.txt
+
 
 echo "configuring eden"
 echo "=========================="
