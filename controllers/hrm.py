@@ -636,6 +636,31 @@ def staff_for_site():
     return result
 
 # =============================================================================
+# Salaries
+# =============================================================================
+def staff_level():
+    """ Staff Levels Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller()
+    return output
+
+def salary_grade():
+    """ Salary Grade Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller()
+    return output
+
+# =============================================================================
 # Messaging
 # =============================================================================
 def compose():

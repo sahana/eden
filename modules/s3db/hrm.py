@@ -1381,14 +1381,52 @@ class S3HRSiteModel(S3Model):
 class S3HRSalaryModel(S3Model):
     """ Data Model to track salaries of staff """
     
-    names = ("hrm_salary",
+    names = ("hrm_staff_level",
+             "hrm_salary_grade",
+             "hrm_salary",
              )
 
     def model(self):
         
+        db = current.db
         T = current.T
         define_table = self.define_table
         
+        organisation_id = self.org_organisation_id
+        organisation_requires = self.org_organisation_requires
+
+        # =====================================================================
+        # Staff Level
+        # 
+        tablename = "hrm_staff_level"
+        table = define_table(tablename,
+                             organisation_id(
+                                requires = organisation_requires(updateable=True),
+                             ),
+                             Field("name",
+                                   label = T("Staff Level"),
+                             ),
+                             *s3_meta_fields())
+
+        ADD_STAFF_LEVEL = T("Add Staff Level")
+        staff_level_represent = S3Represent(lookup="hrm_staff_level")
+
+        # =====================================================================
+        # Salary Grades
+        # 
+        tablename = "hrm_salary_grade"
+        table = define_table(tablename,
+                             organisation_id(
+                                requires = organisation_requires(updateable=True),
+                             ),
+                             Field("name",
+                                   label = T("Salary Grade"),
+                             ),
+                             *s3_meta_fields())
+
+        ADD_SALARY_GRADE = T("Add Salary Grade")
+        salary_grade_represent = S3Represent(lookup="hrm_salary_grade")
+
         # =====================================================================
         # Salary
         # 
@@ -1400,6 +1438,28 @@ class S3HRSalaryModel(S3Model):
                                 widget = None,
                                 comment = None,
                              ),
+                             Field("staff_level_id", "reference hrm_staff_level",
+                                   label = T("Staff Level"),
+                                   represent = staff_level_represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, 
+                                                          "hrm_staff_level.id",
+                                                          staff_level_represent,
+                                                          )),
+                                   comment = S3AddResourceLink(f = "staff_level",
+                                                               label = ADD_STAFF_LEVEL),
+                                   ),
+                             Field("salary_grade_id", "reference hrm_salary_grade",
+                                   label = T("Salary Grade"),
+                                   represent = salary_grade_represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, 
+                                                          "hrm_salary_grade.id",
+                                                          salary_grade_represent,
+                                                          )),
+                                   comment = S3AddResourceLink(f = "salary_grade",
+                                                               label = ADD_SALARY_GRADE),
+                                   ),
                              s3_date("start_date",
                                      default = "now",
                                      label = T("From")
@@ -1427,16 +1487,6 @@ class S3HRSalaryModel(S3Model):
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no salary registered"))
 
-        # =====================================================================
-        # Staff Level
-        # 
-        # @todo: implement
-        
-        # =====================================================================
-        # Salary Grade
-        # 
-        # @todo: implement
-        
         # =====================================================================
         # Salary Coefficient
         # 
