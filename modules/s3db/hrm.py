@@ -1391,6 +1391,7 @@ class S3HRSalaryModel(S3Model):
         db = current.db
         T = current.T
         define_table = self.define_table
+        configure = self.configure
         
         organisation_id = self.org_organisation_id
         organisation_requires = self.org_organisation_requires
@@ -1462,10 +1463,16 @@ class S3HRSalaryModel(S3Model):
                                    ),
                              s3_date("start_date",
                                      default = "now",
-                                     label = T("From")
+                                     label = T("From"),
+                                     widget = S3DateTimeWidget(hide_time=True,
+                                                               set_min="hrm_salary_end_date",
+                                                               ),
                                      ),
                              s3_date("end_date",
-                                     label = T("To")
+                                     label = T("To"),
+                                     widget = S3DateTimeWidget(hide_time=True,
+                                                               set_max="hrm_salary_start_date",
+                                                               ),
                                      ),
                              Field("monthly_amount", "double",
                                    requires = IS_EMPTY_OR(
@@ -1486,6 +1493,11 @@ class S3HRSalaryModel(S3Model):
             msg_record_deleted = T("Salary removed"),
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no salary registered"))
+            
+        configure(tablename,
+                  onvalidation = self.hrm_salary_onvalidation,
+                  orderby = "%s.start_date desc" % tablename,
+                  )
 
         # =====================================================================
         # Salary Coefficient
@@ -1503,6 +1515,21 @@ class S3HRSalaryModel(S3Model):
     def defaults(self):
         
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_salary_onvalidation(form):
+        
+        try:
+            form_vars = form.vars
+            start_date = form_vars.get("start_date")
+            end_date = form_vars.get("end_date")
+        except AttributeError:
+            return
+            
+        if start_date and end_date and start_date > end_date:
+            form.errors["end_date"] = current.T("End date must be after start date.")
+        return
 
 # =============================================================================
 class S3HRJobModel(S3Model):
