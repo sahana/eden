@@ -29,7 +29,7 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
-	<xsl:include href="../../xml/countries.xsl"/>
+    <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->

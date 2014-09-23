@@ -33,9 +33,9 @@
          Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
+    <xsl:import href="../commons.xsl"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->

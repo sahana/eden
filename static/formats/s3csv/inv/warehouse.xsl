@@ -28,10 +28,11 @@
          Comments................inv_warehouse
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
-    <xsl:include href="../commons.xsl"/>
-    <xsl:include href="../../xml/countries.xsl"/>
+    <xsl:import href="../commons.xsl"/>
+    <xsl:import href="../../xml/countries.xsl"/>
 
+    <xsl:output method="xml"/>
+    
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
 

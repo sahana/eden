@@ -20,9 +20,9 @@
          Cluster Threshold....integer.........Style Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
+    <xsl:import href="../commons.xsl"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->

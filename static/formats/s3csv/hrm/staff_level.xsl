@@ -3,24 +3,11 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Certificates - CSV Import Stylesheet
-
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be hrm/competency_rating/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
+         Staff Levels - CSV Import Stylesheet
 
          CSV fields:
-         Name............................hrm_certificate.name
-         Organisation....................hrm_certificate.organisation
-         Expiry..........................hrm_certificate.expiry (in months)
+         Name............................hrm_staff_level.name
+         Organisation....................hrm_staff_level.organisation
 
     *********************************************************************** -->
     <xsl:import href="../commons.xsl"/>
@@ -30,7 +17,6 @@
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
-
     <xsl:template match="/">
         <s3xml>
             <!-- Organisations -->
@@ -47,16 +33,16 @@
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
 
-        <!-- HRM Certificate -->
-        <resource name="hrm_certificate">
+        <resource name="hrm_staff_level">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="expiry"><xsl:value-of select="col[@field='Expiry']"/></data>
             <!-- Link to Organisation -->
-            <reference field="organisation_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OrgName"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$OrgName!=''">
+                <reference field="organisation_id" resource="org_organisation">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$OrgName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
         </resource>
 
     </xsl:template>
