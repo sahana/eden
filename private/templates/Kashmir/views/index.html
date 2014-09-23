@@ -1,5 +1,24 @@
 {{extend "layout.html"}}
 <div class='row home-top' style='margin-top:20px;'>
+    <div class="large-10 large-offset-1 end columns panel call-out">
+        <h4>
+            Use <b>Athewaas</b> if you need help
+        </h4>
+        <p>
+            This website takes a request for help from an individual or
+            organization and gives it to the nearest place that can
+            provide help.
+        </p>
+        <p>
+            Athewaas helps many organisations to collaborate with each other
+            and has been put together by a non-profit, <b>Revive Kashmir</b>.
+        </p>
+        <h5>
+            Call #000-000-0000 for help
+        </h5>
+    </div>
+</div>
+<div class='row'>
   <div class='large-5 small-offset-1 columns'>
     {{if AUTHENTICATED not in session.s3.roles:}}
     <div id='login_box'>
