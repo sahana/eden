@@ -175,7 +175,7 @@
             var rows = [], i, j;
             if (this.options.order == 'columns') {
                 // Order items as columns=>rows
-                numrows = Math.floor(tail.length / numcols);
+                numrows = Math.ceil(tail.length / numcols);
                 for (i = 0; i < numcols; i++) {
                     for (j = 0; j < numrows; j++) {
                         if (tail.length) {
