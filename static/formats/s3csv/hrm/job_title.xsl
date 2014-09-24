@@ -12,6 +12,8 @@
          Comments........................hrm_job_title.comments
 
     *********************************************************************** -->
+    <xsl:import href="../commons.xsl"/>
+
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
 
@@ -70,20 +72,6 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Organisation">
-
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrgName"/></data>
         </resource>
 
     </xsl:template>

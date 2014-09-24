@@ -17,6 +17,8 @@
          Hours...........................hrm_programme_hours.hours
 
     *********************************************************************** -->
+    <xsl:import href="../commons.xsl"/>
+
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
@@ -110,19 +112,6 @@
             
             <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
             <data field="hours"><xsl:value-of select="col[@field='Hours']"/></data>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Organisation">
-        <xsl:variable name="Organisation" select="col[@field='Organisation']/text()"/>
-
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Organisation"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Organisation"/></data>
         </resource>
 
     </xsl:template>
