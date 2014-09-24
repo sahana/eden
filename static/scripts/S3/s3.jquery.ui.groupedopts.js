@@ -11,6 +11,7 @@
 
 (function($, undefined) {
 
+    "use strict";
     var groupedoptsID = 0;
 
     /**
@@ -175,7 +176,7 @@
             var rows = [], i, j;
             if (this.options.order == 'columns') {
                 // Order items as columns=>rows
-                numrows = Math.ceil(tail.length / numcols);
+                var numrows = Math.ceil(tail.length / numcols);
                 for (i = 0; i < numcols; i++) {
                     for (j = 0; j < numrows; j++) {
                         if (tail.length) {
@@ -203,8 +204,7 @@
             for (i = 0; i<rows.length; i++) {
                 var tr = $('<tr/>');
                 for (j = 0; j<rows[i].length; j++) {
-                    item = rows[i][j];
-                    this._renderItem(item, tr);
+                    this._renderItem(rows[i][j], tr);
                 }
                 group.append(tr);
             }
@@ -258,7 +258,7 @@
                 $(oinput).prop('checked', true);
             }
 
-            widget = $('<td>').append(oinput).append($(olabel));
+            var widget = $('<td>').append(oinput).append($(olabel));
             row.append(widget);
         },
 

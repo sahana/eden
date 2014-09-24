@@ -28,7 +28,7 @@ settings.base.system_name_short = "Athewaas"
 settings.base.prepopulate = ("Kashmir", "Kashmir/Demo", "default/users")
 
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "default"
+settings.base.theme = "Kashmir"
 
 # Authentication settings
 # Should users be allowed to register themselves?
