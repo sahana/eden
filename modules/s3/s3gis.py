@@ -2598,6 +2598,7 @@ class GIS(object):
         """
             Returns a Marker dict
             - called by xml.gis_encode() for non-geojson resources
+            - called by S3Map.widget() if no marker_fn supplied
         """
 
         marker = None
@@ -2620,12 +2621,27 @@ class GIS(object):
                     ]
             if filter:
                 query &= (ftable.filter == filter)
-            marker = db(query).select(mtable.image,
+            if current.deployment_settings.get_database_type() == "postgres":
+                # None is last
+                orderby = stable.config_id
+            else:
+                # None is 1st
+                orderby = ~stable.config_id
+            layers = db(query).select(mtable.image,
                                       mtable.height,
                                       mtable.width,
+                                      ftable.style_default,
                                       stable.gps_marker,
                                       left=left,
-                                      limitby=(0, 1)).first()
+                                      orderby=orderby)
+            if len(layers) > 1:
+                layers.exclude(lambda row: row["gis_layer_feature.style_default"] == False)
+            if len(layers) == 1:
+                marker = layers.first()
+            else:
+                # Can't differentiate
+                marker = None
+
             if marker:
                 _marker = marker["gis_marker"]
                 marker = dict(image=_marker.image,
@@ -9046,6 +9062,7 @@ class S3Map(S3Method):
             if len(layers) == 1:
                 layer_id = layers.first().layer_id
             else:
+                # We can't distinguish
                 layer_id = None
             return layer_id
 

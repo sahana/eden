@@ -22,7 +22,7 @@ settings = current.deployment_settings
 
 # -----------------------------------------------------------------------------
 # Pre-Populate
-settings.base.prepopulate = ("CRMT", "default/users", "CRMT/Test")
+settings.base.prepopulate = ("CRMT", "default/users", "CRMT/Demo")
 
 settings.base.system_name = T("Community Resilience Mapping Tool")
 settings.base.system_name_short = T("CRMT")
@@ -129,7 +129,7 @@ settings.gis.map_width = 1178
 # Set map to be able to open Census Data & still view root labels
 settings.gis.map_height = 816
 
-settings.base.youtube_id = [dict(id = "introduction",
+settings.base.youtube_id = (dict(id = "introduction",
                                  title = T("Introduction"),
                                  video_id = "HR-FtR2XkBU" ),
                             dict(id = "expanding-your-coalition",
@@ -147,11 +147,11 @@ settings.base.youtube_id = [dict(id = "introduction",
                             dict(id = "tracking-outreach",
                                  title = T("Tracking Outreach"),
                                  video_id = "HR-FtR2XkBU" ),
-                            ]
+                            )
 
 # -----------------------------------------------------------------------------
 # Menu
-menu = [
+menu = (
     {"name": T("Organizations"),
      "c":"org", 
      "f":"organisation",
@@ -194,7 +194,7 @@ menu = [
      "f":"evac_route",
      "icon": "icon-road"
      },
-    ]
+    )
 
 for item in menu:
     item["url"] = URL(item["c"], item["f"])
@@ -203,7 +203,7 @@ current.response.menu = menu
 
 # -----------------------------------------------------------------------------
 # Summary Pages
-settings.ui.summary = [{"common": True,
+settings.ui.summary = ({"common": True,
                         "name": "add",
                         "widgets": [{"method": "create"}],
                         },
@@ -223,7 +223,7 @@ settings.ui.summary = [{"common": True,
                         "label": "Map",
                         "widgets": [{"method": "map", "ajax_init": True}],
                         },
-                       ]
+                       )
 
 settings.search.filter_manager = True
 settings.search.filter_manager_allow_delete = False
@@ -1948,7 +1948,8 @@ def customise_vulnerability_risk_controller(**attr):
                            list_fields = list_fields,
                            )
 
-        if r.interactive or representation == "json" or representation == "plain":
+        if r.interactive or representation == "json" or \
+                            representation == "plain":
             # CRUD Strings / Represent
             table.name.label = T("Description")
             table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)

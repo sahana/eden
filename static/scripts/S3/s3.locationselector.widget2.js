@@ -979,7 +979,7 @@
 
     /**
      * Hide the Map
-     * - this also acts as a 'Cancel' for the addition of Lat/Lon fields
+     * - this also acts as a 'Cancel' for the addition of Lat/Lon/WKT fields
      */
     var hideMap = function(fieldname) {
         var selector = '#' + fieldname;
@@ -998,9 +998,13 @@
         var map = S3.gis.maps[map_id];
         map.s3.draftLayer.removeAllFeatures();
 
-        // Clear the Lat/Lon fields
+        // Clear the Lat/Lon/WKT fields
         $(selector + '_lat').val('');
         $(selector + '_lon').val('');
+        $(selector + '_wkt').val('');
+
+        // Change the Label
+        $(selector + '_map_icon span').html(i18n.show_map);
 
         // Reset the real_input
         resetHidden(fieldname);
@@ -1045,6 +1049,11 @@
             hideMap(fieldname);
         });
 
+        // Change the Label
+        var label = $(selector + '_map_icon span')
+        i18n.show_map = label.html();
+        label.html(i18n.hide_map);
+
         // Show the Map
         var map_wrapper = $(selector + '_map_wrapper')
         map_wrapper.removeClass('hide').show();
@@ -1074,7 +1083,7 @@
                     var wkt = wktfield.val();
                     if (lat || lon || wkt) {
                         // Display feature
-                        if (wkt != undefined) {
+                        if ((wkt != undefined) && wkt) {
                             var in_options = {
                                 'internalProjection': map.getProjectionObject(),
                                 'externalProjection': gis.proj4326

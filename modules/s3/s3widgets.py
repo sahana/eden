@@ -680,7 +680,7 @@ class S3AddPersonWidget2(FormWidget):
         formstyle = s3.crud.formstyle
         row = formstyle("test", "test", "test", "test")
         if isinstance(row, tuple):
-            # Formstyle with separate row for label (e.g. default Eden formstyle)
+            # Formstyle with separate row for label (e.g. old default Eden formstyle)
             tuple_rows = True
         else:
             # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
@@ -3996,7 +3996,7 @@ class S3LocationSelectorWidget2(FormWidget):
         formstyle = s3.crud.formstyle
         row = formstyle("test", "test", "test", "test")
         if isinstance(row, tuple):
-            # Formstyle with separate row for label (e.g. default Eden formstyle)
+            # Formstyle with separate row for label (e.g. old default Eden formstyle)
             tuple_rows = True
         else:
             # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
@@ -4052,6 +4052,7 @@ class S3LocationSelectorWidget2(FormWidget):
             record = db(gtable.id == value).select(gtable.path,
                                                    gtable.parent,
                                                    gtable.level,
+                                                   gtable.gis_feature_type,
                                                    gtable.inherited,
                                                    gtable.lat,
                                                    gtable.lon,
@@ -4084,13 +4085,28 @@ class S3LocationSelectorWidget2(FormWidget):
                 # Only use a specific Lat/Lon when they are not inherited
                 if not record.inherited:
                     if points:
-                        lat = lat or record.lat
-                        lon = lon or record.lon
+                        if lat is None or lat is "":
+                            if record.gis_feature_type == 1:
+                                # Only use Lat for Points
+                                lat = record.lat
+                            else:
+                                lat = ""
+                        if lon is None or lon is "":
+                            if record.gis_feature_type == 1:
+                                # Only use Lat for Points
+                                lon = record.lon
+                            else:
+                                lon = ""
                     else:
                         lat = ""
                         lon = ""
                     if use_wkt:
-                        wkt = wkt or record.wkt
+                        if not wkt:
+                            if record.gis_feature_type != 1:
+                                # Only use WKT for non-Points
+                                wkt = record.wkt
+                            else:
+                                wkt = ""
                     else:
                         wkt = ""
 
@@ -4621,33 +4637,53 @@ class S3LocationSelectorWidget2(FormWidget):
         if show_map:
             # @ToDo: handle multiple LocationSelectors in 1 page
             # (=> multiple callbacks, as well as the need to migrate options from globals to a parameter)
+            add_points_active = add_polygon_active = add_line_active = False
             if points and lines:
                 toolbar = True              # Allow selection between
-                add_feature_active = True   # Default to Points
-                add_line_active = add_polygon_active = False
+                if wkt:
+                    if not polygons or wkt.startswith("LINE"):
+                        add_line_active = True
+                    elif polygons:
+                        add_polygon_active = True
+                    else:
+                        add_line_active = True
+                else:
+                    add_points_active = True
             elif points and polygons:
                 toolbar = True              # Allow selection between
-                add_feature_active = True   # Default to Points
-                add_line_active = add_polygon_active = False
+                if wkt:
+                    add_polygon_active = True
+                else:
+                    add_points_active = True
             elif points:
                 toolbar = False             # No need to select between
-                add_feature_active = True   # Default to Points
-                add_line_active = add_polygon_active = False
+                add_points_active = True
             elif lines and polygons:
                 toolbar = True              # Allow selection between
-                add_polygon_active = True   # Default to Polygons
-                add_feature_active = add_line_active = False
+                if wkt:
+                    if wkt.startswith("LINE"):
+                        add_line_active = True
+                    else:
+                        add_polygon_active = True
+                else:
+                    add_polygon_active = True
             elif lines:
                 toolbar = False             # No need to select between
-                add_line_active = True      # Default to Lines
-                add_feature_active = add_polygon_active = False
+                add_line_active = True
             elif polygons:
                 toolbar = False             # No need to select between
-                add_polygon_active = True   # Default to Polygons
-                add_feature_active = add_line_active = False
+                add_polygon_active = True
             else:
                 # No Valid options!
                 raise SyntaxError
+            if add_points_active:
+                add_line_active = add_polygon_active = False
+            elif add_polygon_active:
+                add_points_active = add_line_active = False
+            else:
+                # Lines active
+                add_points_active = add_polygon_active = False
+
             if not self.color_picker:
                 color_picker = False
             else:
@@ -4689,7 +4725,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                 height = 340,
                                 width = 480,
                                 add_feature = points,
-                                add_feature_active = add_feature_active,
+                                add_feature_active = add_points_active,
                                 add_line = lines,
                                 add_line_active = add_line_active,
                                 add_polygon = polygons,
@@ -4711,10 +4747,27 @@ class S3LocationSelectorWidget2(FormWidget):
                 label = T("Draw on Map")
             else:
                 label = T("Find on Map")
-            if settings.ui.formstyle == "bootstrap":
+            if not location_selector_loaded:
+                global_append('''i18n.hide_map="%s"''' % T("Hide Map"))
+            _formstyle = settings.ui.formstyle
+            if not _formstyle:
+                # Default: Foundation
+                # Need to add custom classes to core HTML markup
+                map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
+                                          SPAN(label),
+                                          _type="button", # defaults to 'submit' otherwise!
+                                          _id=icon_id,
+                                          _class="btn gis_loc_select_btn",
+                                          ),
+                                   _class="small-12 columns",
+                                   ),
+                               _id = row_id,
+                               _class = "form-row row hide",
+                               )
+            elif _formstyle == "bootstrap":
                 # Need to add custom classes to core HTML markup
                 map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
-                                          label,
+                                          SPAN(label),
                                           _type="button", # defaults to 'submit' otherwise!
                                           _id=icon_id,
                                           _class="btn gis_loc_select_btn",
@@ -4725,8 +4778,9 @@ class S3LocationSelectorWidget2(FormWidget):
                                _class = "control-group hide",
                                )
             else:
+                # Old default
                 map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
-                                          label,
+                                          SPAN(label),
                                           _type="button", # defaults to 'submit' otherwise!
                                           _id=icon_id,
                                           _class="btn gis_loc_select_btn",

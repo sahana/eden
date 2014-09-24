@@ -528,7 +528,7 @@ class S3CRUD(S3Method):
                         s3.jquery_ready.append(script)
 
                     # Add-button script
-                    script = '''$('#show-add-btn').click(function(){$('#list-add').slideDown('medium',function(){$('#show-add-btn').hide()})})'''
+                    script = '''$('#show-add-btn').click(function(){$('#show-add-btn').hide(10, function(){$('#list-add').slideDown('medium')})})'''
                     s3.jquery_ready.append(script)
 
             elif addbtn:

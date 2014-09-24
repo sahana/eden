@@ -1,7 +1,7 @@
 # Import LMS Facilities
 #
 #
-# run as python web2py.py -S eden -M -R applications/eden/private/templates/CRMT/Test/import_lms.py
+# run as python web2py.py -S eden -M -R applications/eden/private/templates/CRMT/Demo/import_lms.py
 #
 
 import os
@@ -28,14 +28,14 @@ table.organisation_id.default = None
 # Import Orgs
 resource = s3db.resource("org_organisation")
 stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "org", "organisation.xsl")
-filename = os.path.join(request.folder, "private", "templates", "CRMT", "Test", "LMS_sample_orgs.csv")
+filename = os.path.join(request.folder, "private", "templates", "CRMT", "Demo", "LMS_sample_orgs.csv")
 File = open(filename, "r")
 resource.import_xml(File, format="csv", stylesheet=stylesheet)
 
 # Import Facs
 resource = s3db.resource("org_facility")
 stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "org", "facility.xsl")
-filename = os.path.join(request.folder, "private", "templates", "CRMT", "Test", "LMS_sample_facs.csv")
+filename = os.path.join(request.folder, "private", "templates", "CRMT", "Demo", "LMS_sample_facs.csv")
 File = open(filename, "r")
 resource.import_xml(File, format="csv", stylesheet=stylesheet)
 

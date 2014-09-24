@@ -764,7 +764,7 @@ class S3SQLCustomForm(S3SQLForm):
         # Choose formstyle
         settings = s3.crud
         if format == "plain":
-            # Default formstyle works best when we have no formatting
+            # Simple formstyle works best when we have no formatting
             formstyle = "table3cols"
         else:
             formstyle = settings.formstyle

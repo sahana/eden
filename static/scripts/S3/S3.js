@@ -1315,7 +1315,6 @@ var s3_showMap = function(feature_id) {
      * @param {string} url - the URL
      */
     var stripQuery = function(url) {
-
         var newurl = url.split('?')[0].split('#')[0];
         return newurl;
     }
@@ -1326,7 +1325,6 @@ var s3_showMap = function(feature_id) {
      * @param {string} defaultURL - the default URL
      */
     $.cancelButtonS3 = function(defaultURL) {
-
         var cancelButtons = $('.s3-cancel');
         if (!cancelButtons.length) {
             return;

@@ -2,10 +2,8 @@ uid,role,description,controller,function,table,entity,uacl,oacl,Notes
 ANONYMOUS,Anonymous,,org,organisation,,any,READ,,Allow new users to see orgs during registration 
 ANONYMOUS,Anonymous,,,,org_organisation,any,READ,,Allow new users to see orgs during registration 
 ANONYMOUS,Anonymous,,default,index,auth_user,,READ,,Allow users to decode the modified_by field
-ANONYMOUS,Anonymous,,inv,,,any,READ,,
 ANONYMOUS,Anonymous,,org,,,any,READ,,
 ANONYMOUS,Anonymous,,pr,,,any,READ,,
-ANONYMOUS,Anonymous,,req,,,any,READ,,
 ANONYMOUS,Anonymous,,supply,,,any,READ,,
 ANONYMOUS,Anonymous,,,,pr_group_membership,any,READ,,
 ANONYMOUS,Anonymous,,gis,,,,READ,,
