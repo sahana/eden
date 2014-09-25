@@ -4894,8 +4894,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         return [r, g, b].join();
     }
 
-    var rgb2hex = function(r,g,b) {
-        return Number(0x1000000 + r*0x10000 + g*0x100 + b).toString(16).substring(1);
+    var rgb2hex = function(r, g, b) {
+        return Number(0x1000000 + Math.round(r)*0x10000 + Math.round(g)*0x100 + Math.round(b)).toString(16).substring(1);
     }
 
     // ColorPicker to style Features
