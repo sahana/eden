@@ -1161,7 +1161,7 @@ class S3ColorPickerWidget(FormWidget):
         #"showPalette": True,
         "showPaletteOnly": True,
         "togglePaletteOnly": True,
-        "palette": ("red", "yellow", "green", "blue", "white", "black")
+        "palette": ("red", "orange", "yellow", "green", "blue", "white", "black")
     }
 
     def __init__(self, options=None):

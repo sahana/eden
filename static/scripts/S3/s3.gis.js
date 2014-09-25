@@ -4928,6 +4928,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     showPaletteOnly: true,
                     togglePaletteOnly: true,
                     palette: ['rgba(255, 0, 0, .5)',    // red
+                              'rgba(255, 165, 0, .5)',  // orange
                               'rgba(255, 255, 0, .5)',  // yellow
                               'rgba(0, 255, 0, .5)',    // green
                               'rgba(0, 0, 255, .5)',    // blue

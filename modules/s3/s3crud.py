@@ -2274,19 +2274,21 @@ class S3CRUD(S3Method):
 
             if fields:
                 query = (table._id == record_id)
-                record = current.db(query).select(limitby=(0, 1), *fields).first()
-                
+                record = current.db(query).select(limitby=(0, 1),
+                                                  *fields).first()
+
                 if record:
                     if "modified_by" in record:
                         if not record.modified_by:
                             modified_by = T("anonymous user")
                         else:
-                            modified_by = table.modified_by.represent(record.modified_by)
+                            modified_by = \
+                                table.modified_by.represent(record.modified_by)
                         output["modified_by"] = T("by %(person)s") % \
                                                   dict(person = modified_by)
                     if "modified_on" in record:
                         output["modified_on"] = T("on %(date)s") % \
-                                                  dict(date = record.modified_on)
+                                                dict(date = record.modified_on)
 
         return output
 

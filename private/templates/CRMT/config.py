@@ -673,13 +673,14 @@ def customise_project_activity_controller(**attr):
                            list_fields = list_fields,
                            )
 
-        if r.interactive or representation == "json" or representation == "plain":
+        table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
+        if r.interactive or representation == "json" or \
+                            representation == "plain":
             # CRUD Strings / Represent
             s3.crud_strings[tablename].title_update = T("Update Activities")
             table.date.label = T("Date")
             table.name.label = T("Activity Name")
             table.comments.label = T("Description")
-            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             # Custom Form (Read/Create/Update inc embedded Summary)
             from s3 import S3SQLCustomForm, S3SQLInlineComponent
@@ -1391,11 +1392,11 @@ def customise_org_facility_controller(**attr):
                            summary = settings.ui.summary,
                            )
 
+        table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
         if r.interactive or representation == "json":
             # CRUD Strings / Represent
             table.name.label = T("Place Name")
             table.phone1.label = T("Phone")
-            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
                 label_create = T("Add Place"),
@@ -1948,11 +1949,11 @@ def customise_vulnerability_risk_controller(**attr):
                            list_fields = list_fields,
                            )
 
+        table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
         if r.interactive or representation == "json" or \
                             representation == "plain":
             # CRUD Strings / Represent
             table.name.label = T("Description")
-            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
 
             s3.crud_strings[tablename] = Storage(
                 label_create = T("Add"),
