@@ -43,7 +43,7 @@ settings.auth.registration_requests_organisation = True
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
 # The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
-settings.auth.registration_roles = { "organisation_id": ["USER"]}
+#settings.auth.registration_roles = { "organisation_id": ["EDITOR"]}
 
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"

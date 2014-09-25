@@ -4667,8 +4667,7 @@ class S3POIModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     # @ToDo: Write style file onaccept from this
-                     #self.gis_marker_id(),
+                     self.gis_marker_id(empty = False),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -4685,7 +4684,7 @@ class S3POIModel(S3Model):
 
         self.configure(tablename,
                        deduplicate = self.gis_poi_type_deduplicate,
-                       #onaccept = self.gis_poi_type_onaccept,
+                       onaccept = self.gis_poi_type_onaccept,
                        )
 
         crud_strings[tablename] = Storage(
@@ -4765,10 +4764,101 @@ class S3POIModel(S3Model):
     @staticmethod
     def gis_poi_type_onaccept(form):
         """
-            @ToDo: Create a Feature Layer for this type
+            Update Style for the PoIs layer
+
+            @ToDo: deployment_setting to add a new Feature Layer for new PoI types
         """
 
-        return
+        db = current.db
+        s3db = current.s3db
+
+        # Read all PoI Types and their Markers
+        ptable = s3db.gis_poi_type
+        mtable = s3db.gis_marker
+        query = (ptable.deleted == False) & \
+                (mtable.id == ptable.marker_id)
+        rows = db(query).select(ptable.name,
+                                mtable.image,
+                                )
+
+        # Build Style File
+        style = []
+        sappend = style.append
+        for row in rows:
+            cat = {"prop": "poi_type_id",
+                   "cat": row["gis_poi_type.name"],
+                   "externalGraphic": "img/markers/%s" % row["gis_marker.image"]
+                   }
+            sappend(cat)
+
+        #try:
+        #    driver_auto_json = current.db._adapter.driver_auto_json
+        #except:
+        #    current.log.warning("Update Web2Py to 2.9.11 to get native JSON support")
+        #    driver_auto_json = []
+        #if "dumps" not in driver_auto_json:
+        #    style = json.dumps(style, separators=SEPARATORS)
+
+        # Find correct Layer record
+        ltable = s3db.gis_layer_feature
+        query = (ltable.controller == "gis") & \
+                (ltable.function == "poi") & \
+                (ltable.filter == None) & \
+                (ltable.deleted == False)
+        row = db(query).select(ltable.layer_id,
+                               limitby=(0, 1)
+                               ).first()
+        if row:
+            layer_id = row.layer_id
+        else:
+            # Create It
+            f_id = ltable.insert(controller = "gis",
+                                 function = "poi",
+                                 attributes = ["name, poi_type_id"],
+                                 )
+            record = dict(id=f_id)
+            s3db.update_super(ltable, record)
+            layer_id = record["layer_id"]
+
+        # Find correct Style record
+        stable = s3db.gis_style
+        query = (stable.layer_id == layer_id) & \
+                (stable.record_id == None)
+        styles = db(query).select(stable.id,
+                                  stable.config_id,
+                                  )
+        none_excluded = False
+        if len(styles) > 1:
+            # Exclude all rows for different Map Configs
+            config = current.gis.get_config()
+            config_id = config.id
+            styles.exclude(lambda row: (row.config_id == config_id) & \
+                                       (row.config_id != None))
+
+        if len(styles) > 1:
+            # Exclude all rows for the default Map Config
+            # (thus leaving just our own)
+            styles.exclude(lambda row: row.config_id == None)
+            none_excluded = True
+
+        if len(styles) == 1:
+            # Update it
+            _style = styles.first()
+            _style.update_record(style = style)
+
+        elif len(styles) == 0:
+            # Create It
+            data = dict(layer_id = layer_id,
+                        popup_format = "{name} ({poi_type_id})",
+                        style = style,
+                        )
+            if none_excluded:
+                data["config_id"] = config_id
+            stable.insert(**data)
+
+        else:
+            # Can't differentiate
+            current.log.warning("Unable to update GIS PoI Style as there are multiple possible")
 
 # =============================================================================
 class S3POIFeedModel(S3Model):

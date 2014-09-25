@@ -4673,7 +4673,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 handler: function() {
                     if (pointButton.items[0].pressed) {
                         $('#' + map_id + '_panel .olMapViewport').addClass('crosshair');
-                        $('#' + map_id + '_panel .gis_colorpicker').spectrum('disable');
+                        var colorpicker = $('#' + map_id + '_panel .gis_colorpicker');
+                        if (colorpicker.length) {
+                            colorpicker.spectrum('disable');
+                        }
                     } else {
                         $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
                     }
@@ -4689,7 +4692,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             toolbar.add(pointButton);
             if (active) {
                 $('#' + map_id + '_panel .olMapViewport').addClass('crosshair');
-                $('#' + map_id + '_panel .gis_colorpicker').spectrum('disable');
+                var colorpicker = $('#' + map_id + '_panel .gis_colorpicker');
+                if (colorpicker.length) {
+                    colorpicker.spectrum('disable');
+                }
             }
             // Pass to Global scope for LocationSelectorWidget
             map.s3.pointButton = pointButton;
@@ -4742,10 +4748,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 handler: function() {
                     if (lineButton.items[0].pressed) {
                         $('#' + map_id + '_panel .olMapViewport').addClass('crosshair');
-                        $('#' + map_id + '_panel .gis_colorpicker').spectrum('enable');
+                        var colorpicker = $('#' + map_id + '_panel .gis_colorpicker');
+                        if (colorpicker.length) {
+                            colorpicker.spectrum('enable');
+                        }
                     } else {
                         $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
-                        $('#' + map_id + '_panel .gis_colorpicker').spectrum('disable');
+                        var colorpicker = $('#' + map_id + '_panel .gis_colorpicker');
+                        if (colorpicker.length) {
+                            colorpicker.spectrum('disable');
+                        }
                     }
                 },
                 map: map,
@@ -4832,10 +4844,16 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 handler: function(){
                     if (polygonButton.items[0].pressed) {
                         $('#' + map_id + '_panel .olMapViewport').addClass('crosshair');
-                        $('#' + map_id + '_panel .gis_colorpicker').spectrum('enable');
+                        var colorpicker = $('#' + map_id + '_panel .gis_colorpicker');
+                        if (colorpicker.length) {
+                            colorpicker.spectrum('enable');
+                        }
                     } else {
                         $('#' + map_id + '_panel .olMapViewport').removeClass('crosshair');
-                        $('#' + map_id + '_panel .gis_colorpicker').spectrum('disable');
+                        var colorpicker = $('#' + map_id + '_panel .gis_colorpicker');
+                        if (colorpicker.length) {
+                            colorpicker.spectrum('disable');
+                        }
                     }
                 },
                 map: map,
