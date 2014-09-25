@@ -19,6 +19,11 @@
          Office Postcode................optional.....office postcode
          Department.....................optional.....human_resource.department
          Job Title......................optional.....human_resource.job_title
+         Staff Level....................optional.....salary.staff_level_id
+         Salary Grade...................optional.....salary.salary_grade_id
+         Monthly Salary.................optional.....salary.monthly_amount
+         Salary Start Date..............optional.....salary.start_date
+         Salary End Date................optional.....salary.end_date
          Status.........................optional.....human_resource.status
          Start Date.....................optional.....human_resource start date
          First Name.....................required.....person first name
@@ -97,6 +102,8 @@
             - make updateable (don't use temporary UIDs)
 
     *********************************************************************** -->
+    <xsl:import href="salary.xsl"/>
+
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
@@ -171,6 +178,12 @@
 
     <xsl:key name="volunteerclustertpositions" match="row"
              use="col[@field='Volunteer Cluster Position']"/>
+
+    <xsl:key name="stafflevels" match="row"
+             use="col[@field='Staff Level']"/>
+
+    <xsl:key name="salarygrades" match="row"
+             use="col[@field='Salary Grade']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -248,6 +261,22 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclustertpositions',
                                                                        col[@field='Volunteer Cluster Position'])[1])]">
                 <xsl:call-template name="VolunteerClusterPosition"/>
+            </xsl:for-each>
+
+            <!-- Staff Levels -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('stafflevels',
+                                                                       col[@field='Staff Level'])[1])]">
+                <xsl:call-template name="StaffLevel">
+                    <xsl:with-param name="Field">Staff Level</xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Salary Grades -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('salarygrades',
+                                                                       col[@field='Salary Grade'])[1])]">
+                <xsl:call-template name="SalaryGrade">
+                    <xsl:with-param name="Field">Salary Grade</xsl:with-param>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -505,6 +534,11 @@
 
         <resource name="pr_person">
 
+            <xsl:variable name="person_tuid" select="concat('Person:', position())"/>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$person_tuid"/>
+            </xsl:attribute>
+
             <!-- Person record -->
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
             <xsl:if test="col[@field='Middle Name']!=''">
@@ -634,6 +668,7 @@
                             </xsl:call-template>
                         </xsl:with-param>
                         <xsl:with-param name="type" select="$type"/>
+                        <xsl:with-param name="person_tuid" select="$person_tuid"/>
                     </xsl:call-template>
                 </xsl:otherwise>
             </xsl:choose>
@@ -756,6 +791,7 @@
         <xsl:param name="StaffID"/>
         <xsl:param name="Status"/>
         <xsl:param name="type"/>
+        <xsl:param name="person_tuid"/>
 
         <resource name="hrm_human_resource">
 
@@ -835,6 +871,15 @@
                 <resource name="deploy_application">
                     <data field="active" value="true"/>
                 </resource>
+            </xsl:if>
+
+            <!-- Salary -->
+            <xsl:if test="col[@field='Staff Level']/text() != '' or col[@field='Salary Grade']/text() != '' or col[@field='Monthly Salary']/text() != ''">
+                <xsl:call-template name="Salary">
+                    <xsl:with-param name="person_tuid">
+                        <xsl:value-of select="$person_tuid"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:if>
 
             <!-- Volunteer Details -->

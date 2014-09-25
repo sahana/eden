@@ -11,6 +11,7 @@
 
     *********************************************************************** -->
     <xsl:import href="../commons.xsl"/>
+    <xsl:import href="salary.xsl"/>
 
     <xsl:output method="xml"/>
 
@@ -30,21 +31,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
-        <resource name="hrm_staff_level">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <!-- Link to Organisation -->
-            <xsl:if test="$OrgName!=''">
-                <reference field="organisation_id" resource="org_organisation">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
-        </resource>
-
+        <xsl:call-template name="StaffLevel"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->
