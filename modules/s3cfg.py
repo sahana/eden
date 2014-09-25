@@ -701,9 +701,9 @@ class S3Config(Storage):
     def get_fin_currencies(self):
         T = current.T
         currencies = {
-            "EUR" :T("Euros"),
-            "GBP" :T("Great British Pounds"),
-            "USD" :T("United States Dollars"),
+            "EUR" : T("Euros"),
+            "GBP" : T("Great British Pounds"),
+            "USD" : T("United States Dollars"),
         }
         return self.fin.get("currencies", currencies)
     def get_fin_currency_default(self):
