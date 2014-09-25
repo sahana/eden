@@ -834,6 +834,18 @@ def customise_org_group_controller(**attr):
                                crud_form = crud_form,
                                )
 
+        elif r.component_name == "pr_group":
+            list_fields = [#(T("Network"), "group_team.org_group_id"),
+                           "name",
+                           "description",
+                           "meetings",
+                           (T("Chairperson"), "chairperson"),
+                           "comments",
+                           ]
+
+            s3db.configure("pr_group",
+                           list_fields = list_fields,
+                           )
         return result
     s3.prep = custom_prep
 
@@ -1148,19 +1160,10 @@ def customise_pr_group_resource(r, tablename):
                         org_group_team = "group_id",
                         )
 
-    list_fields = [(T("Network"), "group_team.org_group_id"),
-                   "name",
-                   "description",
-                   "meetings",
-                   (T("Chairperson"), "chairperson"),
-                   "comments",
-                   ]
-
     s3db.configure("pr_group",
                    # Redirect to member list when a new group has been created
                    create_next = URL(c="hrm", f="group",
                                      args=["[id]", "group_membership"]),
-                   list_fields = list_fields,
                    )
 
 settings.customise_pr_group_resource = customise_pr_group_resource

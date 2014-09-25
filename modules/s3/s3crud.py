@@ -2911,6 +2911,14 @@ class S3CRUD(S3Method):
             c = prefix
             f = name
 
+        if r.representation == "iframe":
+            if current.deployment_settings.get_ui_iframe_opens_full():
+                iframe_safe = lambda url: s3_set_extension(url, "html")
+            else:
+                iframe_safe = lambda url: s3_set_extension(url, "iframe")
+        else:
+            iframe_safe = False
+
         def list_linkto(record_id, r=r, c=c, f=f,
                         linkto=linkto,
                         update=authorised and update):
@@ -2920,7 +2928,6 @@ class S3CRUD(S3Method):
                     url = str(linkto(record_id))
                 except TypeError:
                     url = linkto % record_id
-                return url
             else:
                 if r.component:
                     if r.link and not r.actuate_link():
@@ -2945,31 +2952,35 @@ class S3CRUD(S3Method):
                         f = r.function
                         args = [r.id, r.component_name, record_id]
                     if update:
-                        return str(URL(r=r, c=c, f=f,
-                                       args=args + ["update"],
-                                       # Don't forward all vars unconditionally
-                                       #vars=r.get_vars
-                                       ))
+                        url = str(URL(r=r, c=c, f=f,
+                                      args=args + ["update"],
+                                      # Don't forward all vars unconditionally
+                                      #vars=r.get_vars
+                                      ))
                     else:
-                        return str(URL(r=r, c=c, f=f,
-                                       args=args + ["read"],
-                                       # Don't forward all vars unconditionally
-                                       #vars=r.get_vars
-                                       ))
+                        url = str(URL(r=r, c=c, f=f,
+                                      args=args + ["read"],
+                                      # Don't forward all vars unconditionally
+                                      #vars=r.get_vars
+                                      ))
                 else:
                     args = [record_id]
                     if update:
-                        return str(URL(r=r, c=c, f=f,
-                                       args=args + ["update"],
-                                       # Don't forward all vars unconditionally
-                                       #vars=r.get_vars
-                                       ))
+                        url = str(URL(r=r, c=c, f=f,
+                                      args=args + ["update"],
+                                      # Don't forward all vars unconditionally
+                                      #vars=r.get_vars
+                                      ))
                     else:
-                        return str(URL(r=r, c=c, f=f,
-                                       args=args + ["read"],
-                                       # Don't forward all vars unconditionally
-                                       #vars=r.get_vars
-                                       ))
+                        url = str(URL(r=r, c=c, f=f,
+                                      args=args + ["read"],
+                                      # Don't forward all vars unconditionally
+                                      #vars=r.get_vars
+                                      ))
+            if iframe_safe:
+                url = iframe_safe(url)
+            return url
+
         return list_linkto
 
     # -------------------------------------------------------------------------
