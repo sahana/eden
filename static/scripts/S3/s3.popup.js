@@ -149,12 +149,12 @@ function s3_popup_refresh_main_form() {
         return;
     }
 
-    var re = new RegExp('.*\\' + S3.Ap + '\\/');
+    var re = new RegExp('.*\\' + S3.Ap + '\\/'),
+        child = $_GET['child'],
+        rel_url,
+        args,
+        child_resource;
 
-    var child = $_GET['child'];
-    var rel_url;
-    var args;
-    var child_resource;
     if (typeof child === 'undefined') {
         // Use default
         var url = new String(self.location);
@@ -168,23 +168,28 @@ function s3_popup_refresh_main_form() {
     }
     s3_debug('child_resource', child_resource);
 
-    var parent = $_GET['parent'];
-    var parent_resource;
-    var parent_url;
-    var caller_prefix;
+    var parent = $_GET['parent'],
+        parent_url = new String(self.parent.location),
+        parent_resource,
+        lookup_prefix = $_GET['prefix'];
+
+    rel_url = parent_url.replace(re, '');
+
     if (typeof parent === 'undefined') {
         // @ToDo: Make this less fragile by passing these fields as separate vars?
         var parent_field = caller.replace('_' + child_resource, '');
         s3_debug('parent_field', parent_field);
+
         var parent_module = parent_field.replace(/_.*/, '');
 
         // Find the parent resource (fixed for components)
         parent_resource = parent_field.replace(parent_module + '_', '');
-        parent_url = new String(self.parent.location);
-        rel_url = parent_url.replace(re, '');
+
         args = rel_url.split('?')[0].split('/');
         var parent_component = null;
-        caller_prefix = args[0];
+        if (!lookup_prefix) {
+            lookup_prefix = args[0];
+        }
         var parent_function = args[1];
         if (args.length > 2) {
             if (args[2].match(/\d*/) !== null) {
@@ -201,16 +206,17 @@ function s3_popup_refresh_main_form() {
     } else {
         // Use manual override
         parent_resource = parent;
-        parent_url = new String(self.parent.location);
-        rel_url = parent_url.replace(re, '');
-        args = rel_url.split('?')[0].split('/');
-        caller_prefix = args[0];
+        if (!lookup_prefix) {
+            rel_url = parent_url.replace(re, '');
+            args = rel_url.split('?')[0].split('/');
+            lookup_prefix = args[0];
+        }
     }
     s3_debug('parent_resource', parent_resource);
-    s3_debug('caller_prefix', caller_prefix);
+    s3_debug('lookup_prefix', lookup_prefix);
 
     // URL to retrieve the Options list for the field of the master resource
-    var opt_url = S3.Ap.concat('/' + caller_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
+    var opt_url = S3.Ap.concat('/' + lookup_prefix + '/' + parent_resource + '/options.s3json?field=' + child_resource);
 
     // Identify the widget type (Dropdown, Checkboxes, Hierarchy or Autocomplete)
     var selector = self.parent.$('#' + caller);
@@ -221,7 +227,7 @@ function s3_popup_refresh_main_form() {
     s3_debug('has_dummy', has_dummy);
     var checkboxes = selector.hasClass('checkboxes-widget-s3');
     var hierarchy_widget = selector.hasClass('s3-hierarchy-input');
-    
+
     var append;
     if (checkboxes) {
         // The number of columns

@@ -3079,7 +3079,13 @@ class S3ProjectOrganisationModel(S3Model):
 
         tablename = "project_organisation"
         self.define_table(tablename,
-                          self.project_project_id(),
+                          self.project_project_id(
+                            comment=S3AddResourceLink(c="project",
+                                                      f="project",
+                                                      vars = dict(prefix="project"),
+                                                      tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
+                                                      )
+                          ),
                           self.org_organisation_id(
                           requires = self.org_organisation_requires(
                                          required=True,
