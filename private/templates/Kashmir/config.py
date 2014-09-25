@@ -39,6 +39,12 @@ settings.auth.registration_requires_verification = True
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requests_organisation = True
 
+# Uncomment to set the default role UUIDs assigned to newly-registered users
+# This is a dictionary of lists, where the key is the realm that the list of roles applies to
+# The key 0 implies not realm restricted
+# The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
+settings.auth.registration_roles = { "organisation_id": ["USER"]}
+
 # Approval emails get sent to all admins
 settings.mail.approver = "ADMIN"
 
