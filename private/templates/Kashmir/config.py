@@ -83,12 +83,12 @@ settings.L10n.display_toolbar = False
 settings.L10n.utc_offset = "UTC +0530"
 
 settings.fin.currencies = {
-    "INR" : T("Indian Rupees"),
     "EUR" : T("Euros"),
     "GBP" : T("Great British Pounds"),
+    "INR" : T("Indian Rupees"),
     "USD" : T("United States Dollars"),
 }
-settings.fin.currency_default = "USD"
+settings.fin.currency_default = "INR"
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
