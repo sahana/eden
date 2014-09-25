@@ -5694,7 +5694,8 @@ def hrm_group_controller():
             msg_list_empty = T("No Teams currently registered"))
 
     # Format for filter_widgets & imports
-    s3db.add_components("pr_group", org_organisation_team="group_id")
+    s3db.add_components("pr_group",
+                        org_organisation_team = "group_id")
 
     # Pre-process
     def prep(r):

@@ -46,77 +46,6 @@ class SECTION(DIV):
     tag = "section"
 
 # =============================================================================
-def formstyle_table(form, fields, *args, **kwargs):
-    """
-        Default Eden Form Style (Labels above the Inputs)
-    """
-
-    def render_row(row_id, label, widget, comment, hidden=False):
-        
-        row = []
-        _class = "hide" if hidden else None
-            
-        # Label on the 1st row
-        row.append(TR(TD(label, _class = "w2p_fl"),
-                      TD(""),
-                      _id = row_id + "1",
-                      _class = _class))
-                      
-        # Widget & Comment on the 2nd Row
-        row.append(TR(widget,
-                      TD(comment, _class = "w2p_fc"),
-                      _id = row_id,
-                      _class = _class))
-                      
-        return tuple(row)
-
-    if args:
-        # Old-style, single-row call:
-        hidden = kwargs.get("hidden", False)
-        return render_row(form, fields, args[0], args[1], hidden=hidden)
-    else:
-        # New-style, all-rows call:
-        parent = TABLE()
-        for row_id, label, widget, comment in fields:
-            rows = render_row(row_id, label, widget, comment)
-            parent.append(rows[0])
-            parent.append(rows[1])
-        return parent
-
-# =============================================================================
-def formstyle_table_inline(form, fields, *args, **kwargs):
-    """
-        Default Eden Form Style (In-Line Labels)
-    """
-
-    def render_row(row_id, label, widget, comment, hidden=False):
-
-        _class = "hide" if hidden else None
-
-        row = TR(TD(label, _class = "w2p_fl"),
-                 TD(widget),
-                 _id = row_id,
-                 _class = _class)
-
-        if comment:
-            row.append(TD(DIV(_class = "tooltip",
-                              _title = "%s|%s" % (label, comment)),
-                          _class="w2p_fc"))
-        return row
-
-    if args:
-        # Old-style, single-row call:
-        hidden = kwargs.get("hidden", False)
-        return render_row(form, fields, args[0], args[1], hidden=hidden)
-    else:
-        # New-style, all-rows call:
-        parent = TABLE()
-        for row_id, label, widget, comment in fields:
-            row = render_row(row_id, label, widget, comment)
-            parent.append(row)
-        return parent
-
-# =============================================================================
 def formstyle_bootstrap(form, fields, *args, **kwargs):
     """
         Formstyle for Bootstrap 2.x themes: http://getbootstrap.com/2.3.2/
@@ -259,6 +188,77 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         parent = TAG[""]()
         for row_id, label, widget, comment in fields:
             parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
+def formstyle_table(form, fields, *args, **kwargs):
+    """
+        Old Default Eden Form Style (Labels above the Inputs)
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+        
+        row = []
+        _class = "hide" if hidden else None
+            
+        # Label on the 1st row
+        row.append(TR(TD(label, _class = "w2p_fl"),
+                      TD(""),
+                      _id = row_id + "1",
+                      _class = _class))
+                      
+        # Widget & Comment on the 2nd Row
+        row.append(TR(widget,
+                      TD(comment, _class = "w2p_fc"),
+                      _id = row_id,
+                      _class = _class))
+                      
+        return tuple(row)
+
+    if args:
+        # Old-style, single-row call:
+        hidden = kwargs.get("hidden", False)
+        return render_row(form, fields, args[0], args[1], hidden=hidden)
+    else:
+        # New-style, all-rows call:
+        parent = TABLE()
+        for row_id, label, widget, comment in fields:
+            rows = render_row(row_id, label, widget, comment)
+            parent.append(rows[0])
+            parent.append(rows[1])
+        return parent
+
+# =============================================================================
+def formstyle_table_inline(form, fields, *args, **kwargs):
+    """
+        Old Default Eden Form Style (In-Line Labels)
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        _class = "hide" if hidden else None
+
+        row = TR(TD(label, _class = "w2p_fl"),
+                 TD(widget),
+                 _id = row_id,
+                 _class = _class)
+
+        if comment:
+            row.append(TD(DIV(_class = "tooltip",
+                              _title = "%s|%s" % (label, comment)),
+                          _class="w2p_fc"))
+        return row
+
+    if args:
+        # Old-style, single-row call:
+        hidden = kwargs.get("hidden", False)
+        return render_row(form, fields, args[0], args[1], hidden=hidden)
+    else:
+        # New-style, all-rows call:
+        parent = TABLE()
+        for row_id, label, widget, comment in fields:
+            row = render_row(row_id, label, widget, comment)
+            parent.append(row)
         return parent
 
 # =============================================================================
