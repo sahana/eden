@@ -3733,9 +3733,12 @@ def req_match():
         return output
 
     table = s3db[tablename]
-    site_id = current.db(table.id == id).select(table.site_id,
-                                                limitby=(0, 1)
-                                                ).first().site_id
+    row = current.db(table.id == id).select(table.site_id, 
+                                            limitby=(0, 1)).first()
+    if row:
+        site_id = row.site_id
+    else:
+        return output
     actions = [dict(url = URL(c = "req",
                               f = "req",
                               args = ["[id]", "check"],
@@ -3794,9 +3797,10 @@ def req_match():
             sr = auth.get_system_roles()
             realms = auth.user.realms or Storage()
 
+            record = r.record
             if sr.ADMIN in realms or sr.ORG_ADMIN in realms and \
                (realms[sr.ORG_ADMIN] is None or \
-                r.record.pe_id in realms[sr.ORG_ADMIN]):
+                record and record.pe_id in realms[sr.ORG_ADMIN]):
                 r.set_handler("roles", S3OrgRoleManager())
         return True
     s3.prep = prep
