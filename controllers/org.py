@@ -343,10 +343,11 @@ def incoming():
     """
         Incoming Shipments for Sites
 
-        @unused
+        Used from Requests rheader when looking at Transport Status
     """
 
-    return inv_incoming()
+    # @ToDo: Create this function!
+    return s3db.inv_incoming()
 
 # -----------------------------------------------------------------------------
 def facility_geojson():

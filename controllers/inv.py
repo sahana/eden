@@ -299,7 +299,8 @@ def warehouse():
                 list_fields = s3db.get_config("inv_inv_item", "list_fields")
                 try:
                     list_fields.remove("site_id")
-                    s3db.configure("inv_inv_item", list_fields=list_fields)
+                    s3db.configure("inv_inv_item",
+                                   list_fields = list_fields)
                 except:
                     pass
 
@@ -374,20 +375,18 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % resourcename
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.inv_rheader,
                                 hide_filter = {"inv_item": False,
                                                "_default": True,
                                               },
-                                csv_template = resourcename,
-                                csv_stylesheet = csv_stylesheet,
                                 # Extra fields for CSV uploads:
                                 #csv_extra_fields = [
                                 #         dict(label="Organisation",
                                 #         field=s3db.org_organisation_id(comment=None))
                                 #]
+                                csv_stylesheet = csv_stylesheet,
+                                csv_template = resourcename,
+                                rheader = s3db.inv_rheader,
                                 )
-    if "add_btn" in output:
-        del output["add_btn"]
     return output
 
 # -----------------------------------------------------------------------------
@@ -1676,10 +1675,14 @@ def facility_type():
 
 # -----------------------------------------------------------------------------
 def incoming():
-    """ Incoming Shipments """
+    """
+        Incoming Shipments for Sites
 
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return inv_incoming()
+        Used from Requests rheader when looking at Transport Status
+    """
+
+    # @ToDo: Create this function!
+    return s3db.inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():

@@ -1216,14 +1216,14 @@ $.filterOptionsS3({
 
         settings = current.deployment_settings
         if settings.get_org_site_inv_req_tabs():
-            s3_has_permission = current.auth.s3_has_permission
+            permit = current.auth.s3_has_permission
             if settings.has_module("req") and \
-               s3_has_permission("read", "req_req", c="req"):
+               permit("read", "req_req", c="req"):
                 T = current.T
                 tabs = [(T("Requests"), "req")]
-                if match and s3_has_permission("read", "req_req",
-                                               c=current.request.controller,
-                                               f="req_match"):
+                if match and permit("read", "req_req",
+                                    c=current.request.controller,
+                                    f="req_match"):
                     tabs.append((T("Match Requests"), "req_match/"))
                 if settings.get_req_use_commit():
                     tabs.append((T("Commit"), "commit"))
@@ -2357,6 +2357,7 @@ class S3CommitModel(S3Model):
                                           readable = True,
                                           writable = True,
                                           represent = self.org_site_represent,
+                                          updateable = True,
                                           widget = site_widget,
                                           ),
                           self.gis_location_id(
@@ -2460,15 +2461,16 @@ class S3CommitModel(S3Model):
 
         # Reusable Field
         commit_id = S3ReusableField("commit_id", "reference %s" % tablename,
-                                    sortby="date",
+                                    label = T("Commitment"),
+                                    ondelete = "CASCADE",
+                                    represent = self.commit_represent,
                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "req_commit.id",
                                                               self.commit_represent,
                                                               orderby="req_commit.date",
                                                               sort=True)),
-                                    represent = self.commit_represent,
-                                    label = T("Commitment"),
-                                    ondelete = "CASCADE")
+                                    sortby = "date",
+                                    )
 
         self.configure(tablename,
                        context = {"event": "req_id$event_id",
@@ -2502,11 +2504,11 @@ class S3CommitModel(S3Model):
         # Components
         add_components(tablename,
                        # Committed Items
-                       req_commit_item="commit_id",
+                       req_commit_item = "commit_id",
                        # Committed Persons
-                       req_commit_person="commit_id",
+                       req_commit_person = "commit_id",
                        # Committed Skills
-                       req_commit_skill="commit_id",
+                       req_commit_skill = "commit_id",
                       )
 
         # ---------------------------------------------------------------------
@@ -3630,14 +3632,15 @@ def req_rheader(r, check_page=False):
                             query = (table.uuid == site_record.uuid)
                             id = db(query).select(table.id,
                                                   limitby=(0, 1)).first().id
-                            transit_status = SPAN(transit_status,
-                                                  A(T("Incoming Shipments"),
-                                                    _href = URL(c = instance_type.split("_")[0],
-                                                                f = "incoming",
-                                                                vars = {"viewing" : "%s.%s" % (instance_type, id)}
-                                                                )
-                                                    )
-                                                  )
+                            # @ToDo: Create this function!
+                            #transit_status = SPAN(transit_status,
+                            #                      A(T("Incoming Shipments"),
+                            #                        _href = URL(c = instance_type.split("_")[0],
+                            #                                    f = "incoming",
+                            #                                    vars = {"viewing" : "%s.%s" % (instance_type, id)}
+                            #                                    )
+                            #                        )
+                            #                      )
                     except:
                         pass
                     transit_status = (TH("%s: " % T("Transit Status")),
@@ -3713,7 +3716,7 @@ def req_rheader(r, check_page=False):
 def req_match():
     """
         Function to be called from controller functions to display all
-        requests as a tab for a site.
+        requests for a site as a tab.
     """
 
     T = current.T
@@ -3739,6 +3742,7 @@ def req_match():
         site_id = row.site_id
     else:
         return output
+
     actions = [dict(url = URL(c = "req",
                               f = "req",
                               args = ["[id]", "check"],
@@ -3748,27 +3752,31 @@ def req_match():
                     label = str(T("Check")),
                     )
                ]
-    if settings.get_req_use_commit():
+
+    if current.auth.s3_has_permission("update", tablename, id):
+        # @ToDo: restrict to those which we've not already committed/sent?
+        if settings.get_req_use_commit():
+            actions.append(
+                dict(url = URL(c = "req",
+                               f = "commit_req",
+                               args = ["[id]"],
+                               vars = {"site_id": site_id}
+                               ),
+                     _class = "action-btn",
+                     label = str(T("Commit")),
+                     )
+                )
         actions.append(
-            dict(url = URL(c = "req",
-                           f = "commit_req",
-                           args = ["[id]"],
-                           vars = {"site_id": site_id}
-                           ),
-                 _class = "action-btn",
-                 label = str(T("Commit")),
+                dict(url = URL(c = "req",
+                               f = "send_req",
+                               args = ["[id]"],
+                               vars = {"site_id": site_id}
+                               ),
+                     _class = "action-btn dispatch",
+                     label = str(T("Send")),
+                     )
                 )
-            )
-    actions.append(
-            dict(url = URL(c = "req",
-                           f = "send_req",
-                           args = ["[id]"],
-                           vars = {"site_id": site_id}
-                           ),
-                 _class = "action-btn dispatch",
-                 label = str(T("Send")),
-                )
-        )
+
     s3.actions = actions
 
     if tablename == "org_office":
@@ -3785,7 +3793,8 @@ def req_match():
         rheader = None
 
     s3.filter = (s3db.req_req.site_id != site_id)
-    s3db.configure("req_req", insertable=False)
+    s3db.configure("req_req",
+                   insertable = False)
 
     # Pre-process
     def prep(r):
@@ -3812,7 +3821,8 @@ def req_match():
         return output
     s3.postp = postp
 
-    output = current.rest_controller("req", "req", rheader=rheader)
+    output = current.rest_controller("req", "req",
+                                     rheader = rheader)
     return output
 
 # =============================================================================

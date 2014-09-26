@@ -4794,9 +4794,10 @@ $.filterOptionsS3({
                 tablename = table._tablename
             else:
                 tablename = table
-            s3db.configure(tablename, insertable = False)
+            s3db.configure(tablename,
+                           insertable = False)
 
-        return []
+        return site_ids # Will be []
 
     # -------------------------------------------------------------------------
     def permitted_organisations(self,
