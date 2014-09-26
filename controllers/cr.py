@@ -66,11 +66,6 @@ def shelter():
     # Filter to just Open shelters (status=2)
     s3base.s3_set_default_filter("~.status", [2, None], tablename="cr_shelter")
 
-    s3db.configure("cr_shelter",
-                   # Go to People check-in for this shelter after creation
-                   create_next = URL(c="cr", f="shelter",
-                                     args=["[id]", "shelter_registration"]))
-
     # Pre-processor
     def prep(r):
         # Location Filter
@@ -153,9 +148,14 @@ def shelter():
 
 # =============================================================================
 def incoming():
-    """ Incoming Shipments """
+    """
+        Incoming Shipments for Sites
 
-    return inv_incoming()
+        Used from Requests rheader when looking at Transport Status
+    """
+
+    # @ToDo: Create this function!
+    return s3db.inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():

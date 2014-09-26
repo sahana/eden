@@ -239,23 +239,27 @@ class S3MainMenu(object):
     def menu_admin(cls, **attr):
         """ Administrator Menu """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        s3_has_role = current.auth.s3_has_role
         settings = current.deployment_settings
         name_nice = settings.modules["admin"].name_nice
-        translate = settings.has_module("translate")
 
-        menu_admin = MM(name_nice, c="admin",
-                        restrict=[ADMIN], **attr)(
-                            MM("Settings", f="setting"),
-                            MM("Users", f="user"),
-                            MM("Person Registry", c="pr"),
-                            MM("Database", c="appadmin", f="index"),
-                            MM("Error Tickets", f="errors"),
-                            MM("Synchronization", c="sync", f="index"),
-                            MM("Translation", c="admin", f="translate",
-                               check=translate),
-                            MM("Test Results", f="result"),
-                        )
+        if s3_has_role("ADMIN"):
+            translate = settings.has_module("translate")
+            menu_admin = MM(name_nice, c="admin", **attr)(
+                                MM("Settings", f="setting"),
+                                MM("Users", f="user"),
+                                MM("Person Registry", c="pr"),
+                                MM("Database", c="appadmin", f="index"),
+                                MM("Error Tickets", f="errors"),
+                                MM("Synchronization", c="sync", f="index"),
+                                MM("Translation", c="admin", f="translate",
+                                   check=translate),
+                                MM("Test Results", f="result"),
+                            )
+        elif s3_has_role("ORG_ADMIN"):
+            menu_admin = MM(name_nice, c="admin", f="user", **attr)()
+        else:
+            menu_admin = None
 
         return menu_admin
 

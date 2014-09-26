@@ -39,6 +39,10 @@ settings.auth.registration_requires_verification = True
 settings.auth.registration_requires_approval = True
 settings.auth.registration_requests_organisation = True
 
+# Ensure that Users have Staff records in their Org
+settings.auth.registration_link_user_to = {"staff": T("Staff")}
+settings.auth.registration_link_user_to_default = "staff"
+
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -114,6 +118,14 @@ settings.frontpage.rss = []
 
 # Disable people registration in shelters
 settings.cr.people_registration = False
+
+# Disable Emergency Contacts
+settings.pr.show_emergency_contacts = False
+
+# Restrict the type of requests that can be made, valid values in the
+# list are ["Stock", "People", "Other"]. If this is commented out then
+# all types will be valid.
+settings.req.req_type = ["Stock"]
 
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py

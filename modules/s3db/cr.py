@@ -86,11 +86,6 @@ class S3ShelterModel(S3Model):
         set_method = self.set_method
         NAME = T("Name")
 
-        if settings.get_org_autocomplete():
-            org_widget = S3OrganisationAutocompleteWidget(default_from_profile=True)
-        else:
-            org_widget = None
-
         # -------------------------------------------------------------------------
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
@@ -280,7 +275,7 @@ class S3ShelterModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      self.org_organisation_id(
-                         widget = org_widget,
+                        requires = self.org_organisation_requires(updateable=True),
                      ),
                      shelter_type_id(),          # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
                      shelter_service_id(),       # e.g. medical, housing, food, ...
@@ -520,7 +515,15 @@ class S3ShelterModel(S3Model):
                                             label = T("Total Capacity (Night)"),
                                             ))
 
+        if settings.get_cr_shelter_people_registration():
+            # Go to People check-in for this shelter after creation
+            create_next = URL(c="cr", f="shelter",
+                              args=["[id]", "shelter_registration"])
+        else:
+            create_next = None
+
         configure(tablename,
+                  create_next = create_next,
                   deduplicate = self.cr_shelter_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
@@ -1191,12 +1194,13 @@ def cr_shelter_rheader(r, tabs=[]):
                 tabs.extend([(T("People Reservation"), "shelter_allocation"),
                              (T("People Registration"), "shelter_registration"),
                              ])
-            STAFF = settings.get_hrm_staff_label()
-            tabs.append((STAFF, "human_resource"))
-            if settings.has_module("hrm") and \
-               current.auth.s3_has_permission("create", "hrm_human_resource_site"):
-                #tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "human_resource_site"))
-                tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign")),
+            if settings.has_module("hrm"):
+                STAFF = settings.get_hrm_staff_label()
+                tabs.append((STAFF, "human_resource"))
+                permit = current.auth.s3_has_permission 
+                if permit("update", tablename, r.id) and \
+                   permit("create", "hrm_human_resource_site"):
+                    tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
             if settings.get_cr_shelter_housing_unit_management():
                 tabs.append((T("Housing Units"), "shelter_unit"))
             #tabs.append((T("Events"), "event_shelter"))

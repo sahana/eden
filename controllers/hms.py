@@ -258,9 +258,14 @@ def hospital():
 
 # -----------------------------------------------------------------------------
 def incoming():
-    """ Incoming Shipments """
+    """
+        Incoming Shipments for Sites
 
-    return inv_incoming()
+        Used from Requests rheader when looking at Transport Status
+    """
+
+    # @ToDo: Create this function!
+    return s3db.inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():
