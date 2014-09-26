@@ -3194,7 +3194,6 @@ def inv_rheader(r):
         # Tabs
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
-                (T("Staff"), "human_resource"),
                 ]
         settings = current.deployment_settings
         if settings.has_module("hrm"):

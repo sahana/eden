@@ -1267,9 +1267,9 @@ class S3DateWidget(FormWidget):
             elif "-" in language:
                 parts = language.split("_", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
-            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            path = os.path.join(request.folder, "static", "scripts", "ui", "i18n", "datepicker-%s.js" % language)
             if os.path.exists(path):
-                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                lscript = "/%s/static/scripts/ui/i18n/datepicker-%s.js" % (request.application, language)
                 if lscript not in s3.scripts:
                     # 1st Datepicker
                     s3.scripts.append(lscript)
@@ -1450,9 +1450,9 @@ class S3DateTimeWidget(FormWidget):
             elif "-" in language:
                 parts = language.split("_", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
-            path = os.path.join(request.folder, "static", "scripts", "i18n", "jquery.ui.datepicker-%s.js" % language)
+            path = os.path.join(request.folder, "static", "scripts", "ui", "i18n", "datepicker-%s.js" % language)
             if os.path.exists(path):
-                lscript = "/%s/static/scripts/i18n/jquery.ui.datepicker-%s.js" % (request.application, language)
+                lscript = "/%s/static/scripts/ui/i18n/datepicker-%s.js" % (request.application, language)
                 if lscript not in s3.scripts:
                     # 1st Datepicker
                     s3.scripts.append(lscript)
@@ -4844,7 +4844,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
     """
         Standard MultipleOptionsWidget, but using the jQuery UI:
         http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/
-        static/scripts/jquery.ui.multiselect.js
+        static/scripts/ui/multiselect.js
     """
 
     def __init__(self,
@@ -5302,7 +5302,6 @@ class S3OrganisationHierarchyWidget(OptionsWidget):
         s3.js_global.append(javascript_array)
         s3.scripts.append("/%s/static/scripts/S3/s3.orghierarchy.js" % \
             current.request.application)
-        s3.stylesheets.append("jquery-ui/jquery.ui.menu.css")
 
         return self.widget(field, value, **attributes)
 

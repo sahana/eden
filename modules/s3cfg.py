@@ -60,7 +60,7 @@ class S3Config(Storage):
         "table_inline": formstyle_table_inline,
     }
 
-    # Formats from static/scripts/i18n/jquery-ui-i18n.js converted to Python style
+    # Formats from static/scripts/ui/i18n converted to Python style
     date_formats = {"ar": "%d/%m/%Y",
                     "bs": "%d.%m.%Y",
                     "de": "%d.%m.%Y",

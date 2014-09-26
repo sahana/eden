@@ -74,6 +74,7 @@ class S3MainMenu(object):
 
         # Home always 1st
         module = all_modules["default"]
+
         menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
         # Modules to hide due to insufficient permissions

@@ -326,7 +326,7 @@ def dojs(dogis = False, warnings = True):
         shutil.move(outputFilename, "../S3")
 
     # Enable when needed
-    full = False
+    full = True
     if full:
         for filename in ("spectrum",
                          "tag-it",
@@ -565,7 +565,8 @@ def docss():
     for file in files[:-1]:
         p = re.compile("(\n|\r|\t|\f|\v)+")
         file = p.sub("", file)
-        listCSS.append("../../styles/%s" % file)
+        if file[0] != "#":
+            listCSS.append("../../styles/%s" % file)
 
     outputFilenameCSS = "eden.min.css"
 
