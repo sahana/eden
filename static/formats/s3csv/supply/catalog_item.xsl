@@ -159,7 +159,7 @@
         <xsl:variable name="item" select="concat(col[@field='Item Name'],col[@field='Item Code'])"/>
         <xsl:variable name="category" select="col[@field='Category']/text()"/>
         <xsl:variable name="catalog" select="col[@field='Catalog']/text()"/>
-        <xsl:variable name="um" select="col[@field='Unit of Measure']"/>
+        <xsl:variable name="um" select="col[@field='Unit of Measure']/text()"/>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
 
         <resource name="supply_item">

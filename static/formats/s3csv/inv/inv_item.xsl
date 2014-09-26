@@ -369,7 +369,7 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="col[@field='Item Name']"/></data>
             <data field="code"><xsl:value-of select="col[@field='Item Code']"/></data>
-            <data field="um">$um</data>
+            <data field="um"><xsl:value-of select="$um"/></data>
             <data field="model"><xsl:value-of select="col[@field='Model']"/></data>
             <data field="year"><xsl:value-of select="col[@field='Year']"/></data>
             <data field="weight"><xsl:value-of select="col[@field='Weight']"/></data>
