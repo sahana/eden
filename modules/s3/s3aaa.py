@@ -1440,10 +1440,11 @@ Thank you"""
             utable.utc_offset.readable = True
             utable.utc_offset.writable = True
 
-        utable.organisation_id.requires = \
-            current.s3db.org_organisation_requires(# Only allowed to select Orgs that the user has update access to
-                                                   updateable = True,
-                                                   )
+        # Users should not be able to change their Org affiliation
+        utable.organisation_id.writable = False
+        ## Only allowed to select Orgs that the user has update access to
+        #utable.organisation_id.requires = \
+        #    current.s3db.org_organisation_requires(updateable = True)
 
         if next == DEFAULT:
             next = request.get_vars._next \
@@ -1507,6 +1508,7 @@ Thank you"""
                                         person_id = person_id)
 
         formstyle = deployment_settings.get_ui_formstyle()
+        current.response.form_label_separator = ""
         form = SQLFORM(utable,
                        self.user.id,
                        fields = settings.profile_fields,
