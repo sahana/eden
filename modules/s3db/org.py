@@ -5606,6 +5606,18 @@ def org_update_affiliations(table, record):
         org_group_update_affiliations(record)
 
     elif rtype == "org_site" or rtype in current.auth.org_site_types:
+
+        if "organisation_id" not in record:
+            # Probably created on component tab, so form does not have the
+            # organisation_id => reload record to get it
+            rtable = current.s3db[rtype]
+            try:
+                query = (rtable._id == record[rtable._id.name])
+            except (KeyError, AttributeError):
+                return
+            record = current.db(query).select(rtable.ALL,
+                                              limitby=(0, 1)).first()
+
         org_site_update_affiliations(record)
 
 # =============================================================================
