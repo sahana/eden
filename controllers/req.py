@@ -424,8 +424,9 @@ def req_controller(template = False):
                                               )
                     s3.jquery_ready.append('''
 $.filterOptionsS3({
- 'trigger':'req_item_id',
- 'target':'item_pack_id',
+ 'trigger':{'alias':'commit_item','name':'req_item_id'},
+ 'target':{'alias':'commit_item','name':'item_pack_id'},
+ 'scope':'row',
  'lookupPrefix':'req',
  'lookupResource':'req_item_packs',
  'lookupKey':'req_item_id',
