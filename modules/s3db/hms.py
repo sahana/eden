@@ -164,7 +164,7 @@ class HospitalDataModel(S3Model):
                                        IS_IN_SET(hms_facility_type_opts)
                                        ),
                            ),
-                     self.organisation_id(
+                     self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
                         ),
                      self.gis_location_id(),
@@ -639,9 +639,9 @@ class HospitalDataModel(S3Model):
         tablename = "hms_contact"
         define_table(tablename,
                      hospital_id(ondelete = "CASCADE"),
-                     self.person_id(empty = False,
-                                    label = T("Contact"),
-                                    ),
+                     self.pr_person_id(empty = False,
+                                       label = T("Contact"),
+                                       ),
                      Field("title",
                            label = T("Job Title"),
                            ),
