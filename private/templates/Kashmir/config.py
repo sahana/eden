@@ -43,6 +43,11 @@ settings.auth.registration_requests_organisation = True
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
 settings.auth.registration_link_user_to_default = "staff"
 
+# Configure frontpage request email address
+#settings.frontpage.request_email = "athewaas.requests@revivekashmir.org"
+# Configure frontpage phone number
+#settings.frontpage.phone_number = "#0194-230-0452"
+
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted

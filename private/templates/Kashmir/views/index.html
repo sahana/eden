@@ -1,50 +1,51 @@
 {{extend "layout.html"}}
 <div class='row home-top' style='margin-top:20px;'>
  <div class='large-5 large-offset-1 columns'>
-  <ul class='example-orbit' data-orbit>
-   <li>
-    <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "p1.jpg"])}}' alt='slide 1' />
-    <!--<div class="orbit-caption">Caption One.</div>-->
-   </li>
-   <li>
-    <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "p2.jpg"])}}' alt='slide 2' />
-    <!--<div class="orbit-caption">Caption One.</div>-->
-   </li>
-   <li>
-    <img src="{{=URL(c="static", f="themes", args=["Kashmir", "img", "p3.jpg"])}}" alt="slide 3" />
-    <!--<div class="orbit-caption">Caption One.</div>-->
-   </li>
-  </ul>
+  <div id='title-image'>
+   <ul data-orbit>
+    <li>
+     <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "p1.jpg"])}}' alt='slide 1' />
+     <!--<div class="orbit-caption">Caption One.</div>-->
+    </li>
+    <li>
+     <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "p2.jpg"])}}' alt='slide 2' />
+     <!--<div class="orbit-caption">Caption One.</div>-->
+    </li>
+    <li>
+     <img src="{{=URL(c="static", f="themes", args=["Kashmir", "img", "p3.jpg"])}}" alt="slide 3" />
+     <!--<div class="orbit-caption">Caption One.</div>-->
+    </li>
+   </ul>
+  </div>
+ </div>
+ <div class="large-5 columns end">
+  <div id="intro" class="callout panel">
+   <h4>Use <b>Athewaas</b> if you need help</h4>
+   <p>This website takes a request for help from an individual or organisation and gives it to the nearest place that can provide help.</p>
+   <p>Athewaas helps many organisations to collaborate with each other and has been put together by a non-profit, <b>Revive Kashmir</b>.</p>
+   {{=H5("Call %(phone_number)s for help or fill out the form below:" % dict(phone_number=settings.get_frontpage("phone_number", "#0000-000-0000")))}}
+    {{=contact_form}}
+    {{if AUTHENTICATED not in session.s3.roles:}}
+    {{=login_buttons}}
+    {{pass}}
+  </div>
   {{if AUTHENTICATED not in session.s3.roles:}}
-  <div id='login_box' class='panel'>
-   {{if not self_registration or registered:}}
+  <div id='login_box' class='panel' style='display:none'>
+  
    <div id='login_form'>
     {{=login_div}}
     {{include "auth/_login.html"}}
    </div>
-   {{pass}}
+   
    {{if self_registration:}}
-   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+   <div id='register_form'>
     {{=register_div}}
     {{include "auth/_register.html"}}
    </div>
    {{pass}}
-   {{if self_registration and not registered:}}
-   <div id='login_form' class='hide'>
-    {{=login_div}}
-    {{include "auth/_login.html"}}
-   </div>
-   {{pass}}
+
+   <a id="show-mailform" class="tiny secondary button">Contact Form</a>
   </div>
   {{pass}}
-  </div>
- <div class="large-5 columns end">
-  <div class="callout panel">
-   <h4>Use <b>Athewaas</b> if you need help</h4>
-   <p>This website takes a request for help from an individual or organisation and gives it to the nearest place that can provide help.</p>
-   <p>Athewaas helps many organisations to collaborate with each other and has been put together by a non-profit, <b>Revive Kashmir</b>.</p>
-   <h5>Call #0194-230-0452 for help or fill out the form below</h5>
-    {{=contact_form}}
-  </div>
  </div>  
 </div>

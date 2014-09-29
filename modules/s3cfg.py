@@ -2903,6 +2903,19 @@ class S3Config(Storage):
         return self.transport.get("seaport_code_unique", False)
 
     # -------------------------------------------------------------------------
+    # Frontpage Options
+    #
+    def get_frontpage(self, key=None, default=None):
+        """
+            Template-specific frontpage configuration options
+        """
+        
+        if key:
+            return self.frontpage.get(key, default)
+        else:
+            return default
+
+    # -------------------------------------------------------------------------
     # Utilities
     #
     def resolve_profile(self, options, setting, resolved=None):

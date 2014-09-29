@@ -29,7 +29,8 @@ class index(S3CustomController):
 
         T = current.T
         request = current.request
-        s3 = current.response.s3
+        response = current.response
+        s3 = response.s3
 
         # Check logged in and permissions
         auth = current.auth
@@ -38,38 +39,139 @@ class index(S3CustomController):
         system_roles = auth.get_system_roles()
         AUTHENTICATED = system_roles.AUTHENTICATED
 
-        # Login/Registration/Contact forms
+        # Login/Registration forms
         self_registration = current.deployment_settings.get_security_self_registration()
         registered = False
         login_form = None
         login_div = None
         register_form = None
         register_div = None
-        contact_form = DIV(
-                FORM(TABLE(
-                        TR(LABEL("Your name:",
-                              SPAN(" *", _class="req"),
-                              _for="name")),
-                        TR(INPUT(_name="name", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Your e-mail address:",
-                              SPAN(" *", _class="req"),
-                              _for="address")),
-                        TR(INPUT(_name="address", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Subject:",
-                              SPAN(" *", _class="req"),
-                              _for="subject")),
-                        TR(INPUT(_name="subject", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Message:",
-                              SPAN(" *", _class="req"),
-                              _for="name")),
-                        TR(TEXTAREA(_name="message", _class="resizable", _rows=5, _cols=62)),
-                        TR(INPUT(_type="submit", _class="small button primary btn", _value="Send e-mail")),
-                        ),
-                    _id="mailform"
-                    )
-                )
+        
+        # Contact Form
+        request_email = settings.get_frontpage("request_email")
+        if request_email:
+            from gluon.dal import Field
+            from gluon.validators import IS_NOT_EMPTY
+            from gluon.sqlhtml import SQLFORM
+            fields = [Field("name", 
+                            label="Your name",
+                            requires=IS_NOT_EMPTY(),
+                            ),
+                      Field("address",
+                            label="Your e-mail address", 
+                            requires=IS_NOT_EMPTY(),
+                            ),
+                      Field("subject",
+                            label="Subject", 
+                            requires=IS_NOT_EMPTY(),
+                            ),
+                      Field("message", "text",
+                            label="Message",
+                            requires=IS_NOT_EMPTY(),
+                            ),
+                      ]
+            from s3 import s3_mark_required
+            labels, required = s3_mark_required(fields)
+            s3.has_required = required
+            
+            response.form_label_separator = ""
+            contact_form = SQLFORM.factory(formstyle = settings.get_ui_formstyle(),
+                                           submit_button = T("Submit"),
+                                           labels = labels,
+                                           separator = "",
+                                           table_name = "contact", # Dummy table name
+                                           _id="mailform",
+                                           *fields
+                                           )
+
+            if contact_form.accepts(request.post_vars,
+                                    current.session,
+                                    formname="contact_form",
+                                    keepvalues=False,
+                                    hideerror=False):
+                # Processs Contact Form
+                form_vars = contact_form.vars
+                sender = "%s <%s>" % (form_vars.name, form_vars.address)
+                result = current.msg.send_email(to=request_email,
+                                                sender=sender,
+                                                subject=form_vars.subject,
+                                                message=form_vars.message,
+                                                reply_to=form_vars.address,
+                                                )
+                if result:
+                    response.confirmation = "Thank you for your message - we'll be in touch shortly"
+            if s3.cdn:
+                if s3.debug:
+                    s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.js")
+                else:
+                    s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js")
+            else:
+                if s3.debug:
+                    s3.scripts.append("/%s/static/scripts/jquery.validate.js" % request.application)
+                else:
+                    s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % request.application)
+            validation_script = '''
+$('#mailform').validate({
+ errorClass:'req',
+ rules:{
+  name:{
+   required:true
+  },
+  address: {
+   required:true,
+   email:true
+  },
+  subject:{
+   required:true
+  },
+  message:{
+   required:true
+  }
+ },
+ messages:{
+  name:"Enter your name",
+  subject:"Enter a subject",
+  message:"Enter a message",
+  address:{
+   required:"Please enter a valid email address",
+   email:"Please enter a valid email address"
+  }
+ },
+ errorPlacement:function(error,element){
+  error.appendTo(element.parents('div.controls'))
+ },
+ submitHandler:function(form){
+  form.submit()
+ }
+})'''
+            s3.jquery_ready.append(validation_script)
+                    
+        else:
+            contact_form = ""
 
         if AUTHENTICATED not in roles:
+            
+            login_buttons = DIV(A(T("Login"),
+                                  _id="show-login",
+                                  _class="tiny secondary button"),
+                                _id="login-buttons"
+                                )
+            script = '''
+$('#show-mailform').click(function(e){
+ e.preventDefault()
+ $('#intro').slideDown(400, function() {
+   $('#login_box').hide()
+ });
+})
+$('#show-login').click(function(e){
+ e.preventDefault()
+ $('#login_form').show()
+ $('#register_form').hide()
+ $('#login_box').show()
+ $('#intro').slideUp()
+})'''
+            s3.jquery_ready.append(script)
+            
             # This user isn't yet logged-in
             if request.cookies.has_key("registered"):
                 # This browser has logged-in before
@@ -77,39 +179,36 @@ class index(S3CustomController):
 
             if self_registration is True:
                 # Provide a Registration box on front page
+                login_buttons.append(A(T("Register"),
+                                       _id="show-register",
+                                       _class="tiny secondary button",
+                                       _style="margin-left:5px"))
+                script = '''
+$('#show-register').click(function(e){
+ e.preventDefault()
+ $('#login_form').hide()
+ $('#register_form').show()
+ $('#login_box').show()
+ $('#intro').slideUp()
+})'''
+                s3.jquery_ready.append(script)
+
                 register_form = auth.register()
                 register_div = DIV(H3(T("Register")),
                                    P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
-                if request.env.request_method == "POST":
-                    # Processs Contact Form
-                    vars = request.post_vars
-                    result = current.msg.send_email(
-                            to="athewaas.requests@revivekashmir.org",
-                            subject=vars.subject,
-                            message=vars.message,
-                            reply_to=vars.address,
-                        )
-                    if result:
-                        response.confirmation = "Thank you for your message - we'll be in touch shortly"
-                    post_script = \
-'''$('#register_form').removeClass('hide')
-$('#login_form').addClass('hide')'''
-                else:
-                    post_script = ""
-                register_script = \
-'''$('#register-btn').attr('href','#register')
-$('#login-btn').attr('href','#login')
-%s
-$('#register-btn').click(function(){
- $('#register_form').removeClass('hide')
- $('#login_form').addClass('hide')
+                register_script = '''
+$('#register-btn').click(function(e){
+ e.preventDefault()
+ $('#register_form').show()
+ $('#login_form').hide()
 })
-$('#login-btn').click(function(){
- $('#register_form').addClass('hide')
- $('#login_form').removeClass('hide')
-})''' % post_script
+$('#login-btn').click(function(e){
+ e.preventDefault()
+ $('#register_form').hide()
+ $('#login_form').show()
+})'''
                 s3.jquery_ready.append(register_script)
                 
             # Provide a login box on front page
@@ -119,85 +218,10 @@ $('#login-btn').click(function(){
                             P(XML(T("Registered users can %(login)s to access the system") % \
                                   dict(login=B(T("login"))))))
 
-            if s3.cdn:
-                if s3.debug:
-                    s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.js")
-                else:
-                    s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.min.js")
+        else:
+            login_buttons = ""
 
-            else:
-                if s3.debug:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.js" % request.application)
-                else:
-                    s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % request.application)
-            s3.jquery_ready.append(
-    '''$('#mailform').validate({
-     errorClass:'req',
-     rules:{
-      name:{
-       required:true
-      },
-      subject:{
-       required:true
-      },
-      message:{
-       required:true
-      },
-      name:{
-       required:true
-      },
-      address: {
-       required:true,
-       email:true
-      }
-     },
-     messages:{
-      name:"Enter your name",
-      subject:"Enter a subject",
-      message:"Enter a message",
-      address:{
-       required:"Please enter a valid email address",
-       email:"Please enter a valid email address"
-      }
-     },
-     errorPlacement:function(error,element){
-      error.appendTo(element.parents('tr').prev().children())
-     },
-     submitHandler:function(form){
-      form.submit()
-     }
-    })''')
-            # @ToDo: Move to static
-            s3.jquery_ready.append(
-    '''$('textarea.resizable:not(.textarea-processed)').each(function() {
-        // Avoid non-processed teasers.
-        if ($(this).is(('textarea.teaser:not(.teaser-processed)'))) {
-            return false;
-        }
-        var textarea = $(this).addClass('textarea-processed'), staticOffset = null;
-        // When wrapping the text area, work around an IE margin bug. See:
-        // http://jaspan.com/ie-inherited-margin-bug-form-elements-and-haslayout
-        $(this).wrap('<div class="resizable-textarea"><span></span></div>')
-        .parent().append($('<div class="grippie"></div>').mousedown(startDrag));
-        var grippie = $('div.grippie', $(this).parent())[0];
-        grippie.style.marginRight = (grippie.offsetWidth - $(this)[0].offsetWidth) +'px';
-        function startDrag(e) {
-            staticOffset = textarea.height() - e.pageY;
-            textarea.css('opacity', 0.25);
-            $(document).mousemove(performDrag).mouseup(endDrag);
-            return false;
-        }
-        function performDrag(e) {
-            textarea.height(Math.max(32, staticOffset + e.pageY) + 'px');
-            return false;
-        }
-        function endDrag(e) {
-            $(document).unbind("mousemove", performDrag).unbind("mouseup", endDrag);
-            textarea.css('opacity', 1);
-        }
-    });''')
-
-
+        output["login_buttons"] = login_buttons
         output["self_registration"] = self_registration
         output["registered"] = registered
         output["login_div"] = login_div
