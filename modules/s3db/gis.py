@@ -1683,7 +1683,7 @@ class S3GISConfigModel(S3Model):
                                                           "%(name)s",
                                                           zero=T("Use default"))),
                                     sortby = "name",
-                                    widget = S3SelectWidget(),
+                                    widget = S3SelectWidget(icons=self.gis_marker_options),
                                     comment=S3AddResourceLink(c="gis",
                                                               f="marker",
                                                               #vars={"child": "marker_id",
@@ -2244,6 +2244,42 @@ class S3GISConfigModel(S3Model):
         if s3.gis.config and \
            s3.gis.config.id == row.id:
                 s3.gis.config = None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_marker_options(options):
+        """
+            Function which takes a list of k/v option tuples and adds an
+            icon URL for S3SelectMenu()
+        """
+
+        marker_ids = []
+        mappend = marker_ids.append
+        for o in options:
+            mappend(o[0])
+        # Do a bulk lookup
+        mtable = current.s3db.gis_marker
+        markers = current.db(mtable.id.belongs(marker_ids)).select(mtable.id,
+                                                                   mtable.image,
+                                                                   mtable.height,
+                                                                   mtable.width,
+                                                                   )
+        markers_lookup = {}
+        base_url = "/%s/static/img/markers/" % current.request.application
+        for m in markers:
+            markers_lookup[str(m.id)] = ("%s%s" % (base_url, m.image),
+                                         m.height,
+                                         m.width,
+                                         )
+
+        new_options = []
+        oappend = new_options.append
+        for (k, v) in options:
+            i = markers_lookup.get(k, None)
+            opt = (k, v, i)
+            oappend(opt)
+
+        return new_options
 
     # -------------------------------------------------------------------------
     @staticmethod

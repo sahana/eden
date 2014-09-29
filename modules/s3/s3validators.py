@@ -699,9 +699,10 @@ class IS_ONE_OF_EMPTY(Validator):
                    not_filterby = None,
                    not_filter_opts = None):
         """
-            This can be called from prep to apply a filter base on
+            This can be called from prep to apply a filter based on
             data in the record or the primary resource id.
         """
+
         if filterby:
             self.filterby = filterby
         if filter_opts:

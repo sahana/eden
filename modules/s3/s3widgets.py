@@ -4992,6 +4992,7 @@ class S3SelectWidget(OptionsWidget):
             @param icons: show icons next to options,
                            can be:
                                 - False (don't show icons)
+                                - function (function to call add Icon URLs, height and width to the options)
         """
 
         self.icons = icons
@@ -5011,23 +5012,63 @@ class S3SelectWidget(OptionsWidget):
         else:
             attr["_class"] = "select-widget"
 
-        w = OptionsWidget
-        widget = TAG[""](w.widget(field, value, **attr),
+        widget = TAG[""](self.widget(field, value, **attr),
                          requires = field.requires)
 
         if self.icons:
             # Use custom subclass in S3.js
-            fn = "iconselectmenu"
+            fn = "iconselectmenu().iconselectmenu('menuWidget').addClass('customicons')"
         else:
             # Use default
-            fn = "selectmenu"
-        script = '''$('#%s').%s()''' % (selector, fn)
+            fn = "selectmenu()"
+        script = '''$('#%s').%s''' % (selector, fn)
 
         jquery_ready = current.response.s3.jquery_ready
         if script not in jquery_ready: # Prevents loading twice when form has errors
             jquery_ready.append(script)
 
         return widget
+
+    # -------------------------------------------------------------------------
+    def widget(self, field, value, **attributes):
+        """
+            Generates a SELECT tag, including OPTIONs (only 1 option allowed)
+            see also: `FormWidget.widget`
+        """
+
+        default = dict(value=value)
+        attr = self._attributes(field, default,
+                               **attributes)
+        requires = field.requires
+        if not isinstance(requires, (list, tuple)):
+            requires = [requires]
+        if requires:
+            if hasattr(requires[0], "options"):
+                options = requires[0].options()
+            else:
+                raise SyntaxError(
+                    "widget cannot determine options of %s" % field)
+        icons = self.icons
+        if icons:
+            # Options including Icons
+            # Add the Icons to the Options
+            options = icons(options)
+            opts = []
+            oappend = opts.append
+            for (k, v, i) in options:
+                oattr = {"_value": k,
+                         #"_data-class": "select-widget-icon",
+                         }
+                if i:
+                    oattr["_data-style"] = "background-image:url('%s');height:%spx;width:%spx" % \
+                        (i[0], i[1], i[2])
+                opt = OPTION(v, **oattr)
+                oappend(opt)
+        else:
+            # Standard Options
+            opts = [OPTION(v, _value=k) for (k, v) in options]
+
+        return SELECT(*opts, **attr)
 
 # =============================================================================
 class S3HierarchyWidget(FormWidget):

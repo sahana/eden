@@ -288,9 +288,16 @@ $.widget('custom.iconselectmenu', $.ui.selectmenu, {
             li.addClass('ui-state-disabled');
         }
  
+        var element = item.element;
+        var _class = item.element.attr('data-class');
+        if (_class) {
+            _class = 'ui-icon ' + _class;
+        } else {
+            _class = 'ui-icon';
+        }
         $('<span>', {
-            style: item.element.attr('data-style'),
-            'class': 'ui-icon' + item.element.attr('data-class')
+            'style': element.attr('data-style'),
+            'class': _class
         })
           .appendTo(li);
  

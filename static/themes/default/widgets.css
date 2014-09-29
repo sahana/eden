@@ -1589,6 +1589,21 @@ button.toggle-text {
     border: 3px solid #d55b5b;
 }
 
+/* S3SelectWidget() icons */
+.ui-selectmenu-menu .ui-menu.customicons {
+    /* @ToDo: This should be responsive */
+    height: 400px;
+}
+.ui-selectmenu-menu .ui-menu.customicons .ui-menu-item {
+    /* @ToDo: This is suitabel for GIS Markers, but may be too big for other usecases */
+    padding: 1em 0 1em 4em;
+}
+.ui-selectmenu-menu .ui-menu.customicons .ui-menu-item .ui-icon {
+    background-repeat: no-repeat !important;
+    background-position: left top;
+    top: 0.1em;
+}
+
 /* AddPersonWidget2 duplicate results */
 .card > .fleft {
     margin-right: 10px;
