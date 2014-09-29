@@ -1411,7 +1411,7 @@ table.report .pt-cell-zoom.opened {
 
 /* Short form for Modals */
 .ui-datepicker-trigger {
-	background-image: url(../../img/jquery-ui/calendar.gif);
+	background-image: url(../../img/calendar.gif);
     background-repeat: no-repeat;
     height: 15px;
     width: 16px;

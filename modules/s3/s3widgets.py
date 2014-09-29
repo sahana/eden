@@ -64,6 +64,7 @@ __all__ = ("S3ACLWidget",
            "S3PersonAutocompleteWidget",
            "S3PentityAutocompleteWidget",
            "S3PriorityListWidget",
+           "S3SelectWidget",
            "S3SiteAutocompleteWidget",
            "S3SliderWidget",
            "S3TimeIntervalWidget",
@@ -4843,8 +4844,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 class S3MultiSelectWidget(MultipleOptionsWidget):
     """
         Standard MultipleOptionsWidget, but using the jQuery UI:
-        http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/
-        static/scripts/ui/multiselect.js
+            http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/
+            static/scripts/ui/multiselect.js
     """
 
     def __init__(self,
@@ -4967,6 +4968,61 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         if filter_opt:
             script = '''%s.multiselectfilter({label:'',placeholder:'%s'})''' % \
                 (script, T("Search"))
+        jquery_ready = current.response.s3.jquery_ready
+        if script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(script)
+
+        return widget
+
+# =============================================================================
+class S3SelectWidget(OptionsWidget):
+    """
+        Standard OptionsWidget, but using the jQuery UI SelectMenu:
+            http://jqueryui.com/selectmenu/
+
+        Useful for showing Icons against the Options.
+    """
+
+    def __init__(self,
+                 icons = False
+                 ):
+        """
+            Constructor
+
+            @param icons: show icons next to options,
+                           can be:
+                                - False (don't show icons)
+        """
+
+        self.icons = icons
+
+    def __call__(self, field, value, **attr):
+
+        if isinstance(field, Field):
+            selector = str(field).replace(".", "_")
+        else:
+            selector = field.name.replace(".", "_")
+
+        # Widget
+        _class = attr.get("_class", None)
+        if _class:
+            if "select-widget" not in _class:
+                attr["_class"] = "%s select-widget" % _class
+        else:
+            attr["_class"] = "select-widget"
+
+        w = OptionsWidget
+        widget = TAG[""](w.widget(field, value, **attr),
+                         requires = field.requires)
+
+        if self.icons:
+            # Use custom subclass in S3.js
+            fn = "iconselectmenu"
+        else:
+            # Use default
+            fn = "selectmenu"
+        script = '''$('#%s').%s()''' % (selector, fn)
+
         jquery_ready = current.response.s3.jquery_ready
         if script not in jquery_ready: # Prevents loading twice when form has errors
             jquery_ready.append(script)

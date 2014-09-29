@@ -89,7 +89,7 @@ settings.base.guided_tour = True
 # The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
 #settings.auth.registration_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
 # Uncomment to activate entity role manager tabs for OrgAdmins
-#settings.auth.entity_role_manager=True
+#settings.auth.entity_role_manager = True
 # Define modules for entity role manager
 #settings.auth.role_modules = OrderedDict([])
 # Define access levels for entity role manager

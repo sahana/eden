@@ -78,8 +78,5 @@
 {{if r.http == "POST" or not hide_listadd:}}
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}
-{{else:}}
-{{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
- $('#show-add-btn').hide()})'''}}
-{{pass}}
 {{s3.jquery_ready.append(script)}}
+{{pass}}

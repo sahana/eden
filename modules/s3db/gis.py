@@ -1683,6 +1683,7 @@ class S3GISConfigModel(S3Model):
                                                           "%(name)s",
                                                           zero=T("Use default"))),
                                     sortby = "name",
+                                    widget = S3SelectWidget(),
                                     comment=S3AddResourceLink(c="gis",
                                                               f="marker",
                                                               #vars={"child": "marker_id",

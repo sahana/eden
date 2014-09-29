@@ -277,6 +277,27 @@ S3.redraw = function() {
     }
 };
 
+// jQueryUI Icon Menus
+// - http://jqueryui.com/selectmenu/#custom_render
+// - used by S3SelectWidget()
+$.widget('custom.iconselectmenu', $.ui.selectmenu, {
+    _renderItem: function(ul, item) {
+        var li = $('<li>', {text: item.label} );
+ 
+        if (item.disabled) {
+            li.addClass('ui-state-disabled');
+        }
+ 
+        $('<span>', {
+            style: item.element.attr('data-style'),
+            'class': 'ui-icon' + item.element.attr('data-class')
+        })
+          .appendTo(li);
+ 
+        return li.appendTo(ul);
+    }
+});
+
 // Geolocation
 // - called from Auth.login()
 S3.getClientLocation = function(targetfield) {
@@ -1638,9 +1659,21 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
                                    .replace(/[^0-9\-\.,]|[\-](?=.)|[\.](?=[0-9]*[\.])/g, '')
                                    .reverse();
         });
+
         // Auto-capitalize first names
         $('input[name="first_name"]').focusout(function() {
             this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
+        });
+
+        // ListCreate Views
+        $('#show-add-btn').click(function() {
+            // Hide the Button
+            $('#show-add-btn').hide(10, function() {
+                // Show the Form
+                $('#list-add').slideDown('medium');
+                // Resize any jQueryUI SelectMenu buttons
+                $('.select-widget').selectmenu('refresh');
+            });
         });
 
         // Resizable textareas
