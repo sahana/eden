@@ -57,6 +57,9 @@ settings.auth.registration_roles = {"site_id": ["reader",
 settings.auth.person_realm_human_resource_site_then_org = True
 settings.auth.person_realm_member_org = True
 
+# Activate entity role manager tabs for OrgAdmins
+settings.auth.entity_role_manager=True
+
 def ifrc_realm_entity(table, row):
     """
         Assign a Realm Entity to records

@@ -6293,13 +6293,6 @@ def hrm_person_controller(**attr):
                method = "record",
                action = hrm_record)
 
-    # Plug-in role matrix for Admins/OrgAdmins
-    realms = auth.user is not None and auth.user.realms or []
-    system_roles = auth.get_system_roles()
-    if system_roles.ADMIN in realms or system_roles.ORG_ADMIN in realms:
-        set_method("pr", "person", method="roles",
-                   action=S3PersonRoleManager())
-
     if settings.has_module("asset"):
         # Assets as component of people
         s3db.add_components("pr_person", asset_asset="assigned_to_id")
@@ -6431,6 +6424,9 @@ def hrm_person_controller(**attr):
 
     # CRUD pre-process
     def prep(r):
+        # Plug-in role matrix for Admins/OrgAdmins
+        S3PersonRoleManager.set_method(r, entity="pr_person")
+
         if r.representation == "s3json":
             current.xml.show_ids = True
         elif r.interactive and r.method != "import":

@@ -8167,9 +8167,6 @@ class S3EntityRoleManager(S3Method):
 
         super(S3EntityRoleManager, self).__init__(*args, **kwargs)
 
-        # Set the default view
-        current.response.view = "admin/manage_roles.html"
-
         # Dictionary of pentities this admin can manage
         self.realm = self.get_realm()
 
@@ -8198,6 +8195,71 @@ class S3EntityRoleManager(S3Method):
                 }
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def set_method(cls, r, entity=None, record_id=None):
+        """ 
+            Plug-in OrgAdmin Role Managers when appropriate 
+            
+            @param r: the S3Request
+            @param entity: override target entity (default: r.tablename)
+            @param record_id: specify target record ID (only for OU's)
+        """
+
+        s3db = current.s3db
+        auth = current.auth
+
+        if not current.deployment_settings.get_auth_entity_role_manager() or \
+           auth.user is None:
+            return False
+
+        sr = auth.get_system_roles()
+        realms = auth.user.realms or Storage()
+
+        ORG_ADMIN = sr.ORG_ADMIN
+
+        admin = sr.ADMIN in realms
+        org_admin = ORG_ADMIN in realms
+
+        if admin or org_admin:
+
+            if entity is not None:
+                tablename = entity
+                record = None
+            else:
+                tablename = r.tablename
+                record = r.record
+
+            all_entities = admin or org_admin and realms[ORG_ADMIN] is None
+
+            if not all_entities and tablename in cls.ENTITY_TYPES:
+
+                if not record and record_id is not None:
+
+                    # Try to load the record and check pe_id
+                    table = s3db.table(tablename)
+                    if table and "pe_id" in table.fields:
+                        record = current.db(table._id==record_id).select(table.pe_id,
+                                                                         limitby = (0, 1)).first()
+
+                if record and record.pe_id not in realms[ORG_ADMIN]:
+                    return False
+
+            if entity is not None:
+                # Configure as custom method for this resource
+                prefix, name = tablename.split("_", 1)
+                s3db.set_method(prefix, name, method="roles", action=cls)
+
+            elif tablename in cls.ENTITY_TYPES:
+                # Configure as method handler for this request
+                r.set_handler("roles", cls)
+
+            else:
+                # Unsupported entity
+                return False
+
+        return True
+
+    # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
         """
@@ -8207,6 +8269,10 @@ class S3EntityRoleManager(S3Method):
             context = self.get_context_data(r, **attr)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+        # Set the default view
+        current.response.view = "admin/manage_roles.html"
+
         return context
 
     # -------------------------------------------------------------------------

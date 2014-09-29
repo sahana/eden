@@ -442,6 +442,12 @@ class S3Config(Storage):
         """
         return self.auth.get("person_realm_member_org", False)
 
+    def get_auth_entity_role_manager(self):
+        """
+            Activate Entity Role Manager (=embedded Role Manager Tab for OrgAdmins)
+        """
+        return self.auth.get("entity_role_manager", False)
+
     def get_auth_role_modules(self):
         """
             Which modules are included in the Role Manager

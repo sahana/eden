@@ -3731,13 +3731,13 @@ def req_match():
     if not viewing:
         return output
     if "." in viewing:
-        tablename, id = viewing.split(".", 1)
+        tablename, record_id = viewing.split(".", 1)
     else:
         return output
 
     table = s3db[tablename]
-    row = current.db(table.id == id).select(table.site_id, 
-                                            limitby=(0, 1)).first()
+    row = current.db(table.id == record_id).select(table.site_id, 
+                                                   limitby=(0, 1)).first()
     if row:
         site_id = row.site_id
     else:
@@ -3753,7 +3753,7 @@ def req_match():
                     )
                ]
 
-    if current.auth.s3_has_permission("update", tablename, id):
+    if current.auth.s3_has_permission("update", tablename, record_id):
         # @ToDo: restrict to those which we've not already committed/sent?
         if settings.get_req_use_commit():
             actions.append(
@@ -3798,19 +3798,8 @@ def req_match():
 
     # Pre-process
     def prep(r):
-        # Plugin OrgRoleManager
-        auth = current.auth
-        if auth.user is not None and \
-           tablename in S3OrgRoleManager.ENTITY_TYPES:
-
-            sr = auth.get_system_roles()
-            realms = auth.user.realms or Storage()
-
-            record = r.record
-            if sr.ADMIN in realms or sr.ORG_ADMIN in realms and \
-               (realms[sr.ORG_ADMIN] is None or \
-                record and record.pe_id in realms[sr.ORG_ADMIN]):
-                r.set_handler("roles", S3OrgRoleManager())
+        # Plugin OrgRoleManager when appropriate
+        S3OrgRoleManager.set_method(r, entity=tablename, record_id=record_id)
         return True
     s3.prep = prep
 
