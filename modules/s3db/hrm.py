@@ -1914,7 +1914,7 @@ class S3HRSkillModel(S3Model):
                            default = 1,
                            label = T("Priority"),
                            requires = IS_INT_IN_RANGE(1, 10),
-                           widget = S3SliderWidget(1, 9),
+                           widget = S3SliderWidget(),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("Priority from 1 to 9. 1 is most preferred.")))
@@ -2027,7 +2027,7 @@ class S3HRSkillModel(S3Model):
         #                     Field("priority", "integer",
         #                           default = 1,
         #                           requires = IS_INT_IN_RANGE(1, 10),
-        #                           widget = S3SliderWidget(1, 9),
+        #                           widget = S3SliderWidget(),
         #                           comment = DIV(_class="tooltip",
         #                                         _title="%s|%s" % (T("Priority"),
         #                                                           T("Priority from 1 to 9. 1 is most preferred.")))
@@ -3368,7 +3368,7 @@ class S3HRAppraisalModel(S3Model):
                            requires = IS_EMPTY_OR(
                                         IS_INT_IN_RANGE(1, 5)
                                       ),
-                           widget = S3SliderWidget(1, 4, step=0.1,
+                           widget = S3SliderWidget(step=0.1,
                                                    type="float"),
                            ),
                      person_id("supervisor_id",

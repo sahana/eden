@@ -4922,7 +4922,7 @@ def gis_opacity():
                            default = 1.0,
                            label = OPACITY,
                            requires = IS_FLOAT_IN_RANGE(0, 1),
-                           widget = S3SliderWidget(0, 1, 0.01, "float"),
+                           widget = S3SliderWidget(0.01, "float"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (OPACITY,
                                                            T("Left-side is fully transparent (0), right-side is opaque (1.0)."))),
