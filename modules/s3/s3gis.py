@@ -9398,7 +9398,7 @@ class S3ImportPOI(S3Method):
                             default = resources_list,
                             widget = SQLFORM.widgets.checkboxes.widget)
                       ] 
-            
+
             if not r.id:
                 from s3validators import IS_LOCATION
                 from s3widgets import S3LocationAutocompleteWidget

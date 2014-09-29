@@ -326,7 +326,7 @@ def dojs(dogis = False, warnings = True):
         shutil.move(outputFilename, "../S3")
 
     # Enable when needed
-    full = True
+    full = False
     if full:
         for filename in ("spectrum",
                          "tag-it",

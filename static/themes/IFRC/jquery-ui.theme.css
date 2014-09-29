@@ -8,7 +8,7 @@
  *
  * http://api.jqueryui.com/category/theming/
  *
- * To view and modify this theme, visit http://jqueryui.com/themeroller/?ffDefault=Verdana%2CArial%2Csans-serif&fwDefault=normal&fsDefault=1.1em&cornerRadius=4px&bgColorHeader=%23F4EDD4&bgTextureHeader=highlight_soft&bgImgOpacityHeader=75&borderColorHeader=%23cccccc&fcHeader=%23222222&iconColorHeader=%23891735&bgColorContent=%23FCF9ED&bgTextureContent=flat&bgImgOpacityContent=75&borderColorContent=%23cccccc&fcContent=%23222222&iconColorContent=%23891735&bgColorDefault=%23FBFBFB&bgTextureDefault=glass&bgImgOpacityDefault=75&borderColorDefault=%23d3d3d3&fcDefault=555555&iconColorDefault=888888&bgColorHover=dadada&bgTextureHover=glass&bgImgOpacityHover=75&borderColorHover=999999&fcHover=212121&iconColorHover=454545&bgColorActive=ffffff&bgTextureActive=glass&bgImgOpacityActive=65&borderColorActive=aaaaaa&fcActive=212121&iconColorActive=454545&bgColorHighlight=fbf9ee&bgTextureHighlight=glass&bgImgOpacityHighlight=55&borderColorHighlight=fcefa1&fcHighlight=363636&iconColorHighlight=2e83ff&bgColorError=fef1ec&bgTextureError=glass&bgImgOpacityError=95&borderColorError=cd0a0a&fcError=cd0a0a&iconColorError=cd0a0a&bgColorOverlay=aaaaaa&bgTextureOverlay=flat&bgImgOpacityOverlay=0&opacityOverlay=30&bgColorShadow=aaaaaa&bgTextureShadow=flat&bgImgOpacityShadow=0&opacityShadow=30&thicknessShadow=8px&offsetTopShadow=-8px&offsetLeftShadow=-8px&cornerRadiusShadow=8px&f=undefined
+ * To view and modify this theme, visit http://jqueryui.com/themeroller/?ffDefault=Verdana%2CArial%2Csans-serif&fwDefault=normal&fsDefault=1.1em&cornerRadius=4px&bgColorHeader=%23F4EDD4&bgTextureHeader=highlight_soft&bgImgOpacityHeader=75&borderColorHeader=%23cccccc&fcHeader=%23222222&iconColorHeader=%23891735&bgColorContent=%23FCF9ED&bgTextureContent=flat&bgImgOpacityContent=75&borderColorContent=%23cccccc&fcContent=%23222222&iconColorContent=%23891735&bgColorDefault=%23FBFBFB&bgTextureDefault=glass&bgImgOpacityDefault=75&borderColorDefault=%23d3d3d3&fcDefault=%23555555&iconColorDefault=%23888888&bgColorHover=%23F4EDD4&bgTextureHover=glass&bgImgOpacityHover=75&borderColorHover=%23dc032e&fcHover=%23212121&iconColorHover=%23454545&bgColorActive=%23891735&bgTextureActive=glass&bgImgOpacityActive=65&borderColorActive=%23aaaaaa&fcActive=%23ffffff&iconColorActive=%23454545&bgColorHighlight=%23fbf9ee&bgTextureHighlight=glass&bgImgOpacityHighlight=55&borderColorHighlight=%23FCF9ED&fcHighlight=%23363636&iconColorHighlight=%232e83ff&bgColorError=%23fef1ec&bgTextureError=glass&bgImgOpacityError=95&borderColorError=%23cd0a0a&fcError=%23cd0a0a&iconColorError=%23cd0a0a&bgColorOverlay=%23aaaaaa&bgTextureOverlay=flat&bgImgOpacityOverlay=0&opacityOverlay=30&bgColorShadow=%23aaaaaa&bgTextureShadow=flat&bgImgOpacityShadow=0&opacityShadow=30&thicknessShadow=8px&offsetTopShadow=-8px&offsetLeftShadow=-8px&cornerRadiusShadow=8px&f=undefined
  */
 
 
@@ -68,8 +68,8 @@
 .ui-state-focus,
 .ui-widget-content .ui-state-focus,
 .ui-widget-header .ui-state-focus {
-	border: 1px solid #999999;
-	background: #dadada url("../../img/jquery.ui/ui-bg_glass_75_dadada_1x400.png") 50% 50% repeat-x;
+	border: 1px solid #dc032e;
+	background: #F4EDD4 url("../../img/jquery.ui/ui-bg_glass_75_F4EDD4_1x400.png") 50% 50% repeat-x;
 	font-weight: normal;
 	color: #212121;
 }
@@ -88,14 +88,14 @@
 .ui-widget-content .ui-state-active,
 .ui-widget-header .ui-state-active {
 	border: 1px solid #aaaaaa;
-	background: #ffffff url("../../img/jquery.ui/ui-bg_glass_65_ffffff_1x400.png") 50% 50% repeat-x;
+	background: #891735 url("../../img/jquery.ui/ui-bg_glass_65_891735_1x400.png") 50% 50% repeat-x;
 	font-weight: normal;
-	color: #212121;
+	color: #ffffff;
 }
 .ui-state-active a,
 .ui-state-active a:link,
 .ui-state-active a:visited {
-	color: #212121;
+	color: #ffffff;
 	text-decoration: none;
 }
 
@@ -104,7 +104,7 @@
 .ui-state-highlight,
 .ui-widget-content .ui-state-highlight,
 .ui-widget-header .ui-state-highlight {
-	border: 1px solid #fcefa1;
+	border: 1px solid #FCF9ED;
 	background: #fbf9ee url("../../img/jquery.ui/ui-bg_glass_55_fbf9ee_1x400.png") 50% 50% repeat-x;
 	color: #363636;
 }
