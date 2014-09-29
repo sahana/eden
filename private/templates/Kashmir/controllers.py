@@ -86,7 +86,7 @@ class index(S3CustomController):
                     # Processs Contact Form
                     vars = request.post_vars
                     result = current.msg.send_email(
-                            to=current.deployment_settings.get_mail_approver(),
+                            to="athewaas.requests@revivekashmir.org",
                             subject=vars.subject,
                             message=vars.message,
                             reply_to=vars.address,
