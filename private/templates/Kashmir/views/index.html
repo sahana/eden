@@ -15,14 +15,6 @@
     <!--<div class="orbit-caption">Caption One.</div>-->
    </li>
   </ul>
- </div>
- <div class="large-5 columns end">
-  <div class="callout panel">
-   <h4>Use <b>Athewaas</b> if you need help</h4>
-   <p>This website takes a request for help from an individual or organisation and gives it to the nearest place that can provide help.</p>
-   <p>Athewaas helps many organisations to collaborate with each other and has been put together by a non-profit, <b>Revive Kashmir</b>.</p>
-   <h5>Call #000-000-0000 for help</h5>
-  </div>
   {{if AUTHENTICATED not in session.s3.roles:}}
   <div id='login_box' class='panel'>
    {{if not self_registration or registered:}}
@@ -44,10 +36,15 @@
    </div>
    {{pass}}
   </div>
-  {{else:}}
-  <div>
-   <h4>Welcome to ATHEWAAS!</h4>
-  </div>
   {{pass}}
+  </div>
+ <div class="large-5 columns end">
+  <div class="callout panel">
+   <h4>Use <b>Athewaas</b> if you need help</h4>
+   <p>This website takes a request for help from an individual or organisation and gives it to the nearest place that can provide help.</p>
+   <p>Athewaas helps many organisations to collaborate with each other and has been put together by a non-profit, <b>Revive Kashmir</b>.</p>
+   <h5>Call #0194-230-0452 for help or fill out the form below</h5>
+    {{=contact_form}}
+  </div>
  </div>  
 </div>
