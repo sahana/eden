@@ -211,17 +211,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                     http = ["GET", "POST"],
                     representation="pdf")
 
-    # Plugin OrgRoleManager where appropriate
-    if r.record and auth.user is not None and \
-       r.tablename in s3base.S3OrgRoleManager.ENTITY_TYPES:
-
-        sr = auth.get_system_roles()
-        realms = auth.user.realms or Storage()
-
-        if sr.ADMIN in realms or sr.ORG_ADMIN in realms and \
-           (realms[sr.ORG_ADMIN] is None or \
-            r.record.pe_id in realms[sr.ORG_ADMIN]):
-            r.set_handler("roles", s3base.S3OrgRoleManager())
+    # Plugin OrgRoleManager when appropriate
+    s3base.S3OrgRoleManager.set_method(r)
 
     # Execute the request
     output = r(**attr)
