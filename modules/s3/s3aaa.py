@@ -6913,17 +6913,9 @@ class S3RoleManager(S3Method):
             # Title and subtitle
             output.update(title = T("List of Roles"))
 
-            # System roles
-            #query = ((table.deleted != True) & \
-            #         (table.system == True))
-            #rows = db(query).select(table.id)
-            #system_roles = [row.id for row in rows]
-
-            # Protected roles
-            #query = ((table.deleted != True) & \
-            #         (table.protected == True))
-            #rows = db(query).select(table.id)
-            #protected_roles = [row.id for row in rows]
+            # Undeletable roles (these shall never have a delete button)
+            sr = auth.get_system_roles()
+            undeletable = [sr.ADMIN, sr.ANONYMOUS, sr.AUTHENTICATED]
 
             # Filter out hidden roles
             resource.add_filter((~(table.id.belongs(self.HIDE_ROLES))) &
@@ -6988,33 +6980,36 @@ class S3RoleManager(S3Method):
                 role_name = role.role
                 role_desc = role.description
 
-                edit_btn = A(T("Edit"),
-                             _href=URL(c="admin", f="role",
-                                       args=[role_id], vars=get_vars),
-                             _class="action-btn")
+                actions = []
 
+                # Edit button to edit permissions of the role
+                if role_id != sr.ADMIN:
+                    edit_btn = A(T("Edit"),
+                                 _href=URL(c="admin", f="role",
+                                           args=[role_id],
+                                           vars=get_vars,
+                                           ),
+                                 _class="action-btn")
+                    actions.append(edit_btn)
+
+                # Users button to manage users for this role
                 users_btn = A(T("Users"),
                               _href=URL(c="admin", f="role",
-                                        args=[role_id, "users"]),
+                                        args=[role_id, "users"],
+                                        ),
                               _class="action-btn")
+                actions.append(users_btn)
 
-                if role.protected:
-                    tdata = [TD(edit_btn,
-                                XML("&nbsp;"),
-                                users_btn),
-                                TD(role_name)]
-                else:
+                # Delete button to delete this role
+                if not role.protected and role_id not in undeletable:
                     delete_btn = A(T("Delete"),
                                 _href=URL(c="admin", f="role",
                                           args=[role_id, "delete"],
-                                          vars=get_vars),
+                                          vars=get_vars,
+                                          ),
                                 _class="delete-btn")
-                    tdata = [TD(edit_btn,
-                                XML("&nbsp;"),
-                                users_btn,
-                                XML("&nbsp;"),
-                                delete_btn),
-                             TD(role_name)]
+                    actions.append(delete_btn)
+                tdata = [TD(actions), TD(role_name)]
 
                 if show_matrix:
                     # Display the permission matrix
@@ -7124,6 +7119,12 @@ class S3RoleManager(S3Method):
                 role_name = None
                 role_desc = None
 
+            sr = auth.get_system_roles()
+            if role_id == sr.ADMIN:
+                # Pointless attempt
+                r.error(400, T("ADMIN Permissions can not be changed."),
+                        next = r.url(method="", id=0))
+            
             # Form helpers ----------------------------------------------------
             mandatory = lambda l: DIV(l, XML("&nbsp;"),
                                       SPAN("*", _class="req"))
@@ -7143,32 +7144,42 @@ class S3RoleManager(S3Method):
                                                    vars=dict(_next=r.url())),
                                        _class = "delete-btn") or using_default
             new_acl = SPAN(T("new ACL"), _class="new-acl")
+            
+            form = FORM()
 
             # Role form -------------------------------------------------------
+
             formstyle = current.deployment_settings.get_ui_formstyle()
+
             id1 = "role_name"
-            label1 = mandatory("%s:" % T("Role Name"))
+            label1 = LABEL(mandatory("%s:" % T("Role Name")))
             widget1 = INPUT(value=role_name,
                             _name="role_name",
                             _type="text",
-                            requires=IS_NOT_IN_DB(db,
-                                      "auth_group.role",
-                                      allowed_override=[role_name]
-                                      ))
+                            requires=IS_NOT_IN_DB(db, "auth_group.role",
+                                                  allowed_override=[role_name]
+                                                  ),
+                            )
             id2 = "role_desc"
-            label2 = "%s:" % T("Description")
+            label2 = LABEL("%s:" % T("Description"))
             widget2 = TEXTAREA(value=role_desc,
                                _name="role_desc",
                                _rows="4")
+
             if callable(formstyle):
-                form_rows = formstyle(id1, label1, widget1, "") + \
-                            formstyle(id2, label2, widget2, "")
+                form_rows = formstyle(form, [[id1, label1, widget1, ""],
+                                             [id2, label2, widget2, ""],
+                                             ]
+                                      )
+                form_rows.update(_id="role_form")
             else:
                 # Fallback to DIVs
-                form_rows = DIV(label1, widget1, _id=id1) +\
+                form_rows = DIV(label1, widget1, _id=id1) + \
                             DIV(label2, widget2, _id=id2)
-            key_row = DIV(T("* Required Fields"), _class="red")
-            role_form = DIV(TABLE(form_rows), key_row, _id="role-form")
+
+            key_row = DIV(T("* Required Fields"), _class="req")
+            role_form = DIV(key_row, form_rows, _id="role-form")
+            form.append(role_form)
 
             # Prepare ACL forms -----------------------------------------------
             ANY = "ANY"
@@ -7395,21 +7406,28 @@ class S3RoleManager(S3Method):
                                      TABLE(thead, TBODY(form_rows)),
                                      _id="table-acls"))
 
-            # Aggregate ACL Form ----------------------------------------------
+            # Append to form
             acl_form = DIV(acl_forms, _id="table-container")
+            form.append(acl_form)
 
-            # Action row
+            # Action row ------------------------------------------------------
             if session.s3.cancel:
                 cancel = session.s3.cancel
             else:
                 cancel = URL(c="admin", f="role",
                              vars=request.get_vars)
-            action_row = DIV(INPUT(_type="submit", _value=T("Save")),
-                             A(CANCEL, _href=cancel, _class="action-lnk"),
+            action_row = DIV(INPUT(_type="submit", 
+                                   _value=T("Save"), 
+                                   _class="small primary button",
+                                   ),
+                             A(CANCEL,
+                               _href=cancel,
+                               _class="action-lnk",
+                               ),
                              _id="action-row")
 
-            # Complete form
-            form = FORM(role_form, acl_form, action_row)
+            # Append to form
+            form.append(action_row)
 
             # Append role_id
             if role_id:
@@ -7662,8 +7680,12 @@ class S3RoleManager(S3Method):
                     if remove:
                         submit_row = TR(arrow,
                                         TD(INPUT(_id="submit_delete_button",
-                                                _type="submit",
-                                                _value=T("Remove"))))
+                                                 _type="submit",
+                                                 _class="tiny alert button",
+                                                 _value=T("Remove"),
+                                                 )
+                                           ),
+                                        )
                         if use_realms:
                             submit_row.append(TD())
                         trows.append(submit_row)
@@ -7734,7 +7756,9 @@ class S3RoleManager(S3Method):
                 # Add button
                 submit_btn = INPUT(_id="submit_add_button",
                                    _type="submit",
-                                   _value=T("Add"))
+                                   _class="tiny primary button",
+                                   _value=T("Add"),
+                                   )
 
                 # Assemble form
                 trow = TR(TD(select_grp, _colspan="2"), _class="odd")
@@ -7909,8 +7933,11 @@ class S3RoleManager(S3Method):
                     if assignable and remove:
                         submit_row = TR(arrow,
                                         TD(INPUT(_id="submit_delete_button",
-                                                _type="submit",
-                                                _value=T("Remove"))),
+                                                 _type="submit",
+                                                 _class="tiny alert button",
+                                                 _value=T("Remove"),
+                                                 ),
+                                           ),
                                         TD())
                         if use_realms:
                             submit_row.append(TD())
@@ -7984,6 +8011,7 @@ class S3RoleManager(S3Method):
                     # Add button
                     submit_btn = INPUT(_id="submit_add_button",
                                        _type="submit",
+                                       _class="tiny primary button",
                                        _value=T("Add"))
 
                     # Assemble form
