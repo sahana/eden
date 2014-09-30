@@ -1633,20 +1633,21 @@ class S3GISConfigModel(S3Model):
                      # If-needed, then Symbology should be here
                      #symbology_id(),
                      Field("image", "upload", autodelete=False,
-                           label = T("Image"),
-                           # upload folder needs to be visible to the download() function as well as the upload
-                           uploadfolder = os.path.join(current.request.folder,
-                                                       "static",
-                                                       "img",
-                                                       "markers"),
                            custom_retrieve = self.gis_marker_retrieve,
                            custom_retrieve_file_properties = self.gis_marker_retrieve_file_properties,
+                           label = T("Image"),
                            represent = lambda filename: \
                                (filename and [DIV(IMG(_src=URL(c="static",
                                                                f="img",
                                                                args=["markers",
                                                                      filename]),
                                                       _height=40))] or [""])[0],
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(current.request.folder,
+                                                       "static",
+                                                       "img",
+                                                       "markers"),
+                           widget = S3ImageCropWidget((50, 50)),
                            ),
                      # We could get size client-side using Javascript's Image() class, although this is unreliable!
                      Field("height", "integer", # In Pixels, for display purposes
@@ -2289,24 +2290,105 @@ class S3GISConfigModel(S3Model):
             Don't wish to resize here as we'd like to use full resolution for printed output
         """
 
-        vars = form.vars
-        image = vars.image
-        if not image or isinstance(image, str):
-            # No Image => CSV import of resources which just need a ref
+        form_vars = form.vars
+        image = form_vars.image
+        if image is None:
+            encoded_file = form_vars.get("imagecrop-data", None)
+            if not encoded_file:
+                # No Image => CSV import of resources which just need a ref
+                return
+            import base64
+            import uuid
+            metadata, encoded_file = encoded_file.split(",")
+            filename, datatype, enctype = metadata.split(";")
+            f = Storage()
+            f.filename = uuid.uuid4().hex + filename
+            import cStringIO
+            f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
+            form_vars.image = image = f
+
+        elif isinstance(image, str):
             # Image = String => Update not a Create, so file not in form
             return
 
+        extension = image.filename.rfind(".")
+        extension = image.filename[extension + 1:].lower()
+        if extension == "jpg":
+            extension = "jpeg"
+        if extension not in ("bmp", "gif", "jpeg", "png"):
+            form.errors.image = current.T("Uploaded file(s) are not Image(s). Supported image formats are '.png', '.jpg', '.bmp', '.gif'.")
+            return
+
+        native = False
         try:
             from PIL import Image
         except ImportError:
-            import Image
+            try:
+                import Image
+            except:
+                # Native Python version
+                native = True
+                import struct
 
-        im = Image.open(image.file)
-        (width, height) = im.size
-        vars.image.file.seek(0)
+        if native:
+            # Fallbacks
+            width = height = -1
+            stream = image.file
+            if extension == "bmp":
+                if stream.read(2) == "BM":
+                    stream.read(16)
+                    width, height = struct.unpack("<LL", stream.read(8))
+            elif extension == "gif":
+                if stream.read(6) in ("GIF87a", "GIF89a"):
+                    stream = stream.read(5)
+                    if len(stream) == 5:
+                        width, height = \
+                            tuple(struct.unpack("<HHB", stream)[:-1])
+            elif extension == "jpeg":
+                if stream.read(2) == "\xFF\xD8":
+                    while True:
+                        (marker, code, length) = \
+                            struct.unpack("!BBH", stream.read(4))
+                        if marker != 0xFF:
+                            break
+                        elif code >= 0xC0 and code <= 0xC3:
+                            width, height = \
+                                tuple(reversed(struct.unpack("!xHH",
+                                                             stream.read(5))))
+                        else:
+                            stream.read(length - 2)
+            elif extension == "png":
+                if stream.read(8) == "\211PNG\r\n\032\n":
+                    stream.read(4)
+                    if stream.read(4) == "IHDR":
+                        width, height = struct.unpack("!LL", stream.read(8))
+        else:
+            # Use PIL
+            try:
+                im = Image.open(image.file)
+            except:
+                width = height = -1
+            else:
+                width, height = im.size
 
-        vars.width = width
-        vars.height = height
+        if width < 1 or height < 1:
+            form.errors.image = current.T("Invalid image!")
+            return
+
+        if width > 50 or height > 50:
+            if native:
+                form.errors.image = current.T("Maximum size 50x50!")
+                return
+            # Resize the Image
+            im.thumbnail((50, 50) , Image.ANTIALIAS)
+            width, height = im.size
+            #im.save(image.file)
+            current.session.warning = current.T("File has been resized")
+
+        image.file.seek(0)
+
+        form_vars.width = width
+        form_vars.height = height
 
     # -------------------------------------------------------------------------
     @staticmethod
