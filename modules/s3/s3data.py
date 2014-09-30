@@ -38,7 +38,11 @@ import sys
 from itertools import product, islice
 
 from gluon import current
-from gluon.dal import Expression
+try:
+    from gluon.dal.objects import Expression
+except ImportError:
+    # old web2py
+    from gluon.dal import Expression
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET

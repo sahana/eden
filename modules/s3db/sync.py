@@ -34,7 +34,11 @@ __all__ = ("SyncDataModel",
            )
 
 from gluon import *
-from gluon.dal import Row
+try:
+    from gluon.dal.objects import Row
+except ImportError:
+    # old web2py
+    from gluon.dal import Row
 from gluon.storage import Storage
 from ..s3 import *
 

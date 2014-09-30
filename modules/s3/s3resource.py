@@ -64,7 +64,12 @@ from gluon import current
 from gluon.html import A, TAG
 from gluon.http import HTTP
 from gluon.validators import IS_EMPTY_OR
-from gluon.dal import Row, Rows, Table, Field, Expression
+try:
+    from gluon.dal import Field
+    from gluon.dal.objects import Row, Rows, Table, Expression
+except ImportError:
+    # old web2py
+    from gluon.dal.objects import Row, Rows, Table, Field, Expression
 from gluon.storage import Storage
 from gluon.tools import callback
 

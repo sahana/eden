@@ -32,8 +32,8 @@ __all__ = ("S3FireModel",
            )
 
 from gluon import *
-from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 

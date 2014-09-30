@@ -13,7 +13,11 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
-from gluon.dal import Expression
+try:
+    from gluon.dal.objects import Expression
+except ImportError:
+    # old web2py
+    from gluon.dal import Expression
 
 from Cache import *
 from DSL.Units import MeaninglessUnitsException

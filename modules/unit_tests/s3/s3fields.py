@@ -7,7 +7,7 @@
 #
 import unittest
 from gluon.languages import lazyT
-from gluon.dal import Query
+
 from s3.s3fields import *
 
 # =============================================================================

@@ -57,7 +57,11 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-from gluon.dal import Row, Rows, Query, Table
+try:
+    from gluon.dal.objects import Row, Rows, Query, Table
+except ImportError:
+    # old web2py
+    from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id

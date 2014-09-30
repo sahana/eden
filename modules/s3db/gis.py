@@ -58,8 +58,8 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.dal import Row, Rows
 from gluon.storage import Storage
+
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 from s3.s3widgets import set_match_strings

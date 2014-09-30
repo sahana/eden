@@ -31,7 +31,11 @@
 from datetime import datetime, timedelta
 
 from gluon import current
-from gluon.dal import Table, Rows, Row
+try:
+    from gluon.dal.objects import Table, Rows, Row
+except ImportError:
+    # old web2py
+    from gluon.dal import Table, Rows, Row
 from gluon.html import *
 
 from s3rest import S3Method

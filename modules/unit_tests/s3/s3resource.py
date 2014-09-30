@@ -10,7 +10,11 @@ import datetime
 from lxml import etree
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Row
+try:
+    from gluon.dal.objects import Row
+except ImportError:
+    # old web2py
+    from gluon.dal import Row
 from s3 import *
 
 # =============================================================================

@@ -40,7 +40,12 @@ import re
 import sys
 
 from gluon import current
-from gluon.dal import Row, Field
+try:
+    from gluon.dal import Field
+    from gluon.dal.objects import Row
+except ImportError:
+    # old web2py
+    from gluon.dal import Field, Row
 from gluon.storage import Storage
 
 from s3fields import S3RepresentLazy

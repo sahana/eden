@@ -75,7 +75,11 @@ from gluon import *
 #from gluon import current
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
-from gluon.dal import Rows
+try:
+    from gluon.dal.objects import Rows
+except ImportError:
+    # old web2py
+    from gluon.dal import Rows
 from gluon.languages import lazyT, regex_translate
 from gluon.storage import Storage
 

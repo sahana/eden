@@ -10,7 +10,6 @@ import datetime
 from lxml import etree
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Row
 from s3 import *
 
 # =============================================================================

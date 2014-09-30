@@ -40,7 +40,12 @@ from gluon import *
 #from gluon.dal import Field
 #from gluon.html import *
 #from gluon.validators import *
-from gluon.dal import Query, SQLCustomType
+try:
+    from gluon.dal import SQLCustomType
+    from gluon.dal.objects import Query
+except ImportError:
+    # old web2py
+    from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 from gluon.languages import lazyT
 

@@ -66,8 +66,7 @@ import re
 import time
 from datetime import datetime, timedelta
 
-JSONErrors = (NameError, TypeError, ValueError, AttributeError,
-              KeyError)
+JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:

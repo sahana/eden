@@ -30,7 +30,11 @@
 __all__ = ("S3Model",)
 
 from gluon import *
-from gluon.dal import Table
+try:
+    from gluon.dal.objects import Table
+except ImportError:
+    # old web2py
+    from gluon.dal import Table
 # Here are dependencies listed for reference:
 #from gluon import current
 #from gluon.dal import Field

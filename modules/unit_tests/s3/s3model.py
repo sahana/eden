@@ -7,7 +7,6 @@
 #
 import unittest
 from gluon import current
-from gluon.dal import Query
 
 from s3.s3fields import s3_meta_fields
 

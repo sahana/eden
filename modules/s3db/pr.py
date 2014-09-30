@@ -100,7 +100,11 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-from gluon.dal import Row
+try:
+    from gluon.dal.objects import Row
+except ImportError:
+    # old web2py
+    from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 

@@ -7,7 +7,6 @@
 #
 import unittest
 from gluon import current
-from gluon.dal import Query
 
 # =============================================================================
 class S3ConfigTests(unittest.TestCase):

@@ -8,7 +8,6 @@
 import unittest
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Query
 from s3.s3rest import S3Request
 
 # =============================================================================

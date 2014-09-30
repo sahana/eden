@@ -7,7 +7,7 @@
 #
 import unittest
 from gluon import current
-from gluon.dal import Query
+
 from s3.s3fields import *
 from s3.s3validators import *
 

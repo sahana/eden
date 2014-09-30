@@ -9,7 +9,6 @@ import unittest
 import datetime
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Row
 
 from s3.s3data import S3DataTable
 

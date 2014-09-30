@@ -30,8 +30,8 @@
 __all__ = ("S3PatientModel",)
 
 from gluon import *
-from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
 
 # =============================================================================

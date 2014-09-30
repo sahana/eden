@@ -7,7 +7,6 @@
 #
 import unittest
 from gluon import current
-from gluon.dal import Query
 from lxml import etree
 try:
     import json # try stdlib (Python 2.6)
