@@ -982,10 +982,14 @@ $('#req_commit_site_id_link').click(function(){
                     # Dropdown not Autocomplete
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
-                    jappend('''
+                    
+                    # Options updater for inline items
+                    if not r.component:
+                        jappend('''
 $.filterOptionsS3({
-'trigger':'req_item_id',
-'target':'item_pack_id',
+ 'trigger':{'alias':'commit_item','name':'req_item_id'},
+ 'target':{'alias':'commit_item','name':'item_pack_id'},
+ 'scope':'row',
 'lookupPrefix':'req',
 'lookupResource':'req_item_packs',
 'lookupKey':'req_item_id',

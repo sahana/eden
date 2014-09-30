@@ -2841,7 +2841,7 @@ $.filterOptionsS3({
                     (inv_item_table.item_id == record.item_id) & \
                     (inv_item_table.item_pack_id == record.item_pack_id) & \
                     (inv_item_table.currency == record.currency) & \
-                    (inv_item_table.status == record.status) & \
+                    (inv_item_table.status == record.inv_item_status) & \
                     (inv_item_table.pack_value == record.pack_value) & \
                     (inv_item_table.expiry_date == record.expiry_date) & \
                     (inv_item_table.bin == record.recv_bin) & \
@@ -4345,13 +4345,16 @@ class inv_InvItemRepresent(S3Represent):
             expires = ""
 
         NONE = current.messages["NONE"]
-        rep_strings = [string for string in [sitem.name,
-                                             expires,
-                                             ctn,
-                                             org,
-                                             bin,
-                                             ]
-                              if string and string != NONE]
-        return " - ".join(rep_strings)
+        SEP = " - "
+        rep_strings = [(string, SEP) for string in [sitem.name,
+                                                    expires,
+                                                    ctn,
+                                                    org,
+                                                    bin,
+                                                    ]
+                                     if string and string != NONE]
+
+        from itertools import chain
+        return TAG[""](list(chain.from_iterable(rep_strings))[:-1])
 
 # END =========================================================================
