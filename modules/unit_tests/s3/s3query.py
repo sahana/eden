@@ -735,14 +735,12 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         q = FS("skill_id").contains([1, 2])
         query = q.query(resource)
-        expected = ((req_req_skill.skill_id.lower().like("%|1|%")) &
-                    (req_req_skill.skill_id.lower().like("%|2|%")))
+        expected = (req_req_skill.skill_id.contains([1, 2], all=True))
         self.assertEqual(str(query), str(expected))
 
         q = FS("skill_id").anyof([1, 2])
         query = q.query(resource)
-        expected = ((req_req_skill.skill_id.lower().like("%|1|%")) |
-                    (req_req_skill.skill_id.lower().like("%|2|%")))
+        expected = (req_req_skill.skill_id.contains([1, 2], all=False))
         self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
