@@ -332,6 +332,8 @@ settings.hrm.use_skills = False
 settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
 # -----------------------------------------------------------------------------
+REDCROSS = "Red Cross / Red Crescent"
+
 def ns_only(f, required=True, branches=True, updateable=True):
     """
         Function to configure an organisation_id field to be restricted to just
@@ -348,9 +350,9 @@ def ns_only(f, required=True, branches=True, updateable=True):
     db = current.db
     ttable = db.org_organisation_type
     try:
-        type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
-                                                                       limitby=(0, 1)
-                                                                       ).first().id
+        type_id = db(ttable.name == REDCROSS).select(ttable.id,
+                                                     limitby=(0, 1),
+                                                     ).first().id
     except:
         # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
         return
@@ -445,6 +447,42 @@ def ns_only(f, required=True, branches=True, updateable=True):
     else:
         # Not allowed to add NS/Branch
         f.comment = ""
+
+# -----------------------------------------------------------------------------
+def limit_org_filter_options(tablename):
+    """
+        Limit filter options for organisation_id to NS/Branches
+        
+        @param tablename: the tablename
+    """
+
+    s3db = current.s3db
+
+    filter_widgets = s3db.get_config(tablename, "filter_widgets")
+
+    filter_widget = None
+    if filter_widgets:
+        from s3 import FS, S3HierarchyFilter
+        for w in filter_widgets:
+            if isinstance(w, S3HierarchyFilter) and \
+               w.field == "organisation_id":
+                filter_widget = w
+                break
+
+    if filter_widget is not None:
+        ttable = s3db.org_organisation_type
+        db = current.db
+        try:
+            type_id = db(ttable.name == REDCROSS).select(ttable.id,
+                                                         limitby=(0, 1),
+                                                         ).first().id
+        except:
+            # No IFRC prepop done - skip
+            return
+        selector = FS("organisation_organisation_type.organisation_type_id")
+        filter_widget.opts["filter"] = (selector == type_id)
+
+    return
 
 # -----------------------------------------------------------------------------
 def user_org_default_filter(selector, tablename=None):
@@ -1027,6 +1065,7 @@ def customise_hrm_human_resource_controller(**attr):
             if not result:
                 return False
 
+        limit_org_filter_options("hrm_human_resource")
         if arcs:
             field = s3db.vol_details.card
             field.readable = field.writable = True
@@ -1329,6 +1368,7 @@ def customise_org_office_controller(**attr):
             required = True,
             branches = True,
             )
+    limit_org_filter_options("org_office")
 
     return attr
 

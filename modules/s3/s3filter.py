@@ -1758,6 +1758,7 @@ class S3HierarchyFilter(S3FilterWidget):
                               represent = opts.get("represent"),
                               multiple = opts.get("multiple", True),
                               leafonly = opts.get("leafonly", True),
+                              filter = opts.get("filter"),
                               )
 
         # Render the widget
