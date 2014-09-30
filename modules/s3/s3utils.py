@@ -60,7 +60,7 @@ try:
     from gluon.dal.objects import Expression, Row
 except ImportError:
     # old web2py
-    from gluon.dal.objects import Expression, Field, Row
+    from gluon.dal import Expression, Field, Row
 from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
