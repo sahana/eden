@@ -4345,16 +4345,13 @@ class inv_InvItemRepresent(S3Represent):
             expires = ""
 
         NONE = current.messages["NONE"]
-        SEP = " - "
-        rep_strings = [(string, SEP) for string in [sitem.name,
-                                                    expires,
-                                                    ctn,
-                                                    org,
-                                                    bin,
-                                                    ]
-                                     if string and string != NONE]
 
-        from itertools import chain
-        return TAG[""](list(chain.from_iterable(rep_strings))[:-1])
+        items = []
+        append = items.append
+        for string in [sitem.name, expires, ctn, org, bin]:
+            if string and string != NONE:
+                append(string)
+                append(" - ")
+        return TAG[""](items[:-1])
 
 # END =========================================================================
