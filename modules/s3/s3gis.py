@@ -1236,7 +1236,7 @@ class GIS(object):
         mtable = s3db.gis_marker
         ptable = s3db.gis_projection
         stable = s3db.gis_style
-        fields = [ctable.id,
+        fields = (ctable.id,
                   ctable.default_location_id,
                   ctable.region_location_id,
                   ctable.geocoder,
@@ -1258,7 +1258,7 @@ class GIS(object):
                   ptable.proj4js,
                   ptable.maxExtent,
                   ptable.units,
-                  ]
+                  )
 
         cache = Storage()
         row = None
@@ -1268,11 +1268,11 @@ class GIS(object):
             query = (ctable.id == config_id) | \
                     (ctable.uuid == "SITE_DEFAULT")
             # May well not be complete, so Left Join
-            left = [ptable.on(ptable.id == ctable.projection_id),
+            left = (ptable.on(ptable.id == ctable.projection_id),
                     stable.on((stable.config_id == ctable.id) & \
                               (stable.layer_id == None)),
                     mtable.on(mtable.id == stable.marker_id),
-                    ]
+                    )
             rows = db(query).select(*fields,
                                     left=left,
                                     orderby=ctable.pe_type,
@@ -1285,11 +1285,11 @@ class GIS(object):
             # Use site default
             query = (ctable.uuid == "SITE_DEFAULT")
             # May well not be complete, so Left Join
-            left = [ptable.on(ptable.id == ctable.projection_id),
+            left = (ptable.on(ptable.id == ctable.projection_id),
                     stable.on((stable.config_id == ctable.id) & \
                               (stable.layer_id == None)),
                     mtable.on(mtable.id == stable.marker_id),
-                    ]
+                    )
             row = db(query).select(*fields,
                                    limitby=(0, 1)).first()
             if not row:
@@ -1305,10 +1305,10 @@ class GIS(object):
                 pe_id = auth.user.pe_id
                 # OU configs
                 # List of roles to check (in order)
-                roles = ["Staff", "Volunteer"]
+                roles = ("Staff", "Volunteer")
                 role_paths = s3db.pr_get_role_paths(pe_id, roles=roles)
                 # Unordered list of PEs
-                pes = []
+                pes = ()
                 for role in roles:
                     if role in role_paths:
                         # @ToDo: Allow selection of which OU a person's config should inherit from for disambiguation
@@ -1326,11 +1326,11 @@ class GIS(object):
                 elif len_pes:
                     query |= (ctable.pe_id.belongs(pes))
                 # Personal may well not be complete, so Left Join
-                left = [ptable.on(ptable.id == ctable.projection_id),
+                left = (ptable.on(ptable.id == ctable.projection_id),
                         stable.on((stable.config_id == ctable.id) & \
                                   (stable.layer_id == None)),
                         mtable.on(mtable.id == stable.marker_id),
-                        ]
+                        )
                 # Order by pe_type (defined in gis_config)
                 # @ToDo: Do this purely from the hierarchy
                 rows = db(query).select(*fields,
@@ -1458,13 +1458,13 @@ class GIS(object):
         s3db = current.s3db
         table = s3db.gis_hierarchy
 
-        fields = [table.uuid,
+        fields = (table.uuid,
                   table.L1,
                   table.L2,
                   table.L3,
                   table.L4,
                   table.L5,
-                  ]
+                  )
 
         query = (table.uuid == "SITE_DEFAULT")
         if not location:
@@ -1784,13 +1784,13 @@ class GIS(object):
         try:
             location_id = int(location)
             # Check that the location is a polygon
-            query = (locations.id == location_id)
-            location = db(query).select(locations.wkt,
-                                        locations.lon_min,
-                                        locations.lon_max,
-                                        locations.lat_min,
-                                        locations.lat_max,
-                                        limitby=(0, 1)).first()
+            location = db(locations.id == location_id).select(locations.wkt,
+                                                              locations.lon_min,
+                                                              locations.lon_max,
+                                                              locations.lat_min,
+                                                              locations.lat_max,
+                                                              limitby=(0, 1)
+                                                              ).first()
             if location:
                 wkt = location.wkt
                 if wkt and (wkt.startswith("POLYGON") or \
@@ -2617,12 +2617,12 @@ class GIS(object):
             query = (ftable.controller == controller) & \
                     (ftable.function == function) & \
                     (ftable.aggregate == False)
-            left = [stable.on((stable.layer_id == ftable.layer_id) & \
+            left = (stable.on((stable.layer_id == ftable.layer_id) & \
                               (stable.record_id == None) & \
                               ((stable.config_id == config.id) | \
                                (stable.config_id == None))),
                     mtable.on(mtable.id == stable.marker_id),
-                    ]
+                    )
             if filter:
                 query &= (ftable.filter == filter)
             if current.deployment_settings.get_database_type() == "postgres":
@@ -2740,9 +2740,7 @@ class GIS(object):
             except WebDriverException:
                 return False
 
-        WebDriverWait(driver, 10).until(
-            map_loaded
-        )
+        WebDriverWait(driver, 10).until(map_loaded)
 
         # Save the Output
         # @ToDo: Can we use StringIO instead of cluttering filesystem?
@@ -2776,7 +2774,8 @@ class GIS(object):
             pass
 
         # Pass the result back to the User
-        redirect(URL(c="static", f="cache", args=["png", "%s.png" % session_id]))
+        redirect(URL(c="static", f="cache",
+                     args=["png", "%s.png" % session_id]))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2898,7 +2897,7 @@ class GIS(object):
         _geojsons = {}
         _geojsons[tablename] = geojsons
 
-        # return 'locations'
+        # Return 'locations'
         return dict(geojsons = _geojsons)
 
     # -------------------------------------------------------------------------
@@ -4434,14 +4433,14 @@ class GIS(object):
         if not feature:
             # Do the whole database
             # Do in chunks to save memory and also do in correct order
-            fields = [table.id, table.name, table.gis_feature_type,
+            fields = (table.id, table.name, table.gis_feature_type,
                       table.L0, table.L1, table.L2, table.L3, table.L4,
                       table.lat, table.lon, table.wkt, table.inherited,
                       # Handle Countries which start with Bounds set, yet are Points
                       table.lat_min, table.lon_min, table.lat_max, table.lon_max,
-                      table.path, table.parent]
+                      table.path, table.parent)
             update_location_tree = GIS.update_location_tree
-            for level in ["L0", "L1", "L2", "L3", "L4", "L5", None]:
+            for level in ("L0", "L1", "L2", "L3", "L4", "L5", None):
                 query = (table.level == level) & (table.deleted == False)
                 try:
                     features = db(query).select(*fields)
@@ -4612,10 +4611,20 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.level, table.path, table.parent,
-                      table.L0, table.L1, table.L2, table.L3, table.L4,
-                      table.lat, table.lon, table.wkt, table.inherited]
-            rows = db(query).select(*fields)
+            rows = db(query).select(table.id,
+                                    table.name,
+                                    table.level,
+                                    table.path,
+                                    table.parent,
+                                    table.L0,
+                                    table.L1,
+                                    table.L2,
+                                    table.L3,
+                                    table.L4,
+                                    table.lat,
+                                    table.lon,
+                                    table.wkt,
+                                    table.inherited)
             update_location_tree = GIS.update_location_tree
             for row in rows:
                 try:
@@ -4669,7 +4678,8 @@ class GIS(object):
                         _path = "%s/%s/%s" % (_parent, parent, id)
                         L0_name = db(table.id == _parent).select(table.name,
                                                                  limitby=(0, 1),
-                                                                 cache=current.s3db.cache).first().name
+                                                                 cache=current.s3db.cache
+                                                                 ).first().name
                     else:
                         _path = "%s/%s" % (parent, id)
                         L0_name = None
@@ -4760,10 +4770,19 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.level, table.path, table.parent,
-                      table.L0, table.L1, table.L2, table.L3, table.L4,
-                      table.lat, table.lon, table.inherited]
-            rows = db(query).select(*fields)
+            rows = db(query).select(table.id,
+                                    table.name,
+                                    table.level,
+                                    table.path,
+                                    table.parent,
+                                    table.L0,
+                                    table.L1,
+                                    table.L2,
+                                    table.L3,
+                                    table.L4,
+                                    table.lat,
+                                    table.lon,
+                                    table.inherited)
             update_location_tree = GIS.update_location_tree
             for row in rows:
                 try:
@@ -4942,10 +4961,20 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.level, table.path, table.parent,
-                      table.L0, table.L1, table.L2, table.L3, table.L4,
-                      table.lat, table.lon, table.wkt, table.inherited]
-            rows = db(query).select(*fields)
+            rows = db(query).select(table.id,
+                                    table.name,
+                                    table.level,
+                                    table.path,
+                                    table.parent,
+                                    table.L0,
+                                    table.L1,
+                                    table.L2,
+                                    table.L3,
+                                    table.L4,
+                                    table.lat,
+                                    table.lon,
+                                    table.wkt,
+                                    table.inherited)
             update_location_tree = GIS.update_location_tree
             for row in rows:
                 try:
@@ -5157,10 +5186,20 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.level, table.path, table.parent,
-                      table.L0, table.L1, table.L2, table.L3, table.L4,
-                      table.lat, table.lon, table.wkt, table.inherited]
-            rows = db(query).select(*fields)
+            rows = db(query).select(table.id,
+                                    table.name,
+                                    table.level,
+                                    table.path,
+                                    table.parent,
+                                    table.L0,
+                                    table.L1,
+                                    table.L2,
+                                    table.L3,
+                                    table.L4,
+                                    table.lat,
+                                    table.lon,
+                                    table.wkt,
+                                    table.inherited)
             update_location_tree = GIS.update_location_tree
             for row in rows:
                 try:
@@ -5405,10 +5444,21 @@ class GIS(object):
             # Ensure that any locations which inherit their latlon from this one get updated
             query = (table.parent == id) & \
                     (table.inherited == True)
-            fields = [table.id, table.name, table.level, table.path, table.parent,
-                      table.L0, table.L1, table.L2, table.L3, table.L4, table.L5,
-                      table.lat, table.lon, table.wkt, table.inherited]
-            rows = db(query).select(*fields)
+            rows = db(query).select(table.id,
+                                    table.name,
+                                    table.level,
+                                    table.path,
+                                    table.parent,
+                                    table.L0,
+                                    table.L1,
+                                    table.L2,
+                                    table.L3,
+                                    table.L4,
+                                    table.L5,
+                                    table.lat,
+                                    table.lon,
+                                    table.wkt,
+                                    table.inherited)
             update_location_tree = GIS.update_location_tree
             for row in rows:
                 try:
@@ -6241,11 +6291,10 @@ class MAP(DIV):
         self.options = {}
 
         # Components
-        components = []
-
         # Map (Embedded not Window)
-        components.append(DIV(DIV(_class="map_loader"),
-                              _id="%s_panel" % map_id))
+        components = [DIV(DIV(_class="map_loader"),
+                              _id="%s_panel" % map_id)
+                      ]
 
         self.components = components
         for c in components:
@@ -6389,11 +6438,11 @@ class MAP(DIV):
 
         options["numZoomLevels"] = config.zoom_levels
 
-        options["restrictedExtent"] = [config.lon_min,
+        options["restrictedExtent"] = (config.lon_min,
                                        config.lat_min,
                                        config.lon_max,
                                        config.lat_max,
-                                       ]
+                                       )
 
         ############
         # Projection

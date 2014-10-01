@@ -334,10 +334,15 @@ settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 # -----------------------------------------------------------------------------
 REDCROSS = "Red Cross / Red Crescent"
 
-def ns_only(f, required=True, branches=True, updateable=True):
+def ns_only(f, required=True, branches=True, updateable=True, filter=True):
     """
         Function to configure an organisation_id field to be restricted to just
         NS/Branch
+
+        @param required: Field is mandatory
+        @param branches: Include Branches
+        @param updateable: Limit to Orgs which the user can update
+        @param filter: Also limit the Filter options
     """
 
     # Label
@@ -356,6 +361,9 @@ def ns_only(f, required=True, branches=True, updateable=True):
     except:
         # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
         return
+
+    if filter:
+        limit_org_filter_options(f.table._tablename)
 
     # Filter by type
     ltable = db.org_organisation_organisation_type
@@ -541,6 +549,7 @@ def customise_asset_asset_resource(r, tablename):
     ns_only(table.organisation_id,
             required = True,
             branches = True,
+            filter = True,
             )
 
     # Custom CRUD Form to allow ad-hoc Kits & link to Teams
@@ -1052,6 +1061,7 @@ def customise_hrm_human_resource_controller(**attr):
     ns_only(s3db.hrm_human_resource.organisation_id,
             required = True,
             branches = True,
+            filter = True,
             )
 
     s3 = current.response.s3
@@ -1065,7 +1075,6 @@ def customise_hrm_human_resource_controller(**attr):
             if not result:
                 return False
 
-        limit_org_filter_options("hrm_human_resource")
         if arcs:
             field = s3db.vol_details.card
             field.readable = field.writable = True
@@ -1325,6 +1334,12 @@ settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 # -----------------------------------------------------------------------------
 def customise_member_membership_controller(**attr):
 
+    # Default Filter
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.organisation_id",
+                          user_org_and_children_default_filter,
+                          tablename = "member_membership")
+
     # @ToDo: If these NS start using Membership module
     #s3db = current.s3db
     #
@@ -1341,6 +1356,7 @@ def customise_member_membership_controller(**attr):
     ns_only(current.s3db.member_membership.organisation_id,
             required = True,
             branches = True,
+            filter = True,
             )
 
     return attr
@@ -1367,8 +1383,8 @@ def customise_org_office_controller(**attr):
     ns_only(current.s3db.org_office.organisation_id,
             required = True,
             branches = True,
+            filter = True,
             )
-    limit_org_filter_options("org_office")
 
     return attr
 

@@ -7804,6 +7804,7 @@ def hrm_human_resource_filters(resource_type=None,
         append_filter(S3OptionsFilter("organisation_id",
                                       filter = True,
                                       header = "",
+                                      # Have open for RMS default filter to take effect
                                       #hidden = True,
                                       ))
 
