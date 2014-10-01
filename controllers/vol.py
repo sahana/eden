@@ -112,9 +112,9 @@ def volunteer():
             list_fields.append("status")
 
         # Update filter widgets
-        filter_widgets = s3db.hrm_human_resource_filters(
-                                resource_type="volunteer",
-                                hrm_type_opts=s3db.hrm_type_opts)
+        filter_widgets = \
+            s3db.hrm_human_resource_filters(resource_type="volunteer",
+                                            hrm_type_opts=s3db.hrm_type_opts)
                                 
         # Reconfigure
         resource.configure(list_fields = list_fields,
@@ -129,17 +129,18 @@ def volunteer():
                     vars = {"human_resource.id": r.id,
                             "group": "volunteer"
                             }
-                    args = []
                     if r.representation == "iframe":
                         vars["format"] = "iframe"
                         args = [r.method]
+                    else:
+                        args = []
                     redirect(URL(f="person", vars=vars, args=args))
             else:
                 if r.method == "import":
                     # Redirect to person controller
                     redirect(URL(f="person",
-                                args="import",
-                                vars={"group": "volunteer"}))
+                                 args="import",
+                                 vars={"group": "volunteer"}))
                                 
                 elif not r.component and r.method != "delete":
                     # Configure AddPersonWidget

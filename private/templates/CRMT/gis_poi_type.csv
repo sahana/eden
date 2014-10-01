@@ -1,5 +1,5 @@
-Name
-Debris Basin
-"Flood Channel / Street Intersection"
-"Member's Home"
-Water Storage Tank
+Name,Marker
+Debris Basin,debris
+"Flood Channel / Street Intersection",manhole
+"Member's Home",facility
+Water Storage Tank,water_tank

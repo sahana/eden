@@ -6531,6 +6531,7 @@ def project_project_filters(org_label):
                         ),
         S3OptionsFilter("organisation_id",
                         label = org_label,
+                        # Can be unhidden in customise_xx_resource if there is a need to use a default_filter
                         hidden = True,
                         ),
         S3LocationFilter("location.location_id",

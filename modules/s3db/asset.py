@@ -317,6 +317,18 @@ $.filterOptionsS3({
         list_fields.extend(("cond",
                             "comments"))
 
+        if settings.get_org_branches():
+            org_filter = S3HierarchyFilter("organisation_id",
+                                           hidden = True,
+                                           leafonly = False,
+                                           )
+        else:
+            org_filter = S3OptionsFilter("organisation_id",
+                                         filter = True,
+                                         header = "",
+                                         hidden = True,
+                                         )
+
         filter_widgets = [
             S3TextFilter(text_fields,
                          label = T("Search"),
@@ -325,10 +337,7 @@ $.filterOptionsS3({
                          ),
             S3OptionsFilter("item_id$item_category_id",
                             ),
-            S3OptionsFilter("organisation_id",
-                            represent = "%(name)s",
-                            hidden = True,
-                            ),
+            org_filter,
             S3LocationFilter("location_id",
                              levels = levels,
                              hidden = True,

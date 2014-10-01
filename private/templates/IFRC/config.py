@@ -332,9 +332,13 @@ settings.hrm.use_skills = False
 settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
 # -----------------------------------------------------------------------------
-REDCROSS = "Red Cross / Red Crescent"
-
-def ns_only(f, required=True, branches=True, updateable=True, filter=True):
+def ns_only(tablename,
+            fieldname = "organisation_id",
+            required = True,
+            branches = True,
+            updateable = True,
+            type_filter = True
+            ):
     """
         Function to configure an organisation_id field to be restricted to just
         NS/Branch
@@ -342,8 +346,41 @@ def ns_only(f, required=True, branches=True, updateable=True, filter=True):
         @param required: Field is mandatory
         @param branches: Include Branches
         @param updateable: Limit to Orgs which the user can update
-        @param filter: Also limit the Filter options
+        @param type_filter: Also limit the Filter options
+
+        NB If type_filter=True, apply in customise_xx_controller inside prep,
+           after standard_prep is run
     """
+
+    # Lookup organisation_type_id for Red Cross
+    db = current.db
+    s3db = current.s3db
+    ttable = s3db.org_organisation_type
+    try:
+        type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
+                                                                       limitby=(0, 1),
+                                                                       ).first().id
+    except:
+        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+        return
+
+    # Load standard model
+    f = s3db[tablename][fieldname]
+
+    if type_filter:
+        # Find the relevant filter widget & limit it's options
+        filter_widgets = s3db.get_config(tablename, "filter_widgets")
+        filter_widget = None
+        if filter_widgets:
+            from s3 import FS, S3HierarchyFilter
+            for w in filter_widgets:
+                if isinstance(w, S3HierarchyFilter) and \
+                   w.field == "organisation_id":
+                    filter_widget = w
+                    break
+        if filter_widget is not None:
+            selector = FS("organisation_organisation_type.organisation_type_id")
+            filter_widget.opts["filter"] = (selector == type_id)
 
     # Label
     if branches:
@@ -352,18 +389,6 @@ def ns_only(f, required=True, branches=True, updateable=True, filter=True):
         f.label = T("National Society")
 
     # Requires
-    db = current.db
-    ttable = db.org_organisation_type
-    try:
-        type_id = db(ttable.name == REDCROSS).select(ttable.id,
-                                                     limitby=(0, 1),
-                                                     ).first().id
-    except:
-        # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
-        return
-
-    if filter:
-        limit_org_filter_options(f.table._tablename)
 
     # Filter by type
     ltable = db.org_organisation_organisation_type
@@ -394,12 +419,12 @@ def ns_only(f, required=True, branches=True, updateable=True, filter=True):
         # Keep the represent function as simple as possible
         parent = False
         # Exclude branches
-        btable = current.s3db.org_organisation_branch
+        btable = s3db.org_organisation_branch
         rows = db((btable.deleted != True) &
                   (btable.branch_id.belongs(filter_opts))).select(btable.branch_id)
         filter_opts = list(set(filter_opts) - set(row.branch_id for row in rows))
 
-    organisation_represent = current.s3db.org_OrganisationRepresent
+    organisation_represent = s3db.org_OrganisationRepresent
     represent = organisation_represent(parent=parent)
     f.represent = represent
 
@@ -423,9 +448,9 @@ def ns_only(f, required=True, branches=True, updateable=True, filter=True):
         node_represent = organisation_represent(parent=False)
         # Filter by type
         # (no need to exclude branches - we wouldn't be here if we didn't use branches)
-        node_filter = (FS("organisation_organisation_type.organisation_type_id") == type_id)
+        selector = FS("organisation_organisation_type.organisation_type_id")
         f.widget = S3HierarchyWidget(lookup="org_organisation",
-                                     filter=node_filter,
+                                     filter=(selector == type_id),
                                      represent=node_represent,
                                      multiple=False,
                                      leafonly=False,
@@ -455,42 +480,6 @@ def ns_only(f, required=True, branches=True, updateable=True, filter=True):
     else:
         # Not allowed to add NS/Branch
         f.comment = ""
-
-# -----------------------------------------------------------------------------
-def limit_org_filter_options(tablename):
-    """
-        Limit filter options for organisation_id to NS/Branches
-        
-        @param tablename: the tablename
-    """
-
-    s3db = current.s3db
-
-    filter_widgets = s3db.get_config(tablename, "filter_widgets")
-
-    filter_widget = None
-    if filter_widgets:
-        from s3 import FS, S3HierarchyFilter
-        for w in filter_widgets:
-            if isinstance(w, S3HierarchyFilter) and \
-               w.field == "organisation_id":
-                filter_widget = w
-                break
-
-    if filter_widget is not None:
-        ttable = s3db.org_organisation_type
-        db = current.db
-        try:
-            type_id = db(ttable.name == REDCROSS).select(ttable.id,
-                                                         limitby=(0, 1),
-                                                         ).first().id
-        except:
-            # No IFRC prepop done - skip
-            return
-        selector = FS("organisation_organisation_type.organisation_type_id")
-        filter_widget.opts["filter"] = (selector == type_id)
-
-    return
 
 # -----------------------------------------------------------------------------
 def user_org_default_filter(selector, tablename=None):
@@ -540,17 +529,54 @@ def user_org_and_children_default_filter(selector, tablename=None):
         return {}
 
 # -----------------------------------------------------------------------------
+def customise_asset_asset_controller(**attr):
+
+    tablename = "asset_asset"
+
+    # Default Filter
+    from s3 import s3_set_default_filter
+    s3_set_default_filter("~.organisation_id",
+                          user_org_and_children_default_filter,
+                          tablename = tablename)
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        # Organisation needs to be an NS/Branch
+        ns_only(tablename,
+                required = True,
+                branches = True,
+                type_filter = True,
+                )
+
+        # Set the NS filter as Visible so that the default filter works
+        filter_widgets = current.s3db.get_config(tablename, "filter_widgets")
+        for widget in filter_widgets:
+            if widget.field == "organisation_id":
+                widget.opts.hidden = False
+                break
+
+        return result
+    s3.prep = custom_prep
+
+    return attr
+
+settings.customise_asset_asset_controller = customise_asset_asset_controller
+
+# -----------------------------------------------------------------------------
 def customise_asset_asset_resource(r, tablename):
 
+    # Load standard model
     s3db = current.s3db
     table = s3db.asset_asset
-
-    # Organisation needs to be an NS/Branch
-    ns_only(table.organisation_id,
-            required = True,
-            branches = True,
-            filter = True,
-            )
 
     # Custom CRUD Form to allow ad-hoc Kits & link to Teams
     from s3 import S3SQLCustomForm, S3SQLInlineComponent
@@ -616,7 +642,7 @@ def customise_auth_user_controller(**attr):
 
     #if "arg" in attr and attr["arg"] == "register":
     # Organisation needs to be an NS/Branch
-    ns_only(current.db.auth_user.organisation_id,
+    ns_only("auth_user",
             required = True,
             branches = True,
             updateable = False, # Need to see all Orgs in Registration screens
@@ -894,7 +920,7 @@ settings.customise_gis_poi_resource = customise_gis_poi_resource
 def customise_hrm_certificate_controller(**attr):
 
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.hrm_certificate.organisation_id,
+    ns_only("hrm_certificate",
             required = False,
             branches = False,
             )
@@ -906,12 +932,10 @@ settings.customise_hrm_certificate_controller = customise_hrm_certificate_contro
 # -----------------------------------------------------------------------------
 def customise_hrm_course_controller(**attr):
 
-    s3db = current.s3db
-    table = s3db.hrm_course
     tablename = "hrm_course"
 
     # Organisation needs to be an NS/Branch
-    ns_only(table.organisation_id,
+    ns_only(tablename,
             required = False,
             branches = False,
             )
@@ -921,6 +945,10 @@ def customise_hrm_course_controller(**attr):
     if root_org == VNRC:
         # Keep things simple
         return attr
+
+    # Load standard model
+    s3db = current.s3db
+    table = s3db.hrm_course
 
     list_fields = ["code",
                    "name",
@@ -974,7 +1002,7 @@ settings.customise_hrm_credential_controller = customise_hrm_credential_controll
 def customise_hrm_department_controller(**attr):
 
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.hrm_department.organisation_id,
+    ns_only("hrm_department",
             required = False,
             branches = False,
             )
@@ -1057,13 +1085,6 @@ def customise_hrm_human_resource_controller(**attr):
     s3db = current.s3db
     s3db.org_organisation.root_organisation.label = T("National Society")
 
-    # Organisation needs to be an NS/Branch
-    ns_only(s3db.hrm_human_resource.organisation_id,
-            required = True,
-            branches = True,
-            filter = True,
-            )
-
     s3 = current.response.s3
 
     # Custom prep
@@ -1074,6 +1095,13 @@ def customise_hrm_human_resource_controller(**attr):
             result = standard_prep(r)
             if not result:
                 return False
+
+        # Organisation needs to be an NS/Branch
+        ns_only("hrm_human_resource",
+                required = True,
+                branches = True,
+                type_filter = True,
+                )
 
         if arcs:
             field = s3db.vol_details.card
@@ -1177,7 +1205,7 @@ def customise_hrm_job_title_controller(**attr):
         s3.filter = (table.type == 4)
     else:
         # Organisation needs to be an NS/Branch
-        ns_only(table.organisation_id,
+        ns_only("hrm_job_title",
                 required = False,
                 branches = False,
                 )
@@ -1221,10 +1249,8 @@ settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 # -----------------------------------------------------------------------------
 def customise_hrm_programme_controller(**attr):
 
-    s3db = current.s3db
-
     # Organisation needs to be an NS/Branch
-    ns_only(s3db.hrm_programme.organisation_id,
+    ns_only("hrm_programme",
             required = False,
             branches = False,
             )
@@ -1239,7 +1265,7 @@ def customise_hrm_programme_controller(**attr):
         settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
     elif root_org == VNRC:
         settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-        field = s3db.hrm_programme_hours.job_title_id
+        field = current.s3db.hrm_programme_hours.job_title_id
         field.readable = field.writable = False
         # @ToDo
         # def vn_age_group(age):
@@ -1334,11 +1360,13 @@ settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 # -----------------------------------------------------------------------------
 def customise_member_membership_controller(**attr):
 
+    tablename = "member_membership"
+
     # Default Filter
     from s3 import s3_set_default_filter
     s3_set_default_filter("~.organisation_id",
                           user_org_and_children_default_filter,
-                          tablename = "member_membership")
+                          tablename = tablename)
 
     # @ToDo: If these NS start using Membership module
     #s3db = current.s3db
@@ -1352,12 +1380,33 @@ def customise_member_membership_controller(**attr):
     #    # Remove link to download Template
     #    attr["csv_template"] = "hide"
 
-    # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.member_membership.organisation_id,
-            required = True,
-            branches = True,
-            filter = True,
-            )
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        # Organisation needs to be an NS/Branch
+        ns_only(tablename,
+                required = True,
+                branches = True,
+                type_filter = True,
+                )
+
+        # Set the NS filter as Visible so that the default filter works
+        filter_widgets = current.s3db.get_config(tablename, "filter_widgets")
+        for widget in filter_widgets:
+            if widget.field == "organisation_id":
+                widget.opts.hidden = False
+                break
+
+        return result
+    s3.prep = custom_prep
 
     return attr
 
@@ -1367,7 +1416,7 @@ settings.customise_member_membership_controller = customise_member_membership_co
 def customise_member_membership_type_controller(**attr):
 
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.member_membership_type.organisation_id,
+    ns_only("member_membership_type",
             required = False,
             branches = False,
             )
@@ -1379,12 +1428,26 @@ settings.customise_member_membership_type_controller = customise_member_membersh
 # -----------------------------------------------------------------------------
 def customise_org_office_controller(**attr):
 
-    # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.org_office.organisation_id,
-            required = True,
-            branches = True,
-            filter = True,
-            )
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        # Organisation needs to be an NS/Branch
+        ns_only("org_office",
+                required = True,
+                branches = True,
+                type_filter = True,
+                )
+
+        return result
+    s3.prep = custom_prep
 
     return attr
 
@@ -1513,10 +1576,8 @@ settings.customise_pr_contact_emergency_resource = customise_pr_contact_emergenc
 # -----------------------------------------------------------------------------
 def customise_pr_group_controller(**attr):
 
-    s3db = current.s3db
-
     # Organisation needs to be an NS/Branch
-    ns_only(s3db.org_organisation_team.organisation_id,
+    ns_only("org_organisation_team",
             required = False,
             branches = True,
             )
@@ -1538,6 +1599,7 @@ def customise_pr_group_controller(**attr):
             if root_org == VNRC:
                 settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
                 # Update the represent as already set
+                s3db = current.s3db
                 s3db.pr_group_membership.person_id.represent = s3db.pr_PersonRepresent()
 
         return result
@@ -1671,7 +1733,7 @@ def customise_pr_person_controller(**attr):
             atable = r.component.table
             atable.organisation_id.readable = atable.organisation_id.writable = False
             # Organisation needs to be an NS
-            #ns_only(atable.organisation_id,
+            #ns_only("hrm_appraisal",
             #        required = True,
             #        branches = False,
             #        )
@@ -1704,7 +1766,7 @@ def customise_pr_person_controller(**attr):
 
         elif r.method =="record" or component_name == "human_resource":
             # Organisation needs to be an NS/Branch
-            ns_only(s3db.hrm_human_resource.organisation_id,
+            ns_only("hrm_human_resource",
                     required = True,
                     branches = True,
                     )
@@ -1880,7 +1942,7 @@ def pr_rheader(r, vnrc):
 def customise_survey_series_controller(**attr):
 
     # Organisation needs to be an NS/Branch
-    ns_only(current.s3db.survey_series.organisation_id,
+    ns_only("survey_series",
             required = False,
             branches = True,
             )
@@ -1923,15 +1985,16 @@ settings.project.organisation_roles = {
 # -----------------------------------------------------------------------------
 def customise_project_project_controller(**attr):
 
+    tablename = "project_project"
+
     # Default Filter
     from s3 import s3_set_default_filter
     s3_set_default_filter("~.organisation_id",
                           user_org_default_filter,
                           tablename = "project_project")
 
+    # Load standard model
     s3db = current.s3db
-    tablename = "project_project"
-    # Load normal model
     table = s3db[tablename]
 
     # @ToDo: S3SQLInlineComponent for Project orgs
@@ -1953,13 +2016,7 @@ def customise_project_project_controller(**attr):
             # nappend(row.id)
 
     # Custom Fields
-    # Organisation needs to be an NS (not a branch)
-    f = table.organisation_id
-    ns_only(f,
-            required = True,
-            branches = False,
-            )
-    f.label = T("Host National Society")
+    table.organisation_id.label = T("Host National Society")
 
     # Custom Crud Form
     from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
@@ -2076,16 +2133,37 @@ $.filterOptionsS3({
         "comments",
     )
 
-    # Set the Host NS filter as Visible so that the default filter works
-    filter_widgets = s3db.get_config(tablename, "filter_widgets")
-    for widget in filter_widgets:
-        if widget.field == "organisation_id":
-            widget.opts.hidden = False
-            break
-
     s3db.configure(tablename,
                    crud_form = crud_form,
                    )
+
+    s3 = current.response.s3
+
+    # Custom prep
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+        else:
+            result = True
+
+        # Lead Organisation needs to be an NS (not a branch)
+        ns_only(tablename,
+                required = True,
+                branches = False,
+                type_filter = True,
+                )
+
+        # Set the Host NS filter as Visible so that the default filter works
+        filter_widgets = s3db.get_config(tablename, "filter_widgets")
+        for widget in filter_widgets:
+            if widget.field == "organisation_id":
+                widget.opts.hidden = False
+                break
+
+        return result
+    s3.prep = custom_prep
 
     return attr
 
