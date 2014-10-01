@@ -1413,7 +1413,7 @@ class S3HRSalaryModel(S3Model):
                              *s3_meta_fields())
 
         ADD_STAFF_LEVEL = T("Add Staff Level")
-        staff_level_represent = S3Represent(lookup="hrm_staff_level")
+        staff_level_represent = hrm_SalaryInfoRepresent(lookup="hrm_staff_level")
 
         # =====================================================================
         # Salary Grades
@@ -1429,7 +1429,7 @@ class S3HRSalaryModel(S3Model):
                              *s3_meta_fields())
 
         ADD_SALARY_GRADE = T("Add Salary Grade")
-        salary_grade_represent = S3Represent(lookup="hrm_salary_grade")
+        salary_grade_represent = hrm_SalaryInfoRepresent(lookup="hrm_salary_grade")
 
         # =====================================================================
         # Salary
@@ -1533,6 +1533,71 @@ class S3HRSalaryModel(S3Model):
         if start_date and end_date and start_date > end_date:
             form.errors["end_date"] = current.T("End date must be after start date.")
         return
+
+# =============================================================================
+class hrm_SalaryInfoRepresent(S3Represent):
+
+    def __init__(self, lookup="hrm_salary_grade"):
+        """ Constructor """
+
+        super(hrm_SalaryInfoRepresent, self).__init__(lookup = lookup,
+                                                      fields = ["name", 
+                                                                "organisation_id",
+                                                                ]
+                                                      )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+
+        table = self.table
+        otable = s3db.org_organisation
+
+        left = otable.on(otable.id == table.organisation_id)
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(table.id,
+                                        table.name,
+                                        otable.id,
+                                        otable.name,
+                                        otable.acronym,
+                                        left = left)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        try:
+            name = row[self.tablename].name
+        except AttributeError:
+            return row.name
+        try:
+            organisation = row["org_organisation"]
+        except AttributeError:
+            return name
+
+        if organisation.acronym:
+            return "%s (%s)" % (name, organisation.acronym)
+        elif organisation.name:
+            return "%s (%s)" % (name, organisation.name)
+        else:
+            return name
 
 # =============================================================================
 class S3HRJobModel(S3Model):

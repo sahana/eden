@@ -394,7 +394,7 @@ def person():
     def prep(r):
 
         # Plug-in role matrix for Admins/OrgAdmins
-        S3PersonRoleManager.set_method(r, entity="pr_person")
+        s3base.S3PersonRoleManager.set_method(r, entity="pr_person")
 
         if r.representation == "s3json":
             current.xml.show_ids = True

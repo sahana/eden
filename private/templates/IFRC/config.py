@@ -1726,12 +1726,19 @@ def customise_pr_person_controller(**attr):
                 s3db.configure("pr_person",
                                crud_form = crud_form,
                                )
-            if r.method == "record" or \
-               component_name == "human_resource":
-                field = s3db.hrm_human_resource.job_title_id
-                field.readable = field.writable = False
+            if r.method == "record" or component_name == "human_resource":
+                # Hide job_title_id in programme hours
                 field = s3db.hrm_programme_hours.job_title_id
                 field.readable = field.writable = False
+                # Hide unwanted fields in human_resource
+                htable = s3db.hrm_human_resource
+                for fname in ["job_title_id", 
+                              "code", 
+                              "essential", 
+                              "site_contact",
+                              ]:
+                    field = htable[fname]
+                    field.readable = field.writable = False
 
             elif component_name == "address":
                 settings.gis.building_name = False
@@ -1781,6 +1788,17 @@ def customise_pr_person_controller(**attr):
                 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
                 blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
                 field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
+                
+            elif component_name == "salary":
+                # Don't use monthly amount field
+                field = s3db.hrm_salary.monthly_amount
+                field.readable = field.writable = False
+                r.component.configure(list_fields = ["staff_level_id",
+                                                     "salary_grade_id",
+                                                     "start_date",
+                                                     "end_date",
+                                                     ],
+                                      )
 
             elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience
