@@ -13,7 +13,7 @@ SEPARATORS = (",", ":")
 # -----------------------------------------------------------------------------
 def index():
     """
-       Module's Home Page
+       Module's Home Page: Show the Main map
     """
 
     module_name = settings.modules[module].name_nice
@@ -48,8 +48,10 @@ def index():
             script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % appname
         s3.scripts.append(script)
 
-    save = settings.get_gis_save()
+    # Allow us to target CSS to make map full-width
+    s3.jquery_ready.append('''$('body').addClass('gis')''')
 
+    save = settings.get_gis_save()
     if not save:
         help = T("To Print or Share the Map you will have to take a screenshot. If you need help taking a screen shot, have a look at these instructions for %(windows)s or %(mac)s") \
             % dict(windows="<a href='http://www.wikihow.com/Take-a-Screenshot-in-Microsoft-Windows' target='_blank'>Windows</a>",

@@ -319,6 +319,7 @@ $.filterOptionsS3({
 
         if settings.get_org_branches():
             org_filter = S3HierarchyFilter("organisation_id",
+                                           # Can be unhidden in customise_xx_resource if there is a need to use a default_filter
                                            hidden = True,
                                            leafonly = False,
                                            )
@@ -326,6 +327,7 @@ $.filterOptionsS3({
             org_filter = S3OptionsFilter("organisation_id",
                                          filter = True,
                                          header = "",
+                                         # Can be unhidden in customise_xx_resource if there is a need to use a default_filter
                                          hidden = True,
                                          )
 

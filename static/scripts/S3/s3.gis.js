@@ -104,9 +104,22 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // Build the OpenLayers map
         var map = addMap(map_id, options);
+        var s3 = map.s3;
 
         // Allow more room for Features
         map.Z_INDEX_BASE.Popup = 800;
+
+        // Resize the Map when the Browser window is resized
+        var map_div = $('#' + map_id + '_panel');
+        map_div.css('width', '100%');
+        $(window).resize(function() {
+            //map.updateSize();
+            var w = map_div.width();
+            map.s3.mapWin.setWidth(w);
+            //var h = w * 3/4;
+            //map.s3.mapWin.setSize(w, h);
+            //map_div.css('height', h);
+        });
 
         // Add the GeoExt UI
         // @ToDo: Make this optional
@@ -326,7 +339,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             displayProjection: proj4326,
             projection: options.projection_current,
             fallThrough: fallThrough,
-            // Use Manual stylesheet download (means can be done in HEAD to not delay pageload)
+            // Use Manual stylesheet download (means can be done in HEAD to not delay page load)
             theme: null,
             // This means that Images get hidden by scrollbars
             //paddingForPopups: new OpenLayers.Bounds(50, 10, 200, 300),
@@ -440,7 +453,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     //cls: 'legendpanel',
                     title: i18n.gis_legend,
                     defaults: {
-                        //labelCls: 'mylabel'
+                        //labelCls: 'mylabel',
                         //style: 'padding:4px'
                     },
                     //bodyStyle: 'padding:4px',

@@ -1,6 +1,9 @@
 /* Main Map */
 .map_home {
-    margin: 0;
+    margin: -13px 0 0;
+}
+body.gis > .container {
+    width: auto;
 }
 
 .x-panel-header {
