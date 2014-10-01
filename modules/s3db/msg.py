@@ -43,6 +43,7 @@ __all__ = ("S3ChannelModel",
            "S3TwitterSearchModel",
            "S3XFormsModel",
            "S3BaseStationModel",
+           "S3CAPModel",
            )
 
 from gluon import *
@@ -1336,6 +1337,54 @@ class S3RSSModel(S3ChannelModel):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3CAPModel(S3Model):
+    """
+        CAP: Common ALerting Protocol
+
+        Alerts can be sent via different brokers
+        - Pubsubhubbub
+        - Alert-hub
+    """
+
+    names = ("msg_cap",)
+
+    def model(self):
+
+        T = current.T
+        
+        # ---------------------------------------------------------------------
+        # CAP Alert: InBox & Outbox
+        #
+        tablename = "msg_cap"
+        self.define_table(tablename,
+                          # Instance
+                          self.super_link("message_id", "msg_message"),
+                          self.msg_channel_id(),
+                          s3_datetime(default="now"),
+                          Field("alert_id",
+                                ),
+                          Field("issuer",
+                                label = T("Alert Issuer")),
+                          Field("to_broker",
+                                label = T("Channel Name"),
+                                ),
+                          Field("success_status",
+                                "integer",
+                                label = T("Success Status"),
+                                ),
+                          Field("inbound", "boolean",
+                                default = False,
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       super_entity = "msg_message",
+                       )
+
+        # ---------------------------------------------------------------------
+        return dict()
 
 # =============================================================================
 class S3SMSModel(S3Model):
