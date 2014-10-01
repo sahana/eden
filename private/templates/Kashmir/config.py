@@ -132,6 +132,9 @@ settings.pr.show_emergency_contacts = False
 # all types will be valid.
 settings.req.req_type = ["Stock"]
 
+# Uncomment to show a default cancel button in standalone create/update forms
+settings.ui.default_cancel_button = True
+
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([
