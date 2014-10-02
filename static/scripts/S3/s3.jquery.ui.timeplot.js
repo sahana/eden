@@ -12,6 +12,7 @@
 
 (function($, undefined) {
 
+    "use strict";
     var timeplotID = 0;
 
     /**
@@ -89,7 +90,7 @@
          */
         refresh: function() {
 
-            var el = this.element
+            var el = this.element;
 
             this._unbindEvents();
             
@@ -169,20 +170,20 @@
                 minValue,
                 maxValue;
             if (!data.empty) {
-                var items = data.items, v;
+                var items = data.items, v, item;
                 for (var i=0, len=items.length; i<len; i++) {
                     item = items[i];
-                    if (burnDown && (baseline || baseline == 0)) {
+                    if (burnDown && (baseline || baseline === 0)) {
                         v = baseline - item[2];
                     } else {
                         v = item[2];
                     }
                     results.push([item[0], item[1], v]);
                 }
-                var minValue = d3.min(results, function(d) {
+                minValue = d3.min(results, function(d) {
                     return burnDown ? d[2] : Math.min(d[2], baseline);
                 });
-                var maxValue = d3.max(results, function(d) {
+                maxValue = d3.max(results, function(d) {
                     return burnDown ? d[2] : Math.max(d[2], baseline);
                 });
             } else {
@@ -196,7 +197,7 @@
                 empty: data.empty,
                 minValue: minValue,
                 maxValue: maxValue
-            }
+            };
         },
 
         /**
@@ -214,7 +215,7 @@
 
             // Create the x axis
             var x = d3.scale.ordinal()
-                            .rangeRoundBands([0, width], .05);
+                            .rangeRoundBands([0, width], 0.05);
 
             // @todo: dynamic tick formatter
             var xAxis = d3.svg.axis()
@@ -298,8 +299,8 @@
                 }
 
                 // Add the bars
-                bar = svg.selectAll("bar")
-                         .data(data.items);
+                var bar = svg.selectAll("bar")
+                             .data(data.items);
 
                 bar.enter()
                    .append("rect")
@@ -388,9 +389,9 @@
                     end = time_options[1];
                     slots = time_options[2];
                 }
-            } else {
+            } //else {
                 // @todo
-            }
+            //}
 
             var options = {
 //                 fact: $(widget_id + '-fact').val(),
@@ -415,7 +416,9 @@
                 } else {
                     return null;
                 }
-            } catch (e) {}
+            } catch (e) {
+                return null;
+            }
         },
 
         /**
@@ -450,7 +453,7 @@
 
             // Check options to update/remove
             if (options) {
-                var option;
+                var option, newopt;
                 for (option in options) {
                     newopt = options[option];
                     qstr = option + '=' + newopt;
@@ -585,7 +588,6 @@
                         clearTimeout(timer);
                     }
                     timer = setTimeout(function () {
-                        // @todo: implement _getOptions
                         var options = self._getOptions(),
                             filters = self._getFilters();
                         self.reload(options, filters, false);
