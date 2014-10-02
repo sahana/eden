@@ -30,6 +30,7 @@
 __all__ = ("S3HRModel",
            "S3HRSiteModel",
            "S3HRSalaryModel",
+           "S3HRInsuranceModel",
            "S3HRSkillModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
@@ -625,6 +626,7 @@ class S3HRModel(S3Model):
                                         "pkey": "person_id",
                                         },
                         hrm_salary = "human_resource_id",
+                        hrm_insurance = "human_resource_id",
                         hrm_training={"link": "pr_person",
                                       "joinby": "id",
                                       "key": "id",
@@ -1598,6 +1600,51 @@ class hrm_SalaryInfoRepresent(S3Represent):
             return "%s (%s)" % (name, organisation.name)
         else:
             return name
+
+# =============================================================================
+class S3HRInsuranceModel(S3Model):
+    """ Data Model to track insurance information of staff members """
+    
+    names = ("hrm_insurance",
+             )
+
+    def model(self):
+        
+        T = current.T
+
+        insurance_types = {"SOCIAL": T("Social Insurance"),
+                           "HEALTH": T("Health Insurance"),
+                           }
+        insurance_type_represent = S3Represent(options = insurance_types)
+        
+        # =====================================================================
+        # Insurance Information
+        #
+        tablename = "hrm_insurance"
+        table = self.define_table(tablename,
+                                  self.hrm_human_resource_id(),
+                                  Field("type",
+                                        requires = IS_IN_SET(insurance_types),
+                                        represent = insurance_type_represent,
+                                        ),
+                                  Field("insurance_number",
+                                        length = 128,
+                                        ),
+                                  Field("insurer",
+                                        length = 255,
+                                        ),
+                                  Field("provider",
+                                        length = 255,
+                                        ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+
+        return {}
 
 # =============================================================================
 class S3HRJobModel(S3Model):

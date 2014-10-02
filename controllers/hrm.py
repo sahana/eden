@@ -661,6 +661,20 @@ def salary_grade():
     return output
 
 # =============================================================================
+# Insurance Information
+# =============================================================================
+def insurance():
+    """ Insurance Information Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller()
+    return output
+
+# =============================================================================
 # Messaging
 # =============================================================================
 def compose():
