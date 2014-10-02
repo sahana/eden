@@ -337,7 +337,7 @@ def ns_only(tablename,
             required = True,
             branches = True,
             updateable = True,
-            type_filter = True
+            limit_filter_opts = True
             ):
     """
         Function to configure an organisation_id field to be restricted to just
@@ -346,9 +346,9 @@ def ns_only(tablename,
         @param required: Field is mandatory
         @param branches: Include Branches
         @param updateable: Limit to Orgs which the user can update
-        @param type_filter: Also limit the Filter options
+        @param limit_filter_opts: Also limit the Filter options
 
-        NB If type_filter=True, apply in customise_xx_controller inside prep,
+        NB If limit_filter_opts=True, apply in customise_xx_controller inside prep,
            after standard_prep is run
     """
 
@@ -367,7 +367,7 @@ def ns_only(tablename,
     # Load standard model
     f = s3db[tablename][fieldname]
 
-    if type_filter:
+    if limit_filter_opts:
         # Find the relevant filter widget & limit it's options
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
         filter_widget = None
@@ -554,7 +554,7 @@ def customise_asset_asset_controller(**attr):
         ns_only(tablename,
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         # Set the NS filter as Visible so that the default filter works
@@ -1100,7 +1100,7 @@ def customise_hrm_human_resource_controller(**attr):
         ns_only("hrm_human_resource",
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         if arcs:
@@ -1395,7 +1395,7 @@ def customise_member_membership_controller(**attr):
         ns_only(tablename,
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         # Set the NS filter as Visible so that the default filter works
@@ -1443,7 +1443,7 @@ def customise_org_office_controller(**attr):
         ns_only("org_office",
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         return result
@@ -2200,7 +2200,7 @@ $.filterOptionsS3({
         ns_only(tablename,
                 required = True,
                 branches = False,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         # Set the Host NS filter as Visible so that the default filter works
