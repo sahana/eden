@@ -10,6 +10,7 @@
  */
 (function($, undefined) {
 
+    "use strict";
     var hierarchicalcrudID = 0;
 
     /**
@@ -63,7 +64,7 @@
             var el = $(this.element);
             
             // The tree
-            this.tree = el.find('.s3-hierarchy-tree')
+            this.tree = el.find('.s3-hierarchy-tree');
             
             this.refresh();
         },
