@@ -1,0 +1,2 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Default,Individual,Style,Folder,Visible,Enabled,Cluster Distance,Cluster Threshold,Refresh
+Tsunami,Tsunami Inundation Area - USGS,vulnerability,risk,,,,,~.hazard_id$name=Tsunami&risk_group.id=None,,,"{'fill':'0000FF','fillOpacity':0.5,'label':'Inundation Zone'}",Hazards,False,False,,0,0

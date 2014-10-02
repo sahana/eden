@@ -1450,7 +1450,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
         // Build and apply the new rules
         var _layer = {'style': style,
-                      'cluster_threshold': 0
+                      'cluster_threshold': 0,
+                      'opacity': 0.9 // trigger the 'select' renderIntent -> Opaque
                       };
         var rules = styleRules(_layer);
         layer.styleMap.styles['default'].rules = rules;
@@ -1819,7 +1820,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         }
         var layer = {
             'marker': marker,
-            'style': style
+            'style': style,
+            'opacity': 0.9 // Trigger the select renderIntent -> Opaque
             };
         var response = createStyleMap(map, layer);
         var featureStyleMap = response[0];
@@ -3126,17 +3128,17 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     var tooltipSelect = function(event) {
         var feature = event.feature;
         var layer = feature.layer;
+        // Style the feature as highlighted
+        feature.renderIntent = 'select';
+        layer.drawFeature(feature);
         if (['OpenLayers.Handler.PointS3',
              'OpenLayers.Handler.Path',
              'OpenLayers.Handler.Polygon',
              'OpenLayers.Handler.RegularPolygon'
              ].indexOf(layer.name) != -1) {
-            // Don't do anything here when drawing features
+            // Don't do anything more when drawing features
             return;
         }
-        // Style the feature as highlighted
-        feature.renderIntent = 'select';
-        layer.drawFeature(feature);
         var map = layer.map;
         if (map.s3.layers_nopopups.indexOf(layer.name) != -1) {
             // Don't do anything more here when there aren't popups to show
@@ -3217,41 +3219,35 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var feature = event.feature;
         var layer = feature.layer;
         var map = layer.map;
+        if (feature) {
+            // Style the feature normally
+            feature.renderIntent = 'default';
+            layer.drawFeature(feature);
+        }
         if (['OpenLayers.Handler.PointS3',
              'OpenLayers.Handler.Path',
              'OpenLayers.Handler.Polygon',
              'OpenLayers.Handler.RegularPolygon'
              ].indexOf(layer.name) != -1) {
-            // Don't do anything here when drawing features
+            // Don't do anything more when drawing features
             return;
         }
         if (map.s3.layers_nopopups.indexOf(layer.name) != -1) {
-            // Style the feature normally
-            feature.renderIntent = 'default';
-            layer.drawFeature(feature);
-            // Don't do anything more here when there aren't popups to show
+            // Don't do anything more when there aren't popups to show
             return;
         }
         if (feature) {
             // Prevent any pending tooltip for this feature from loading
             clearTimeout(S3.gis.timeouts[feature.id]);
-            if (feature.popup) {
-                if (feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip') {
-                    // Style the feature normally
-                    feature.renderIntent = 'default';
-                    layer.drawFeature(feature);
-                    // Destroy any tooltip for this feature
-                    if (feature.popup) {
-                        map.removePopup(feature.popup);
-                        feature.popup.destroy();
-                    }
-                    delete feature.popup;
+            if ((feature.popup) && (feature.popup.CLASS_NAME == 'OpenLayers.Popup.Tooltip')) {
+                // Destroy any tooltip for this feature
+                if (feature.popup) {
+                    map.removePopup(feature.popup);
+                    feature.popup.destroy();
                 }
-            } else {
+                delete feature.popup;
+            //} else {
                 // Must have been a cluster
-                // Style the feature normally
-                feature.renderIntent = 'default';
-                layer.drawFeature(feature);
             }
             $('#' + feature.id + '_tooltip').remove();
         }
@@ -4980,7 +4976,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             style.fillOpacity = colour._a;
                         }
                         var layer = {
-                            'style': style
+                            'style': style,
+                            'opacity': 0.9 // trigger the 'select' renderIntent -> Opaque
                         };
                         var response = createStyleMap(map, layer);
                         var featureStyleMap = response[0];
@@ -6122,6 +6119,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (opacity != 1) {
             // Simply make opaque onSelect
             var selectStyle = {
+                fillOpacity: 1,
                 graphicOpacity: 1
             };
         } else {
@@ -6134,6 +6132,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var featureStyleMap = new OpenLayers.StyleMap({
             'default': featureStyle,
             'select': selectStyle
+            // Can set this to something different if we have a need for a 3rd style
+            //'temporary': tempStyle
         });
         return [featureStyleMap, marker_url];
     };
