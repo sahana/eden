@@ -3713,7 +3713,7 @@ def req_rheader(r, check_page=False):
     return None
 
 # =============================================================================
-def req_match():
+def req_match(rheader=None):
     """
         Function to be called from controller functions to display all
         requests for a site as a tab.
@@ -3779,18 +3779,17 @@ def req_match():
 
     s3.actions = actions
 
-    if tablename == "org_office":
-        rheader = s3db.org_rheader
-    elif tablename == "org_facility":
-        rheader = s3db.org_facility_rheader
-    elif tablename == "inv_warehouse":
-        rheader = s3db.inv_rheader
-    elif tablename == "cr_shelter":
-        rheader = s3db.cr_shelter_rheader
-    elif tablename == "hms_hospital":
-        rheader = s3db.hms_hospital_rheader
-    else:
-        rheader = None
+    if rheader is None:
+        if tablename == "org_office":
+            rheader = s3db.org_rheader
+        elif tablename == "org_facility":
+            rheader = s3db.org_facility_rheader
+        elif tablename == "inv_warehouse":
+            rheader = s3db.inv_rheader
+        elif tablename == "cr_shelter":
+            rheader = s3db.cr_shelter_rheader
+        elif tablename == "hms_hospital":
+            rheader = s3db.hms_hospital_rheader
 
     s3.filter = (s3db.req_req.site_id != site_id)
     s3db.configure("req_req",
