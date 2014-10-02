@@ -2210,9 +2210,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
             prefix = component.prefix
             name = component.name
             tablename = component.tablename
-            table = component.table
 
             db = current.db
+            table = db[tablename]
+
             s3db = current.s3db
             auth = current.auth
 

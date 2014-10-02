@@ -1693,6 +1693,19 @@ def customise_pr_person_controller(**attr):
         if root_org == CVTL:
             settings.member.cv_tab = True
     elif root_org == VNRC:
+
+        s3db.add_components("hrm_human_resource",
+                            hrm_insurance = ({"name": "social_insurance",
+                                              "joinby": "human_resource_id",
+                                              "filterby": "type",
+                                              "filterfor": "SOCIAL",
+                                              },
+                                             {"name": "health_insurance",
+                                              "joinby": "human_resource_id",
+                                              "filterby": "type",
+                                              "filterfor": "HEALTH",
+                                              }))
+
         vnrc = True
         # Remove 'Commune' level for Addresses
         #gis = current.gis
@@ -1770,6 +1783,9 @@ def customise_pr_person_controller(**attr):
                     required = True,
                     branches = True,
                     )
+            if r.method == "record":
+                # Use default form (legacy)
+                s3db.clear_config("hrm_human_resource", "crud_form")
 
         if arcs:
             if not r.component:
@@ -1810,13 +1826,45 @@ def customise_pr_person_controller(**attr):
                 field.readable = field.writable = False
                 # Hide unwanted fields in human_resource
                 htable = s3db.hrm_human_resource
-                for fname in ["job_title_id", 
-                              "code", 
-                              "essential", 
+                for fname in ["job_title_id",
+                              "code",
+                              "essential",
                               "site_contact",
+                              "start_date",
+                              "end_date",
                               ]:
                     field = htable[fname]
                     field.readable = field.writable = False
+
+                if r.method == "record" and r.controller == "hrm":
+                    # Use custom form
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                    crud_fields = ["organisation_id",
+                                   "site_id",
+                                   "department_id",
+                                   "status",
+                                   # @todo: type of employment contract
+                                   # @todo: full time / part time
+                                   S3SQLInlineComponent("social_insurance",
+                                                        name="social",
+                                                        fields=["insurance_number",
+                                                                "insurer",
+                                                                ],
+                                                        default={"type": "SOCIAL"},
+                                                        multiple=False,
+                                                        ),
+                                   S3SQLInlineComponent("health_insurance",
+                                                        name="health",
+                                                        fields=["insurance_number",
+                                                                "provider",
+                                                                ],
+                                                        default={"type": "HEALTH"},
+                                                        multiple=False,
+                                                        ),
+                                   "comments",
+                                   ]
+                    s3db.configure("hrm_human_resource",
+                                   crud_form = S3SQLCustomForm(*crud_fields))
 
             elif component_name == "address":
                 settings.gis.building_name = False
@@ -1837,7 +1885,7 @@ def customise_pr_person_controller(**attr):
                                    }
                 from gluon.validators import IS_IN_SET
                 table.type.requires = IS_IN_SET(pr_id_type_opts, zero=None)
-                
+
                 if controller == "hrm":
                     # For staff, set default for ID document type and do not
                     # allow selection of other options
@@ -1846,7 +1894,7 @@ def customise_pr_person_controller(**attr):
                     hide_fields = ("description", "valid_until", "country_code", "ia_name")
                 else:
                     hide_fields = ("description",)
-                
+
                 # Hide unneeded fields
                 for fname in hide_fields:
                     field = table[fname]
@@ -1866,7 +1914,7 @@ def customise_pr_person_controller(**attr):
                 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
                 blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
                 field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
-                
+
             elif component_name == "salary":
                 # Don't use monthly amount field
                 field = s3db.hrm_salary.monthly_amount
