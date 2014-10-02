@@ -124,4 +124,21 @@ def transport_rheader(r, tabs=[]):
     rheader = S3ResourceHeader(rheader_fields, tabs)(r)
     return rheader
 
+# -----------------------------------------------------------------------------
+def incoming():
+    """
+        Incoming Shipments for Sites
+
+        Used from Requests rheader when looking at Transport Status
+    """
+
+    # @ToDo: Create this function!
+    return s3db.inv_incoming()
+
+# -----------------------------------------------------------------------------
+def req_match():
+    """ Match Requests """
+
+    return s3db.req_match(rheader=transport_rheader)
+
 # END =========================================================================

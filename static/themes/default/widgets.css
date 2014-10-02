@@ -270,9 +270,6 @@ textarea.richtext {
     font-weight: bold;
 }
 
-.controls {
-    white-space: pre;
-}
 .dt-export-options {
     float: right;
     padding-top: 5px;
