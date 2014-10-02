@@ -823,7 +823,8 @@ class GIS(object):
                 if parent.path:
                     path = parent.path
                 else:
-                    path = GIS.update_location_tree(dict(id=parent.id))
+                    path = GIS.update_location_tree(dict(id=parent.id,
+                                                         level=parent.level))
                 path_list = map(int, path.split("/"))
                 rows = db(table.id.belongs(path_list)).select(table.level,
                                                               table.name,
@@ -4401,49 +4402,95 @@ class GIS(object):
         except:
             table = current.s3db.gis_location
         spatial = current.deployment_settings.get_gis_spatialdb()
+        update_location_tree = GIS.update_location_tree
         wkt_centroid = GIS.wkt_centroid
 
-        def bounds_centroid_wkt(feature):
+        fields = (table.id,
+                  table.name,
+                  table.level,
+                  table.path,
+                  table.parent,
+                  table.L0,
+                  table.L1,
+                  table.L2,
+                  table.L3,
+                  table.L4,
+                  table.L5,
+                  table.lat,
+                  table.lon,
+                  table.wkt,
+                  table.inherited
+                  )
+
+        # ---------------------------------------------------------------------
+        def fixup(feature):
+            """
+                Fix all the issues with a Feature, assuming that
+                - the corrections are in the feature
+                - or they are Bounds / Centroid / WKT / the_geom issues
+            """
+
             form = Storage()
-            form.vars = feature
+            form.vars = form_vars = feature
             form.errors = Storage()
+            if not form_vars.get("wkt"):
+                # Point
+                form_vars.update(gis_feature_type="1")
+
+            # Calculate Bounds / Centroid / WKT / the_geom
             wkt_centroid(form)
-            form_vars = form.vars
-            if "lat_max" in form_vars:
+
+            if form.errors:
+                current.log.error("S3GIS: %s" % form.errors)
+            else:
                 wkt = form_vars.wkt
-                _vars = dict(gis_feature_type = form_vars.gis_feature_type,
-                             lat = form_vars.lat,
-                             lon = form_vars.lon,
-                             wkt = wkt,
-                             lat_max = form_vars.lat_max,
-                             lat_min = form_vars.lat_min,
-                             lon_min = form_vars.lon_min,
-                             lon_max = form_vars.lon_max)
-                if wkt:
-                    if not wkt.startswith("POI"):
-                        # Polygons aren't inherited
-                        _vars.update(inherited = False)
-                    if spatial:
-                        _vars.update(the_geom = wkt)
+                if wkt and not wkt.startswith("POI"):
+                    # Polygons aren't inherited
+                    form_vars.update(inherited = False)
+                if "update_record" in form_vars:
+                    # Must be a Row
+                    new_vars = {}
+                    table_fields = table.fields
+                    for v in form_vars:
+                        if v in table_fields:
+                            new_vars[v] = form_vars[v]
+                    form_vars = new_vars
+
                 try:
-                    db(table.id == feature.id).update(**_vars)
+                    db(table.id == feature.id).update(**form_vars)
                 except MemoryError:
                     current.log.error("S3GIS: Unable to set bounds & centroid for feature %s: MemoryError" % feature.id)
+
+        # ---------------------------------------------------------------------
+        def propagate(parent):
+            """
+                Propagate Lat/Lon down to any Features which inherit from this one
+            """
+
+            query = (table.parent == parent) & \
+                    (table.inherited == True)
+            rows = db(query).select(*fields)
+            for row in rows:
+                try:
+                    update_location_tree(row)
+                except RuntimeError:
+                    current.log.error("Cannot propagate inherited latlon to child %s of location ID %s: too much recursion" % \
+                        (row.id, parent))
+
 
         if not feature:
             # Do the whole database
             # Do in chunks to save memory and also do in correct order
-            fields = (table.id, table.name, table.gis_feature_type,
-                      table.L0, table.L1, table.L2, table.L3, table.L4,
-                      table.lat, table.lon, table.wkt, table.inherited,
-                      # Handle Countries which start with Bounds set, yet are Points
-                      table.lat_min, table.lon_min, table.lat_max, table.lon_max,
-                      table.path, table.parent)
-            update_location_tree = GIS.update_location_tree
+            all_fields = (table.id, table.name, table.gis_feature_type,
+                          table.L0, table.L1, table.L2, table.L3, table.L4,
+                          table.lat, table.lon, table.wkt, table.inherited,
+                          # Handle Countries which start with Bounds set, yet are Points
+                          table.lat_min, table.lon_min, table.lat_max, table.lon_max,
+                          table.path, table.parent)
             for level in ("L0", "L1", "L2", "L3", "L4", "L5", None):
                 query = (table.level == level) & (table.deleted == False)
                 try:
-                    features = db(query).select(*fields)
+                    features = db(query).select(*all_fields)
                 except MemoryError:
                     current.log.error("S3GIS: Unable to update Location Tree for level %s: MemoryError" % level)
                 else:
@@ -4454,9 +4501,9 @@ class GIS(object):
                             # Polygons aren't inherited
                             feature["inherited"] = False
                         update_location_tree(feature)
-                        # Also do the Bounds/Centroid/WKT
-                        bounds_centroid_wkt(feature)
+            # All Done!
             return
+
 
         # Single Feature
         id = str(feature["id"]) if "id" in feature else None
@@ -4465,66 +4512,89 @@ class GIS(object):
             raise ValueError
 
         # L0
-        name = feature.get("name", False)
         level = feature.get("level", False)
+        name = feature.get("name", False)
         path = feature.get("path", False)
-        L0 = feature.get("L0", False)
-        if level == "L0":
-            if name:
-                if path == id and L0 == name:
-                    # No action required
-                    return path
-                else:
-                    db(table.id == id).update(L0=name,
-                                              path=id)
-            else:
-                # Look this up
-                feature = db(table.id == id).select(table.name,
-                                                    table.path,
-                                                    table.L0,
-                                                    limitby=(0, 1)).first()
-                if feature:
-                    name = feature["name"]
-                    path = feature["path"]
-                    L0 = feature["L0"]
-                    if path == id and L0 == name:
-                        # No action required
-                        return path
-                    else:
-                        db(table.id == id).update(L0=name,
-                                                  path=id)
-            return id
-
-        # L1
-        parent = feature.get("parent", False)
-        L1 = feature.get("L1", False)
         lat = feature.get("lat", False)
         lon = feature.get("lon", False)
         wkt = feature.get("wkt", False)
-        inherited = feature.get("inherited", None)
-        if level == "L1":
-            if name is False or lat is False or lon is False or \
-               wkt is False or inherited is None or parent is False or \
-               path is False or L0 is False or L1 is False:
+        L0 = feature.get("L0", False)
+        if level == "L0":
+            if name is False or path is False or lat is False or lon is False or \
+               wkt is False or L0 is False:
                 # Get the whole feature
                 feature = db(table.id == id).select(table.id,
+                                                    table.name,
+                                                    table.path,
+                                                    table.lat,
+                                                    table.lon,
+                                                    table.wkt,
+                                                    table.L0,
+                                                    limitby=(0, 1)).first()
+                name = feature.name
+                path = feature.path
+                lat = feature.lat
+                lon = feature.lon
+                wkt = feature.wkt
+                L0 = feature.L0
+
+            if path != id or L0 != name or not wkt or lat is None:
+                # Fix everything up
+                path = id
+                if lat is False:
+                    lat = None
+                if lon is False:
+                    lon = None
+                fix_vars = dict(inherited = False,
+                                path = path,
+                                lat = lat,
+                                lon = lon,
+                                wkt = wkt or None,
+                                L0 = name,
+                                L1 = None,
+                                L2 = None,
+                                L3 = None,
+                                L4 = None,
+                                L5 = None,
+                                )
+                feature.update(**fix_vars)
+                fixup(feature)
+
+            # Ensure that any locations which inherit their latlon from this one get updated
+            propagate(id)
+
+            return path
+
+
+        fixup_required = False
+
+        # L1
+        inherited = feature.get("inherited", None)
+        parent = feature.get("parent", False)
+        L1 = feature.get("L1", False)
+        if level == "L1":
+            if inherited is None or name is False or parent is False or path is False or \
+               lat is False or lon is False or wkt is False or \
+               L0 is False or L1 is False:
+                # Get the whole feature
+                feature = db(table.id == id).select(table.id,
+                                                    table.inherited,
                                                     table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
                                                     table.lon,
                                                     table.wkt,
-                                                    table.inherited,
                                                     table.L0,
                                                     table.L1,
                                                     limitby=(0, 1)).first()
+                inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
                 path = feature.path
                 lat = feature.lat
                 lon = feature.lon
                 wkt = feature.wkt
-                inherited = feature.inherited
                 L0 = feature.L0
                 L1 = feature.L1
 
@@ -4543,123 +4613,67 @@ class GIS(object):
                 L0_lat = None
                 L0_lon = None
 
-            if path == _path and L1 == name and L0 == L0_name:
-                if inherited and lat == L0_lat and lon == L0_lon:
-                    if wkt:
-                        # No action required
-                        return path
-                    else:
-                        # Do the Bounds/Centroid/WKT
-                        feature.update(gis_feature_type="1")
-                        bounds_centroid_wkt(feature)
-                        return path
-                elif inherited or lat is None or lon is None:
-                    vars = dict(inherited=True,
-                                lat=L0_lat,
-                                lon=L0_lon,
-                                L2=None,
-                                L3=None,
-                                L4=None,
-                                L5=None,
+            if inherited or lat is None or lon is None:
+                fixup_required = True
+                inherited = True
+                lat = L0_lat
+                lon = L0_lon
+            elif path != _path or L0 != L0_name or L1 != name or not wkt:
+                fixup_required = True
+
+            if fixup_required:
+                # Fix everything up
+                if lat is False:
+                    lat = None
+                if lon is False:
+                    lon = None
+                fix_vars = dict(inherited = inherited,
+                                path = _path,
+                                lat = lat,
+                                lon = lon,
+                                wkt = wkt or None,
+                                L0 = L0_name,
+                                L1 = name,
+                                L2 = None,
+                                L3 = None,
+                                L4 = None,
+                                L5 = None,
                                 )
-                    db(table.id == id).update(**vars)
-                    # Also do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-            elif inherited and lat == L0_lat and lon == L0_lon:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=name,
-                            L2=None,
-                            L3=None,
-                            L4=None,
-                            L5=None,
-                            )
-                db(table.id == id).update(**vars)
-                if wkt:
-                    # No further action required
-                    return _path
-                else:
-                    # Do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-                    return _path
-            elif inherited or lat is None or lon is None:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=name,
-                            L2=None,
-                            L3=None,
-                            L4=None,
-                            L5=None,
-                            inherited=True,
-                            lat=L0_lat,
-                            lon=L0_lon,
-                            )
-                db(table.id == id).update(**vars)
-                # Also do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
-            else:
-                db(table.id == id).update(path=_path,
-                                          inherited=False,
-                                          L0=L0_name,
-                                          L1=name)
+                feature.update(**fix_vars)
+                fixup(feature)
+
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) & \
-                    (table.inherited == True)
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.level,
-                                    table.path,
-                                    table.parent,
-                                    table.L0,
-                                    table.L1,
-                                    table.L2,
-                                    table.L3,
-                                    table.L4,
-                                    table.lat,
-                                    table.lon,
-                                    table.wkt,
-                                    table.inherited)
-            update_location_tree = GIS.update_location_tree
-            for row in rows:
-                try:
-                    update_location_tree(row)
-                except RuntimeError:
-                    current.log.error("Cannot propagate inherited latlon to child %s of L1 location ID %s: too much recursion" % \
-                        (row.id, id))
+            propagate(id)
+
             return _path
+
 
         # L2
         L2 = feature.get("L2", False)
         if level == "L2":
-            if name is False or lat is False or lon is False or \
-               wkt is False or inherited is None or parent is False or \
-               path is False or L0 is False or L1 is False or L2 is False:
+            if inherited is None or name is False or parent is False or path is False or \
+               lat is False or lon is False or wkt is False or \
+               L0 is False or L1 is False or L2 is False:
                 # Get the whole feature
                 feature = db(table.id == id).select(table.id,
+                                                    table.inherited,
                                                     table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
                                                     table.lon,
                                                     table.wkt,
-                                                    table.inherited,
                                                     table.L0,
                                                     table.L1,
                                                     table.L2,
                                                     limitby=(0, 1)).first()
+                inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
                 path = feature.path
                 lat = feature.lat
                 lon = feature.lon
                 wkt = feature.wkt
-                inherited = feature.inherited
                 L0 = feature.L0
                 L1 = feature.L1
                 L2 = feature.L2
@@ -4701,125 +4715,68 @@ class GIS(object):
                 Lx_lat = None
                 Lx_lon = None
 
-            if path == _path and L2 == name and L0 == L0_name and \
-                                                L1 == L1_name:
-                if inherited and lat == Lx_lat and lon == Lx_lon:
-                    if wkt:
-                        # No action required
-                        return path
-                    else:
-                        # Do the Bounds/Centroid/WKT
-                        feature.update(gis_feature_type="1")
-                        bounds_centroid_wkt(feature)
-                        return path
-                elif inherited or lat is None or lon is None:
-                    vars = dict(inherited=True,
-                                lat=Lx_lat,
-                                lon=Lx_lon,
-                                L3=None,
-                                L4=None,
-                                L5=None,
+            if inherited or lat is None or lon is None:
+                fixup_required = True
+                inherited = True
+                lat = Lx_lat
+                lon = Lx_lon
+            elif path != _path or L0 != L0_name or L1 != L1_name or L2 != name or not wkt:
+                fixup_required = True
+
+            if fixup_required:
+                # Fix everything up
+                if lat is False:
+                    lat = None
+                if lon is False:
+                    lon = None
+                fix_vars = dict(inherited = inherited,
+                                path = _path,
+                                lat = lat,
+                                lon = lon,
+                                wkt = wkt or None,
+                                L0 = L0_name,
+                                L1 = L1_name,
+                                L2 = name,
+                                L3 = None,
+                                L4 = None,
+                                L5 = None,
                                 )
-                    db(table.id == id).update(**vars)
-                    # Also do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-            elif inherited and lat == Lx_lat and lon == Lx_lon:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=name,
-                            L3=None,
-                            L4=None,
-                            L5=None,
-                            )
-                db(table.id == id).update(**vars)
-                if wkt:
-                    # No further action required
-                    return _path
-                else:
-                    # Do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-                    return _path
-            elif inherited or lat is None or lon is None:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=name,
-                            L3=None,
-                            L4=None,
-                            L5=None,
-                            inherited=True,
-                            lat=Lx_lat,
-                            lon=Lx_lon,
-                            )
-                db(table.id == id).update(**vars)
-                # Also do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
-            else:
-                db(table.id == id).update(path=_path,
-                                          inherited=False,
-                                          L0=L0_name,
-                                          L1=L1_name,
-                                          L2=name)
+                feature.update(**fix_vars)
+                fixup(feature)
+
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) & \
-                    (table.inherited == True)
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.level,
-                                    table.path,
-                                    table.parent,
-                                    table.L0,
-                                    table.L1,
-                                    table.L2,
-                                    table.L3,
-                                    table.L4,
-                                    table.lat,
-                                    table.lon,
-                                    table.inherited)
-            update_location_tree = GIS.update_location_tree
-            for row in rows:
-                try:
-                    update_location_tree(row)
-                except RuntimeError:
-                    current.log.error("Cannot propagate inherited latlon to child %s of L2 location ID %s: too much recursion" % \
-                        (row.id, id))
+            propagate(id)
+
             return _path
+
 
         # L3
         L3 = feature.get("L3", False)
         if level == "L3":
-            if name is False or lat is False or lon is False or \
-               wkt is False or inherited is None or parent is False or \
-               path is False or L0 is False or L1 is False or L2 is False or \
-                                               L3 is False:
+            if inherited is None or name is False or parent is False or path is False or \
+               lat is False or lon is False or wkt is False or \
+               L0 is False or L1 is False or L2 is False or L3 is False:
                 # Get the whole feature
                 feature = db(table.id == id).select(table.id,
+                                                    table.inherited,
                                                     table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
                                                     table.lon,
                                                     table.wkt,
-                                                    table.inherited,
                                                     table.L0,
                                                     table.L1,
                                                     table.L2,
                                                     table.L3,
                                                     limitby=(0, 1)).first()
+                inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
                 path = feature.path
                 lat = feature.lat
                 lon = feature.lon
                 wkt = feature.wkt
-                inherited = feature.inherited
                 L0 = feature.L0
                 L1 = feature.L1
                 L2 = feature.L2
@@ -4829,11 +4786,12 @@ class GIS(object):
                 Lx = db(table.id == parent).select(table.id,
                                                    table.name,
                                                    table.level,
-                                                   table.L0,
-                                                   table.L1,
+                                                   table.parent,
                                                    table.path,
                                                    table.lat,
                                                    table.lon,
+                                                   table.L0,
+                                                   table.L1,
                                                    limitby=(0, 1)).first()
                 if Lx.level == "L2":
                     L0_name = Lx.L0
@@ -4844,7 +4802,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4864,7 +4822,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4893,126 +4851,69 @@ class GIS(object):
                 Lx_lat = None
                 Lx_lon = None
 
-            if path == _path and L3 == name and L0 == L0_name and \
-                                 L1 == L1_name and L2 == L2_name:
-                if inherited and lat == Lx_lat and lon == Lx_lon:
-                    if wkt:
-                        # No action required
-                        return path
-                    else:
-                        # Do the Bounds/Centroid/WKT
-                        feature.update(gis_feature_type="1")
-                        bounds_centroid_wkt(feature)
-                        return path
-                elif inherited or lat is None or lon is None:
-                    vars = dict(inherited=True,
-                                lat=Lx_lat,
-                                lon=Lx_lon,
-                                L4=None,
-                                L5=None,
+            if inherited or lat is None or lon is None:
+                fixup_required = True
+                inherited = True
+                lat = Lx_lat
+                lon = Lx_lon
+            elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != name or not wkt:
+                fixup_required = True
+
+            if fixup_required:
+                # Fix everything up
+                if lat is False:
+                    lat = None
+                if lon is False:
+                    lon = None
+                fix_vars = dict(inherited = inherited,
+                                path = _path,
+                                lat = lat,
+                                lon = lon,
+                                wkt = wkt or None,
+                                L0 = L0_name,
+                                L1 = L1_name,
+                                L2 = L2_name,
+                                L3 = name,
+                                L4 = None,
+                                L5 = None,
                                 )
-                    db(table.id == id).update(**vars)
-                    # Also do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-            elif inherited and lat == Lx_lat and lon == Lx_lon:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=L2_name,
-                            L3=name,
-                            )
-                db(table.id == id).update(**vars)
-                if wkt:
-                    # No further action required
-                    return _path
-                else:
-                    # Do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-                    return _path
-            elif inherited or lat is None or lon is None:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=L2_name,
-                            L3=name,
-                            L4=None,
-                            L5=None,
-                            inherited=True,
-                            lat=Lx_lat,
-                            lon=Lx_lon)
-                db(table.id == id).update(**vars)
-                # Also do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
-            else:
-                db(table.id == id).update(path=_path,
-                                          inherited=False,
-                                          L0=L0_name,
-                                          L1=L1_name,
-                                          L2=L2_name,
-                                          L3=name,
-                                          L4=None,
-                                          L5=None)
+                feature.update(**fix_vars)
+                fixup(feature)
+
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) & \
-                    (table.inherited == True)
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.level,
-                                    table.path,
-                                    table.parent,
-                                    table.L0,
-                                    table.L1,
-                                    table.L2,
-                                    table.L3,
-                                    table.L4,
-                                    table.lat,
-                                    table.lon,
-                                    table.wkt,
-                                    table.inherited)
-            update_location_tree = GIS.update_location_tree
-            for row in rows:
-                try:
-                    update_location_tree(row)
-                except RuntimeError:
-                    current.log.error("Cannot propagate inherited latlon to child %s of L3 location ID %s: too much recursion" % \
-                        (row.id, id))
+            propagate(id)
+
             return _path
+
 
         # L4
         L4 = feature.get("L4", False)
         if level == "L4":
-            if name is False or lat is False or lon is False or \
-               wkt is False or inherited is None or parent is False or \
-               path is False or L0 is False or L1 is False or L2 is False or \
-                                               L3 is False or L4 is False:
+            if inherited is None or name is False or parent is False or path is False or \
+               lat is False or lon is False or wkt is False or \
+               L0 is False or L1 is False or L2 is False or L3 is False or L4 is False:
                 # Get the whole feature
                 feature = db(table.id == id).select(table.id,
+                                                    table.inherited,
                                                     table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
                                                     table.lon,
                                                     table.wkt,
-                                                    table.inherited,
                                                     table.L0,
                                                     table.L1,
                                                     table.L2,
                                                     table.L3,
                                                     table.L4,
                                                     limitby=(0, 1)).first()
+                inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
                 path = feature.path
                 lat = feature.lat
                 lon = feature.lon
                 wkt = feature.wkt
-                inherited = feature.inherited
                 L0 = feature.L0
                 L1 = feature.L1
                 L2 = feature.L2
@@ -5023,12 +4924,13 @@ class GIS(object):
                 Lx = db(table.id == parent).select(table.id,
                                                    table.name,
                                                    table.level,
-                                                   table.L0,
-                                                   table.L1,
-                                                   table.L2,
+                                                   table.parent,
                                                    table.path,
                                                    table.lat,
                                                    table.lon,
+                                                   table.L0,
+                                                   table.L1,
+                                                   table.L2,
                                                    limitby=(0, 1)).first()
                 if Lx.level == "L3":
                     L0_name = Lx.L0
@@ -5036,12 +4938,11 @@ class GIS(object):
                     L2_name = Lx.L2
                     L3_name = Lx.name
                     _path = Lx.path
-                    # @ToDo: Cannot assume that all levels are filled
                     if _path and L0_name and L1_name and L2_name:
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5064,7 +4965,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5085,7 +4986,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5101,7 +5002,7 @@ class GIS(object):
                     L2_name = None
                     L3_name = None
                 else:
-                    current.log.error("Parent of L4 Location ID %s has invalid level: %s is %s" % \
+                    current.log.error("Parent of L3 Location ID %s has invalid level: %s is %s" % \
                                 (id, parent, Lx.level))
                     #raise ValueError
                     return "%s/%s" % (parent, id)
@@ -5116,116 +5017,56 @@ class GIS(object):
                 Lx_lat = None
                 Lx_lon = None
 
-            if path == _path and L4 == name and L0 == L0_name and \
-                                 L1 == L1_name and L2 == L2_name and \
-                                 L3 == L3_name:
-                if inherited and lat == Lx_lat and lon == Lx_lon:
-                    if wkt:
-                        # No action required
-                        return path
-                    else:
-                        # Do the Bounds/Centroid/WKT
-                        feature.update(gis_feature_type="1")
-                        bounds_centroid_wkt(feature)
-                        return path
-                elif inherited or lat is None or lon is None:
-                    vars = dict(inherited=True,
-                                lat=Lx_lat,
-                                lon=Lx_lon,
-                                L5=None,
+            if inherited or lat is None or lon is None:
+                fixup_required = True
+                inherited = True
+                lat = Lx_lat
+                lon = Lx_lon
+            elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != name or not wkt:
+                fixup_required = True
+
+            if fixup_required:
+                # Fix everything up
+                if lat is False:
+                    lat = None
+                if lon is False:
+                    lon = None
+                fix_vars = dict(inherited = inherited,
+                                path = _path,
+                                lat = lat,
+                                lon = lon,
+                                wkt = wkt or None,
+                                L0 = L0_name,
+                                L1 = L1_name,
+                                L2 = L2_name,
+                                L3 = L3_name,
+                                L4 = name,
+                                L5 = None,
                                 )
-                    db(table.id == id).update(**vars)
-                    # Also do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-            elif inherited and lat == Lx_lat and lon == Lx_lon:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=L2_name,
-                            L3=L3_name,
-                            L4=name,
-                            L5=None,
-                            )
-                db(table.id == id).update(**vars)
-                if wkt:
-                    # No further action required
-                    return _path
-                else:
-                    # Do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-                    return _path
-            elif inherited or lat is None or lon is None:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=L2_name,
-                            L3=L3_name,
-                            L4=name,
-                            L5=None,
-                            inherited=True,
-                            lat=Lx_lat,
-                            lon=Lx_lon)
-                db(table.id == id).update(**vars)
-                # Also do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
-            else:
-                db(table.id == id).update(path=_path,
-                                          inherited=False,
-                                          L0=L0_name,
-                                          L1=L1_name,
-                                          L2=L2_name,
-                                          L3=L3_name,
-                                          L4=name,
-                                          L5=None)
+                feature.update(**fix_vars)
+                fixup(feature)
+
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) & \
-                    (table.inherited == True)
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.level,
-                                    table.path,
-                                    table.parent,
-                                    table.L0,
-                                    table.L1,
-                                    table.L2,
-                                    table.L3,
-                                    table.L4,
-                                    table.lat,
-                                    table.lon,
-                                    table.wkt,
-                                    table.inherited)
-            update_location_tree = GIS.update_location_tree
-            for row in rows:
-                try:
-                    update_location_tree(row)
-                except RuntimeError:
-                    current.log.error("Cannot propagate inherited latlon to child %s of L4 location ID %s: too much recursion" % \
-                        (row.id, id))
+            propagate(id)
+
             return _path
+
 
         # L5
         L5 = feature.get("L5", False)
         if level == "L5":
-            if name is False or lat is False or lon is False or \
-               wkt is False or inherited is None or parent is False or \
-               path is False or L0 is False or L1 is False or L2 is False or \
-                                               L3 is False or L4 is False or \
-                                               L5 is False:
+            if inherited is None or name is False or parent is False or path is False or \
+               lat is False or lon is False or wkt is False or \
+               L0 is False or L1 is False or L2 is False or L3 is False or L4 is False or L5 is False:
                 # Get the whole feature
                 feature = db(table.id == id).select(table.id,
+                                                    table.inherited,
                                                     table.name,
                                                     table.parent,
                                                     table.path,
                                                     table.lat,
                                                     table.lon,
                                                     table.wkt,
-                                                    table.inherited,
                                                     table.L0,
                                                     table.L1,
                                                     table.L2,
@@ -5233,13 +5074,13 @@ class GIS(object):
                                                     table.L4,
                                                     table.L5,
                                                     limitby=(0, 1)).first()
+                inherited = feature.inherited
                 name = feature.name
                 parent = feature.parent
                 path = feature.path
                 lat = feature.lat
                 lon = feature.lon
                 wkt = feature.wkt
-                inherited = feature.inherited
                 L0 = feature.L0
                 L1 = feature.L1
                 L2 = feature.L2
@@ -5251,13 +5092,14 @@ class GIS(object):
                 Lx = db(table.id == parent).select(table.id,
                                                    table.name,
                                                    table.level,
+                                                   table.parent,
+                                                   table.path,
+                                                   table.lat,
+                                                   table.lon,
                                                    table.L0,
                                                    table.L1,
                                                    table.L2,
                                                    table.L3,
-                                                   table.path,
-                                                   table.lat,
-                                                   table.lon,
                                                    limitby=(0, 1)).first()
                 if Lx.level == "L4":
                     L0_name = Lx.L0
@@ -5270,7 +5112,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5296,7 +5138,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5320,7 +5162,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5342,7 +5184,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = GIS.update_location_tree(Lx)
+                        _path = update_location_tree(Lx)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5359,7 +5201,7 @@ class GIS(object):
                     L3_name = None
                     L4_name = None
                 else:
-                    current.log.error("Parent of L5 Location ID %s has invalid level: %s is %s" % \
+                    current.log.error("Parent of L3 Location ID %s has invalid level: %s is %s" % \
                                 (id, parent, Lx.level))
                     #raise ValueError
                     return "%s/%s" % (parent, id)
@@ -5375,115 +5217,56 @@ class GIS(object):
                 Lx_lat = None
                 Lx_lon = None
 
-            if path == _path and L5 == name and L0 == L0_name and \
-                                 L1 == L1_name and L2 == L2_name and \
-                                 L3 == L3_name and L4 == L4_name:
-                if inherited and lat == Lx_lat and lon == Lx_lon:
-                    if wkt:
-                        # No action required
-                        return path
-                    else:
-                        # Do the Bounds/Centroid/WKT
-                        feature.update(gis_feature_type="1")
-                        bounds_centroid_wkt(feature)
-                        return path
-                elif inherited or lat is None or lon is None:
-                    vars = dict(inherited=True,
-                                lat=Lx_lat,
-                                lon=Lx_lon,
+            if inherited or lat is None or lon is None:
+                fixup_required = True
+                inherited = True
+                lat = Lx_lat
+                lon = Lx_lon
+            elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != L4_name or L5 != name or not wkt:
+                fixup_required = True
+
+            if fixup_required:
+                # Fix everything up
+                if lat is False:
+                    lat = None
+                if lon is False:
+                    lon = None
+                fix_vars = dict(inherited = inherited,
+                                path = _path,
+                                lat = lat,
+                                lon = lon,
+                                wkt = wkt or None,
+                                L0 = L0_name,
+                                L1 = L1_name,
+                                L2 = L2_name,
+                                L3 = L3_name,
+                                L4 = L4_name,
+                                L5 = name,
                                 )
-                    db(table.id == id).update(**vars)
-                    # Also do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-            elif inherited and lat == Lx_lat and lon == Lx_lon:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=L2_name,
-                            L3=L3_name,
-                            L4=L4_name,
-                            L5=name,
-                            )
-                db(table.id == id).update(**vars)
-                if wkt:
-                    # No further action required
-                    return _path
-                else:
-                    # Do the Bounds/Centroid/WKT
-                    vars.update(gis_feature_type="1")
-                    feature.update(**vars)
-                    bounds_centroid_wkt(feature)
-                    return _path
-            elif inherited or lat is None or lon is None:
-                vars = dict(path=_path,
-                            L0=L0_name,
-                            L1=L1_name,
-                            L2=L2_name,
-                            L3=L3_name,
-                            L4=L4_name,
-                            L5=name,
-                            inherited=True,
-                            lat=Lx_lat,
-                            lon=Lx_lon)
-                db(table.id == id).update(**vars)
-                # Also do the Bounds/Centroid/WKT
-                vars.update(gis_feature_type="1")
-                feature.update(**vars)
-                bounds_centroid_wkt(feature)
-            else:
-                db(table.id == id).update(path=_path,
-                                          inherited=False,
-                                          L0=L0_name,
-                                          L1=L1_name,
-                                          L2=L2_name,
-                                          L3=L3_name,
-                                          L4=L4_name,
-                                          L5=name)
+                feature.update(**fix_vars)
+                fixup(feature)
+
             # Ensure that any locations which inherit their latlon from this one get updated
-            query = (table.parent == id) & \
-                    (table.inherited == True)
-            rows = db(query).select(table.id,
-                                    table.name,
-                                    table.level,
-                                    table.path,
-                                    table.parent,
-                                    table.L0,
-                                    table.L1,
-                                    table.L2,
-                                    table.L3,
-                                    table.L4,
-                                    table.L5,
-                                    table.lat,
-                                    table.lon,
-                                    table.wkt,
-                                    table.inherited)
-            update_location_tree = GIS.update_location_tree
-            for row in rows:
-                try:
-                    update_location_tree(row)
-                except RuntimeError:
-                    current.log.error("Cannot propagate inherited latlon to child %s of L5 location ID %s: too much recursion" % \
-                        (row.id, id))
+            propagate(id)
+
             return _path
 
+
         # Specific Location
-        # - or unspecified (which we should avoid happening)
-        if name is False or lat is False or lon is False or wkt is False or \
-           inherited is None or parent is False or path is False or \
-           L0 is False or L1 is False or L2 is False or L3 is False or \
-                                         L4 is False or L5 is False:
+        # - or unspecified (which we should avoid happening as inefficient)
+        if inherited is None or level is False or name is False or parent is False or path is False or \
+           lat is False or lon is False or wkt is False or \
+           L0 is False or L1 is False or L2 is False or L3 is False or L4 is False or L5 is False:
             # Get the whole feature
             feature = db(table.id == id).select(table.id,
-                                                table.name,
+                                                table.inherited,
                                                 table.level,
+                                                table.name,
                                                 table.parent,
                                                 table.path,
                                                 table.lat,
                                                 table.lon,
                                                 table.wkt,
-                                                table.inherited,
                                                 table.L0,
                                                 table.L1,
                                                 table.L2,
@@ -5491,14 +5274,14 @@ class GIS(object):
                                                 table.L4,
                                                 table.L5,
                                                 limitby=(0, 1)).first()
-            name = feature.name
+            inherited = feature.inherited
             level = feature.level
+            name = feature.name
             parent = feature.parent
             path = feature.path
             lat = feature.lat
             lon = feature.lon
             wkt = feature.wkt
-            inherited = feature.inherited
             L0 = feature.L0
             L1 = feature.L1
             L2 = feature.L2
@@ -5506,18 +5289,26 @@ class GIS(object):
             L4 = feature.L4
             L5 = feature.L5
 
+        L0_name = name if level == "L0" else None
+        L1_name = name if level == "L1" else None
+        L2_name = name if level == "L2" else None
+        L3_name = name if level == "L3" else None
+        L4_name = name if level == "L4" else None
+        L5_name = name if level == "L5" else None
+
         if parent:
             Lx = db(table.id == parent).select(table.id,
                                                table.name,
                                                table.level,
+                                               table.parent,
+                                               table.path,
+                                               table.lat,
+                                               table.lon,
                                                table.L0,
                                                table.L1,
                                                table.L2,
                                                table.L3,
                                                table.L4,
-                                               table.path,
-                                               table.lat,
-                                               table.lon,
                                                limitby=(0, 1)).first()
             if Lx.level == "L5":
                 L0_name = Lx.L0
@@ -5529,10 +5320,9 @@ class GIS(object):
                 _path = Lx.path
                 if _path and L0_name and L1_name and L2_name and L3_name and L4_name:
                     _path = "%s/%s" % (_path, id)
-
                 else:
                     # This feature needs to be updated
-                    _path = GIS.update_location_tree(Lx)
+                    _path = update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5542,7 +5332,8 @@ class GIS(object):
                                                        table.L4,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)).first()
+                                                       limitby=(0, 1)
+                                                       ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
                     L2_name = Lx.L2
@@ -5554,13 +5345,12 @@ class GIS(object):
                 L2_name = Lx.L2
                 L3_name = Lx.L3
                 L4_name = Lx.name
-                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name and L1_name and L2_name and L3_name:
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = GIS.update_location_tree(Lx)
+                    _path = update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5569,7 +5359,8 @@ class GIS(object):
                                                        table.L3,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)).first()
+                                                       limitby=(0, 1)
+                                                       ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
                     L2_name = Lx.L2
@@ -5579,14 +5370,12 @@ class GIS(object):
                 L1_name = Lx.L1
                 L2_name = Lx.L2
                 L3_name = Lx.name
-                L4_name = name if level == "L4" else None
-                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name and L1_name and L2_name:
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = GIS.update_location_tree(Lx)
+                    _path = update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5594,7 +5383,8 @@ class GIS(object):
                                                        table.L2,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)).first()
+                                                       limitby=(0, 1)
+                                                       ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
                     L2_name = Lx.L2
@@ -5602,132 +5392,85 @@ class GIS(object):
                 L0_name = Lx.L0
                 L1_name = Lx.L1
                 L2_name = Lx.name
-                L3_name = name if level == "L3" else None
-                L4_name = name if level == "L4" else None
-                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name and L1_name:
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = GIS.update_location_tree(Lx)
+                    _path = update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
                                                        table.L1,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)).first()
+                                                       limitby=(0, 1)
+                                                       ).first()
                     L0_name = Lx.L0
                     L1_name = Lx.L1
             elif Lx.level == "L1":
                 L0_name = Lx.L0
                 L1_name = Lx.name
-                L2_name = name if level == "L2" else None
-                L3_name = name if level == "L3" else None
-                L4_name = name if level == "L4" else None
-                L5_name = name if level == "L5" else None
                 _path = Lx.path
                 if _path and L0_name:
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = GIS.update_location_tree(Lx)
+                    _path = update_location_tree(Lx)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
                                                        table.lat,
                                                        table.lon,
-                                                       limitby=(0, 1)).first()
+                                                       limitby=(0, 1)
+                                                       ).first()
                     L0_name = Lx.L0
             elif Lx.level == "L0":
                 _path = "%s/%s" % (parent, id)
                 L0_name = Lx.name
-                L1_name = name if level == "L1" else None
-                L2_name = name if level == "L2" else None
-                L3_name = name if level == "L3" else None
-                L4_name = name if level == "L4" else None
-                L5_name = name if level == "L5" else None
             else:
+                current.log.error("Parent of L3 Location ID %s has invalid level: %s is %s" % \
+                            (id, parent, Lx.level))
                 #raise ValueError
-                return id
+                return "%s/%s" % (parent, id)
             Lx_lat = Lx.lat
             Lx_lon = Lx.lon
         else:
             _path = id
-            L0_name = name if level == "L0" else None
-            L1_name = name if level == "L1" else None
-            L2_name = name if level == "L2" else None
-            L3_name = name if level == "L3" else None
-            L4_name = name if level == "L4" else None
-            L5_name = name if level == "L5" else None
             Lx_lat = None
             Lx_lon = None
 
-        if path == _path and L0 == L0_name and \
-                             L1 == L1_name and L2 == L2_name and \
-                             L3 == L3_name and L4 == L4_name and \
-                             L5 == L5_name:
-            if inherited and lat == Lx_lat and lon == Lx_lon:
-                if wkt:
-                    # No action required
-                    return path
-                else:
-                    # Do the Bounds/Centroid/WKT (below)
-                    vars = dict()
+        if inherited or lat is None or lon is None:
+            fixup_required = True
+            inherited = True
+            lat = Lx_lat
+            lon = Lx_lon
+        elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != L4_name or L5 != L5_name or not wkt:
+            fixup_required = True
 
-            elif inherited or lat is None or lon is None:
-                vars = dict(inherited=True,
-                            lat=Lx_lat,
-                            lon=Lx_lon,
+        if fixup_required:
+            # Fix everything up
+            if lat is False:
+                lat = None
+            if lon is False:
+                lon = None
+            fix_vars = dict(inherited = inherited,
+                            path = _path,
+                            lat = lat,
+                            lon = lon,
+                            wkt = wkt or None,
+                            L0 = L0_name,
+                            L1 = L1_name,
+                            L2 = L2_name,
+                            L3 = L3_name,
+                            L4 = L4_name,
+                            L5 = L5_name,
                             )
-                db(table.id == id).update(**vars)
-            else:
-                # Do the Bounds/Centroid/WKT (below)
-                vars = dict()
+            feature.update(**fix_vars)
+            fixup(feature)
 
-        elif inherited and lat == Lx_lat and lon == Lx_lon:
-            vars = dict(path=_path,
-                        L0=L0_name,
-                        L1=L1_name,
-                        L2=L2_name,
-                        L3=L3_name,
-                        L4=L4_name,
-                        L5=L5_name,
-                        )
-            db(table.id == id).update(**vars)
-
-        elif inherited or lat is None or lon is None:
-            vars = dict(path=_path,
-                        L0=L0_name,
-                        L1=L1_name,
-                        L2=L2_name,
-                        L3=L3_name,
-                        L4=L4_name,
-                        L5=L5_name,
-                        inherited=True,
-                        lat=Lx_lat,
-                        lon=Lx_lon
-                        )
-            db(table.id == id).update(**vars)
-        else:
-            # We have a Lat & Lon
-            vars = dict(path=_path,
-                        inherited=False,
-                        L0=L0_name,
-                        L1=L1_name,
-                        L2=L2_name,
-                        L3=L3_name,
-                        L4=L4_name,
-                        L5=L5_name,
-                        )
-            db(table.id == id).update(**vars)
-
-        # Also do the Bounds/Centroid/WKT
-        if not wkt or wkt.startswith("POI"):
-            vars.update(gis_feature_type="1")
-        feature.update(**vars)
-        bounds_centroid_wkt(feature)
+        # Ensure that any locations which inherit their latlon from this one get updated
+        propagate(id)
 
         return _path
 
@@ -5741,7 +5484,6 @@ class GIS(object):
             Else if a LonLat is defined: calculate the WKT for the Point.
         """
 
-        messages = current.messages
         form_vars = form.vars
 
         if form_vars.get("gis_feature_type", None) == "1":
@@ -5757,9 +5499,9 @@ class GIS(object):
                 return
             elif lat is None or lat == "":
                 # Can't just have lon without lat
-                form.errors["lat"] = messages.lat_empty
+                form.errors["lat"] = current.messages.lat_empty
             elif lon is None or lon == "":
-                form.errors["lon"] = messages.lon_empty
+                form.errors["lon"] = current.messages.lon_empty
             else:
                 form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
                 radius = form_vars.get("radius", None)
@@ -5791,8 +5533,8 @@ class GIS(object):
                     shape = wkt_loads(linestring)
                     form_vars.wkt = linestring
                 except:
-                    form.errors["wkt"] = messages.invalid_wkt
-                return
+                    form.errors["wkt"] = current.messages.invalid_wkt
+                    return
             gis_feature_type = shape.type
             if gis_feature_type == "Point":
                 form_vars.gis_feature_type = 1
@@ -5822,7 +5564,7 @@ class GIS(object):
                     form_vars.lon_max = bounds[2]
                     form_vars.lat_max = bounds[3]
             except:
-                form.errors.gis_feature_type = messages.centroid_error
+                form.errors.gis_feature_type = current.messages.centroid_error
 
         elif (form_vars.lon is None and form_vars.lat is None) or \
              (form_vars.lon == "" and form_vars.lat == ""):
@@ -5835,9 +5577,9 @@ class GIS(object):
             # Point
             form_vars.gis_feature_type = "1"
             if form_vars.lat is None or form_vars.lat == "":
-                form.errors["lat"] = messages.lat_empty
+                form.errors["lat"] = current.messages.lat_empty
             elif form_vars.lon is None or form_vars.lon == "":
-                form.errors["lon"] = messages.lon_empty
+                form.errors["lon"] = current.messages.lon_empty
             else:
                 form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
                 if "lon_min" not in form_vars or form_vars.lon_min is None:
