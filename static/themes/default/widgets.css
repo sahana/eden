@@ -1066,6 +1066,12 @@ li input + a {
 #comments div.comment-text li {
     padding: 0;
 }
+#comments div.comment-body {
+    white-space: normal;
+}
+#comments div.comment-body p {
+    margin-left: 25px;
+}
 /* Over-ride Ext! */
 #comments em {
     font-style: italic;
