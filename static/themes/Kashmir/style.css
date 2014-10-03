@@ -501,9 +501,9 @@ div.tabs span.tab_other a:hover {
   font-size: 0.75rem;
 }
 
-table.dataTable th, table.dataTable td {
+table.dataTable thead th, table.dataTable th, table.dataTable td {
   border: 1px solid #cccccc;
-  padding: 0.7em 0.7em 0.7em 0.5em;
+  padding: 0.2em 1.5em 0.2em 0.5em;
 }
 table.dataTable thead th, table.dataTable thead td {
   background-color: #ffffff;

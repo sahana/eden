@@ -98,6 +98,34 @@
 .pt-table-contents .pt-table .pt-row-total {
   border-left: 2px solid #ccc;
 }
+.pt-table-contents .pt-table .pt-cell-value {
+  float: left;
+}
+.pt-table-contents .pt-table .pt-cell-value li {
+  font-size: 0.8rem;
+}
+.pt-table-contents .pt-table .pt-cell-records {
+  clear: left;
+}
+.pt-table-contents .pt-table td {
+  min-width: 60px;
+  padding-right: 16px;
+  white-space: nowrap;
+}
+.pt-table-contents .pt-table td .pt-cell-zoom {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  float: right;
+  margin-left: 5px;
+  background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
+}
+.pt-table-contents .pt-table td .pt-cell-zoom.opened {
+  background-image: url(../../img/silk/magnifier_zoom_out.png);
+}
+.pt-table-contents .pt-table tfoot {
+  font-style: italic;
+}
 
 /* Throbber */
 .pt-throbber {
