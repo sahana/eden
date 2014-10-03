@@ -53,6 +53,10 @@
          Emergency Contact Name.........optional.....pr_contact_emergency name
          Emergency Contact Relationship.optional.....pr_contact_emergency relationship
          Emergency Contact Phone........optional.....pr_contact_emergency phone
+         Social Insurance Number........optional.....hrm_insurance.insurance_number
+         Social Insurance Place.........optional.....hrm_insurance.insurer
+         Health Insurance Number........optional.....hrm_insurance.insurance_number
+         Health Care Provider...........optional.....hrm_insurance.provider
          Home Postcode..................optional.....person home address postcode
          Home Lat.......................optional.....person home address latitude
          Home Lon.......................optional.....person home address longitude
@@ -103,6 +107,7 @@
 
     *********************************************************************** -->
     <xsl:import href="salary.xsl"/>
+    <xsl:import href="insurance.xsl"/>
 
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
@@ -881,6 +886,9 @@
                     </xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
+
+            <!-- Insurance -->
+            <xsl:call-template name="Insurance"/>
 
             <!-- Volunteer Details -->
             <xsl:if test="col[@field='Active'] = 'true'">
