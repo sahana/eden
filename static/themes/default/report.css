@@ -79,6 +79,11 @@
   /* override jQuery.dataTables.css */
   border-bottom: 0;
 }
+.pt-table-contents .pt-table tr.pt-totals-row th.pt-totals-header {
+  /* override jQuery.dataTables.css */
+  border-bottom: 1px solid #ccc;
+  border-top: 2px solid #ccc;
+}
 .pt-table-contents .pt-table .pt-totals-header,
 .pt-table-contents .pt-table .pt-total,
 .pt-table-contents .pt-table .pt-row-total,
