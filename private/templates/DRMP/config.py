@@ -107,6 +107,7 @@ settings.auth.realm_entity = drmp_realm_entity
 settings.base.theme = "DRMP"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+settings.ui.filter_formstyle = "table_inline"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
