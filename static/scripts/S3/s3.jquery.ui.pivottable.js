@@ -813,7 +813,7 @@
 
                 reportChart.pie.dispatch.on('elementMouseover', onhoverTooltip)
                                         .on('elementMouseout', function(e) {
-                    $('.pt-chart-tooltip').remove();
+                    $('.pt-tooltip').remove();
                     pt.chartOptions.currentDataIndex = null;
                     pt.chartOptions.currentSeriesIndex = null;
                 });
@@ -1177,7 +1177,7 @@
          */
         _renderChartTooltip: function(x, y, contents) {
 
-            $('<div class="pt-chart-tooltip">' + contents + '</div>').css({
+            $('<div class="pt-tooltip">' + contents + '</div>').css({
                 position: 'absolute',
                 display: 'none',
                 top: y - 50,
@@ -1197,7 +1197,7 @@
          * Remove all onhover-tooltips for chart data points
          */
         _removeChartTooltip: function() {
-            $('.pt-chart-tooltip').remove();
+            $('.pt-tooltip').remove();
             this.chartOptions.currentDataIndex = null;
             this.chartOptions.currentSeriesIndex = null;
         },
