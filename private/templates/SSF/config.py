@@ -25,6 +25,7 @@ settings.base.prepopulate = ("SSF", "default/users")
 settings.base.theme = "SSF"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+settings.ui.filter_formstyle = "table_inline"
 
 # Should users be allowed to register themselves?
 settings.security.self_registration = True
