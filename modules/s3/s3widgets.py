@@ -3855,7 +3855,6 @@ class S3LocationSelectorWidget2(FormWidget):
 
         Limitations:
         * Doesn't support variable Levels by Country
-        * Doesn't support non-strict hierarchies
         * Doesn't allow creation of new Lx Locations
         * Doesn't allow selection of existing specific Locations
         * Doesn't support manual entry of LatLons
@@ -4399,6 +4398,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # Build initial location_dict
         # Read all visible levels
+        # NB (level != None) is to handle Missing Levels
         if "L0" in levels:
             query = (gtable.level == "L0")
             if len(countries):
@@ -4407,64 +4407,64 @@ class S3LocationSelectorWidget2(FormWidget):
                           (ttable.value.belongs(countries)) & \
                           (ttable.location_id == gtable.id))
             if L0 and "L1" in levels:
-                query |= (gtable.level == "L1") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L0)
             if L1 and "L2" in levels:
-                query |= (gtable.level == "L2") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L1)
             if L2 and "L3" in levels:
-                query |= (gtable.level == "L3") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L0 and "L1" in levels:
-            query = (gtable.level == "L1") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L0)
             if L1 and "L2" in levels:
-                query |= (gtable.level == "L2") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L1)
             if L2 and "L3" in levels:
-                query |= (gtable.level == "L3") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L1 and "L2" in levels:
-            query = (gtable.level == "L2") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L1)
             if L2 and "L3" in levels:
-                query |= (gtable.level == "L3") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L2 and "L3" in levels:
-            query = (gtable.level == "L3") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L3 and "L4" in levels:
-            query = (gtable.level == "L4") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L4 and "L5" in levels:
-            query = (gtable.level == "L5") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L4)
 
         query &= (gtable.deleted == False)
@@ -4597,21 +4597,21 @@ class S3LocationSelectorWidget2(FormWidget):
             use_callback = False
 
         specific = values["specific"]
-        args = [L0]
+        # Add only required args
         if specific:
-            # We need to provide all args
-            args += [L1, L2, L3, L4, L5, specific]
+            args = [L0, L1, L2, L3, L4, L5, specific]
+        elif L5:
+            args = [L0, L1, L2, L3, L4, L5]
+        elif L4:
+            args = [L0, L1, L2, L3, L4]
+        elif L3:
+            args = [L0, L1, L2, L3]
+        elif L2:
+            args = [L0, L1, L2]
         elif L1:
-            # Add only required args
-            args.append(L1)
-            if L2:
-                args.append(L2)
-                if L3:
-                    args.append(L3)
-                    if L4:
-                        args.append(L4)
-                        if L5:
-                            args.append(L5)
+            args = [L0, L1]
+        else:
+            args = [L0]
 
         args = [str(arg) for arg in args]
         args = ''','''.join(args)

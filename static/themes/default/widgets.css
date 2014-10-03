@@ -1387,6 +1387,11 @@ td .icon {
     margin-top: 0;
 }
 
+/* S3LocationSelectorWidget2 */
+option.missing {
+    background-color: yellow;
+}
+
 .resizable-textarea .grippie {
     /*-moz-border-bottom-colors: none;
     -moz-border-image: none;
