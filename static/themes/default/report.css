@@ -75,6 +75,24 @@
 .pt-table-contents .pt-table {
   overflow: auto;
 }
+.pt-table-contents .pt-table th {
+  /* override jQuery.dataTables.css */
+  border-bottom: 0;
+}
+.pt-table-contents .pt-table .pt-totals-header,
+.pt-table-contents .pt-table .pt-total,
+.pt-table-contents .pt-table .pt-row-total,
+.pt-table-contents .pt-table .pt-col-total {
+  font-weight: bold;
+}
+.pt-table-contents .pt-table .pt-total,
+.pt-table-contents .pt-table .pt-col-total {
+  border-top: 2px solid #ccc;
+}
+.pt-table-contents .pt-table .pt-total,
+.pt-table-contents .pt-table .pt-row-total {
+  border-left: 2px solid #ccc;
+}
 
 /* Throbber */
 .pt-throbber {

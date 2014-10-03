@@ -243,31 +243,15 @@ textarea.richtext {
     border-bottom: 1px solid black;
 }
 
-#table-container th,
+.dataTable th,
 .fixedHeader th {
     text-align: center;
     border: 1px solid #ccc;
 }
-#table-container th.rtotal {
-    border-left: 2px solid #aaa;
-}
-#table-container tr.even td {
+.dataTable tr.even td,
+.dataTable tr.odd td {
     border: 1px solid #ccc;
     padding: 4px 10px;
-}
-#table-container tr.odd td {
-    border: 1px solid #ccc;
-    padding: 4px 10px;
-}
-#table-container tr.odd td.rtotal,
-#table-container tr.even td.rtotal {
-    border-left: 2px solid #aaa;
-}
-#table-container tr.totals_row {
-    border-top: 2px solid #aaa;
-}
-#table-container td.totals_header {
-    font-weight: bold;
 }
 
 .dt-export-options {
