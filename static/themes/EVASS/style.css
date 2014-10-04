@@ -226,6 +226,7 @@ div.tabs {
   padding: 0.5em 0;
   text-align: left;
   width: 100%;
+  line-height: 1em;
 }
 div.tabs span {
   float: left;
