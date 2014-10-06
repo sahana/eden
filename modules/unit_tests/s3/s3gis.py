@@ -170,8 +170,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 26.969696969696972)
-        self.assertEqual(record.lon, 25.454545454545453)
+        self.assertAlmostEqual(record.lat, 26.969696969696972, 13)
+        self.assertAlmostEqual(record.lon, 25.454545454545453, 13)
         self.assertEqual(record.lat_min, 10)
         self.assertEqual(record.lat_max, 40)
         self.assertEqual(record.lon_min, 10)
@@ -222,8 +222,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 26.675741710296684)
-        self.assertEqual(record.lon, 25.59232111692845)
+        self.assertAlmostEqual(record.lat, 26.675741710296684, 13)
+        self.assertAlmostEqual(record.lon, 25.59232111692845, 13)
         self.assertEqual(record.lat_min, 11)
         self.assertEqual(record.lat_max, 39)
         self.assertEqual(record.lon_min, 11)
@@ -276,8 +276,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 26.37723577235772)
-        self.assertEqual(record.lon, 25.73008130081301)
+        self.assertAlmostEqual(record.lat, 26.37723577235772, 13)
+        self.assertAlmostEqual(record.lon, 25.73008130081301, 13)
         self.assertEqual(record.lat_min, 12)
         self.assertEqual(record.lat_max, 38)
         self.assertEqual(record.lon_min, 12)
@@ -332,8 +332,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 26.072901678657075)
-        self.assertEqual(record.lon, 25.867625899280576)
+        self.assertAlmostEqual(record.lat, 26.072901678657075, 13)
+        self.assertAlmostEqual(record.lon, 25.867625899280576, 13)
         self.assertEqual(record.lat_min, 13)
         self.assertEqual(record.lat_max, 37)
         self.assertEqual(record.lon_min, 13)
@@ -390,8 +390,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 25.760919540229885)
-        self.assertEqual(record.lon, 26.004597701149425)
+        self.assertAlmostEqual(record.lat, 25.760919540229885, 13)
+        self.assertAlmostEqual(record.lon, 26.004597701149425, 13)
         self.assertEqual(record.lat_min, 14)
         self.assertEqual(record.lat_max, 36)
         self.assertEqual(record.lon_min, 14)
@@ -448,8 +448,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 25.70957095709571)
-        self.assertEqual(record.lon, 25.834983498349835)
+        self.assertAlmostEqual(record.lat, 25.70957095709571, 13)
+        self.assertAlmostEqual(record.lon, 25.834983498349835, 13)
         self.assertEqual(record.lat_min, 15)
         self.assertEqual(record.lat_max, 35)
         self.assertEqual(record.lon_min, 15)
@@ -502,8 +502,8 @@ class S3LocationTreeTests(unittest.TestCase):
 
         # Compare to what we expect
         self.assertEqual(record.inherited, False)
-        self.assertEqual(record.lat, 26.072901678657075)
-        self.assertEqual(record.lon, 25.867625899280576)
+        self.assertAlmostEqual(record.lat, 26.072901678657075, 13)
+        self.assertAlmostEqual(record.lon, 25.867625899280576, 13)
         self.assertEqual(record.lat_min, 13)
         self.assertEqual(record.lat_max, 37)
         self.assertEqual(record.lon_min, 13)
