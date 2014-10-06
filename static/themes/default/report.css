@@ -30,6 +30,10 @@
   background: url(../../img/report/hchart.png) center no-repeat;
 }
 
+.pt-schart {
+  background: url(../../img/report/pchart.png) center no-repeat;
+}
+
 /* Chart contents */
 .pt-chart-contents {
   background-color: #fffdf6;
