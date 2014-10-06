@@ -675,6 +675,7 @@ class S3ReportForm(object):
 
             "thousandSeparator": settings.get_L10n_thousands_separator(),
             "thousandGrouping": settings.get_L10n_thousands_grouping(),
+            "textAll": str(T("All")),
         }
 
         chart_opt = get_vars["chart"]
