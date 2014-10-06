@@ -19,6 +19,8 @@
          Office Postcode................optional.....office postcode
          Department.....................optional.....human_resource.department
          Job Title......................optional.....human_resource.job_title
+         Contract Term..................optional.....hrm_contract.term (short-term|long-term|permanent)
+         Hours Model....................optional.....hrm_contract.hours (part-time|full-time)
          Staff Level....................optional.....salary.staff_level_id
          Salary Grade...................optional.....salary.salary_grade_id
          Monthly Salary.................optional.....salary.monthly_amount
@@ -108,6 +110,7 @@
     *********************************************************************** -->
     <xsl:import href="salary.xsl"/>
     <xsl:import href="insurance.xsl"/>
+    <xsl:import href="contract.xsl"/>
 
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
@@ -820,9 +823,9 @@
                 <xsl:when test="$Status='resigned'">
                     <data field="status">2</data>
                 </xsl:when>
-                <xsl:default>
+                <xsl:otherwise>
                     <!-- Leave XML blank to default to 'Active' -->
-                </xsl:default>
+                </xsl:otherwise>
             </xsl:choose>
 
             <!-- Link to Department -->
@@ -889,6 +892,9 @@
 
             <!-- Insurance -->
             <xsl:call-template name="Insurance"/>
+
+            <!-- Contract Details -->
+            <xsl:call-template name="Contract"/>
 
             <!-- Volunteer Details -->
             <xsl:if test="col[@field='Active'] = 'true'">
