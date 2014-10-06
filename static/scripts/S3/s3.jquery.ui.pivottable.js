@@ -74,7 +74,8 @@
             thousandSeparator: ' ',
             thousandGrouping: '3',
             minTickSize: null,
-            precision: null
+            precision: null,
+            textAll: 'All'
         },
 
         /**
@@ -103,7 +104,8 @@
             this.chartOptions = {
                 currentChart: null,
                 currentDataIndex: null,
-                currentSeriesIndex: null
+                currentSeriesIndex: null,
+                currentSpectrumIndex: null
             };
 
             this.table_options = {
@@ -121,24 +123,24 @@
             if (!opts.renderFilter && !opts.renderOptions) {
                 $el.find('.pt-form-container').hide();
             } else {
-                var widgetID = $el.attr('id');
+                var widgetID = '#' + $el.attr('id');
                 if (opts.renderOptions) {
-                    $('#' + widgetID + '-options').show();
+                    $(widgetID + '-options').show();
                     if (opts.collapseOptions) {
-                        $('#' + widgetID + '-options legend').siblings().toggle();
-                        $('#' + widgetID + '-options legend').children().toggle();
+                        $(widgetID + '-options legend').siblings().toggle();
+                        $(widgetID + '-options legend').children().toggle();
                     }
                 } else {
-                    $('#' + widgetID + '-options').hide();
+                    $(widgetID + '-options').hide();
                 }
                 if (opts.renderFilter) {
-                    $('#' + widgetID + '-filters').show();
+                    $(widgetID + '-filters').show();
                     if (opts.collapseFilter) {
-                        $('#' + widgetID + '-filters legend').siblings().toggle();
-                        $('#' + widgetID + '-filters legend').children().toggle();
+                        $(widgetID + '-filters legend').siblings().toggle();
+                        $(widgetID + '-filters legend').children().toggle();
                     }
                 } else {
-                    $('#' + widgetID + '-options').hide();
+                    $(widgetID + '-options').hide();
                 }
             }
 
@@ -582,9 +584,11 @@
             var pchartRows = widgetID + '-pchart-rows',
                 vchartRows = widgetID + '-vchart-rows',
                 hchartRows = widgetID + '-hchart-rows',
+                schartRows = widgetID + '-schart-rows',
                 pchartCols = widgetID + '-pchart-cols',
                 vchartCols = widgetID + '-vchart-cols',
-                hchartCols = widgetID + '-hchart-cols';
+                hchartCols = widgetID + '-hchart-cols',
+                schartCols = widgetID + '-schart-cols';
 
             if (layerLabel) {
                 $(chartOpts).append($(
@@ -610,10 +614,12 @@
             if (rowsLabel && colsLabel) {
                 $(chartOpts).append($(
                     '<span class="pt-chart-label">| ' + labels.breakdown + ': </span>' +
+                    '<div id="' + schartRows + '" class="pt-chart-icon pt-schart"/>' +
                     '<div id="' + hchartRows + '" class="pt-chart-icon pt-hchart"/>' +
                     '<span class="pt-chart-label">' +
                         [per, rowsLabel, '&amp;', colsLabel].join(' ') +
                     '</span>' +
+                    '<div id="' + schartCols + '"  class="pt-chart-icon pt-schart"/>' +
                     '<div id="' + hchartCols + '"  class="pt-chart-icon pt-hchart"/>' +
                     '<span class="pt-chart-label">' +
                         [per, colsLabel, '&amp;', rowsLabel].join(' ') +
@@ -719,6 +725,8 @@
                 } else {
                     this._renderBreakDown(data, 1, colsTitle, filter);
                 }
+            } else if (chartType == 'spectrum') {
+                this._renderSpectrum(data, chartAxis, filter);
             }
         },
 
@@ -800,8 +808,8 @@
             nv.addGraph(function() {
 
                 var reportChart = nv.models.pieChart()
-                                           .x(function(d) { return d.label })
-                                           .y(function(d) { return d.value })
+                                           .x(function(d) { return d.label; })
+                                           .y(function(d) { return d.value; })
                                            .pieLabelsOutside(false)
                                            .labelType('percent')
                                            .labelThreshold(0.03)
@@ -1130,6 +1138,333 @@
                 nv.utils.windowResize(reportChart.update);
 
                 return reportChart;
+            });
+        },
+
+        /**
+         * Render spectrum chart
+         *
+         * @param {object} data - the pivot table data
+         * @param {string} axis - the axis to break down by
+         * @param {array} selectors - the field selectors for filtering [row, col]
+         */
+        _renderSpectrum: function(data, axis, selectors) {
+
+            var chart = this.chart;
+            if (!chart) {
+                return;
+            }
+            var pt = this,
+                defaultColor = 'silver';
+
+            // Determine the x and y axes of the pivot table
+            var chartOptions = pt.chartOptions,
+                cells = data.cells,
+                labels = data.labels,
+                xAxis,
+                yAxis,
+                xLabel,
+                yLabel,
+                xSelector,
+                ySelector,
+                getCell;
+            if (axis == 'rows') {
+                xAxis = data.rows;
+                yAxis = data.cols;
+                xLabel = labels.rows;
+                yLabel = labels.cols;
+                xSelector = selectors[0];
+                ySelector = selectors[1];
+                // Cell accessor
+                getCell = function(xIndex, yIndex) {
+                    return cells[xIndex][yIndex];
+                };
+            } else {
+                xAxis = data.cols;
+                yAxis = data.rows;
+                xLabel = labels.cols;
+                yLabel = labels.rows;
+                xSelector = selectors[1];
+                ySelector = selectors[0];
+                // Cell accessor
+                getCell = function(xIndex, yIndex) {
+                    return cells[yIndex][xIndex];
+                };
+            }
+
+            // Data accessor, read either cells or axis headers
+            var getData = function(xIndex, yIndex) {
+                if (xIndex === null) {
+                    // Read y header
+                    return yAxis[yIndex];
+                } else if (yIndex === null) {
+                    // Read x header
+                    return xAxis[xIndex];
+                } else {
+                    return getCell(xIndex, yIndex);
+                }
+            };
+
+            // Series accessor (returns all Y data points for a particular X)
+            var getSeries = function(xIndex, color) {
+                if (color === undefined) {
+                    color = defaultColor;
+                }
+                var items = [], item, value;
+                for (var i=0; i<yAxis.length; i++) {
+                    item = getData(null, i);
+                    if (xIndex === null) {
+                        value = item[2];
+                    } else {
+                        value = getData(xIndex, i).value;
+                    }
+                    if (!item[1] && item[2] >= 0) {
+                        items.push({
+                            filterIndex: item[0],
+                            filterKey: item[3],
+                            label: item[4],
+                            value: value,
+                            color: color
+                        });
+                    }
+                }
+                return items;
+            };
+
+            // Read the xAxis headers
+            var xHeaders = [], total = 0;
+            for (var i=0; i<xAxis.length; i++) {
+                var item = getData(i, null);
+                if (!item[1] && item[2] >= 0) {
+                    xHeaders.push({
+                        position: i,
+                        index: item[0],
+                        label: item[4],
+                        value: item[2],
+                        key: item[3]
+                    });
+                    total += item[2];
+                }
+            }
+
+            // On-hover data point tooltip
+            pt.chartOptions.currentDataIndex = null;
+            var onhoverTooltip = function(e) {
+
+                if (pt.chartOptions.currentDataIndex == e.pointIndex) {
+                    // Already open
+                    return;
+                }
+                // Close any open tooltip
+                pt._removeChartTooltip();
+                pt.chartOptions.currentDataIndex = e.pointIndex;
+
+                // Get the data point data
+                var value = e.value;
+                var percent = Math.round((value / total) * 100);
+
+                // Create the tooltip
+                var tooltip = '<div class="pt-tooltip-label">' + e.label + '</div>';
+                tooltip += '<div class="pt-tooltip-text">' + value + ' (' + percent + '%)</div>';
+                pt._renderChartTooltip(e.pos[0], e.pos[1], tooltip);
+
+                $('.pt-tooltip-label').css({
+                    color: nv.utils.defaultColor()({}, e.pointIndex)
+                });
+            };
+
+            // Show the container
+            $(chart).removeAttr('style')
+                    .closest('.pt-chart-contents')
+                    .css({'width': '100%', 'height': 'auto'})
+                    .show();
+
+            // Remove previous title
+            $(chart).siblings('.pt-chart-title').empty();
+
+            // Chart areas
+            var pieArea = $('<div class="pt-spectrum-pie">').appendTo(chart)
+                                                            .css({'height': '140px'}),
+                barArea = $('<div class="pt-spectrum-bar">').appendTo(chart)
+                                                            .css({'height': '280px', 'clear': 'left'});
+
+            // Define the bar chart
+            var valueFormat = this.options.numberFormatter,
+                truncateLabel = this._truncateLabel;
+
+            // On-hover data point tooltip
+            var barChartTooltip = function(series, label, value, dataPoint) {
+                var data = dataPoint.point,
+                    color = data.color || [defaultColor];
+
+                var tooltip = '<div class="pt-tooltip">' +
+                              '<div class="pt-tooltip-label" style="color:' + color + '">' + data.label + '</div>' +
+                              '<div class="pt-tooltip-text">' + data.value + '</div>' +
+                              '</div>';
+                return tooltip;
+            }
+            var barChart = nv.models.discreteBarChart()
+                                    .x(function(d) { return d.label })
+                                    .y(function(d) { return d.value })
+                                    .color([defaultColor])
+                                    .staggerLabels(true)
+                                    .tooltips(true)
+                                    .tooltipContent(barChartTooltip)
+                                    .showValues(true);
+
+            // Set value and tick formatters
+            barChart.valueFormat(valueFormat);
+            barChart.yAxis
+                    .tickFormat(valueFormat);
+            barChart.xAxis
+                    .tickFormat(function(d) { return truncateLabel(d, 18); });
+
+            var barChartContainer = d3.select($(barArea).get(0))
+                                      .append('svg')
+                                      .attr('class', 'nv')
+
+            // Define the pie chart
+            var pieChart = nv.models.pieChart()
+                                    .x(function(d) { return d.label })
+                                    .y(function(d) { return d.value })
+                                    .height(280)
+                                    .width(480)
+                                    .margin({top: -20, left: 30})
+                                    .labelType('percent')
+                                    .labelThreshold(0.10)
+                                    .showLegend(false)
+                                    .donut(true)
+                                    .donutRatio(0.35)
+                                    .tooltips(false);
+
+            pieChart.legend.align(true)
+                           .rightAlign(false);
+
+            pieChart.pie.startAngle(function(d) { return d.startAngle/2 -Math.PI/2 })
+                        .endAngle(function(d) { return d.endAngle/2 -Math.PI/2 });
+
+            pieChart.pie.dispatch.on('elementMouseover', onhoverTooltip)
+                                 .on('elementMouseout', function(e) {
+                $('.pt-tooltip').remove();
+                pt.chartOptions.currentDataIndex = null;
+                pt.chartOptions.currentSeriesIndex = null;
+            });
+
+            // Pie chart container
+            var pieChartContainer = d3.select($(pieArea).get(0))
+                                      .append('svg')
+                                      .attr('class', 'nv')
+                                      .style({ 'float':'left', 'width':'auto', 'min-width':'440px' });
+
+            var formArea = d3.select($(pieArea).get(0))
+                             .append('div')
+                             .style('float', 'left');
+
+            // Chart title
+            formArea.append('h4')
+                    .html(labels.layer + ' ' + labels.per + ' ' + yLabel);
+
+            // Series selector
+            formArea.append('label')
+                    .html(xLabel + ':')
+                    .style({ 'font-weight':'bold', 'margin-right':'8px' });
+            var seriesSelector = formArea.append('select');
+            seriesSelector.append('option')
+                          .attr('value', 'null')
+                          .style('font-weight', 'bold')
+                          .html(pt.options.textAll);
+            seriesSelector.selectAll('.pt-series-item')
+                          .data(xHeaders)
+                          .enter()
+                          .append('option')
+                          .attr('class', 'pt-series-item')
+                          .attr('value', function(d, i) { return i; })
+                          .html(function(d) { return d.label; });
+
+            // Series total
+            formArea.append('label')
+                    .html(labels.total + ':')
+                    .style({ 'font-weight': 'bold', 'margin-right': '8px' });
+            var totalValue = formArea.append('span')
+                                     .text(data.total);
+
+            // Helper method to render a series
+            var selectSeries = function(xIndex) {
+
+                var sliceColor, items;
+                if (xIndex === null || pt.chartOptions.currentSpectrumIndex == xIndex) {
+                    sliceColor = function(d, i) {
+                        return nv.utils.defaultColor()({}, i);
+                    }
+                    pieChartContainer.selectAll('.nv-slice')
+                                     .style('fill', sliceColor)
+                                     .style('stroke', sliceColor);
+                    items = getSeries(null);
+                    barChartContainer.datum([{ key: 'spectrum', values: items }])
+                    barChart.update();
+                    pt.chartOptions.currentSpectrumIndex = null;
+                    seriesSelector.property('value', 'null');
+                    totalValue.text(data.total);
+                } else {
+                    var seriesHeader = xHeaders[xIndex],
+                        color = nv.utils.defaultColor()({}, xIndex);
+                    sliceColor = function(d, i) {
+                        if (i == xIndex) {
+                            return color;
+                        } else {
+                            return defaultColor;
+                        }
+                    }
+                    pieChartContainer.selectAll('.nv-slice')
+                                     .style('fill', sliceColor)
+                                     .style('stroke', sliceColor);
+                    items = getSeries(seriesHeader.position, color);
+                    barChartContainer.datum([{ key: 'spectrum', values: items }])
+                    barChart.update();
+                    pt.chartOptions.currentSpectrumIndex = xIndex;
+                    seriesSelector.property('value', xIndex);
+                    totalValue.text(xHeaders[xIndex].value);
+                }
+            };
+
+            // Pie chart click event
+            pieChart.pie.dispatch.on('elementClick', function(e) {
+                selectSeries(e.index);
+            });
+
+            // Series selector change event
+            seriesSelector.on('change.pt', function(e) {
+                var xIndex = d3.select(this).property('value');
+                if (xIndex == 'null') {
+                    selectSeries(null);
+                } else {
+                    selectSeries(xIndex);
+                }
+            })
+
+            // Render the pie chart
+            nv.addGraph(function() {
+                pieChartContainer.datum(xHeaders)
+                                 .transition().duration(1200)
+                                 .call(pieChart);
+
+                nv.utils.windowResize(pieChart.update);
+                return pieChart;
+            });
+
+            // Render the bar chart
+            nv.addGraph(function() {
+                barChartContainer.datum([{ key: 'spectrum', values: getSeries(null) }])
+                                 .transition().duration(500)
+                                 .call(barChart);
+                // Event handlers
+                //if (pt.options.exploreChart && selector) {
+                    // Click on a bar forwards to a filtered view
+                    // @ToDo
+                //}
+                // Re-draw when window gets resized
+                nv.utils.windowResize(barChart.update);
+                return barChart;
             });
         },
 
@@ -1487,14 +1822,14 @@
             var pt = this,
                 $el = $(this.element),
                 data = this.data;
-            var widgetID = $el.attr('id');
+            var widgetID = '#' + $el.attr('id');
 
             // Show/hide report options
-            $('#' + widgetID + '-options legend').click(function() {
+            $(widgetID + '-options legend').click(function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
-            $('#' + widgetID + '-filters legend').click(function() {
+            $(widgetID + '-filters legend').click(function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
@@ -1514,7 +1849,7 @@
             });
 
             // Totals-option doesn't need Ajax-refresh
-            $('#' + widgetID + '-totals').click(function() {
+            $(widgetID + '-totals').click(function() {
                 var show_totals = $(this).is(':checked');
                 if (pt.options.showTotals != show_totals) {
                     pt.reload({totals: show_totals}, null, false);
@@ -1522,17 +1857,17 @@
             });
 
             // Axis selectors to fire optionChanged-event
-            $('#' + widgetID + '-rows, #' +
-                    widgetID + '-cols, #' +
-                    widgetID + '-fact').on('change.autosubmit', function() {
-                $('#' + widgetID + '-pt-form').trigger('optionChanged');
+            $(widgetID + '-rows,' +
+              widgetID + '-cols,' +
+              widgetID + '-fact').on('change.autosubmit', function() {
+                $(widgetID + '-pt-form').trigger('optionChanged');
             });
 
             // Form submission
             if (this.options.autoSubmit) {
                 // Auto-submit
                 var timeout = this.options.autoSubmit;
-                $('#' + widgetID + '-pt-form').on('optionChanged', function() {
+                $(widgetID + '-pt-form').on('optionChanged', function() {
                     var that = $(this);
                     if (that.data('noAutoSubmit')) {
                         // Event temporarily disabled
@@ -1551,7 +1886,7 @@
                 });
             } else {
                 // Manual submit
-                $('#' + widgetID + '-pt-form input.pt-submit').click(function() {
+                $(widgetID + '-pt-form input.pt-submit').click(function() {
                     var options = pt._getOptions(),
                         filters = pt._getFilters();
                     pt.reload(options, filters, false);
@@ -1559,7 +1894,7 @@
             }
 
             // Zoom in
-            $('#' + widgetID + ' div.pt-table div.pt-cell-zoom').click(function(event) {
+            $(widgetID + ' div.pt-table div.pt-cell-zoom').click(function(event) {
 
                 var zoom = $(event.currentTarget);
                 var cell = zoom.closest('td'); //parent();
@@ -1584,22 +1919,28 @@
             });
 
             // Charts
-            $('#' + widgetID + '-pchart-rows').click(function() {
+            $(widgetID + '-pchart-rows').click(function() {
                 pt._renderChart({type: 'piechart', axis: 'rows'});
             });
-            $('#' + widgetID + '-vchart-rows').click(function() {
+            $(widgetID + '-vchart-rows').click(function() {
                 pt._renderChart({type: 'barchart', axis: 'rows'});
             });
-            $('#' + widgetID + '-pchart-cols').click(function() {
-                pt._renderChart({type: 'piechart', axis: 'cols'});
+            $(widgetID + '-schart-rows').click(function() {
+                pt._renderChart({type: 'spectrum', axis: 'rows'});
             });
-            $('#' + widgetID + '-vchart-cols').click(function() {
-                pt._renderChart({type: 'barchart', axis: 'cols'});
-            });
-            $('#' + widgetID + '-hchart-rows').click(function() {
+            $(widgetID + '-hchart-rows').click(function() {
                 pt._renderChart({type: 'breakdown', axis: 'rows'});
             });
-            $('#' + widgetID + '-hchart-cols').click(function() {
+            $(widgetID + '-pchart-cols').click(function() {
+                pt._renderChart({type: 'piechart', axis: 'cols'});
+            });
+            $(widgetID + '-vchart-cols').click(function() {
+                pt._renderChart({type: 'barchart', axis: 'cols'});
+            });
+            $(widgetID + '-schart-cols').click(function() {
+                pt._renderChart({type: 'spectrum', axis: 'cols'});
+            });
+            $(widgetID + '-hchart-cols').click(function() {
                 pt._renderChart({type: 'breakdown', axis: 'cols'});
             });
             $el.find('.pt-hide-chart').click(function () {
@@ -1613,29 +1954,32 @@
         _unbindEvents: function() {
 
             var $el = $(this.element);
-            var widgetID = $el.attr('id');
+            var widgetID = '#' + $el.attr('id');
 
-            $('#' + widgetID + ' div.pt-table div.pt-cell-zoom').unbind('click');
-            $('#' + widgetID + '-options legend').unbind('click');
-            $('#' + widgetID + '-filters legend').unbind('click');
+            $(widgetID + ' div.pt-table div.pt-cell-zoom').unbind('click');
+            $(widgetID + '-options legend').unbind('click');
+            $(widgetID + '-filters legend').unbind('click');
 
             $(widgetID + '-totals').unbind('click');
 
-            $('#' + widgetID + '-rows, #' +
-                    widgetID + '-cols, #' +
-                    widgetID + '-fact').unbind('change.autosubmit');
+            $(widgetID + '-rows,' +
+              widgetID + '-cols,' +
+              widgetID + '-fact').unbind('change.autosubmit');
 
-            $('#' + widgetID + '-pt-form').unbind('optionChanged');
+            $(widgetID + '-pt-form').unbind('optionChanged');
             $el.find('input.pt-submit').unbind('click');
 
-            $('#' + widgetID + '-pchart-rows').unbind('click');
-            $('#' + widgetID + '-vchart-rows').unbind('click');
-            $('#' + widgetID + '-pchart-cols').unbind('click');
-            $('#' + widgetID + '-vchart-cols').unbind('click');
+            $(widgetID + '-pchart-rows,' +
+              widgetID + '-vchart-rows,' +
+              widgetID + '-schart-rows,' +
+              widgetID + '-hchart-rows,' +
+              widgetID + '-pchart-cols,' +
+              widgetID + '-vchart-cols,' +
+              widgetID + '-schart-cols,' +
+              widgetID + '-hchart-cols').unbind('click');
 
             $el.find('.pt-hide-table').unbind('click');
             $el.find('.pt-show-table').unbind('click');
-
             $el.find('.pt-hide-chart').unbind('click');
         }
     });
