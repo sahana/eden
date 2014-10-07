@@ -616,14 +616,10 @@
                     '<span class="pt-chart-label">| ' + labels.breakdown + ': </span>' +
                     '<div id="' + schartRows + '" class="pt-chart-icon pt-schart"/>' +
                     '<div id="' + hchartRows + '" class="pt-chart-icon pt-hchart"/>' +
-                    '<span class="pt-chart-label">' +
-                        [per, rowsLabel, '&amp;', colsLabel].join(' ') +
-                    '</span>' +
+                    '<span class="pt-chart-label">' + per + ' ' + rowsLabel + '</span>' +
                     '<div id="' + schartCols + '"  class="pt-chart-icon pt-schart"/>' +
                     '<div id="' + hchartCols + '"  class="pt-chart-icon pt-hchart"/>' +
-                    '<span class="pt-chart-label">' +
-                        [per, colsLabel, '&amp;', rowsLabel].join(' ') +
-                    '</span>'
+                    '<span class="pt-chart-label">' + per + ' ' + colsLabel + '</span>'
                 ));
             }
 
@@ -1276,17 +1272,15 @@
             // Show the container
             $(chart).removeAttr('style')
                     .closest('.pt-chart-contents')
-                    .css({'width': '100%', 'height': 'auto'})
+                    .css({'width': '98%', 'height': 'auto'})
                     .show();
 
             // Remove previous title
             $(chart).siblings('.pt-chart-title').empty();
 
             // Chart areas
-            var pieArea = $('<div class="pt-spectrum-pie">').appendTo(chart)
-                                                            .css({'height': '140px'}),
-                barArea = $('<div class="pt-spectrum-bar">').appendTo(chart)
-                                                            .css({'height': '280px', 'clear': 'left'});
+            var pieArea = $('<div class="pt-spectrum-pie">').appendTo(chart),
+                barArea = $('<div class="pt-spectrum-bar">').appendTo(chart);
 
             // Define the bar chart
             var valueFormat = this.options.numberFormatter,
@@ -1324,12 +1318,13 @@
                                       .attr('class', 'nv')
 
             // Define the pie chart
+            var pieWidth = Math.floor(pieArea.width()/2) - 30;
             var pieChart = nv.models.pieChart()
                                     .x(function(d) { return d.label })
                                     .y(function(d) { return d.value })
                                     .height(280)
-                                    .width(480)
-                                    .margin({top: -20, left: 30})
+                                    .width(pieWidth)
+                                    .margin({top: -20, left: 20})
                                     .labelType('percent')
                                     .labelThreshold(0.10)
                                     .showLegend(false)
@@ -1354,11 +1349,11 @@
             var pieChartContainer = d3.select($(pieArea).get(0))
                                       .append('svg')
                                       .attr('class', 'nv')
-                                      .style({ 'float':'left', 'width':'auto', 'min-width':'440px' });
+                                      .style({'min-width': (pieWidth-30) + 'px' });
 
             var formArea = d3.select($(pieArea).get(0))
                              .append('div')
-                             .style('float', 'left');
+                             .attr('class', 'pt-spectrum-form');
 
             // Chart title
             formArea.append('h4')
@@ -1366,8 +1361,7 @@
 
             // Series selector
             formArea.append('label')
-                    .html(xLabel + ':')
-                    .style({ 'font-weight':'bold', 'margin-right':'8px' });
+                    .html(xLabel + ':');
             var seriesSelector = formArea.append('select');
             seriesSelector.append('option')
                           .attr('value', 'null')
@@ -1383,8 +1377,7 @@
 
             // Series total
             formArea.append('label')
-                    .html(labels.total + ':')
-                    .style({ 'font-weight': 'bold', 'margin-right': '8px' });
+                    .html(labels.total + ':');
             var totalValue = formArea.append('span')
                                      .text(data.total);
 
