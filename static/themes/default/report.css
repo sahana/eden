@@ -57,6 +57,29 @@
 .pt-chart-contents .pt-chart {
   margin-top: 20px;
 }
+.pt-chart-contents .pt-spectrum-pie {
+  height: 140px;
+}
+.pt-chart-contents .pt-spectrum-pie svg.nv {
+  float: left;
+  width: auto;
+}
+.pt-chart-contents .pt-spectrum-bar {
+  height: 280px;
+  clear: left;
+}
+.pt-chart-contents .pt-spectrum-form {
+  float: left;
+}
+.pt-chart-contents .pt-spectrum-form label {
+  font-weight: bold;
+  margin-right: 8px;
+  display: block;
+}
+.pt-chart-contents .pt-spectrum-form select {
+  font-size: 0.875rem;
+  max-width: 360px;
+}
 
 /* Onhover-tooltips */
 .pt-tooltip {
