@@ -25,11 +25,6 @@ header.row {
     width: 42px;
 } */
 
-/* Not appearing in CSS we build, although showing on demo */
-.top-bar-section .has-dropdown > a {
-    padding-right: 40px !important;
-}
-
 /* END */
 
 .row .row {

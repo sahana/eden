@@ -4243,7 +4243,7 @@ meta.foundation-mq-topbar {
         background: #038d8d;
         color: #FFFFFF; }
     .top-bar-section .has-dropdown > a {
-      padding-right: 20px10px 20px !important; }
+      padding-right: 40px !important; }
       .top-bar-section .has-dropdown > a:after {
         content: "";
         display: block;
@@ -4689,5 +4689,3 @@ th.hide-for-touch {
 
   th.show-for-print {
     display: table-cell !important; } }
-
-/*# sourceMappingURL=foundation.css.map */
