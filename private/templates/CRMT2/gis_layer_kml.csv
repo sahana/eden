@@ -1,0 +1,2 @@
+Name,Description,URL,Marker,Folder,Title,Body,Style,Folder,Enabled,Visible,Cluster Distance,Cluster Threshold,Refresh
+Gas Pipelines,"SoCal Gas. Accuracy of pipeline locations can vary +/- 500 feet.",http://socalgas.com/safety/pipeline-maps/kmz/LosAngelesHP.kmz,,,,,"[{'label':'Transmission','stroke':'00007f','strokeWidth':4},{'label':'Distribution','stroke':'0059fe'}]",Hazards,True,False,,0,0

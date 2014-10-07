@@ -4933,7 +4933,8 @@ class S3POIModel(S3Model):
             # Create It
             f_id = ltable.insert(controller = "gis",
                                  function = "poi",
-                                 attributes = ["name, poi_type_id"],
+                                 attr_fields = ["name", "poi_type_id"],
+                                 name = "PoIs",
                                  )
             record = dict(id=f_id)
             s3db.update_super(ltable, record)

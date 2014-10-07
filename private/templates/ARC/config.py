@@ -196,7 +196,7 @@ settings.gis.display_L0 = True
 settings.gis.geonames_username = "rms_dev"
 # Resources which can be directly added to the main map
 settings.gis.poi_create_resources = \
-    [dict(c="gis",
+    (dict(c="gis",
           f="poi",
           table="gis_poi",
           type="point",
@@ -210,7 +210,7 @@ settings.gis.poi_create_resources = \
           label=T("Add Route"),
           layer="Routes",
           ),
-     ]
+     )
 
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later

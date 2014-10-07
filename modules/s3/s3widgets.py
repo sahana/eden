@@ -67,6 +67,7 @@ __all__ = ("S3ACLWidget",
            "S3SelectWidget",
            "S3SiteAutocompleteWidget",
            "S3SliderWidget",
+           "S3TextWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
            "CheckboxesWidgetS3",
@@ -5776,6 +5777,29 @@ class S3SliderWidget(FormWidget):
         s3.jquery_ready.append(script)
 
         return TAG[""](input, slider)
+
+# =============================================================================
+class S3TextWidget(StringWidget):
+    """
+        Extend the default Web2Py widget to include a Placeholder
+    """
+
+    @classmethod
+    def widget(cls, field, value, **attributes):
+        """
+        Generates an INPUT text tag.
+
+        see also: `FormWidget.widget`
+        """
+
+        default = dict(
+            _type="text",
+            value=(not value is None and str(value)) or "",
+        )
+        attr = cls._attributes(field, default, **attributes)
+
+        return INPUT(_placeholder=current.T("Text"),
+                     **attr)
 
 # =============================================================================
 class S3TimeIntervalWidget(FormWidget):

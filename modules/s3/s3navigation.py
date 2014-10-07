@@ -593,7 +593,7 @@ class S3NavigationItem(object):
 
         level = 0
         args = self.args
-        vars = self.vars
+        link_vars = self.vars
 
         if self.application is not None and \
            self.application != request.application:
@@ -669,7 +669,7 @@ class S3NavigationItem(object):
         #   7 = args match and vars match
         if level == 2:
             extra = 1
-            for k, v in vars.iteritems():
+            for k, v in link_vars.iteritems():
                 if k not in rvars or k in rvars and rvars[k] != s3_unicode(v):
                     extra = 0
                     break
@@ -771,10 +771,10 @@ class S3NavigationItem(object):
 
         args = self.args
         if self.vars:
-            vars = Storage(self.vars)
-            vars.update(kwargs)
+            link_vars = Storage(self.vars)
+            link_vars.update(kwargs)
         else:
-            vars = Storage(kwargs)
+            link_vars = Storage(kwargs)
         if extension is None:
             extension = self.extension
         a = self.get("application")
@@ -787,7 +787,7 @@ class S3NavigationItem(object):
         if f is None:
             f = "index"
         f, args = self.__format(f, args, extension)
-        return URL(a=a, c=c, f=f, args=args, vars=vars)
+        return URL(a=a, c=c, f=f, args=args, vars=link_vars)
 
     # -------------------------------------------------------------------------
     def accessible_url(self, extension=None, **kwargs):
@@ -806,10 +806,10 @@ class S3NavigationItem(object):
 
         args = self.args
         if self.vars:
-            vars = Storage(self.vars)
-            vars.update(kwargs)
+            link_vars = Storage(self.vars)
+            link_vars.update(kwargs)
         else:
-            vars = Storage(kwargs)
+            link_vars = Storage(kwargs)
         if extension is None:
             extension = self.extension
         a = self.get("application")
@@ -823,7 +823,7 @@ class S3NavigationItem(object):
             f = "index"
         f, args = self.__format(f, args, extension)
         return aURL(c=c, f=f, p=self.p, a=a, t=self.tablename,
-                    args=args, vars=vars)
+                    args=args, vars=link_vars)
 
     # -------------------------------------------------------------------------
     @staticmethod

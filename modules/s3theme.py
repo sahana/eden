@@ -118,6 +118,7 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
 def formstyle_foundation(form, fields, *args, **kwargs):
     """
         Formstyle for Foundation 5 themes: http://foundation.zurb.com
+        - Labels above the Inputs
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
@@ -134,6 +135,48 @@ def formstyle_foundation(form, fields, *args, **kwargs):
                        _class="small-12 columns",
                        )
         return DIV(controls, _class=_class, _id=row_id)
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
+def formstyle_foundation_2col(form, fields, *args, **kwargs):
+    """
+        Formstyle for Foundation 5 themes: http://foundation.zurb.com
+        - Labels beside the Inputs
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
+
+        _class = "form-row row hide" if hidden else "form-row row"
+        hints = DIV(render_tooltip(label, comment), _class="inline-tooltip")
+        if isinstance(label, LABEL):
+            label.add_class("right inline")
+        else:
+            label = LABEL(label, _class="right inline")
+
+        label = DIV(label,
+                    _class="small-2 columns",
+                    )
+        controls = DIV(widget,
+                       hints,
+                       _class="small-10 columns",
+                       )
+        return DIV(label, controls, _class=_class, _id=row_id)
 
     if args:
         row_id = form
@@ -193,7 +236,8 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
 # =============================================================================
 def formstyle_table(form, fields, *args, **kwargs):
     """
-        Old Default Eden Form Style (Labels above the Inputs)
+        Old Default Eden Form Style (TRs not DIVs, Labels above the Inputs)
+        - still used by IFRC
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
@@ -202,16 +246,16 @@ def formstyle_table(form, fields, *args, **kwargs):
         _class = "hide" if hidden else None
             
         # Label on the 1st row
-        row.append(TR(TD(label, _class = "w2p_fl"),
+        row.append(TR(TD(label, _class="w2p_fl"),
                       TD(""),
                       _id = row_id + "1",
-                      _class = _class))
+                      _class=_class))
                       
         # Widget & Comment on the 2nd Row
         row.append(TR(widget,
-                      TD(comment, _class = "w2p_fc"),
-                      _id = row_id,
-                      _class = _class))
+                      TD(comment, _class="w2p_fc"),
+                      _id=row_id,
+                      _class=_class))
                       
         return tuple(row)
 
@@ -232,20 +276,21 @@ def formstyle_table(form, fields, *args, **kwargs):
 def formstyle_table_inline(form, fields, *args, **kwargs):
     """
         Old Default Eden Form Style (In-Line Labels)
+        - still used by IFRC
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
 
         _class = "hide" if hidden else None
 
-        row = TR(TD(label, _class = "w2p_fl"),
+        row = TR(TD(label, _class="w2p_fl"),
                  TD(widget),
-                 _id = row_id,
-                 _class = _class)
+                 _id=row_id,
+                 _class=_class)
 
         if comment:
-            row.append(TD(DIV(_class = "tooltip",
-                              _title = "%s|%s" % (label, comment)),
+            row.append(TD(DIV(_class="tooltip",
+                              _title="%s|%s" % (label, comment)),
                           _class="w2p_fc"))
         return row
 

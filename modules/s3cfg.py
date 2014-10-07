@@ -55,6 +55,7 @@ class S3Config(Storage):
         "default_inline": formstyle_foundation_inline,
         "bootstrap": formstyle_bootstrap,
         "foundation": formstyle_foundation,
+        "foundation_2col": formstyle_foundation_2col,
         "foundation_inline": formstyle_foundation_inline,
         "table": formstyle_table,
         "table_inline": formstyle_table_inline,

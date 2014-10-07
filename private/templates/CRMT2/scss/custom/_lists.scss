@@ -1,0 +1,51 @@
+
+// new list styles
+
+ul.lined {
+  list-style: none;
+  border-top: 1px solid $wave;
+  padding: 0;
+  margin: 20px 0;
+  li {
+    border-bottom: 1px solid $wave;
+    padding: 12px 0;
+    font-size: 120%;
+  }
+  small {
+    text-transform: uppercase;
+    letter-spacing: $tracking-tight;
+    margin-left: 5px;
+    color: $stone;
+  }
+}
+
+ul.ellipsis {
+  li {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: $stone; // color for ellipsis
+  }
+}
+
+
+dl.horizontal {
+  margin: 0 0 $space;
+  border-top: 2px solid $stone;
+  border-bottom: 2px solid $stone;
+  padding: $space 0;
+  dt {
+    float: left;
+    clear: left;
+    width: 120px;
+  }
+  dd {
+    margin-left: 120px;
+  }
+  dd:after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+}

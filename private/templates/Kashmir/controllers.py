@@ -232,9 +232,9 @@ $('#login-btn').click(function(e){
 
         # Slick slider
         if s3.debug:
-            s3.scripts.append("/%s/static/scripts/slick/slick.js" % request.application)
+            s3.scripts.append("/%s/static/scripts/slick.js" % request.application)
         else:
-            s3.scripts.append("/%s/static/scripts/slick/slick.min.js" % request.application)
+            s3.scripts.append("/%s/static/scripts/slick.min.js" % request.application)
         script = '''
 $(document).ready(function(){
  $('#title-image').slick({

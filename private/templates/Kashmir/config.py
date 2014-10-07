@@ -130,11 +130,49 @@ settings.pr.show_emergency_contacts = False
 # Restrict the type of requests that can be made, valid values in the
 # list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
-settings.req.req_type = ["Stock"]
+#settings.req.req_type = ("Stock", "People")
+settings.req.req_type = ("Stock",)
 
 # Uncomment to show a default cancel button in standalone create/update forms
 settings.ui.default_cancel_button = True
 
+# -----------------------------------------------------------------------------
+def customise_event_incident_report_resource(r, tablename):
+
+    s3db = current.s3db
+
+    table = s3db.event_incident_report
+    table.name.label = T("Description")
+
+    # ImageCrop widget doesn't currently work within an Inline Form
+    from gluon.validators import IS_IMAGE
+    image_field = s3db.doc_image.file
+    image_field.requires = IS_IMAGE()
+    image_field.widget = None
+
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+    crud_form = S3SQLCustomForm(S3SQLInlineComponent(
+                                    "image",
+                                    label = T("Photo"),
+                                    fields = [("", "file"),
+                                              ],
+                                    ),
+                                "name",
+                                "location_id",
+                                )
+
+    list_fields = ["location_id",
+                   "name",
+                   ]
+
+    s3db.configure("event_incident_report",
+                   crud_form = crud_form,
+                   list_fields = list_fields,
+                   )
+
+settings.customise_event_incident_report_resource = customise_event_incident_report_resource
+
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([
@@ -208,6 +246,17 @@ settings.modules = OrderedDict([
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+        restricted = True,
+        module_type = 3
+    )),
+    ("doc", Storage(
+        name_nice = T("Documents"),
+        #description = "A library of digital resources, such as photos, documents and reports",
+        restricted = True,
+        module_type = None,
+    )),
+    ("event", Storage(
+        name_nice = T("Incident Reports"),
         restricted = True,
         module_type = 3
     )),

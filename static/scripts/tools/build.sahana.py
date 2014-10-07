@@ -32,6 +32,13 @@ import jsmin, mergejs
 # For CSS
 import re
 
+## Untested as libsass failing to run for me:
+# For SCSS
+#try:
+#    import sass
+#except:
+#    print "Unable to import libsass: so if your theme includes SCSS sources, these won't be rebuilt"
+
 def mergeCSS(inputFilenames, outputFilename):
     output = ""
     for inputFilename in inputFilenames:
@@ -563,9 +570,26 @@ def docss():
     f.close()
     listCSS = []
     for file in files[:-1]:
-        p = re.compile("(\n|\r|\t|\f|\v)+")
-        file = p.sub("", file)
         if file[0] != "#":
+            # Real line, not a comment
+            if file[:5] == "SCSS ":
+                # Compile the SCSS first
+                file = file[5:]
+                filename = file.split("/")[-1].split(".")[0]
+                sourcePath = os.path.join("..", "..", "..", "private", "templates", theme, "scss")
+                sourceFilename = os.path.join(sourcePath, "%s.scss" % filename)
+                sourceFile = open(sourceFilename, "r")
+                source = sourceFile.read()
+                sourceFile.close()
+                os.chdir(sourcePath)
+                outputText = sass.compile(source)
+                os.chdir(SCRIPTPATH)
+                outputFile = open(file, "w")
+                outputFile.write(outputText)
+                outputFile.close()
+
+            p = re.compile("(\n|\r|\t|\f|\v)+")
+            file = p.sub("", file)
             listCSS.append("../../styles/%s" % file)
 
     outputFilenameCSS = "eden.min.css"
