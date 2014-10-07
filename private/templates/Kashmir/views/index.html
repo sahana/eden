@@ -2,20 +2,15 @@
 <div class='row home-top' style='margin-top:20px;'>
  <div class='large-5 large-offset-1 columns'>
   <div id='title-image'>
-   <ul data-orbit>
-    <li>
+    <div>
      <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "p1.jpg"])}}' alt='slide 1' />
-     <!--<div class="orbit-caption">Caption One.</div>-->
-    </li>
-    <li>
+    </div>
+    <div>
      <img src='{{=URL(c="static", f="themes", args=["Kashmir", "img", "p2.jpg"])}}' alt='slide 2' />
-     <!--<div class="orbit-caption">Caption One.</div>-->
-    </li>
-    <li>
+    </div>
+    <div>
      <img src="{{=URL(c="static", f="themes", args=["Kashmir", "img", "p3.jpg"])}}" alt="slide 3" />
-     <!--<div class="orbit-caption">Caption One.</div>-->
-    </li>
-   </ul>
+    </div>
   </div>
  </div>
  <div class="large-5 columns end">
@@ -31,19 +26,16 @@
   </div>
   {{if AUTHENTICATED not in session.s3.roles:}}
   <div id='login_box' class='panel' style='display:none'>
-  
    <div id='login_form'>
     {{=login_div}}
     {{include "auth/_login.html"}}
    </div>
-   
    {{if self_registration:}}
    <div id='register_form'>
     {{=register_div}}
     {{include "auth/_register.html"}}
    </div>
    {{pass}}
-
    <a id="show-mailform" class="tiny secondary button">Contact Form</a>
   </div>
   {{pass}}

@@ -230,6 +230,20 @@ $('#login-btn').click(function(e){
         output["register_form"] = register_form
         output["contact_form"] = contact_form
 
+        # Slick slider
+        s3.scripts.append("/%s/static/scripts/slick/slick.js" % request.application)
+        script = '''
+$(document).ready(function(){
+ $('#title-image').slick({
+  autoplay: true,
+  autoplaySpeed: 5000,
+  speed: 1000,
+  fade: true,
+  cssEase: 'linear'
+ });
+});'''
+        s3.jquery_ready.append(script)
+
         self._view(TEMPLATE, "index.html")
         return output
 
