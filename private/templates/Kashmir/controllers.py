@@ -231,15 +231,18 @@ $('#login-btn').click(function(e){
         output["contact_form"] = contact_form
 
         # Slick slider
-        s3.scripts.append("/%s/static/scripts/slick/slick.js" % request.application)
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/slick/slick.js" % request.application)
+        else:
+            s3.scripts.append("/%s/static/scripts/slick/slick.min.js" % request.application)
         script = '''
 $(document).ready(function(){
  $('#title-image').slick({
-  autoplay: true,
-  autoplaySpeed: 5000,
-  speed: 1000,
-  fade: true,
-  cssEase: 'linear'
+  autoplay:true,
+  autoplaySpeed:5000,
+  speed:1000,
+  fade:true,
+  cssEase:'linear'
  });
 });'''
         s3.jquery_ready.append(script)
