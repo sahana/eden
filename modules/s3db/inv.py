@@ -29,6 +29,7 @@
 
 __all__ = ("S3WarehouseModel",
            "S3InventoryModel",
+           "S3InventoryTrackingLabels",
            "S3InventoryTrackingModel",
            "S3InventoryAdjustModel",
            "inv_tabs",
@@ -70,14 +71,6 @@ inv_ship_status = {"IN_PROCESS" : SHIP_STATUS_IN_PROCESS,
                    "RETURNING"  : SHIP_STATUS_RETURNING,
                    }
 
-T = current.T
-shipment_status = {SHIP_STATUS_IN_PROCESS: T("In Process"),
-                   SHIP_STATUS_RECEIVED:   T("Received"),
-                   SHIP_STATUS_SENT:       T("Sent"),
-                   SHIP_STATUS_CANCEL:     T("Canceled"),
-                   SHIP_STATUS_RETURNING:  T("Returning"),
-                   }
-
 SHIP_DOC_PENDING  = 0
 SHIP_DOC_COMPLETE = 1
 
@@ -98,19 +91,8 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        "RETURNING"  : TRACK_STATUS_RETURNING,
                        }
 
-tracking_status = {TRACK_STATUS_UNKNOWN   : T("Unknown"),
-                   TRACK_STATUS_PREPARING : T("In Process"),
-                   TRACK_STATUS_TRANSIT   : T("In transit"),
-                   TRACK_STATUS_UNLOADING : T("Unloading"),
-                   TRACK_STATUS_ARRIVED   : T("Arrived"),
-                   TRACK_STATUS_CANCELED  : T("Canceled"),
-                   TRACK_STATUS_RETURNING : T("Returning"),
-                   }
-
-#itn_label = T("Item Source Tracking Number")
-# Overwrite the label until we have a better way to do this
-itn_label = T("CTN")
-
+# @todo: must not assign a current-variable to a module-global variable
+#        => fix analogous to S3InvTrackingLabels
 settings = current.deployment_settings
 inv_item_status_opts = settings.get_inv_item_status()
 send_type_opts = settings.get_inv_shipment_types()
@@ -487,7 +469,7 @@ class S3InventoryModel(S3Model):
                                       writable = track_pack_values,
                                       ),
                           Field("item_source_no", "string", length=16,
-                                label = itn_label,
+                                label = self.inv_itn_label,
                                 represent = lambda v: v or NONE,
                                 ),
                           # Organisation that owns this item
@@ -871,6 +853,49 @@ $.filterOptionsS3({
                     job.data.quantity = table[id].quantity
 
 # =============================================================================
+class S3InventoryTrackingLabels(S3Model):
+    """ Tracking Status Labels """
+
+    names = ("inv_tracking_status_labels",
+             "inv_shipment_status_labels",
+             "inv_itn_label",
+             )
+
+    def model(self):
+
+        T = current.T
+        shipment_status = {SHIP_STATUS_IN_PROCESS: T("In Process"),
+                           SHIP_STATUS_RECEIVED: T("Received"),
+                           SHIP_STATUS_SENT: T("Sent"),
+                           SHIP_STATUS_CANCEL: T("Canceled"),
+                           SHIP_STATUS_RETURNING: T("Returning"),
+                           }
+                                  
+        tracking_status = {TRACK_STATUS_UNKNOWN: T("Unknown"),
+                           TRACK_STATUS_PREPARING: T("In Process"),
+                           TRACK_STATUS_TRANSIT: T("In transit"),
+                           TRACK_STATUS_UNLOADING: T("Unloading"),
+                           TRACK_STATUS_ARRIVED: T("Arrived"),
+                           TRACK_STATUS_CANCELED: T("Canceled"),
+                           TRACK_STATUS_RETURNING: T("Returning"),
+                           }
+        
+        #itn_label = T("Item Source Tracking Number")
+        # Overwrite the label until we have a better way to do this
+        itn_label = T("CTN")
+
+        return dict(inv_tracking_status_labels = tracking_status,
+                    inv_shipment_status_labels = shipment_status,
+                    inv_itn_label = itn_label,
+                    )
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+
+        # inv disabled => label dicts can remain the same, however
+        return self.model()
+
+# =============================================================================
 class S3InventoryTrackingModel(S3Model):
     """
         A module to manage the shipment of inventory items
@@ -907,6 +932,8 @@ class S3InventoryTrackingModel(S3Model):
         item_pack_id = self.supply_item_pack_id
         req_item_id = self.req_item_id
         req_ref = self.req_req_ref
+        tracking_status = self.inv_tracking_status_labels
+        shipment_status = self.inv_shipment_status_labels
 
         org_site_represent = self.org_site_represent
 
@@ -1628,7 +1655,7 @@ $.filterOptionsS3({
                                                  T("The Bin in which the Item is being stored (optional)."))),
                            ),
                      Field("item_source_no", "string", length=16,
-                           label = itn_label,
+                           label = self.inv_itn_label,
                            represent = s3_string_represent),
                      # original donating org
                      organisation_id(name = "supply_org_id",
