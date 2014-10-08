@@ -973,6 +973,8 @@
 'Create New Request': 'Хүсэлт Шинээр үүсгэх',
 'Create New Role': 'Үүрэг Шинээр үүсгэх',
 'Create New User': 'Хэрэглэгч Шинээр үүсгэх',
+'Create Office': 'Оффис бүртгэх',
+'Create Organization': 'Байлууллага үүсгэх',
 'Create Program': 'Хөтөлбөр үүсгэх',
 'Create Project': 'Төсөл үүсгэх',
 'Create Staff Member': 'Aжилтан гишүүн үүсгэх',
