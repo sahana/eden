@@ -4736,7 +4736,9 @@ class S3LocationSelectorWidget2(FormWidget):
                                 color_picker = color_picker,
                                 toolbar = toolbar,
                                 # Hide controls from toolbar
+                                clear_layers = False,
                                 nav = False,
+                                print_control = False,
                                 area = False,
                                 zoomWheelEnabled = False,
                                 # Don't use normal callback (since we postpone rendering Map until DIV unhidden)

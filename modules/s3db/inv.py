@@ -3339,7 +3339,7 @@ def inv_rfooter(r, record):
 # =============================================================================
 def inv_recv_crud_strings():
     """
-        CRUD Strings for inv_recv which ened to be visible to menus without a
+        CRUD Strings for inv_recv which need to be visible to menus without a
         model load
     """
     
