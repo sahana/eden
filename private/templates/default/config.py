@@ -133,9 +133,10 @@ settings.base.guided_tour = True
 #    ("ja", "日本語"),
 #    ("km", "ភាសាខ្មែរ"),
 #    ("ko", "한국어"),
-#    ("ne", "नेपाली"),          # Nepali
-#    ("prs", "دری"), # Dari
-#    ("ps", "پښتو"), # Pashto
+#    ("mn", "Монгол хэл"), # Mongolian
+#    ("ne", "नेपाली"),                         #  Nepali
+#    ("prs", "دری"),       # Dari
+#    ("ps", "پښتو"),       # Pashto
 #    ("pt", "Português"),
 #    ("pt-br", "Português (Brasil)"),
 #    ("ru", "русский"),

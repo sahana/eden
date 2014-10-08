@@ -50,16 +50,15 @@ class S3Config(Storage):
     """
 
     # Used by modules/s3theme.py
-    FORMSTYLE = {
-        "default": formstyle_foundation,
-        "default_inline": formstyle_foundation_inline,
-        "bootstrap": formstyle_bootstrap,
-        "foundation": formstyle_foundation,
-        "foundation_2col": formstyle_foundation_2col,
-        "foundation_inline": formstyle_foundation_inline,
-        "table": formstyle_table,
-        "table_inline": formstyle_table_inline,
-    }
+    FORMSTYLE = {"default": formstyle_foundation,
+                 "default_inline": formstyle_foundation_inline,
+                 "bootstrap": formstyle_bootstrap,
+                 "foundation": formstyle_foundation,
+                 "foundation_2col": formstyle_foundation_2col,
+                 "foundation_inline": formstyle_foundation_inline,
+                 "table": formstyle_table,
+                 "table_inline": formstyle_table_inline,
+                 }
 
     # Formats from static/scripts/ui/i18n converted to Python style
     date_formats = {"ar": "%d/%m/%Y",
@@ -73,6 +72,7 @@ class S3Config(Storage):
                     "ja": "%Y/%m/%d",
                     "km": "%d-%m-%Y",
                     "ko": "%Y-%m-%d",
+                    #"mn": "",
                     #"ne": "",
                     "prs": "%Y/%m/%d",
                     "ps": "%Y/%m/%d",
@@ -1122,6 +1122,7 @@ class S3Config(Storage):
                                                        ("ja", "日本語"),
                                                        ("km", "ភាសាខ្មែរ"),         # Khmer
                                                        ("ko", "한국어"),
+                                                       ("mn", "Монгол хэл"),   # Mongolian
                                                        ("ne", "नेपाली"),          # Nepali
                                                        ("prs", "دری"),         # Dari
                                                        ("ps", "پښتو"),         # Pashto

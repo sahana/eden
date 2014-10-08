@@ -3449,7 +3449,7 @@ class S3PersonPresence(S3Model):
                                 label = T("Procedure"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Procedure"),
-                                                                T('Describe the procedure which this record relates to (e.g. "medical examination")')))),
+                                                                T("Describe the procedure which this record relates to (e.g. 'medical examination')")))),
                           location_id("orig_id",
                                       label=T("Origin"),
                                       widget = S3LocationAutocompleteWidget(),

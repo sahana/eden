@@ -866,10 +866,6 @@ def customise_org_organisation_controller(**attr):
         tablename = "org_organisation"
         table = s3db[tablename]
 
-        s3.crud_strings[tablename].label_create = T("Add Organization")
-
-        table.name.widget = S3TextWidget.widget
-
         method = r.method
         if method == "validate":
             # Need to override .requires here too
@@ -879,8 +875,8 @@ def customise_org_organisation_controller(**attr):
 
             # Profile page configuration
             profile_layout = OrganisationProfileLayout()
-            places_widget = dict(label = "Organization's Places",
-                                 label_create = "Add Place",
+            places_widget = dict(label = "Location(s)",
+                                 label_create = "Add Location",
                                  type = "datalist",
                                  tablename = "org_facility",
                                  context = "organisation",
@@ -901,12 +897,12 @@ def customise_org_organisation_controller(**attr):
             # Data table configuration
             list_fields = ["id",
                            "name",
-                           (T("Coalition Member"), "group_membership.group_id"),
-                           (T("Organization's Places"), "facility.location_id"),
+                           (T("Coalition"), "group_membership.group_id"),
+                           (T("Location(s)"), "facility.location_id"),
                            #"facility.location_id$addr_postcode",
                            (T("Sectors"), "sector_organisation.sector_id"),
                            (T("Services"), "service_organisation.service_id"),
-                           "phone",
+                           (T("Phone"), "phone"),
                            "website",
                            "comments",
                            ]
@@ -921,9 +917,21 @@ def customise_org_organisation_controller(**attr):
         if (r.interactive or r.representation == "json") and not r.component:
             
             # CRUD Strings / Represent
-            s3.crud_strings[tablename].title_update = T("Update Organization")
+            s3.crud_strings[tablename].update(
+                label_create = T("Add Organization"),
+                title_report = T("Organization Matrix"),
+                title_update = T("Update Organization"),
+                )
             table.logo.readable = table.logo.writable = False
-            table.name.label = T("Organization Name")
+            #table.name.label = T("Organization Name")
+            table.phone.label = T("Phone")
+
+            from s3 import S3StringWidget
+            table.name.widget = S3StringWidget(placeholder=T("Text"))
+            table.phone.widget = S3StringWidget(placeholder=T("+1 800-555-1212"))
+            table.website.widget = S3StringWidget(placeholder=T("URL"))
+            s3db.pr_contact.value.widget = S3StringWidget(placeholder=T("username"))
+            table.comments.widget = S3StringWidget(placeholder=T("Comments"), textarea=True)
 
             if method in ("summary", "report"):
 
@@ -955,12 +963,10 @@ def customise_org_organisation_controller(**attr):
                                   #                  )
                                   ]
 
-                s3.crud_strings.org_organisation.title_report = T("Organization Matrix")
-
                 # Report Options
                 report_fields = [# Only 1 Axis so use singular name
                                  #"name",
-                                 (T("Coalition Member"), "group_membership.group_id"),
+                                 (T("Coalition"), "group_membership.group_id"),
                                  (T("Sector"), "sector_organisation.sector_id"),
                                  (T("Service"), "service_organisation.service_id"),
                                  ]
@@ -1006,7 +1012,7 @@ def customise_org_organisation_controller(**attr):
                                "logo",
                                S3SQLInlineComponent(
                                     "group_membership",
-                                    label = T("Coalition Member"),
+                                    label = T("Coalition"),
                                     fields = [("", "group_id"),
                                               ("", "status_id"),
                                               ],
@@ -1079,9 +1085,10 @@ def customise_org_organisation_controller(**attr):
                                        # Not fully ready yet
                                        S3SQLInlineComponent("facility",
                                                 #label = T("Address"),
-                                                label = T("Organization's Places"),
+                                                label = T("Location(s)"),
                                                 fields = [("", "location_id"),
                                                         ],
+                                                # @ToDo: Fix
                                                 multiple = False,
                                        ))
 

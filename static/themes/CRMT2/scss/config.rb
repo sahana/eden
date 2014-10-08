@@ -1,9 +1,9 @@
 # Require any additional compass plugins here.
-add_import_path "../foundation/scss/components"
+add_import_path "../../foundation/scss/components"
 # Set this to the root of your project when deployed:
 http_path = "/"
-css_dir = "../../../static/themes/CRMT2"
-sass_dir = "scss"
+css_dir = ".."
+sass_dir = "."
 images_dir = "images"
 javascripts_dir = "js"
 # You can select your preferred output style here (can be overridden via the command line):

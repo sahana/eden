@@ -18,6 +18,11 @@ header.row {
     padding: 0;
 }
 
+table.embeddedComponent,
+form table.embeddedComponent td {
+    border: none;
+}
+
 /* Moved to CSS in-line with normal Eden practise. Needs more than this to untangle
 .S3menulogo {
     background: url("img/logos/sahana-sunflower.png") no-repeat center center;
