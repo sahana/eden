@@ -387,6 +387,8 @@ class S3CRUD(S3Method):
                     next_vars = self._remove_filters(r.get_vars)
                     create_next = r.url(target="[id]", method="update",
                                         vars=next_vars)
+                elif r.http == "POST" and "save_close" in r.post_vars:
+                    create_next = _config("create_next_close")
                 elif session.s3.rapid_data_entry and not r.component:
                     create_next = r.url()
                 else:
@@ -2993,20 +2995,19 @@ class S3CRUD(S3Method):
             form for the same record after create/update
         """
 
-        settings = current.response.s3.crud
         label = current.deployment_settings.get_ui_interim_save()
         if label:
-            T = current.T
             _class = "interim-save"
             if isinstance(label, basestring):
-                label = T(label)
+                label = current.T(label)
             elif isinstance(label, (tuple, list)) and len(label) > 1:
                 label, _class = label[:2]
             elif not isinstance(label, lazyT):
-                label = T("Save and Continue Editing")
+                label = current.T("Save and Continue Editing")
             item = ("interim_save", label, _class)
         else:
             return
+        settings = current.response.s3.crud
         if settings.custom_submit:
             settings.custom_submit.insert(0, item)
         else:

@@ -146,25 +146,72 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _submit_buttons(items):
+    def _submit_buttons(readonly=False):
         """
-            Render custom submit buttons
+            Render submit buttons
 
-            @param items: list of tuples (<HTML name>, label, <HTML class>)
-            @return: list of additional submit buttons
+            @param readonly: render the form read-only
+            @return: list of submit buttons
         """
 
-        buttons = []
-        for name, label, _class in items:
-            if isinstance(label, basestring):
-                label = current.T(label)
-            button = INPUT(_type="submit",
-                           _class="btn crud-submit-button",
-                           _name=name,
-                           _value=label)
-            if _class:
-                button.add_class(_class)
-            buttons.append(button)
+        T = current.T
+        s3 = current.response.s3
+        settings = s3.crud
+
+        if settings.custom_submit:
+            submit = [(None,
+                       settings.submit_button,
+                       settings.submit_style)]
+            submit.extend(settings.custom_submit)
+            buttons = []
+            for name, label, _class in submit:
+                if isinstance(label, basestring):
+                    label = T(label)
+                button = INPUT(_type="submit",
+                               _class="btn crud-submit-button",
+                               _name=name,
+                               _value=label)
+                if _class:
+                    button.add_class(_class)
+                buttons.append(button)
+        else:
+            buttons = ["submit"]
+
+        # Cancel button
+        if not readonly and s3.cancel:
+            if not settings.custom_submit:
+                if settings.submit_button:
+                    submit_label = T(settings.submit_button)
+                else:
+                    submit_label = T("Save")
+                submit_button = INPUT(_type="submit",
+                                      _value=submit_label)
+                if settings.submit_style:
+                    submit_button.add_class(settings.submit_style)
+                buttons = [submit_button]
+
+            cancel = s3.cancel
+            if isinstance(cancel, DIV):
+                cancel_button = cancel
+            else:
+                cancel_button = A(T("Cancel"),
+                                  _class="cancel-form-btn action-lnk")
+                if isinstance(cancel, dict):
+                    # Script-controlled cancel button (embedded form)
+                    if "script" in cancel:
+                        # Custom script
+                        script = cancel["script"]
+                    else:
+                        # Default script: hide form, show add-button
+                        script = \
+'''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
+                    s3.jquery_ready.append(script % cancel)
+                elif s3.cancel is True:
+                    cancel_button.add_class("s3-cancel")
+                else:
+                    cancel_button.update(_href=s3.cancel)
+            buttons.append(cancel_button)
+
         return buttons
 
     # -------------------------------------------------------------------------
@@ -334,45 +381,7 @@ class S3SQLDefaultForm(S3SQLForm):
             formstyle = settings.formstyle
 
         # Submit buttons
-        if settings.custom_submit:
-            submit = [(None,
-                       settings.submit_button,
-                       settings.submit_style)]
-            submit.extend(settings.custom_submit)
-            buttons = self._submit_buttons(submit)
-        else:
-            buttons = ["submit"]
-
-        # Cancel button
-        if not readonly and s3.cancel:
-            T = current.T
-            if not settings.custom_submit:
-                if settings.submit_button:
-                    submit_label = T(settings.submit_button)
-                else:
-                    submit_label = T("Save")
-                submit_button = INPUT(_type="submit",
-                                    _value=submit_label)
-                if settings.submit_style:
-                    submit_button.add_class(settings.submit_style)
-                buttons = [submit_button]
-
-            cancel = s3.cancel
-            cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
-            if isinstance(cancel, dict):
-                # Script-controlled cancel button (embedded form)
-                if "script" in cancel:
-                    # Custom script
-                    script = cancel["script"]
-                else:
-                    # Default script: hide form, show add-button
-                    script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
-                s3.jquery_ready.append(script % cancel)
-            elif s3.cancel is True:
-                cancel_button.add_class("s3-cancel")
-            else:
-                cancel_button.update(_href=s3.cancel)
-            buttons.append(cancel_button)
+        buttons = self._submit_buttons(readonly)
 
         # Generate the form
         if record is None:
@@ -898,37 +907,7 @@ class S3SQLCustomForm(S3SQLForm):
         formfields = [f[-1] for f in fields]
 
         # Submit buttons
-        if settings.custom_submit:
-            submit = [(None,
-                       settings.submit_button,
-                       settings.submit_style)]
-            submit.extend(settings.custom_submit)
-            buttons = self._submit_buttons(submit)
-        else:
-            buttons = ["submit"]
-
-        # Cancel button
-        if not readonly and s3.cancel:
-            T = current.T
-            if settings.submit_button:
-                submit_label = T(settings.submit_button)
-            else:
-                submit_label = T("Save")
-            submit_button = INPUT(_type="submit",
-                                  _value=submit_label)
-            if settings.submit_style:
-                submit_button.add_class(settings.submit_style)
-
-            cancel = s3.cancel
-            cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
-            if isinstance(cancel, dict):
-                script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})''' % cancel
-                s3.jquery_ready.append(script)
-            elif s3.cancel is True:
-                cancel_button.add_class("s3-cancel")
-            else:
-                cancel_button.update(_href=s3.cancel)
-            buttons = [submit_button, cancel_button]
+        buttons = self._submit_buttons(readonly)
 
         # Render the form
         tablename = self.tablename

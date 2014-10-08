@@ -919,6 +919,7 @@ def customise_org_organisation_controller(**attr):
             # CRUD Strings / Represent
             s3.crud_strings[tablename].update(
                 label_create = T("Add Organization"),
+                name_plural = T("Organizations"),
                 title_report = T("Organization Matrix"),
                 title_update = T("Update Organization"),
                 )
@@ -929,9 +930,17 @@ def customise_org_organisation_controller(**attr):
             from s3 import S3StringWidget
             table.name.widget = S3StringWidget(placeholder=T("Text"))
             table.phone.widget = S3StringWidget(placeholder=T("+1 800-555-1212"))
-            table.website.widget = S3StringWidget(placeholder=T("URL"))
-            s3db.pr_contact.value.widget = S3StringWidget(placeholder=T("username"))
+            table.website.widget = S3StringWidget(placeholder=T("URL"), prefix="http://")
+            s3db.pr_contact.value.widget = S3StringWidget(placeholder=T("username"), prefix="@")
             table.comments.widget = S3StringWidget(placeholder=T("Comments"), textarea=True)
+            s3.crud.submit_button = T("Save & Add Another")
+            s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                     #("cancel", T("Cancel"), "button small secondary cancel"),
+                                     )
+            s3.cancel = A(T("Cancel"),
+                          _class="button small secondary cancel",
+                          _href=r.url(method="summary"),
+                          )
 
             if method in ("summary", "report"):
 
@@ -1156,6 +1165,8 @@ def customise_org_organisation_controller(**attr):
                                             postprocess = org_organisation_postprocess)
 
                 s3db.configure(tablename,
+                               create_next = r.url(method="create"),
+                               create_next_close = r.url(method="summary"),
                                crud_form = crud_form,
                                )
 

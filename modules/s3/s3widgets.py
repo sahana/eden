@@ -5788,9 +5788,11 @@ class S3StringWidget(StringWidget):
 
     def __init__(self,
                  placeholder = None,
+                 prefix = None,
                  textarea = False,
                  ):
         self.placeholder = placeholder
+        self.prefix = prefix
         self.textarea = textarea
 
     def __call__(self, field, value, **attributes):
@@ -5800,13 +5802,24 @@ class S3StringWidget(StringWidget):
             value = (value != None and str(value)) or "",
             )
         attr = StringWidget._attributes(field, default, **attributes)
+
         placeholder = self.placeholder
         if placeholder:
             attr["_placeholder"] = placeholder
+
         if self.textarea:
             widget = TEXTAREA(**attr)
         else:
             widget = INPUT(**attr)
+
+        if self.prefix:
+            # NB These classes target Foundation Themes
+            widget = TAG[""](DIV(SPAN(self.prefix,
+                                      _class="prefix"),
+                                 _class="small-1 columns"),
+                             DIV(widget,
+                                 _class="small-9 columns"),
+                             )
 
         return TAG[""](widget,
                        requires = field.requires
