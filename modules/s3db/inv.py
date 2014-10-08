@@ -3342,6 +3342,8 @@ def inv_recv_crud_strings():
         CRUD Strings for inv_recv which ened to be visible to menus without a
         model load
     """
+    
+    T = current.T
 
     if current.deployment_settings.get_inv_shipment_name() == "order":
         recv_id_label = T("Order")
