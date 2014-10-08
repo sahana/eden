@@ -91,16 +91,6 @@ inv_tracking_status = {"UNKNOWN"    : TRACK_STATUS_UNKNOWN,
                        "RETURNING"  : TRACK_STATUS_RETURNING,
                        }
 
-# @todo: must not assign a current-variable to a module-global variable
-#        => fix analogous to S3InvTrackingLabels
-settings = current.deployment_settings
-inv_item_status_opts = settings.get_inv_item_status()
-send_type_opts = settings.get_inv_shipment_types()
-send_type_opts.update(inv_item_status_opts)
-send_type_opts.update(settings.get_inv_send_types())
-recv_type_opts = settings.get_inv_shipment_types()
-recv_type_opts.update(settings.get_inv_recv_types())
-
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
@@ -114,10 +104,10 @@ class S3WarehouseModel(S3Model):
     def model(self):
 
         T = current.T
-        db = current.db
+        #db = current.db
         messages = current.messages
         NONE = messages["NONE"]
-        add_components = self.add_components
+        #add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -403,6 +393,7 @@ class S3InventoryModel(S3Model):
         #
         # ondelete references have been set to RESTRICT because the inv. items
         # should never be automatically deleted
+        inv_item_status_opts = self.inv_item_status_opts
 
         tablename = "inv_inv_item"
         self.define_table(tablename,
@@ -682,7 +673,7 @@ $.filterOptionsS3({
         try:
             v = row.quantity * row.pack_value
             return v
-            
+
         except (AttributeError,TypeError):
             # not available
             return current.messages["NONE"]
@@ -706,27 +697,27 @@ $.filterOptionsS3({
                record.item_source_no == item_source_no:
                 # The tracking number hasn't changed so no validation needed
                 return
-                    
+
         db = current.db
         s3db = current.s3db
-        
+
         itable = s3db.inv_inv_item
 
         # Was: "track_org_id" - but inv_inv_item has no "track_org_id"!
         org_field = "owner_org_id"
-        
+
         query = (itable[org_field] == form.vars[org_field]) & \
                 (itable.item_source_no == item_source_no)
-                
+
         record = db(query).select(itable[org_field],
                                   limitby=(0, 1)).first()
         if record:
             org = current.response.s3 \
                          .org_organisation_represent(record[org_field])
 
-            form.errors.item_source_no = T("The Tracking Number %s "
-                                           "is already used by %s.") % \
-                                           (item_source_no, org)
+            form.errors.item_source_no = current.T("The Tracking Number %s "
+                                                   "is already used by %s.") % \
+                                                   (item_source_no, org)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -859,6 +850,7 @@ class S3InventoryTrackingLabels(S3Model):
     names = ("inv_tracking_status_labels",
              "inv_shipment_status_labels",
              "inv_itn_label",
+             "inv_item_status_opts",
              )
 
     def model(self):
@@ -870,7 +862,7 @@ class S3InventoryTrackingLabels(S3Model):
                            SHIP_STATUS_CANCEL: T("Canceled"),
                            SHIP_STATUS_RETURNING: T("Returning"),
                            }
-                                  
+
         tracking_status = {TRACK_STATUS_UNKNOWN: T("Unknown"),
                            TRACK_STATUS_PREPARING: T("In Process"),
                            TRACK_STATUS_TRANSIT: T("In transit"),
@@ -879,14 +871,16 @@ class S3InventoryTrackingLabels(S3Model):
                            TRACK_STATUS_CANCELED: T("Canceled"),
                            TRACK_STATUS_RETURNING: T("Returning"),
                            }
-        
+
         #itn_label = T("Item Source Tracking Number")
         # Overwrite the label until we have a better way to do this
         itn_label = T("CTN")
 
+        settings = current.deployment_settings
         return dict(inv_tracking_status_labels = tracking_status,
                     inv_shipment_status_labels = shipment_status,
                     inv_itn_label = itn_label,
+                    inv_item_status_opts = settings.get_inv_item_status()
                     )
 
     # -------------------------------------------------------------------------
@@ -978,6 +972,10 @@ class S3InventoryTrackingModel(S3Model):
         # ---------------------------------------------------------------------
         # Send (Outgoing / Dispatch / etc)
         #
+        send_type_opts = settings.get_inv_shipment_types()
+        send_type_opts.update(self.inv_item_status_opts)
+        send_type_opts.update(settings.get_inv_send_types())
+
         tablename = "inv_send"
         define_table(tablename,
                      send_ref(),
@@ -1151,7 +1149,7 @@ class S3InventoryTrackingModel(S3Model):
                          hidden = True,
                         ),
         ]
-        
+
         # CRUD strings
         ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
@@ -1241,6 +1239,9 @@ class S3InventoryTrackingModel(S3Model):
         #
         ship_doc_status = { SHIP_DOC_PENDING  : T("Pending"),
                             SHIP_DOC_COMPLETE : T("Complete") }
+
+        recv_type_opts = settings.get_inv_shipment_types()
+        recv_type_opts.update(settings.get_inv_recv_types())
 
         radio_widget = lambda field, value: \
                               RadioWidget().widget(field, value, cols = 2)
@@ -1578,6 +1579,7 @@ class S3InventoryTrackingModel(S3Model):
         # ---------------------------------------------------------------------
         # Tracking Items
         #
+        inv_item_status_opts = self.inv_item_status_opts
 
         tablename = "inv_track_item"
         define_table(tablename,
@@ -1753,7 +1755,7 @@ $.filterOptionsS3({
                   onvalidation = self.inv_track_item_onvalidate,
                   extra_fields = ["quantity", "pack_value", "item_pack_id"],
                  )
- 
+
         #---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -1768,7 +1770,7 @@ $.filterOptionsS3({
     @staticmethod
     def inv_track_item_total_value(row):
         """ Total value of a track item """
-        
+
         if hasattr(row, "inv_track_item"):
             row = row.inv_track_item
         try:
@@ -1793,24 +1795,22 @@ $.filterOptionsS3({
         except:
             # not available
             req_item_id = None
-            
+
         if not req_item_id:
             return current.messages["NONE"]
 
-        db = current.db
         s3db = current.s3db
-        
+
         ritable = s3db.req_req_item
         siptable = s3db.supply_item_pack
-        
+
         query = (ritable.id == req_item_id) & \
                 (ritable.item_pack_id == siptable.id)
-                
+
         row = current.db(query).select(ritable.quantity,
                                        ritable.quantity_transit,
                                        ritable.quantity_fulfil,
-                                       siptable.quantity) \
-                               .first()
+                                       siptable.quantity).first()
 
         if row:
             rim = row.req_req_item
@@ -2086,7 +2086,7 @@ $.filterOptionsS3({
                         list_fields.insert(4, (T("Quantity Needed"),
                                                "quantity_needed"))
 
-                s3db.configure("inv_track_item", list_fields=list_fields)                              
+                s3db.configure("inv_track_item", list_fields=list_fields)
 
                 # Can only create or delete track items for a send record if the status is preparing
                 method = r.method
@@ -2365,6 +2365,7 @@ $.filterOptionsS3({
         tracktable.send_inv_item_id.readable = False
         tracktable.recv_inv_item_id.readable = False
 
+        T = current.T
         list_fields = [(T("Item Code"), "item_id$code"),
                        "item_id",
                        (T("Weight (kg)"), "item_id$weight"),
@@ -2431,6 +2432,7 @@ $.filterOptionsS3({
                                                           show_link=False)
         date_string = table.date.represent(row.date)
 
+        T = current.T
         represent  = "%s (%s: %s %s %s)" % (recv_ref_string,
                                             T("From"),
                                             from_string,
@@ -2472,7 +2474,8 @@ $.filterOptionsS3({
 
         vars = form.vars
         if not vars.to_site_id and not vars.organisation_id:
-            error = T("Please enter a %(site)s OR an Organization") % dict(site=current.deployment_settings.get_org_site_label())
+            error = current.T("Please enter a %(site)s OR an Organization") % \
+                              dict(site=current.deployment_settings.get_org_site_label())
             errors = form.errors
             errors.to_site_id = error
             errors.organisation_id = error
@@ -2488,10 +2491,11 @@ $.filterOptionsS3({
         type = form.vars.type and int(form.vars.type)
         if type == 11 and not form.vars.from_site_id:
             # Internal Shipment needs from_site_id
-            form.errors.from_site_id = T("Please enter a %(site)s") % dict(site=current.deployment_settings.get_org_site_label())
+            form.errors.from_site_id = current.T("Please enter a %(site)s") % \
+                                            dict(site=current.deployment_settings.get_org_site_label())
         if type >= 32 and not form.vars.organisation_id:
             # Internal Shipment needs from_site_id
-            form.errors.organisation_id = T("Please enter an Organization/Supplier")
+            form.errors.organisation_id = current.T("Please enter an Organization/Supplier")
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -2744,7 +2748,7 @@ $.filterOptionsS3({
             # @ToDo: Save the results for the onaccept
 
         if max_kits < quantity:
-            form.errors.quantity = T("You can only make %d kit(s) with the available stock") % \
+            form.errors.quantity = current.T("You can only make %d kit(s) with the available stock") % \
                                         int(max_kits)
 
         return
@@ -2779,7 +2783,6 @@ $.filterOptionsS3({
         rtable = db.inv_recv
         siptable = db.supply_item_pack
         supply_item_add = s3db.supply_item_add
-        oldTotal = 0
         form_vars = form.vars
         id = form_vars.id
         record = form.record
@@ -2840,10 +2843,10 @@ $.filterOptionsS3({
         else:
             # Req module deactivated
             use_req = False
-            
+
         # If this item is linked to a request, then copy the req_ref to the send item
         if use_req and record and record.req_item_id:
-            
+
             req_id = db(ritable.id == record.req_item_id).select(ritable.req_id,
                                                                  limitby=(0, 1)
                                                                  ).first().req_id
@@ -3032,13 +3035,11 @@ $.filterOptionsS3({
             @ToDo: Play button
             http://www.simile-widgets.org/wiki/Timeline_Moving_the_Timeline_via_Javascript
         """
-       
+
         if r.representation == "html"  and  (r.name == "recv" or \
                                              r.name == "send"):
-            
+
             T = current.T
-            db = current.db
-            s3db = current.s3db
             request = current.request
             response = current.response
             s3 = response.s3
@@ -3054,10 +3055,11 @@ $.filterOptionsS3({
             # Add our data
             # @ToDo: Make this the initial data & then collect extra via REST with a stylesheet
             # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
-           
+
+            db = current.db
             rows1 = db(db.inv_send.id > 0).select()     # select rows from inv_send
             rows2 = db(db.inv_recv.id > 0).select()     # select rows form inv_recv
-           
+
             if r.record:
                 # Single record
                 rows = [r.record]
@@ -3067,8 +3069,8 @@ $.filterOptionsS3({
                 # http://stackoverflow.com/questions/7327689/how-to-generate-a-sequence-of-future-datetimes-in-python-and-determine-nearest-d
                 r.resource.load(limit=2000)
                 rows = r.resource._rows
-            
-            
+
+
             data = {"dateTimeFormat": "iso8601",
                     }
 
@@ -3081,7 +3083,7 @@ $.filterOptionsS3({
                 rr = (rows1, rows)
             for (row_send, row_recv) in itertools.izip_longest(rr[0], rr[0]):
                 # send  Dates
-                start = row_send.date  or "" 
+                start = row_send.date  or ""
                 if start:
                     if start < tl_start:
                         tl_start = start
@@ -3089,12 +3091,12 @@ $.filterOptionsS3({
                         tl_end = start
                     start = start.isoformat()
                 # recv date
-                end = row_recv.date or "" 
+                end = row_recv.date or ""
                 if end:
                     if end > tl_end:
                         tl_end = end
                     end = end.isoformat()
-                    
+
                 # append events
                 events.append({"start": start,
                                "end": end,
@@ -3152,7 +3154,7 @@ def inv_tabs(r):
             s3 = current.session.s3
 
             collapse_tabs = settings.get_inv_collapse_tabs()
-            tablename, record = s3_rheader_resource(r)
+            tablename = s3_rheader_resource(r)[0]
             if collapse_tabs and not (tablename == "inv_warehouse"):
                 # Test if the tabs are collapsed
                 show_collapse = True
@@ -3212,6 +3214,7 @@ def inv_rheader(r):
         # List or Create form: rheader makes no sense here
         return None
 
+    T = current.T
     s3db = current.s3db
     table = s3db.table(tablename)
 
@@ -3226,7 +3229,7 @@ def inv_rheader(r):
         if settings.has_module("hrm"):
             STAFF = settings.get_hrm_staff_label()
             tabs.append((STAFF, "human_resource"))
-            permit = current.auth.s3_has_permission 
+            permit = current.auth.s3_has_permission
             if permit("create", "hrm_human_resource_site") and \
                permit("update", tablename, r.id):
                 tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
@@ -3369,11 +3372,11 @@ def inv_recv_crud_strings():
         CRUD Strings for inv_recv which need to be visible to menus without a
         model load
     """
-    
+
     T = current.T
 
     if current.deployment_settings.get_inv_shipment_name() == "order":
-        recv_id_label = T("Order")
+        #recv_id_label = T("Order")
         ADD_RECV = T("Add Order")
         current.response.s3.crud_strings["inv_recv"] = Storage(
             label_create = ADD_RECV,
@@ -3388,7 +3391,7 @@ def inv_recv_crud_strings():
             msg_list_empty = T("No Orders registered")
         )
     else:
-        recv_id_label = T("Receive Shipment")
+        #recv_id_label = T("Receive Shipment")
         ADD_RECV = T("Receive New Shipment")
         current.response.s3.crud_strings["inv_recv"] = Storage(
             label_create = ADD_RECV,
@@ -3413,6 +3416,7 @@ def inv_send_rheader(r):
         if record:
             db = current.db
             s3db = current.s3db
+            T = current.T
             s3 = current.response.s3
 
             tabs = [(T("Edit Details"), None),
@@ -3568,7 +3572,6 @@ def inv_send_rheader(r):
                         rfooter.append(SPAN(msg))
             elif status != SHIP_STATUS_CANCEL:
                 if status == SHIP_STATUS_SENT:
-                    vars = current.request.vars
                     jappend = s3.jquery_ready.append
                     s3_has_permission = current.auth.s3_has_permission
                     if s3_has_permission("update",
@@ -3641,6 +3644,7 @@ def inv_send_pdf_footer(r):
     """
 
     if r.record:
+        T = current.T
         footer = DIV(TABLE(TR(TH(T("Commodities Loaded")),
                               TH(T("Date")),
                               TH(T("Function")),
@@ -3813,6 +3817,7 @@ def inv_recv_pdf_footer(r):
 
     record = r.record
     if record:
+        T = current.T
         footer = DIV(TABLE(TR(TH(T("Delivered By")),
                               TH(T("Date")),
                               TH(T("Function")),
@@ -3994,6 +3999,8 @@ class S3InventoryAdjustModel(S3Model):
         # ---------------------------------------------------------------------
         # Adjustment Items
         #
+        inv_item_status_opts = self.inv_item_status_opts
+
         tablename = "inv_adj_item"
         define_table(tablename,
                      # Original inventory item
@@ -4064,7 +4071,7 @@ class S3InventoryAdjustModel(S3Model):
                      adj_id(),
                      s3_comments(),
                      *s3_meta_fields())
-                     
+
         # Reusable Field
         adj_item_id = S3ReusableField("adj_item_id", "reference %s" % tablename,
                                       label = T("Inventory Adjustment Item"),
@@ -4220,6 +4227,7 @@ def inv_adj_rheader(r):
     if r.representation == "html" and r.name == "adj":
         record = r.record
         if record:
+            T = current.T
 
             tabs = [(T("Edit Details"), None),
                     (T("Items"), "adj_item"),
@@ -4229,7 +4237,7 @@ def inv_adj_rheader(r):
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             table = r.table
-            
+
             rheader = DIV(TABLE(
                             TR(TH("%s: " % table.adjuster_id.label),
                                table.adjuster_id.represent(record.adjuster_id),
@@ -4300,14 +4308,14 @@ def duplicator(job, query):
 
 # =============================================================================
 class inv_InvItemRepresent(S3Represent):
-    
+
     def __init__(self):
         """
             Constructor
         """
 
         super(inv_InvItemRepresent, self).__init__(lookup = "inv_inv_item")
-                                                   
+
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
         """
@@ -4319,7 +4327,7 @@ class inv_InvItemRepresent(S3Represent):
         """
 
         s3db = current.s3db
-        
+
         itable = s3db.inv_inv_item
         stable = s3db.supply_item
 
@@ -4344,7 +4352,7 @@ class inv_InvItemRepresent(S3Represent):
         organisation_ids = [row[organisation_id] for row in rows]
         if organisation_ids:
             itable.owner_org_id.represent.bulk(organisation_ids)
-        
+
         return rows
 
     # -------------------------------------------------------------------------
@@ -4356,7 +4364,7 @@ class inv_InvItemRepresent(S3Represent):
         """
 
         itable = current.s3db.inv_inv_item
-        
+
         iitem = row.inv_inv_item
         sitem = row.supply_item
 
