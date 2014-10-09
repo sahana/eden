@@ -816,7 +816,7 @@ class S3DataTable(object):
                     else:
                         tr.append(TD(row[field]))
                 body.append(tr)
-        table = TABLE([header, body], _id=id, _class="dataTable display")
+        table = TABLE([header, body], _id=id, _class="dataTable display responsive")
         return table
 
     # -------------------------------------------------------------------------

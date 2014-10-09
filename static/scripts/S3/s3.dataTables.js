@@ -919,6 +919,8 @@
 
         var dt;
         dt = $(id).dataTable({
+            'responsive': true,
+            'searchDelay': 450,
             'aaSorting': tableConfig['aaSort'],
             'aaSortingFixed': tableConfig['group'],
             'aLengthMenu': tableConfig['lengthMenu'],
@@ -1191,9 +1193,6 @@
             } // end of fnDrawCallback
         }); // end of call to $(id).datatable()
 
-        // Delay in milliseconds to prevent too many AJAX calls
-        dt.fnSetFilteringDelay(450);
-
         // Ajax-delete handler
         dt.delegate('.dt-ajax-delete', 'click.datatable', function(e) {
             e.stopPropagation();
@@ -1258,9 +1257,6 @@
             }
             window.open(url);
         });
-
-        // Does not handle horizontal overflow properly:
-        //new FixedHeader(dt);
 
         if (S3.dataTables.Resize) {
             // Resize the Columns after hiding extra data

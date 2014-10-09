@@ -1019,6 +1019,19 @@ S3.search = {};
             }
         }
 
+        /**
+         * Helper method to trigger re-calculation of column width in
+         * responsive data tables after unhiding them
+         *
+         * @param {jQuery} datatable - the datatable
+         */
+        var recalcResponsive = function(datatable) {
+            var dt = $(datatable).DataTable();
+            if (dt && dt.responsive) {
+                dt.responsive.recalc();
+            }
+        }
+
         // Initialise jQueryUI Tabs
         $('#summary-tabs').tabs({
             active: active_tab,
@@ -1064,10 +1077,20 @@ S3.search = {};
                     // Update all just-unhidden widgets which have pending updates
                     updatePendingTargets(form);
                 }
+                newPanel.find('table.dataTable.display.responsive')
+                        .each(function() {
+                    recalcResponsive(this);
+                });
             }
         }).css({visibility: 'visible'});
+
         // Activate not called? Unhide initial section anyway:
-        $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
+        $('.ui-tabs-panel[aria-hidden="false"]').first()
+                                                .removeClass('hide')
+                                                .find('table.dataTable.display.responsive')
+                                                .each(function() {
+                                                    recalcResponsive(this);
+                                                });
     };
 
     /**
