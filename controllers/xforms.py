@@ -369,13 +369,13 @@ def submission():
 
     try:
         result = resource.import_xml(source=tree, stylesheet=stylesheet)
-    except IOError, SyntaxError:
+    except (IOError, SyntaxError):
         raise HTTP(500, "Internal server error")
 
     # Parse response
     status = json.loads(result)["statuscode"]
 
-    if status == 200:
+    if status == "200":
         r = HTTP(201, "Saved") # ODK Collect only accepts 201
         r.headers["Location"] = request.env.http_host
         raise r
