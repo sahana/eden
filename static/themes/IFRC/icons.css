@@ -6,13 +6,15 @@ table.dataTable .action-btn.read,
 table.dataTable .action-btn.send,
 table.dataTable .action-btn.copy_all,
 table.dataTable .action-btn.dispatch,
-table.dataTable .delete-btn {
+table.dataTable .delete-btn,
+table.dataTable .dt-ajax-delete {
     font-size: 0;
     line-height: 0;
     margin: 0;
     padding: 0;
 }
-table.dataTable .delete-btn:before {
+table.dataTable .delete-btn:before,
+table.dataTable .dt-ajax-delete:before {
     content: url(img/trashbin.png);
 }
 table.dataTable .action-btn.edit:before,

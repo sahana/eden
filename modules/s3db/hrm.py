@@ -53,7 +53,8 @@ __all__ = ("S3HRModel",
            "hrm_training_controller",
            "hrm_training_event_controller",
            "hrm_cv",
-           "hrm_record",
+           #"hrm_record",
+           "hrm_Record",
            "hrm_configure_pr_group_membership",
            "hrm_human_resource_onaccept",
            #"hrm_competency_list_layout",
@@ -6501,7 +6502,7 @@ def hrm_person_controller(**attr):
     # Custom Method for HR Record
     set_method("pr", "person",
                method = "record",
-               action = hrm_record)
+               action = hrm_Record)
 
     if settings.has_module("asset"):
         # Assets as component of people
@@ -7106,131 +7107,282 @@ def hrm_cv(r, **attr):
         raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
-def hrm_record(r, **attr):
-    """
-        HR Record
-        - Custom Profile page with multiple DataTables:
-        * Human Resource
-        * Hours (for volunteers)
-        * Teams
-    """
+class hrm_Record(S3Method):
+    
+    def __init__(self, salary=False):
+        
+        self.salary = salary
+    
+    def apply_method(self, r, **attr):
+        """
+            HR Record
+            - Custom Profile page with multiple DataTables:
+            * Human Resource
+            * Hours (for volunteers)
+            * Teams
+        """
 
-    if r.name == "person" and r.id and not r.component and \
-       r.representation in ("html", "aadata"):
-        T = current.T
-        s3db = current.s3db
-        settings = current.deployment_settings
-        tablename = r.tablename
-        if r.controller == "vol":
-            controller = "vol"
-        else:
-            controller = "hrm"
+        if r.name == "person" and r.id and not r.component and \
+        r.representation in ("html", "aadata"):
+            T = current.T
+            s3db = current.s3db
+            settings = current.deployment_settings
+            tablename = r.tablename
+            if r.controller == "vol":
+                controller = "vol"
+            else:
+                controller = "hrm"
 
-        def dt_row_actions(component):
-            return lambda r, list_id: [
-                {"label": T("Open"),
-                 "url": r.url(component=component,
-                              component_id="[id]",
-                              method="update.popup",
-                              vars={"refresh": list_id}),
-                 "_class": "action-btn edit s3_modal",
-                },
-                {"label": T("Delete"),
-                 "url": r.url(component=component,
-                              component_id="[id]",
-                              method="delete"),
-                 "_class": "action-btn delete-btn delete-btn-ajax",
-                },
-            ]
+            def dt_row_actions(component):
+                return lambda r, list_id: [
+                    {"label": T("Open"),
+                     "url": r.url(component=component,
+                                  component_id="[id]",
+                                  method="update.popup",
+                                  vars={"refresh": list_id},
+                                  ),
+                     "_class": "action-btn edit s3_modal",
+                     },
+                    {"label": T("Delete"),
+                     "_ajaxurl": r.url(component=component, 
+                                       component_id="[id]", 
+                                       method="delete.json",
+                                       ),
+                     "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                     },
+                ]
 
-        if controller == "vol":
-            label = "Volunteer Record"
-        else:
-            label = "Staff Record"
+            if controller == "vol":
+                label = "Volunteer Record"
+            else:
+                label = "Staff Record"
 
-        table = s3db.hrm_human_resource
-        profile_widgets = [
-            dict(label = label,
-                 type = "form",
-                 tablename = "hrm_human_resource",
-                 context = "person",
-                 )
-            ]
+            table = s3db.hrm_human_resource
+            profile_widgets = [
+                dict(label = label,
+                     type = "form",
+                     tablename = "hrm_human_resource",
+                     context = "person",
+                     )
+                ]
 
-        if controller == "vol":
-            vol_experience = settings.get_hrm_vol_experience()
-            if vol_experience in ("programme", "both"):
-                # Exclude records which are just to link to Programme & also Training Hours
-                filter = (FS("hours") != None) & \
-                         (FS("programme_id") != None)
-                list_fields = ["id",
-                               "date",
-                               "programme_id",
-                               ]
-                if s3db.hrm_programme_hours.job_title_id.readable:
-                    list_fields.append("job_title_id")
-                list_fields.append("hours")
-                hours_widget = dict(label = "Program Hours",
-                                    label_create = "Add Program Hours",
+            if controller == "vol":
+                vol_experience = settings.get_hrm_vol_experience()
+                if vol_experience in ("programme", "both"):
+                    # Exclude records which are just to link to Programme & also Training Hours
+                    filter = (FS("hours") != None) & \
+                             (FS("programme_id") != None)
+                    list_fields = ["id",
+                                   "date",
+                                   "programme_id",
+                                   ]
+                    if s3db.hrm_programme_hours.job_title_id.readable:
+                        list_fields.append("job_title_id")
+                    list_fields.append("hours")
+                    hours_widget = dict(label = "Program Hours",
+                                        label_create = "Add Program Hours",
+                                        type = "datatable",
+                                        actions = dt_row_actions("hours"),
+                                        tablename = "hrm_programme_hours",
+                                        context = "person",
+                                        filter = filter,
+                                        list_fields = list_fields,
+                                        create_controller = controller,
+                                        create_function = "person",
+                                        create_component = "hours",
+                                        pagesize = None, # all records
+                                        )
+                    profile_widgets.append(hours_widget)
+
+            teams = settings.get_hrm_teams()
+            if teams:
+                hrm_configure_pr_group_membership()
+                if teams == "Teams":
+                    label_create = "Add Team"
+                elif teams == "Groups":
+                    label_create = "Create Group"
+                teams_widget = dict(label = teams,
+                                    label_create = label_create,
                                     type = "datatable",
-                                    actions = dt_row_actions("hours"),
-                                    tablename = "hrm_programme_hours",
+                                    actions = dt_row_actions("group_membership"),
+                                    tablename = "pr_group_membership",
                                     context = "person",
-                                    filter = filter,
-                                    list_fields = list_fields,
                                     create_controller = controller,
                                     create_function = "person",
-                                    create_component = "hours",
+                                    create_component = "group_membership",
                                     pagesize = None, # all records
                                     )
-                profile_widgets.append(hours_widget)
+                profile_widgets.append(teams_widget)
+                
+            if controller == "hrm":
+                
+                if self.salary:
+                    widget = dict(label = T("Salary"),
+                                  label_create = T("Add Salary"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("salary"),
+                                  tablename = "hrm_salary",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "salary",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
 
-        teams = settings.get_hrm_teams()
-        if teams:
-            hrm_configure_pr_group_membership()
-            if teams == "Teams":
-                label_create = "Add Team"
-            elif teams == "Groups":
-                label_create = "Create Group"
-            teams_widget = dict(label = teams,
-                                label_create = label_create,
-                                type = "datatable",
-                                actions = dt_row_actions("group_membership"),
-                                tablename = "pr_group_membership",
-                                context = "person",
-                                create_controller = controller,
-                                create_function = "person",
-                                create_component = "group_membership",
-                                pagesize = None, # all records
-                                )
-            profile_widgets.append(teams_widget)
+            if r.representation == "html":
+                # Maintain normal rheader for consistency
+                response = current.response
+                title = response.s3.crud_strings["pr_person"].title_display
+                profile_header = TAG[""](H2(title),
+                                         DIV(hrm_rheader(r),
+                                         _id="rheader"))
+            else:
+                profile_header = None
 
-        if r.representation == "html":
-            # Maintain normal rheader for consistency
-            response = current.response
-            title = response.s3.crud_strings["pr_person"].title_display
-            profile_header = TAG[""](H2(title),
-                                     DIV(hrm_rheader(r),
-                                     _id="rheader"))
+            s3db.configure(tablename,
+                           profile_cols = 1,
+                           profile_header = profile_header,
+                           profile_widgets = profile_widgets,
+                           )
+
+            profile = S3Profile()
+            profile.tablename = tablename
+            profile.request = r
+            output = profile.profile(r, **attr)
+            if r.representation == "html":
+                output["title"] = response.title = title
+            return output
+
         else:
-            profile_header = None
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
-        s3db.configure(tablename,
-                       profile_cols = 1,
-                       profile_header = profile_header,
-                       profile_widgets = profile_widgets,
-                       )
+# =============================================================================
+#def hrm_record(r, **attr):
+    #"""
+        #HR Record
+        #- Custom Profile page with multiple DataTables:
+        #* Human Resource
+        #* Hours (for volunteers)
+        #* Teams
+    #"""
 
-        profile = S3Profile()
-        profile.tablename = tablename
-        profile.request = r
-        output = profile.profile(r, **attr)
-        if r.representation == "html":
-            output["title"] = response.title = title
-        return output
+    #if r.name == "person" and r.id and not r.component and \
+       #r.representation in ("html", "aadata"):
+        #T = current.T
+        #s3db = current.s3db
+        #settings = current.deployment_settings
+        #tablename = r.tablename
+        #if r.controller == "vol":
+            #controller = "vol"
+        #else:
+            #controller = "hrm"
 
-    else:
-        raise HTTP(501, current.ERROR.BAD_METHOD)
+        #def dt_row_actions(component):
+            #return lambda r, list_id: [
+                #{"label": T("Open"),
+                 #"url": r.url(component=component,
+                              #component_id="[id]",
+                              #method="update.popup",
+                              #vars={"refresh": list_id}),
+                 #"_class": "action-btn edit s3_modal",
+                #},
+                #{"label": T("Delete"),
+                 #"url": r.url(component=component,
+                              #component_id="[id]",
+                              #method="delete"),
+                 #"_class": "action-btn delete-btn delete-btn-ajax",
+                #},
+            #]
+
+        #if controller == "vol":
+            #label = "Volunteer Record"
+        #else:
+            #label = "Staff Record"
+
+        #table = s3db.hrm_human_resource
+        #profile_widgets = [
+            #dict(label = label,
+                 #type = "form",
+                 #tablename = "hrm_human_resource",
+                 #context = "person",
+                 #)
+            #]
+
+        #if controller == "vol":
+            #vol_experience = settings.get_hrm_vol_experience()
+            #if vol_experience in ("programme", "both"):
+                ## Exclude records which are just to link to Programme & also Training Hours
+                #filter = (FS("hours") != None) & \
+                         #(FS("programme_id") != None)
+                #list_fields = ["id",
+                               #"date",
+                               #"programme_id",
+                               #]
+                #if s3db.hrm_programme_hours.job_title_id.readable:
+                    #list_fields.append("job_title_id")
+                #list_fields.append("hours")
+                #hours_widget = dict(label = "Program Hours",
+                                    #label_create = "Add Program Hours",
+                                    #type = "datatable",
+                                    #actions = dt_row_actions("hours"),
+                                    #tablename = "hrm_programme_hours",
+                                    #context = "person",
+                                    #filter = filter,
+                                    #list_fields = list_fields,
+                                    #create_controller = controller,
+                                    #create_function = "person",
+                                    #create_component = "hours",
+                                    #pagesize = None, # all records
+                                    #)
+                #profile_widgets.append(hours_widget)
+
+        #teams = settings.get_hrm_teams()
+        #if teams:
+            #hrm_configure_pr_group_membership()
+            #if teams == "Teams":
+                #label_create = "Add Team"
+            #elif teams == "Groups":
+                #label_create = "Create Group"
+            #teams_widget = dict(label = teams,
+                                #label_create = label_create,
+                                #type = "datatable",
+                                #actions = dt_row_actions("group_membership"),
+                                #tablename = "pr_group_membership",
+                                #context = "person",
+                                #create_controller = controller,
+                                #create_function = "person",
+                                #create_component = "group_membership",
+                                #pagesize = None, # all records
+                                #)
+            #profile_widgets.append(teams_widget)
+
+        #if r.representation == "html":
+            ## Maintain normal rheader for consistency
+            #response = current.response
+            #title = response.s3.crud_strings["pr_person"].title_display
+            #profile_header = TAG[""](H2(title),
+                                     #DIV(hrm_rheader(r),
+                                     #_id="rheader"))
+        #else:
+            #profile_header = None
+
+        #s3db.configure(tablename,
+                       #profile_cols = 1,
+                       #profile_header = profile_header,
+                       #profile_widgets = profile_widgets,
+                       #)
+
+        #profile = S3Profile()
+        #profile.tablename = tablename
+        #profile.request = r
+        #output = profile.profile(r, **attr)
+        #if r.representation == "html":
+            #output["title"] = response.title = title
+        #return output
+
+    #else:
+        #raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def hrm_configure_salary(r):

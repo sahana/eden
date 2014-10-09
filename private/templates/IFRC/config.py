@@ -1838,7 +1838,19 @@ def customise_pr_person_controller(**attr):
                     field.readable = field.writable = False
 
                 if r.method == "record" and r.controller == "hrm":
-                    # Use custom form
+                    # Custom config for method handler
+                    s3db.set_method("pr", "person",     
+                                    method = "record",
+                                    action = s3db.hrm_Record(salary=True))
+                    # Custom list_fields for hrm_salary (exclude monthly amount)
+                    s3db.configure("hrm_salary",
+                                   list_fields = ["staff_level_id",
+                                                  "salary_grade_id",
+                                                  "start_date",
+                                                  "end_date",
+                                                  ],
+                                   )
+                    # Custom form for hrm_human_resource
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_fields = ["organisation_id",
                                    "site_id",
@@ -1923,17 +1935,6 @@ def customise_pr_person_controller(**attr):
                 blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
                 field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
 
-            elif component_name == "salary":
-                # Don't use monthly amount field
-                field = s3db.hrm_salary.monthly_amount
-                field.readable = field.writable = False
-                r.component.configure(list_fields = ["staff_level_id",
-                                                     "salary_grade_id",
-                                                     "start_date",
-                                                     "end_date",
-                                                     ],
-                                      )
-
             elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience
                 # Use simple free-text variants
@@ -1983,9 +1984,6 @@ def pr_rheader(r, vnrc):
         if controller == "vol":
             # Simplify RHeader
             settings.hrm.vol_experience = None
-        elif controller == "hrm":
-            # Expose Salary Tab
-            settings.hrm.salary = True
 
     if controller == "member":
         return current.s3db.member_rheader(r)

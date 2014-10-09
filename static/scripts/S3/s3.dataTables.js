@@ -1027,7 +1027,13 @@
                                 }
                                 Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" href="' + url + '" title="' + title + '"' + target + '>' + label + '</a>' + '&nbsp;';
                             } else {
-                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + title + '"' + target + '>' + label + '</a>' + '&nbsp;';
+                                var ajaxURL = action._ajaxurl;
+                                if (ajaxURL) {
+                                    ajaxURL = ' data-url="' + ajaxURL + '"';
+                                } else {
+                                    ajaxURL = '';
+                                }
+                                Buttons = Buttons + '<a db_id="'+ action_id + '" class="' + c + '" title="' + title + '"' + ajaxURL + '>' + label + '</a>' + '&nbsp;';
                             }
                         } // end of loop through for each row Action for this table
                     } // end of if there are to be Row Actions for this table
@@ -1187,6 +1193,31 @@
 
         // Delay in milliseconds to prevent too many AJAX calls
         dt.fnSetFilteringDelay(450);
+
+        // Ajax-delete handler
+        dt.delegate('.dt-ajax-delete', 'click.datatable', function(e) {
+            e.stopPropagation();
+            if (confirm(i18n.delete_confirmation)) {
+                var $this = $(this);
+                var db_id = $this.attr('db_id'),
+                    ajaxURL = $this.data('url');
+                if (ajaxURL && db_id) {
+                    ajaxURL = ajaxURL.replace(/%5Bid%5D/g, db_id);
+                }
+                $.ajaxS3({
+                    'url': ajaxURL,
+                    'type': 'POST',
+                    'dataType': 'json',
+                    'data': '',
+                    'success': function(data) {
+                        dt.dataTable().fnReloadAjax();
+                    }
+                });
+            } else {
+                event.preventDefault();
+                return false;
+            }
+        });
 
         // Export formats click-handler
         dt.closest('.dt-wrapper').find('.dt-export')

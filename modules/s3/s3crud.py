@@ -1019,7 +1019,8 @@ class S3CRUD(S3Method):
             r.http = "DELETE" # must be set for immediate redirect
             self.next = delete_next or r.url(method="")
 
-        elif r.http == "DELETE":
+        elif r.http == "DELETE" or \
+             r.representation == "json" and r.http == "POST" and record_id:
             # Delete the records and return a JSON message
             numrows = self.resource.delete(format=r.representation)
             if numrows > 1:
