@@ -39,8 +39,9 @@ __all__ = ("S3LocationModel",
            "S3FeatureLayerModel",
            "S3MapModel",
            "S3GISThemeModel",
-           "S3POIModel",
-           "S3POIFeedModel",
+           "S3PoIModel",
+           "S3PoIOrganisationGroupModel",
+           "S3PoIFeedModel",
            "gis_location_filter",
            "gis_LocationRepresent",
            "gis_layer_represent",
@@ -4761,7 +4762,7 @@ class S3GISThemeModel(S3Model):
         return json.dumps(style)
 
 # =============================================================================
-class S3POIModel(S3Model):
+class S3PoIModel(S3Model):
     """
         Data Model for PoIs (Points of Interest)
     """
@@ -4769,16 +4770,20 @@ class S3POIModel(S3Model):
     names = ("gis_poi_type",
              #"gis_poi_type_tag",
              "gis_poi",
+             "gis_poi_id",
              )
 
     def model(self):
 
+        db = current.db
         T = current.T
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # PoI Category
+        #
+        # @ToDo: Optionally restrict by Feature Type?
         #
         tablename = "gis_poi_type"
         define_table(tablename,
@@ -4796,7 +4801,7 @@ class S3POIModel(S3Model):
                                       ondelete = "SET NULL",
                                       represent = represent,
                                       requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(current.db, "gis_poi_type.id",
+                                        IS_ONE_OF(db, "gis_poi_type.id",
                                                   represent)),
                                       sortby = "name",
                                       )
@@ -4838,6 +4843,14 @@ class S3POIModel(S3Model):
                          # @ToDo: S3PoIWidget() to allow other resources to pickup the passed Lat/Lon/WKT
                          widget = S3LocationLatLonWidget(),
                      ),
+                     # Enable in Templates as-required
+                     self.org_organisation_id(readable = False,
+                                              writable = False,
+                                              ),
+                     # Enable in Templates as-required
+                     self.pr_person_id(readable = False,
+                                       writable = False,
+                                       ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -4853,8 +4866,33 @@ class S3POIModel(S3Model):
             msg_record_deleted = T("Point of Interest deleted"),
             msg_list_empty = T("No Points of Interest currently available"))
 
+        represent = S3Represent(lookup=tablename)
+        poi_id = S3ReusableField("poi_id", "reference %s" % tablename,
+                                 label = T("Point of Interest"),
+                                 ondelete = "RESTRICT",
+                                 represent = represent,
+                                 requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "gis_poi.id",
+                                                          represent)
+                                                ),
+                                 sortby = "name",
+                                 )
+
+        # Components
+        self.add_components(tablename,
+                            # Organisation Groups (Coalitions/Networks)
+                            org_group = {"link": "gis_poi_group",
+                                         "joinby": "poi_id",
+                                         "key": "group_id",
+                                         "actuate": "hide",
+                                         },
+                            # Format for InlineComponent/filter_widget
+                            gis_poi_group = "poi_id",
+                            )
+
         # Pass names back to global scope (s3.*)
-        return dict()
+        return dict(gis_poi_id = poi_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4980,7 +5018,64 @@ class S3POIModel(S3Model):
             current.log.warning("Unable to update GIS PoI Style as there are multiple possible")
 
 # =============================================================================
-class S3POIFeedModel(S3Model):
+class S3PoIOrganisationGroupModel(S3Model):
+    """
+        PoI Organisation Group Model
+
+        This model allows PoIs to link to Organisation Groups
+    """
+
+    names = ("gis_poi_group",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # PoIs <> Organisation Groups - Link table
+        #
+        tablename = "gis_poi_group"
+        self.define_table(tablename,
+                          self.gis_poi_id(empty = False,
+                                          ondelete = "CASCADE",
+                                          ),
+                          self.org_group_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.gis_poi_group_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_poi_group_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "gis_poi_group":
+            return
+
+        data = item.data
+        poi_id = data.get("poi_id", None)
+        group_id = data.get("group_id", None)
+        if poi_id and group_id:
+            table = item.table
+            query = (table.poi_id == poi_id) & \
+                    (table.group_id == group_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3PoIFeedModel(S3Model):
     """ Data Model for PoI feeds """
 
     names = ("gis_poi_feed",)

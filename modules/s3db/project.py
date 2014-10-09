@@ -1363,9 +1363,10 @@ class S3ProjectActivityTypeModel(S3Model):
 # =============================================================================
 class S3ProjectActivityOrganisationModel(S3Model):
     """
-        Project Activity Organization Model
+        Project Activity Organisation Model
 
-        This model links Organisations with Activities
+        This model allows Activities to link to Organisations
+                                           &/or Organisation Groups
         - useful when we don't have the details of the Projects
     """
 

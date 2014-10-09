@@ -1,7 +1,7 @@
 <header class='row details-header'>
  <div class='large-12 columns'>
   <h6 class='breadcrumbs'>
-   <a href='{{=URL(args="summary")}}'>{{=s3.crud_strings[r.tablename].name_plural}}</a>
+   <a href='{{=URL(args="summary")}}'>{{=s3.crud_strings[r.tablename].title_list}}</a>
    <a href='#' class='current'>{{=T("Details")}}</a>
   </h6>
   <h1 class='details-title'>{{try:}}{{=r.record.name}}{{except:}}{{pass}}</h1>

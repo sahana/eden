@@ -4689,6 +4689,7 @@ class S3LocationSelectorWidget2(FormWidget):
             if not self.color_picker:
                 color_picker = False
             else:
+                toolbar = True
                 # Requires the custom controller to store this before calling the widget
                 # - a bit hacky, but can't think of a better option currently without rewriting completely as an S3SQLSubForm
                 record_id = s3.record_id
