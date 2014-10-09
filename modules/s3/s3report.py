@@ -915,6 +915,7 @@ class S3ReportForm(object):
             """ Helper to construct a layer label """
             mlabel = mname(method)
             flabel = rfield.label if rfield.label != "Id" else RECORDS
+            # @ToDo: Exclude this string from admin/translate exports
             return T("%s (%s)") % (flabel, mlabel)
 
         prefix = resource.prefix_selector

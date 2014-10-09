@@ -2307,11 +2307,11 @@ def event_notification_dispatcher(r, **attr):
 
             text += "************************************************"
             text += "\n%s " % T("Automatic Message")
-            text += "\n%s " % T("Event ID: %s, ") % id
-            text += T(" Event name: %s") % eventName
-            text += "\n%s " % T("Event started: %s") % startDate
-            text += "\n%s " % T("Exercise= %s,") % exercise
-            text += "%s " % T("Status open= %s") % exercise
+            text += "\n%s: %s, " % (T("Event ID"), id)
+            text += " %s: %s" % (T("Event name"), eventName)
+            text += "\n%s: %s " % (T("Event started"), startDate)
+            text += "\n%s= %s, " % (T("Exercise"), exercise)
+            text += "%s= %s" % (T("Status open"), exercise)
             text += "\n************************************************\n"
 
             # URL to redirect to after message sent
@@ -2337,12 +2337,12 @@ def event_notification_dispatcher(r, **attr):
 
             text += "************************************************"
             text += "\n%s " % T("Automatic Message")
-            text += "\n%s " % T("Incident ID: %s, ") % id
-            text += T(" Incident name: %s") % incName
-            text += "\n%s " % T("Related event: %s") % eventName
-            text += "\n%s " % T("Incident started: %s") % zeroHour
-            text += "\n%s " % T("Exercise? %s,") % exercise
-            text += "%s " % T("Closed? %s") % closed
+            text += "\n%s: %s,  " % (T("Incident ID"), id)
+            text += " %s: %s" % (T("Incident name"), incName)
+            text += "\n%s: %s " % (T("Related event"), eventName)
+            text += "\n%s: %s " % (T("Incident started"), zeroHour)
+            text += "\n%s %s, " % (T("Exercise?"), exercise)
+            text += "%s %s" % (T("Closed?"), closed)
             text += "\n************************************************\n"
 
             url = URL(c="event", f="incident", args=r.id)

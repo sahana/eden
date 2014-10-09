@@ -4840,9 +4840,8 @@ class S3POIModel(S3Model):
                      ),
                      *s3_meta_fields())
 
-        ADD_POI = T("Create Point of Interest")
         crud_strings[tablename] = Storage(
-            label_create = ADD_POI,
+            label_create = T("Create Point of Interest"),
             title_display = T("Point of Interest Details"),
             title_list = T("Points of Interest"),
             title_update = T("Edit Point of Interest"),

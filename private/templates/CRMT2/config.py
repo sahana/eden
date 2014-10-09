@@ -146,10 +146,10 @@ settings.base.youtube_id = (dict(id = "introduction",
 
 # -----------------------------------------------------------------------------
 # Summary Pages
-settings.ui.summary = ({"common": True,
-                        "name": "add",
-                        "widgets": [{"method": "create"}],
-                        },
+settings.ui.summary = (#{"common": True,    # Added in View instead
+                       # "name": "add",
+                       # "widgets": [{"method": "create"}],
+                       # },
                        {"common": True,
                         "name": "cms",
                         "widgets": [{"method": "cms"}]
@@ -158,13 +158,13 @@ settings.ui.summary = ({"common": True,
                         "label": "Table",
                         "widgets": [{"method": "datatable"}]
                         },
-                       {"name": "charts",
-                        "label": "Charts",
-                        "widgets": [{"method": "report", "ajax_init": True}]
-                        },
                        {"name": "map",
                         "label": "Map",
                         "widgets": [{"method": "map", "ajax_init": True}],
+                        },
+                       {"name": "charts",
+                        "label": "Chart",
+                        "widgets": [{"method": "report", "ajax_init": True}]
                         },
                        )
 
@@ -219,7 +219,7 @@ settings.gis.layer_properties = False
 # Uncomment to hide the Overlays folder in the LayerTree
 #settings.gis.layer_tree_overlays = False
 # Uncomment to change the label of the Overlays folder in the LayerTree
-settings.gis.label_overlays = "Places"
+#settings.gis.label_overlays = "Places"
 # Uncomment to not expand the folders in the LayerTree by default
 settings.gis.layer_tree_expanded = False
 # Uncomment to have custom folders in the LayerTree use Radio Buttons
@@ -318,7 +318,7 @@ settings.org.services_hierarchical = True
 # Enable the use of Organisation Groups
 settings.org.groups = "Coalition"
 # Set the label for Sites
-settings.org.site_label = "Place"
+settings.org.site_label = "Location"
 
 # -----------------------------------------------------------------------------
 # projects
@@ -327,7 +327,7 @@ settings.org.site_label = "Place"
 settings.project.sectors = False
 
 # -----------------------------------------------------------------------------
-# Contacts
+# People
 #
 def user_coalition(row):
     """
@@ -411,16 +411,18 @@ def customise_pr_person_controller(**attr):
             if r.controller != "default":
                 # CRUD Strings
                 s3.crud_strings[tablename] = Storage(
-                    label_create = T("Add"),
-                    title_display = T("Contact Details"),
-                    title_list = T("Contact Directory"),
-                    title_update = T("Update Contact Details"),
-                    label_list_button = T("List Contacts"),
-                    label_delete_button = T("Delete Contact"),
-                    msg_record_created = T("Contact added"),
-                    msg_record_modified = T("Contact details updated"),
-                    msg_record_deleted = T("Contact deleted"),
-                    msg_list_empty = T("No Contacts currently registered"))
+                    label_create = T("Add Person"),
+                    title_display = T("Person Details"),
+                    title_list = T("People"),
+                    title_update = T("Update Person Details"),
+                    label_list_button = T("List People"),
+                    label_delete_button = T("Delete Person"),
+                    name_plural = T("People"),
+                    name_single = "person", # Used for Create Icon in Summary View
+                    msg_record_created = T("Person added"),
+                    msg_record_modified = T("Person details updated"),
+                    msg_record_deleted = T("Person deleted"),
+                    msg_list_empty = T("No People currently registered"))
 
             # Custom Form (Read/Create/Update)
             from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent
@@ -432,23 +434,23 @@ def customise_pr_person_controller(**attr):
 
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
-            site_field = htable.site_id
-            site_field.label = T("Place")
-            represent = S3Represent(lookup="org_site")
-            site_field.represent = represent
+            #site_field = htable.site_id
+            #site_field.label = T("Place")
+            #represent = S3Represent(lookup="org_site")
+            #site_field.represent = represent
             if widgets:
                 from s3 import IS_ONE_OF, S3MultiSelectWidget
                 from s3layouts import S3AddResourceLink
                 htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
-                site_field.widget = S3MultiSelectWidget(multiple=False)
-                site_field.requires = IS_ONE_OF(db, "org_site.site_id",
-                                                represent,
-                                                orderby = "org_site.name")
-                site_field.comment = S3AddResourceLink(c="org", f="office",
-                                                       vars={"child": "site_id"},
-                                                       label=T("Add New Place"),
-                                                       title=T("Place"),
-                                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
+                #site_field.widget = S3MultiSelectWidget(multiple=False)
+                #site_field.requires = IS_ONE_OF(db, "org_site.site_id",
+                #                                represent,
+                #                                orderby = "org_site.name")
+                #site_field.comment = S3AddResourceLink(c="org", f="office",
+                #                                       vars={"child": "site_id"},
+                #                                       label=T("Add New Place"),
+                #                                       title=T("Place"),
+                #                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
 
             s3db.pr_image.profile.default = True
             # ImageCrop widget doesn't currently work within an Inline Form
@@ -459,7 +461,7 @@ def customise_pr_person_controller(**attr):
 
             hr_fields = ["organisation_id",
                          #"job_title_id",
-                         "site_id",
+                         #"site_id",
                          ]
             #if widgets:
             #    # Context from a Profile page?"
@@ -618,6 +620,23 @@ def customise_project_activity_controller(**attr):
         s3db = current.s3db
         tablename = "project_activity"
         table = s3db[tablename]
+
+        s3.crud_strings[tablename].update(
+            label_create = T("Add Activity"),
+            name_plural = T("Activities"),
+            name_single = "activity", # Used for Create Icon in Summary View
+            )
+        from s3 import S3StringWidget
+        table.name.widget = S3StringWidget(placeholder=T("Text"))
+        table.comments.widget = S3StringWidget(placeholder=T("Comments"), textarea=True)
+        s3.crud.submit_button = T("Save & Add Another")
+        s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                 #("cancel", T("Cancel"), "button small secondary cancel"),
+                                 )
+        s3.cancel = A(T("Cancel"),
+                      _class="button small secondary cancel",
+                      _href=r.url(method="summary"),
+                      )
 
         method = r.method
         representation = r.representation
@@ -920,6 +939,7 @@ def customise_org_organisation_controller(**attr):
             s3.crud_strings[tablename].update(
                 label_create = T("Add Organization"),
                 name_plural = T("Organizations"),
+                name_single = "organization", # Used for Create Icon in Summary View
                 title_report = T("Organization Matrix"),
                 title_update = T("Update Organization"),
                 )
@@ -1602,6 +1622,108 @@ def customise_gis_config_controller(**attr):
     return attr
 
 settings.customise_gis_config_controller = customise_gis_config_controller
+
+# -----------------------------------------------------------------------------
+# Points, Routes and Areas
+#
+def customise_gis_poi_controller(**attr):
+
+    # Custom PreP
+    s3 = current.response.s3
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        if r.interactive:
+            s3db = current.s3db
+            tablename = "gis_poi"
+            table = s3db.gis_poi
+
+            if r.record:
+                gtable = s3db.gis_location
+                row = current.db(gtable.id == r.record.location_id).select(gtable.gis_feature_type,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
+                try:
+                    feature_type = row.gis_feature_type
+                except:
+                    # No location?
+                    feature_type = 1
+            else:
+                feature_type = r.get_vars.get("~.location_id$gis_feature_type")
+                if feature_type:
+                    feature_type = int(feature_type)
+                else:
+                    feature_type = 1
+
+            if feature_type == 1:
+                # Point
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Add Point"),
+                    title_display = T("Point Details"),
+                    title_list = T("Points"),
+                    title_update = T("Update Point Details"),
+                    label_list_button = T("List Points"),
+                    label_delete_button = T("Delete Point"),
+                    name_plural = T("Points"),
+                    name_single = "point", # Used for Create Icon in Summary View
+                    msg_record_created = T("Point added"),
+                    msg_record_modified = T("Point details updated"),
+                    msg_record_deleted = T("Point deleted"),
+                    msg_list_empty = T("No Points currently registered"))
+            elif feature_type == 2:
+                # Route
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Add Route"),
+                    title_display = T("Route Details"),
+                    title_list = T("Routes"),
+                    title_update = T("Update Route Details"),
+                    label_list_button = T("List Routes"),
+                    label_delete_button = T("Delete Route"),
+                    name_plural = T("Routes"),
+                    name_single = "route", # Used for Create Icon in Summary View
+                    msg_record_created = T("Route added"),
+                    msg_record_modified = T("Route details updated"),
+                    msg_record_deleted = T("Route deleted"),
+                    msg_list_empty = T("No Routes currently registered"))
+            elif feature_type == 3:
+                # Area
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Add Area"),
+                    title_display = T("Area Details"),
+                    title_list = T("Areas"),
+                    title_update = T("Update Area Details"),
+                    label_list_button = T("List Areas"),
+                    label_delete_button = T("Delete Area"),
+                    name_plural = T("Areas"),
+                    name_single = "area", # Used for Create Icon in Summary View
+                    msg_record_created = T("Area added"),
+                    msg_record_modified = T("Area details updated"),
+                    msg_record_deleted = T("Area deleted"),
+                    msg_list_empty = T("No Areas currently registered"))
+
+            from s3 import S3StringWidget
+            table.name.widget = S3StringWidget(placeholder=T("Text"))
+            table.comments.widget = S3StringWidget(placeholder=T("Description"), textarea=True)
+            s3.crud.submit_button = T("Save & Add Another")
+            s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                     #("cancel", T("Cancel"), "button small secondary cancel"),
+                                     )
+            s3.cancel = A(T("Cancel"),
+                          _class="button small secondary cancel",
+                          _href=r.url(method="summary"),
+                          )
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.customise_gis_poi_controller = customise_gis_poi_controller
 
 # -----------------------------------------------------------------------------
 # Site Activity Log

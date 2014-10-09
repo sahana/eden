@@ -1,22 +1,23 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='summary-common'>
- {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
+<header class='row data-header'>
+ <div class='large-8 columns'>
+  <h1 class='row-title'>{{try:}}{{=title}}{{except:}}{{pass}}</h1>
+  <p class='lede'>{{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}</p>
+ </div>
+ <div id='summary-common' class='large-4 columns'>
+  <a class='button small alert has-icon' href='{{=URL(args="create.html")}}'><img src="/{{=appname}}/static/themes/{{=response.s3.theme}}/img/icons/{{=response.s3.crud_strings[r.tablename].name_single}}.png" width='20' height='20'>{{=response.s3.crud_strings[r.tablename].label_create}}</a>
+ </div>
+</header>
  <div id='filter-form' class='form-container'>
   {{try:}}{{=filter_form}}{{except:}}{{pass}}
  </div>
 </div>
 <div id='summary-tabs'>
- <div id='summary-tab-headers'>
+ <div id='summary-tab-headers' class='row tabs-header'>
   {{try:}}{{=tabs}}{{except:}}{{pass}}
  </div>
- <div id='summary-sections'>
+ <div id='summary-sections' class='row tabs-content'>
   {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
  </div>
 </div>
-{{if s3.debug:}}
-{{s3.scripts.append("/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname)}}
-{{s3.scripts.append("/%s/static/scripts/flot/jquery.flot.js" % appname)}}
-{{s3.scripts.append("/%s/static/scripts/flot/jquery.flot.pie.js" % appname)}}
-{{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.pivotTables.min.js" % appname)}}{{pass}}
 {{include "dataTables.html"}}
-{{include "dataLists.html"}}
+
