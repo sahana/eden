@@ -817,6 +817,8 @@ class S3DataTable(object):
                         tr.append(TD(row[field]))
                 body.append(tr)
         table = TABLE([header, body], _id=id, _class="dataTable display")
+        if current.deployment_settings.get_ui_datatables_responsive():
+            table.add_class("responsive")
         return table
 
     # -------------------------------------------------------------------------
