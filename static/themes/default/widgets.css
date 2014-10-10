@@ -229,7 +229,7 @@ textarea.richtext {
    overflow: auto; */
    /* Bring in line with export formats */
    margin-top: -1px;
-   min-width: 640px;
+/*    min-width: 640px; */
 }
 
 #table-container .empty {
