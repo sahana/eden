@@ -1324,6 +1324,28 @@ class S3Config(Storage):
             create/update forms
         """
         return self.ui.get("default_cancel_button", False)
+        
+    def get_ui_icon_set(self):
+        """
+            Standard icon set, one of:
+            - "font-awesome"
+            - "foundation"
+        """
+        return self.ui.get("icons", "font-awesome")
+        
+    def get_ui_custom_icons(self):
+        """
+            Custom icon CSS classes, a dict {abstract name: CSS class},
+            can be used to partially override standard icons
+        """
+        return self.ui.get("custom_icons", None)
+        
+    def get_ui_icon_layout(self):
+        """
+            Callable to render icon HTML, which takes an ICON instance
+            as parameter and returns valid XML as string
+        """
+        return self.ui.get("icon_layout", None)
 
     # -------------------------------------------------------------------------
     def get_ui_auth_user_represent(self):

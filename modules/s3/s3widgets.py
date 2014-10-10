@@ -74,6 +74,7 @@ __all__ = ("S3ACLWidget",
            "s3_comments_widget",
            "s3_richtext_widget",
            "search_ac",
+           "ICON",
            )
 
 import datetime
@@ -6289,5 +6290,224 @@ def search_ac(r, **attr):
 
     current.response.headers["Content-Type"] = "application/json"
     return json.dumps(output, separators=SEPARATORS)
+
+# =============================================================================
+class ICON(I):
+    """ 
+        Helper class to render <i> tags for icons, mapping abstract
+        icon names to theme-specific CSS classes. The standard icon
+        set can be configured using settings.ui.icons
+        
+        e.g. ICON("book"), gives:
+            - font-awesome: <i class="icon icon-book">
+            - foundation: <i class="fi-book">
+            
+        Standard sets are defined below.
+            
+        Additional icons (beyond the standard set) can be configured
+        per deployment (settings.ui.custom_icons).
+        
+        If <i class=""> is not suitable for the CSS, a custom HTML
+        layout can be configured as settings.ui.icon_layout. See
+        S3Config for more details.
+        
+        @todo: apply in widgets/crud/profile+datalist layouts etc.
+        @todo: better abstract names for the icons to indicate what they
+               symbolize rather than what they depict, e.g. "sitemap" is
+               typically used to symbolize an organisation => rename into
+               "organisation".
+    """
+
+    # -------------------------------------------------------------------------
+    # Standard icon sets, 
+    # - "_base" can be used to define a common CSS class for all icons
+    #
+    icons = {
+        "font-awesome": {
+            "_base": "icon",
+            "arrow-down": "icon-arrow-down",
+            "bar-chart": "icon-bar-chart",
+            "book": "icon-book",
+            "bookmark": "icon-bookmark",
+            "bookmark-empty": "icon-bookmark-empty",
+            "briefcase": "icon-briefcase",
+            "calendar": "icon-calendar",
+            "certificate": "icon-certificate",
+            "comment-alt": "icon-comment-alt",
+            "down": "icon-caret-down",
+            "edit": "icon-edit",
+            "envelope-alt": "icon-envelope-alt",
+            "exclamation": "icon-exclamation",
+            "file": "icon-file",
+            "file-alt": "icon-file-alt",
+            "folder-open-alt": "icon-folder-open-alt",
+            "fullscreen": "icon-fullscreen",
+            "globe": "icon-globe",
+            "home": "icon-home",
+            "link": "icon-link",
+            "list": "icon-list",
+            "map-marker": "icon-map-marker",
+            "offer": "icon-truck",
+            "paper-clip": "icon-paper-clip",
+            "phone": "icon-phone",
+            "plus": "icon-plus",
+            "plus-sign": "icon-plus-sign",
+            "remove": "icon-remove",
+            "request": "icon-flag",
+            "sitemap": "icon-sitemap",
+            "star": "icon-star",
+            "table": "icon-table",
+            "tag": "icon-tag",
+            "tags": "icon-tags",
+            "time": "icon-time",
+            "trash": "icon-trash",
+            "truck": "icon-truck",
+            "up": "icon-caret-up",
+            "user": "icon-user",
+            "wrench": "icon-wrench",
+            "zoomin": "icon-zoomin",
+            "zoomout": "icon-zoomout",
+        },
+        # @todo: integrate
+        #"font-awesome4": {
+            #"_base": "fa",
+            #"arrow-down": "fa-arrow-down",
+            #"bar-chart": "fa-bar-chart",
+            #"book": "fa-book",
+            #"bookmark": "fa-bookmark",
+            #"bookmark-empty": "fa-bookmark-empty",
+            #"briefcase": "fa-briefcase",
+            #"calendar": "fa-calendar",
+            #"certificate": "fa-certificate",
+            #"comment-alt": "fa-comment-o",
+            #"down": "fa-caret-down",
+            #"edit": "fa-edit",
+            #"envelope-alt": "fa-envelope-o",
+            #"exclamation": "fa-exclamation",
+            #"file": "fa-file",
+            #"file-alt": "fa-file-alt",
+            #"folder-open-alt": "fa-folder-open-o",
+            #"fullscreen": "fa-fullscreen",
+            #"globe": "fa-globe",
+            #"home": "fa-home",
+            #"link": "fa-link",
+            #"list": "fa-list",
+            #"map-marker": "fa-map-marker",
+            #"offer": "fa-truck",
+            #"paper-clip": "fa-paper-clip",
+            #"phone": "fa-phone",
+            #"plus": "fa-plus",
+            #"plus-sign": "fa-plus-sign",
+            #"remove": "fa-remove",
+            #"request": "fa-flag",
+            #"sitemap": "fa-sitemap",
+            #"star": "fa-star",
+            #"table": "fa-table",
+            #"tag": "fa-tag",
+            #"tags": "fa-tags",
+            #"time": "fa-time",
+            #"trash": "fa-trash",
+            #"truck": "fa-truck",
+            #"up": "fa-caret-up",
+            #"user": "fa-user",
+            #"wrench": "fa-wrench",
+            #"zoomin": "fa-zoomin",
+            #"zoomout": "fa-zoomout",
+        #},
+        "foundation": {
+            "arrow-down": "fi-arrow-down",
+            "bar-chart": "fi-graph-bar",
+            "book": "fi-book",
+            "bookmark": "fi-bookmark",
+            "bookmark-empty": "fi-bookmark-empty",
+            "calendar": "fi-calendar",
+            "certificate": "fi-burst",
+            "comment-alt": "fi-comment",
+            "edit": "fi-page-edit",
+            "envelope-alt": "fi-mail",
+            "exclamation": "fi-alert",
+            "file": "fi-page-filled",
+            "file-alt": "fi-page",
+            "folder-open-alt": "fi-folder",
+            "fullscreen": "fi-arrows-out",
+            "globe": "fi-map",
+            "home": "fi-home",
+            "link": "fi-link",
+            "list": "fi-list",
+            "map-marker": "fi-marker",
+            "offer": "fi-burst",
+            "paper-clip": "fi-paperclip",
+            "phone": "fi-telephone",
+            "plus": "fi-plus",
+            "plus-sign": "fi-plus",
+            "remove": "fi-x",
+            "request": "fi-flag",
+            "star": "fi-star",
+            "table": "fi-list-thumbnails",
+            "tag": "fi-price-tag",
+            "tags": "fi-pricetag-multiple",
+            "time": "fi-clock",
+            "trash": "fi-trash",
+            "user": "fi-torso",
+            "wrench": "fi-wrench",
+            "zoomin": "fi-zoom-in",
+            "zoomout": "fi-zoom-out",
+        },
+    }
+
+    # -------------------------------------------------------------------------
+    def __init__(self, name, _class=None):
+        """
+            Constructor
+
+            @param name: the abstract icon name
+            @param _class: additional HTML classes (optional)
+        """
+
+        self.name = name
+        super(ICON, self).__init__(" ", _class=_class)
+
+    # -------------------------------------------------------------------------
+    def xml(self):
+        """
+            Render this instance as XML
+        """
+
+        settings = current.deployment_settings
+        fallback = "font-awesome"
+
+        # Custom layout?
+        layout = settings.get_ui_icon_layout()
+        if layout:
+            return layout(self)
+
+        # Lookup the default set
+        icons = self.icons
+        default_set = settings.get_ui_icon_set()
+        default = icons[fallback]
+        if default_set != fallback:
+            default.update(icons.get(default_set, {}))
+
+        # Custom set?
+        custom = settings.get_ui_custom_icons()
+
+        name = self.name
+        if custom and name in custom:
+            css = custom[name]
+            base = custom.get("_base")
+        elif name in default:
+            css = default[name]
+            base = default.get("_base")
+        else:
+            css = name
+            base = None
+
+        add_class = self.add_class
+        if css:
+            add_class(css)
+        if base:
+            add_class(base)
+
+        return super(ICON, self).xml()
 
 # END =========================================================================
