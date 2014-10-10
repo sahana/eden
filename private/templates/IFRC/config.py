@@ -1841,7 +1841,9 @@ def customise_pr_person_controller(**attr):
                     # Custom config for method handler
                     s3db.set_method("pr", "person",     
                                     method = "record",
-                                    action = s3db.hrm_Record(salary=True))
+                                    action = s3db.hrm_Record(salary=True, 
+                                                             awards=True,
+                                                             ))
                     # Custom list_fields for hrm_salary (exclude monthly amount)
                     s3db.configure("hrm_salary",
                                    list_fields = ["staff_level_id",

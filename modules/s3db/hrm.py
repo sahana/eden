@@ -35,6 +35,7 @@ __all__ = ("S3HRModel",
            "S3HRSkillModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
+           "S3HRAwardModel",
            "S3HRProgrammeModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
@@ -3889,6 +3890,73 @@ class S3HRExperienceModel(S3Model):
         return dict()
 
 # =============================================================================
+class S3HRAwardModel(S3Model):
+    """ Data model for staff awards """
+
+    names = ("hrm_award_type",
+             "hrm_award",
+             )
+
+    def model(self):
+        
+        T = current.T
+        db = current.db
+
+        define_table = self.define_table
+
+        # =====================================================================
+        # Award types
+        #
+        tablename = "hrm_award_type"
+        table = define_table(tablename,
+                             self.org_organisation_id(
+                                requires = self.org_organisation_requires(updateable=True),
+                             ),
+                             Field("name",
+                                   label = T("Award Type"),
+                             ),
+                             *s3_meta_fields())
+
+        ADD_AWARD_TYPE = T("Add Award Type")
+        award_type_represent = hrm_SalaryInfoRepresent(lookup="hrm_award_type")
+
+        # =====================================================================
+        # Salary
+        #
+        tablename = "hrm_award"
+        table = define_table(tablename,
+                             self.pr_person_id(),
+                             s3_date(),
+                             Field("awarding_body"),
+                             Field("award_type_id", "reference hrm_award_type",
+                                   label = T("Award Type"),
+                                   represent = award_type_represent,
+                                   requires = IS_ONE_OF(db,
+                                                        "hrm_award_type.id",
+                                                        award_type_represent,
+                                                        ),
+                                   comment = S3AddResourceLink(f = "award_type",
+                                                               label = ADD_AWARD_TYPE),
+                                   ),
+                             *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Award"),
+            title_display = T("Award Details"),
+            title_list = T("Awards"),
+            title_update = T("Edit Award"),
+            label_list_button = T("List Awards"),
+            label_delete_button = T("Delete Award"),
+            msg_record_created = T("Award added"),
+            msg_record_modified = T("Award updated"),
+            msg_record_deleted = T("Award removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no awards registered"))
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
 class S3HRProgrammeModel(S3Model):
     """
         Record Volunteer Hours on Programmes
@@ -7108,9 +7176,10 @@ def hrm_cv(r, **attr):
 # =============================================================================
 class hrm_Record(S3Method):
     
-    def __init__(self, salary=False):
+    def __init__(self, salary=False, awards=False):
         
         self.salary = salary
+        self.awards = awards
     
     def apply_method(self, r, **attr):
         """
@@ -7214,7 +7283,7 @@ class hrm_Record(S3Method):
                 profile_widgets.append(teams_widget)
                 
             if controller == "hrm":
-                
+
                 if self.salary:
                     widget = dict(label = T("Salary"),
                                   label_create = T("Add Salary"),
@@ -7225,6 +7294,20 @@ class hrm_Record(S3Method):
                                   create_controller = controller,
                                   create_function = "person",
                                   create_component = "salary",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
+
+                if self.awards:
+                    widget = dict(label = T("Awards"),
+                                  label_create = T("Add Award"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("staff_award"),
+                                  tablename = "hrm_award",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "staff_award",
                                   pagesize = None, # all records
                                   )
                     profile_widgets.append(widget)

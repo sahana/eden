@@ -1015,6 +1015,9 @@ class S3PersonModel(S3Model):
                        # Appraisals
                        hrm_appraisal = "person_id",
                        # Awards
+                       hrm_award = {"name": "staff_award",
+                                    "joinby": "person_id",
+                                    },
                        vol_volunteer_award = {"name": "award",
                                               "joinby": "person_id",
                                               },

@@ -675,6 +675,31 @@ def insurance():
     return output
 
 # =============================================================================
+# Awards
+# =============================================================================
+def award_type():
+    """ Award Type Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller()
+    return output
+
+def award():
+    """ Awards Controller """
+
+    mode = session.s3.hrm.mode
+    if mode is not None:
+        session.error = T("Access denied")
+        redirect(URL(f="index"))
+
+    output = s3_rest_controller()
+    return output
+
+# =============================================================================
 # Messaging
 # =============================================================================
 def compose():
