@@ -3041,6 +3041,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             # filterby is a field selector for the component
             # that shall match certain conditions
             filter_selector = FS(filterby)
+            filter_query = None
 
             if filteropts is not None:
                 # filterby-field shall match one of the given filteropts
