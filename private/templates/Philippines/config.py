@@ -87,6 +87,8 @@ settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
+# Uncomment to disable responsive behavior of datatables
+settings.ui.datatables_responsive = False
 
 # -----------------------------------------------------------------------------
 # L10n (Localization) settings

@@ -21,7 +21,7 @@ S3.search = {};
             if (result.search(/\,/) != -1) {
                 result = '"' + result + '"';
             }
-            return result
+            return result;
         } else {
             return (value);
         }
@@ -613,7 +613,7 @@ S3.search = {};
                 var qstr = url_parts[1];
                 var a = qstr.split('&'), b, c;
                 for (i=0; i<a.length; i++) {
-                    var b = a[i].split('=');
+                    b = a[i].split('=');
                     if (b.length > 1) {
                         c = decodeURIComponent(b[0]);
                         if (c != name) {
@@ -902,7 +902,7 @@ S3.search = {};
         for (target_id in targets) {
             t = $('#' + target_id);
             if (!t.is(':visible')) {
-                continue
+                continue;
             }
             target_data = targets[target_id];
             t = $('#' + target_id);
@@ -1005,7 +1005,7 @@ S3.search = {};
                         if (typeof ajaxurl != 'undefined') {
                             ajaxurl = filterURL(ajaxurl, q);
                         } else {
-                            continue
+                            continue;
                         }
                     }
                 } else {
@@ -1018,6 +1018,19 @@ S3.search = {};
                 };
             }
         }
+
+        /**
+         * Helper method to trigger re-calculation of column width in
+         * responsive data tables after unhiding them
+         *
+         * @param {jQuery} datatable - the datatable
+         */
+        var recalcResponsive = function(datatable) {
+            var dt = $(datatable).DataTable();
+            if (dt && dt.responsive) {
+                dt.responsive.recalc();
+            }
+        };
 
         // Initialise jQueryUI Tabs
         $('#summary-tabs').tabs({
@@ -1064,10 +1077,20 @@ S3.search = {};
                     // Update all just-unhidden widgets which have pending updates
                     updatePendingTargets(form);
                 }
+                newPanel.find('table.dataTable.display.responsive')
+                        .each(function() {
+                    recalcResponsive(this);
+                });
             }
         }).css({visibility: 'visible'});
+
         // Activate not called? Unhide initial section anyway:
-        $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
+        $('.ui-tabs-panel[aria-hidden="false"]').first()
+                                                .removeClass('hide')
+                                                .find('table.dataTable.display.responsive')
+                                                .each(function() {
+                                                    recalcResponsive(this);
+                                                });
     };
 
     /**
@@ -1473,7 +1496,7 @@ S3.search = {};
 
             // Ajax-update all visible targets
             for (i=0; i < targets.length; i++) {
-                target_id = targets[i]
+                target_id = targets[i];
                 t = $('#' + target_id);
                 if (!t.is(':visible')) {
                     continue;
@@ -1500,7 +1523,7 @@ S3.search = {};
             url = filterURL(url, queries);
             window.location.href = url;
         }
-    }
+    };
 
     var toggleAdvanced = function(form) {
 

@@ -1318,6 +1318,11 @@ class S3Config(Storage):
                 return formstyles[setting]
         return setting
 
+    def get_ui_datatables_responsive(self):
+        """ Responsive behavior of data tables """
+
+        return self.ui.get("datatables_responsive", True)
+
     def get_ui_default_cancel_button(self):
         """
             Whether to show a default cancel button in standalone
