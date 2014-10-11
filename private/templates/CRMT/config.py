@@ -50,6 +50,7 @@ settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
 settings.ui.label_postcode = "ZIP Code"
 # Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
 settings.ui.datatables_responsive = False
 # PDF to Letter
 settings.base.paper_size = T("Letter")

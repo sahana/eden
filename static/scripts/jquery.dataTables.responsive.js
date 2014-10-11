@@ -63,8 +63,8 @@ var factory = function( $, DataTable ) {
  *  @class
  *  @param {object} settings DataTables settings object for the host table
  *  @param {object} [opts] Configuration options
- *  @requires jQuery 1.7+
- *  @requires DataTables 1.10.1+
+ *  requires jQuery 1.7+
+ *  requires DataTables 1.10.1+
  *
  *  @example
  *      $('#example').DataTable( {

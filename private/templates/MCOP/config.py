@@ -72,7 +72,9 @@ settings.ui.use_button_glyphicons = True
 
 # Uncomment to show a default cancel button in standalone create/update forms
 settings.ui.default_cancel_button = True
+
 # Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
 settings.ui.datatables_responsive = False
 
 #settings.gis.map_height = 600

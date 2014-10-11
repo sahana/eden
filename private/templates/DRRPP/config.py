@@ -149,7 +149,9 @@ settings.ui.export_formats = ["xls", "xml"]
 
 # Uncomment to include an Interim Save button on CRUD forms
 settings.ui.interim_save = True
+
 # Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
 settings.ui.datatables_responsive = False
 
 # -----------------------------------------------------------------------------
