@@ -386,6 +386,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.hierarchy_theme = "default"
 # Uncomment to show a default cancel button in standalone create/update forms
 #settings.ui.default_cancel_button = True
+# Uncomment to disable responsive behavior of datatables
+#settings.ui.datatables_responsive = False
 
 # -----------------------------------------------------------------------------
 # CMS
