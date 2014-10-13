@@ -388,6 +388,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.default_cancel_button = True
 # Uncomment to disable responsive behavior of datatables
 #settings.ui.datatables_responsive = False
+# Uncomment to modify the label of the Permalink
+#settings.ui.label_permalink = "Permalink"
 
 # -----------------------------------------------------------------------------
 # CMS

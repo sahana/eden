@@ -1233,11 +1233,11 @@ class S3Importer(S3Method):
                In ajax this will be a json response
 
                In addition the following values will be made available:
-               totalRecords         Number of records in the filtered data set
-               totalDisplayRecords  Number of records to display
+               recordsTotal         Number of records in the filtered data set
+               recordsFiltered  Number of records to display
                start                Start point in the ordered data set
                limit                Number of records in the ordered set
-               NOTE: limit - totalDisplayRecords = total cached
+               NOTE: limit - recordsFiltered = total cached
         """
 
         from s3data import S3DataTable
@@ -1265,9 +1265,9 @@ class S3Importer(S3Method):
         # Start/Limit
         if representation == "aadata":
             get_vars = request.get_vars
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", None)
-            sEcho = int(get_vars.sEcho or 0)
+            start = get_vars.get("displayStart", None)
+            limit = get_vars.get("pageLength", None)
+            draw = int(get_vars.draw or 0)
         else: # catch all
             start = 0
             limit = s3.ROWSPERPAGE
@@ -1313,7 +1313,7 @@ class S3Importer(S3Method):
             output = dt.json(totalrows,
                              displayrows,
                              datatable_id,
-                             sEcho,
+                             draw,
                              dt_bulk_actions = [current.T("Import")])
         else:
             # Initial HTML response

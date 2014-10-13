@@ -18,9 +18,124 @@ header.row {
     padding: 0;
 }
 
+.map_home {
+    margin: 0;
+}
+.gis_fullscreen_map-btn {
+    display: none;
+}
+.x-btn button {
+    background-color: #f0f0f0;
+}
+
 table.embeddedComponent,
 form table.embeddedComponent td {
     border: none;
+}
+
+table.dataTable thead th {
+    border: 0;
+}
+table.dataTable tr.odd {
+    background-color: #f9f9f9;
+}
+.dataTable tr.even td, .dataTable tr.odd td {
+    border: 1px solid #fff;
+}
+.dataTables_info {
+    color: #6f6f6f;
+    font-weight: normal;
+    line-height: 1.4;
+    float: left !important;
+    margin: 0 0 1rem;
+    padding: 0.5625rem 0;
+}
+.dataTables_length {
+    float: left !important;
+    color: #6f6f6f;
+    font-weight: normal;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    margin-top: 0.2rem;
+}
+div.dataTables_paginate {
+    float: left;
+    margin: 0;
+    text-align: left;
+}
+.dataTables_info {
+    display: none;
+}
+#summary-1_info.dataTables_info {
+    display: block;
+}
+.paginate_button {
+    float: left;
+}
+.paginate_button.previous,
+.paginate_button.next {
+    visibility: hidden;
+}
+.paginate_button.previous:after,
+.paginate_button.next:after {
+  visibility: visible;
+  display: block;
+}
+.paginate_button.previous:after {
+    content: "«";
+}
+.paginate_button.next:after {
+    content: "»";
+    float: right;
+}
+
+
+table.dataTable .action-btn.read {
+    background-color: inherit;
+    border: 0;
+    color: #04a4a4;
+}
+table.dataTable .action-btn.read:before {
+    /* fi-eye */
+    content: "\f147";
+    font-family: "foundation-icons";
+    font-size: 200%;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    text-decoration: inherit;
+    /**margin-right: .3em;*/
+}
+
+.ui-widget {
+    font-family: inherit;
+    font-size: inherit;
+}
+.ui-widget-content {
+    border: 0;
+}
+.ui-widget-content a {
+    color: #04a4a4;
+}
+.ui-widget-header {
+    background: none;
+    border: 0;
+}
+
+.action-btn.cms-edit {
+    background-color: inherit;
+    border: 0;
+    color: #04a4a4;
+    display: inline;
+}
+.cms-content {
+    font-size: 1.1em;
+    line-height: 1.6;
+     margin-bottom: 1.25rem;
 }
 
 /* Moved to CSS in-line with normal Eden practise. Needs more than this to untangle
@@ -156,8 +271,9 @@ footer.row {
 .details-title {
   margin-bottom: 0; }
 
+  /* No longer required
 .lede {
-  font-size: 1.1em; }
+  font-size: 1.1em; } */
 
 h6 {
   text-transform: uppercase;
@@ -374,8 +490,9 @@ dl.horizontal {
       border-color: #FFFFFF;
       background: #FFFFFF; }
 
+/* Irrelevant now
 table .fi-eye {
-  font-size: 200%; }
+  font-size: 200%; } */
 
 th.sorting {
   background-image: url(); }

@@ -1079,8 +1079,8 @@ class S3CRUD(S3Method):
                 # Hide datatable filter box if we have a filter form
                 if filter_widgets and not hide_filter:
                     dtargs = attr.get("dtargs", {})
-                    if "dt_bFilter" not in dtargs:
-                        dtargs["dt_bFilter"] = False
+                    if "dt_searching" not in dtargs:
+                        dtargs["dt_searching"] = False
                     _attr = dict(attr)
                     _attr["dtargs"] = dtargs
                 else:
@@ -1338,8 +1338,8 @@ class S3CRUD(S3Method):
         # Pagination
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", 0)
+            start = get_vars.get("displayStart", None)
+            limit = get_vars.get("pageLength", 0)
         else:
             start = get_vars.get("start", None)
             limit = get_vars.get("limit", 0)
@@ -1377,8 +1377,8 @@ class S3CRUD(S3Method):
         if r.interactive:
 
             # How many records per page?
-            if s3.dataTable_iDisplayLength:
-                display_length = s3.dataTable_iDisplayLength
+            if s3.dataTable_pageLength:
+                display_length = s3.dataTable_pageLength
             else:
                 display_length = 25
 
@@ -1438,7 +1438,8 @@ class S3CRUD(S3Method):
             #        shows the right empty-message (ZeroRecords instead
             #        of EmptyTable)
             dtargs["dt_pagination"] = dt_pagination
-            dtargs["dt_displayLength"] = display_length
+            dtargs["dt_pagingType"] = s3.dataTable_pagingType or "full_numbers"
+            dtargs["dt_pageLength"] = display_length
             dtargs["dt_base_url"] = r.url(method="", vars={})
             dtargs["dt_permalink"] = r.url()
             datatable = dt.html(totalrows,
@@ -1480,21 +1481,21 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(get_vars.sEcho or 0)
+            draw = int(get_vars.draw or 0)
 
             # Representation
             if dt is not None:
                 output = dt.json(totalrows,
                                  displayrows,
                                  list_id,
-                                 sEcho,
+                                 draw,
                                  **dtargs)
             else:
-                output = '{"iTotalRecords":%s,' \
-                         '"iTotalDisplayRecords":0,' \
+                output = '{"recordsTotal":%s,' \
+                         '"recordsFiltered":0,' \
                          '"dataTable_id":"%s",' \
-                         '"sEcho":%s,' \
-                         '"aaData":[]}' % (totalrows, list_id, sEcho)
+                         '"draw":%s,' \
+                         '"data":[]}' % (totalrows, list_id, draw)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -1744,8 +1745,8 @@ class S3CRUD(S3Method):
         # Pagination
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", 0)
+            start = get_vars.get("displayStart", None)
+            limit = get_vars.get("pageLength", 0)
         else:
             start = get_vars.get("start", None)
             limit = get_vars.get("limit", 0)
@@ -1801,8 +1802,8 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # How many records per page?
-            if s3.dataTable_iDisplayLength:
-                display_length = s3.dataTable_iDisplayLength
+            if s3.dataTable_pageLength:
+                display_length = s3.dataTable_pageLength
             else:
                 display_length = 25
 
@@ -1840,11 +1841,13 @@ class S3CRUD(S3Method):
                 s3.no_formats = True
                 datatable = current.T("No records to review")
             else:
-                dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
+                dt_dom = s3.get("dataTable_dom", 'fril<"dataTable_table"t>pi')
                 datatable = dt.html(totalrows, displayrows, list_id,
                                     dt_pagination=dt_pagination,
-                                    dt_displayLength=display_length,
-                                    dt_sDom = dt_sDom)
+                                    dt_pagingType = s3.dataTable_pagingType or "full_numbers",
+                                    dt_pageLength=display_length,
+                                    dt_dom = dt_dom,
+                                    )
                 s3.actions = [{"label": str(current.T("Review")),
                                "url": r.url(id="[id]", method="review"),
                                "_class": "action-btn"}]
@@ -1882,20 +1885,20 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(get_vars.sEcho or 0)
+            draw = int(get_vars.draw or 0)
 
             # Representation
             if dt is not None:
                 output = dt.json(totalrows,
                                  displayrows,
                                  list_id,
-                                 sEcho)
+                                 draw)
             else:
-                output = '{"iTotalRecords": %s, ' \
-                         '"iTotalDisplayRecords": 0,' \
+                output = '{"recordsTotal": %s, ' \
+                         '"recordsFiltered": 0,' \
                          '"dataTable_id": "%s", ' \
-                         '"sEcho": %s, ' \
-                         '"aaData": []}' % (totalrows, list_id, sEcho)
+                         '"draw": %s, ' \
+                         '"data": []}' % (totalrows, list_id, draw)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)

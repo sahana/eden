@@ -1421,6 +1421,12 @@ class S3Config(Storage):
         """
         return current.T(self.ui.get("label_mobile_phone", "Mobile Phone"))
 
+    def get_ui_label_permalink(self):
+        """
+            Label for the Permalink on dataTables
+        """
+        return current.T(self.ui.get("label_permalink", "Link to this result"))
+
     def get_ui_label_postcode(self):
         """
             Label for the Postcode field

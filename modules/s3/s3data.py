@@ -148,7 +148,7 @@ class S3DataTable(object):
              totalrows,
              filteredrows,
              id = None,
-             sEcho = 1,
+             draw = 1,
              **attr
              ):
         """
@@ -161,8 +161,8 @@ class S3DataTable(object):
                            If this is not passed in then a unique id will be
                            generated. Regardless the id is stored in self.id
                            so it can be easily accessed after rendering.
-            @param sEcho: An unaltered copy of sEcho sent from the client used
-                          by dataTables as a draw count.
+            @param draw: An unaltered copy of draw sent from the client used
+                         by dataTables as a draw count.
             @param attr: dictionary of attributes which can be passed in
         """
 
@@ -203,14 +203,14 @@ class S3DataTable(object):
             aadata = self.aadata(totalrows,
                                  filteredrows,
                                  id,
-                                 sEcho,
+                                 draw,
                                  flist,
                                  action_col=action_col,
                                  stringify=False,
                                  **attr)
-            cache = {"iCacheLower": self.start,
-                     "iCacheUpper": self.end if filteredrows > self.end else filteredrows,
-                     "lastJson": aadata,
+            cache = {"cacheLower": self.start,
+                     "cacheUpper": self.end if filteredrows > self.end else filteredrows,
+                     "cacheLastJson": aadata,
                      }
 
         html = self.htmlConfig(table,
@@ -231,23 +231,23 @@ class S3DataTable(object):
         """
 
         T = current.T
-        scripts = ['''i18n.sSortAscending="%s"''' % T("activate to sort column ascending"),
-                   '''i18n.sSortDescending="%s"''' % T("activate to sort column descending"),
-                   '''i18n.sFirst="%s"''' % T("First"),
-                   '''i18n.sLast="%s"''' % T("Last"),
-                   '''i18n.sNext="%s"''' % T("Next"),
-                   '''i18n.sPrevious="%s"''' % T("Previous"),
-                   '''i18n.sEmptyTable="%s"''' % T("No records found"), #T("No data available in table"),
-                   '''i18n.sInfo="%s"''' % T("Showing _START_ to _END_ of _TOTAL_ entries"),
-                   '''i18n.sInfoEmpty="%s"''' % T("Showing 0 to 0 of 0 entries"),
-                   '''i18n.sInfoFiltered="%s"''' % T("(filtered from _MAX_ total entries)"),
-                   '''i18n.sInfoThousands="%s"''' % current.deployment_settings.get_L10n_thousands_separator(),
-                   '''i18n.sLengthMenu="%s"''' % T("Show _MENU_ entries"),
-                   '''i18n.sLoadingRecords="%s"''' % T("Loading"),
-                   '''i18n.sProcessing="%s"''' % T("Processing"),
-                   '''i18n.sSearch="%s"''' % T("Search"),
-                   '''i18n.sZeroRecords="%s"''' % T("No matching records found"),
-                   '''i18n.sSelectAll="%s"''' % T("Select All")
+        scripts = ['''i18n.sortAscending="%s"''' % T("activate to sort column ascending"),
+                   '''i18n.sortDescending="%s"''' % T("activate to sort column descending"),
+                   '''i18n.first="%s"''' % T("First"),
+                   '''i18n.last="%s"''' % T("Last"),
+                   '''i18n.next="%s"''' % T("Next"),
+                   '''i18n.previous="%s"''' % T("Previous"),
+                   '''i18n.emptyTable="%s"''' % T("No records found"), #T("No data available in table"),
+                   '''i18n.info="%s"''' % T("Showing _START_ to _END_ of _TOTAL_ entries"),
+                   '''i18n.infoEmpty="%s"''' % T("Showing 0 to 0 of 0 entries"),
+                   '''i18n.infoFiltered="%s"''' % T("(filtered from _MAX_ total entries)"),
+                   '''i18n.infoThousands="%s"''' % current.deployment_settings.get_L10n_thousands_separator(),
+                   '''i18n.lengthMenu="%s"''' % T("Show _MENU_ entries"),
+                   '''i18n.loadingRecords="%s"''' % T("Loading"),
+                   '''i18n.processing="%s"''' % T("Processing"),
+                   '''i18n.search="%s"''' % T("Search"),
+                   '''i18n.zeroRecords="%s"''' % T("No matching records found"),
+                   '''i18n.selectAll="%s"''' % T("Select All")
                    ]
         script = "\n".join(scripts)
 
@@ -258,7 +258,7 @@ class S3DataTable(object):
              totalrows,
              displayrows,
              id,
-             sEcho,
+             draw,
              stringify=True,
              **attr
              ):
@@ -269,7 +269,7 @@ class S3DataTable(object):
             @param displayrows: The total rows in the filtered query.
             @param id: The id of the table for which this ajax call will
                        respond to.
-            @param sEcho: An unaltered copy of sEcho sent from the client used
+            @param draw: An unaltered copy of draw sent from the client used
                           by dataTables as a draw count.
             @param attr: dictionary of attributes which can be passed in
                    dt_action_col: The column where the action buttons will be placed
@@ -303,7 +303,7 @@ class S3DataTable(object):
         return self.aadata(totalrows,
                            displayrows,
                            id,
-                           sEcho,
+                           draw,
                            flist,
                            action_col=action_col,
                            stringify=stringify,
@@ -322,12 +322,15 @@ class S3DataTable(object):
             @return: dictionary of attributes which can be passed into html()
 
             @param attr: dictionary of attributes which can be passed in
-                   dt_displayLength : The default number of records that will be shown
+                   dt_pageLength : The default number of records that will be shown
                    dt_pagination: Enable pagination
-                   dt_pagination_type: type of pagination, either:
-                                        (default) full_numbers
-                                        OR two_button
-                   dt_bFilter: Enable or disable filtering of data.
+                   dt_pagingType: type of pagination, one of:
+                                        simple
+                                        simple_numbers
+                                        full
+                                        full_numbers (default)
+                                  http://datatables.net/reference/option/pagingType
+                   dt_searching: Enable or disable filtering of data.
                    dt_group: The colum that is used to group the data
                    dt_ajax_url: The URL to be used for the Ajax call
                    dt_action_col: The column where the action buttons will be placed
@@ -352,17 +355,18 @@ class S3DataTable(object):
             attr.dt_actions = s3.actions
         if s3.dataTableBulkActions:
             attr.dt_bulk_actions = s3.dataTableBulkActions
-        if s3.dataTable_iDisplayLength:
-            attr.dt_displayLength = s3.dataTable_iDisplayLength
+        if s3.dataTable_pageLength:
+            attr.dt_pageLength = s3.dataTable_pageLength
         attr.dt_pagination = "false" if s3.no_sspag else "true"
-        if s3.dataTable_sPaginationType:
-            attr.dt_pagination_type = s3.dataTable_sPaginationType
+        if s3.dataTable_pagingType:
+            attr.dt_pagingType = s3.dataTable_pagingType
         if s3.dataTable_group:
             attr.dt_group = s3.dataTable_group
-        if s3.dataTable_NobFilter:
-            attr.dt_bFilter = not s3.dataTable_NobFilter
-        if s3.dataTable_sDom:
-            attr.dt_sDom = s3.dataTable_sDom
+        # Nothing using currently
+        #if s3.dataTable_NoSearch:
+        #    attr.dt_searching = not s3.dataTable_NoSearch
+        if s3.dataTable_dom:
+            attr.dt_dom = s3.dataTable_dom
         if s3.dataTableDisplay:
             attr.dt_display = s3.dataTableDisplay
         if s3.dataTableStyleDisabled or s3.dataTableStyleWarning or s3.dataTableStyleAlert:
@@ -457,10 +461,11 @@ class S3DataTable(object):
         # @note: icons appear in reverse order due to float-right
         icons = SPAN(_class = "list_formats")
 
-        export_formats = current.deployment_settings.get_ui_export_formats()
+        settings = current.deployment_settings
+        export_formats = settings.get_ui_export_formats()
         if export_formats:
 
-            icons.append("%s:" % current.T("Export as"))
+            icons.append("%s:" % T("Export as"))
 
             formats = dict(s3.formats)
 
@@ -501,7 +506,7 @@ class S3DataTable(object):
 
         # Append the permalink (if any)
         if permalink is not None:
-            link = A(T("Link to this result"),
+            link = A(settings.get_ui_label_permalink(),
                      _href=permalink,
                      _class="permalink")
             export_options.append(link)
@@ -600,17 +605,17 @@ class S3DataTable(object):
 
             @param html: The html table
             @param id: The id of the table
-            @param orderby: the sort details see aaSort at http://datatables.net/ref
+            @param orderby: the sort details see http://datatables.net/reference/option/order
             @param rfields: The list of resource fields
             @param attr: dictionary of attributes which can be passed in
                    dt_lengthMenu: The menu options for the number of records to be shown
-                   dt_displayLength : The default number of records that will be shown
-                   dt_sDom : The Datatable DOM initialisation variable, describing
-                             the order in which elements are displayed.
-                             See http://datatables.net/ref for more details.
+                   dt_pageLength : The default number of records that will be shown
+                   dt_dom : The Datatable DOM initialisation variable, describing
+                            the order in which elements are displayed.
+                            See http://datatables.net/ref for more details.
                    dt_pagination : Is pagination enabled, dafault 'true'
-                   dt_pagination_type : How the pagination buttons are displayed
-                   dt_bFilter: Enable or disable filtering of data.
+                   dt_pagingType : How the pagination buttons are displayed
+                   dt_searching: Enable or disable filtering of data.
                    dt_ajax_url: The URL to be used for the Ajax call
                    dt_action_col: The column where the action buttons will be placed
                    dt_bulk_actions: list of labels for the bulk actions.
@@ -659,20 +664,20 @@ class S3DataTable(object):
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
+        config.dom = attr.get("dt_dom", 'fril<"dataTable_table"t>pi')
         config.lengthMenu = attr.get("dt_lengthMenu",
                                      [[ 25, 50, -1], [ 25, 50, str(current.T("All"))]]
                                      )
-        config.displayLength = attr.get("dt_displayLength", s3.ROWSPERPAGE)
-        config.sDom = attr.get("dt_sDom", 'fril<"dataTable_table"t>pi')
+        config.pageLength = attr.get("dt_pageLength", s3.ROWSPERPAGE)
         config.pagination = attr.get("dt_pagination", "true")
-        config.paginationType = attr.get("dt_pagination_type", "full_numbers")
-        config.bFilter = attr.get("dt_bFilter", "true")
+        config.pagingType = attr.get("dt_pagingType", "full_numbers")
+        config.searching = attr.get("dt_searching", "true")
         url = URL(c=request.controller,
                   f=request.function,
                   args=request.args,
                   vars=request.get_vars,
                   )
-        _ajaxUrl = s3_set_extension( url, "aadata")
+        _ajaxUrl = s3_set_extension(url, "aadata")
         config.ajaxUrl = attr.get("dt_ajax_url", _ajaxUrl)
         config.rowStyles = attr.get("dt_styles", [])
 
@@ -705,12 +710,12 @@ class S3DataTable(object):
         config.groupTitles = attr.get("dt_group_titles", [])
         config.groupSpacing = attr.get("dt_group_space", "false")
         for order in orderby:
-           if bulkActions:
-               if bulkCol <= order[0]:
-                   order[0] += 1
-           if action_col > 0 and action_col >= order[0]:
-               order[0] -= 1
-        config.aaSort = orderby
+            if bulkActions:
+                if bulkCol <= order[0]:
+                    order[0] += 1
+            if action_col > 0 and action_col >= order[0]:
+                order[0] -= 1
+        config.order = orderby
         config.textMaxLength = attr.get("dt_text_maximum_len", 80)
         config.textShrinkLength = attr.get("dt_text_condense_len", 75)
         config.shrinkGroupedRows = attr.get("dt_shrink_groups", "false")
@@ -731,17 +736,20 @@ class S3DataTable(object):
                                                 permalink=permalink,
                                                 base_url=base_url))
         form.append(html)
+
         # Add the configuration details for this dataTable
         form.append(INPUT(_type="hidden",
                           _id="%s_configurations" % id,
                           _name="config",
                           _value=jsons(config)))
+                          
         # If we have a cache set up then pass it in
         if cache:
             form.append(INPUT(_type="hidden",
                               _id="%s_dataTable_cache" %id,
                               _name="cache",
                               _value=jsons(cache)))
+
         # If we have bulk actions then add the hidden fields
         if bulkActions:
             form.append(INPUT(_type="hidden",
@@ -760,6 +768,7 @@ class S3DataTable(object):
                               _class="dataTable_filterURL",
                               _name="filterURL",
                               _value="%s" % config.ajaxUrl))
+
         return form
 
     # -------------------------------------------------------------------------
@@ -826,7 +835,7 @@ class S3DataTable(object):
                totalrows,
                displayrows,
                id,
-               sEcho,
+               draw,
                flist,
                stringify=True,
                action_col=None,
@@ -839,7 +848,7 @@ class S3DataTable(object):
             @param displayrows: The total rows in the filtered query.
             @param id: The id of the table for which this ajax call will
                        respond to.
-            @param sEcho: An unaltered copy of sEcho sent from the client used
+            @param draw: An unaltered copy of draw sent from the client used
                           by dataTables as a draw count.
             @param flist: The list of fields
             @param attr: dictionary of attributes which can be passed in
@@ -876,10 +885,10 @@ class S3DataTable(object):
         structure["dataTable_filter"] = self.filterString
         structure["dataTable_groupTotals"] = attr.get("dt_group_totals", [])
         structure["dataTable_sort"] = self.orderby
-        structure["aaData"] = aadata
-        structure["iTotalRecords"] = totalrows
-        structure["iTotalDisplayRecords"] = displayrows
-        structure["sEcho"] = sEcho
+        structure["data"] = aadata
+        structure["recordsTotal"] = totalrows
+        structure["recordsFiltered"] = displayrows
+        structure["draw"] = draw
         if stringify:
             from gluon.serializers import json as jsons
             return jsons(structure)

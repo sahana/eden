@@ -162,7 +162,7 @@ class S3Summary(S3Method):
                         if method == "datatable":
                             # Assume that we have a FilterForm, so disable Quick Search
                             dtargs = attr.get("dtargs", {})
-                            dtargs["dt_bFilter"] = "false"
+                            dtargs["dt_searching"] = "false"
                             attr["dtargs"] = dtargs
                         content = handler(r,
                                           method=method,

@@ -912,7 +912,7 @@ S3.search = {};
             } else if (t.hasClass('dataTable')) {
                 var dt = t.dataTable();
                 // Refresh Data
-                dt.fnReloadAjax(target_data['ajaxurl']);
+                dt.reloadAjax(target_data['ajaxurl']);
                 updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                     $(this).val(target_data['ajaxurl']);
@@ -1505,7 +1505,7 @@ S3.search = {};
 //                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable();
-                    dt.fnReloadAjax(dt_ajaxurl[target_id]);
+                    dt.reloadAjax(dt_ajaxurl[target_id]);
                     updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                         $(this).val(dt_ajaxurl[target_id]);

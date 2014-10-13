@@ -259,9 +259,9 @@ class S3Merge(S3Method):
         # Start/Limit
         get_vars = r.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", None)
-            sEcho = int(get_vars.sEcho or 0)
+            start = get_vars.get("displayStart", None)
+            limit = get_vars.get("pageLength", None)
+            draw = int(get_vars.draw or 0)
         else: # catch all
             start = 0
             limit = s3.ROWSPERPAGE
@@ -274,8 +274,8 @@ class S3Merge(S3Method):
                 limit = None # use default
         else:
             start = None # use default
-        if s3.dataTable_iDisplayLength:
-            display_length = s3.dataTable_iDisplayLength
+        if s3.dataTable_pageLength:
+            display_length = s3.dataTable_pageLength
         else:
             display_length = 25
         if limit is None:
@@ -323,7 +323,7 @@ class S3Merge(S3Method):
             output = dt.json(totalrows,
                              displayrows,
                              datatable_id,
-                             sEcho,
+                             draw,
                              dt_bulk_actions = [(current.T("Merge"),
                                                  "merge", "pair-action")])
 
@@ -341,9 +341,11 @@ class S3Merge(S3Method):
                              displayrows,
                              datatable_id,
                              dt_ajax_url=url,
-                             dt_displayLength=display_length,
                              dt_bulk_actions = [(T("Merge"),
-                                                 "merge", "pair-action")])
+                                                 "merge", "pair-action")],
+                             dt_pageLength=display_length,
+                             dt_pagingType = s3.dataTable_pagingType or "full_numbers",
+                             )
 
             output["items"] = items
             s3.actions = [{"label": str(T("View")),

@@ -21,7 +21,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,LK,Province,District,Divisional Secretariat,Grama Niladhari,,
 ,LY,District,"City / Town / Village",,,,
 ,MM,State,District,Township,Village Tract,Village,
-,MN,"Province / Aimag","District / Soum","Subdistrict / Bagh",,,
+,MN,Province,District,Subdistrict,,,
 ,MP,Municipality,Village,,,,
 ,MV,"Atoll/City",Island,,,,
 ,MY,State,District,Mukim,,,

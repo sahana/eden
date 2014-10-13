@@ -2202,6 +2202,7 @@ class ActivityLogLayout(S3DataListLayout):
             user_id = row[ltable.user_id]
             avatar = s3_avatar_represent(user_id,
                                          _class="media-object",
+                                         # @ToDo: Move to CSS
                                          _style="width:50px;padding:5px;padding-top:0px;")
             person_id = row[ptable.id]
             if person_id:
@@ -2222,6 +2223,8 @@ class ActivityLogLayout(S3DataListLayout):
             @param tablename: the tablename
             @param method: the method ("create" or "update")
         """
+
+        T = current.T
 
         activity = None
         if tablename == "pr_filter":
@@ -2287,8 +2290,6 @@ class ActivityLogLayout(S3DataListLayout):
         record_id = raw["s3_audit.record_id"]
 
         T = current.T
-        db = current.db
-        s3db = current.s3db
 
         if tablename == "pr_filter":
             label = T("Saved Filters")

@@ -61,7 +61,13 @@
    {{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
   </div>
  </div>
- {{include}}
+ {{if request.controller in ("default", "gis") and request.function == "index":}}
+  {{include}}
+ {{else:}}
+ <div class='row'>
+  {{include}}
+ </div>
+ {{pass}}
  {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
 {{pass}}
 {{include "scripts.html"}}

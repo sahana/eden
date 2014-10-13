@@ -256,7 +256,7 @@ def customise_project_project_controller(**attr):
         table.email.requires = IS_EMAIL()
 
     # Custom dataTable
-    s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+    s3["dataTable_dom"] = 'ripl<"dataTable_table"t>p'
 
     # Don't show export buttons for XLS/XML    
     s3.formats = Storage(xls=None, xml=None)
@@ -266,7 +266,7 @@ def customise_project_project_controller(**attr):
     
     # Only show 10 Project by default to improve load time
     attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, T("All")]]
-    s3.dataTable_iDisplayLength = 10
+    s3.dataTable_pageLength = 10
     
     # Custom PreP
     standard_prep = s3.prep

@@ -537,8 +537,8 @@ class S3Profile(S3CRUD):
         representation = r.representation
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", 0)
+            start = get_vars.get("displayStart", None)
+            limit = get_vars.get("pageLength", 0)
         else:
             start = get_vars.get("start", None)
             limit = get_vars.get("limit", 0)
@@ -562,12 +562,10 @@ class S3Profile(S3CRUD):
             s3 = current.response.s3
 
             # How many records per page?
-            if s3.dataTable_iDisplayLength:
-                display_length = s3.dataTable_iDisplayLength
+            if s3.dataTable_pageLength:
+                display_length = s3.dataTable_pageLength
             else:
                 display_length = widget.get("pagesize", 10)
-            if not display_length:
-                display_length = 10
 
             # ORDERBY fallbacks: widget->resource->default
             orderby = widget.get("orderby")
@@ -600,7 +598,8 @@ class S3Profile(S3CRUD):
             empty = DIV(empty_str, _class="empty")
 
             dtargs["dt_pagination"] = dt_pagination
-            dtargs["dt_displayLength"] = display_length
+            dtargs["dt_pagingType"] = s3.dataTable_pagingType or "full_numbers"
+            dtargs["dt_pageLength"] = display_length
             # @todo: fix base URL (make configurable?) to fix export options
             s3.no_formats = True
             dtargs["dt_base_url"] = r.url(method="", vars={})
@@ -686,21 +685,21 @@ class S3Profile(S3CRUD):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(get_vars.sEcho or 0)
+            draw = int(get_vars.draw or 0)
 
             # Representation
             if dt is not None:
                 data = dt.json(totalrows,
                                displayrows,
                                list_id,
-                               sEcho,
+                               draw,
                                **dtargs)
             else:
-                data = '{"iTotalRecords":%s,' \
-                       '"iTotalDisplayRecords":0,' \
+                data = '{"recordsTotal":%s,' \
+                       '"recordsFiltered":0,' \
                        '"dataTable_id":"%s",' \
-                       '"sEcho":%s,' \
-                       '"aaData":[]}' % (totalrows, list_id, sEcho)
+                       '"draw":%s,' \
+                       '"data":[]}' % (totalrows, list_id, draw)
 
             return data
 
