@@ -1234,10 +1234,10 @@
                 if (!item[1] && item[2] >= 0) {
                     xHeaders.push({
                         position: i,
-                        index: item[0],
+                        filterIndex: item[0],
+                        filterKey: item[3],
                         label: item[4],
-                        value: item[2],
-                        key: item[3]
+                        value: item[2]
                     });
                     total += item[2];
                 }
@@ -1393,7 +1393,11 @@
                                      .style('fill', sliceColor)
                                      .style('stroke', sliceColor);
                     items = getSeries(null);
-                    barChartContainer.datum([{ key: 'spectrum', values: items }])
+                    barChartContainer.datum([{key: null,
+                                              filterIndex: null,
+                                              filterKey: null,
+                                              values: items
+                                              }])
                     barChart.update();
                     pt.chartOptions.currentSpectrumIndex = null;
                     seriesSelector.property('value', 'null');
@@ -1412,7 +1416,11 @@
                                      .style('fill', sliceColor)
                                      .style('stroke', sliceColor);
                     items = getSeries(seriesHeader.position, color);
-                    barChartContainer.datum([{ key: 'spectrum', values: items }])
+                    barChartContainer.datum([{key: seriesHeader.position,
+                                              filterIndex: seriesHeader.filterIndex,
+                                              filterKey: seriesHeader.filterKey,
+                                              values: items
+                                              }])
                     barChart.update();
                     pt.chartOptions.currentSpectrumIndex = xIndex;
                     seriesSelector.property('value', xIndex);
@@ -1447,14 +1455,44 @@
 
             // Render the bar chart
             nv.addGraph(function() {
-                barChartContainer.datum([{ key: 'spectrum', values: getSeries(null) }])
+                barChartContainer.datum([{key: null,
+                                          filterIndex: null,
+                                          filterKey: null,
+                                          values: getSeries(null)
+                                          }])
                                  .transition().duration(500)
                                  .call(barChart);
                 // Event handlers
-                //if (pt.options.exploreChart && selector) {
+                if (pt.options.exploreChart && xSelector && ySelector) {
                     // Click on a bar forwards to a filtered view
-                    // @ToDo
-                //}
+                    barChart.discretebar.dispatch.on('elementClick', function(e) {
+                        var xIndex = e.series.filterIndex,
+                            xKey = e.series.filterKey,
+                            yIndex = e.point.filterIndex,
+                            yKey = e.point.filterKey,
+                            filters = [];
+
+                        var filterExpression = function(selector, index, key) {
+                            if (key === null && index !== null) {
+                                key = 'None';
+                            }
+                            if (index == '__other__') {
+                                return selector + '__belongs';
+                            } else {
+                                return selector;
+                            }
+                        }
+                        if (xIndex !== null) {
+                            var xFilter = filterExpression(xSelector, xIndex, xKey);
+                            filters.push([xFilter, xKey]);
+                        }
+                        if (yIndex !== null) {
+                            var yFilter = filterExpression(ySelector, yIndex, yKey);
+                            filters.push([yFilter, yKey]);
+                        }
+                        pt._chartExplore(filters);
+                    });
+                }
                 // Re-draw when window gets resized
                 nv.utils.windowResize(barChart.update);
                 return barChart;
