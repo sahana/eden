@@ -513,8 +513,8 @@ class S3Profile(S3CRUD):
                                  get_config("list_fields", None))
         if not list_fields:
             list_fields = [f for f in table.fields if table[f].readable]
-            if "id" not in list_fields:
-                list_fields.append("id")
+        if "id" not in list_fields:
+            list_fields.insert(0, "id")
 
         # Widget filter option
         widget_filter = widget.get("filter", None)

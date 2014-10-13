@@ -3689,10 +3689,11 @@ class S3Resource(object):
                     # Map sortable-column index to the real list_fields
                     # index: for every non-sortable column to the left
                     # of sortable column subtract 1
-                    for j in xrange(iSortCol):
-                        if get_vars.get("bSortable_%s" % j, "true") == "false":
-                            iSortCol -= 1
-                    rfield = rfields[iSortCol + 1]
+                    # No longer needed? (new datatables using true index)
+                    #for j in xrange(iSortCol):
+                    #    if get_vars.get("bSortable_%s" % j, "true") == "false":
+                    #        iSortCol -= 1
+                    rfield = rfields[iSortCol]
                 except:
                     # iSortCol_x is either not present in vars or specifies
                     # a non-existent column (i.e. iSortCol_x >= numcols) =>

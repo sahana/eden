@@ -1845,12 +1845,22 @@ def customise_pr_person_controller(**attr):
                                                              awards=True,
                                                              ))
                     # Custom list_fields for hrm_salary (exclude monthly amount)
+                    stable = s3db.hrm_salary
+                    stable.salary_grade_id.label = T("Grade Code")
                     s3db.configure("hrm_salary",
                                    list_fields = ["staff_level_id",
                                                   "salary_grade_id",
                                                   "start_date",
                                                   "end_date",
                                                   ],
+                                   )
+                    # Custom list_fields for hrm_award
+                    s3db.configure("hrm_award",
+                                   list_fields = ["date",
+                                                  "awarding_body",
+                                                  "award_type_id",
+                                                  ],
+                                    orderby = "hrm_award.date desc"
                                    )
                     # Custom form for hrm_human_resource
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
