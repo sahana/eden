@@ -704,13 +704,12 @@ class S3DataTable(object):
         config.groupTotals = attr.get("dt_group_totals", [])
         config.groupTitles = attr.get("dt_group_titles", [])
         config.groupSpacing = attr.get("dt_group_space", "false")
-        # No longer needed? (new datatables using true index)
-        #for order in orderby:
-        #    if bulkActions:
-        #        if bulkCol <= order[0]:
-        #            order[0] += 1
-        #    if action_col >= order[0]:
-        #        order[0] -= 1
+        for order in orderby:
+           if bulkActions:
+               if bulkCol <= order[0]:
+                   order[0] += 1
+           if action_col > 0 and action_col >= order[0]:
+               order[0] -= 1
         config.aaSort = orderby
         config.textMaxLength = attr.get("dt_text_maximum_len", 80)
         config.textShrinkLength = attr.get("dt_text_condense_len", 75)

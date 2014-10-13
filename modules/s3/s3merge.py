@@ -290,7 +290,15 @@ class S3Merge(S3Method):
                 totalrows = resource.count()
                 resource.add_filter(searchq)
         else:
-            orderby, left = None, None
+            dt_sorting = {"iSortingCols": "1", "sSortDir_0": "asc"}
+            if len(list_fields) > 1:
+                dt_sorting["bSortable_0"] = "false"
+                dt_sorting["iSortCol_0"] = "1"
+            else:
+                dt_sorting["bSortable_0"] = "true"
+                dt_sorting["iSortCol_0"] = "0"
+            orderby, left = resource.datatable_filter(list_fields,
+                                                      dt_sorting)[1:]
 
         # Get the records
         data = resource.select(list_fields,
