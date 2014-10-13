@@ -381,47 +381,6 @@ class S3DataTable(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def getControlData(rfields, vars):
-        """
-            Method that will return the orderby and filter from the vars
-            returned by the browser, from an ajax call.
-
-            @param rfields: A list of S3Resourcefield
-            @param vars: A list of variables sent from the dataTable
-        """
-
-        # @todo: does not sort properly in option fields nor FK references
-        if not vars.iSortingCols:
-            return (False, "")
-
-        sort_cols = int(vars.iSortingCols)
-        orderby = False
-        for x in range(sort_cols):
-            index = int(vars["iSortCol_%s" % x])
-            f = rfields[index].field
-            if vars["sSortDir_%s" % x] == "desc":
-                f = ~f
-            if not orderby:
-                orderby = f
-            else:
-                orderby |= f
-        # @todo: does not search properly in option fields nor FK references
-        words = vars.sSearch
-        if not words:
-            return (orderby, "")
-        words = words.split()
-        query = None
-        for rf in rfields:
-            if rf.ftype in ("string", "text") :
-                if not query:
-                    query = rf.field.contains(words)
-                else:
-                    query |= (rf.field.contains(words))
-
-        return (orderby, query)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def listFormats(rfields=None, permalink=None, base_url=None):
         """
             Calculate the export formats that can be added to the table
@@ -665,6 +624,8 @@ class S3DataTable(object):
         config = Storage()
         config.id = id
         config.dom = attr.get("dt_dom", 'fril<"dataTable_table"t>pi')
+        # Consider this for Foundation themes:
+        #config.dom = attr.get("dt_dom", "<'row'<'large-6 columns'l><'large-6 columns'f>r>t<'row'<'large-6 columns'i><'large-6 columns'p>>")
         config.lengthMenu = attr.get("dt_lengthMenu",
                                      [[ 25, 50, -1], [ 25, 50, str(current.T("All"))]]
                                      )

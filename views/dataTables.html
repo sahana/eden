@@ -5,9 +5,6 @@
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.ReloadAjax.js" % appname)}}
  {{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.js" % appname)}}
 {{else:}}{{s3.scripts.append("/%s/static/scripts/S3/s3.dataTables.min.js" % appname)}}{{pass}}
-{{#if current.deployment_settings.ui.formstyle in ("foundation", "foundation_2col"):}}
- {{#s3.scripts.append("/%s/static/scripts/jquery.dataTables.foundation.js" % appname)}}
-{{#pass}}
 <script type="text/javascript">
 {{=XML(s3base.S3DataTable.i18n())}}
 S3.dataTables={}

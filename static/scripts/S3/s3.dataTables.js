@@ -714,8 +714,16 @@
                 // Send a minimal URL query with old-style vars
                 var sendData = [{'name': 'draw',
                                  'value': request.draw
-                                 }
+                                 },
+                                {'name': 'limit',
+                                 'value': request.length
+                                 },
                                 ];
+                if (requestStart != 0) {
+                    sendData.push({'name': 'start',
+                                   'value': requestStart
+                                   });
+                }
                 if (request.search && request.search.value) {
                     sendData.push({'name': 'sSearch',
                                    'value': request.search.value
