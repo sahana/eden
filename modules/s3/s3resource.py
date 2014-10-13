@@ -3682,22 +3682,33 @@ class S3Resource(object):
                 numcols = int(get_vars[iSortingCols])
             except:
                 numcols = 0
+
             columns = []
+            pkey = str(self._id)
             for i in xrange(numcols):
                 try:
                     iSortCol = int(get_vars["iSortCol_%s" % i])
-                    # Map sortable-column index to the real list_fields
-                    # index: for every non-sortable column to the left
-                    # of sortable column subtract 1
-                    # No longer needed? (new datatables using true index)
-                    #for j in xrange(iSortCol):
-                    #    if get_vars.get("bSortable_%s" % j, "true") == "false":
-                    #        iSortCol -= 1
+                except (AttributeError, KeyError):
+                    # iSortCol_x not present in get_vars => ignore
+                    columns.append(Storage(field=None))
+                    continue
+
+                # Map sortable-column index to the real list_fields
+                # index: for every non-id non-sortable column to the
+                # left of sortable column subtract 1
+                for j in xrange(iSortCol):
+                    if get_vars.get("bSortable_%s" % j, "true") == "false":
+                        try:
+                            if rfields[j].colname != pkey:
+                                iSortCol -= 1
+                        except KeyError:
+                            break
+
+                try:
                     rfield = rfields[iSortCol]
-                except:
-                    # iSortCol_x is either not present in vars or specifies
-                    # a non-existent column (i.e. iSortCol_x >= numcols) =>
-                    # ignore silently
+                except KeyError:
+                    # iSortCol specifies a non-existent column, i.e. 
+                    # iSortCol_x>=numcols => ignore
                     columns.append(Storage(field=None))
                 else:
                     columns.append(rfield)
