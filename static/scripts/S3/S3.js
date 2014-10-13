@@ -1794,6 +1794,24 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
                     });
                 });
         });
+
+        // Options Menu Toggle on mobile
+        $('#menu-options-toggle').on('click', function(e) {
+            e.stopPropagation();
+            var $this = $(this);
+            var status = $this.data('status'),
+                menu = $('#menu-options');
+            if (status == 'off') {
+                menu.hide().removeClass('hide-for-small').slideDown(400, function() {
+                    $this.data('status', 'on').text($this.data('on'));
+                });
+            } else {
+                menu.slideUp(400, function() {
+                    menu.addClass('hide-for-small').show();
+                    $this.data('status', 'off').text($this.data('off'));
+                });
+            }
+        });
     });
 
 }());

@@ -56,7 +56,8 @@
  </div>
  <div class='row'>
   {{if current.menu.options is not None:}}
-  <div class='medium-3 large-2 columns' id='menu-options'>
+  <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
+  <div class='medium-3 large-2 columns hide-for-small' id='menu-options'>
    {{=current.menu.options}}
   </div>
   <div class='medium-9 large-10 columns' id='content'>
