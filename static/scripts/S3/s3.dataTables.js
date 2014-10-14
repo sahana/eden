@@ -742,7 +742,7 @@
                                  },
                                 {'name': 'limit',
                                  'value': limit
-                                 },
+                                 }
                                 ];
                 if (requestStart != 0) {
                     sendData.push({'name': 'start',
