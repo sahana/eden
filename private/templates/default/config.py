@@ -374,6 +374,15 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.hide_report_options = False
 # Uncomment to show created_by/modified_by using Names not Emails
 #settings.ui.auth_user_represent = "name"
+# Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
+# Default:
+#settings.ui.datatables_dom = "fril<'dataTable_table't>pi"
+# dataTables.Foundation.js would set to this:
+#settings.ui.datatables_dom = "<'row'<'large-6 columns'l><'large-6 columns'f>r>t<'row'<'large-6 columns'i><'large-6 columns'p>>"
+# Move the export_formats after the pagination control
+#settings.ui.datatables_initComplete = '''$('.dataTables_paginate').after($('.dt-export-options'))'''
+# Uncomment for dataTables to use a different paging style:
+#settings.ui.datatables_pagingType = "bootstrap"
 # Uncomment to restrict the export formats available
 #settings.ui.export_formats = ("kml", "pdf", "rss", "xls", "xml")
 # Uncomment to include an Interim Save button on CRUD forms

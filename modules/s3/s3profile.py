@@ -598,7 +598,6 @@ class S3Profile(S3CRUD):
             empty = DIV(empty_str, _class="empty")
 
             dtargs["dt_pagination"] = dt_pagination
-            dtargs["dt_pagingType"] = s3.dataTable_pagingType or "full_numbers"
             dtargs["dt_pageLength"] = display_length
             # @todo: fix base URL (make configurable?) to fix export options
             s3.no_formats = True

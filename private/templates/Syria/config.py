@@ -111,8 +111,8 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.translate_gis_location = True
 
 # Restrict the Location Selector to just certain countries
-#settings.gis.countries = ["SY"]
-settings.gis.countries = ["SY", "IQ", "LB", "TR", "JO"] #, "EG", "DZ"
+#settings.gis.countries = ("SY",)
+settings.gis.countries = ("SY", "IQ", "LB", "TR", "JO") #, "EG", "DZ"
 
 # Disable toolbar
 settings.gis.toolbar = False

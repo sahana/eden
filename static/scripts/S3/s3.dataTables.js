@@ -1214,7 +1214,9 @@
                                .siblings('.dtwrapper')
                                .hide();
                 }
-            } // end of drawCallback
+            }, // end of drawCallback
+            // Custom initComplete can be used to reposition elements like export_formats
+            'initComplete': S3.dataTables.initComplete
         }); // end of call to $(selector).datatable()
 
         // Ajax-delete handler

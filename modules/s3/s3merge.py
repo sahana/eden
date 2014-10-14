@@ -344,7 +344,6 @@ class S3Merge(S3Method):
                              dt_bulk_actions = [(T("Merge"),
                                                  "merge", "pair-action")],
                              dt_pageLength=display_length,
-                             dt_pagingType = s3.dataTable_pagingType or "full_numbers",
                              )
 
             output["items"] = items

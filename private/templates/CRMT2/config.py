@@ -92,6 +92,13 @@ settings.ui.formstyle = "foundation_2col"
 settings.ui.hide_report_options = False
 settings.ui.read_label = "" # replaced with icon
 #settings.ui.update_label = "Update"
+# Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
+settings.ui.datatables_dom = "<'data-sort'<'row'<'large-4 columns'i><'large-3 columns'l><'large-3 columns'f><'large-2 columns right'>r>><'dataTable_table't><'row'p>"
+# Move the export_formats inside the row above it
+settings.ui.datatables_initComplete = \
+'''$('.dataTables_paginate').after($('.dt-export-options'))'''
+# Uncomment for dataTables to use a different paging style:
+settings.ui.datatables_pagingType = "bootstrap"
 settings.ui.export_formats = ("xls", "xml")
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 settings.ui.multiselect_widget = True
@@ -913,8 +920,6 @@ def customise_org_organisation_controller(**attr):
         elif method == "summary" or r.representation == "aadata":
 
             # Data table configuration
-            s3.dataTable_pagingType = "simple_numbers"
-
             list_fields = ["id",
                            "name",
                            (T("Coalition"), "group_membership.group_id"),

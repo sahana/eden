@@ -33,6 +33,9 @@ form table.embeddedComponent td {
     border: none;
 }
 
+.dataTable_table {
+    margin-bottom: 18px;
+}
 table.dataTable thead th {
     border: 0;
 }
@@ -58,37 +61,15 @@ table.dataTable tr.odd {
     margin-bottom: 0.5rem;
     margin-top: 0.2rem;
 }
+div.dataTables_length {
+    padding-top: 0;
+}
 div.dataTables_paginate {
     float: left;
-    margin: 0;
-    text-align: left;
 }
-.dataTables_info {
-    display: none;
+.dt-export-options {
+    padding-top: 0;
 }
-#summary-1_info.dataTables_info {
-    display: block;
-}
-.paginate_button {
-    float: left;
-}
-.paginate_button.previous,
-.paginate_button.next {
-    visibility: hidden;
-}
-.paginate_button.previous:after,
-.paginate_button.next:after {
-  visibility: visible;
-  display: block;
-}
-.paginate_button.previous:after {
-    content: "«";
-}
-.paginate_button.next:after {
-    content: "»";
-    float: right;
-}
-
 
 table.dataTable .action-btn.read {
     background-color: inherit;
