@@ -289,16 +289,18 @@ def server_validation(form):
 # -----------------------------------------------------------------------------
 def instance_onaccept(form):
 
-    vars = form.vars
-    s3db = current.s3db
     db = current.db
+    s3db = current.s3db
+    form_vars = form.vars
+
+    # Get deployment id
+    itable = s3db.setup_instance
+    instance = db(itable.id == form_vars.id).select(itable.deployment_id,
+                                                    limitby = (0, 1)
+                                                    ).first()
+    deployment_id = instance.deployment_id
 
     stable = s3db.setup_server
-    # get deployment id
-    itable = s3db.setup_instance
-    query = (itable.id == vars.id)
-    deployment_id = db(query).select(itable.deployment_id).first().deployment_id
-
     query = (stable.deployment_id == deployment_id)
     rows = db(query).select(stable.role,
                             stable.host_ip,
@@ -314,12 +316,19 @@ def instance_onaccept(form):
 
 
     dtable = s3db.setup_deployment
-    query = (dtable.id == deployment_id)
-    deployment = db(query).select().first()
+    deployment = db(dtable.id == deployment_id).select(dtable.db_password,
+                                                       dtable.webserver_type,
+                                                       dtable.db_type,
+                                                       dtable.distro,
+                                                       dtable.template,
+                                                       dtable.private_key,
+                                                       dtable.remote_user,
+                                                       limitby=(0, 1)
+                                                       ).first()
 
-    prepop_options = str(','.join(vars.prepop_options))
+    prepop_options = str(",".join(form_vars.prepop_options))
 
-    instance_type = int(vars.type)
+    instance_type = int(form_vars.type)
     if instance_type  == 2:
         demo_type = "na"
     elif instance_type == 1 or instance_type == 3:
@@ -336,9 +345,9 @@ def instance_onaccept(form):
         else:
             demo_type = "beforeprod"
 
-    webservers = ["apache", "cherokee"]
-    dbs = ["mysql", "postgresql"]
-    prepop = ["prod", "test", "demo"]
+    webservers = ("apache", "cherokee")
+    dbs = ("mysql", "postgresql")
+    prepop = ("prod", "test", "demo")
     scheduler_id = setup_create_yaml_file(hosts,
                                           deployment.db_password,
                                           webservers[deployment.webserver_type - 1],
@@ -349,14 +358,13 @@ def instance_onaccept(form):
                                           False,
                                           hostname,
                                           deployment.template,
-                                          vars.url,
+                                          form_vars.url,
                                           deployment.private_key,
                                           deployment.remote_user,
                                           demo_type,
                                           )
     # add scheduler fk in current record
-    query = (itable.id == vars.id)
-    record = db(query).select().first()
+    record = db(itable.id == form_vars.id).select().first()
     record.update_record(scheduler_id=scheduler_id)
 
 # -----------------------------------------------------------------------------

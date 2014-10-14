@@ -1099,7 +1099,6 @@ def customise_org_organisation_controller(**attr):
                 #                                             title=T("Add New Status"))
                 mtable.status_id.comment = T("Status of the Organization in the Coalition")
                 mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
-                                                              # NB Has no permissions checks
                                                               create=dict(c="org",
                                                                           f="group_membership_status",
                                                                           label=str(T("Add New Status")),
