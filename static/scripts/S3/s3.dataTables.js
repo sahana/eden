@@ -654,31 +654,42 @@
                 totalRecords[t] = request.recordsTotal;
             }
             if (requestLength == -1) {
-                requestLength = totalRecords[t];
-            }
-            var requestEnd = requestStart + requestLength;
-            
-            // Prevent the Ajax lookup of the last page if we already know
-            // that there are no more records than we have in the cache.
-            if (cacheLastJson && cacheLastJson.hasOwnProperty('recordsFiltered')) {
-                if (cacheLastJson.recordsFiltered < requestEnd) {
-                    requestEnd = cacheLastJson.recordsFiltered;
+                // Showing all records
+                var total = totalRecords[t];
+                if (typeof total != 'undefined') {
+                    requestLength = total;
+                } else {
+                    // Total number of records is unknown and hence not
+                    // all records cached either => need server in any case
+                    ajax = true;
                 }
             }
 
-            if (settings.clearCache) {
-                // API requested that the cache be cleared
-                ajax = true;
-                settings.clearCache = false;
-            } else if (cacheLower < 0 || requestStart < cacheLower || requestEnd > cacheUpper) {
-                // outside cached data - need to make a request
-                ajax = true;
-            } else if (cacheLastRequest && 
-                       (JSON.stringify(request.order)   !== JSON.stringify(cacheLastRequest.order) ||
-                        JSON.stringify(request.columns) !== JSON.stringify(cacheLastRequest.columns) ||
-                        JSON.stringify(request.search)  !== JSON.stringify(cacheLastRequest.search))) {
-                // properties changed (ordering, columns, searching)
-                ajax = true;
+            if (!ajax) {
+                var requestEnd = requestStart + requestLength;
+            
+                // Prevent the Ajax lookup of the last page if we already know
+                // that there are no more records than we have in the cache.
+                if (cacheLastJson && cacheLastJson.hasOwnProperty('recordsFiltered')) {
+                    if (cacheLastJson.recordsFiltered < requestEnd) {
+                        requestEnd = cacheLastJson.recordsFiltered;
+                    }
+                }
+
+                if (settings.clearCache) {
+                    // API requested that the cache be cleared
+                    ajax = true;
+                    settings.clearCache = false;
+                } else if (cacheLower < 0 || requestStart < cacheLower || requestEnd > cacheUpper) {
+                    // outside cached data - need to make a request
+                    ajax = true;
+                } else if (cacheLastRequest && 
+                        (JSON.stringify(request.order)   !== JSON.stringify(cacheLastRequest.order) ||
+                         JSON.stringify(request.columns) !== JSON.stringify(cacheLastRequest.columns) ||
+                         JSON.stringify(request.search)  !== JSON.stringify(cacheLastRequest.search))) {
+                    // properties changed (ordering, columns, searching)
+                    ajax = true;
+                }
             }
 
             // Store the request for checking next time around
@@ -695,7 +706,11 @@
                 }
 
                 cacheLower = requestStart;
-                cacheUpper = requestStart + (requestLength * conf.pages);
+                if (request.length != -1) {
+                    cacheUpper = requestStart + (requestLength * conf.pages);
+                } else {
+                    cacheUpper = requestLength;
+                }
 
                 request.start = requestStart;
                 request.length = requestLength * conf.pages;
@@ -716,11 +731,17 @@
                 }
 
                 // Send a minimal URL query with old-style vars
+                if (requestLength == -1) {
+                    // Load all records
+                    limit = 'none';
+                } else {
+                    limit = request.length;
+                }
                 var sendData = [{'name': 'draw',
                                  'value': request.draw
                                  },
                                 {'name': 'limit',
-                                 'value': request.length
+                                 'value': limit
                                  },
                                 ];
                 if (requestStart != 0) {
@@ -762,20 +783,38 @@
                     'success':  function(json) {
                         cacheLastJson = $.extend(true, {}, json);
 
+                        // Update cacheUpper with the actual number of records returned
+                        cacheUpper = cacheLower + json.data.length;
+
                         if (cacheLower != drawStart) {
+                            // Remove the records up to the start of the
+                            // current page from JSON
                             json.data.splice(0, drawStart - cacheLower);
                         }
-                        json.data.splice(requestLength, json.data.length);
+                        if (requestLength != -1) {
+                            // Not showing all records: remove all records behind
+                            // the end of the current page
+                            json.data.splice(requestLength, json.data.length);
+                        }
 
                         drawCallback(json);
                     }
                 });
             } else {
+                // Copy the JSON from cache
                 var json = $.extend(true, {}, cacheLastJson);
-                json.draw = request.draw; // Update the echo for each response
-                json.data.splice(0, requestStart - cacheLower);
-                json.data.splice(requestLength, json.data.length);
 
+                // Update the echo for each response
+                json.draw = request.draw; 
+
+                // Remove the records up to the start of the current page
+                json.data.splice(0, requestStart - cacheLower);
+
+                if (requestLength != -1) {
+                    // Not showing all records: remove all records behind
+                    // the end of the current page
+                    json.data.splice(requestLength, json.data.length);
+                }
                 drawCallback(json);
             }
         }
