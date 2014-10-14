@@ -642,7 +642,6 @@
                 requestStart  = request.start,
                 drawStart     = request.start,
                 requestLength = request.length;
-            var requestEnd    = requestStart + requestLength;
 
             // S3 Extensions
             // Make the totalRecords visible to other functions
@@ -654,6 +653,11 @@
             } else {
                 totalRecords[t] = request.recordsTotal;
             }
+            if (requestLength == -1) {
+                requestLength = totalRecords[t];
+            }
+            var requestEnd = requestStart + requestLength;
+            
             // Prevent the Ajax lookup of the last page if we already know
             // that there are no more records than we have in the cache.
             if (cacheLastJson && cacheLastJson.hasOwnProperty('recordsFiltered')) {

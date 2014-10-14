@@ -1333,36 +1333,48 @@ class S3CRUD(S3Method):
         # Default orderby
         orderby = get_config("orderby", None)
 
+        response = current.response
+        s3 = response.s3
         representation = r.representation
 
         # Pagination
         get_vars = self.request.get_vars
-        #if representation == "aadata":
-        #    start = get_vars.get("displayStart", None)
-        #    limit = get_vars.get("pageLength", 0)
-        #else:
-        start = get_vars.get("start", None)
-        limit = get_vars.get("limit", 0)
-        if limit:
-            if limit.lower() == "none":
-                limit = None
+        if representation == "aadata":
+            start = get_vars.get("start", None)
+            limit = get_vars.get("limit", 0)
+            # Deal with overrides (pagination limits come last)
+            if isinstance(start, list):
+                start = start[-1]
+            if isinstance(limit, list):
+                limit = limit[-1]
+            if limit:
+                # Ability to override default limit to "Show All"
+                if limit.lower() == "none":
+                    #start = None # needed?
+                    limit = None
+                else:
+                    try:
+                        start = int(start) if start is not None else None
+                        limit = int(limit)
+                    except (ValueError, TypeError):
+                        # Fall back to defaults
+                        start, limit = None, 0
             else:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = 0 # use default
+                # Use defaults, assume sspag because this is a
+                # pagination request by definition
+                start = None
+                limit = 0
         else:
-            # Use defaults
+            # Initial page request always uses defaults (otherwise
+            # filtering and pagination would have to be relative to
+            # the initial limits, but there is no use-case for that)
             start = None
+            limit = None if s3.no_sspag else 0
 
         # Initialize output
         output = {}
 
         # Filter
-        response = current.response
-        s3 = response.s3
         if s3.filter is not None:
             resource.add_filter(s3.filter)
 
