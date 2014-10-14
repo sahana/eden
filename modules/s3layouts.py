@@ -391,7 +391,7 @@ class S3AddResourceLink(S3NavigationItem):
             return None
 
 
-        if current.deployment_settings.get_ui_use_button_glyphicons():
+        if current.deployment_settings.get_ui_use_button_icons():
             label = (I(" ", _class="icon-plus"),
                       item.label)
         else:

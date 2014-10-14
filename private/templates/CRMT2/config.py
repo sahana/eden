@@ -118,7 +118,7 @@ settings.ui.export_formats = ("xls", "xml")
 settings.ui.filter_clear = "Clear"
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 settings.ui.multiselect_widget = True
-settings.ui.use_button_glyphicons = True
+settings.ui.use_button_icons = True
 # Uncomment to disable responsive behavior of datatables
 # - Disabled until tested
 settings.ui.datatables_responsive = False

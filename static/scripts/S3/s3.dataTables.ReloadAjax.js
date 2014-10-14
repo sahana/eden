@@ -12,7 +12,7 @@ var tableIdReverse = function(id) {
 
 $.fn.dataTableExt.oApi.reloadAjax = function(settings, newSource) {
 
-    if ( newSource != 'undefined' && newSource != null ) {
+    if ( typeof newSource != 'undefined' && newSource != null ) {
         // newSource is a string containing the new Ajax-URL for
         // this instance, so override the previous setting
         S3.dataTables.ajax_urls[settings.nTable.id] = newSource;

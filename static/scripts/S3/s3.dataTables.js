@@ -1071,9 +1071,9 @@
                             var title = label;
                             re = /%5Bid%5D/g;
                             if (action.icon) {
-                                label = '<i class="icon icon-' + action.icon + '" alt="' + label + '"></i>';
+                                label = '<i class="' + action.icon + '" alt="' + label + '"> </i>';
                             } else if (action.img) {
-                                label = '<img src="' + action.icon + '" alt="' + label + '">';
+                                label = '<img src="' + action.icon + '" alt="' + label + '"></img>';
                             }
                             if (action._onclick) {
                                 var oc = Actions[i]._onclick.replace(re, action_id);

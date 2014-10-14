@@ -577,8 +577,10 @@ class S3Profile(S3CRUD):
             # Server-side pagination?
             if not s3.no_sspag:
                 dt_pagination = "true"
-                if not limit:
+                if not limit and display_length is not None:
                     limit = 2 * display_length
+                else:
+                    limit = None
             else:
                 dt_pagination = "false"
 

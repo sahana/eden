@@ -68,7 +68,7 @@ settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 
 # @ToDo: Investigate
-settings.ui.use_button_glyphicons = True
+settings.ui.use_button_icons = True
 
 # Uncomment to show a default cancel button in standalone create/update forms
 settings.ui.default_cancel_button = True

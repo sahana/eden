@@ -6327,6 +6327,7 @@ class ICON(I):
     icons = {
         "font-awesome": {
             "_base": "icon",
+            "add": "icon-plus",
             "arrow-down": "icon-arrow-down",
             "bar-chart": "icon-bar-chart",
             "book": "icon-book",
@@ -6336,6 +6337,7 @@ class ICON(I):
             "calendar": "icon-calendar",
             "certificate": "icon-certificate",
             "comment-alt": "icon-comment-alt",
+            "delete": "icon-trash",
             "down": "icon-caret-down",
             "edit": "icon-edit",
             "envelope-alt": "icon-envelope-alt",
@@ -6373,6 +6375,7 @@ class ICON(I):
         # @todo: integrate
         #"font-awesome4": {
             #"_base": "fa",
+            #"add": "fa-plus",
             #"arrow-down": "fa-arrow-down",
             #"bar-chart": "fa-bar-chart",
             #"book": "fa-book",
@@ -6382,6 +6385,7 @@ class ICON(I):
             #"calendar": "fa-calendar",
             #"certificate": "fa-certificate",
             #"comment-alt": "fa-comment-o",
+            #"delete": "fa-trash",
             #"down": "fa-caret-down",
             #"edit": "fa-edit",
             #"envelope-alt": "fa-envelope-o",
@@ -6417,6 +6421,7 @@ class ICON(I):
             #"zoomout": "fa-zoomout",
         #},
         "foundation": {
+            "add": "fi-plus",
             "arrow-down": "fi-arrow-down",
             "bar-chart": "fi-graph-bar",
             "book": "fi-book",
@@ -6425,6 +6430,7 @@ class ICON(I):
             "calendar": "fi-calendar",
             "certificate": "fi-burst",
             "comment-alt": "fi-comment",
+            "delete": "fi-trash",
             "edit": "fi-page-edit",
             "envelope-alt": "fi-mail",
             "exclamation": "fi-alert",
@@ -6475,25 +6481,36 @@ class ICON(I):
             Render this instance as XML
         """
 
-        settings = current.deployment_settings
-        fallback = "font-awesome"
-
         # Custom layout?
-        layout = settings.get_ui_icon_layout()
+        layout = current.deployment_settings.get_ui_icon_layout()
         if layout:
             return layout(self)
 
+        css_class = self.css_class(self.name)
+        
+        if css_class:
+            self.add_class(css_class)
+
+        return super(ICON, self).xml()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def css_class(cls, name):
+        
+        settings = current.deployment_settings
+        fallback = "font-awesome"
+
         # Lookup the default set
-        icons = self.icons
-        default_set = settings.get_ui_icon_set()
+        icons = cls.icons
+        default_set = settings.get_ui_icons()
         default = icons[fallback]
         if default_set != fallback:
+            default.pop("_base", None)
             default.update(icons.get(default_set, {}))
 
         # Custom set?
         custom = settings.get_ui_custom_icons()
 
-        name = self.name
         if custom and name in custom:
             css = custom[name]
             base = custom.get("_base")
@@ -6504,12 +6521,6 @@ class ICON(I):
             css = name
             base = None
 
-        add_class = self.add_class
-        if css:
-            add_class(css)
-        if base:
-            add_class(base)
-
-        return super(ICON, self).xml()
+        return " ".join([c for c in (css, base) if c])
 
 # END =========================================================================

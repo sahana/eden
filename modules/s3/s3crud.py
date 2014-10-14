@@ -58,7 +58,7 @@ from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
 from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
-from s3widgets import S3EmbedComponentWidget
+from s3widgets import S3EmbedComponentWidget, ICON
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -520,7 +520,7 @@ class S3CRUD(S3Method):
                     output["form"] = form
                     output["showadd_btn"] = self.crud_button(tablename=tablename,
                                                              name="label_create",
-                                                             icon="icon-plus",
+                                                             icon="add",
                                                              _id="show-add-btn")
                     addtitle = self.crud_string(tablename, "label_create")
                     output["addtitle"] = addtitle
@@ -539,7 +539,7 @@ class S3CRUD(S3Method):
                 add_btn = self.crud_button(
                                     tablename=tablename,
                                     name="label_create",
-                                    icon="icon-plus",
+                                    icon="add",
                                     _id="add-btn")
                 if buttons:
                     output["buttons"] = {"add_btn": add_btn}
@@ -1170,7 +1170,7 @@ class S3CRUD(S3Method):
                         showadd_btn = self.crud_button(None,
                                                        tablename=tablename,
                                                        name="label_create",
-                                                       icon="icon-plus",
+                                                       icon="add",
                                                        _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
 
@@ -2221,7 +2221,7 @@ class S3CRUD(S3Method):
             @param label: the link label (None if using CRUD string)
             @param tablename: the name of table for CRUD string selection
             @param name: name of CRUD string for the button label
-            @param icon: class name of the glyphicon icon (e.g. "icon-plus")
+            @param icon: name of the icon (e.g. "add")
             @param _href: the target URL
             @param _id: the HTML id of the link
             @param _class: the HTML class of the link
@@ -2255,9 +2255,9 @@ class S3CRUD(S3Method):
         else:
             labelstr = str(label)
 
-        # Show glyphicon icon on button?
-        if icon and settings.get_ui_use_button_glyphicons():
-            button = A(I(" ", _class=icon), labelstr, _id=_id, _class=_class)
+        # Show icon on button?
+        if icon and settings.get_ui_use_button_icons():
+            button = A(ICON(icon), labelstr, _id=_id, _class=_class)
         else:
             button = A(labelstr, _id=_id, _class=_class)
 
@@ -2350,7 +2350,7 @@ class S3CRUD(S3Method):
                     _href = url(method="create",
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-plus",
+                                      icon="add",
                                       _href=_href,
                                       _id="add-btn")
                 output[ADD_BTN] = btn
@@ -2368,7 +2368,7 @@ class S3CRUD(S3Method):
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-list",
+                                      icon="list",
                                       _href=_href,
                                       _id="list-btn")
                 output[LIST_BTN] = btn
@@ -2386,7 +2386,7 @@ class S3CRUD(S3Method):
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-list",
+                                      icon="list",
                                       _href=_href,
                                       _id="summary-btn")
                 output[SUMMARY_BTN] = btn
@@ -2406,7 +2406,7 @@ class S3CRUD(S3Method):
                     _href = url(method="update",
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-edit",
+                                      icon="edit",
                                       _href=_href,
                                       _id="edit-btn")
                 output[EDIT_BTN] = btn
@@ -2423,7 +2423,7 @@ class S3CRUD(S3Method):
                     _href = url(method="delete",
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-trash",
+                                      icon="delete",
                                       _href=_href,
                                       _id="delete-btn",
                                       _class="delete-btn")
@@ -2443,11 +2443,12 @@ class S3CRUD(S3Method):
         """
 
         link = dict(attr)
-        link.update(label=str(label), url=url)
-        if icon and current.deployment_settings.get_ui_use_button_glyphicons():
-            link.update(icon=icon)
+        link["label"] = str(label)
+        link["url"] = url
+        if icon and current.deployment_settings.get_ui_use_button_icons():
+            link["icon"] = ICON.css_class(icon)
         if "_class" not in link:
-            link.update(_class="action-btn")
+            link["_class"] = "action-btn"
 
         s3 = current.response.s3
         if s3.actions is None:
@@ -2543,12 +2544,13 @@ class S3CRUD(S3Method):
                                  # To use modals
                                  #_class="action-btn s3_modal"
                                  _class="action-btn read",
+                                 icon = "file",
                                  **target
                                  )
 
         # Delete-action
         if deletable and has_permission("delete", table):
-            icon = "trash"
+            icon = "delete"
             if not delete_url:
                 delete_url = iframe_safe(URL(args = args + ["delete"],
                                              vars = get_vars))
@@ -2581,7 +2583,7 @@ class S3CRUD(S3Method):
                 copy_url = iframe_safe(URL(args = args + ["copy"]))
             s3crud.action_button(labels.COPY,
                                  copy_url,
-                                 icon="copy",
+                                 icon="icon-copy",
                                  **target
                                  )
 

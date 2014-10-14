@@ -527,10 +527,12 @@ class S3DataTable(object):
            not ownership_required("update", table):
             update_url = URL(c=c, f=f, args=args + ["update"])
             S3CRUD.action_button(labels.UPDATE, update_url,
+                                 icon = "edit",
                                  _class="action-btn edit")
         else:
             read_url = URL(c=c, f=f, args=args)
             S3CRUD.action_button(labels.READ, read_url,
+                                 icon = "file",
                                  _class="action-btn read")
 
         # Delete button
@@ -544,6 +546,7 @@ class S3DataTable(object):
            not ownership_required("delete", table):
             delete_url = URL(c=c, f=f, args=args + ["delete"])
             S3CRUD.action_button(labels.DELETE, delete_url,
+                                 icon = "delete",
                                  _class="delete-btn")
 
         # Append custom actions

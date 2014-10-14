@@ -389,8 +389,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.filter_clear = "Clear"
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
-# Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)
-#settings.ui.use_button_glyphicons = True
+# Uncomment to enable icons on action buttons (requires corresponding CSS)
+#settings.ui.use_button_icons = True
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 #settings.ui.multiselect_widget = True
 # Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)

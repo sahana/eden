@@ -125,7 +125,7 @@ settings.ui.update_label = "Update"
 settings.ui.export_formats = ("xls", "xml")
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 settings.ui.multiselect_widget = True
-settings.ui.use_button_glyphicons = True
+settings.ui.use_button_icons = True
 
 # Set Map to fill the container
 settings.gis.map_width = 1178

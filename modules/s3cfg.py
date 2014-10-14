@@ -1367,7 +1367,7 @@ class S3Config(Storage):
         """
         return self.ui.get("filter_clear", True)
 
-    def get_ui_icon_set(self):
+    def get_ui_icons(self):
         """
             Standard icon set, one of:
             - "font-awesome"
@@ -1560,11 +1560,11 @@ class S3Config(Storage):
         """
         return self.ui.get("report_auto_submit", 800)
 
-    def get_ui_use_button_glyphicons(self):
+    def get_ui_use_button_icons(self):
         """
-            Use glyphicons on action buttons (requires bootstrap CSS)
+            Use icons on action buttons (requires corresponding CSS)
         """
-        return self.ui.get("use_button_glyphicons", False)
+        return self.ui.get("use_button_icons", False)
 
     def get_ui_hierarchy_theme(self):
         """
