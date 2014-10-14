@@ -1119,7 +1119,8 @@ class S3CRUD(S3Method):
                                                  vars={},
                                                  representation="options"))
 
-                filter_clear = get_config("filter_clear", True)
+                filter_clear = get_config("filter_clear",
+                                        urrent.deployment_settings.get_ui_filter_clear())
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,

@@ -385,6 +385,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.datatables_pagingType = "bootstrap"
 # Uncomment to restrict the export formats available
 #settings.ui.export_formats = ("kml", "pdf", "rss", "xls", "xml")
+# Uncomment to change the label/class of FilterForm clear buttons
+#settings.ui.filter_clear = "Clear"
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
 # Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)

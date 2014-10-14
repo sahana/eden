@@ -1360,6 +1360,13 @@ class S3Config(Storage):
         """
         return self.ui.get("default_cancel_button", False)
         
+    def get_ui_filter_clear(self):
+        """
+            Whether to show a clear button in default FilterForms
+            - and allows possibility to relabel &/or add a class
+        """
+        return self.ui.get("filter_clear", True)
+
     def get_ui_icon_set(self):
         """
             Standard icon set, one of:

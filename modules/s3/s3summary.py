@@ -241,9 +241,12 @@ class S3Summary(S3Method):
                                              vars={},
                                              representation="options"))
 
+            filter_clear = get_config("filter_clear",
+                                      current.deployment_settings.get_ui_filter_clear())
             filter_formstyle = get_config("filter_formstyle")
             filter_submit = get_config("filter_submit", True)
             filter_form = S3FilterForm(filter_widgets,
+                                       clear=filter_clear,
                                        formstyle=filter_formstyle,
                                        submit=filter_submit,
                                        ajax=filter_ajax,
