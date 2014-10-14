@@ -956,13 +956,6 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10
     )),
-    ("dvi", Storage(
-       name_nice = T("Disaster Victim Identification"),
-       #description = "Disaster Victim Identification",
-       restricted = True,
-       module_type = 10,
-       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    )),
     ("dvr", Storage(
        name_nice = T("Disaster Victim Registry"),
        #description = "Allow affected individuals & households to register to receive compensation and distributions",
@@ -980,6 +973,13 @@ settings.modules = OrderedDict([
        restricted = True,
        module_type = 10,
     )),
+    #("dvi", Storage(
+    #   name_nice = T("Disaster Victim Identification"),
+    #   #description = "Disaster Victim Identification",
+    #   restricted = True,
+    #   module_type = 10,
+    #   #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
+    #)),
     #("mpr", Storage(
     #       name_nice = T("Missing Person Registry"),
     #       #description = "Helps to report and search for missing persons",
