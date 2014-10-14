@@ -579,27 +579,27 @@ class S3Config(Storage):
         return self.base.get("chat_server", False)
 
     def get_chatdb_string(self):
-        chat_server = self.base.get("chat_server",False)
-
-        if(chat_server["server_db_type"] == "mysql"):
+        chat_server = self.base.get("chat_server", False)
+        db_get = self.database.get
+        
+        if (chat_server["server_db_type"] == "mysql"):
             db_string = "mysql://%s:%s@%s:%s/%s" % \
-            (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
-                chat_server["server_db_password"] if chat_server["server_db_password"] else  self.database.get("password", "password"),
-                chat_server["server_db_ip"] if chat_server["server_db_ip"] else self.database.get("host", "localhost"),
-                chat_server["server_db_port"] if chat_server["server_db_port"] else self.database.get("port", 3306),
-                chat_server["server_db"] if chat_server["server_db"] else self.database.get("database", "openfiredb"))
+            (chat_server["server_db_username"] if chat_server["server_db_username"] else db_get("username", "sahana"),
+                chat_server["server_db_password"] if chat_server["server_db_password"] else db_get("password", "password"),
+                chat_server["server_db_ip"] if chat_server["server_db_ip"] else db_get("host", "localhost"),
+                chat_server["server_db_port"] if chat_server["server_db_port"] else db_get("port", 3306),
+                chat_server["server_db"] if chat_server["server_db"] else db_get("database", "openfiredb"))
         elif (chat_server["server_db_type"] == "postgres"):
             db_string = "postgres://%s:%s@%s:%s/%s" % \
-            (chat_server["server_db_username"] if chat_server["server_db_username"] else self.database.get("username", "sahana"),
-                chat_server["server_db_password"] if chat_server["server_db_password"] else  self.database.get("password", "password"),
-                chat_server["server_db_ip"] if chat_server["server_db_ip"] else self.database.get("host", "localhost"),
-                chat_server["server_db_port"] if chat_server["server_db_port"] else self.database.get("port", 5432),
-                chat_server["server_db"] if chat_server["server_db"] else self.database.get("database", "openfiredb"))
+            (chat_server["server_db_username"] if chat_server["server_db_username"] else db_get("username", "sahana"),
+                chat_server["server_db_password"] if chat_server["server_db_password"] else db_get("password", "password"),
+                chat_server["server_db_ip"] if chat_server["server_db_ip"] else db_get("host", "localhost"),
+                chat_server["server_db_port"] if chat_server["server_db_port"] else db_get("port", 5432),
+                chat_server["server_db"] if chat_server["server_db"] else db_get("database", "openfiredb"))
         else:
             from gluon import HTTP
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
         return db_string
-
 
     def get_base_session_memcache(self):
         """
@@ -677,25 +677,28 @@ class S3Config(Storage):
     # Database settings
     def get_database_type(self):
         return self.database.get("db_type", "sqlite").lower()
+
     def get_database_string(self):
         db_type = self.database.get("db_type", "sqlite").lower()
         pool_size = self.database.get("pool_size", 30)
         if (db_type == "sqlite"):
             db_string = "sqlite://storage.db"
         elif (db_type == "mysql"):
+            db_get = self.database.get
             db_string = "mysql://%s:%s@%s:%s/%s" % \
-                        (self.database.get("username", "sahana"),
-                         self.database.get("password", "password"),
-                         self.database.get("host", "localhost"),
-                         self.database.get("port", None) or "3306",
-                         self.database.get("database", "sahana"))
+                        (db_get("username", "sahana"),
+                         db_get("password", "password"),
+                         db_get("host", "localhost"),
+                         db_get("port", None) or "3306",
+                         db_get("database", "sahana"))
         elif (db_type == "postgres"):
+            db_get = self.database.get
             db_string = "postgres://%s:%s@%s:%s/%s" % \
-                        (self.database.get("username", "sahana"),
-                         self.database.get("password", "password"),
-                         self.database.get("host", "localhost"),
-                         self.database.get("port", None) or "5432",
-                         self.database.get("database", "sahana"))
+                        (db_get("username", "sahana"),
+                         db_get("password", "password"),
+                         db_get("host", "localhost"),
+                         db_get("port", None) or "5432",
+                         db_get("database", "sahana"))
         else:
             from gluon import HTTP
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
@@ -713,8 +716,10 @@ class S3Config(Storage):
             "USD" : T("United States Dollars"),
         }
         return self.fin.get("currencies", currencies)
+
     def get_fin_currency_default(self):
         return self.fin.get("currency_default", "USD") # Dollars
+
     def get_fin_currency_writable(self):
         return self.fin.get("currency_writable", True)
 
@@ -731,7 +736,8 @@ class S3Config(Storage):
             - needed for Earth, MapMaker & GeoCoder
             - defaults to localhost
         """
-        return self.gis.get("api_google", "ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw")
+        return self.gis.get("api_google",
+                            "ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw")
 
     def get_gis_api_yahoo(self):
         """
@@ -1318,8 +1324,32 @@ class S3Config(Storage):
                 return formstyles[setting]
         return setting
 
+    def get_ui_datatables_dom(self):
+        """
+            DOM layout for dataTables:
+            https://datatables.net/reference/option/dom
+        """
+
+        return self.ui.get("datatables_dom", "fril<'dataTable_table't>pi")
+
+    def get_ui_datatables_initComplete(self):
+        """
+            Callback for dataTables
+            - allows moving objects such as data_exports
+        """
+
+        return self.ui.get("datatables_initComplete", None)
+
+    def get_ui_datatables_pagingType(self):
+        """
+            The style of Paging used by dataTables:
+            https://datatables.net/reference/option/pagingType
+        """
+
+        return self.ui.get("datatables_pagingType", "full_numbers")
+
     def get_ui_datatables_responsive(self):
-        """ Responsive behavior of data tables """
+        """ Whether dataTables should be responsive when resized """
 
         return self.ui.get("datatables_responsive", True)
 
@@ -1330,6 +1360,13 @@ class S3Config(Storage):
         """
         return self.ui.get("default_cancel_button", False)
         
+    def get_ui_filter_clear(self):
+        """
+            Whether to show a clear button in default FilterForms
+            - and allows possibility to relabel &/or add a class
+        """
+        return self.ui.get("filter_clear", True)
+
     def get_ui_icon_set(self):
         """
             Standard icon set, one of:
@@ -1374,7 +1411,7 @@ class S3Config(Storage):
             - specify a list of export formats to restrict
         """
         return self.ui.get("export_formats",
-                           ["cap", "have", "kml", "map", "pdf", "rss", "xls", "xml"])
+                           ("cap", "have", "kml", "map", "pdf", "rss", "xls", "xml"))
 
     def get_ui_hide_report_filter_options(self):
         """

@@ -1,4 +1,4 @@
-/* Set the defaults for DataTables initialisation */
+/* Set the defaults for DataTables initialisation
 $.extend( true, $.fn.dataTable.defaults, {
 	"sDom":
 		"<'row'<'large-6 columns'l><'large-6 columns'f>r>"+
@@ -8,7 +8,7 @@ $.extend( true, $.fn.dataTable.defaults, {
 	"oLanguage": {
 		"sLengthMenu": "_MENU_ records per page"
 	}
-} );
+} ); */
 
 
 /* API method to get paging information */
@@ -153,7 +153,6 @@ $.extend( $.fn.dataTableExt.oPagination, {
 /*
  * TableTools Foundation compatibility
  * Required TableTools 2.1+
- */
 if ( $.fn.DataTable.TableTools ) {
 	// Set the classes that TableTools uses to something suitable for Foundation
 	$.extend( true, $.fn.DataTable.TableTools.classes, {
@@ -183,4 +182,5 @@ if ( $.fn.DataTable.TableTools ) {
 		}
 	} );
 }
+ */
 

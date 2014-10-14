@@ -358,8 +358,9 @@ class S3DataTable(object):
         if s3.dataTable_pageLength:
             attr.dt_pageLength = s3.dataTable_pageLength
         attr.dt_pagination = "false" if s3.no_sspag else "true"
-        if s3.dataTable_pagingType:
-            attr.dt_pagingType = s3.dataTable_pagingType
+        # Nothing using currently
+        #if s3.dataTable_pagingType:
+        #    attr.dt_pagingType = s3.dataTable_pagingType
         if s3.dataTable_group:
             attr.dt_group = s3.dataTable_group
         # Nothing using currently
@@ -381,7 +382,7 @@ class S3DataTable(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def listFormats(rfields=None, permalink=None, base_url=None):
+    def export_formats(rfields=None, permalink=None, base_url=None):
         """
             Calculate the export formats that can be added to the table
 
@@ -559,8 +560,8 @@ class S3DataTable(object):
                    **attr
                    ):
         """
-            Method to wrap the html for a dataTable in a form, the list of formats
-            used for data export and add the config details required by dataTables,
+            Method to wrap the html for a dataTable in a form, add the export formats
+            and the config details required by dataTables
 
             @param html: The html table
             @param id: The id of the table
@@ -605,58 +606,68 @@ class S3DataTable(object):
                                    Permitted valies are: 'icon' (the default) 'text' and 'none'
                    dt_base_url: base URL to construct export format URLs, resource
                                 default URL without any URL method or query part
+
             @global current.response.s3.actions used to get the RowActions
         """
 
         from gluon.serializers import json as jsons
 
-        request = current.request
         s3 = current.response.s3
+        settings = current.deployment_settings
 
         dataTableID = s3.dataTableID
         if not dataTableID or not isinstance(dataTableID, list):
             dataTableID = s3.dataTableID = [id]
         elif id not in dataTableID:
             dataTableID.append(id)
+
         # The configuration parameter from the server to the client will be
         # sent in a json object stored in an hidden input field. This object
         # will then be parsed by s3.dataTable.js and the values used.
         config = Storage()
         config.id = id
-        config.dom = attr.get("dt_dom", 'fril<"dataTable_table"t>pi')
-        # Consider this for Foundation themes:
-        #config.dom = attr.get("dt_dom", "<'row'<'large-6 columns'l><'large-6 columns'f>r>t<'row'<'large-6 columns'i><'large-6 columns'p>>")
-        config.lengthMenu = attr.get("dt_lengthMenu",
-                                     [[ 25, 50, -1], [ 25, 50, str(current.T("All"))]]
-                                     )
-        config.pageLength = attr.get("dt_pageLength", s3.ROWSPERPAGE)
-        config.pagination = attr.get("dt_pagination", "true")
-        config.pagingType = attr.get("dt_pagingType", "full_numbers")
-        config.searching = attr.get("dt_searching", "true")
-        url = URL(c=request.controller,
-                  f=request.function,
-                  args=request.args,
-                  vars=request.get_vars,
-                  )
-        _ajaxUrl = s3_set_extension(url, "aadata")
-        config.ajaxUrl = attr.get("dt_ajax_url", _ajaxUrl)
-        config.rowStyles = attr.get("dt_styles", [])
+        _aget = attr.get
+        config.dom = _aget("dt_dom", settings.get_ui_datatables_dom())
+        config.lengthMenu = _aget("dt_lengthMenu",
+                                  [[ 25, 50, -1],
+                                   [ 25, 50, str(current.T("All"))]
+                                   ]
+                                  )
+        config.pageLength = _aget("dt_pageLength", s3.ROWSPERPAGE)
+        config.pagination = _aget("dt_pagination", "true")
+        config.pagingType = _aget("dt_pagingType",
+                                  settings.get_ui_datatables_pagingType())
+        config.searching = _aget("dt_searching", "true")
 
-        rowActions = attr.get("dt_row_actions", s3.actions)
+        ajaxUrl = _aget("dt_ajax_url", None)
+        if not ajaxUrl:
+            request = current.request
+            url = URL(c=request.controller,
+                      f=request.function,
+                      args=request.args,
+                      vars=request.get_vars,
+                      )
+            ajaxUrl = s3_set_extension(url, "aadata")
+        config.ajaxUrl = ajaxUrl
+
+        config.rowStyles = _aget("dt_styles", [])
+
+        rowActions = _aget("dt_row_actions", s3.actions)
         if rowActions:
             config.rowActions = rowActions
         else:
             config.rowActions = []
-        bulkActions = attr.get("dt_bulk_actions", None)
+        bulkActions = _aget("dt_bulk_actions", None)
         if bulkActions and not isinstance(bulkActions, list):
             bulkActions = [bulkActions]
         config.bulkActions = bulkActions
-        config.bulkCol = bulkCol = attr.get("dt_bulk_col", 0)
-        action_col = attr.get("dt_action_col", 0)
+        config.bulkCol = bulkCol = _aget("dt_bulk_col", 0)
+        action_col = _aget("dt_action_col", 0)
         if bulkActions and bulkCol <= action_col:
             action_col += 1
         config.actionCol = action_col
-        group_list = attr.get("dt_group", [])
+
+        group_list = _aget("dt_group", [])
         if not isinstance(group_list, list):
             group_list = [group_list]
         dt_group = []
@@ -667,9 +678,9 @@ class S3DataTable(object):
                 group -= 1
             dt_group.append([group, "asc"])
         config.group = dt_group
-        config.groupTotals = attr.get("dt_group_totals", [])
-        config.groupTitles = attr.get("dt_group_titles", [])
-        config.groupSpacing = attr.get("dt_group_space", "false")
+        config.groupTotals = _aget("dt_group_totals", [])
+        config.groupTitles = _aget("dt_group_titles", [])
+        config.groupSpacing = _aget("dt_group_space", "false")
         for order in orderby:
             if bulkActions:
                 if bulkCol <= order[0]:
@@ -677,25 +688,29 @@ class S3DataTable(object):
             if action_col > 0 and action_col >= order[0]:
                 order[0] -= 1
         config.order = orderby
-        config.textMaxLength = attr.get("dt_text_maximum_len", 80)
-        config.textShrinkLength = attr.get("dt_text_condense_len", 75)
-        config.shrinkGroupedRows = attr.get("dt_shrink_groups", "false")
-        config.groupIcon = attr.get("dt_group_types", [])
+        config.textMaxLength = _aget("dt_text_maximum_len", 80)
+        config.textShrinkLength = _aget("dt_text_condense_len", 75)
+        config.shrinkGroupedRows = _aget("dt_shrink_groups", "false")
+        config.groupIcon = _aget("dt_group_types", [])
+
         # Wrap the table in a form and add some data in hidden fields
         form = FORM(_class="dt-wrapper")
         if not s3.no_formats and len(html) > 0:
             # @todo: always *render* both export options and permalink,
             #        even if the initial table is empty, so that
             #        Ajax-update can unhide them once there are results
-            # @todo: move export-format update into fnDrawCallback
+            # @todo: move export-format update into drawCallback()
             # @todo: poor UX with onclick-JS, better to render real
             #        links which can be bookmarked, and then update them
-            #        in fnDrawCallback
-            permalink = attr.get("dt_permalink", None)
-            base_url = attr.get("dt_base_url", None)
-            form.append(S3DataTable.listFormats(rfields,
-                                                permalink=permalink,
-                                                base_url=base_url))
+            #        in drawCallback()
+            permalink = _aget("dt_permalink", None)
+            base_url = _aget("dt_base_url", None)
+            export_formats = S3DataTable.export_formats(rfields,
+                                                        permalink=permalink,
+                                                        base_url=base_url)
+            # Nb These can be moved around in initComplete()
+            form.append(export_formats)
+
         form.append(html)
 
         # Add the configuration details for this dataTable
@@ -717,7 +732,7 @@ class S3DataTable(object):
                               _id="%s_dataTable_bulkMode" % id,
                               _name="mode",
                               _value="Inclusive"))
-            bulk_selected = attr.get("dt_bulk_selected", "")
+            bulk_selected = _aget("dt_bulk_selected", "")
             if isinstance(bulk_selected, list):
                 bulk_selected = ",".join(bulk_selected)
             form.append(INPUT(_type="hidden",
@@ -729,6 +744,12 @@ class S3DataTable(object):
                               _class="dataTable_filterURL",
                               _name="filterURL",
                               _value="%s" % config.ajaxUrl))
+
+        # Set callback?
+        initComplete = settings.get_ui_datatables_initComplete()
+        if initComplete:
+            # Processed in views/dataTables.html
+            s3.dataTable_initComplete = initComplete
 
         return form
 

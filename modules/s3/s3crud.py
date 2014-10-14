@@ -1119,7 +1119,8 @@ class S3CRUD(S3Method):
                                                  vars={},
                                                  representation="options"))
 
-                filter_clear = get_config("filter_clear", True)
+                filter_clear = get_config("filter_clear",
+                                        urrent.deployment_settings.get_ui_filter_clear())
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
@@ -1450,7 +1451,6 @@ class S3CRUD(S3Method):
             #        shows the right empty-message (ZeroRecords instead
             #        of EmptyTable)
             dtargs["dt_pagination"] = dt_pagination
-            dtargs["dt_pagingType"] = s3.dataTable_pagingType or "full_numbers"
             dtargs["dt_pageLength"] = display_length
             dtargs["dt_base_url"] = r.url(method="", vars={})
             dtargs["dt_permalink"] = r.url()
@@ -1853,10 +1853,10 @@ class S3CRUD(S3Method):
                 s3.no_formats = True
                 datatable = current.T("No records to review")
             else:
-                dt_dom = s3.get("dataTable_dom", 'fril<"dataTable_table"t>pi')
+                dt_dom = s3.get("dataTable_dom",
+                                current.deployment_settings.get_ui_datatables_dom())
                 datatable = dt.html(totalrows, displayrows, list_id,
                                     dt_pagination=dt_pagination,
-                                    dt_pagingType = s3.dataTable_pagingType or "full_numbers",
                                     dt_pageLength=display_length,
                                     dt_dom = dt_dom,
                                     )
