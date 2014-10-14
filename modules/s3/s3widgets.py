@@ -4885,7 +4885,6 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                                                            child: 'child', (optional: which field to lookup options for)
                                                            }
             @ToDo: Complete the 'create' feature:
-                * Check User is allowed to create resources before rendering the option
                 * Ensure the Create option doesn't get filtered out when searching for items
                 * Style option to make it clearer that it's an Action item
         """
@@ -4955,10 +4954,13 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         noneSelectedText = self.noneSelectedText
         if not isinstance(noneSelectedText, lazyT):
             noneSelectedText = T(noneSelectedText)
-        if self.create:
-            create = ",create:%s" % json.dumps(self.create, separators=SEPARATORS)
-        else:
-            create = ""
+        create = self.create or ""
+        if create:
+            tablename = "%s_%s" % (create["c"], create["f"])
+            if current.auth.s3_has_permission("create", tablename):
+                create = ",create:%s" % json.dumps(create, separators=SEPARATORS)
+            else:
+                create = ""
         script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s%s})''' % \
                  (selector,
                   T("All selected"),
