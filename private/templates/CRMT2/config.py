@@ -459,21 +459,34 @@ def customise_pr_person_controller(**attr):
                 table = s3db[tablename]
                 table.first_name.widget = S3StringWidget(placeholder=T("Text"))
                 table.last_name.widget = S3StringWidget(placeholder=T("Text"))
-                s3.crud.submit_button = T("Save & Add Another")
-                s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
-                                         #("cancel", T("Cancel"), "button small secondary cancel"),
-                                         )
+                if r.method == "update":
+                    # Normal Submit buttons
+                    s3.crud.submit_button = T("Save & Close")
+                    create_next = r.url(method="summary", id=0)
+                    create_next_close = None
+                else:
+                    s3.crud.submit_button = T("Save & Add Another")
+                    s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                             #("cancel", T("Cancel"), "button small secondary cancel"),
+                                             )
+                    create_next = r.url(method="create")
+                    create_next_close = r.url(method="summary", id=0)
+
                 s3.cancel = A(T("Cancel"),
                               _class="button small secondary cancel",
                               _href=r.url(method="summary", id=0),
                               )
 
-            s3db.pr_image.profile.default = True
-            # ImageCrop widget doesn't currently work within an Inline Form
-            from gluon.validators import IS_IMAGE
-            image_field = s3db.pr_image.image
-            image_field.requires = IS_IMAGE()
-            image_field.widget = None
+                # ImageCrop widget doesn't currently work within an Inline Form
+                from gluon.validators import IS_IMAGE
+                itable = s3db.pr_image
+                itable.profile.default = True
+                image_field = itable.image
+                image_field.requires = IS_IMAGE()
+                image_field.widget = None
+
+            else:
+                create_next = create_next_close = None
 
             hr_fields = ["organisation_id",
                          #"job_title_id",
@@ -554,8 +567,8 @@ def customise_pr_person_controller(**attr):
             crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
             s3db.configure(tablename,
-                           create_next = r.url(method="create"),
-                           create_next_close = r.url(method="summary", id=0),
+                           create_next = create_next,
+                           create_next_close = create_next_close,
                            crud_form = crud_form,
                            delete_next = r.url(method="summary", id=0),
                            # Hide Open & Delete dataTable action buttons
@@ -647,10 +660,18 @@ def customise_project_activity_controller(**attr):
         from s3 import S3StringWidget
         table.name.widget = S3StringWidget(placeholder=T("Text"))
         table.comments.widget = S3StringWidget(placeholder=T("Comments"), textarea=True)
-        s3.crud.submit_button = T("Save & Add Another")
-        s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
-                                 #("cancel", T("Cancel"), "button small secondary cancel"),
-                                 )
+        if r.method == "update":
+            # Normal Submit buttons
+            s3.crud.submit_button = T("Save & Close")
+            create_next = r.url(method="summary", id=0)
+            create_next_close = None
+        else:
+            s3.crud.submit_button = T("Save & Add Another")
+            s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                     #("cancel", T("Cancel"), "button small secondary cancel"),
+                                     )
+            create_next = r.url(method="create")
+            create_next_close = r.url(method="summary", id=0)
         s3.cancel = A(T("Cancel"),
                       _class="button small secondary cancel",
                       _href=r.url(method="summary", id=0),
@@ -745,8 +766,8 @@ def customise_project_activity_controller(**attr):
             )
 
             s3db.configure(tablename,
-                           create_next = r.url(method="create"),
-                           create_next_close = r.url(method="summary", id=0),
+                           create_next = create_next,
+                           create_next_close = create_next_close,
                            crud_form = crud_form,
                            delete_next = r.url(method="summary", id=0),
                            update_next = r.url(method="summary", id=0),
@@ -973,10 +994,18 @@ def customise_org_organisation_controller(**attr):
             table.website.widget = S3StringWidget(placeholder=T("URL"), prefix="http://")
             s3db.pr_contact.value.widget = S3StringWidget(placeholder=T("username"), prefix="@")
             table.comments.widget = S3StringWidget(placeholder=T("Comments"), textarea=True)
-            s3.crud.submit_button = T("Save & Add Another")
-            s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
-                                     #("cancel", T("Cancel"), "button small secondary cancel"),
-                                     )
+            if r.method == "update":
+                # Normal Submit buttons
+                s3.crud.submit_button = T("Save & Close")
+                create_next = r.url(method="summary", id=0)
+                create_next_close = None
+            else:
+                s3.crud.submit_button = T("Save & Add Another")
+                s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                         #("cancel", T("Cancel"), "button small secondary cancel"),
+                                         )
+                create_next = r.url(method="create")
+                create_next_close = r.url(method="summary", id=0)
             s3.cancel = A(T("Cancel"),
                           _class="button small secondary cancel",
                           _href=r.url(method="summary", id=0),
@@ -1207,8 +1236,8 @@ def customise_org_organisation_controller(**attr):
                                             postprocess = org_organisation_postprocess)
 
                 s3db.configure(tablename,
-                               create_next = r.url(method="create"),
-                               create_next_close = r.url(method="summary", id=0),
+                               create_next = create_next,
+                               create_next_close = create_next_close,
                                crud_form = crud_form,
                                delete_next = r.url(method="summary", id=0),
                                update_next = r.url(method="summary", id=0),
@@ -1769,10 +1798,18 @@ def customise_gis_poi_controller(**attr):
                                                          show_address=True,
                                                          show_postcode=True,
                                                          )
-            s3.crud.submit_button = T("Save & Add Another")
-            s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
-                                     #("cancel", T("Cancel"), "button small secondary cancel"),
-                                     )
+            if r.method == "update":
+                # Normal Submit buttons
+                s3.crud.submit_button = T("Save & Close")
+                create_next = r.url(method="summary", id=0)
+                create_next_close = None
+            else:
+                s3.crud.submit_button = T("Save & Add Another")
+                s3.crud.custom_submit = (("save_close", T("Save & Close"), "button small secondary"),
+                                         #("cancel", T("Cancel"), "button small secondary cancel"),
+                                         )
+                create_next = r.url(method="create")
+                create_next_close = r.url(method="summary", id=0)
             s3.cancel = A(T("Cancel"),
                           _class="button small secondary cancel",
                           _href=r.url(method="summary", id=0),
@@ -1792,8 +1829,8 @@ def customise_gis_poi_controller(**attr):
                                         )
 
             s3db.configure(tablename,
-                           create_next = r.url(method="create"),
-                           create_next_close = r.url(method="summary", id=0),
+                           create_next = create_next,
+                           create_next_close = create_next_close,
                            crud_form = crud_form,
                            icon = icon,
                            delete_next = r.url(method="summary", id=0),

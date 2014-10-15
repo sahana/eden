@@ -62,6 +62,7 @@
 'Edit Project Organization': 'Edit Project Organisation',
 'Edit Synchronization Settings': 'Edit Synchronisation Settings',
 'Enter your organization': 'Enter your organisation',
+'Filter': 'Filter',
 'From Organization': 'From Organisation',
 'Fulfill Requests': 'Fulfil Requests',
 'Funding Organization': 'Funding Organisation',

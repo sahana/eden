@@ -14,21 +14,18 @@ T = current.T
 settings = current.deployment_settings
 
 """
-    Template settings
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Settings for an outbreak of an infectious disease, such as Ebola:
+    http://eden.sahanafoundation.org/wiki/Deployments/Ebola
 """
 
-#settings.base.system_name = T("Sahana Skeleton")
-#settings.base.system_name_short = T("Sahana")
+settings.base.system_name = T("Sahana Ebola Response")
+settings.base.system_name_short = T("Sahana")
 
 # PrePopulate data
-settings.base.prepopulate = ("skeleton", "default/users")
+settings.base.prepopulate = ("Disease", "default/users")
 
 # Theme (folder to use for views/layout.html)
-settings.base.theme = "skeleton"
+settings.base.theme = "Disease"
 
 # Authentication settings
 # Should users be allowed to register themselves?
@@ -45,36 +42,15 @@ settings.mail.approver = "ADMIN"
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-#settings.gis.countries = ("US",)
+settings.gis.countries = ("GN", "LR", "SL",)
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
-#settings.L10n.languages = OrderedDict([
-#    ("ar", "العربية"),
-#    ("bs", "Bosanski"),
-#    ("en", "English"),
-#    ("fr", "Français"),
-#    ("de", "Deutsch"),
-#    ("el", "ελληνικά"),
-#    ("es", "Español"),
-#    ("it", "Italiano"),
-#    ("ja", "日本語"),
-#    ("km", "ភាសាខ្មែរ"),
-#    ("ko", "한국어"),
-#    ("ne", "नेपाली"),          # Nepali
-#    ("prs", "دری"), # Dari
-#    ("ps", "پښتو"), # Pashto
-#    ("pt", "Português"),
-#    ("pt-br", "Português (Brasil)"),
-#    ("ru", "русский"),
-#    ("tet", "Tetum"),
-#    ("tl", "Tagalog"),
-#    ("ur", "اردو"),
-#    ("vi", "Tiếng Việt"),
-#    ("zh-cn", "中文 (简体)"),
-#    ("zh-tw", "中文 (繁體)"),
-#])
+settings.L10n.languages = OrderedDict([
+    ("en", "English"),
+    ("fr", "Français"),
+])
 # Default language for Language Toolbar (& GIS Locations in future)
 #settings.L10n.default_language = "en"
 # Uncomment to Hide the language toolbar
@@ -96,21 +72,20 @@ settings.mail.approver = "ADMIN"
 #settings.security.policy = 7 # Organisation-ACLs
 
 # RSS feeds
-settings.frontpage.rss = [
-    {"title": "Eden",
-     # Trac timeline
-     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
-    },
-    {"title": "Twitter",
-     # @SahanaFOSS
-     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
-     # Hashtag
-     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
-    }
-]
-
+#settings.frontpage.rss = [
+#    {"title": "Eden",
+#     # Trac timeline
+#     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+#    },
+#    {"title": "Twitter",
+#     # @SahanaFOSS
+#     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
+#     # Hashtag
+#     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
+#    }
+#]
 
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
@@ -174,39 +149,30 @@ settings.modules = OrderedDict([
         name_nice = T("Organizations"),
         #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
         restricted = True,
+        module_type = 10
+    )),
+    # Primary target usecase currently
+    ("hms", Storage(
+        name_nice = T("Hospitals"),
+        #description = "Helps to monitor status of hospitals",
+        restricted = True,
         module_type = 1
     )),
+    # Doesn't seem like an easily-adaptable model:
+    #("patient", Storage(
+    #    name_nice = T("Patient Tracking"),
+    #    #description = "Tracking of Patients",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
+    # Possible usecase: HR
     #("hrm", Storage(
     #    name_nice = T("Staff"),
     #    #description = "Human Resources Management",
     #    restricted = True,
     #    module_type = 2,
     #)),
-    #("vol", Storage(
-    #    name_nice = T("Volunteers"),
-    #    #description = "Human Resources Management",
-    #    restricted = True,
-    #    module_type = 2,
-    #)),
-    #("cms", Storage(
-    #  name_nice = T("Content Management"),
-    #  #description = "Content Management System",
-    #  restricted = True,
-    #  module_type = 10,
-    #)),
-    #("doc", Storage(
-    #    name_nice = T("Documents"),
-    #    #description = "A library of digital resources, such as photos, documents and reports",
-    #    restricted = True,
-    #    module_type = 10,
-    #)),
-    #("msg", Storage(
-    #    name_nice = T("Messaging"),
-    #    #description = "Sends & Receives Alerts via Email & SMS",
-    #    restricted = True,
-    #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-    #    module_type = None,
-    #)),
+    # Possible usecase: Logistics
     #("supply", Storage(
     #    name_nice = T("Supply Chain Management"),
     #    #description = "Used within Inventory Management, Request Management and Asset Management",
@@ -219,48 +185,24 @@ settings.modules = OrderedDict([
     #    restricted = True,
     #    module_type = 4
     #)),
-    #("asset", Storage(
-    #    name_nice = T("Assets"),
-    #    #description = "Recording and Assigning Assets",
-    #    restricted = True,
-    #    module_type = 5,
-    #)),
-    # Vehicle depends on Assets
-    #("vehicle", Storage(
-    #    name_nice = T("Vehicles"),
-    #    #description = "Manage Vehicles",
-    #    restricted = True,
-    #    module_type = 10,
-    #)),
     #("req", Storage(
     #    name_nice = T("Requests"),
     #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
     #    restricted = True,
     #    module_type = 10,
     #)),
-    #("project", Storage(
-    #    name_nice = T("Projects"),
-    #    #description = "Tracking of Projects, Activities and Tasks",
-    #    restricted = True,
-    #    module_type = 2
+    # Possible support Modules
+    #("cms", Storage(
+    #  name_nice = T("Content Management"),
+    #  #description = "Content Management System",
+    #  restricted = True,
+    #  module_type = 10,
     #)),
-    #("cr", Storage(
-    #    name_nice = T("Shelters"),
-    #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+    #("doc", Storage(
+    #    name_nice = T("Documents"),
+    #    #description = "A library of digital resources, such as photos, documents and reports",
     #    restricted = True,
-    #    module_type = 10
-    #)),
-    #("hms", Storage(
-    #    name_nice = T("Hospitals"),
-    #    #description = "Helps to monitor status of hospitals",
-    #    restricted = True,
-    #    module_type = 10
-    #)),
-    #("dvr", Storage(
-    #   name_nice = T("Disaster Victim Registry"),
-    #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
-    #   restricted = True,
-    #   module_type = 10,
+    #    module_type = 10,
     #)),
     #("event", Storage(
     #    name_nice = T("Events"),
@@ -268,10 +210,12 @@ settings.modules = OrderedDict([
     #    restricted = True,
     #    module_type = 10,
     #)),
-    #("transport", Storage(
-    #   name_nice = T("Transport"),
-    #   restricted = True,
-    #   module_type = 10,
+    #("msg", Storage(
+    #    name_nice = T("Messaging"),
+    #    #description = "Sends & Receives Alerts via Email & SMS",
+    #    restricted = True,
+    #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+    #    module_type = None,
     #)),
     #("stats", Storage(
     #    name_nice = T("Statistics"),

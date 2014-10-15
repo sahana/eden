@@ -961,12 +961,6 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10
     )),
-    ("irs", Storage(
-        name_nice = T("Incidents"),
-        #description = "Incident Reporting System",
-        restricted = True,
-        module_type = 10
-    )),
     ("dvr", Storage(
        name_nice = T("Disaster Victim Registry"),
        #description = "Allow affected individuals & households to register to receive compensation and distributions",
@@ -984,6 +978,37 @@ settings.modules = OrderedDict([
        restricted = True,
        module_type = 10,
     )),
+    ("stats", Storage(
+        name_nice = T("Statistics"),
+        #description = "Manages statistics",
+        restricted = True,
+        module_type = None,
+    )),
+    ("member", Storage(
+       name_nice = T("Members"),
+       #description = "Membership Management System",
+       restricted = True,
+       module_type = 10,
+    )),
+    ("budget", Storage(
+        name_nice = T("Budgeting Module"),
+        #description = "Allows a Budget to be drawn up",
+        restricted = True,
+        module_type = 10
+    )),
+    #("deploy", Storage(
+    #    name_nice = T("Deployments"),
+    #    #description = "Manage Deployments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
+    # Deprecated: Replaced by event
+    #("irs", Storage(
+    #    name_nice = T("Incidents"),
+    #    #description = "Incident Reporting System",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     #("dvi", Storage(
     #   name_nice = T("Disaster Victim Identification"),
     #   #description = "Disaster Victim Identification",
@@ -992,117 +1017,92 @@ settings.modules = OrderedDict([
     #   #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
     #)),
     #("mpr", Storage(
-    #       name_nice = T("Missing Person Registry"),
-    #       #description = "Helps to report and search for missing persons",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    #("stats", Storage(
-    #        name_nice = T("Statistics"),
-    #        #description = "Manages statistics",
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
-    #("vulnerability", Storage(
-    #        name_nice = T("Vulnerability"),
-    #        #description = "Manages vulnerability indicators",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #   name_nice = T("Missing Person Registry"),
+    #   #description = "Helps to report and search for missing persons",
+    #   restricted = True,
+    #   module_type = 10,
+    #)),
     #("scenario", Storage(
-    #        name_nice = T("Scenarios"),
-    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Scenarios"),
+    #    #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
+    #("vulnerability", Storage(
+    #    name_nice = T("Vulnerability"),
+    #    #description = "Manages vulnerability indicators",
+    #    restricted = True,
+    #    module_type = 10,
+    # )),
     #("fire", Storage(
-    #       name_nice = T("Fire Stations"),
-    #       #description = "Fire Station Management",
-    #       restricted = True,
-    #       module_type = 1,
-    #   )),
+    #   name_nice = T("Fire Stations"),
+    #   #description = "Fire Station Management",
+    #   restricted = True,
+    #   module_type = 1,
+    #)),
     #("water", Storage(
-    #        name_nice = T("Flood Warnings"),
-    #        #description = "Flood Gauges show water levels in various parts of the country",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
-    #("member", Storage(
-    #       name_nice = T("Members"),
-    #       #description = "Membership Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    #("deploy", Storage(
-    #        name_nice = T("Deployments"),
-    #        #description = "Manage Deployments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Flood Warnings"),
+    #    #description = "Flood Gauges show water levels in various parts of the country",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     #("patient", Storage(
-    #        name_nice = T("Patient Tracking"),
-    #        #description = "Tracking of Patients",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
+    #    name_nice = T("Patient Tracking"),
+    #    #description = "Tracking of Patients",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     #("security", Storage(
-    #       name_nice = T("Security"),
-    #       #description = "Security Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
+    #   name_nice = T("Security"),
+    #   #description = "Security Management System",
+    #   restricted = True,
+    #   module_type = 10,
+    #)),
     # These are specialist modules
     #("cap", Storage(
-    #        name_nice = T("CAP"),
-    #        #description = "Create & broadcast CAP alerts",
-    #        restricted = True,
-    #        module_type = 10,
+    #    name_nice = T("CAP"),
+    #    #description = "Create & broadcast CAP alerts",
+    #    restricted = True,
+    #    module_type = 10,
     #)),
     # Requires RPy2 & PostgreSQL
     #("climate", Storage(
-    #        name_nice = T("Climate"),
-    #        #description = "Climate data portal",
-    #        restricted = True,
-    #        module_type = 10,
+    #    name_nice = T("Climate"),
+    #    #description = "Climate data portal",
+    #    restricted = True,
+    #    module_type = 10,
     #)),
     #("delphi", Storage(
-    #        name_nice = T("Delphi Decision Maker"),
-    #        #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
-    # @ToDo: Rewrite in a modern style
-    #("budget", Storage(
-    #        name_nice = T("Budgeting Module"),
-    #        #description = "Allows a Budget to be drawn up",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
+    #    name_nice = T("Delphi Decision Maker"),
+    #    #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
+    #    restricted = False,
+    #    module_type = 10,
+    #)),
     # @ToDo: Port these Assessments to the Survey module
     #("building", Storage(
-    #        name_nice = T("Building Assessments"),
-    #        #description = "Building Safety Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Building Assessments"),
+    #    #description = "Building Safety Assessments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
     # Deprecated by Surveys module
     # - depends on CR, IRS & Impact
     #("assess", Storage(
-    #        name_nice = T("Assessments"),
-    #        #description = "Rapid Assessments & Flexible Impact Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Assessments"),
+    #    #description = "Rapid Assessments & Flexible Impact Assessments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
     #("impact", Storage(
-    #        name_nice = T("Impacts"),
-    #        #description = "Used by Assess",
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
+    #    name_nice = T("Impacts"),
+    #    #description = "Used by Assess",
+    #    restricted = True,
+    #    module_type = None,
+    #)),
     #("ocr", Storage(
-    #       name_nice = T("Optical Character Recognition"),
-    #       #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
-    #       restricted = False,
-    #       module_type = None,
-    #   )),
+    #   name_nice = T("Optical Character Recognition"),
+    #   #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
+    #   restricted = False,
+    #   module_type = None,
+    #)),
 ])

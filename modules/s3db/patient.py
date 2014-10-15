@@ -54,9 +54,6 @@ class S3PatientModel(S3Model):
 
         messages = current.messages
 
-        s3_date_format = current.deployment_settings.get_L10n_date_format()
-        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
-
         add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
 
@@ -65,38 +62,34 @@ class S3PatientModel(S3Model):
 
         tablename = "patient_patient"
         self.define_table(tablename,
-                          person_id(comment=None,
-                                    label=T("Patient"),
-                                    requires=IS_ADD_PERSON_WIDGET2(),
-                                    widget=S3AddPersonWidget2(),
+                          person_id(comment = None,
+                                    label = T("Patient"),
+                                    requires = IS_ADD_PERSON_WIDGET2(),
+                                    widget = S3AddPersonWidget2(),
                                     ),
                           #person_id(empty=False, label = T("Patient")),
                           Field("country",
                                 label = T("Current Location Country"),
+                                represent = lambda code: \
+                                            gis.get_country(code, key_type="code") or \
+                                            messages.UNKNOWN_OPT,
                                 requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
                                            lambda: gis.get_countries(key_type="code"),
                                            zero = messages.SELECT_LOCATION)),
-                                represent = lambda code: \
-                                            gis.get_country(code, key_type="code") or \
-                                            messages.UNKNOWN_OPT),
+                                ),
                           self.hms_hospital_id(
-                                empty=False,
+                                empty = False,
                                 label = T("Current Location Treating Hospital")
-                          ),
+                                ),
                           Field("phone", requires=s3_phone_requires,
-                                label=T("Current Location Phone Number")),
-                          Field("treatment_date", "date",
-                                label=T("Date of Treatment"),
-                                represent = s3_date_represent,
-                                requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                widget = S3DateWidget()
+                                label = T("Current Location Phone Number"),
                                 ),
-                          Field("return_date", "date",
-                                label=T("Expected Return Home"),
-                                represent = s3_date_represent,
-                                requires = IS_EMPTY_OR(IS_DATE(format=s3_date_format)),
-                                widget = S3DateWidget()
-                                ),
+                          s3_date("treatment_date",
+                                  label = T("Date of Treatment"),
+                                  ),
+                          s3_date("return_date",
+                                  label = T("Expected Return Home"),
+                                  ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -115,11 +108,12 @@ class S3PatientModel(S3Model):
 
         # Reusable Field for Component Link
         patient_id = S3ReusableField("patient_id", "reference %s" % tablename,
+                                     ondelete = "RESTRICT",
+                                     represent = self.patient_represent,
                                      requires = IS_ONE_OF(db,
                                                           "patient_patient.id",
                                                           self.patient_represent),
-                                     represent = self.patient_represent,
-                                     ondelete = "RESTRICT")
+                                     )
 
         # Search method
         filter_widgets = [
@@ -146,30 +140,31 @@ class S3PatientModel(S3Model):
         # Configuration
         self.configure(tablename,
                        filter_widgets = filter_widgets,
-                      )
+                       )
 
         # Components
         add_components(tablename,
                        # Relatives
-                       patient_relative={"joinby": "patient_id",
-                                         "multiple": False,
-                                        },
+                       patient_relative = {"joinby": "patient_id",
+                                           "multiple": False,
+                                           },
                        # Homes
-                       patient_home={"joinby": "patient_id",
-                                     "multiple": False,
-                                    },
-                      )
+                       patient_home = {"joinby": "patient_id",
+                                       "multiple": False,
+                                       },
+                       )
 
         # ---------------------------------------------------------------------
         # Relatives
 
         tablename = "patient_relative"
         self.define_table(tablename,
-                          patient_id(readable=False, writable=False),
-                          person_id(comment=None,
-                                    label=T("Accompanying Relative"),
-                                    requires=IS_ADD_PERSON_WIDGET2(),
-                                    widget=S3AddPersonWidget2(),
+                          patient_id(readable = False,
+                                     writable = False),
+                          person_id(comment = None,
+                                    label = T("Accompanying Relative"),
+                                    requires = IS_ADD_PERSON_WIDGET2(),
+                                    widget = S3AddPersonWidget2(),
                                     ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -196,21 +191,23 @@ class S3PatientModel(S3Model):
 
         tablename = "patient_home"
         self.define_table(tablename,
-                          patient_id(readable=False, writable=False),
-                          person_id(comment=None,
-                                    label=T("Home Relative"),
-                                    requires=IS_ADD_PERSON_WIDGET2(),
-                                    widget=S3AddPersonWidget2(),
+                          patient_id(readable = False,
+                                     writable = False),
+                          person_id(comment = None,
+                                    label = T("Home Relative"),
+                                    requires = IS_ADD_PERSON_WIDGET2(),
+                                    widget = S3AddPersonWidget2(),
                                     ),
                           #person_id(label = T("Home Relative")),
                           self.gis_location_id(
-                              label=T("Home City"),
+                              label = T("Home City"),
+                              requires = IS_LOCATION(level="L2"),
                               widget = S3LocationAutocompleteWidget(level="L2"),
-                              requires = IS_LOCATION(level="L2")
-                          ),
+                              ),
                           Field("phone",
-                                requires=IS_EMPTY_OR(s3_phone_requires),
-                                label=T("Home Phone Number")),
+                                label = T("Home Phone Number"),
+                                requires = IS_EMPTY_OR(s3_phone_requires),
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -230,13 +227,15 @@ class S3PatientModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     @staticmethod
     def patient_represent(id, row=None):
         """
             Represent a Patient by their full name
+
+            @ToDo: Migrate to S3Represent
         """
 
         if row:

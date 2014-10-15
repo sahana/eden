@@ -1138,12 +1138,12 @@ class CholeraTreatmentCapabilityModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3db
         #
-        return Storage()
+        return dict()
 
     # -------------------------------------------------------------------------
     def defaults(self):
 
-        return Storage()
+        return dict()
 
 # =============================================================================
 class HospitalActivityReportModel(S3Model):
