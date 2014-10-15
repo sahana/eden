@@ -673,6 +673,25 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def disease():
+        """ Disease Case Tracking and Contact Tracing """
+
+        return M()(M("Diseases",
+                     c="disease", f="disease")(
+                        M("Create", m="create"),
+                   ),
+                   M("Cases",
+                     c="disease", f="case")(
+                        M("Create", m="create"),
+                   ),
+                   #M("Contacts",
+                   #  c="disease", f="contact")(
+                   #     M("Create", m="create"),
+                   #),
+                  )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def doc():
         """ DOC Menu """
 

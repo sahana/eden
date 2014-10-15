@@ -17,4 +17,19 @@ def index():
     response.title = module_name
     return dict(module_name=module_name)
 
+# -----------------------------------------------------------------------------
+def disease():
+    
+    return s3_rest_controller(rheader = s3db.disease_rheader)
+
+# -----------------------------------------------------------------------------
+def case():
+    
+    return s3_rest_controller(rheader = s3db.disease_rheader)
+
+# -----------------------------------------------------------------------------
+def contact():
+    
+    return s3_rest_controller(rheader = s3db.disease_rheader)
+
 # END =========================================================================
