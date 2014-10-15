@@ -684,10 +684,10 @@ class S3OptionsMenu(object):
                      c="disease", f="case")(
                         M("Create", m="create"),
                    ),
-                   #M("Contacts",
-                   #  c="disease", f="contact")(
-                   #     M("Create", m="create"),
-                   #),
+                   M("Contacts",
+                    c="disease", f="contact")(
+                       M("Create", m="create"),
+                   ),
                   )
 
     # -------------------------------------------------------------------------

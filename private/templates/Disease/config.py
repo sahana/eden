@@ -26,6 +26,8 @@ settings.base.prepopulate = ("Disease", "default/users")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "Disease"
+# Uncomment to show a default cancel button in standalone create/update forms
+settings.ui.default_cancel_button = True
 
 # Authentication settings
 # Should users be allowed to register themselves?
