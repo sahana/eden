@@ -34,6 +34,7 @@ class DiseaseDataModel(S3Model):
         #
         tablename = "disease_disease"
         table = define_table(tablename,
+                             self.super_link("doc_id", "doc_entity"),
                              Field("name"),
                              Field("short_name"),
                              Field("acronym"),
@@ -57,6 +58,14 @@ class DiseaseDataModel(S3Model):
                                                                  ),
                                      )
 
+        self.add_components(tablename,
+                            disease_symptom = "disease_id",
+                            )
+                            
+        self.configure(tablename,
+                       super_entity = "doc_entity",
+                       )
+
         # CRUD strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Disease"),
@@ -70,10 +79,6 @@ class DiseaseDataModel(S3Model):
             msg_record_modified = T("Disease Information updated"),
             msg_record_deleted = T("Disease Information deleted"),
             msg_list_empty = T("No Diseases currently registered"))
-
-        self.add_components(tablename,
-                            disease_symptom = "disease_id",
-                            )
 
         # =====================================================================
         # Symptom Information
@@ -525,6 +530,7 @@ def disease_rheader(r, tabs=None):
 
         tabs = [(T("Basic Details"), None),
                 (T("Symptoms"), "symptom"),
+                (T("Documents"), "document"),
                 ]
                
         rheader_fields = [["name"],
