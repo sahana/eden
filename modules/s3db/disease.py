@@ -36,6 +36,7 @@ class DiseaseDataModel(S3Model):
         table = define_table(tablename,
                              Field("name"),
                              Field("short_name"),
+                             Field("acronym"),
                              Field("code",
                                    label = T("ICD-10-CM Code"),
                                    ),
@@ -169,6 +170,10 @@ class CaseTrackingModel(S3Model):
 
         tablename = "disease_case"
         table = define_table(tablename,
+                             Field("case_number", 
+                                   length = 64,
+                                   unique = True,
+                                   ),
                              person_id(),
                              self.disease_disease_id(),
                              s3_date(),
@@ -185,7 +190,7 @@ class CaseTrackingModel(S3Model):
                              *s3_meta_fields())
 
         # Reusable Field
-        represent = S3Represent(lookup=tablename, fields=["person_id"])
+        represent = disease_CaseRepresent()
         case_id = S3ReusableField("case_id", "reference %s" % tablename,
                                   label = T("Case"),
                                   represent = represent,
@@ -313,6 +318,90 @@ class CaseTrackingModel(S3Model):
     def defaults():
 
         return dict()
+
+# =============================================================================
+class disease_CaseRepresent(S3Represent):
+
+    def __init__(self):
+        """ Constructor """
+
+        super(disease_CaseRepresent, self).__init__(lookup = "disease_case")
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+
+        table = self.table
+        ptable = s3db.pr_person
+        dtable = s3db.disease_disease
+
+        left = [ptable.on(ptable.id == table.person_id),
+                dtable.on(dtable.id == table.disease_id)]
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(table.id,
+                                        table.case_number,
+                                        dtable.name,
+                                        dtable.short_name,
+                                        dtable.acronym,
+                                        ptable.first_name,
+                                        ptable.last_name,
+                                        left = left)
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        try:
+            case_number = row[self.tablename].case_number
+        except AttributeError:
+            return row.case_number
+
+        disease_name = None
+        try:
+            disease = row["disease_disease"]
+        except AttributeError:
+            pass
+        else:
+            for field in ("acronym", "short_name", "name"):
+                if field in disease:
+                    disease_name = disease[field]
+                    if disease_name:
+                        break
+                        
+        if disease_name and case_number:
+            case = "%s [%s]" % (case_number, disease_name)
+        elif disease_name:
+            case = "[%s]" % disease_name
+        else:
+            case = case_number
+
+        try:
+            person = row["pr_person"]
+        except AttributeError:
+            return case
+
+        full_name = s3_fullname(person)
+        if case:
+            return " ".join((case, full_name))
+        else:
+            return full_name
 
 # =============================================================================
 class ContactTracingModel(S3Model):
