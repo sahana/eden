@@ -961,6 +961,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10
     )),
+    #("disease", Storage(
+    #    name_nice = T("Disease Tracking"),
+    #    #description = "Helps to track cases and trace contacts in disease outbreaks",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     ("dvr", Storage(
        name_nice = T("Disaster Victim Registry"),
        #description = "Allow affected individuals & households to register to receive compensation and distributions",

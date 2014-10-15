@@ -158,6 +158,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 1
     )),
+    ("disease", Storage(
+        name_nice = T("Disease Tracking"),
+        #description = "Helps to track cases and trace contacts in disease outbreaks",
+        restricted = True,
+        module_type = 10
+    )),
     # Doesn't seem like an easily-adaptable model:
     #("patient", Storage(
     #    name_nice = T("Patient Tracking"),
