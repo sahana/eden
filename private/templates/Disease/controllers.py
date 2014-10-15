@@ -66,6 +66,7 @@ $('#show-login').click(function(e){
                 login_buttons.append(A(T("Register"),
                                        _id="show-register",
                                        _class="tiny secondary button",
+                                       # @ToDo: Move to CSS
                                        _style="margin-left:5px"))
                 script = '''
 $('#show-register').click(function(e){

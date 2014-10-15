@@ -434,15 +434,13 @@ def customise_org_organisation_resource(r, tablename):
 
     mtable = s3db.org_group_membership
     mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
-    field = mtable.status_id
-    field.comment = T("Affiliation Type")
-    field.widget = S3MultiSelectWidget(multiple=False,
-                                       create=dict(c="org",
-                                                   f="group_membership_status",
-                                                   label=str(T("Add New Affiliation Type")),
-                                                   parent="group_membership",
-                                                   child="status_id"
-                                                   ))
+    mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
+                                                  create=dict(c="org",
+                                                              f="group_membership_status",
+                                                              label=str(T("Add New Status")),
+                                                              parent="group_membership",
+                                                              child="status_id"
+                                                              ))
     crud_form = S3SQLCustomForm(
         "name",
         "acronym",

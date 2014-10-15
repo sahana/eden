@@ -9,14 +9,28 @@
   </div>
   {{if AUTHENTICATED not in session.s3.roles:}}
   <div id='login_box' class='panel' style='display:none'>
+   {{if registered and self_registration:}}{{# Login form is default for validation}}
    <div id='login_form'>
     {{=login_div}}
     {{include "auth/_login.html"}}
    </div>
-   {{if self_registration:}}
    <div id='register_form'>
     {{=register_div}}
     {{include "auth/_register.html"}}
+   </div>
+   {{elif self_registration:}}{{# Register form is default for validation}}
+   <div id='register_form'>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+   {{else:}}{{# Only Login form}}
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
    </div>
    {{pass}}
    <a id="show-intro" class="tiny secondary button">Back to Intro</a>

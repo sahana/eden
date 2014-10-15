@@ -135,7 +135,8 @@ class HospitalDataModel(S3Model):
                      # Name of the facility
                      Field("name", notnull=True,
                            length=64, # Mayon compatibility
-                           label = T("Name")),
+                           label = T("Name"),
+                           ),
 
                      # Alternate name, or name in local language
                      Field("aka1",
