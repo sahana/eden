@@ -158,13 +158,13 @@ settings.modules = OrderedDict([
         name_nice = T("Hospitals"),
         #description = "Helps to monitor status of hospitals",
         restricted = True,
-        module_type = 1
+        module_type = 2
     )),
     ("disease", Storage(
         name_nice = T("Disease Tracking"),
         #description = "Helps to track cases and trace contacts in disease outbreaks",
         restricted = True,
-        module_type = 10
+        module_type = 1
     )),
     # Access to Procedures is key: either attach files or write directly in rich-text forms
     ("cms", Storage(

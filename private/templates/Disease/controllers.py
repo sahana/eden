@@ -25,6 +25,23 @@ class index(S3CustomController):
         system_roles = auth.get_system_roles()
         AUTHENTICATED = system_roles.AUTHENTICATED
 
+        if settings.has_module("cms"):
+            s3db = current.s3db
+            table = s3db.cms_post
+            ltable = s3db.cms_post_module
+            query = (ltable.module == "default") & \
+                    ((ltable.resource == None) | (ltable.resource == "index")) & \
+                    (ltable.post_id == table.id) & \
+                    (table.deleted != True)
+            item = current.db(query).select(table.body,
+                                            limitby=(0, 1)).first()
+            if item:
+                item = DIV(XML(item.body))
+            else:
+                item = ""
+        else:
+            item = ""
+
         # Login/Registration forms
         self_registration = current.deployment_settings.get_security_self_registration()
         registered = False
@@ -106,6 +123,7 @@ $('#login-btn').click(function(e){
         else:
             login_buttons = ""
 
+        output["item"] = item
         output["login_buttons"] = login_buttons
         output["self_registration"] = self_registration
         output["registered"] = registered

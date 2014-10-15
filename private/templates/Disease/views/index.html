@@ -3,6 +3,7 @@
  <div class="large-5 columns end">
   <div id="intro" class="callout panel">
    <h2>{{=settings.get_system_name()}}</h2>
+    {{=item}}
     {{if AUTHENTICATED not in session.s3.roles:}}
     {{=login_buttons}}
     {{pass}}

@@ -170,22 +170,20 @@ class CaseTrackingModel(S3Model):
 
         tablename = "disease_case"
         table = define_table(tablename,
-                             Field("case_number", 
-                                   length = 64,
-                                   unique = True,
+                             Field("case_number", length=64, unique=True,
                                    ),
                              person_id(),
                              self.disease_disease_id(),
                              s3_date(),
                              Field("monitoring_level",
                                    label = T("Monitoring Level"),
-                                   requires = IS_IN_SET(monitoring_levels),
                                    represent = S3Represent(options = monitoring_levels),
+                                   requires = IS_IN_SET(monitoring_levels),
                                    ),
                              Field("diagnosis_status",
                                    label = T("Diagnosis Status"),
-                                   requires = IS_IN_SET(diagnosis_status),
                                    represent = S3Represent(options = diagnosis_status),
+                                   requires = IS_IN_SET(diagnosis_status),
                                    ),
                              *s3_meta_fields())
 

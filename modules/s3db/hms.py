@@ -124,13 +124,14 @@ class HospitalDataModel(S3Model):
                      # required for EDXL-HAVE
                      # @ToDo: Move to a KV in hms_hospital_tag table?
                      Field("gov_uuid", unique=True, length=128,
-                           readable = False,
-                           writable = False,
+                           label = T("Government UID"),
                            requires = IS_EMPTY_OR(
                                        IS_NOT_ONE_OF(db,
                                            "%s.gov_uuid" % tablename)
                                        ),
-                           label = T("Government UID")),
+                           readable = False,
+                           writable = False,
+                           ),
 
                      # Name of the facility
                      Field("name", notnull=True,
