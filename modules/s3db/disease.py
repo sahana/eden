@@ -137,7 +137,8 @@ class CaseTrackingModel(S3Model):
 
     names = ("disease_case",
              "disease_case_id",
-             "disease_case_status",
+             "disease_case_monitoring",
+             "disease_case_monitoring_symptom",
              )
 
     def model(self):
@@ -154,12 +155,36 @@ class CaseTrackingModel(S3Model):
         # =====================================================================
         # Case
         #
+        monitoring_levels = {"NONE": T("No Monitoring"),
+                             "MONITORING": T("Routine Monitoring"),
+                             "DIAGNOSTICS": T("Targeted Diagnostics"),
+                             "QUARANTINE": T("Quarantine"),
+                             "FOLLOW-UP": T("Post-Quarantine Follow-Up"),
+                             }
+        diagnosis_status = {"UNKNOWN": T("Unknown"),
+                            "PROBABLE": T("Probable"),
+                            "CONFIRMED-POS": T("Confirmed Positive"),
+                            "CONFIRMED-NEG": T("Confirmed Negative"),
+                            }
+
         tablename = "disease_case"
         table = define_table(tablename,
                              person_id(),
                              self.disease_disease_id(),
+                             s3_date(),
+                             Field("monitoring_level",
+                                   label = T("Monitoring Level"),
+                                   requires = IS_IN_SET(monitoring_levels),
+                                   represent = S3Represent(options = monitoring_levels),
+                                   ),
+                             Field("diagnosis_status",
+                                   label = T("Diagnosis Status"),
+                                   requires = IS_IN_SET(diagnosis_status),
+                                   represent = S3Represent(options = diagnosis_status),
+                                   ),
                              *s3_meta_fields())
 
+        # Reusable Field
         represent = S3Represent(lookup=tablename, fields=["person_id"])
         case_id = S3ReusableField("case_id", "reference %s" % tablename,
                                   label = T("Case"),
@@ -172,8 +197,9 @@ class CaseTrackingModel(S3Model):
                                                               ),
                                   )
 
+        # Components
         self.add_components(tablename,
-                            disease_case_status = "case_id",
+                            disease_case_monitoring = "case_id",
                             disease_contact = "case_id",
                             )
 
@@ -192,41 +218,89 @@ class CaseTrackingModel(S3Model):
             msg_list_empty = T("No Cases currently registered"))
 
         # =====================================================================
-        # Status
+        # Monitoring
         #
-        tablename = "disease_case_status"
+        illness_status = {"UNKNOWN": T("Unknown"),
+                          "ASYMPTOMATIC": T("Asymptomatic"),
+                          "SYMPTOMATIC": T("Symptomatic"),
+                          "SEVERE": T("Severely Ill"),
+                          "DECEASED": T("Deceased"),
+                          "RECOVERED": T("Recovered"),
+                          }
+
+        tablename = "disease_case_monitoring"
         table = define_table(tablename,
                              case_id(),
-                             # @todo: add basic status information fields
-                             s3_date(),
-                             # @todo: add inline-component for symptoms
+                             s3_datetime(default="now"),
+                             Field("illness_status",
+                                   requires = IS_IN_SET(illness_status),
+                                   represent = S3Represent(options = illness_status),
+                                   ),
                              *s3_meta_fields())
-                             
-        # @todo: add symptom component
-        # @todo: add custom CRUD form
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, fields=["case_id"])
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Case"),
+                                  represent = represent,
+                                  requires = IS_ONE_OF(db, "disease_case.id",
+                                                       represent,
+                                                       ),
+                                  comment = S3AddResourceLink(f="case",
+                                                              tooltip=T("Add a new case"),
+                                                              ),
+                                  )
+
+        # Components
+        self.add_components(tablename,
+                            disease_symptom = {"link": "disease_case_monitoring_symptom",
+                                               "joinby": "status_id",
+                                               "key": "symptom_id",
+                                               }
+                            )
+
+        # Custom CRUD form
+        crud_fields = ["case_id",
+                       "date",
+                       "illness_status",
+                       S3SQLInlineLink("symptom",
+                                       field = "symptom_id",
+                                       label = T("Symptoms"),
+                                       multiple = True,
+                                       ),
+                       ]
+                     
+        self.configure(tablename,
+                       crud_form = S3SQLCustomForm(*crud_fields),
+                       list_fields = ["date", 
+                                      (T("Symptoms"), "symptom.name"),
+                                      ],
+                       )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Add Status Update"),
-            title_display = T("Status Update"),
-            title_list = T("Status Updates"),
-            title_update = T("Edit Status Update"),
-            title_upload = T("Import Status Updates"),
-            label_list_button = T("List Status Updates"),
-            label_delete_button = T("Delete Status Update"),
-            msg_record_created = T("Status Update added"),
-            msg_record_modified = T("Status Update updated"),
-            msg_record_deleted = T("Status Update deleted"),
-            msg_list_empty = T("No Status Information currently available"))
+            label_create = T("Add Monitoring Update"),
+            title_display = T("Monitoring Update"),
+            title_list = T("Monitoring Updates"),
+            title_update = T("Edit Monitoring Update"),
+            title_upload = T("Import Monitoring Updates"),
+            label_list_button = T("List Monitoring Updates"),
+            label_delete_button = T("Delete Monitoring Update"),
+            msg_record_created = T("Monitoring Update added"),
+            msg_record_modified = T("Monitoring Update updated"),
+            msg_record_deleted = T("Monitoring Update deleted"),
+            msg_list_empty = T("No Monitoring Information currently available"))
 
 
         # =====================================================================
-        # Status <=> Symptom
+        # Monitoring <=> Symptom
         #
-        tablename = "disease_case_status_symptom"
+        tablename = "disease_case_monitoring_symptom"
         table = define_table(tablename,
-                             # @todo: status_id
-                             # @todo: symptom_id
+                             Field("status_id", "reference disease_case_monitoring",
+                                   requires = IS_ONE_OF(db, "disease_case_monitoring.id"),
+                                   ),
+                             self.disease_symptom_id(),
                              *s3_meta_fields())
 
         # @todo: CRUD strings
@@ -374,7 +448,7 @@ def disease_rheader(r, tabs=None):
     elif resourcename == "case":
 
         tabs = [(T("Basic Details"), None),
-                (T("Status"), "status"),
+                (T("Monitoring"), "case_monitoring"),
                 (T("Contacts"), "contact"),
                 ]
 
