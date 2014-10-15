@@ -1576,7 +1576,7 @@ class S3DateTimeWidget(FormWidget):
  useLocalTimezone:true,
  defaultValue:'%(default)s',
  onClose:%(onclose)s
-})
+}).one('click',function(){$(this).focus()})
 var clear_button=$('<button id="%(selector)s_clear" class="btn date-clear-btn" type="button">%(clear)s</button>').click(function(){
  $('#%(selector)s').val('');%(onclear)s;$('#%(selector)s').closest('.filter-form').trigger('optionChanged')
 })

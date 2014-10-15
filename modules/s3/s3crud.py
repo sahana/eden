@@ -876,7 +876,8 @@ class S3CRUD(S3Method):
             self._interim_save_button()
 
             # Default Cancel Button
-            if r.representation == "html" and r.method == "update":
+            if r.representation == "html" and \
+               (r.method == "update" or not r.method):
                 self._default_cancel_button(r)
 
             # Get the form
@@ -2630,7 +2631,7 @@ class S3CRUD(S3Method):
                             default_url = r.url(method="summary", id=0)
                         else:
                             default_url = r.url(method="", id=0)
-                elif method == "update":
+                elif method == "update" or not method:
                     if r.component:
                         default_url = r.url(method = "",
                                             component_id= "",
