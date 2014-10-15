@@ -124,8 +124,8 @@ class S3RequestModel(S3Model):
         req_ref = S3ReusableField("req_ref", "string",
                                   label = T("%(REQ)s Number") % #
                                     dict(REQ=settings.get_req_shortname()),
-                                  writable = False,
                                   represent = self.req_ref_represent,
+                                  writable = False,
                                   )
 
         req_priority_opts = {3: T("High"),
