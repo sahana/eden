@@ -1340,13 +1340,13 @@ class S3LocationTagModel(S3Model):
             table = job.table
             data = job.data
             tag = data.get("tag", None)
-            location = data.get("location", None)
+            location_id = data.get("location_id", None)
 
-            if not tag or not location:
+            if not tag or not location_id:
                 return
 
             query = (table.tag.lower() == tag.lower()) & \
-                    (table.location_id == location)
+                    (table.location_id == location_id)
 
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
