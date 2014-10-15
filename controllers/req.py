@@ -270,7 +270,7 @@ def req_controller(template = False):
                 table.request_for_id.label = T("Deliver To")
                 table.requester_id.label = T("Site Contact")
                 table.recv_by_id.label = T("Delivered To")
-     
+
             elif type == 3: # Person
                 table.date_required_until.readable = table.date_required_until.writable = True
 
@@ -363,8 +363,9 @@ def req_controller(template = False):
             pass
 
         elif r.representation == "geojson":
-            table.req_ref.represent = lambda v: \
-                table.req_ref.represent(v, show_link=False)
+            req_ref_represent = table.req_ref.represent
+            table.req_ref.represent = lambda v, show_link=False, pdf=False: \
+                req_ref_represent(v, show_link)
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
             s3db.configure("req_req", marker_fn=marker_fn)

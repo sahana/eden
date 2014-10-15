@@ -166,6 +166,19 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10
     )),
+    # Access to Procedures is key: either attach files or write directly in rich-text forms
+    ("cms", Storage(
+      name_nice = T("Content Management"),
+      #description = "Content Management System",
+      restricted = True,
+      module_type = 10,
+    )),
+    ("doc", Storage(
+        name_nice = T("Documents"),
+        #description = "A library of digital resources, such as photos, documents and reports",
+        restricted = True,
+        module_type = 10,
+    )),
     # Doesn't seem like an easily-adaptable model:
     #("patient", Storage(
     #    name_nice = T("Patient Tracking"),
@@ -200,18 +213,6 @@ settings.modules = OrderedDict([
     #    module_type = 10,
     #)),
     # Possible support Modules
-    #("cms", Storage(
-    #  name_nice = T("Content Management"),
-    #  #description = "Content Management System",
-    #  restricted = True,
-    #  module_type = 10,
-    #)),
-    #("doc", Storage(
-    #    name_nice = T("Documents"),
-    #    #description = "A library of digital resources, such as photos, documents and reports",
-    #    restricted = True,
-    #    module_type = 10,
-    #)),
     #("event", Storage(
     #    name_nice = T("Events"),
     #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
