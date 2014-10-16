@@ -30,6 +30,17 @@ def case():
     def prep(r):
         if r.method == "update":
             r.table.person_id.writable = False
+        else:
+            dtable = s3db.disease_disease
+            diseases = db(dtable.deleted == False).select(dtable.id,
+                                                          limitby=(0, 2)
+                                                          )
+            if len(diseases) == 1:
+                # Default to only disease
+                field = r.table.disease_id
+                field.default = diseases.first().id
+                field.writable = False
+
         return True
     s3.prep = prep
     
