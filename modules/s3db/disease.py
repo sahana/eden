@@ -144,6 +144,39 @@ class DiseaseDataModel(S3Model):
                     disease_symptom_id = lambda **attr: dummy("symptom_id"),
                     )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def disease_duplicate(item):
+
+        data = item.data
+        code = data.get("code")
+        name = data.get("name")
+
+        queries = []
+        if code:
+            queries.append((table.code == code))
+        if name:
+            queries.append((table.name == name))
+        if queries:
+            query = map(lambda x, y: x | y, queries)
+        else:
+            return
+
+        table = item.table
+        rows = current.db(query).select(table.id,
+                                        table.code,
+                                        table.name)
+        duplicate = None
+        for row in rows:
+            if code and row.code == code:
+                duplicate = row.id
+                break
+            if name and row.name == name:
+                duplicate = row.id
+        if duplicate:
+            item.id = duplicate
+            item.method = item.METHOD.UPDATE
+    
 # =============================================================================
 class CaseTrackingModel(S3Model):
 
@@ -720,12 +753,12 @@ class ContactTracingModel(S3Model):
         exposure_type_represent = S3Represent(options = exposure_type)
         
         # =====================================================================
-        # Exposure Risk
+        # Exposure Risk Level
         #
         exposure_risk = {"UNKNOWN": T("Unknown"),
-                         "LOW": T("Low"),
-                         "HIGH": T("High"),
-                         "CERTAIN": T("Certain"),
+                         "NONE": T("No known exposure"),
+                         "LOW": T("Low risk exposure"),
+                         "HIGH": T("High risk exposure"),
                          }
         exposure_risk_represent = S3Represent(options = exposure_risk)
         
