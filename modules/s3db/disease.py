@@ -205,7 +205,9 @@ class CaseTrackingModel(S3Model):
         table = define_table(tablename,
                              Field("case_number", length=64, unique=True,
                                    ),
-                             person_id(empty=False),
+                             person_id(empty = False,
+                                       widget = S3AddPersonWidget2(controller="pr"),
+                                       ),
                              self.disease_disease_id(),
                              s3_date(),
                              self.gis_location_id(),
@@ -277,25 +279,26 @@ class CaseTrackingModel(S3Model):
                                        },
                           }
 
-        summary = [{"name": "add",
-                    "common": True,
-                    "widgets": [{"method": "create"}]
-                    },
-                   {"name": "table",
-                    "label": "Table",
-                    "widgets": [{"method": "datatable"}]
-                    },
-                   {"name": "report",
-                    "label": "Report",
-                    "widgets": [{"method": "report",
-                                 "ajax_init": True}]
-                    },
-                   {"name": "map",
-                    "label": "Map",
-                    "widgets": [{"method": "map",
-                                 "ajax_init": True}],
-                    },
-                   ]
+        # Default anyway
+        # summary = [{"name": "add",
+                    # "common": True,
+                    # "widgets": [{"method": "create"}]
+                    # },
+                   # {"name": "table",
+                    # "label": "Table",
+                    # "widgets": [{"method": "datatable"}]
+                    # },
+                   # {"name": "report",
+                    # "label": "Report",
+                    # "widgets": [{"method": "report",
+                                 # "ajax_init": True}]
+                    # },
+                   # {"name": "map",
+                    # "label": "Map",
+                    # "widgets": [{"method": "map",
+                                 # "ajax_init": True}],
+                    # },
+                   # ]
 
         filter_widgets = [S3TextFilter(["case_number",
                                         "person_id$first_name",
@@ -316,10 +319,10 @@ class CaseTrackingModel(S3Model):
                           ]
                           
         self.configure(tablename,
+                       delete_next = URL(f="case", args=["summary"]),
                        filter_widgets = filter_widgets,
                        report_options = report_options,
-                       summary = summary,
-                       delete_next = URL(f="case", args=["summary"]),
+                       #summary = summary,
                        )
 
         # CRUD strings

@@ -27,6 +27,12 @@ def disease():
 def case():
     """ Case Tracking Controller """
 
+    def prep(r):
+        if r.method == "update":
+            r.table.person_id.writable = False
+        return True
+    s3.prep = prep
+    
     def postp(r, output):
         if isinstance(output, dict) and "buttons" in output:
             buttons = output["buttons"]

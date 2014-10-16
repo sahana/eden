@@ -1659,7 +1659,7 @@ class S3OptionsMenu(object):
                     M("Demographics", f="demographic")(
                         M("Create", m="create"),
                     ),
-                    M("Demographic Data", f="demographic_data")(
+                    M("Demographic Data", f="demographic_data", args="summary")(
                         M("Create", m="create"),
                         M("Import", m="import"),
                     ),

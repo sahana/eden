@@ -90,6 +90,31 @@ settings.L10n.languages = OrderedDict([
 #]
 
 # -----------------------------------------------------------------------------
+# Summary Pages
+# - this is currently the default
+#settings.ui.summary = ({"common": True,
+#                        "name": "add",
+#                        "widgets": [{"method": "create"}],
+#                        },
+#                       {"common": True,
+#                        "name": "cms",
+#                        "widgets": [{"method": "cms"}]
+#                        },
+#                       {"name": "table",
+#                        "label": "Table",
+#                        "widgets": [{"method": "datatable"}]
+#                        },
+#                       {"name": "charts",
+#                        "label": "Report",
+#                        "widgets": [{"method": "report", "ajax_init": True}]
+#                        },
+#                       {"name": "map",
+#                        "label": "Map",
+#                        "widgets": [{"method": "map", "ajax_init": True}],
+#                        },
+#                       )
+
+# -----------------------------------------------------------------------------
 def customise_hms_hospital_resource(r, tablename):
 
     if r.representation == "geojson":
@@ -210,7 +235,7 @@ settings.modules = OrderedDict([
         name_nice = T("Statistics"),
         #description = "Manages statistics",
         restricted = True,
-        module_type = 10,
+        module_type = 7,
     )),
     # Primary target usecase currently
     ("hms", Storage(

@@ -1544,7 +1544,29 @@ class S3Config(Storage):
 
         """
 
-        return self.ui.get("summary", None)
+        return self.ui.get("summary", ({"common": True,
+                                        "name": "add",
+                                        "widgets": [{"method": "create"}],
+                                        },
+                                       {"common": True,
+                                        "name": "cms",
+                                        "widgets": [{"method": "cms"}]
+                                        },
+                                       {"name": "table",
+                                        "label": "Table",
+                                        "widgets": [{"method": "datatable"}]
+                                        },
+                                       {"name": "charts",
+                                        "label": "Report",
+                                        "widgets": [{"method": "report",
+                                                     "ajax_init": True}]
+                                        },
+                                       {"name": "map",
+                                        "label": "Map",
+                                        "widgets": [{"method": "map",
+                                                     "ajax_init": True}],
+                                        },
+                                       ))
 
     def get_ui_filter_auto_submit(self):
         """
