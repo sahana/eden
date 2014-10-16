@@ -281,6 +281,7 @@ class CaseTrackingModel(S3Model):
         self.configure(tablename,
                        crud_form = S3SQLCustomForm(*crud_fields),
                        list_fields = ["date", 
+                                      "illness_status",
                                       (T("Symptoms"), "symptom.name"),
                                       ],
                        )
