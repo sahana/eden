@@ -70,6 +70,7 @@ class DiseaseDataModel(S3Model):
                             
         self.configure(tablename,
                        super_entity = "doc_entity",
+                       deduplicate = self.disease_duplicate,
                        )
 
         # CRUD strings
@@ -147,22 +148,27 @@ class DiseaseDataModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def disease_duplicate(item):
+        """
+            Disease import update detection
+            
+            @param item: the import item
+        """
 
         data = item.data
         code = data.get("code")
         name = data.get("name")
 
+        table = item.table
         queries = []
         if code:
             queries.append((table.code == code))
         if name:
             queries.append((table.name == name))
         if queries:
-            query = map(lambda x, y: x | y, queries)
+            query = reduce(lambda x, y: x | y, queries)
         else:
             return
 
-        table = item.table
         rows = current.db(query).select(table.id,
                                         table.code,
                                         table.name)
@@ -176,7 +182,8 @@ class DiseaseDataModel(S3Model):
         if duplicate:
             item.id = duplicate
             item.method = item.METHOD.UPDATE
-    
+        return
+
 # =============================================================================
 class CaseTrackingModel(S3Model):
 
