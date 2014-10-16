@@ -186,9 +186,10 @@ class CaseTrackingModel(S3Model):
         table = define_table(tablename,
                              Field("case_number", length=64, unique=True,
                                    ),
-                             person_id(),
+                             person_id(empty=False),
                              self.disease_disease_id(),
                              s3_date(),
+                             self.gis_location_id(),
                              Field("monitoring_level",
                                    label = T("Monitoring Level"),
                                    represent = monitoring_level_represent,
@@ -220,6 +221,67 @@ class CaseTrackingModel(S3Model):
                             disease_case_diagnostics = "case_id",
                             disease_contact = "case_id",
                             )
+
+        report_fields = ["disease_id",
+                         "location_id",
+                         "monitoring_level", 
+                         "diagnosis_status",
+                         ]
+        report_options = {"rows": report_fields,
+                          "cols": report_fields,
+                          "fact": [(T("Number of Cases"), "count(id)"),
+                                   ],
+                          "defaults": {"rows": "location_id",
+                                       "cols": "diagnosis_status",
+                                       "fact": "count(id)",
+                                       "totals": True,
+                                       },
+                          }
+
+        summary = [{"name": "add",
+                    "common": True,
+                    "widgets": [{"method": "create"}]
+                    },
+                   {"name": "table",
+                    "label": "Table",
+                    "widgets": [{"method": "datatable"}]
+                    },
+                   {"name": "report",
+                    "label": "Report",
+                    "widgets": [{"method": "report",
+                                 "ajax_init": True}]
+                    },
+                   {"name": "map",
+                    "label": "Map",
+                    "widgets": [{"method": "map",
+                                 "ajax_init": True}],
+                    },
+                   ]
+
+        filter_widgets = [S3TextFilter(["case_number",
+                                        "person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        ],
+                                        label = T("Search"),
+                                        comment = T("Enter Case Number or Name"),
+                                        ),
+                          S3OptionsFilter("monitoring_level",
+                                          options = monitoring_levels,
+                                          ),
+                          S3OptionsFilter("diagnosis_status",
+                                          options = diagnosis_status,
+                                          ),
+                          S3LocationFilter("location_id",
+                                           ),
+                          ]
+                          
+        self.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       report_options = report_options,
+                       summary = summary,
+                       delete_next = URL(f="case", args=["summary"]),
+                       )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
