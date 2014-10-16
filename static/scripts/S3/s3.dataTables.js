@@ -880,7 +880,7 @@
         }
         if (tableConfig['bulkActions']) {
             tableColumns[tableConfig['bulkCol']] = {
-                'sTitle': '<div id="bulk_select_options"><input id="modeSelectionAll" type="checkbox">' + i18n.sSelectAll + '</input></div>',
+                'sTitle': '<div id="bulk_select_options"><input id="modeSelectionAll" type="checkbox">' + i18n.selectAll + '</input></div>',
                 'bSortable': false
             };
         }
