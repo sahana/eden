@@ -1,6 +1,6 @@
 Name,Code,Type,Status,Beds Total,Organisation,Country,L1,L2,L3,L4,L5,Building,#loc,Lat,Lon,Comments
-Tubmanburg Government Hospital - Holding Centre,LibTub,Triage,Functional,12,MoH Liberia,LR,Bomi,,Tubmanburg,,,,,,,"Bomi County Health Team (CHT) opened three, two-room quarantine units with a 12-bed capacity for Ebola patients. There is a holding centre in Tubmanburg."
-none,LibTub2,ETC,Pending,,International Organization for Migration,LR,Bomi,,Tubmanburg,,,,,,,Under construction
+Tubmanburg Government Hospital - Holding Centre,LibTub,Triage,Functional,12,MoH Liberia,LR,Bomi,Senjeh,Tubmanburg,,,,,,,"Bomi County Health Team (CHT) opened three, two-room quarantine units with a 12-bed capacity for Ebola patients. There is a holding centre in Tubmanburg."
+none,LibTub2,ETC,Pending,,International Organization for Migration,LR,Bomi,Senjeh,Tubmanburg,,,,,,,Under construction
 Bong County ETC,LibBon,ETC,Functional,70,International Medical Corps,LR,Bong,,,,,,,,,Expected to open 08 September
 Phebe Hospital,LibPhe,ETC,Functional,50,,LR,Bong,Suakoko,,,,,,7.02794,-9.55329,"A 7-bed Isolation Centre has been added to the Phebe Hospital in Suakoko.. The new 50 bed facility has been handed over to the County Authority and is awaiting admissions, as at 10 September. Hospital to ETC. As at 22 August, a new ETU is being constructed however it is not determined how the clinic services will be run"
 none,LibBuc,ETC,Pending,,International Organization for Migration,LR,Grand Bassa,District No. 3,Buchanan City,,,,,,,Under construction
@@ -49,8 +49,8 @@ JFD Hospital,LibJFD,Hospital,Functional,,,LR,Nimba,Doe,Tappita City,,,,,,,Holdin
 none,,ETC,Pending,,Partners in Health,LR,Nimba,Garr-Bain,Ganta City,,,,,,,Planned
 none,,ETC,Pending,,Partners in Health,LR,Nimba,Doe,Tappita City,,,,,,,Planned
 G. W. Harley,LibGWH,ETC,Pending,0,,LR,Nimba,Sanniquellie Mahn,,,,,,7.35261,-8.71733,No partner currently identified. Renovation of the holding facilties at G. W. Harley and Ganta Hospitals is underway as at 20 August.
-none,,ETC,Pending,,,LR,River Gee,,Fish Town,,,,,,,Planned
-none,,ETC,Pending,,,LR,Rivercess,,Cestos City,,,,,,,Planned
+none,,ETC,Pending,,,LR,River Gee,Potupo ,Fish Town,,,,,,,Planned
+none,,ETC,Pending,,,LR,Rivercess,Zarflahn ,Cestos City,,,,,,,Planned
 F.J. Grante Hospital Temporary Holding Centre,LibFJG,Holding Centre,Functional,,,LR,Sinoe,Greenville,,,,,,,,"http://www.mohsw.gov.lr/documents/Liberia%20Ebola%20Sit%20Rep%20138%20Sept%2030,%202014.pptx%20New%20(1)%20(1).pdf; http://www.mohsw.gov.lr/documents/Liberia%20Ebola%20SitRep%20128%20Sept%2020,%202014.pdf"
 Donka Hospital,GuiDon,ETC,Functional,50,Medecins Sans Frontieres,GN,Conakry,Conakry,,,,,,9.53564,-13.6832,"Expansion underway. Media sources have reported a spike in Ebola cases at the Donka Ebola Treatment Centre in Conakry with a number of new arrivals, particularly from Coyah prefecture. Authorities are expanding the bed capacity and also training more health care workers to help cope with the increase. Public hospital"
 Dabola,GuiDab,Triage,Functional,0,Medecins Sans Frontieres,GN,Faranah,Dabola,,,,,,,,
