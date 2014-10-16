@@ -169,6 +169,62 @@ def customise_hms_hospital_resource(r, tablename):
 settings.customise_hms_hospital_resource = customise_hms_hospital_resource
 
 # -----------------------------------------------------------------------------
+def customise_stats_demographic_data_resource(r, tablename):
+
+    s3db = current.s3db
+    table = s3db.stats_demographic_data
+
+    # @ToDo: 'Month' VF
+    #from s3 import S3OptionsFilter
+    #filter_widgets = [S3OptionsFilter("parameter_id",
+    #                                  label = T("Type"),
+    #                                  multiple = False,
+    #                                  # Not translateable
+    #                                  #represent = "%(name)s",
+    #                                  ),
+    #                  S3OptionsFilter("month",
+    #                                  #multiple = False,
+    #                                  operator = "anyof",
+    #                                  options = lambda: \
+    #                                    stats_month_options("stats_demographic_data"),
+    #                                  ),
+    #                  S3OptionsFilter("location_id$level",
+    #                                  label = T("Level"),
+    #                                  multiple = False,
+    #                                  # Not translateable
+    #                                  #represent = "%(name)s",
+    #                                  ),
+    #                  S3LocationFilter("location_id",
+    #                                   levels = levels,
+    #                                   ),
+    #                  ]
+
+    # Sum doesn't make sense for this data as it's already cumulative
+    report_options = s3db.get_config(tablename, "report_options")
+    report_options.fact = [(T("Value"), "max(value)")]
+    report_options.defaults.fact = "max(value)"
+
+    #report_options = Storage(rows = location_fields + ["month"],
+    #                         cols = ["parameter_id"],
+    #                         fact = [(T("Value"), "max(value)"),
+    #                                 ],
+    #                         defaults = Storage(rows = "location_id",
+    #                                            cols = "parameter_id",
+    #                                            fact = "max(value)",
+    #                                            totals = True,
+    #                                            chart = "breakdown:rows",
+    #                                            table = "collapse",
+    #                                            )
+    #                         )
+
+    #s3db.configure(tablename,
+    #               filter_widgets = filter_widgets,
+    #               report_options = report_options,
+    #               )
+
+settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
+
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([

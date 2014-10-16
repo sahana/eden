@@ -29,7 +29,7 @@
 
 from __future__ import division
 
-__all__ = ["S3StatsModel",
+__all__ = ("S3StatsModel",
            "S3StatsDemographicModel",
            "S3StatsImpactModel",
            "S3StatsPeopleModel",
@@ -38,7 +38,7 @@ __all__ = ["S3StatsModel",
            "stats_year",
            "stats_year_options",
            #"stats_SourceRepresent",
-           ]
+           )
 
 import datetime
 
@@ -382,7 +382,7 @@ class S3StatsDemographicModel(S3Model):
                                  cols = ["parameter_id"],
                                  fact = [(T("Value"), "sum(value)"),
                                          ],
-                                 defaults = Storage(rows = "location_id",
+                                 defaults = Storage(rows = location_fields[0],
                                                     cols = "parameter_id",
                                                     fact = "sum(value)",
                                                     totals = True,
