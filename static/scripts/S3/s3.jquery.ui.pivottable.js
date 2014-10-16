@@ -156,6 +156,9 @@
             opts.numberFormatter = function(number) {
 
                 var decimals = opts.precision;
+                if (number === null || typeof number == 'undefined') {
+                    return '-';
+                }
                 var n = decimals || decimals == 0 ? number.toFixed(decimals) : number.toString();
 
                 n = n.split('.');
@@ -1293,7 +1296,7 @@
 
                 var tooltip = '<div class="pt-tooltip">' +
                               '<div class="pt-tooltip-label" style="color:' + color + '">' + data.label + '</div>' +
-                              '<div class="pt-tooltip-text">' + data.value + '</div>' +
+                              '<div class="pt-tooltip-text">' + valueFormat(data.value) + '</div>' +
                               '</div>';
                 return tooltip;
             }
