@@ -241,8 +241,8 @@ class CaseTrackingModel(S3Model):
                              case_id(),
                              s3_datetime(default="now"),
                              Field("illness_status",
-                                   requires = IS_IN_SET(illness_status),
                                    represent = S3Represent(options = illness_status),
+                                   requires = IS_IN_SET(illness_status),
                                    ),
                              *s3_meta_fields())
 

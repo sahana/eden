@@ -2,7 +2,7 @@ Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,F
 Airports,All Active Airports,transport,airport,airport,Airport,"{name} (T('Airport'))",name,~.obsolete=False,,,,,False,
 Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,"{name} (T('Heliport'))",name,~.obsolete=False,,,,,False,
 Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,"{name} (T('Hospital'))",name,~.obsolete=False,,,,,False,
-Incident Reports,,irs,ireport,incident,Danger Area,"{name} (T('Incident'))<br />{category}","name,category",,,,,,False,
+Incident Reports,,event,incident_report,incident,Danger Area,"{name} (T('Incident'))<br />{incident_type_id}","name,incident_type_id",,,,,,False,
 Offices,All Active Offices,org,office,office,Building,"{name} (T('Office'))<br />{organisation_id}","name,organisation_id",~.obsolete=False,,,,,False,
 PoIs,,gis,poi,,,"{name} ({poi_type_id})","name,poi_type_id",,,,,,,False
 Projects,,project,location,project,,"{name} (T('Project'))<br />{location_id}<br />{multi_activity_type_id}","name,location_id,multi_activity_type_id",,,,,,False,

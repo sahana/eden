@@ -2436,14 +2436,15 @@ class GIS(object):
                 # Add a per-feature Marker
                 marker_fn = s3db.get_config(tablename, "marker_fn")
                 if marker_fn:
+                    m = {}
                     for record in resource:
-                        markers[record[pkey]] = marker_fn(record)
+                        m[record[pkey]] = marker_fn(record)
                 else:
                     # No configuration found so use default marker for all
                     c, f = tablename.split("_", 1)
-                    markers = GIS.get_marker(c, f)
+                    m = GIS.get_marker(c, f)
 
-                markers[tablename] = markers
+                markers[tablename] = m
 
             if individual:
                 # Add a per-feature Style
