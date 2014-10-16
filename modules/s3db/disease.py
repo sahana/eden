@@ -145,6 +145,7 @@ class CaseTrackingModel(S3Model):
              "disease_case_id",
              "disease_case_monitoring",
              "disease_case_monitoring_symptom",
+             "disease_case_diagnostics",
              )
 
     def model(self):
@@ -159,7 +160,17 @@ class CaseTrackingModel(S3Model):
         person_id = self.pr_person_id
 
         # =====================================================================
-        # Case
+        # Diagnosis Status
+        #
+        diagnosis_status = {"UNKNOWN": T("Unknown"),
+                            "PROBABLE": T("Probable"),
+                            "CONFIRMED-POS": T("Confirmed Positive"),
+                            "CONFIRMED-NEG": T("Confirmed Negative"),
+                            }
+        diagnosis_status_represent = S3Represent(options = diagnosis_status)
+
+        # =====================================================================
+        # Monitoring Levels
         #
         monitoring_levels = {"NONE": T("No Monitoring"),
                              "MONITORING": T("Routine Monitoring"),
@@ -167,12 +178,10 @@ class CaseTrackingModel(S3Model):
                              "QUARANTINE": T("Quarantine"),
                              "FOLLOW-UP": T("Post-Quarantine Follow-Up"),
                              }
-        diagnosis_status = {"UNKNOWN": T("Unknown"),
-                            "PROBABLE": T("Probable"),
-                            "CONFIRMED-POS": T("Confirmed Positive"),
-                            "CONFIRMED-NEG": T("Confirmed Negative"),
-                            }
-
+        monitoring_level_represent = S3Represent(options = monitoring_levels)
+        # =====================================================================
+        # Case
+        #
         tablename = "disease_case"
         table = define_table(tablename,
                              Field("case_number", length=64, unique=True,
@@ -182,12 +191,12 @@ class CaseTrackingModel(S3Model):
                              s3_date(),
                              Field("monitoring_level",
                                    label = T("Monitoring Level"),
-                                   represent = S3Represent(options = monitoring_levels),
+                                   represent = monitoring_level_represent,
                                    requires = IS_IN_SET(monitoring_levels),
                                    ),
                              Field("diagnosis_status",
                                    label = T("Diagnosis Status"),
-                                   represent = S3Represent(options = diagnosis_status),
+                                   represent = diagnosis_status_represent,
                                    requires = IS_IN_SET(diagnosis_status),
                                    ),
                              *s3_meta_fields())
@@ -208,6 +217,7 @@ class CaseTrackingModel(S3Model):
         # Components
         self.add_components(tablename,
                             disease_case_monitoring = "case_id",
+                            disease_case_diagnostics = "case_id",
                             disease_contact = "case_id",
                             )
 
@@ -244,6 +254,7 @@ class CaseTrackingModel(S3Model):
                                    represent = S3Represent(options = illness_status),
                                    requires = IS_IN_SET(illness_status),
                                    ),
+                             s3_comments(),
                              *s3_meta_fields())
 
         # Reusable Field
@@ -276,6 +287,7 @@ class CaseTrackingModel(S3Model):
                                        label = T("Symptoms"),
                                        multiple = True,
                                        ),
+                       "comments",
                        ]
                      
         self.configure(tablename,
@@ -283,6 +295,7 @@ class CaseTrackingModel(S3Model):
                        list_fields = ["date", 
                                       "illness_status",
                                       (T("Symptoms"), "symptom.name"),
+                                      "comments",
                                       ],
                        )
 
@@ -312,7 +325,48 @@ class CaseTrackingModel(S3Model):
                              self.disease_symptom_id(),
                              *s3_meta_fields())
 
+        # =====================================================================
+        # Diagnostics
+        #
+        probe_status = {"PENDING": T("Pending"),
+                        "PROCESSED": T("Processed"),
+                        "VALIDATED": T("Validated"),
+                        "INVALID": T("Invalid"),
+                        "LOST": T("Lost"),
+                        }
+        tablename = "disease_case_diagnostics"
+        table = define_table(tablename,
+                             case_id(),
+                             # @todo: make a lookup table in DiseaseDataModel:
+                             Field("probe_type"),
+                             Field("probe_number", length = 64, unique = True,
+                                   ),
+                             s3_date("probe_date", 
+                                     default = "now",
+                                     label = T("Probe Date"),
+                                     ),
+                             Field("probe_status",
+                                   represent = S3Represent(options = probe_status),
+                                   requires = IS_IN_SET(probe_status),
+                                   default = "PENDING",
+                                   ),
+                             # @todo: make a lookup table in DiseaseDataModel:
+                             Field("test_type"),
+                             Field("result"),
+                             s3_date("result_date", 
+                                     label = T("Result Date"),
+                                     ),
+                             Field("conclusion",
+                                   represent = diagnosis_status_represent,
+                                   requires = IS_EMPTY_OR(
+                                                IS_IN_SET(diagnosis_status)),
+                                   ),
+                             s3_comments(),
+                             *s3_meta_fields())
+
         # @todo: CRUD strings
+
+        # =====================================================================
 
         # Pass names back to global scope (s3.*)
         return dict(disease_case_id = case_id)
@@ -543,6 +597,7 @@ def disease_rheader(r, tabs=None):
 
         tabs = [(T("Basic Details"), None),
                 (T("Monitoring"), "case_monitoring"),
+                (T("Diagnostics"), "case_diagnostics"),
                 (T("Contacts"), "contact"),
                 ]
 
