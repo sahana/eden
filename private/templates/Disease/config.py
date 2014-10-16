@@ -45,6 +45,8 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ("GN", "LR", "SL",)
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
