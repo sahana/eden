@@ -40,7 +40,7 @@ __all__ = ["S3StatsModel",
            #"stats_SourceRepresent",
            ]
 
-from datetime import date
+import datetime
 
 from gluon import *
 from gluon.storage import Storage
@@ -422,42 +422,42 @@ class S3StatsDemographicModel(S3Model):
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
                      super_link("parameter_id", "stats_parameter",
-                                label = T("Demographic"),
+                                empty = False,
                                 instance_types = ("stats_demographic",),
+                                label = T("Demographic"),
                                 represent = S3Represent(lookup="stats_parameter"),
                                 readable = True,
                                 writable = True,
-                                empty = False,
                                 ),
                      location_id(
+                        requires = IS_LOCATION(),
                         widget = S3LocationAutocompleteWidget(),
-                        requires = IS_LOCATION()
                      ),
                      Field("agg_type", "integer",
-                           requires = IS_IN_SET(aggregate_types),
-                           represent = lambda opt: \
-                           aggregate_types.get(opt,
-                                               current.messages.UNKNOWN_OPT),
                            default = 1,
                            label = T("Aggregation Type"),
+                           represent = lambda opt: \
+                            aggregate_types.get(opt,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(aggregate_types),
                            ),
-                     Field("date", "date",
-                           label = T("Start Date"),
-                           ),
-                     Field("end_date", "date",
-                           label = T("End Date"),
-                           ),
+                     s3_date("date",
+                             label = T("Start Date"),
+                             ),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
                      # Sum is used by Vulnerability as a fallback if we have no data at this level
                      Field("sum", "double",
                            label = T("Sum"),
                            represent = lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2),
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
                            ),
                      # Percentage is used to compare an absolute value against a total
                      Field("percentage", "double",
                            label = T("Percentage"),
                            represent = lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2),
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
                            ),
                      #Field("min", "double",
                      #      label = T("Minimum"),
@@ -597,6 +597,7 @@ class S3StatsDemographicModel(S3Model):
             and end of the current year.
         """
 
+        date = datetime.date
         if data_date is None:
             data_date = date.today()
         year = data_date.year
@@ -630,7 +631,6 @@ class S3StatsDemographicModel(S3Model):
         if not records:
             return
 
-        import datetime
         from dateutil.rrule import rrule, YEARLY
 
         db = current.db
@@ -673,7 +673,8 @@ class S3StatsDemographicModel(S3Model):
             if total_id and parameter_id not in param_total_dict:
                 param_total_dict[parameter_id] = total_id
             if from_json:
-                date = parse(record["date"])
+                date = parse(record["date"]) # produces a datetime
+                date = date.date()
             else:
                 date = record["date"]
             (start_date, end_date) = aggregated_period(date)
