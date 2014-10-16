@@ -38,7 +38,7 @@ def case():
     return s3_rest_controller(rheader = s3db.disease_rheader)
 
 # -----------------------------------------------------------------------------
-def contact():
+def tracing():
     """ Contact Tracing Controller """
     
     return s3_rest_controller(rheader = s3db.disease_rheader)

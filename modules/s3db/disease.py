@@ -219,7 +219,15 @@ class CaseTrackingModel(S3Model):
         self.add_components(tablename,
                             disease_case_monitoring = "case_id",
                             disease_case_diagnostics = "case_id",
-                            disease_contact = "case_id",
+                            disease_tracing = "case_id",
+                            disease_exposure = ({"name": "exposure",
+                                                 "joinby": "person_id", 
+                                                 "pkey": "person_id",
+                                                 },
+                                                {"name": "contact",
+                                                 "joinby": "case_id",
+                                                 },
+                                                 ),
                             )
 
         report_fields = ["disease_id",
@@ -526,8 +534,8 @@ class disease_CaseRepresent(S3Represent):
 # =============================================================================
 class ContactTracingModel(S3Model):
 
-    names = ("disease_contact",
-             "disease_contact_person",
+    names = ("disease_tracing",
+             "disease_exposure",
              )
 
     def model(self):
@@ -540,90 +548,103 @@ class ContactTracingModel(S3Model):
         define_table = self.define_table
 
         person_id = self.pr_person_id
+        case_id = self.disease_case_id
 
         # =====================================================================
-        # Contact: place/time when a people were in contact with a case
+        # Tracing Information: when/where did a case pose risk for exposure?
         #
         
-        # Status of the tracing
+        # Processing Status
         contact_tracing_status = {
-            "OPEN": T("Open"),         # not all contact persons identified yet
-            "COMPLETE": T("Complete"), # all contact persons identified
+            "OPEN": T("Open"),         # not all contacts identified yet
+            "COMPLETE": T("Complete"), # all contacts identified, closed
         }
-        tablename = "disease_contact"
+
+        tablename = "disease_tracing"
         table = define_table(tablename,
-                             self.disease_case_id(label="Source Case"),
+                             self.disease_case_id(),
                              s3_datetime("start_date",
                                          label = T("From"),
-                                         widget = S3DateTimeWidget(set_min="disease_contact_end_date",
+                                         widget = S3DateTimeWidget(set_min="disease_end_date",
                                                                    ),
                                          ),
                              s3_datetime("end_date",
                                          label = T("To"),
-                                         widget = S3DateTimeWidget(set_max="disease_contact_start_date",
+                                         widget = S3DateTimeWidget(set_max="disease_start_date",
                                                                    ),
                                          ),
                              self.gis_location_id(),
+                             Field("circumstances", "text",
+                                   ),
                              Field("status",
                                    label = T("Tracing Status"),
                                    requires = IS_IN_SET(contact_tracing_status),
                                    represent = S3Represent(options=contact_tracing_status),
                                    ),
+                             s3_comments(),
                              *s3_meta_fields())
-                             
-        represent = S3Represent(lookup=tablename, fields=["person_id", "date"])
-        contact_id = S3ReusableField("contact_id", "reference %s" % tablename,
-                                     label = T("Contact"),
+
+        # @todo: implement specific S3Represent class
+        represent = S3Represent(lookup=tablename, fields=["case_id"])
+        tracing_id = S3ReusableField("tracing_id", "reference %s" % tablename,
+                                     label = T("Tracing Record"),
                                      represent = represent,
-                                     requires = IS_ONE_OF(db, "disease_contact.id",
+                                     requires = IS_ONE_OF(db, "disease_tracing.id",
                                                           represent,
                                                           ),
                                      sortby = "date",
-                                     comment = S3AddResourceLink(f="contact",
-                                                                 tooltip=T("Add a new contact"),
+                                     comment = S3AddResourceLink(f="contact_tracing",
+                                                                 tooltip=T("Add a new contact tracing information"),
                                                                  ),
                                      )
 
         self.add_components(tablename,
-                            disease_contact_person = "contact_id",
+                            disease_exposure = "tracing_id",
                             )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Register Contact Tracing"),
-            title_display = T("Contact Tracing Information"),
+            label_create = T("Add Tracing Record"),
+            title_display = T("Tracing Details"),
             title_list = T("Contact Tracings"),
-            title_update = T("Edit Contact Tracing"),
-            title_upload = T("Import Contact Tracing"),
-            label_list_button = T("List Contact Tracings"),
-            label_delete_button = T("Delete Contact Tracing"),
-            msg_record_created = T("Contact Tracing registered"),
-            msg_record_modified = T("Contact Tracing updated"),
-            msg_record_deleted = T("Contact Tracing deleted"),
+            title_update = T("Edit Tracing Information"),
+            title_upload = T("Import Tracing Information"),
+            label_list_button = T("List Tracing Record"),
+            label_delete_button = T("Delete Tracing Record"),
+            msg_record_created = T("Tracing Record added"),
+            msg_record_modified = T("Tracing Record updated"),
+            msg_record_deleted = T("Tracing Record deleted"),
             msg_list_empty = T("No Contact Tracings currently registered"))
 
         # =====================================================================
-        # Contact Person: persons who've been involved in a contact
+        # Exposure: when and how was a person exposed to the disease?
         #
-        tablename = "disease_contact_person"
+        tablename = "disease_exposure"
         table = define_table(tablename,
-                             contact_id(),
+                             case_id(),
+                             tracing_id(empty=True),
                              person_id(),
                              s3_datetime(),
+                             #self.gis_location_id(),
+                             Field("circumstances", "text"),
+                             # @todo: make lookup field
+                             Field("exposure_type"),
+                             # @todo: make lookup field
+                             Field("exposure_risk"),
                              *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Add Contact Person"),
-            title_display = T("Contact Person Details"),
-            title_list = T("Contact Persons"),
-            title_update = T("Edit Contact Person"),
-            title_upload = T("Import Contact Persons"),
-            label_list_button = T("List Contact Persons"),
-            label_delete_button = T("Delete Contact Person"),
-            msg_record_created = T("Contact Person added"),
-            msg_record_modified = T("Contact Person Details updated"),
-            msg_record_deleted = T("Contact Person deleted"),
-            msg_list_empty = T("No Contact Persons currently registered"))
+            label_create = T("Add Exposure Information"),
+            title_display = T("Exposure Details"),
+            title_list = T("Exposure Information"),
+            title_update = T("Edit Exposure Information"),
+            title_upload = T("Import Exposure Information"),
+            label_list_button = T("List Exposures"),
+            label_delete_button = T("Delete Exposure Information"),
+            msg_record_created = T("Exposure Information added"),
+            msg_record_modified = T("Exposure Information updated"),
+            msg_record_deleted = T("Exposure Information deleted"),
+            msg_list_empty = T("No Exposure Information currently registered"))
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -658,19 +679,21 @@ def disease_rheader(r, tabs=None):
     elif resourcename == "case":
 
         tabs = [(T("Basic Details"), None),
+                (T("Exposure"), "exposure"),
                 (T("Monitoring"), "case_monitoring"),
                 (T("Diagnostics"), "case_diagnostics"),
                 (T("Contacts"), "contact"),
+                (T("Tracing"), "tracing"),
                 ]
 
         rheader_fields = [["person_id"],
                           ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-    elif resourcename == "contact":
+    elif resourcename == "tracing":
 
         tabs = [(T("Basic Details"), None),
-                (T("Contact Persons"), "contact_person"),
+                (T("Contact Persons"), "exposure"),
                 ]
 
         rheader_fields = [["case_id"],
