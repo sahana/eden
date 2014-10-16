@@ -683,6 +683,8 @@ class S3OptionsMenu(object):
                    M("Cases",
                      c="disease", f="case", m="summary")(
                         M("Create", m="create"),
+                        M("Watch List", m="summary", 
+                          vars={"~.monitoring_level__belongs": "MONITORING"}),
                    ),
                    M("Contact Tracing",
                      c="disease", f="tracing")(

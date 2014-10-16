@@ -42,6 +42,12 @@ class DiseaseDataModel(S3Model):
                                    label = T("ICD-10-CM Code"),
                                    ),
                              Field("description", "text"),
+                             Field("trace_period", "integer",
+                                   label = T("Trace Period before Symptom Debut (days)"),
+                                   ),
+                             Field("watch_period", "integer",
+                                   label = T("Watch Period after Exposure (days)"),
+                                   ),
                              s3_comments(),
                              *s3_meta_fields())
 
@@ -163,6 +169,7 @@ class CaseTrackingModel(S3Model):
         # Diagnosis Status
         #
         diagnosis_status = {"UNKNOWN": T("Unknown"),
+                            "RISK": T("At Risk"),
                             "PROBABLE": T("Probable"),
                             "CONFIRMED-POS": T("Confirmed Positive"),
                             "CONFIRMED-NEG": T("Confirmed Negative"),
@@ -180,6 +187,18 @@ class CaseTrackingModel(S3Model):
                              }
         monitoring_level_represent = S3Represent(options = monitoring_levels)
         # =====================================================================
+        # Illness status
+        #
+        illness_status = {"UNKNOWN": T("Unknown"),
+                          "ASYMPTOMATIC": T("Asymptomatic"),
+                          "SYMPTOMATIC": T("Symptomatic"),
+                          "SEVERE": T("Severely Ill"),
+                          "DECEASED": T("Deceased"),
+                          "RECOVERED": T("Recovered"),
+                          }
+        illness_status_represent = S3Represent(options = illness_status)
+
+        # =====================================================================
         # Case
         #
         tablename = "disease_case"
@@ -190,15 +209,26 @@ class CaseTrackingModel(S3Model):
                              self.disease_disease_id(),
                              s3_date(),
                              self.gis_location_id(),
-                             Field("monitoring_level",
-                                   label = T("Monitoring Level"),
-                                   represent = monitoring_level_represent,
-                                   requires = IS_IN_SET(monitoring_levels),
+                             Field("illness_status",
+                                   label = T("Current Illness Status"),
+                                   represent = illness_status_represent,
+                                   requires = IS_IN_SET(illness_status),
+                                   default = "UNKNOWN",
                                    ),
+                             s3_date("symptom_debut",
+                                     label = T("Symptom Debut"),
+                                     ),
                              Field("diagnosis_status",
-                                   label = T("Diagnosis Status"),
+                                   label = T("Current Diagnosis Status"),
                                    represent = diagnosis_status_represent,
                                    requires = IS_IN_SET(diagnosis_status),
+                                   default = "UNKNOWN",
+                                   ),
+                             Field("monitoring_level",
+                                   label = T("Current Monitoring Level"),
+                                   represent = monitoring_level_represent,
+                                   requires = IS_IN_SET(monitoring_levels),
+                                   default = "NONE",
                                    ),
                              *s3_meta_fields())
 
@@ -232,7 +262,8 @@ class CaseTrackingModel(S3Model):
 
         report_fields = ["disease_id",
                          "location_id",
-                         "monitoring_level", 
+                         "illness_status",
+                         "monitoring_level",
                          "diagnosis_status",
                          ]
         report_options = {"rows": report_fields,
@@ -308,20 +339,12 @@ class CaseTrackingModel(S3Model):
         # =====================================================================
         # Monitoring
         #
-        illness_status = {"UNKNOWN": T("Unknown"),
-                          "ASYMPTOMATIC": T("Asymptomatic"),
-                          "SYMPTOMATIC": T("Symptomatic"),
-                          "SEVERE": T("Severely Ill"),
-                          "DECEASED": T("Deceased"),
-                          "RECOVERED": T("Recovered"),
-                          }
-
         tablename = "disease_case_monitoring"
         table = define_table(tablename,
                              case_id(),
                              s3_datetime(default="now"),
                              Field("illness_status",
-                                   represent = S3Represent(options = illness_status),
+                                   represent = illness_status_represent,
                                    requires = IS_IN_SET(illness_status),
                                    ),
                              s3_comments(),
@@ -367,6 +390,7 @@ class CaseTrackingModel(S3Model):
                                       (T("Symptoms"), "symptom.name"),
                                       "comments",
                                       ],
+                       onaccept = self.monitoring_onaccept,
                        )
 
         # CRUD strings
@@ -382,7 +406,6 @@ class CaseTrackingModel(S3Model):
             msg_record_modified = T("Monitoring Update updated"),
             msg_record_deleted = T("Monitoring Update deleted"),
             msg_list_empty = T("No Monitoring Information currently available"))
-
 
         # =====================================================================
         # Monitoring <=> Symptom
@@ -434,7 +457,19 @@ class CaseTrackingModel(S3Model):
                              s3_comments(),
                              *s3_meta_fields())
 
-        # @todo: CRUD strings
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Diagnostic Test"),
+            title_display = T("Diagnostic Test Details"),
+            title_list = T("Diagnostic Tests"),
+            title_update = T("Edit Diagnostic Test Details"),
+            title_upload = T("Import Diagnostic Test Data"),
+            label_list_button = T("List Diagnostic Tests"),
+            label_delete_button = T("Delete Diagnostic Test"),
+            msg_record_created = T("Diagnostic Test added"),
+            msg_record_modified = T("Diagnostic Test updated"),
+            msg_record_deleted = T("Diagnostic Test deleted"),
+            msg_list_empty = T("No Diagnostic Tests currently registered"))
 
         # =====================================================================
 
@@ -444,8 +479,55 @@ class CaseTrackingModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
+        """ Safe defaults for names in case the module is disabled """
 
-        return dict()
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(disease_case_id = lambda **attr: dummy("case_id"),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def monitoring_onaccept(form):
+        """
+            Update the illness status of the case from last monitoring entry
+        """
+        
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            return
+        
+        db = current.db
+        s3db = current.s3db
+
+        ctable = s3db.disease_case
+        mtable = s3db.disease_case_monitoring
+        
+        # Get the case ID
+        case_id = None
+        if "case_id" not in formvars:
+            query = (mtable.id == record_id)
+            row = db(query).select(mtable.case_id, limitby=(0, 1)).first()
+            if row:
+                case_id = row.case_id
+        else:
+            case_id = formvars.case_id
+        if not case_id:
+            return
+        
+        query = (mtable.case_id == case_id) & \
+                (mtable.illness_status != None)
+        
+        row = db(query).select(mtable.illness_status,
+                               orderby = "disease_case_monitoring.date desc",
+                               limitby = (0, 1)).first()
+        if row:
+            db(ctable.id == case_id).update(illness_status = row.illness_status)
+        return
 
 # =============================================================================
 class disease_CaseRepresent(S3Represent):
@@ -617,6 +699,34 @@ class ContactTracingModel(S3Model):
             msg_list_empty = T("No Contact Tracings currently registered"))
 
         # =====================================================================
+        # Protection
+        #
+        protection_level = {"NONE": T("Unknown"),
+                            "PARTIAL": T("Partial"),
+                            "FULL": T("Full"),
+                            }
+        protection_level_represent = S3Represent(options = protection_level)
+        
+        # =====================================================================
+        # Exposure Type
+        #
+        exposure_type = {"UNKNOWN": T("Unknown"),
+                         "DIRECT": T("Direct"),
+                         "INDIRECT": T("Indirect"),
+                         }
+        exposure_type_represent = S3Represent(options = exposure_type)
+        
+        # =====================================================================
+        # Exposure Risk
+        #
+        exposure_risk = {"UNKNOWN": T("Unknown"),
+                         "LOW": T("Low"),
+                         "HIGH": T("High"),
+                         "CERTAIN": T("Certain"),
+                         }
+        exposure_risk_represent = S3Represent(options = exposure_risk)
+        
+        # =====================================================================
         # Exposure: when and how was a person exposed to the disease?
         #
         tablename = "disease_exposure"
@@ -626,11 +736,22 @@ class ContactTracingModel(S3Model):
                              person_id(),
                              s3_datetime(),
                              #self.gis_location_id(),
+                             Field("exposure_type",
+                                   default = "UNKNOWN",
+                                   represent = exposure_type_represent,
+                                   requires = IS_IN_SET(exposure_type, zero=None),
+                                   ),
+                             Field("protection_level",
+                                   default = "NONE",
+                                   represent = protection_level_represent,
+                                   requires = IS_IN_SET(protection_level, zero=None),
+                                   ),
+                             Field("exposure_risk",
+                                   default = "LOW",
+                                   represent = exposure_risk_represent,
+                                   requires = IS_IN_SET(exposure_risk, zero=None),
+                                   ),
                              Field("circumstances", "text"),
-                             # @todo: make lookup field
-                             Field("exposure_type"),
-                             # @todo: make lookup field
-                             Field("exposure_risk"),
                              *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
