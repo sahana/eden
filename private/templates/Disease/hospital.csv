@@ -59,11 +59,11 @@ none,GuiKan,Triage,Functional,,Medecins Sans Frontieres,GN,Kankan,Kankan,,,,,,,,
 none,GuiCoy,Triage,Functional,,Medecins Sans Frontieres,GN,Kindia,Coyah,,,,,,,,
 none,,Transit Centre,Pending,0,,GN,Kindia,Forécariah,,,,,,,,
 Telimélé Treatment Centre,GuiTel,ETC,Closed,21,Medecins Sans Frontieres,GN,Kindia,Télimélé,,,,,,,,"The situation has stabilized in some areas and MSF has closed its Ebola treatment center in Telimélé, in the west of the country, after no new cases were reported for 21 days"
-Nzerekore Transit Centre,GuiNze,Transit Centre,Pending,12,,GN,Nzerekore,Nzérékoré,,,,,,,,To be set up
-Guinee Forestiere (CMC Gueckedou MSF),GuiGui,ETC,Functional,80,Medecins Sans Frontieres,GN,Nzerekore,Guéckédou,,,,,,8.552229,-10.120623,WHO deploy infection control specialist
-Macenta Transit Centre,GuiMac,Transit Centre,Functional,25,MoH Guinea,GN,Nzerekore,Macenta,,,,,,8.53688,-9.46481,"Due to be upgraded to an Ebola Treatment Unit, by the French government. The MSF ETU was closed in July. Request to change to ETU. MSF is supporting the Ministry of Health by transferring Ebola patients by ambulance for case management in either Conakry or Guékédou. Patients are arriving from a wide area, including the region around Nzerekore"
-none,,ETC,Pending,50,French Red Cross (Croix Rouge Francaise),GN,Nzerekore,Macenta,,,,,,,,To be set up
-Yomou Transit Centre,GuiYom,Transit Centre,Pending,12,,GN,Nzerekore,Yamou,,,,,,,,To be set up
+Nzerekore Transit Centre,GuiNze,Transit Centre,Pending,12,,GN,Nzérékoré,Nzérékoré,,,,,,,,To be set up
+Guinee Forestiere (CMC Gueckedou MSF),GuiGui,ETC,Functional,80,Medecins Sans Frontieres,GN,Nzérékoré,Guéckédou,,,,,,8.552229,-10.120623,WHO deploy infection control specialist
+Macenta Transit Centre,GuiMac,Transit Centre,Functional,25,MoH Guinea,GN,Nzérékoré,Macenta,,,,,,8.53688,-9.46481,"Due to be upgraded to an Ebola Treatment Unit, by the French government. The MSF ETU was closed in July. Request to change to ETU. MSF is supporting the Ministry of Health by transferring Ebola patients by ambulance for case management in either Conakry or Guékédou. Patients are arriving from a wide area, including the region around Nzerekore"
+none,,ETC,Pending,50,French Red Cross (Croix Rouge Francaise),GN,Nzérékoré,Macenta,,,,,,,,To be set up
+Yomou Transit Centre,GuiYom,Transit Centre,Pending,12,,GN,Nzérékoré,Yamou,,,,,,,,To be set up
 CMC Kailahun MSF,SieKai,ETC,Functional,80,Medecins Sans Frontieres,SL,Eastern,Kailahun,,,,,,8.297871,-10.556686,"MSF treatment centre, concidering expanding to 100 beds"
 Buedu,SieBue,Triage,Functional,0,Medecins Sans Frontieres,SL,Eastern,Kailahun,,,,,,,,Referral site. If patients are determined to have Ebola they are then transferred to the isolation facility.
 Daru,SieDar,Triage,Functional,0,Medecins Sans Frontieres,SL,Eastern,Kailahun,,,,,,,,
