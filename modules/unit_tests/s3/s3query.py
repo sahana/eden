@@ -1856,10 +1856,21 @@ class URLQueryParserTests(unittest.TestCase):
             # Parse the bbox
             bbox, joins = rfilter.parse_bbox_query(resource, url_query)
 
-            expected_bbox = ((((gis_location.lon > 119.8) & \
-                            (gis_location.lon < 122.27)) & \
-                            (gis_location.lat > 12.86)) & \
-                            (gis_location.lat < 15.1))
+            expected_bbox = None
+            if current.deployment_settings.get_gis_spatialdb():
+                polygon = "POLYGON((119.8 12.86, 119.8 15.1, 122.27 15.1, 122.27 12.86, 119.8 12.86))"
+                try:
+                    expected_bbox = gis_location.the_geom.st_intersects(polygon)
+                except:
+                    # Not supported
+                    pass
+
+            if expected_bbox is None:
+                expected_bbox = ((((gis_location.lon > 119.8) & \
+                                (gis_location.lon < 122.27)) & \
+                                (gis_location.lat > 12.86)) & \
+                                (gis_location.lat < 15.1))
+
             assertEqual(bbox, expected_bbox)
 
             # Check the joins
@@ -1910,10 +1921,21 @@ class URLQueryParserTests(unittest.TestCase):
             # Parse the bbox
             bbox, joins = rfilter.parse_bbox_query(resource, url_query)
 
-            expected_bbox = ((((gis_location.lon > 119.8) & \
-                            (gis_location.lon < 122.27)) & \
-                            (gis_location.lat > 12.86)) & \
-                            (gis_location.lat < 15.1))
+            expected_bbox = None
+            if current.deployment_settings.get_gis_spatialdb():
+                polygon = "POLYGON((119.8 12.86, 119.8 15.1, 122.27 15.1, 122.27 12.86, 119.8 12.86))"
+                try:
+                    expected_bbox = gis_location.the_geom.st_intersects(polygon)
+                except:
+                    # Not supported
+                    pass
+
+            if expected_bbox is None:
+                expected_bbox = ((((gis_location.lon > 119.8) & \
+                                (gis_location.lon < 122.27)) & \
+                                (gis_location.lat > 12.86)) & \
+                                (gis_location.lat < 15.1))
+
             assertEqual(bbox, expected_bbox)
 
             # Check the joins
