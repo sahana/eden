@@ -235,7 +235,7 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 7
     )),
-		("stats", Storage(
+	("stats", Storage(
         name_nice = T("Statis"),
         #description = "Enabled because organization resourse model needs this",
         restricted = True,
