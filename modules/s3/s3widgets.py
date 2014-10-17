@@ -1268,7 +1268,7 @@ class S3DateWidget(FormWidget):
             #    # Urdu uses Arabic
             #    language = "ar"
             elif "-" in language:
-                parts = language.split("_", 1)
+                parts = language.split("-", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
             path = os.path.join(request.folder, "static", "scripts", "ui", "i18n", "datepicker-%s.js" % language)
             if os.path.exists(path):
