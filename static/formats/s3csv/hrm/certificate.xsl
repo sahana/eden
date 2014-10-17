@@ -11,8 +11,8 @@
          Expiry..........................hrm_certificate.expiry (in months)
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
     <xsl:import href="../commons.xsl"/>
+    <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->

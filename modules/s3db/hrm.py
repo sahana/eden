@@ -2781,7 +2781,8 @@ class S3HRSkillModel(S3Model):
                                      widget = widget,
                                      ),
                      Field("expiry", "integer",
-                           label = T("Expiry (months)")),
+                           label = T("Expiry (months)"),
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(

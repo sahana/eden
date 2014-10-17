@@ -456,10 +456,10 @@ class S3LocationModel(S3Model):
         """
 
         auth = current.auth
-        vars = form.vars
-        id = vars.id
+        form_vars = form.vars
+        id = form_vars.id
 
-        if vars.path and current.response.s3.bulk:
+        if form_vars.path and current.response.s3.bulk:
             # Don't import path from foreign sources as IDs won't match
             db = current.db
             db(db.gis_location.id == id).update(path=None)
@@ -469,7 +469,7 @@ class S3LocationModel(S3Model):
             # Update the Path (async if-possible)
             # (skip during prepop)
             feature = json.dumps(dict(id=id,
-                                      level=vars.get("level", False),
+                                      level=form_vars.get("level", False),
                                       ))
             current.s3task.async("gis_update_location_tree",
                                  args=[feature])
@@ -485,9 +485,11 @@ class S3LocationModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
+        auth = current.auth
         response = current.response
+        settings = current.deployment_settings
 
-        MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
+        MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
         form_vars = form.vars
         vars_get = form_vars.get
@@ -499,7 +501,7 @@ class S3LocationModel(S3Model):
 
         if addr_street and lat is None and lon is None and \
            response.s3.bulk:
-            geocoder = current.deployment_settings.get_gis_geocode_imported_addresses()
+            geocoder = settings.get_gis_geocode_imported_addresses()
             if geocoder:
                 # Geocode imported addresses
                 postcode = vars_get("postcode", None)
@@ -515,9 +517,14 @@ class S3LocationModel(S3Model):
                 results = gis.geocode(addr_street, postcode, Lx_ids, geocoder)
                 if isinstance(results, basestring):
                     # Error
-                    current.log.error(results)
-                    form.errors["addr_street"] = results
-                    return
+                    if auth.override and not \
+                       settings.get_gis_check_within_parent_boundaries():
+                        # Just Warn
+                        current.log.warning(results)
+                    else:
+                        # Make this check mandatory
+                        form.errors["addr_street"] = results
+                        return
                 else:
                     form_vars.lon = lon = results["lon"]
                     form_vars.lat = lat = results["lat"]
@@ -596,7 +603,7 @@ class S3LocationModel(S3Model):
                 #if lat not in (None, "") and lon not in (None, ""):
                 if lat and lon:
                     name = form_vars.name
-                    if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
+                    if parent and settings.get_gis_check_within_parent_boundaries():
                         # Check within Bounds of the Parent
                         # Rough (Bounding Box)
                         lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)

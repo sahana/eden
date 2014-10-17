@@ -18,8 +18,8 @@
          Comments........................hrm_certification.comments
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
     <xsl:import href="../commons.xsl"/>
+    <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
@@ -47,6 +47,16 @@
                 <xsl:call-template name="Certificate"/>
             </xsl:for-each>
 
+            <!-- Persons -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('person',
+                                                                   concat(col[@field='First Name'], '/',
+                                                                          col[@field='Middle Name'], '/',
+                                                                          col[@field='Last Name'], '/',
+                                                                          col[@field='Email'], '/',
+                                                                          col[@field='Mobile Phone']))[1])]">
+                <xsl:call-template name="Person"/>
+            </xsl:for-each>
+
             <xsl:apply-templates select="table/row"/>
         </s3xml>
     </xsl:template>
@@ -54,6 +64,8 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="CertName" select="col[@field='Certificate']"/>
+        <xsl:variable name="Number" select="col[@field='License Number']"/>
+        <xsl:variable name="Date" select="col[@field='Expiry Date']"/>
         <xsl:variable name="FirstName" select="col[@field='First Name']"/>
         <xsl:variable name="MiddleName" select="col[@field='Middle Name']"/>
         <xsl:variable name="LastName" select="col[@field='Last Name']"/>
@@ -76,9 +88,15 @@
                                                             $Mobile)"/>
                 </xsl:attribute>
             </reference>
-            <data field="number"><xsl:value-of select="col[@field='Mobile Phone']"/></data>
-            <data field="date"><xsl:value-of select="col[@field='Expiry Date']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="$Number!=''">
+                <data field="number"><xsl:value-of select="$Number"/></data>
+            </xsl:if>
+            <xsl:if test="$Date!=''">
+                <data field="date"><xsl:value-of select="$Date"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
         </resource>
 
     </xsl:template>
@@ -89,10 +107,9 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']"/>
 
         <resource name="hrm_certificate">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Cert:', $CertName)"/>
-                </xsl:attribute>
-            </reference>
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Cert:', $CertName)"/>
+            </xsl:attribute>
             <data field="name"><xsl:value-of select="$CertName"/></data>
             <xsl:if test="$OrgName!=''">
                 <!-- Link to Organisation -->
