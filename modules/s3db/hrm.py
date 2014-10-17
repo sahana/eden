@@ -3948,7 +3948,7 @@ class S3HRAwardModel(S3Model):
              )
 
     def model(self):
-        
+
         T = current.T
         db = current.db
 
@@ -7250,12 +7250,12 @@ def hrm_cv(r, **attr):
 
 # =============================================================================
 class hrm_Record(S3Method):
-    
+
     def __init__(self, salary=False, awards=False):
-        
+
         self.salary = salary
         self.awards = awards
-    
+
     def apply_method(self, r, **attr):
         """
             HR Record
@@ -7287,8 +7287,8 @@ class hrm_Record(S3Method):
                      "_class": "action-btn edit s3_modal",
                      },
                     {"label": T("Delete"),
-                     "_ajaxurl": r.url(component=component, 
-                                       component_id="[id]", 
+                     "_ajaxurl": r.url(component=component,
+                                       component_id="[id]",
                                        method="delete.json",
                                        ),
                      "_class": "action-btn delete-btn-ajax dt-ajax-delete",
@@ -7356,7 +7356,7 @@ class hrm_Record(S3Method):
                                     pagesize = None, # all records
                                     )
                 profile_widgets.append(teams_widget)
-                
+
             if controller == "hrm":
 
                 if self.salary:
