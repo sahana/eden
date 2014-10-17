@@ -1419,6 +1419,10 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = self.staff_level_duplicate,
+                  )
+
         ADD_STAFF_LEVEL = T("Add Staff Level")
         staff_level_represent = hrm_SalaryInfoRepresent(lookup="hrm_staff_level")
 
@@ -1434,6 +1438,10 @@ class S3HRSalaryModel(S3Model):
                                    label = T("Salary Grade"),
                              ),
                              *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = self.salary_grade_duplicate,
+                  )
 
         ADD_SALARY_GRADE = T("Add Salary Grade")
         salary_grade_represent = hrm_SalaryInfoRepresent(lookup="hrm_salary_grade")
@@ -1539,6 +1547,48 @@ class S3HRSalaryModel(S3Model):
 
         if start_date and end_date and start_date > end_date:
             form.errors["end_date"] = current.T("End date must be after start date.")
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def staff_level_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def salary_grade_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
         return
 
 # =============================================================================
@@ -3917,6 +3967,10 @@ class S3HRAwardModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = self.award_type_duplicate,
+                       )
+
         ADD_AWARD_TYPE = T("Add Award Type")
         award_type_represent = hrm_SalaryInfoRepresent(lookup="hrm_award_type")
 
@@ -3955,6 +4009,27 @@ class S3HRAwardModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def award_type_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3HRProgrammeModel(S3Model):
