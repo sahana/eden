@@ -43,8 +43,7 @@ class index(S3CustomController):
                                BR(),
                                A(current.T("Edit"),
                                  _href=URL(c="cms", f="post",
-                                           args=[item.id, "update"],
-                                           vars=get_vars),
+                                           args=[item.id, "update"]),
                                  _class="action-btn"))
                 else:
                     item = DIV(XML(item.body))
