@@ -23,10 +23,12 @@ class S3MainMenu(default.S3MainMenu):
             homepage(name=sysname),
             homepage("gis"),
             homepage("org"),
-            #homepage("hrm"),
+            homepage("hrm"),
             homepage("inv"),
             homepage("cr"),
             homepage("req"),
+			homepage("vol"),
+			homepage("project"),
        ]
 
 # END =========================================================================

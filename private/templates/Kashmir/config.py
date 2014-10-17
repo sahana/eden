@@ -229,4 +229,22 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 4
     )),
+	("vol", Storage(
+        name_nice = T("Voluntary"),
+        #description = "",
+        restricted = True,
+        module_type = 7
+    )),
+		("stats", Storage(
+        name_nice = T("Statis"),
+        #description = "Enabled because organization resourse model needs this",
+        restricted = True,
+        module_type = 8
+    )),
+	("project", Storage(
+        name_nice = T("Project"),
+        #description = "",
+        restricted = True,
+        module_type = 9
+    )),
 ])
