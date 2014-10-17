@@ -5,36 +5,24 @@
     <!-- **********************************************************************
          Certificates - CSV Import Stylesheet
 
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be hrm/competency_rating/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
-
          CSV fields:
          Name............................hrm_certificate.name
          Organisation....................hrm_certificate.organisation
          Expiry..........................hrm_certificate.expiry (in months)
 
     *********************************************************************** -->
+    <xsl:output method="xml"/>
     <xsl:import href="../commons.xsl"/>
 
-    <xsl:output method="xml"/>
-
-    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+    <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
+    <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
-
     <xsl:template match="/">
         <s3xml>
             <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs', col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 

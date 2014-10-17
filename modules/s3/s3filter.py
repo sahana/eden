@@ -771,44 +771,42 @@ class S3SliderFilter(S3RangeFilter):
         type = self.opts.get("type", "int")
 
         # Generate the input elements
+        field = str(field)
+        fieldname = field.replace(".", "_")
         selector = self.selector
         _variable = self._variable
         for operator in self.operator:
             input_id = "%s-%s" % (_id, operator)
-            variable = _variable(selector, operator)
+            input = INPUT(_name = input_id,
+                          _disabled = True,
+                          _id = input_id,
+                          _style = "border:0",
+                          )
             # Populate with the value, if given
             # if user has not set any of the limits, we get [] in values.
+            variable = _variable(selector, operator)
             value = values.get(variable, None)
             if value not in [None, []]:
                 if type(value) is list:
                     value = value[0]
-                input_box["_value"] = value
-                input_box["value"] = value
+                input["_value"] = value
+                input["value"] = value
 
-        validator = field.requires
-        field = str(field)
-        fieldname = field.replace(".", "_")
-        input = INPUT(_name = field.split(".")[1],
-                      _disabled = True,
-                      _id = fieldname,
-                      _style = "border:0",
-                      _value = value)
         slider = DIV(_id="%s_slider" % fieldname, **attributes)
 
         s3 = current.response.s3
 
+        validator = field.requires
         if isinstance(validator, IS_EMPTY_OR):
             validator = validator.other
-        
         _min = validator.minimum
-
         # Max Value depends upon validator type
         if isinstance(validator, IS_INT_IN_RANGE):
             _max = validator.maximum - 1
         elif isinstance(validator, IS_FLOAT_IN_RANGE):
             _max = validator.maximum 
 
-        if value is None:
+        if values is None:
             # JSONify
             value = "null"
             script = '''i18n.slider_help="%s"''' % \
@@ -816,21 +814,21 @@ class S3SliderFilter(S3RangeFilter):
             s3.js_global.append(script)
 
         if _type == "int":
-            script = '''S3.slider('%s',%i,%i,%i,%s)''' % (fieldname,
-                                                          _min,
-                                                          _max,
-                                                          step,
-                                                          value)
+            script = '''S3.range_slider('%s',%i,%i,%i,%s)''' % (fieldname,
+                                                                _min,
+                                                                _max,
+                                                                step,
+                                                                values)
         else:
             # Float
-            script = '''S3.slider('%s',%f,%f,%f,%s)''' % (fieldname,
-                                                          _min,
-                                                          _max,
-                                                          step,
-                                                          value)
+            script = '''S3.range_slider('%s',%f,%f,%f,%s)''' % (fieldname,
+                                                                _min,
+                                                                _max,
+                                                                step,
+                                                                values)
         s3.jquery_ready.append(script)
 
-        return TAG[""](input, slider)
+        return TAG[""](input1, input2, slider)
 
 # =============================================================================
 class S3LocationFilter(S3FilterWidget):
