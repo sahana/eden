@@ -674,7 +674,6 @@ class ContactTracingModel(S3Model):
 
         define_table = self.define_table
 
-        person_id = self.pr_person_id
         case_id = self.disease_case_id
 
         # =====================================================================
@@ -689,7 +688,7 @@ class ContactTracingModel(S3Model):
 
         tablename = "disease_tracing"
         table = define_table(tablename,
-                             self.disease_case_id(),
+                             case_id(),
                              s3_datetime("start_date",
                                          label = T("From"),
                                          widget = S3DateTimeWidget(set_min="disease_end_date",
@@ -720,7 +719,7 @@ class ContactTracingModel(S3Model):
                                                           represent,
                                                           ),
                                      sortby = "date",
-                                     comment = S3AddResourceLink(f="contact_tracing",
+                                     comment = S3AddResourceLink(f="tracing",
                                                                  tooltip=T("Add a new contact tracing information"),
                                                                  ),
                                      )
@@ -778,7 +777,9 @@ class ContactTracingModel(S3Model):
         table = define_table(tablename,
                              case_id(),
                              tracing_id(empty=True),
-                             person_id(),
+                             self.pr_person_id(requires = IS_ADD_PERSON_WIDGET2(),
+                                               widget = S3AddPersonWidget2(controller="pr"),
+                                               ),
                              s3_datetime(),
                              #self.gis_location_id(),
                              Field("exposure_type",
