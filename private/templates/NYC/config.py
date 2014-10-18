@@ -463,7 +463,7 @@ def customise_org_organisation_resource(r, tablename):
         ),
         S3SQLInlineComponent(
             "group_membership",
-            label = T("Coalition"),
+            label = T("Network"),
             fields = [("", "group_id"),
                       ("", "status_id"),
                       ],
@@ -859,6 +859,12 @@ def customise_org_group_controller(**attr):
             s3db.configure("pr_group",
                            list_fields = list_fields,
                            )
+
+        elif r.component_name == "organisation":
+            # Add Network Status to List Fields
+            list_fields = s3db.get_config("org_organisation", "list_fields")
+            list_fields.insert(1, "group_membership.status_id")
+
         return result
     s3.prep = custom_prep
 
