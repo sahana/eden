@@ -403,8 +403,8 @@ class S3OrganisationModel(S3Model):
         if settings.get_org_summary():
             # Include Summary fields in form 
             position = form_fields.index("year")
-            form_fields.insert(position+1, "summary.national_staff")
-            form_fields.insert(position+2, "summary.international_staff")    
+            form_fields.insert(position + 1, "summary.national_staff")
+            form_fields.insert(position + 2, "summary.international_staff")
         
         crud_form = S3SQLCustomForm(*form_fields
                                     )
