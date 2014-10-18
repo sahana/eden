@@ -246,6 +246,8 @@ class CaseTrackingModel(S3Model):
                              Field("case_number", length=64, unique=True,
                                    ),
                              person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       requires = IS_ADD_PERSON_WIDGET2(),
                                        widget = S3AddPersonWidget2(controller="pr"),
                                        ),
                              self.disease_disease_id(),
