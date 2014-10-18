@@ -133,6 +133,8 @@ if len(pop_list) > 0:
 
     # Override authorization
     auth.override = True
+    # No location tree updates
+    s3base.GIS.disable_update_location_tree = True
 
     # Load all Models to ensure all DB tables present
     s3db.load_all_models()
@@ -276,6 +278,8 @@ if len(pop_list) > 0:
 
     # Restore Auth
     auth.override = False
+    # Enable location tree updates
+    s3base.GIS.disable_update_location_tree = False
 
     # Update Location Tree (disabled during prepop)
     start = datetime.datetime.now()
