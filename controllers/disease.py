@@ -41,6 +41,10 @@ def case():
                 field.default = diseases.first().id
                 field.writable = False
 
+        if r.component_name == "contact":
+            field = r.component.table.tracing_id
+            field.readable = field.writable = False
+
         return True
     s3.prep = prep
     

@@ -715,9 +715,10 @@ class ContactTracingModel(S3Model):
         tracing_id = S3ReusableField("tracing_id", "reference %s" % tablename,
                                      label = T("Tracing Record"),
                                      represent = represent,
-                                     requires = IS_ONE_OF(db, "disease_tracing.id",
-                                                          represent,
-                                                          ),
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "disease_tracing.id",
+                                                              represent,
+                                                              )),
                                      sortby = "date",
                                      comment = S3AddResourceLink(f="tracing",
                                                                  tooltip=T("Add a new contact tracing information"),
@@ -776,7 +777,7 @@ class ContactTracingModel(S3Model):
         tablename = "disease_exposure"
         table = define_table(tablename,
                              case_id(),
-                             tracing_id(empty=True),
+                             tracing_id(),
                              self.pr_person_id(requires = IS_ADD_PERSON_WIDGET2(),
                                                widget = S3AddPersonWidget2(controller="pr"),
                                                ),
