@@ -93,22 +93,38 @@ settings.L10n.display_toolbar = False
 #
 settings.security.policy = 7 # Organisation-ACLs
 
-# RSS feeds
-#settings.frontpage.rss = [
-#    {"title": "Eden",
-#     # Trac timeline
-#     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
-#    },
-#    {"title": "Twitter",
-#     # @SahanaFOSS
-#     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-#     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
-#     # Hashtag
-#     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-#     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
-#    }
-#]
+# =============================================================================
+# Project Settings
+# Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
+settings.project.mode_3w = True
+# Uncomment this to use Codes for projects
+settings.project.codes = True
+# Uncomment this to enable Hazards in 3W projects
+#settings.project.hazards = True
+# Uncomment this to use multiple Budgets per project
+#settings.project.multiple_budgets = True
+# Uncomment this to use multiple Organisations per project
+settings.project.multiple_organisations = True
+# Uncomment this to enable Themes in 3W projects
+#settings.project.themes = True
+# Uncomment this to customise
+# Links to Filtered Components for Donors & Partners
+#settings.project.organisation_roles = {
+#    1: T("Lead Organization"),
+#    2: T("Partner Organization"),
+#    3: T("Donor"),
+#    #4: T("Customer"), # T("Beneficiary")?
+#    #5: T("Supplier"),
+#    9: T("Partner Organization"), # Needed for IFRC RMS interop ("Partner National Society")
+#}
 
+# =============================================================================
+# Requests
+#settings.req.use_commit = False
+# Restrict the type of requests that can be made, valid values in the
+# list are ["Stock", "People", "Other"]. If this is commented out then
+# all types will be valid.
+settings.req.req_type = ["Stock"]
 
 # -----------------------------------------------------------------------------
 def customise_hms_hospital_resource(r, tablename):
@@ -362,24 +378,25 @@ settings.modules = OrderedDict([
        restricted = True,
        module_type = 10,
     )),
-    #("inv", Storage(
-    #    name_nice = T("Warehouses"),
-    #    #description = "Receiving and Sending Items",
-    #    restricted = True,
-    #    module_type = 4
-    #)),
-    #("req", Storage(
-    #    name_nice = T("Requests"),
-    #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-    #    restricted = True,
-    #    module_type = 10,
-    #)),
-    #("project", Storage(
-    #    name_nice = T("Projects"),
-    #    #description = "Tracking of Projects, Activities and Tasks",
-    #    restricted = True,
-    #    module_type = 2
-    #)),
+    # Enabled as-requested by user
+    ("inv", Storage(
+        name_nice = T("Warehouses"),
+        #description = "Receiving and Sending Items",
+        restricted = True,
+        module_type = 4
+    )),
+    ("req", Storage(
+        name_nice = T("Requests"),
+        #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        restricted = True,
+        module_type = 10,
+    )),
+    ("project", Storage(
+        name_nice = T("Projects"),
+        #description = "Tracking of Projects, Activities and Tasks",
+        restricted = True,
+        module_type = 2
+    )),
     #("cr", Storage(
     #    name_nice = T("Shelters"),
     #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
