@@ -11,6 +11,21 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Monitoring upgrades {new_level:previous_levels}
+MONITORING_UPGRADE = {"OBSERVATION": ("NONE",
+                                     "FOLLOW-UP",
+                                     ),
+                      "DIAGNOSTICS": ("NONE",
+                                      "OBSERVATION",
+                                      "FOLLOW-UP",
+                                      ),
+                      "QUARANTINE": ("NONE",
+                                     "OBSERVATION",
+                                     "DIAGNOSTICS",
+                                     "FOLLOW-UP",
+                                     ),
+                      }
+
 # =============================================================================
 class DiseaseDataModel(S3Model):
 
@@ -21,14 +36,14 @@ class DiseaseDataModel(S3Model):
              )
 
     def model(self):
-        
+
         T = current.T
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
 
         define_table = self.define_table
-        
+
         # =====================================================================
         # Basic Disease Information
         #
@@ -67,7 +82,7 @@ class DiseaseDataModel(S3Model):
         self.add_components(tablename,
                             disease_symptom = "disease_id",
                             )
-                            
+
         self.configure(tablename,
                        super_entity = "doc_entity",
                        deduplicate = self.disease_duplicate,
@@ -112,7 +127,7 @@ class DiseaseDataModel(S3Model):
                                                           ),
                                      sortby = "name",
                                      )
-                                     
+
         # CRUD strings
         crud_strings[tablename] = Storage(
             label_create = T("Add Symptom"),
@@ -150,7 +165,7 @@ class DiseaseDataModel(S3Model):
     def disease_duplicate(item):
         """
             Disease import update detection
-            
+
             @param item: the import item
         """
 
@@ -195,14 +210,18 @@ class CaseTrackingModel(S3Model):
              )
 
     def model(self):
-        
+
+        # @todo: add treatment component?
+
         T = current.T
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
 
         define_table = self.define_table
-        
+        configure = self.configure
+        add_components = self.add_components
+
         person_id = self.pr_person_id
 
         # =====================================================================
@@ -220,20 +239,24 @@ class CaseTrackingModel(S3Model):
         # Monitoring Levels
         #
         monitoring_levels = {"NONE": T("No Monitoring"),
-                             "MONITORING": T("Routine Monitoring"),
-                             "DIAGNOSTICS": T("Targeted Diagnostics"),
+                             # Clinical observation required:
+                             "OBSERVATION": T("Observation"),
+                             # Targeted diagnostics required:
+                             "DIAGNOSTICS": T("Diagnostics"),
+                             # Quarantine required:
                              "QUARANTINE": T("Quarantine"),
-                             "FOLLOW-UP": T("Post-Quarantine Follow-Up"),
+                             # Follow-up after recovery:
+                             "FOLLOW-UP": T("Post-Recovery Follow-Up"),
                              }
         monitoring_level_represent = S3Represent(options = monitoring_levels)
         # =====================================================================
         # Illness status
         #
-        illness_status = {"UNKNOWN": T("Unknown"),
-                          "ASYMPTOMATIC": T("Asymptomatic"),
-                          "SYMPTOMATIC": T("Symptomatic"),
-                          "SEVERE": T("Severely Ill"),
-                          "DECEASED": T("Deceased"),
+        illness_status = {"UNKNOWN": T("Unknown, Not Checked"),
+                          "ASYMPTOMATIC": T("Asymptomatic, Clinical Signs Negative"),
+                          "SYMPTOMATIC": T("Symptomatic, Clinical Signs Positive"),
+                          "SEVERE": T("Severely Ill, Clinical Signs Positive"),
+                          "DECEASED": T("Deceased, Clinical Signs Positive"),
                           "RECOVERED": T("Recovered"),
                           }
         illness_status_represent = S3Represent(options = illness_status)
@@ -243,7 +266,8 @@ class CaseTrackingModel(S3Model):
         #
         tablename = "disease_case"
         table = define_table(tablename,
-                             Field("case_number", length=64, unique=True,
+                             Field("case_number", length=64,
+                                   requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "disease_case.case_number")),
                                    ),
                              person_id(empty = False,
                                        ondelete = "CASCADE",
@@ -251,8 +275,11 @@ class CaseTrackingModel(S3Model):
                                        widget = S3AddPersonWidget2(controller="pr"),
                                        ),
                              self.disease_disease_id(),
-                             s3_date(),
+                             #s3_date(), # date registered == created_on?
                              self.gis_location_id(),
+                             # @todo: add site ID for registering site?
+
+                             # Current illness status and symptom debut
                              Field("illness_status",
                                    label = T("Current Illness Status"),
                                    represent = illness_status_represent,
@@ -262,18 +289,29 @@ class CaseTrackingModel(S3Model):
                              s3_date("symptom_debut",
                                      label = T("Symptom Debut"),
                                      ),
+
+                             # Current diagnosis status and date of last status update
                              Field("diagnosis_status",
-                                   label = T("Current Diagnosis Status"),
+                                   label = T("Diagnosis Status"),
                                    represent = diagnosis_status_represent,
                                    requires = IS_IN_SET(diagnosis_status),
                                    default = "UNKNOWN",
                                    ),
+                             s3_date("diagnosis_date",
+                                     default = "now",
+                                     label = T("Diagnosis Date"),
+                                     ),
+
+                             # Current monitoring level and end date
                              Field("monitoring_level",
                                    label = T("Current Monitoring Level"),
                                    represent = monitoring_level_represent,
                                    requires = IS_IN_SET(monitoring_levels),
                                    default = "NONE",
                                    ),
+                             s3_date("monitoring_until",
+                                     label = T("Monitoring required until"),
+                                     ),
                              *s3_meta_fields())
 
         # Reusable Field
@@ -290,19 +328,19 @@ class CaseTrackingModel(S3Model):
                                   )
 
         # Components
-        self.add_components(tablename,
-                            disease_case_monitoring = "case_id",
-                            disease_case_diagnostics = "case_id",
-                            disease_tracing = "case_id",
-                            disease_exposure = ({"name": "exposure",
-                                                 "joinby": "person_id", 
-                                                 "pkey": "person_id",
-                                                 },
-                                                {"name": "contact",
-                                                 "joinby": "case_id",
-                                                 },
-                                                 ),
-                            )
+        add_components(tablename,
+                       disease_case_monitoring = "case_id",
+                       disease_case_diagnostics = "case_id",
+                       disease_tracing = "case_id",
+                       disease_exposure = ({"name": "exposure",
+                                            "joinby": "person_id",
+                                            "pkey": "person_id",
+                                            },
+                                            {"name": "contact",
+                                             "joinby": "case_id",
+                                             },
+                                            ),
+                       )
 
         report_fields = ["disease_id",
                          "location_id",
@@ -321,27 +359,6 @@ class CaseTrackingModel(S3Model):
                                        },
                           }
 
-        # Default anyway
-        # summary = [{"name": "add",
-                    # "common": True,
-                    # "widgets": [{"method": "create"}]
-                    # },
-                   # {"name": "table",
-                    # "label": "Table",
-                    # "widgets": [{"method": "datatable"}]
-                    # },
-                   # {"name": "report",
-                    # "label": "Report",
-                    # "widgets": [{"method": "report",
-                                 # "ajax_init": True}]
-                    # },
-                   # {"name": "map",
-                    # "label": "Map",
-                    # "widgets": [{"method": "map",
-                                 # "ajax_init": True}],
-                    # },
-                   # ]
-
         filter_widgets = [S3TextFilter(["case_number",
                                         "person_id$first_name",
                                         "person_id$middle_name",
@@ -359,13 +376,15 @@ class CaseTrackingModel(S3Model):
                           S3LocationFilter("location_id",
                                            ),
                           ]
-                          
-        self.configure(tablename,
-                       delete_next = URL(f="case", args=["summary"]),
-                       filter_widgets = filter_widgets,
-                       report_options = report_options,
-                       #summary = summary,
-                       )
+
+        configure(tablename,
+                  create_onvalidation = self.case_create_onvalidation,
+                  deduplicate = self.case_duplicate,
+                  delete_next = URL(f="case", args=["summary"]),
+                  filter_widgets = filter_widgets,
+                  onaccept = self.case_onaccept,
+                  report_options = report_options,
+                  )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -399,22 +418,22 @@ class CaseTrackingModel(S3Model):
         represent = S3Represent(lookup=tablename, fields=["case_id"])
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     label = T("Case"),
-                                  represent = represent,
-                                  requires = IS_ONE_OF(db, "disease_case.id",
-                                                       represent,
-                                                       ),
-                                  comment = S3AddResourceLink(f="case",
-                                                              tooltip=T("Add a new case"),
-                                                              ),
-                                  )
+                                    represent = represent,
+                                    requires = IS_ONE_OF(db, "disease_case.id",
+                                                         represent,
+                                                         ),
+                                    comment = S3AddResourceLink(f="case",
+                                                                tooltip=T("Add a new case"),
+                                                                ),
+                                    )
 
         # Components
-        self.add_components(tablename,
-                            disease_symptom = {"link": "disease_case_monitoring_symptom",
-                                               "joinby": "status_id",
-                                               "key": "symptom_id",
-                                               }
-                            )
+        add_components(tablename,
+                       disease_symptom = {"link": "disease_case_monitoring_symptom",
+                                          "joinby": "status_id",
+                                          "key": "symptom_id",
+                                          }
+                       )
 
         # Custom CRUD form
         crud_fields = ["case_id",
@@ -427,16 +446,16 @@ class CaseTrackingModel(S3Model):
                                        ),
                        "comments",
                        ]
-                     
-        self.configure(tablename,
-                       crud_form = S3SQLCustomForm(*crud_fields),
-                       list_fields = ["date", 
-                                      "illness_status",
-                                      (T("Symptoms"), "symptom.name"),
-                                      "comments",
-                                      ],
-                       onaccept = self.monitoring_onaccept,
-                       )
+
+        configure(tablename,
+                  crud_form = S3SQLCustomForm(*crud_fields),
+                  list_fields = ["date",
+                                 "illness_status",
+                                 (T("Symptoms"), "symptom.name"),
+                                 "comments",
+                                 ],
+                  onaccept = self.monitoring_onaccept,
+                  )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -479,7 +498,7 @@ class CaseTrackingModel(S3Model):
                              Field("probe_type"),
                              Field("probe_number", length = 64, unique = True,
                                    ),
-                             s3_date("probe_date", 
+                             s3_date("probe_date",
                                      default = "now",
                                      label = T("Probe Date"),
                                      ),
@@ -491,7 +510,7 @@ class CaseTrackingModel(S3Model):
                              # @todo: make a lookup table in DiseaseDataModel:
                              Field("test_type"),
                              Field("result"),
-                             s3_date("result_date", 
+                             s3_date("result_date",
                                      label = T("Result Date"),
                                      ),
                              Field("conclusion",
@@ -535,23 +554,120 @@ class CaseTrackingModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def monitoring_onaccept(form):
+    def get_case(person_id, disease_id):
         """
-            Update the illness status of the case from last monitoring entry
+            Find the case record for a person for a disease
+
+            @param person_id: the person record ID
+            @param disease_id: the disease record ID
         """
-        
+
+        ctable = current.s3db.disease_case
+        query = (ctable.person_id == person_id) & \
+                (ctable.disease_id == disease_id) & \
+                (ctable.deleted != True)
+        record = current.db(query).select(ctable.id,
+                                          ctable.case_number,
+                                          limitby = (0, 1)).first()
+        return record
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def case_create_onvalidation(cls, form):
+        """
+            Make sure that there's only one case per person and disease
+        """
+
+        formvars = form.vars
+        try:
+            case_id = formvars.id
+            person_id = formvars.person_id
+        except AttributeError, e:
+            return
+
+        if "disease_id" not in formvars:
+            disease_id = current.s3db.disease_case.disease_id.default
+        else:
+            disease_id = formvars.disease_id
+
+        record = cls.get_case(person_id, disease_id)
+        if record and record.id != case_id:
+            error = current.T("This case is already registered")
+            link = A(record.case_number,
+                     _href=URL(f="case", args=[record.id]))
+            form.errors.person_id = XML("%s: %s" % (error, link))
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_duplicate(item):
+        """
+            Case import update detection
+
+            @param item: the import item
+        """
+
+        data = item.data
+        case_number = data.get("case_number")
+        person_id = data.get("person_id")
+
+        table = item.table
+        if case_number:
+            query = (table.case_number == case_number) & \
+                    (table.deleted != True)
+        else:
+            disease_id = data.get("disease_id")
+            if person_id and disease_id:
+                query = (table.disease_id == disease_id) & \
+                        (table.person_id == person_id) & \
+                        (table.deleted != True)
+            else:
+                return
+
+        duplicate = current.db(query).select(table.id,
+                                             table.person_id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.data.person_id = duplicate.person_id
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_onaccept(form):
+        """
+            Propagate status updates of the case to high-risk contacts
+        """
+
         formvars = form.vars
         try:
             record_id = formvars.id
         except AttributeError:
             return
-        
+
+        disease_propagate_case_status(record_id)
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def monitoring_onaccept(form):
+        """
+            Update the illness status of the case from last monitoring entry
+        """
+
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            return
+
         db = current.db
         s3db = current.s3db
 
         ctable = s3db.disease_case
         mtable = s3db.disease_case_monitoring
-        
+
         # Get the case ID
         case_id = None
         if "case_id" not in formvars:
@@ -563,15 +679,17 @@ class CaseTrackingModel(S3Model):
             case_id = formvars.case_id
         if not case_id:
             return
-        
+
         query = (mtable.case_id == case_id) & \
                 (mtable.illness_status != None)
-        
+
         row = db(query).select(mtable.illness_status,
                                orderby = "disease_case_monitoring.date desc",
                                limitby = (0, 1)).first()
         if row:
             db(ctable.id == case_id).update(illness_status = row.illness_status)
+            # Propagate case status to contacts
+            disease_propagate_case_status(case_id)
         return
 
 # =============================================================================
@@ -639,7 +757,7 @@ class disease_CaseRepresent(S3Represent):
                     disease_name = disease[field]
                     if disease_name:
                         break
-                        
+
         if disease_name and case_number:
             case = "%s [%s]" % (case_number, disease_name)
         elif disease_name:
@@ -666,7 +784,7 @@ class ContactTracingModel(S3Model):
              )
 
     def model(self):
-        
+
         T = current.T
         db = current.db
 
@@ -679,7 +797,7 @@ class ContactTracingModel(S3Model):
         # =====================================================================
         # Tracing Information: when/where did a case pose risk for exposure?
         #
-        
+
         # Processing Status
         contact_tracing_status = {
             "OPEN": T("Open"),         # not all contacts identified yet
@@ -699,12 +817,14 @@ class ContactTracingModel(S3Model):
                                          widget = S3DateTimeWidget(set_max="disease_start_date",
                                                                    ),
                                          ),
+                             # @todo: add site_id?
                              self.gis_location_id(),
                              Field("circumstances", "text",
                                    ),
                              Field("status",
+                                   default = "OPEN",
                                    label = T("Tracing Status"),
-                                   requires = IS_IN_SET(contact_tracing_status),
+                                   requires = IS_IN_SET(contact_tracing_status, zero=None),
                                    represent = S3Represent(options=contact_tracing_status),
                                    ),
                              s3_comments(),
@@ -751,7 +871,7 @@ class ContactTracingModel(S3Model):
                             "FULL": T("Full"),
                             }
         protection_level_represent = S3Represent(options = protection_level)
-        
+
         # =====================================================================
         # Exposure Type
         #
@@ -760,7 +880,7 @@ class ContactTracingModel(S3Model):
                          "INDIRECT": T("Indirect"),
                          }
         exposure_type_represent = S3Represent(options = exposure_type)
-        
+
         # =====================================================================
         # Exposure Risk Level
         #
@@ -770,7 +890,7 @@ class ContactTracingModel(S3Model):
                          "HIGH": T("High risk exposure"),
                          }
         exposure_risk_represent = S3Represent(options = exposure_risk)
-        
+
         # =====================================================================
         # Exposure: when and how was a person exposed to the disease?
         #
@@ -801,6 +921,10 @@ class ContactTracingModel(S3Model):
                              Field("circumstances", "text"),
                              *s3_meta_fields())
 
+        self.configure(tablename,
+                       onaccept = self.exposure_onaccept,
+                       )
+
         crud_strings[tablename] = Storage(
             label_create = T("Add Exposure Information"),
             title_display = T("Exposure Details"),
@@ -823,9 +947,175 @@ class ContactTracingModel(S3Model):
 
         return dict()
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def exposure_onaccept(form):
+        """
+            @todo: docstring
+        """
+
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        # We need case_id, person_id and exposure_risk from the current record
+        if "case_id" not in formvars:
+            etable = s3db.disease_exposure
+            row = db(etable.id == record_id).select(etable.case_id,
+                                                    limitby = (0, 1)).first()
+            if not row:
+                return
+            case_id = row.case_id
+        else:
+            case_id = formvars.case_id
+
+        disease_propagate_case_status(case_id)
+        return
+
+# =============================================================================
+def disease_propagate_case_status(case_id):
+    """
+        @todo: docstring
+    """
+
+    db = current.db
+    s3db = current.s3db
+
+    risk_status = ("SYMPTOMATIC", "SEVERE", "DECEASED", "RECOVERED")
+
+    # Get the case
+    ctable = s3db.disease_case
+    query = (ctable.id == case_id) & \
+            (ctable.deleted != True)
+    case = db(query).select(ctable.id,
+                            ctable.created_on,
+                            ctable.disease_id,
+                            ctable.illness_status,
+                            ctable.symptom_debut,
+                            ctable.diagnosis_status,
+                            ctable.diagnosis_date,
+                            limitby = (0, 1)).first()
+    if case is None:
+        return
+    disease_id = case.disease_id
+
+    # Try to establish a symptom debut
+    symptom_debut = case.symptom_debut
+    if not symptom_debut:
+        # Get all monitoring entries for this case
+        mtable = s3db.disease_case_monitoring
+        query = (mtable.case_id == case_id) & \
+                (mtable.illness_status.belongs(risk_status)) & \
+                (mtable.deleted != True)
+        monitoring = db(query).select(mtable.date,
+                                      orderby = "disease_case_monitoring.date desc",
+                                      limitby = (0, 1)).first()
+        if monitoring:
+            symptom_debut = monitoring.date
+    if not symptom_debut and case.illness_status in risk_status:
+        symptom_debut = case.created_on
+    if not symptom_debut:
+        # Case is not known to ever have shown any symptoms
+        return
+
+    if case.diagnosis_status == "CONFIRMED-NEG" and \
+       case.diagnosis_date > symptom_debut:
+        # Case has been declared CONFIRMED-NEG after symptom debut
+        return
+
+    # Establish risk period (=symptom debut minus trace period)
+    dtable = s3db.disease_disease
+    query = (dtable.id == disease_id) & \
+            (dtable.deleted != True)
+    disease = db(query).select(dtable.trace_period,
+                               dtable.watch_period,
+                               limitby = (0, 1)).first()
+    if not disease:
+        return
+    trace_period = disease.trace_period
+    if trace_period:
+        risk_period_start = symptom_debut - datetime.timedelta(days = disease.trace_period)
+    else:
+        risk_period_start = symptom_debut
+
+    # Get all high-risk exposures after risk_period_start
+    etable = s3db.disease_exposure
+    query = (etable.case_id == case_id) & \
+            (etable.date >= risk_period_start) & \
+            (etable.exposure_risk == "HIGH") & \
+            (etable.deleted != True)
+    exposures = db(query).select(etable.person_id)
+    for exposure in exposures:
+        disease_create_case(disease_id,
+                            exposure.person_id,
+                            monitoring_level = "OBSERVATION",
+                            )
+    return
+
+# =============================================================================
+def disease_create_case(disease_id, person_id, monitoring_level=None):
+    """
+        @todo: docstring
+    """
+
+    ctable = current.s3db.disease_case
+    query = (ctable.person_id == person_id) & \
+            (ctable.disease_id == disease_id) & \
+            (ctable.deleted != True)
+
+    case = current.db(query).select(ctable.id,
+                                    ctable.monitoring_level,
+                                    limitby = (0, 1)).first()
+    if case:
+        case_id = case.id
+        if monitoring_level is not None:
+            disease_upgrade_monitoring(case_id,
+                                       monitoring_level,
+                                       case=case,
+                                       )
+    else:
+        case_id = ctable.insert(disease_id = disease_id,
+                                person_id = person_id,
+                                monitoring_level = monitoring_level,
+                                )
+    return case_id
+
+# =============================================================================
+def disease_upgrade_monitoring(case_id, level, case=None):
+    """
+        @todo: docstring
+    """
+
+    if level not in MONITORING_UPGRADE:
+        return False
+    else:
+        previous_levels = MONITORING_UPGRADE[level]
+
+    if case is None or "monitoring_level" not in case:
+        ctable = current.s3db.disease_case
+        query = (ctable.id == case_id) & \
+                (ctable.monitoring_level.belongs(previous_levels)) & \
+                (ctable.deleted != True)
+
+        case = current.db(query).select(ctable.id,
+                                        limitby = (0, 1)).first()
+    elif case.monitoring_level not in previous_levels:
+        return
+    if case:
+        case.update_record(monitoring_level = level)
+    return True
+
 # =============================================================================
 def disease_rheader(r, tabs=None):
-    
+    """
+        @todo: docstring
+    """
+
     T = current.T
     if r.representation != "html":
         return None
@@ -838,12 +1128,12 @@ def disease_rheader(r, tabs=None):
                 (T("Symptoms"), "symptom"),
                 (T("Documents"), "document"),
                 ]
-               
+
         rheader_fields = [["name"],
                           ["code"],
                           ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-        
+
     elif resourcename == "case":
 
         tabs = [(T("Basic Details"), None),

@@ -705,6 +705,8 @@ class S3AddPersonWidget2(FormWidget):
             date_of_birth = None
         if settings.get_pr_request_gender():
             gender = ptable.gender
+            if request.env.request_method == "POST":
+                gender.requires = IS_EMPTY_OR(gender.requires)
         else:
             gender = None
 
@@ -5751,14 +5753,14 @@ class S3SliderWidget(FormWidget):
 
         if isinstance(validator, IS_EMPTY_OR):
             validator = validator.other
-        
+
         self.min = validator.minimum
 
         # Max Value depends upon validator type
         if isinstance(validator, IS_INT_IN_RANGE):
             self.max = validator.maximum - 1
         elif isinstance(validator, IS_FLOAT_IN_RANGE):
-            self.max = validator.maximum 
+            self.max = validator.maximum
 
         if value is None:
             # JSONify
@@ -6065,7 +6067,7 @@ class S3PasswordWidget(FormWidget):
                                                                      fieldname),
                             _id = "%s_%s_unmask" % (tablename, fieldname),
                             )
-        return DIV(password_input, 
+        return DIV(password_input,
                    password_unmask,
                    )
 
@@ -6295,24 +6297,24 @@ def search_ac(r, **attr):
 
 # =============================================================================
 class ICON(I):
-    """ 
+    """
         Helper class to render <i> tags for icons, mapping abstract
         icon names to theme-specific CSS classes. The standard icon
         set can be configured using settings.ui.icons
-        
+
         e.g. ICON("book"), gives:
             - font-awesome: <i class="icon icon-book">
             - foundation: <i class="fi-book">
-            
+
         Standard sets are defined below.
-            
+
         Additional icons (beyond the standard set) can be configured
         per deployment (settings.ui.custom_icons).
-        
+
         If <i class=""> is not suitable for the CSS, a custom HTML
         layout can be configured as settings.ui.icon_layout. See
         S3Config for more details.
-        
+
         @todo: apply in widgets/crud/profile+datalist layouts etc.
         @todo: better abstract names for the icons to indicate what they
                symbolize rather than what they depict, e.g. "sitemap" is
@@ -6321,7 +6323,7 @@ class ICON(I):
     """
 
     # -------------------------------------------------------------------------
-    # Standard icon sets, 
+    # Standard icon sets,
     # - "_base" can be used to define a common CSS class for all icons
     #
     icons = {
@@ -6487,7 +6489,7 @@ class ICON(I):
             return layout(self)
 
         css_class = self.css_class(self.name)
-        
+
         if css_class:
             self.add_class(css_class)
 
@@ -6496,7 +6498,7 @@ class ICON(I):
     # -------------------------------------------------------------------------
     @classmethod
     def css_class(cls, name):
-        
+
         settings = current.deployment_settings
         fallback = "font-awesome"
 

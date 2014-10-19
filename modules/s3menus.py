@@ -676,21 +676,22 @@ class S3OptionsMenu(object):
     def disease():
         """ Disease Case Tracking and Contact Tracing """
 
-        return M()(M("Diseases",
-                     c="disease", f="disease")(
-                        M("Create", m="create"),
-                   ),
-                   M("Cases",
-                     c="disease", f="case", m="summary")(
+        return M(c="disease")(
+                    M("Cases",
+                      c="disease", f="case", m="summary")(
                         M("Create", m="create"),
                         M("Watch List", m="summary", 
-                          vars={"~.monitoring_level__belongs": "MONITORING"}),
-                   ),
-                   M("Contact Tracing",
-                     c="disease", f="tracing")(
+                          vars={"~.monitoring_level__belongs": "OBSERVATION,DIAGNOSTICS"}),
+                    ),
+                    M("Contact Tracing",
+                      c="disease", f="tracing")(
                        M("Create", m="create"),
-                   ),
-                  )
+                    ),
+                    M("Diseases",
+                      c="disease", f="disease")(
+                        M("Create", m="create"),
+                    ),
+               )
 
     # -------------------------------------------------------------------------
     @staticmethod
