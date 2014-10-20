@@ -209,10 +209,10 @@
   content: "\f0ad";
 }
 .icon-caret-down:before {
-  /* Used for filter forms and profile update form */
+  /* Used for filter forms, profile update form and AddPersonWidget2 deduplicator */
   content: "\f0d7";
 }
 .icon-caret-up:before {
-  /* Used for filter forms and profile update form */
+  /* Used for filter forms, profile update form and AddPersonWidget2 deduplicator  */
   content: "\f0d8";
 }
