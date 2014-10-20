@@ -27,8 +27,8 @@ class S3MainMenu(default.S3MainMenu):
             homepage("inv"),
             homepage("cr"),
             homepage("req"),
-			homepage("vol"),
-			homepage("project"),
+            homepage("vol"),
+            homepage("project"),
        ]
 
 # END =========================================================================
