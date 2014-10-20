@@ -158,12 +158,25 @@ def formstyle_foundation_2col(form, fields, *args, **kwargs):
     def render_row(row_id, label, widget, comment, hidden=False):
 
         if hasattr(widget, "element"):
+            widget_attr = widget.element().attributes
+            widget_classes = widget_attr.get("_class", "")
+            collapse = "collapse" in widget_classes
+            if collapse:
+                widget.element().attributes["_class"] = widget_classes.replace("collapse", "")
+            columns = "columns" in widget_classes
             submit = widget.element("input", _type="submit")
             if submit:
                 submit.add_class("small primary button")
+        else:
+            collapse = False
+            columns = False
 
-        _class = "form-row row hide" if hidden else "form-row row"
-        hints = DIV(render_tooltip(label, comment), _class="inline-tooltip")
+        _class = "form-row row"
+        if collapse:
+            _class = "%s collapse" % _class
+        if hidden:
+            _class = "%s hide" % _class
+        hints = render_tooltip(label, comment)
         if isinstance(label, LABEL):
             label.add_class("right inline")
         else:
@@ -172,10 +185,26 @@ def formstyle_foundation_2col(form, fields, *args, **kwargs):
         label = DIV(label,
                     _class="small-2 columns",
                     )
-        controls = DIV(widget,
-                       hints,
-                       _class="small-10 columns",
-                       )
+
+        if hints:
+            hints = DIV(hints,
+                        _class="inline-tooltip",
+                        )
+            if columns:
+                # Don't wrap again
+                widget.append(hints)
+
+        if columns:
+            # Don't wrap again
+            controls = widget
+            # Ensure we fill-out empty space
+            controls.add_class("end")
+        else:
+            controls = DIV(widget,
+                           hints,
+                           _class="small-10 columns",
+                           )
+
         return DIV(label, controls, _class=_class, _id=row_id)
 
     if args:

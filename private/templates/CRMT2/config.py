@@ -1104,11 +1104,13 @@ def customise_org_organisation_controller(**attr):
                                     ),
                                S3SQLInlineComponentMultiSelectWidget(
                                     "sector",
+                                    columns = 4,
                                     label = T("Sectors"),
                                     field = "sector_id",
                                     ),
                                S3SQLInlineLink(
                                     "service",
+                                    columns = 4,
                                     label = T("Services"),
                                     field = "service_id",
                                     leafonly = False,

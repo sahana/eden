@@ -2850,6 +2850,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             w_opts = widget_opts(("represent",
                                   "multiple",
                                   "leafonly",
+                                  "columns",
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)
@@ -2861,6 +2862,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "selectedList",
                                   "noneSelectedText",
                                   "multiple",
+                                  "columns",
                                   ))
             w = S3MultiSelectWidget(**w_opts)
 
@@ -3580,8 +3582,8 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
         """
-            Widget method for this form element. Renders a SELECT MULTIPLE with
-            all available options.
+            Widget method for this form element.
+            Renders a SELECT MULTIPLE with all available options.
             This widget uses s3.inline_component.js to facilitate
             manipulation of the entries.
 
@@ -3606,9 +3608,11 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
 
         T = current.T
 
+        opts = self.options
+
         jquery_ready = current.response.s3.jquery_ready
 
-        script = self.options.get("script", None)
+        script = opts.get("script", None)
         if script and script not in jquery_ready:
             jquery_ready.append(script)
 
@@ -3628,7 +3632,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = self.options.get("translate", None)
+            translate = opts.get("translate", None)
             if translate is None:
                 # Try to lookup presence of reusable field
                 # - how do we know the module though?
@@ -3641,9 +3645,9 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                             translate = represent.translate
 
             # Render the options
-            opts = []
+            _opts = []
             vals = []
-            oappend = opts.append
+            oappend = _opts.append
             for _id in options:
                 option = options[_id]
                 v = option["name"]
@@ -3655,7 +3659,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                 if option["selected"]:
                     vals.append(_id)
 
-            widget = SELECT(*opts,
+            widget = SELECT(*_opts,
                             value=vals,
                             _id=field_name,
                             _name=field_name,
@@ -3665,7 +3669,6 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                             )
             # jQueryUI widget
             # (this section could be made optional)
-            opts = self.options
             opt_filter = opts.get("filter", False)
             header = opts.get("header", False)
             selectedList = opts.get("selectedList", 3)
@@ -3706,6 +3709,9 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                      #_class="inline-multiselect",
                      _name="%s_widget" % field_name,
                      )
+        columns = opts.get("columns")
+        if columns:
+            output.add_class("small-%s columns" % columns)
 
         return output
 

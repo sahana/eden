@@ -4861,6 +4861,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                  multiple = True,
                  selectedList = 3,
                  noneSelectedText = "Select",
+                 columns = None,
                  create = None,
                  ):
         """
@@ -4880,6 +4881,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                                  selected")
             @param noneSelectedText: text to show on the widget button when no option is
                                      selected (automatic l10n, no T() required)
+            @param columns: set the columns width class for Foundation forms
             @param create: options to create a new record {c: 'controller',
                                                            f: 'function',
                                                            label: 'label',
@@ -4896,6 +4898,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         self.multiple = multiple
         self.selectedList = selectedList
         self.noneSelectedText = noneSelectedText
+        self.columns = columns
         self.create = create
 
     def __call__(self, field, value, **attr):
@@ -4924,8 +4927,12 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                 # Base widget requires single value, so enforce that
                 # if necessary, and convert to string to match options
                 value = str(value[0] if type(value) is list else value)
-        widget = TAG[""](w.widget(field, value, **attr),
-                         requires = field.requires)
+        widget = w.widget(field, value, **attr)
+        options_len = len(widget)
+        if self.columns:
+            widget = DIV(widget,
+                         _class = "small-%s columns" % self.columns,
+                         )
 
         # Filter and header for multiselect options list
         filter_opt = self.filter
@@ -4935,7 +4942,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             header_opt = False
         if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
             max_options = 10 if filter_opt == "auto" else filter_opt
-            if len(widget[0]) > max_options:
+            if options_len > max_options:
                 filter_opt = True
             else:
                 filter_opt = False
@@ -5084,11 +5091,12 @@ class S3HierarchyWidget(FormWidget):
     """ Selector Widget for Hierarchies """
 
     def __init__(self,
-                 lookup=None,
-                 represent=None,
-                 multiple=True,
-                 leafonly=True,
-                 filter=None,
+                 lookup = None,
+                 represent = None,
+                 multiple = True,
+                 leafonly = True,
+                 filter = None,
+                 columns = None,
                  ):
         """
             Constructor
@@ -5101,14 +5109,15 @@ class S3HierarchyWidget(FormWidget):
             @param leafonly: True = only leaf nodes can be selected
                              False = any nodes to be selected independently
             @param filter: filter query for the lookup table
+            @param columns: set the columns width class for Foundation forms
         """
 
         self.lookup = lookup
         self.represent = represent
         self.filter = filter
-
         self.multiple = multiple
         self.leafonly = leafonly
+        self.columns = columns
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -5164,6 +5173,10 @@ class S3HierarchyWidget(FormWidget):
                          _class = "s3-hierarchy-tree"),
                      **attr)
         widget.add_class("s3-hierarchy-widget")
+        if self.columns:
+            widget = DIV(widget,
+                         _class = "small-%s columns" % self.columns,
+                         )
 
         s3 = current.response.s3
         scripts = s3.scripts
@@ -5803,10 +5816,12 @@ class S3StringWidget(StringWidget):
     """
 
     def __init__(self,
+                 columns = 10,
                  placeholder = None,
                  prefix = None,
                  textarea = False,
                  ):
+        self.cols = columns
         self.placeholder = placeholder
         self.prefix = prefix
         self.textarea = textarea
@@ -5831,15 +5846,22 @@ class S3StringWidget(StringWidget):
         if self.prefix:
             # NB These classes target Foundation Themes
             widget = TAG[""](DIV(SPAN(self.prefix,
-                                      _class="prefix"),
-                                 _class="small-1 columns"),
+                                      _class="prefix",
+                                      ),
+                                 _class="small-1 columns",
+                                 ),
                              DIV(widget,
-                                 _class="small-9 columns"),
+                                 _class="small-%s columns" % (self.cols - 1),
+                                 ),
+                             # Tell the formstyle not to wrap & collapse
+                             _class="columns collapse",
                              )
+        else:
+            widget = DIV(widget,
+                         _class="small-%s columns" % self.cols,
+                         )
 
-        return TAG[""](widget,
-                       requires = field.requires
-                       )
+        return widget
 
 # =============================================================================
 class S3TimeIntervalWidget(FormWidget):
