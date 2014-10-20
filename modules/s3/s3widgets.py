@@ -5180,17 +5180,26 @@ class S3HierarchyWidget(FormWidget):
             if isinstance(v, (int, long)) or str(v).isdigit():
                 append(v)
 
+        # Custom theme
+        theme = current.deployment_settings.get_ui_hierarchy_theme()
+
         if s3.debug:
-            script = "%s/jquery.jstree.js" % script_dir
+            script = "%s/jstree.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
             script = "%s/S3/s3.jquery.ui.hierarchicalopts.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
+            style = "%s/jstree.css" % theme.get("css", "plugins")
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
         else:
             script = "%s/S3/s3.jstree.min.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
+            style = "%s/jstree.min.css" % theme.get("css", "plugins")
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
 
         T = current.T
 
@@ -5198,17 +5207,18 @@ class S3HierarchyWidget(FormWidget):
                        "selectedText": str(T("# selected")),
                        "noneSelectedText": str(T("Select")),
                        "noOptionsText": str(T("No options available")),
-                       "multiple": self.multiple,
-                       "leafonly": leafonly,
                        }
-
-        # Custom theme
-        theme = current.deployment_settings.get_ui_hierarchy_theme()
-        if theme and hasattr(theme, "rsplit"):
-            folder, theme = ([None] + theme.rsplit("/", 1))[-2:]
-            if folder:
-                widget_opts["themesFolder"] = folder
-            widget_opts["theme"] = theme
+        # Only include non-default options
+        if not self.multiple:
+            widget_opts["multiple"] = False
+        if not leafonly:
+            widget_opts["leafonly"] = False
+        icons = theme.get("icons", False)
+        if icons:
+            widget_opts["icons"] = icons
+        stripes = theme.get("stripes", True)
+        if not stripes:
+            widget_opts["stripes"] = stripes
 
         script = '''$('#%(widget_id)s').hierarchicalopts(%(widget_opts)s)''' % \
                  {"widget_id": widget_id,

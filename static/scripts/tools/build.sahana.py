@@ -615,6 +615,7 @@ def docss():
     full = False
     if full:
         for filename in ("joyride",
+                         "jstree",
                          "spectrum",
                          ):
             print "Merging %s styles." % filename

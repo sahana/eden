@@ -393,8 +393,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.use_button_icons = True
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 #settings.ui.multiselect_widget = True
-# Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
-#settings.ui.hierarchy_theme = "default"
+# Theme for the S3HierarchyWidget
+#settings.ui.hierarchy_theme = dict(css = "../themes/MYTHEME",
+#                                   icons = True,
+#                                   stripes = False,
+#                                   )
 # Uncomment to show a default cancel button in standalone create/update forms
 #settings.ui.default_cancel_button = True
 # Uncomment to disable responsive behavior of datatables

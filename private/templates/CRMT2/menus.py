@@ -103,7 +103,7 @@ class S3MainMenu(default.S3MainMenu):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            menu_auth = MM("Login", c="default", f="user", m="login",
+            menu_auth = MM("Log in", c="default", f="user", m="login",
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)
         else:

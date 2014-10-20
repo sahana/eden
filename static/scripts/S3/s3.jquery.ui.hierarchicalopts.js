@@ -31,8 +31,8 @@
             noOptionsText: 'No options available',
             multiple: true,
             leafonly: true,
-            themesFolder: 'static/styles/jstree',
-            theme: 'default',
+            icons: false,
+            stripes: true,
             htmlTitles: true
         },
 
@@ -142,11 +142,9 @@
             tree.jstree({
                 'core': {
                     'themes': {
-                        url: true,
-                        dir: S3.Ap.concat('/', opts.themesFolder, '/'),
-                        name: opts.theme,
-                        icons: false,
-                        stripes: true
+                        name: 's3',
+                        icons: opts.icons,
+                        stripes: opts.stripes
                     },
                     animation: 100,
                     multiple: multiple,

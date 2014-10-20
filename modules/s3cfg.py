@@ -1590,14 +1590,14 @@ class S3Config(Storage):
 
     def get_ui_hierarchy_theme(self):
         """
-            Theme for the S3HierarchyWidget: folder, either relative to
-            static/styles/jstree (e.g. "default"), or relative to the
-            application (e.g. "static/styles/jstree/default")
-
-            @note: for right-to-left scripts, the theme folder is expected
-                   to be <themename>-rtl (e.g. "default-rtl")
+            Theme for the S3HierarchyWidget.
+            'css' is a folder relative to static/styles
+            - /jstree.css or /jstree.min.css is added as-required
         """
-        return self.ui.get("hierarchy_theme", None)
+        return self.ui.get("hierarchy_theme", dict(css = "plugins",
+                                                   icons = False,
+                                                   stripes = True,
+                                                   ))
 
     # =========================================================================
     # Messaging

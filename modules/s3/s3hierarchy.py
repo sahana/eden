@@ -129,11 +129,14 @@ class S3HierarchyCRUD(S3Method):
             "addURL": r.url(method="create", representation="popup"),
         }
         theme = current.deployment_settings.get_ui_hierarchy_theme()
-        if theme and hasattr(theme, "rsplit"):
-            folder, theme = ([None] + theme.rsplit("/", 1))[-2:]
-            if folder:
-                widget_opts["themesFolder"] = folder
-            widget_opts["theme"] = theme
+        icons = theme.get("icons", False)
+        if icons:
+            # Only include non-default options
+            widget_opts["icons"] = icons
+        stripes = theme.get("stripes", True)
+        if not stripes:
+            # Only include non-default options
+            widget_opts["stripes"] = stripes
         self.include_scripts(widget_id, widget_opts)
 
         # View
@@ -216,24 +219,31 @@ class S3HierarchyCRUD(S3Method):
     # -------------------------------------------------------------------------
     @staticmethod
     def include_scripts(widget_id, widget_opts):
-        """ Include JS needed for hierarchical CRUD """
+        """ Include JS & CSS needed for hierarchical CRUD """
 
         s3 = current.response.s3
         scripts = s3.scripts
+        theme = current.deployment_settings.get_ui_hierarchy_theme()
 
-        # Include static scripts
+        # Include static scripts & stylesheets
         script_dir = "/%s/static/scripts" % current.request.application
         if s3.debug:
-            script = "%s/jquery.jstree.js" % script_dir
+            script = "%s/jstree.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
             script = "%s/S3/s3.jquery.ui.hierarchicalcrud.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
+            style = "%s/jstree.css" % theme.get("css", "plugins")
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
         else:
             script = "%s/S3/s3.jstree.min.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
+            style = "%s/jstree.min.css" % theme.get("css", "plugins")
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
 
         # Apply the widget JS
         script = '''$('#%(widget_id)s').hierarchicalcrud(%(widget_opts)s)''' % \
