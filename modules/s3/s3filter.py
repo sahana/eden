@@ -69,7 +69,7 @@ from s3rest import S3Method
 from s3query import S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
+from s3widgets import ICON, S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -2152,8 +2152,8 @@ class S3FilterForm(object):
                                       },
                               _class="filter-advanced-label",
                               ),
-                         I(" ", _class="icon-down"),
-                         I(" ", _class="icon-up", _style="display:none"),
+                         ICON("down"),
+                         ICON("up", _style="display:none"),
                          _class=_class
                          )
             controls.append(advanced)

@@ -35,6 +35,7 @@ from gluon.storage import Storage
 from s3crud import S3CRUD
 from s3report import S3Report
 from s3query import FS
+from s3widgets import ICON
 
 # =============================================================================
 class S3Profile(S3CRUD):
@@ -190,8 +191,8 @@ class S3Profile(S3CRUD):
                                         "off": hide,
                                         },
                                 ),
-                           I(" ", _class="icon-down", _style=style_show),
-                           I(" ", _class="icon-up", _style=style_hide),
+                           ICON("down", _style=style_show),
+                           ICON("up", _style=style_hide),
                            data = {"hidden": hidden},
                            _class="form-toggle action-lnk",
                            )

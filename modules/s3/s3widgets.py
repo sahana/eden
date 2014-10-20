@@ -6466,16 +6466,16 @@ class ICON(I):
     }
 
     # -------------------------------------------------------------------------
-    def __init__(self, name, _class=None):
+    def __init__(self, name, **attr):
         """
             Constructor
 
             @param name: the abstract icon name
-            @param _class: additional HTML classes (optional)
+            @param attr: additional HTML attributes (optional)
         """
 
         self.name = name
-        super(ICON, self).__init__(" ", _class=_class)
+        super(ICON, self).__init__(" ", **attr)
 
     # -------------------------------------------------------------------------
     def xml(self):
