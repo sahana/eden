@@ -1839,11 +1839,39 @@ def customise_pr_person_controller(**attr):
 
                 if r.method == "record" and r.controller == "hrm":
                     # Custom config for method handler
+
+                    from s3 import FS
+                    
+                    # RC employment history
+                    org_type_name = "organisation_id$organisation_organisation_type.organisation_type_id$name"
+                    widget_filter = (FS(org_type_name) == "Red Cross / Red Crescent") & \
+                                    (FS("organisation") == None)
+                    org_experience = {"label": T("Red Cross Employment History"),
+                                      "label_create": T("Add Employment"),
+                                      "filter": widget_filter,
+                                      }
+
+                    # Non-RC employment history
+                    widget_filter = FS("organisation") != None
+                    other_experience = {"label": T("Other Employments"),
+                                        "label_create": T("Add Employment"),
+                                        "list_fields": ["start_date",
+                                                        "end_date",
+                                                        "organisation",
+                                                        "job_title",
+                                                        "comments",
+                                                        ],
+                                        "filter": widget_filter,
+                                        }
+
                     s3db.set_method("pr", "person",     
                                     method = "record",
                                     action = s3db.hrm_Record(salary=True, 
                                                              awards=True,
+                                                             org_experience=org_experience,
+                                                             other_experience=other_experience,
                                                              ))
+
                     # Custom list_fields for hrm_salary (exclude monthly amount)
                     stable = s3db.hrm_salary
                     stable.salary_grade_id.label = T("Grade Code")
@@ -1950,6 +1978,7 @@ def customise_pr_person_controller(**attr):
             elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience
                 # Use simple free-text variants
+                table.organisation_id.default = None # should not default in this case
                 table.organisation.readable = True
                 table.organisation.writable = True
                 table.job_title.readable = True
@@ -1971,6 +2000,11 @@ def customise_pr_person_controller(**attr):
                                               "end_date",
                                               ],
                                )
+            elif component_name == "salary":
+                stable = s3db.hrm_salary
+                stable.salary_grade_id.label = T("Grade Code")
+                field = stable.monthly_amount
+                field.readable = field.writable = False
 
         return True
     s3.prep = custom_prep

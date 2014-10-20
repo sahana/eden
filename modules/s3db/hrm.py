@@ -5985,7 +5985,6 @@ def hrm_experience_controller():
                 refresh = r.get_vars.get("refresh")
                 if refresh and refresh.startswith("profile-list-hrm_experience"):
                     field.readable = field.writable = False
-
         return True
     current.response.s3.prep = prep
 
@@ -7252,10 +7251,27 @@ def hrm_cv(r, **attr):
 # =============================================================================
 class hrm_Record(S3Method):
 
-    def __init__(self, salary=False, awards=False):
+    def __init__(self, 
+                 salary=False, 
+                 awards=False, 
+                 org_experience=False, 
+                 other_experience=False):
+        """
+            Constructor
+            
+            @param salary: show a Salary widget
+            @param awards: show an Awards History widget
+            @param org_experience: show widget with Professional Experience
+                                   within registered organisations, can be a
+                                   dict with overrides for widget defaults
+            @param other_experience: show widget with Other Experience, can
+                                     be a dict with overrides for widget defaults
+        """
 
         self.salary = salary
         self.awards = awards
+        self.org_experience = org_experience
+        self.other_experience = other_experience
 
     def apply_method(self, r, **attr):
         """
@@ -7267,7 +7283,7 @@ class hrm_Record(S3Method):
         """
 
         if r.name == "person" and r.id and not r.component and \
-        r.representation in ("html", "aadata"):
+           r.representation in ("html", "aadata"):
             T = current.T
             s3db = current.s3db
             settings = current.deployment_settings
@@ -7386,6 +7402,72 @@ class hrm_Record(S3Method):
                                   create_component = "staff_award",
                                   pagesize = None, # all records
                                   )
+                    profile_widgets.append(widget)
+
+                org_experience = self.org_experience
+                if org_experience:
+                    # Use primary hrm/experience controller
+                    # (=> defaults to staff-style experience form)
+                    
+                    # Need different action URLs
+                    def experience_row_actions(component):
+                        return lambda r, list_id: [
+                            {"label": T("Open"),
+                            "url": URL(f="experience",
+                                       args=["[id]", "update.popup"],
+                                       vars={"refresh": list_id},
+                                       ),
+                            "_class": "action-btn edit s3_modal",
+                            },
+                            {"label": T("Delete"),
+                            "_ajaxurl": URL(f="experience",
+                                            args=["[id]", "delete.json"],
+                                            ),
+                            "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                            },
+                        ]
+
+                    # Configure widget, apply overrides
+                    widget = dict(label = T("Experience"),
+                                  label_create = T("Add Experience"),
+                                  type = "datatable",
+                                  actions = experience_row_actions("experience"),
+                                  tablename = "hrm_experience",
+                                  pagesize = None, # all records
+                                  )
+                    if isinstance(org_experience, dict):
+                        widget.update(org_experience)
+
+                    # Retain the person filter
+                    person_filter = FS("person_id") == r.id
+                    widget_filter = widget.get("filter")
+                    if widget_filter:
+                        widget["filter"] = person_filter & widget_filter
+                    else:
+                        widget["filter"] = person_filter
+
+                    profile_widgets.append(widget)
+
+                other_experience = self.other_experience
+                if other_experience:
+                    # Use experience component in hrm/person controller
+                    # (=> defaults to vol-style experience form)
+                    
+                    # Configure widget and apply overrides
+                    widget = dict(label = "Experience",
+                                  label_create = "Add Experience",
+                                  type = "datatable",
+                                  actions = dt_row_actions("experience"),
+                                  tablename = "hrm_experience",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "experience",
+                                  pagesize = None, # all records
+                                  )
+                    if isinstance(other_experience, dict):
+                        widget.update(other_experience)
+
                     profile_widgets.append(widget)
 
             if r.representation == "html":
