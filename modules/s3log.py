@@ -129,6 +129,7 @@ class S3Log(object):
             self.debug = self.ignore
             return
 
+        self.name = __name__
         logger = logging.getLogger(__name__)
         logger.propagate = False
         logger.setLevel(self.log_level)
@@ -165,6 +166,16 @@ class S3Log(object):
         """
 
         return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_name():
+        """
+            Provide name to allow access to the logger.
+            This may be useful in testing, to capture messages.
+        """
+
+        return __name__
 
     # -------------------------------------------------------------------------
     @staticmethod
