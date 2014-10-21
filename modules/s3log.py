@@ -329,18 +329,22 @@ class S3LogRecorder(object):
 
     # -------------------------------------------------------------------------
     def stop(self):
-        """ Stop recording S3Log messages """
-        
+        """ Stop recording S3Log messages (and return the messages) """
+
         handler = self.handler
-        if handler is None:
-            return
+        if handler is not None:
 
-        logger = logging.getLogger(__name__)
-        logger.removeHandler(handler)
+            logger = logging.getLogger(__name__)
+            logger.removeHandler(handler)
 
-        handler.close()
-        self.handler = None
-        return
+            handler.close()
+            self.handler = None
+
+        strbuf = self.strbuf
+        if strbuf is not None:
+            return strbuf.getvalue()
+        else:
+            return ""
 
     # -------------------------------------------------------------------------
     def clear(self):
