@@ -771,9 +771,12 @@ class GIS(object):
         return bearing
 
     # -------------------------------------------------------------------------
-    def get_bounds(self, features=None, parent=None):
+    def get_bounds(self, features=None, parent=None,
+                   bbox_min_size = 0.05, bbox_inset = 0.007):
         """
-            Calculate the Bounds of a list of Point Features
+            Calculate the Bounds of a list of Point Features, suitable for
+            setting map bounds. If no features are supplied, the current map
+            configuration bounds will be returned.
             e.g. When a map is displayed that focuses on a collection of points,
                  the map is zoomed to show just the region bounding the points.
             e.g. To use in GPX export for correct zooming
@@ -782,87 +785,20 @@ class GIS(object):
             are inset from the border.
 
             @param features: A list of point features
-            @param parent: A location_id to provide a polygonal bounds suitable
-                           for validating child locations
+            @param bbox_min_size: Minimum bounding box - gives a minimum width
+                   and height in degrees for the region shown.
+                   Without this, a map showing a single point would not show any
+                   extent around that point.
+            @param bbox_inset: Bounding box insets - adds a small amount of
+                   distance outside the points.
+                   Without this, the outermost points would be on the bounding
+                   box, and might not be visible.
+            @return: An appropriate map bounding box, as a dict:
+                   dict(lon_min=lon_min, lat_min=lat_min,
+                        lon_max=lon_max, lat_max=lat_max)
 
             @ToDo: Support Polygons (separate function?)
         """
-
-        if parent:
-            table = current.s3db.gis_location
-            db = current.db
-            parent = db(table.id == parent).select(table.id,
-                                                   table.level,
-                                                   table.name,
-                                                   table.parent,
-                                                   table.path,
-                                                   table.lon,
-                                                   table.lat,
-                                                   table.lon_min,
-                                                   table.lat_min,
-                                                   table.lon_max,
-                                                   table.lat_max).first()
-            if parent.lon_min is None or \
-               parent.lon_max is None or \
-               parent.lat_min is None or \
-               parent.lat_max is None or \
-               parent.lon == parent.lon_min or \
-               parent.lon == parent.lon_max or \
-               parent.lat == parent.lat_min or \
-               parent.lat == parent.lat_max:
-                # This is unsuitable - try higher parent
-                if parent.level == "L1":
-                    if parent.parent:
-                        # We can trust that L0 should have the data from prepop
-                        L0 = db(table.id == parent.parent).select(table.name,
-                                                                  table.lon_min,
-                                                                  table.lat_min,
-                                                                  table.lon_max,
-                                                                  table.lat_max).first()
-                        return L0.lat_min, L0.lon_min, L0.lat_max, L0.lon_max, L0.name
-                if parent.path:
-                    path = parent.path
-                else:
-                    path = GIS.update_location_tree(dict(id=parent.id,
-                                                         level=parent.level))
-                path_list = map(int, path.split("/"))
-                rows = db(table.id.belongs(path_list)).select(table.level,
-                                                              table.name,
-                                                              table.lat,
-                                                              table.lon,
-                                                              table.lon_min,
-                                                              table.lat_min,
-                                                              table.lon_max,
-                                                              table.lat_max,
-                                                              orderby=table.level)
-                row_list = rows.as_list()
-                row_list.reverse()
-                ok = False
-                for row in row_list:
-                    if row["lon_min"] is not None and row["lon_max"] is not None and \
-                       row["lat_min"] is not None and row["lat_max"] is not None and \
-                       row["lon"] != row["lon_min"] != row["lon_max"] and \
-                       row["lat"] != row["lat_min"] != row["lat_max"]:
-                        ok = True
-                        break
-
-                if ok:
-                    # This level is suitable
-                    return row["lat_min"], row["lon_min"], row["lat_max"], row["lon_max"], row["name"]
-            else:
-                # This level is suitable
-                return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
-
-            return -90, -180, 90, 180, None
-
-        # Minimum Bounding Box
-        # - gives a minimum width and height in degrees for the region shown.
-        # Without this, a map showing a single point would not show any extent around that point.
-        bbox_min_size = 0.05
-        # Bounding Box Insets
-        # - adds a small amount of distance outside the points.
-        # Without this, the outermost points would be on the bounding box, and might not be visible.
-        bbox_inset = 0.007
 
         if features:
 
@@ -943,6 +879,101 @@ class GIS(object):
                     lon_max=lon_max, lat_max=lat_max)
 
     # -------------------------------------------------------------------------
+    def get_parent_bounds(self, parent=None):
+        """
+            Get bounds from the specified (parent) location and its ancestors.
+            This is used to validate lat, lon, and bounds for child locations.
+
+            Caution: This calls update_location_tree if the parent bounds are
+            not set. During prepopulate, update_location_tree is disabled,
+            so unless the parent contains its own bounds (i.e. they do not need
+            to be propagated down from its ancestors), this will not provide a
+            check on location nesting. Prepopulate data should be prepared to
+            be correct. A set of candidate prepopulate data can be tested by
+            importing after prepopulate is run.
+
+            @param parent: A location_id to provide bounds suitable
+                           for validating child locations
+            @return: bounding box and parent location name, as a list:
+                [lat_min, lon_min, lat_max, lon_max, parent_name]
+
+            @ToDo: Support Polygons (separate function?)
+        """
+
+        table = current.s3db.gis_location
+        db = current.db
+        parent = db(table.id == parent).select(table.id,
+                                               table.level,
+                                               table.name,
+                                               table.parent,
+                                               table.path,
+                                               table.lon,
+                                               table.lat,
+                                               table.lon_min,
+                                               table.lat_min,
+                                               table.lon_max,
+                                               table.lat_max).first()
+        if parent.lon_min is None or \
+           parent.lon_max is None or \
+           parent.lat_min is None or \
+           parent.lat_max is None or \
+           parent.lon_min == parent.lon_max or \
+           parent.lat_min == parent.lat_max:
+            # This is unsuitable - try higher parent
+            if parent.level == "L1":
+                if parent.parent:
+                    # We can trust that L0 should have the data from prepop
+                    L0 = db(table.id == parent.parent).select(table.name,
+                                                              table.lon_min,
+                                                              table.lat_min,
+                                                              table.lon_max,
+                                                              table.lat_max).first()
+                    return L0.lat_min, L0.lon_min, L0.lat_max, L0.lon_max, L0.name
+            if parent.path:
+                path = parent.path
+            else:
+                # This will return None during prepopulate.
+                path = GIS.update_location_tree(dict(id=parent.id,
+                                                     level=parent.level))
+            if path:
+                path_list = map(int, path.split("/"))
+                rows = db(table.id.belongs(path_list)).select(table.level,
+                                                              table.name,
+                                                              table.lat,
+                                                              table.lon,
+                                                              table.lon_min,
+                                                              table.lat_min,
+                                                              table.lon_max,
+                                                              table.lat_max,
+                                                              orderby=table.level)
+                row_list = rows.as_list()
+                row_list.reverse()
+                ok = False
+                for row in row_list:
+                    if row["lon_min"] is not None and row["lon_max"] is not None and \
+                       row["lat_min"] is not None and row["lat_max"] is not None and \
+                       row["lon"] != row["lon_min"] != row["lon_max"] and \
+                       row["lat"] != row["lat_min"] != row["lat_max"]:
+                        ok = True
+                        break
+
+                if ok:
+                    # This level is suitable
+                    return row["lat_min"], row["lon_min"], row["lat_max"], row["lon_max"], row["name"]
+
+        else:
+            # This level is suitable
+            return parent.lat_min, parent.lon_min, parent.lat_max, parent.lon_max, parent.name
+
+        # No ancestor bounds available -- use the active gis_config.
+        config = GIS.get_config()
+        if config:
+            return config.lat_min, config.lon_min, config.lat_max, config.lon_max, None
+
+        # Last resort -- fall back to no restriction.
+        return -90, -180, 90, 180, None
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def _lookup_parent_path(feature_id):
         """
@@ -1018,6 +1049,9 @@ class GIS(object):
 
             Assists lazy update of a database without location paths by calling
             update_location_tree to get the path.
+
+            Note that during prepopulate, update_location_tree is disabled,
+            in which case this will only return the immediate parent.
         """
 
         if not feature or "path" not in feature or "parent" not in feature:
@@ -1029,23 +1063,28 @@ class GIS(object):
             else:
                 path = GIS.update_location_tree(feature)
 
-            path_list = map(int, path.split("/"))
-            if len(path_list) == 1:
-                # No parents - path contains only this feature.
+            if path:
+                path_list = map(int, path.split("/"))
+                if len(path_list) == 1:
+                    # No parents - path contains only this feature.
+                    return None
+                # Get only ancestors
+                path_list = path_list[:-1]
+                # Get path in the desired -- reversed -- order.
+                path_list.reverse()
+            elif feature.parent:
+                path_list = [feature.parent]
+            else:
                 return None
-
-            # Get path in the desired order, without current feature.
-            reverse_path = path_list[:-1]
-            reverse_path.reverse()
 
             # If only ids are wanted, stop here.
             if ids_only:
-                return reverse_path
+                return path_list
 
             # Retrieve parents - order in which they're returned is arbitrary.
             s3db = current.s3db
             table = s3db.gis_location
-            query = (table.id.belongs(reverse_path))
+            query = (table.id.belongs(path_list))
             fields = [table.id, table.name, table.level, table.lat, table.lon]
             unordered_parents = current.db(query).select(cache=s3db.cache,
                                                          *fields)
@@ -1053,7 +1092,7 @@ class GIS(object):
             # Reorder parents in order of reversed path.
             unordered_ids = [row.id for row in unordered_parents]
             parents = [unordered_parents[unordered_ids.index(path_id)]
-                       for path_id in reverse_path if path_id in unordered_ids]
+                       for path_id in path_list if path_id in unordered_ids]
 
             return parents
 
@@ -4384,18 +4423,33 @@ class GIS(object):
         return res
 
     # -------------------------------------------------------------------------
+    # Used to disable location tree updates during prepopulate.
+    # It is not appropriate to use auth.override for this, as there are times
+    # (e.g. during tests) when auth.override is turned on, but location tree
+    # updates should still be enabled.
+    disable_update_location_tree = False
+
     @staticmethod
-    def update_location_tree(feature=None):
+    def update_location_tree(feature=None, all_locations=False):
         """
             Update GIS Locations' Materialized path, Lx locations, Lat/Lon & the_geom
 
             @param feature: a feature dict to update the tree for
             - if not provided then update the whole tree
+            @param all_locations: passed to recursive calls to indicate that this
+            is an update of the whole tree. Used to avoid repeated attempts to
+            update hierarchy locations with missing data (e.g. lacking some
+            ancestor level).
 
             returns the path of the feature
 
             Called onaccept for locations (async, where-possible)
         """
+
+        # During prepopulate, for efficiency, we don't update the location
+        # tree, but rather leave that til after prepopulate is complete.
+        if GIS.disable_update_location_tree:
+            return None
 
         db = current.db
         try:
@@ -4463,24 +4517,41 @@ class GIS(object):
                     current.log.error("S3GIS: Unable to set bounds & centroid for feature %s: MemoryError" % feature.id)
 
         # ---------------------------------------------------------------------
-        def propagate(parent):
+        def propagate(parent, all_locations=False):
             """
                 Propagate Lat/Lon down to any Features which inherit from this one
+
+                @param parent: gis_location id of parent
+                @param all_locations: passed to recursive calls to indicate that
+                this is an update of the whole tree
             """
+
+            # During a whole tree update, the levels are processed in order
+            # from L0 down through specific locations with no level.  Since
+            # all locations will be processed eventually, processing children
+            # is not needed. Note a whole tree update may occur after
+            # prepopulate, during normal operation, if import_admin_areas is
+            # used. (Note this assumes only hierarchy locations can be parents,
+            # else children among specific locations could be processed in any
+            # order, and the "parents before children" assumption would not
+            # hold.)
+            if all_locations:
+                return
 
             query = (table.parent == parent) & \
                     (table.inherited == True)
             rows = db(query).select(*fields)
             for row in rows:
                 try:
-                    update_location_tree(row)
+                    update_location_tree(row) # all_locations is False here
                 except RuntimeError:
                     current.log.error("Cannot propagate inherited latlon to child %s of location ID %s: too much recursion" % \
                         (row.id, parent))
 
 
         if not feature:
-            # Do the whole database
+            # We are updating all locations.
+            all_locations = True
             # Do in chunks to save memory and also do in correct order
             all_fields = (table.id, table.name, table.gis_feature_type,
                           table.L0, table.L1, table.L2, table.L3, table.L4,
@@ -4501,7 +4572,7 @@ class GIS(object):
                         if wkt and not wkt.startswith("POI"):
                             # Polygons aren't inherited
                             feature["inherited"] = False
-                        update_location_tree(feature)
+                        update_location_tree(feature)  # all_locations is False here
             # All Done!
             return
 
@@ -4516,6 +4587,15 @@ class GIS(object):
         level = feature.get("level", False)
         name = feature.get("name", False)
         path = feature.get("path", False)
+        # If we're processing all locations, and this is a hierarchy location,
+        # and has already been processed (as evidenced by having a path) do not
+        # process it again. Locations with a gap in their ancestor levels will
+        # be regarded as missing data and sent through update_location_tree
+        # recursively, but that missing data will not be filled in after the
+        # location is processed once during the all-locations call.
+        if all_locations and path and level:
+            # This hierarchy location is already finalized.
+            return path
         lat = feature.get("lat", False)
         lon = feature.get("lon", False)
         wkt = feature.get("wkt", False)
@@ -4562,7 +4642,7 @@ class GIS(object):
                 fixup(feature)
 
             # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id)
+            propagate(id, all_locations)
 
             return path
 
@@ -4644,7 +4724,7 @@ class GIS(object):
                 fixup(feature)
 
             # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id)
+            propagate(id, all_locations)
 
             return _path
 
@@ -4746,7 +4826,7 @@ class GIS(object):
                 fixup(feature)
 
             # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id)
+            propagate(id, all_locations)
 
             return _path
 
@@ -4803,7 +4883,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4823,7 +4903,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4882,7 +4962,7 @@ class GIS(object):
                 fixup(feature)
 
             # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id)
+            propagate(id, all_locations)
 
             return _path
 
@@ -4943,7 +5023,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4966,7 +5046,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -4987,7 +5067,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5048,7 +5128,7 @@ class GIS(object):
                 fixup(feature)
 
             # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id)
+            propagate(id, all_locations)
 
             return _path
 
@@ -5113,7 +5193,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5139,7 +5219,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5163,7 +5243,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5185,7 +5265,7 @@ class GIS(object):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
-                        _path = update_location_tree(Lx)
+                        _path = update_location_tree(Lx, all_locations)
                         _path = "%s/%s" % (_path, id)
                         # Query again
                         Lx = db(table.id == parent).select(table.L0,
@@ -5248,7 +5328,7 @@ class GIS(object):
                 fixup(feature)
 
             # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id)
+            propagate(id, all_locations)
 
             return _path
 
@@ -5323,7 +5403,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = update_location_tree(Lx)
+                    _path = update_location_tree(Lx, all_locations)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5351,7 +5431,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = update_location_tree(Lx)
+                    _path = update_location_tree(Lx, all_locations)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5376,7 +5456,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = update_location_tree(Lx)
+                    _path = update_location_tree(Lx, all_locations)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5398,7 +5478,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = update_location_tree(Lx)
+                    _path = update_location_tree(Lx, all_locations)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5417,7 +5497,7 @@ class GIS(object):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
-                    _path = update_location_tree(Lx)
+                    _path = update_location_tree(Lx, all_locations)
                     _path = "%s/%s" % (_path, id)
                     # Query again
                     Lx = db(table.id == parent).select(table.L0,
@@ -5471,7 +5551,7 @@ class GIS(object):
             fixup(feature)
 
         # Ensure that any locations which inherit their latlon from this one get updated
-        propagate(id)
+        propagate(id, all_locations)
 
         return _path
 
