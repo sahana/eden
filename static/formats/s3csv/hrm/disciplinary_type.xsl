@@ -3,15 +3,15 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Award Types - CSV Import Stylesheet
+         Disciplinary Action Types - CSV Import Stylesheet
 
          CSV fields:
-         Name............................hrm_award.name
-         Organisation....................hrm_award.organisation_id
+         Name............................hrm_disciplinary_type.name
+         Organisation....................hrm_disciplinary_type.organisation_id
 
     *********************************************************************** -->
     <xsl:import href="../commons.xsl"/>
-    <xsl:import href="award.xsl"/>
+    <xsl:import href="disciplinary.xsl"/>
 
     <xsl:output method="xml"/>
 
@@ -31,7 +31,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-        <xsl:call-template name="AwardType"/>
+        <xsl:call-template name="DisciplinaryActionType"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->
