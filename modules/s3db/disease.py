@@ -271,8 +271,6 @@ class CaseTrackingModel(S3Model):
                                    ),
                              person_id(empty = False,
                                        ondelete = "CASCADE",
-                                       requires = IS_ADD_PERSON_WIDGET2(),
-                                       widget = S3AddPersonWidget2(controller="pr"),
                                        ),
                              self.disease_disease_id(),
                              #s3_date(), # date registered == created_on?
