@@ -36,6 +36,7 @@ __all__ = ("S3HRModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
            "S3HRAwardModel",
+           "S3HRDisciplinaryActionModel",
            "S3HRProgrammeModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
@@ -1424,7 +1425,7 @@ class S3HRSalaryModel(S3Model):
                   )
 
         ADD_STAFF_LEVEL = T("Add Staff Level")
-        staff_level_represent = hrm_SalaryInfoRepresent(lookup="hrm_staff_level")
+        staff_level_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_staff_level")
 
         # =====================================================================
         # Salary Grades
@@ -1444,7 +1445,7 @@ class S3HRSalaryModel(S3Model):
                   )
 
         ADD_SALARY_GRADE = T("Add Salary Grade")
-        salary_grade_represent = hrm_SalaryInfoRepresent(lookup="hrm_salary_grade")
+        salary_grade_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_salary_grade")
 
         # =====================================================================
         # Salary
@@ -1592,16 +1593,19 @@ class S3HRSalaryModel(S3Model):
         return
 
 # =============================================================================
-class hrm_SalaryInfoRepresent(S3Represent):
+class hrm_OrgSpecificTypeRepresent(S3Represent):
+    """ Representation of organisation-specific taxonomic categories """
 
-    def __init__(self, lookup="hrm_salary_grade"):
+    def __init__(self, lookup=None):
         """ Constructor """
 
-        super(hrm_SalaryInfoRepresent, self).__init__(lookup = lookup,
-                                                      fields = ["name",
-                                                                "organisation_id",
-                                                                ]
-                                                      )
+        if lookup is None:
+            raise SyntaxError("must specify a lookup table")
+
+        fields = ("name", "organisation_id")
+        super(hrm_OrgSpecificTypeRepresent, self).__init__(lookup = lookup,
+                                                           fields = fields,
+                                                           )
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
@@ -3973,7 +3977,7 @@ class S3HRAwardModel(S3Model):
                        )
 
         ADD_AWARD_TYPE = T("Add Award Type")
-        award_type_represent = hrm_SalaryInfoRepresent(lookup="hrm_award_type")
+        award_type_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_award_type")
 
         # =====================================================================
         # Salary
@@ -4014,6 +4018,88 @@ class S3HRAwardModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def award_type_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
+class S3HRDisciplinaryActionModel(S3Model):
+    """ Data model for staff disciplinary record """
+
+    names = ("hrm_disciplinary_type",
+             "hrm_disciplinary_action",
+             )
+
+    def model(self):
+        
+        T = current.T
+
+        define_table = self.define_table
+
+        # =====================================================================
+        # Types of disciplinary action
+        #
+        tablename = "hrm_disciplinary_type"
+        define_table(tablename,
+                     self.org_organisation_id(
+                        requires = self.org_organisation_requires(updateable=True),
+                     ),
+                     Field("name",
+                           label = T("Disciplinary Action Type"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+                     
+        self.configure(tablename,
+                       deduplicate = self.disciplinary_type_duplicate,
+                       )
+
+        ADD_DISCIPLINARY_TYPE = T("Add Disciplinary Action Type")
+        disciplinary_type_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_disciplinary_type")
+
+        # =====================================================================
+        # Disciplinary record
+        tablename = "hrm_disciplinary_action"
+        define_table(tablename,
+                     self.pr_person_id(),
+                     s3_date(),
+                     Field("disciplinary_body"),
+                     Field("disciplinary_type_id", "reference hrm_disciplinary_type",
+                           label = T("Disciplinary Action Type"),
+                           represent = disciplinary_type_represent,
+                           requires = IS_ONE_OF(current.db,
+                                                "hrm_disciplinary_type.id",
+                                                disciplinary_type_represent,
+                                                ),
+                           comment = S3AddResourceLink(f = "disciplinary_type",
+                                                       label = ADD_DISCIPLINARY_TYPE,
+                                                       ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def disciplinary_type_duplicate(item):
         """ Callback to identify the original of an update import item """
 
         data = item.data
@@ -7253,7 +7339,8 @@ class hrm_Record(S3Method):
 
     def __init__(self, 
                  salary=False, 
-                 awards=False, 
+                 awards=False,
+                 disciplinary_record=False,
                  org_experience=False, 
                  other_experience=False):
         """
@@ -7261,6 +7348,7 @@ class hrm_Record(S3Method):
             
             @param salary: show a Salary widget
             @param awards: show an Awards History widget
+            @param disciplinary_record: show a Disciplinary Record widget
             @param org_experience: show widget with Professional Experience
                                    within registered organisations, can be a
                                    dict with overrides for widget defaults
@@ -7270,6 +7358,7 @@ class hrm_Record(S3Method):
 
         self.salary = salary
         self.awards = awards
+        self.disciplinary_record = disciplinary_record
         self.org_experience = org_experience
         self.other_experience = other_experience
 
@@ -7376,34 +7465,6 @@ class hrm_Record(S3Method):
 
             if controller == "hrm":
 
-                if self.salary:
-                    widget = dict(label = T("Salary"),
-                                  label_create = T("Add Salary"),
-                                  type = "datatable",
-                                  actions = dt_row_actions("salary"),
-                                  tablename = "hrm_salary",
-                                  context = "person",
-                                  create_controller = controller,
-                                  create_function = "person",
-                                  create_component = "salary",
-                                  pagesize = None, # all records
-                                  )
-                    profile_widgets.append(widget)
-
-                if self.awards:
-                    widget = dict(label = T("Awards"),
-                                  label_create = T("Add Award"),
-                                  type = "datatable",
-                                  actions = dt_row_actions("staff_award"),
-                                  tablename = "hrm_award",
-                                  context = "person",
-                                  create_controller = controller,
-                                  create_function = "person",
-                                  create_component = "staff_award",
-                                  pagesize = None, # all records
-                                  )
-                    profile_widgets.append(widget)
-
                 org_experience = self.org_experience
                 if org_experience:
                     # Use primary hrm/experience controller
@@ -7468,6 +7529,48 @@ class hrm_Record(S3Method):
                     if isinstance(other_experience, dict):
                         widget.update(other_experience)
 
+                    profile_widgets.append(widget)
+
+                if self.awards:
+                    widget = dict(label = T("Awards"),
+                                  label_create = T("Add Award"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("staff_award"),
+                                  tablename = "hrm_award",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "staff_award",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
+
+                if self.disciplinary_record:
+                    widget = dict(label = T("Disciplinary Record"),
+                                  label_create = T("Add Disciplinary Action"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("disciplinary_action"),
+                                  tablename = "hrm_disciplinary_action",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "disciplinary_action",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
+
+                if self.salary:
+                    widget = dict(label = T("Salary"),
+                                  label_create = T("Add Salary"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("salary"),
+                                  tablename = "hrm_salary",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "salary",
+                                  pagesize = None, # all records
+                                  )
                     profile_widgets.append(widget)
 
             if r.representation == "html":

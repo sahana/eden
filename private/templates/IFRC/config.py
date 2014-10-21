@@ -1868,6 +1868,7 @@ def customise_pr_person_controller(**attr):
                                     method = "record",
                                     action = s3db.hrm_Record(salary=True, 
                                                              awards=True,
+                                                             disciplinary_record=True,
                                                              org_experience=org_experience,
                                                              other_experience=other_experience,
                                                              ))
@@ -1889,6 +1890,14 @@ def customise_pr_person_controller(**attr):
                                                   "award_type_id",
                                                   ],
                                     orderby = "hrm_award.date desc"
+                                   )
+                    # Custom list_fields for hrm_disciplinary_action
+                    s3db.configure("hrm_disciplinary_action",
+                                   list_fields = ["date",
+                                                  "disciplinary_body",
+                                                  "disciplinary_type_id",
+                                                  ],
+                                    orderby = "hrm_disciplinary_action.date desc"
                                    )
                     # Custom form for hrm_human_resource
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
