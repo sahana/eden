@@ -1016,6 +1016,11 @@ settings.customise_hrm_department_controller = customise_hrm_department_controll
 def customise_hrm_experience_controller(**attr):
 
     s3 = current.response.s3
+    
+    root_org = current.auth.root_org_name()
+    vnrc = False
+    if root_org == VNRC:
+        vnrc = True
 
     standard_prep = s3.prep
     def custom_prep(r):
@@ -1023,6 +1028,10 @@ def customise_hrm_experience_controller(**attr):
         if callable(standard_prep):
             if not standard_prep(r):
                 return False
+                
+        if vnrc:
+            department_id = r.table.department_id
+            department_id.readable = department_id.writable = True
 
         if r.controller == "deploy":
             # Popups in RDRT Member Profile
@@ -1762,6 +1771,12 @@ def customise_pr_person_controller(**attr):
                                        filterby = "type",
                                        filter_opts = (4,),
                                        )
+        elif component_name == "physical_description":
+            from gluon import DIV
+            dtable = r.component.table
+            dtable.medical_conditions.comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Medical Conditions"),
+                                                                      T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
         elif r.method == "cv" or component_name == "education":
             if vnrc:
                 etable = s3db.pr_education
@@ -1859,13 +1874,20 @@ def customise_pr_person_controller(**attr):
                     # Custom config for method handler
 
                     from s3 import FS
-                    
+
                     # RC employment history
                     org_type_name = "organisation_id$organisation_organisation_type.organisation_type_id$name"
                     widget_filter = (FS(org_type_name) == "Red Cross / Red Crescent") & \
                                     (FS("organisation") == None)
                     org_experience = {"label": T("Red Cross Employment History"),
                                       "label_create": T("Add Employment"),
+                                      "list_fields": ["start_date",
+                                                      "end_date",
+                                                      "organisation",
+                                                      "department_id",
+                                                      "job_title",
+                                                      "employment_type",
+                                                      ],
                                       "filter": widget_filter,
                                       }
 
@@ -1877,7 +1899,6 @@ def customise_pr_person_controller(**attr):
                                                         "end_date",
                                                         "organisation",
                                                         "job_title",
-                                                        "comments",
                                                         ],
                                         "filter": widget_filter,
                                         }

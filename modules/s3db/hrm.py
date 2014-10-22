@@ -3854,6 +3854,9 @@ class S3HRExperienceModel(S3Model):
                                 writable = False,
                                 ),
                           self.org_organisation_id(widget = org_widget),
+                          self.hrm_department_id(readable=False,
+                                                 writable=False,
+                                                 ),
                           # Alternate free-text form especially suitable for volunteers
                           Field("organisation",
                                 label = T("Organization"),
