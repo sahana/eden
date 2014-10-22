@@ -1764,10 +1764,28 @@ def customise_pr_person_controller(**attr):
                                        )
         elif r.method == "cv" or component_name == "education":
             if vnrc:
+                etable = s3db.pr_education
                 # Don't enable Legacy Freetext field
                 # Hide the 'Name of Award' field
-                field = s3db.pr_education.award
+                field = etable.award
                 field.readable = field.writable = False
+                # Limit education-level dropdown to specific options
+                field = s3db.pr_education.level_id
+                levels = ("Vocational School/ College",
+                          "Graduate",
+                          "Post graduate (Master's)",
+                          "Post graduate (Doctor's)",
+                          )
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(current.db, "pr_education_level.id",
+                                              field.represent,
+                                              filterby = "name",
+                                              filter_opts = levels,
+                                              ))
+                # Disallow adding of new education levels
+                field.comment = None
             elif arcs:
                 # Don't enable Legacy Freetext field
                 pass
@@ -2014,6 +2032,11 @@ def customise_pr_person_controller(**attr):
                 stable.salary_grade_id.label = T("Grade Code")
                 field = stable.monthly_amount
                 field.readable = field.writable = False
+                
+            elif component_name == "competency":
+                ctable = s3db.hrm_competency
+                # Hide confirming organisation (defaults to VNRC)
+                ctable.organisation_id.readable = False
 
         return True
     s3.prep = custom_prep
