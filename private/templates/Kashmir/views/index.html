@@ -12,13 +12,19 @@
      <img src="{{=URL(c="static", f="themes", args=["Kashmir", "img", "p3.jpg"])}}" alt="slide 3" />
     </div>
   </div>
+  <h4>اَتھِواس کشمیر میں آنے والے ستمبر ۲۰۱۴ کے سیلاب کے بعد امداد اور تعمیر نو کی کوششوں کو مربوط کرنے کی کوشش ھے۔</h4></br>
+  In addition to servicing reports and requests from the public, this platform provides support for operations management, coordination,  and sharing of information to all NGO, individual, and government initiatives involved in relief and reconstruction efforts following the Kashmir floods of September 2014. It is an open platform available to all who are working on the ground. While a number of civil society formations are cooperating on this effort, software engineers and volunteers associated with ReviveKashmir have been responsible for building and maintaining the platform.
+   <br/><br/>
+   <a href="../default/index/listoforganizations" target="_blank">Click here </a>for a list of organizations that are currently on Athewaas.
+  
  </div>
  <div class="large-5 columns end">
   <div id="intro" class="callout panel">
-   <h4>Use <b>Athewaas</b> if you need help</h4>
-   <p>This website takes a request for help from an individual or organisation and gives it to the nearest place that can provide help.</p>
-   <p>Athewaas helps many organisations to collaborate with each other and has been put together by a non-profit, <b>Revive Kashmir</b>.</p>
-   {{=H5("Call %(phone_number)s for help or fill out the form below:" % dict(phone_number=settings.get_frontpage("phone_number", "#0000-000-0000")))}}
+   <h5>Use <b>Athewaas</b> (Kashmir Flood Coordination System) if you need help</h5>
+   <p>When you submit a report or a request for assistance, we will match it to the nearest place(s) that can provide help and track the progress on it.</p>
+   <!-- <p>Athewaas helps many organisations to collaborate with each other and has been put together by a non-profit, <b>Revive Kashmir</b>.</p> -->
+   {{=H4("Call %(phone_number)s for help or fill out the form below:" % dict(phone_number=settings.get_frontpage("phone_number", "#0000-000-0000")))}}
+     <h4> :مدد کے لئے  ۰۱۹۴۲۳۰۰۱۹۴  پر کال کریں یا نیچے دیا فارم پُر کریں </h4>
     {{=contact_form}}
     {{if AUTHENTICATED not in session.s3.roles:}}
     {{=login_buttons}}
