@@ -172,8 +172,6 @@ class S3Report(S3Method):
 
             tablename = resource.tablename
 
-            output["title"] = self.crud_string(tablename, "title_report")
-
             # Filter widgets
             if show_filter_form:
                 advanced = False
@@ -209,13 +207,17 @@ class S3Report(S3Method):
                                                 representation="json",
                                                 vars=ajax_vars))
 
-            output["form"] = S3ReportForm(resource) \
-                                    .html(pivotdata,
-                                          get_vars = get_vars,
-                                          filter_widgets = filter_widgets,
-                                          ajaxurl = ajaxurl,
-                                          filter_url = filter_url,
-                                          widget_id = widget_id)
+            output = S3ReportForm(resource).html(pivotdata,
+                                                 get_vars = get_vars,
+                                                 filter_widgets = filter_widgets,
+                                                 ajaxurl = ajaxurl,
+                                                 filter_url = filter_url,
+                                                 widget_id = widget_id)
+
+            output["title"] = self.crud_string(tablename, "title_report")
+
+            # Detect and store theme-specific inner layout
+            self._view(r, "pivottable.html")
 
             # View
             response.view = self._view(r, "report.html")
@@ -534,6 +536,13 @@ class S3Report(S3Method):
                                                  filter_tab = filter_tab,
                                                  widget_id = widget_id)
 
+            # Detect and store theme-specific inner layout
+            view = self._view(r, "pivottable.html")
+
+            # Render inner layout (outer page layout is set by S3Summary)
+            output["title"] = None
+            output = XML(current.response.render(view, output))
+
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
 
@@ -608,47 +617,26 @@ class S3ReportForm(object):
         else:
             submit = ""
 
-        # General layout (@todo: make configurable)
-        form = DIV(DIV(FORM(filter_options,
-                            report_options,
-                            submit,
-                            hidden = hidden,
-                            _class = "pt-form",
-                            _id = "%s-pt-form" % widget_id,
-                            ),
-                       _class="pt-form-container form-container",
-                       ),
-                   DIV(IMG(_src=throbber,
-                           _alt=current.T("Processing"),
-                           _class="pt-throbber"),
-                       DIV(DIV(_class="pt-chart-controls"),
-                           DIV(DIV(_class="pt-hide-chart"),
-                               DIV(_class="pt-chart-title"),
-                               DIV(_class="pt-chart"),
-                               _class="pt-chart-contents"
-                           ),
-                           _class="pt-chart-container"
-                       ),
-                       DIV(hide,
-                           _class="pt-toggle-table pt-hide-table"),
-                       DIV(show,
-                           _class="pt-toggle-table pt-show-table"),
-                       DIV(DIV(_class="pt-table-controls"),
-                           DIV(DIV(_class="pt-table"),
-                               _class="pt-table-contents"
-                           ),
-                           _class="pt-table-container"
-                       ),
-                       DIV(empty, _class="pt-empty"),
-                   ),
-                   _class="pt-container",
-                   _id=widget_id
-               )
+        # Form
+        form = FORM(filter_options,
+                    report_options,
+                    submit,
+                    hidden = hidden,
+                    _class = "pt-form",
+                    _id = "%s-pt-form" % widget_id,
+                    )
 
-        # Settings
+        # View variables
+        output = {"form": form,
+                  "throbber": throbber,
+                  "hide": hide,
+                  "show": show,
+                  "empty": empty,
+                  "widget_id": widget_id,
+                  }
+
+        # Script options
         settings = current.deployment_settings
-
-        # Default options
         opts = {
             #"renderFilter": True,
             #"collapseFilter": False,
@@ -677,7 +665,6 @@ class S3ReportForm(object):
             "thousandGrouping": settings.get_L10n_thousands_grouping(),
             "textAll": str(T("All")),
         }
-
         chart_opt = get_vars["chart"]
         if chart_opt is not None:
             if str(chart_opt).lower() in ("0", "off", "false"):
@@ -722,7 +709,7 @@ class S3ReportForm(object):
 
         s3.jquery_ready.append(script)
 
-        return form
+        return output
 
     # -------------------------------------------------------------------------
     def report_options(self, get_vars=None, widget_id="pivottable"):

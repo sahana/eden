@@ -1,0 +1,37 @@
+<div>
+ <div class='table-container pt-container' {{try:}}id='{{=widget_id}}{{except:}}{{pass}}'>
+  <!-- Form -->
+  <div class='pt-form-container form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+  <!-- Throbber -->
+  <div class="pt-throbber inline-throbber"></div>
+  <!-- Chart Container -->
+  <div class='pt-chart-container'>
+   <div class='pt-chart-controls'></div>
+   <div class='pt-chart-contents'>
+    <div class='pt-hide-chart'></div>
+    <div class='pt-chart-title'></div>
+    <div class='pt-chart'></div>
+   </div>
+  </div>
+  <!-- Table Toggle -->
+  <div class='pt-toggle-table pt-hide-table'>
+   {{try:}}{{=hide}}{{except:}}{{pass}}
+  </div>
+  <div class='pt-toggle-table pt-show-table'>
+   {{try:}}{{=show}}{{except:}}{{pass}}
+  </div>
+  <!-- Table Container -->
+  <div class='pt-table-container'>
+   <div class='pt-table-controls'></div>
+   <div class='pt-table-contents'>
+    <div class='pt-table'></div>
+   </div>
+  </div>
+  <!-- Empty-Section -->
+  <div class='pt-empty'>
+   {{try:}}{{=empty}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>
