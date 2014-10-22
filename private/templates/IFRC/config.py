@@ -204,8 +204,9 @@ settings.gis.geonames_username = "rms_dev"
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
-    ("km", "ភាសាខ្មែរ"),       # Khmer
-    ("ne", "नेपाली"),         # Nepali
+    ("km", "ភាសាខ្មែរ"),        # Khmer
+    ("mn", "Монгол хэл"),   # Mongolian
+    ("ne", "नेपाली"),          # Nepali
     ("prs", "دری"),         # Dari
     ("ps", "پښتو"),         # Pashto
     ("vi", "Tiếng Việt"),   # Vietnamese
@@ -337,7 +338,7 @@ def ns_only(tablename,
             required = True,
             branches = True,
             updateable = True,
-            type_filter = True
+            limit_filter_opts = True
             ):
     """
         Function to configure an organisation_id field to be restricted to just
@@ -346,9 +347,9 @@ def ns_only(tablename,
         @param required: Field is mandatory
         @param branches: Include Branches
         @param updateable: Limit to Orgs which the user can update
-        @param type_filter: Also limit the Filter options
+        @param limit_filter_opts: Also limit the Filter options
 
-        NB If type_filter=True, apply in customise_xx_controller inside prep,
+        NB If limit_filter_opts=True, apply in customise_xx_controller inside prep,
            after standard_prep is run
     """
 
@@ -367,7 +368,7 @@ def ns_only(tablename,
     # Load standard model
     f = s3db[tablename][fieldname]
 
-    if type_filter:
+    if limit_filter_opts:
         # Find the relevant filter widget & limit it's options
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
         filter_widget = None
@@ -554,7 +555,7 @@ def customise_asset_asset_controller(**attr):
         ns_only(tablename,
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         # Set the NS filter as Visible so that the default filter works
@@ -1100,7 +1101,7 @@ def customise_hrm_human_resource_controller(**attr):
         ns_only("hrm_human_resource",
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         if arcs:
@@ -1395,7 +1396,7 @@ def customise_member_membership_controller(**attr):
         ns_only(tablename,
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         # Set the NS filter as Visible so that the default filter works
@@ -1443,7 +1444,7 @@ def customise_org_office_controller(**attr):
         ns_only("org_office",
                 required = True,
                 branches = True,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         return result
@@ -1693,6 +1694,19 @@ def customise_pr_person_controller(**attr):
         if root_org == CVTL:
             settings.member.cv_tab = True
     elif root_org == VNRC:
+
+        s3db.add_components("hrm_human_resource",
+                            hrm_insurance = ({"name": "social_insurance",
+                                              "joinby": "human_resource_id",
+                                              "filterby": "type",
+                                              "filterfor": "SOCIAL",
+                                              },
+                                             {"name": "health_insurance",
+                                              "joinby": "human_resource_id",
+                                              "filterby": "type",
+                                              "filterfor": "HEALTH",
+                                              }))
+
         vnrc = True
         # Remove 'Commune' level for Addresses
         #gis = current.gis
@@ -1750,10 +1764,28 @@ def customise_pr_person_controller(**attr):
                                        )
         elif r.method == "cv" or component_name == "education":
             if vnrc:
+                etable = s3db.pr_education
                 # Don't enable Legacy Freetext field
                 # Hide the 'Name of Award' field
-                field = s3db.pr_education.award
+                field = etable.award
                 field.readable = field.writable = False
+                # Limit education-level dropdown to specific options
+                field = s3db.pr_education.level_id
+                levels = ("Vocational School/ College",
+                          "Graduate",
+                          "Post graduate (Master's)",
+                          "Post graduate (Doctor's)",
+                          )
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(current.db, "pr_education_level.id",
+                                              field.represent,
+                                              filterby = "name",
+                                              filter_opts = levels,
+                                              ))
+                # Disallow adding of new education levels
+                field.comment = None
             elif arcs:
                 # Don't enable Legacy Freetext field
                 pass
@@ -1770,6 +1802,9 @@ def customise_pr_person_controller(**attr):
                     required = True,
                     branches = True,
                     )
+            if r.method == "record":
+                # Use default form (legacy)
+                s3db.clear_config("hrm_human_resource", "crud_form")
 
         if arcs:
             if not r.component:
@@ -1810,13 +1845,113 @@ def customise_pr_person_controller(**attr):
                 field.readable = field.writable = False
                 # Hide unwanted fields in human_resource
                 htable = s3db.hrm_human_resource
-                for fname in ["job_title_id", 
-                              "code", 
-                              "essential", 
+                for fname in ["job_title_id",
+                              "code",
+                              "essential",
                               "site_contact",
+                              "start_date",
+                              "end_date",
                               ]:
                     field = htable[fname]
                     field.readable = field.writable = False
+
+                if r.method == "record" and r.controller == "hrm":
+                    # Custom config for method handler
+
+                    from s3 import FS
+                    
+                    # RC employment history
+                    org_type_name = "organisation_id$organisation_organisation_type.organisation_type_id$name"
+                    widget_filter = (FS(org_type_name) == "Red Cross / Red Crescent") & \
+                                    (FS("organisation") == None)
+                    org_experience = {"label": T("Red Cross Employment History"),
+                                      "label_create": T("Add Employment"),
+                                      "filter": widget_filter,
+                                      }
+
+                    # Non-RC employment history
+                    widget_filter = FS("organisation") != None
+                    other_experience = {"label": T("Other Employments"),
+                                        "label_create": T("Add Employment"),
+                                        "list_fields": ["start_date",
+                                                        "end_date",
+                                                        "organisation",
+                                                        "job_title",
+                                                        "comments",
+                                                        ],
+                                        "filter": widget_filter,
+                                        }
+
+                    s3db.set_method("pr", "person",     
+                                    method = "record",
+                                    action = s3db.hrm_Record(salary=True, 
+                                                             awards=True,
+                                                             disciplinary_record=True,
+                                                             org_experience=org_experience,
+                                                             other_experience=other_experience,
+                                                             ))
+
+                    # Custom list_fields for hrm_salary (exclude monthly amount)
+                    stable = s3db.hrm_salary
+                    stable.salary_grade_id.label = T("Grade Code")
+                    s3db.configure("hrm_salary",
+                                   list_fields = ["staff_level_id",
+                                                  "salary_grade_id",
+                                                  "start_date",
+                                                  "end_date",
+                                                  ],
+                                   )
+                    # Custom list_fields for hrm_award
+                    s3db.configure("hrm_award",
+                                   list_fields = ["date",
+                                                  "awarding_body",
+                                                  "award_type_id",
+                                                  ],
+                                    orderby = "hrm_award.date desc"
+                                   )
+                    # Custom list_fields for hrm_disciplinary_action
+                    s3db.configure("hrm_disciplinary_action",
+                                   list_fields = ["date",
+                                                  "disciplinary_body",
+                                                  "disciplinary_type_id",
+                                                  ],
+                                    orderby = "hrm_disciplinary_action.date desc"
+                                   )
+                    # Custom form for hrm_human_resource
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                    crud_fields = ["organisation_id",
+                                   "site_id",
+                                   "department_id",
+                                   "status",
+                                   S3SQLInlineComponent("contract",
+                                                        label=T("Contract Details"),
+                                                        fields=["term",
+                                                                (T("Hours Model"), "hours"),
+                                                                ],
+                                                        multiple=False,
+                                                        ),
+                                   S3SQLInlineComponent("social_insurance",
+                                                        label=T("Social Insurance"),
+                                                        name="social",
+                                                        fields=["insurance_number",
+                                                                "insurer",
+                                                                ],
+                                                        default={"type": "SOCIAL"},
+                                                        multiple=False,
+                                                        ),
+                                   S3SQLInlineComponent("health_insurance",
+                                                        label=T("Health Insurance"),
+                                                        name="health",
+                                                        fields=["insurance_number",
+                                                                "provider",
+                                                                ],
+                                                        default={"type": "HEALTH"},
+                                                        multiple=False,
+                                                        ),
+                                   "comments",
+                                   ]
+                    s3db.configure("hrm_human_resource",
+                                   crud_form = S3SQLCustomForm(*crud_fields))
 
             elif component_name == "address":
                 settings.gis.building_name = False
@@ -1837,7 +1972,7 @@ def customise_pr_person_controller(**attr):
                                    }
                 from gluon.validators import IS_IN_SET
                 table.type.requires = IS_IN_SET(pr_id_type_opts, zero=None)
-                
+
                 if controller == "hrm":
                     # For staff, set default for ID document type and do not
                     # allow selection of other options
@@ -1846,7 +1981,7 @@ def customise_pr_person_controller(**attr):
                     hide_fields = ("description", "valid_until", "country_code", "ia_name")
                 else:
                     hide_fields = ("description",)
-                
+
                 # Hide unneeded fields
                 for fname in hide_fields:
                     field = table[fname]
@@ -1866,21 +2001,11 @@ def customise_pr_person_controller(**attr):
                 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
                 blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
                 field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
-                
-            elif component_name == "salary":
-                # Don't use monthly amount field
-                field = s3db.hrm_salary.monthly_amount
-                field.readable = field.writable = False
-                r.component.configure(list_fields = ["staff_level_id",
-                                                     "salary_grade_id",
-                                                     "start_date",
-                                                     "end_date",
-                                                     ],
-                                      )
 
             elif r.method == "cv" or component_name == "experience":
                 table = s3db.hrm_experience
                 # Use simple free-text variants
+                table.organisation_id.default = None # should not default in this case
                 table.organisation.readable = True
                 table.organisation.writable = True
                 table.job_title.readable = True
@@ -1902,6 +2027,16 @@ def customise_pr_person_controller(**attr):
                                               "end_date",
                                               ],
                                )
+            elif component_name == "salary":
+                stable = s3db.hrm_salary
+                stable.salary_grade_id.label = T("Grade Code")
+                field = stable.monthly_amount
+                field.readable = field.writable = False
+                
+            elif component_name == "competency":
+                ctable = s3db.hrm_competency
+                # Hide confirming organisation (defaults to VNRC)
+                ctable.organisation_id.readable = False
 
         return True
     s3.prep = custom_prep
@@ -1927,9 +2062,6 @@ def pr_rheader(r, vnrc):
         if controller == "vol":
             # Simplify RHeader
             settings.hrm.vol_experience = None
-        elif controller == "hrm":
-            # Expose Salary Tab
-            settings.hrm.salary = True
 
     if controller == "member":
         return current.s3db.member_rheader(r)
@@ -2152,7 +2284,7 @@ $.filterOptionsS3({
         ns_only(tablename,
                 required = True,
                 branches = False,
-                type_filter = True,
+                limit_filter_opts = True,
                 )
 
         # Set the Host NS filter as Visible so that the default filter works

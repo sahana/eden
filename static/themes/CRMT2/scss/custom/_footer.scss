@@ -1,0 +1,66 @@
+
+
+
+
+// exit links
+
+.sahana-help {
+  background: $mint;
+  h3 {
+    margin-bottom: $space;
+  }
+  img {
+    border: $frame-border;
+  }
+}
+
+.help-links {
+  width: 100%;
+  height: 130px;
+  .button {
+    height: 70px;
+    width: 100%;
+    padding-top: 11px;
+    padding-left: 0;
+    padding-right: 0;
+    border: 5px solid $white;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-bottom: 0;
+    &:first-child {
+      margin-bottom: -5px;
+    }
+  }
+}
+
+
+// footers
+
+
+footer.row {
+  padding-top: $space;
+  padding-bottom: $space;
+}
+
+.sahana-footer {
+  background: $sage;
+  img {
+    margin-right: 10px;
+  }
+  p {
+    margin-bottom: 0;
+    color: $text-color;
+  }
+  a {
+    color: $headline-color;
+    &:hover {
+      color: $mint;
+    }
+  }
+}
+
+.credits {
+  font-size: .75em;
+  margin-bottom: 0;
+  letter-spacing: $tracking-tight;
+}

@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3MainMenu",
-           "S3OptionsMenu"
-           ]
+__all__ = ("S3MainMenu",
+           "S3OptionsMenu",
+           )
 
 import re
 
@@ -42,6 +42,7 @@ from s3layouts import *
 class S3MainMenu(object):
     """ The default configurations for the main application menu """
 
+    # -------------------------------------------------------------------------
     @classmethod
     def menu(cls):
 
@@ -672,6 +673,28 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def disease():
+        """ Disease Case Tracking and Contact Tracing """
+
+        return M(c="disease")(
+                    M("Cases",
+                      c="disease", f="case", m="summary")(
+                        M("Create", m="create"),
+                        M("Watch List", m="summary", 
+                          vars={"~.monitoring_level__belongs": "OBSERVATION,DIAGNOSTICS"}),
+                    ),
+                    M("Contact Tracing",
+                      c="disease", f="tracing")(
+                       M("Create", m="create"),
+                    ),
+                    M("Diseases",
+                      c="disease", f="disease")(
+                        M("Create", m="create"),
+                    ),
+               )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def doc():
         """ DOC Menu """
 
@@ -1125,7 +1148,7 @@ class S3OptionsMenu(object):
                         M("Summary of Releases", c="inv", f="track_item",
                           vars=dict(report="rel")),
                     ),
-                    M(inv_recv_list, c="inv", f="recv")(
+                    M(inv_recv_list, c="inv", f="recv", translate=False)( # Already T()
                         M("Create", m="create"),
                         M("Timeline", args="timeline"),
                     ),
@@ -1637,7 +1660,7 @@ class S3OptionsMenu(object):
                     M("Demographics", f="demographic")(
                         M("Create", m="create"),
                     ),
-                    M("Demographic Data", f="demographic_data")(
+                    M("Demographic Data", f="demographic_data", args="summary")(
                         M("Create", m="create"),
                         M("Import", m="import"),
                     ),

@@ -1,4 +1,2 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='table-container'>
-{{try:}}{{=form}}{{except:}}{{pass}}
-</div>
+{{try:}}{{if title:}}{{=H2(title)}}{{pass}}{{except:}}{{pass}}
+{{include response.s3.views.get("pivottable.html", "_pivottable.html")}}

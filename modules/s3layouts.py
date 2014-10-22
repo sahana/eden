@@ -30,7 +30,7 @@
            - render "selected" (flag in item)
 """
 
-__all__ = ["S3MainMenuDefaultLayout",
+__all__ = ("S3MainMenuDefaultLayout",
            "S3OptionsMenuDefaultLayout",
            "S3MenuSeparatorDefaultLayout",
            "S3MainMenuLayout", "MM",
@@ -39,7 +39,7 @@ __all__ = ["S3MainMenuDefaultLayout",
            "S3BreadcrumbsLayout",
            "S3AddResourceLink",
            "homepage",
-           ]
+           )
 
 from gluon import *
 from s3 import *
@@ -54,7 +54,7 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
         """ Layout Method (Item Renderer) """
 
         # Manage flags: hide any disabled/unauthorized items
-        if not item.authorized:
+        if not item.authorized and not item.opts.always_display:
             item.enabled = False
             item.visible = False
         elif item.enabled is None or item.enabled:
@@ -66,7 +66,10 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
             items = item.render_components()
             if item.parent is not None:
 
-                classes = []
+                if item.attr._class:
+                    classes = item.attr._class.split(" ")
+                else:
+                    classes = []
 
                 if item.parent.parent is None:
                     # Item at the top-level?
@@ -118,9 +121,18 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         else:
                             label = item.label
                         link = A(label, _href=item.url(), _id=item.attr._id)
-                        return LI(link)
+                        _class = " ".join(classes)
+                        return LI(link, _class=_class)
             else:
                 # Main menu
+
+                if item.opts.title_area:
+                    title_area = item.opts.title_area
+                else:
+                    title_area = A(" ",
+                                   _href=URL(c="default", f="index"),
+                                   _class="S3menulogo",
+                                   )
 
                 right = []
                 left = []
@@ -134,16 +146,14 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                 if current.response.s3.rtl:
                     right, left = left, right
                 return NAV(
-                    UL(LI(A(" ",
-                            _href=URL(c="default", f="index"),
-                            _class="S3menulogo"
-                            ),
+                    UL(LI(title_area,
                           _class="name"
                           ),
                        LI(A(SPAN(current.T("Menu"))),
                           _class="toggle-topbar menu-icon",
                           ),
-                       _class="title-area"),
+                       _class="title-area",
+                       ),
                     SECTION(UL(right,
                                _class="right"),
                             UL(left,
@@ -381,7 +391,7 @@ class S3AddResourceLink(S3NavigationItem):
             return None
 
 
-        if current.deployment_settings.get_ui_use_button_glyphicons():
+        if current.deployment_settings.get_ui_use_button_icons():
             label = (I(" ", _class="icon-plus"),
                       item.label)
         else:

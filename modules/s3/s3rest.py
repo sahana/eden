@@ -787,17 +787,17 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
+        get_vars = r.get_vars
         args = Storage()
 
         # Slicing
-        start = _vars.get("start")
+        start = get_vars.get("start")
         if start is not None:
             try:
                 start = int(start)
             except ValueError:
                 start = None
-        limit = _vars.get("limit")
+        limit = get_vars.get("limit")
         if limit is not None:
             try:
                 limit = int(limit)
@@ -805,7 +805,7 @@ class S3Request(object):
                 limit = None
 
         # msince
-        msince = _vars.get("msince")
+        msince = get_vars.get("msince")
         if msince is not None:
             tfmt = current.xml.ISOFORMAT
             try:
@@ -816,26 +816,26 @@ class S3Request(object):
                 msince = None
 
         # Show IDs (default: False)
-        if "show_ids" in _vars:
-            if _vars["show_ids"].lower() == "true":
+        if "show_ids" in get_vars:
+            if get_vars["show_ids"].lower() == "true":
                 current.xml.show_ids = True
 
         # Show URLs (default: True)
-        if "show_urls" in _vars:
-            if _vars["show_urls"].lower() == "false":
+        if "show_urls" in get_vars:
+            if get_vars["show_urls"].lower() == "false":
                 current.xml.show_urls = False
 
         # Maxbounds (default: False)
         maxbounds = False
-        if "maxbounds" in _vars:
-            if _vars["maxbounds"].lower() == "true":
+        if "maxbounds" in get_vars:
+            if get_vars["maxbounds"].lower() == "true":
                 maxbounds = True
         if r.representation in ("gpx", "osm"):
             maxbounds = True
 
         # Components of the master resource (tablenames)
-        if "mcomponents" in _vars:
-            mcomponents = _vars["mcomponents"]
+        if "mcomponents" in get_vars:
+            mcomponents = get_vars["mcomponents"]
             if str(mcomponents).lower() == "none":
                 mcomponents = None
             elif not isinstance(mcomponents, list):
@@ -844,8 +844,8 @@ class S3Request(object):
             mcomponents = [] # all
 
         # Components of referenced resources (tablenames)
-        if "rcomponents" in _vars:
-            rcomponents = _vars["rcomponents"]
+        if "rcomponents" in get_vars:
+            rcomponents = get_vars["rcomponents"]
             if str(rcomponents).lower() == "none":
                 rcomponents = None
             elif not isinstance(rcomponents, list):
@@ -854,15 +854,15 @@ class S3Request(object):
             rcomponents = None
 
         # Maximum reference resolution depth
-        if "maxdepth" in _vars:
+        if "maxdepth" in get_vars:
             try:
-                args["maxdepth"] = int(_vars["maxdepth"])
+                args["maxdepth"] = int(get_vars["maxdepth"])
             except ValueError:
                 pass
 
         # References to resolve (field names)
-        if "references" in _vars:
-            references = _vars["references"]
+        if "references" in get_vars:
+            references = get_vars["references"]
             if str(references).lower() == "none":
                 references = []
             elif not isinstance(references, list):
@@ -871,8 +871,8 @@ class S3Request(object):
             references = None # all
 
         # Export field selection
-        if "fields" in _vars:
-            fields = _vars["fields"]
+        if "fields" in get_vars:
+            fields = get_vars["fields"]
             if str(fields).lower() == "none":
                 fields = []
             elif not isinstance(fields, list):
@@ -890,7 +890,7 @@ class S3Request(object):
                             component=r.component.tablename)
                 if r.component.alias:
                     args.update(alias=r.component.alias)
-            mode = _vars.get("xsltmode")
+            mode = get_vars.get("xsltmode")
             if mode is not None:
                 args.update(mode=mode)
 
@@ -938,19 +938,19 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
+        get_vars = r.get_vars
 
         # Skip invalid records?
-        if "ignore_errors" in _vars:
+        if "ignore_errors" in get_vars:
             ignore_errors = True
         else:
             ignore_errors = False
 
         # Find all source names in the URL vars
-        def findnames(_vars, name):
+        def findnames(get_vars, name):
             nlist = []
-            if name in _vars:
-                names = _vars[name]
+            if name in get_vars:
+                names = get_vars[name]
                 if isinstance(names, (list, tuple)):
                     names = ",".join(names)
                 names = names.split(",")
@@ -960,8 +960,8 @@ class S3Request(object):
                     else:
                         nlist.append([None, n])
             return nlist
-        filenames = findnames(_vars, "filename")
-        fetchurls = findnames(_vars, "fetchurl")
+        filenames = findnames(get_vars, "filename")
+        fetchurls = findnames(get_vars, "fetchurl")
         source_url = None
 
         # Get the source(s)
@@ -1012,8 +1012,8 @@ class S3Request(object):
             _id = r.id
 
         # Transformation mode?
-        if "xsltmode" in _vars:
-            args = dict(xsltmode=_vars["xsltmode"])
+        if "xsltmode" in get_vars:
+            args = dict(xsltmode=get_vars["xsltmode"])
         else:
             args = dict()
         # These 3 options are called by gis.show_map() & read by the
@@ -1022,11 +1022,11 @@ class S3Request(object):
         if source_url:
             args["source_url"] = source_url
         # Data Field: For GeoRSS/KML Feed popups
-        if "data_field" in _vars:
-            args["data_field"] = _vars["data_field"]
+        if "data_field" in get_vars:
+            args["data_field"] = get_vars["data_field"]
         # Image Field: For GeoRSS/KML Feed popups
-        if "image_field" in _vars:
-            args["image_field"] = _vars["image_field"]
+        if "image_field" in get_vars:
+            args["image_field"] = get_vars["image_field"]
 
         # Format type?
         if format in json_formats:
@@ -1072,10 +1072,10 @@ class S3Request(object):
         else:
             as_json = False
             content_type = "text/xml"
-        _vars = r.get_vars
-        meta = str(_vars.get("meta", False)).lower() == "true"
-        opts = str(_vars.get("options", False)).lower() == "true"
-        refs = str(_vars.get("references", False)).lower() == "true"
+        get_vars = r.get_vars
+        meta = str(get_vars.get("meta", False)).lower() == "true"
+        opts = str(get_vars.get("options", False)).lower() == "true"
+        refs = str(get_vars.get("references", False)).lower() == "true"
         stylesheet = r.stylesheet()
         output = r.resource.export_struct(meta=meta,
                                           options=opts,

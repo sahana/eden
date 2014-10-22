@@ -5,8 +5,6 @@
     @copyright: 2013-2014 (c) Sahana Software Foundation
     @license: MIT
 
-    @requires: U{B{I{Python 2.6}} <http://www.python.org>}
-
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
     files (the "Software"), to deal in the Software without

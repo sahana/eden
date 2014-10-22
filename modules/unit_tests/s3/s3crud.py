@@ -3,7 +3,7 @@
 # S3CRUD Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3crud.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3crud.py
 #
 import unittest
 from gluon import current

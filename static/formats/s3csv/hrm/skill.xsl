@@ -5,17 +5,6 @@
     <!-- **********************************************************************
          Skills - CSV Import Stylesheet
 
-         - example raw URL usage:
-           Let URLpath be the URL to Sahana Eden appliation
-           Let Resource be hrm/skill/create
-           Let Type be s3csv
-           Let CSVPath be the path on the server to the CSV file to be imported
-           Let XSLPath be the path on the server to the XSL transform file
-           Then in the browser type:
-
-           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
-
-           You can add a third argument &ignore_errors
          CSV fields:
          Type............................hrm_skill_type.name
          Name............................hrm_skill.name
@@ -24,6 +13,8 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
+    <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
     <xsl:key name="types" match="row" use="col[@field='Type']/text()"/>
 
     <!-- ****************************************************************** -->

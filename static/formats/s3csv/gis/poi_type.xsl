@@ -12,7 +12,7 @@
          Comments.............string..........Comments
 
     *********************************************************************** -->
-    <xsl:import href="../commons.xsl"/>
+    <!--<xsl:import href="../commons.xsl"/>-->
 
     <xsl:output method="xml"/>
 
@@ -45,25 +45,7 @@
                     <xsl:value-of select="col[@field='Marker']"/>
                 </xsl:attribute>
             </reference>
-            <!-- Arbitrary Tags
-            <xsl:for-each select="col[starts-with(@field, 'KV')]">
-                <xsl:call-template name="KeyValue"/>
-            </xsl:for-each> -->
         </resource>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-
-    <xsl:template name="KeyValue">
-        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="Value" select="text()"/>
-
-        <xsl:if test="$Value!=''">
-            <resource name="gis_poi_type_tag">
-                <data field="tag"><xsl:value-of select="$Key"/></data>
-                <data field="value"><xsl:value-of select="$Value"/></data>
-            </resource>
-        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

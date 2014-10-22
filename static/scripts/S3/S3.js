@@ -1433,6 +1433,66 @@ S3.slider = function(fieldname, min, max, step, value) {
     });
 };
 
+/**
+ * Add a Range Slider to a field - used by S3SliderFilter
+ */
+S3.range_slider = function(fieldname, min, max, step, values) {
+    var real_input1 = $('#' + fieldname + '_1');
+    var real_input2 = $('#' + fieldname + '_2');
+    var selector = '#' + fieldname + '_slider';
+    $(selector).slider({
+        range: true,
+        min: min,
+        max: max,
+        step: step,
+        values: values,
+        slide: function (event, ui) {
+            // Set the value of the real inputs
+            real_input1.val(ui.values[0]);
+            real_input2.val(ui.values[1]);
+        },
+        change: function(event, ui) {
+            if (value == null) {
+                // Set a default value
+                // - halfway between min & max
+                value = (min + max) / 2;
+                // - rounded to nearest step
+                var modulo = value % step;
+                if (modulo != 0) {
+                    if (modulo < (step / 2)) {
+                        // round down
+                        value = value - modulo;
+                    } else {
+                        // round up
+                        value = value + modulo;
+                    }
+                }
+                $(selector).slider('option', 'values', values);
+                // Show the control
+                $(selector + ' .ui-slider-handle').show();
+                // Show the value
+                // Hide the help text
+                real_input.show().next().remove();
+            }
+        }
+    });
+    if (values == []) {
+        // Don't show a value until Slider is touched
+        $(selector + ' .ui-slider-handle').hide();
+        // Show help text
+        real_input1.hide();
+        real_input2.hide()
+                   .after('<p>' + i18n.slider_help + '</p>');
+    }
+    // Enable the fields before form is submitted
+    real_input1.closest('form').submit(function() {
+        real_input1.prop('disabled', false);
+        real_input2.prop('disabled', false);
+        // Normal Submit
+        return true;
+    });
+};
+
 // ============================================================================
 /**
  * Add a querystring variable to an existing URL and redirect into it.
@@ -1793,6 +1853,24 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
                                .siblings().toggle();
                     });
                 });
+        });
+
+        // Options Menu Toggle on mobile
+        $('#menu-options-toggle').on('click', function(e) {
+            e.stopPropagation();
+            var $this = $(this);
+            var status = $this.data('status'),
+                menu = $('#menu-options');
+            if (status == 'off') {
+                menu.hide().removeClass('hide-for-small').slideDown(400, function() {
+                    $this.data('status', 'on').text($this.data('on'));
+                });
+            } else {
+                menu.slideUp(400, function() {
+                    menu.addClass('hide-for-small').show();
+                    $this.data('status', 'off').text($this.data('off'));
+                });
+            }
         });
     });
 

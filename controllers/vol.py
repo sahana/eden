@@ -268,7 +268,7 @@ def person():
     # Custom Method for HR Record
     set_method("pr", resourcename,
                method = "record",
-               action = s3db.hrm_record)
+               action = s3db.hrm_Record)
 
     if settings.has_module("asset"):
         # Assets as component of people

@@ -133,9 +133,10 @@ settings.base.guided_tour = True
 #    ("ja", "日本語"),
 #    ("km", "ភាសាខ្មែរ"),
 #    ("ko", "한국어"),
-#    ("ne", "नेपाली"),          # Nepali
-#    ("prs", "دری"), # Dari
-#    ("ps", "پښتو"), # Pashto
+#    ("mn", "Монгол хэл"), # Mongolian
+#    ("ne", "नेपाली"),                         #  Nepali
+#    ("prs", "دری"),       # Dari
+#    ("ps", "پښتو"),       # Pashto
 #    ("pt", "Português"),
 #    ("pt-br", "Português (Brasil)"),
 #    ("ru", "русский"),
@@ -373,18 +374,36 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.hide_report_options = False
 # Uncomment to show created_by/modified_by using Names not Emails
 #settings.ui.auth_user_represent = "name"
+# Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
+# Default:
+#settings.ui.datatables_dom = "fril<'dataTable_table't>pi"
+# dataTables.Foundation.js would set to this:
+#settings.ui.datatables_dom = "<'row'<'large-6 columns'l><'large-6 columns'f>r>t<'row'<'large-6 columns'i><'large-6 columns'p>>"
+# Move the export_formats after the pagination control
+#settings.ui.datatables_initComplete = '''$('.dataTables_paginate').after($('.dt-export-options'))'''
+# Uncomment for dataTables to use a different paging style:
+#settings.ui.datatables_pagingType = "bootstrap"
 # Uncomment to restrict the export formats available
 #settings.ui.export_formats = ("kml", "pdf", "rss", "xls", "xml")
+# Uncomment to change the label/class of FilterForm clear buttons
+#settings.ui.filter_clear = "Clear"
 # Uncomment to include an Interim Save button on CRUD forms
 #settings.ui.interim_save = True
-# Uncomment to enable glyphicon icons on action buttons (requires bootstrap CSS)
-#settings.ui.use_button_glyphicons = True
+# Uncomment to enable icons on action buttons (requires corresponding CSS)
+#settings.ui.use_button_icons = True
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 #settings.ui.multiselect_widget = True
-# Theme for the S3HierarchyWidget (folder in static/styles/jstree or relative to application)
-#settings.ui.hierarchy_theme = "default"
+# Theme for the S3HierarchyWidget
+#settings.ui.hierarchy_theme = dict(css = "../themes/MYTHEME",
+#                                   icons = True,
+#                                   stripes = False,
+#                                   )
 # Uncomment to show a default cancel button in standalone create/update forms
 #settings.ui.default_cancel_button = True
+# Uncomment to disable responsive behavior of datatables
+#settings.ui.datatables_responsive = False
+# Uncomment to modify the label of the Permalink
+#settings.ui.label_permalink = "Permalink"
 
 # -----------------------------------------------------------------------------
 # CMS
@@ -945,19 +964,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10
     )),
-    ("irs", Storage(
-        name_nice = T("Incidents"),
-        #description = "Incident Reporting System",
-        restricted = True,
-        module_type = 10
-    )),
-    ("dvi", Storage(
-       name_nice = T("Disaster Victim Identification"),
-       #description = "Disaster Victim Identification",
-       restricted = True,
-       module_type = 10,
-       #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
-    )),
+    #("disease", Storage(
+    #    name_nice = T("Disease Tracking"),
+    #    #description = "Helps to track cases and trace contacts in disease outbreaks",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     ("dvr", Storage(
        name_nice = T("Disaster Victim Registry"),
        #description = "Allow affected individuals & households to register to receive compensation and distributions",
@@ -975,118 +987,131 @@ settings.modules = OrderedDict([
        restricted = True,
        module_type = 10,
     )),
-    #("mpr", Storage(
-    #       name_nice = T("Missing Person Registry"),
-    #       #description = "Helps to report and search for missing persons",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
-    #("stats", Storage(
-    #        name_nice = T("Statistics"),
-    #        #description = "Manages statistics",
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
-    #("vulnerability", Storage(
-    #        name_nice = T("Vulnerability"),
-    #        #description = "Manages vulnerability indicators",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    #("scenario", Storage(
-    #        name_nice = T("Scenarios"),
-    #        #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
-    #("fire", Storage(
-    #       name_nice = T("Fire Stations"),
-    #       #description = "Fire Station Management",
-    #       restricted = True,
-    #       module_type = 1,
-    #   )),
-    #("water", Storage(
-    #        name_nice = T("Flood Warnings"),
-    #        #description = "Flood Gauges show water levels in various parts of the country",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
-    #("member", Storage(
-    #       name_nice = T("Members"),
-    #       #description = "Membership Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
+    ("stats", Storage(
+        name_nice = T("Statistics"),
+        #description = "Manages statistics",
+        restricted = True,
+        module_type = None,
+    )),
+    ("member", Storage(
+       name_nice = T("Members"),
+       #description = "Membership Management System",
+       restricted = True,
+       module_type = 10,
+    )),
+    ("budget", Storage(
+        name_nice = T("Budgeting Module"),
+        #description = "Allows a Budget to be drawn up",
+        restricted = True,
+        module_type = 10
+    )),
     #("deploy", Storage(
-    #        name_nice = T("Deployments"),
-    #        #description = "Manage Deployments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Deployments"),
+    #    #description = "Manage Deployments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
+    # Deprecated: Replaced by event
+    #("irs", Storage(
+    #    name_nice = T("Incidents"),
+    #    #description = "Incident Reporting System",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
+    #("dvi", Storage(
+    #   name_nice = T("Disaster Victim Identification"),
+    #   #description = "Disaster Victim Identification",
+    #   restricted = True,
+    #   module_type = 10,
+    #   #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
+    #)),
+    #("mpr", Storage(
+    #   name_nice = T("Missing Person Registry"),
+    #   #description = "Helps to report and search for missing persons",
+    #   restricted = True,
+    #   module_type = 10,
+    #)),
+    #("scenario", Storage(
+    #    name_nice = T("Scenarios"),
+    #    #description = "Define Scenarios for allocation of appropriate Resources (Human, Assets & Facilities).",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
+    #("vulnerability", Storage(
+    #    name_nice = T("Vulnerability"),
+    #    #description = "Manages vulnerability indicators",
+    #    restricted = True,
+    #    module_type = 10,
+    # )),
+    #("fire", Storage(
+    #   name_nice = T("Fire Stations"),
+    #   #description = "Fire Station Management",
+    #   restricted = True,
+    #   module_type = 1,
+    #)),
+    #("water", Storage(
+    #    name_nice = T("Flood Warnings"),
+    #    #description = "Flood Gauges show water levels in various parts of the country",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     #("patient", Storage(
-    #        name_nice = T("Patient Tracking"),
-    #        #description = "Tracking of Patients",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
+    #    name_nice = T("Patient Tracking"),
+    #    #description = "Tracking of Patients",
+    #    restricted = True,
+    #    module_type = 10
+    #)),
     #("security", Storage(
-    #       name_nice = T("Security"),
-    #       #description = "Security Management System",
-    #       restricted = True,
-    #       module_type = 10,
-    #   )),
+    #   name_nice = T("Security"),
+    #   #description = "Security Management System",
+    #   restricted = True,
+    #   module_type = 10,
+    #)),
     # These are specialist modules
     #("cap", Storage(
-    #        name_nice = T("CAP"),
-    #        #description = "Create & broadcast CAP alerts",
-    #        restricted = True,
-    #        module_type = 10,
+    #    name_nice = T("CAP"),
+    #    #description = "Create & broadcast CAP alerts",
+    #    restricted = True,
+    #    module_type = 10,
     #)),
     # Requires RPy2 & PostgreSQL
     #("climate", Storage(
-    #        name_nice = T("Climate"),
-    #        #description = "Climate data portal",
-    #        restricted = True,
-    #        module_type = 10,
+    #    name_nice = T("Climate"),
+    #    #description = "Climate data portal",
+    #    restricted = True,
+    #    module_type = 10,
     #)),
     #("delphi", Storage(
-    #        name_nice = T("Delphi Decision Maker"),
-    #        #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
-    #        restricted = False,
-    #        module_type = 10,
-    #    )),
-    # @ToDo: Rewrite in a modern style
-    #("budget", Storage(
-    #        name_nice = T("Budgeting Module"),
-    #        #description = "Allows a Budget to be drawn up",
-    #        restricted = True,
-    #        module_type = 10
-    #    )),
+    #    name_nice = T("Delphi Decision Maker"),
+    #    #description = "Supports the decision making of large groups of Crisis Management Experts by helping the groups create ranked list.",
+    #    restricted = False,
+    #    module_type = 10,
+    #)),
     # @ToDo: Port these Assessments to the Survey module
     #("building", Storage(
-    #        name_nice = T("Building Assessments"),
-    #        #description = "Building Safety Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Building Assessments"),
+    #    #description = "Building Safety Assessments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
     # Deprecated by Surveys module
     # - depends on CR, IRS & Impact
     #("assess", Storage(
-    #        name_nice = T("Assessments"),
-    #        #description = "Rapid Assessments & Flexible Impact Assessments",
-    #        restricted = True,
-    #        module_type = 10,
-    #    )),
+    #    name_nice = T("Assessments"),
+    #    #description = "Rapid Assessments & Flexible Impact Assessments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
     #("impact", Storage(
-    #        name_nice = T("Impacts"),
-    #        #description = "Used by Assess",
-    #        restricted = True,
-    #        module_type = None,
-    #    )),
+    #    name_nice = T("Impacts"),
+    #    #description = "Used by Assess",
+    #    restricted = True,
+    #    module_type = None,
+    #)),
     #("ocr", Storage(
-    #       name_nice = T("Optical Character Recognition"),
-    #       #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
-    #       restricted = False,
-    #       module_type = None,
-    #   )),
+    #   name_nice = T("Optical Character Recognition"),
+    #   #description = "Optical Character Recognition for reading the scanned handwritten paper forms.",
+    #   restricted = False,
+    #   module_type = None,
+    #)),
 ])

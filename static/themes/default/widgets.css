@@ -229,7 +229,7 @@ textarea.richtext {
    overflow: auto; */
    /* Bring in line with export formats */
    margin-top: -1px;
-   min-width: 640px;
+/*    min-width: 640px; */
 }
 
 #table-container .empty {
@@ -243,36 +243,17 @@ textarea.richtext {
     border-bottom: 1px solid black;
 }
 
-#table-container th,
+.dataTable th,
 .fixedHeader th {
     text-align: center;
     border: 1px solid #ccc;
 }
-#table-container th.rtotal {
-    border-left: 2px solid #aaa;
-}
-#table-container tr.even td {
+.dataTable tr.even td,
+.dataTable tr.odd td {
     border: 1px solid #ccc;
     padding: 4px 10px;
-}
-#table-container tr.odd td {
-    border: 1px solid #ccc;
-    padding: 4px 10px;
-}
-#table-container tr.odd td.rtotal,
-#table-container tr.even td.rtotal {
-    border-left: 2px solid #aaa;
-}
-#table-container tr.totals_row {
-    border-top: 2px solid #aaa;
-}
-#table-container td.totals_header {
-    font-weight: bold;
 }
 
-.controls {
-    white-space: pre;
-}
 .dt-export-options {
     float: right;
     padding-top: 5px;
@@ -1085,6 +1066,12 @@ li input + a {
 #comments div.comment-text li {
     padding: 0;
 }
+#comments div.comment-body {
+    white-space: normal;
+}
+#comments div.comment-body p {
+    margin-left: 25px;
+}
 /* Over-ride Ext! */
 #comments em {
     font-style: italic;
@@ -1382,33 +1369,6 @@ body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     border-bottom: 1px dashed black;
 }
 
-table.report td {
-    min-width: 40px;
-    padding-right: 16px;
-    white-space: nowrap;
-}
-table.report .report-cell-value,
-table.report .pt-cell-value {
-    float: left;
-}
-table.report .report-cell-zoom,
-table.report .pt-cell-zoom {
-    width: 16px;
-    height: 16px;
-    float: right;
-    margin-left: 5px;
-    background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
-    cursor: pointer;
-}
-table.report .report-cell-records,
-table.report .pt-cell-records {
-    clear: left;
-}
-table.report .report-cell-zoom.opened,
-table.report .pt-cell-zoom.opened {
-    background-image: url(../../img/silk/magnifier_zoom_out.png);
-}
-
 /* Short form for Modals */
 .ui-datepicker-trigger {
 	background-image: url(../../img/calendar.gif);
@@ -1431,6 +1391,11 @@ table.report .pt-cell-zoom.opened {
 td .icon {
     /* Override profile.css */
     margin-top: 0;
+}
+
+/* S3LocationSelectorWidget2 */
+option.missing {
+    background-color: yellow;
 }
 
 .resizable-textarea .grippie {

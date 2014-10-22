@@ -242,8 +242,20 @@ form.inline p {margin-bottom:0;}
     text-indent: -99999px;
 }
 
-hr {border-width:0px;border-bottom:1px #ccc dashed;color:#b5b5b5;clear:both;float:none;height:1px;margin:10px 0}
-hr.space {background:#fff;color:#fff;visibility:hidden;}
+hr {
+    border-width: 0;
+    border-bottom: 1px #ccc dashed;
+    color: #b5b5b5;
+    clear: both;
+    float: none;
+    height: 1px;
+    margin: 10px 0
+}
+hr.space {
+    background: #fff;
+    color: #fff;
+    visibility: hidden;
+}
 
 ol, ul {
     padding-left: 1em;

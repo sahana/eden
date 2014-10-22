@@ -38,6 +38,7 @@ __all__ = ("S3DateFilter",
            "S3LocationFilter",
            "S3OptionsFilter",
            "S3RangeFilter",
+           "S3SliderFilter",
            "S3TextFilter",
            "get_s3_filter_opts",
            )
@@ -68,7 +69,7 @@ from s3rest import S3Method
 from s3query import S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
+from s3widgets import ICON, S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -572,14 +573,13 @@ class S3RangeFilter(S3FilterWidget):
         input_elements = DIV()
         ie_append = input_elements.append
 
+        _id = attr["_id"]
+        _variable = self._variable
         selector = self.selector
 
-        _variable = self._variable
-
-        id = attr["_id"]
         for operator in self.operator:
 
-            input_id = "%s-%s" % (id, operator)
+            input_id = "%s-%s" % (_id, operator)
 
             input_box = INPUT(_name=input_id,
                               _id=input_id,
@@ -724,6 +724,111 @@ class S3DateFilter(S3RangeFilter):
                     _class="range-filter-field"))
 
         return input_elements
+
+# =============================================================================
+class S3SliderFilter(S3RangeFilter):
+    """
+        Filter widget for Ranges which is controlled by a Slider instead of
+        INPUTs
+    """
+
+    _class = "slider-filter"
+
+    operator = ["ge", "le"]
+
+    # -------------------------------------------------------------------------
+    def widget(self, resource, values):
+        """
+            Render this widget as HTML helper object(s)
+
+            @param resource: the resource
+            @param values: the search values from the URL query
+        """
+
+        attr = self.attr
+
+        # CSS class and element ID
+        _class = self._class
+        if "_class" in attr and attr["_class"]:
+            _class = "%s %s" % (attr["_class"], _class)
+        else:
+            _class = _class
+        attr["_class"] = _class
+        _id = attr["_id"]
+
+        # Determine the field type
+        if resource:
+            rfield = S3ResourceField(resource, self.field)
+            field = rfield.field
+        else:
+            field = None
+        if not field:
+            # Unresolvable selector
+            return ""
+
+        # Options
+        step = self.opts.get("step", 1)
+        type = self.opts.get("type", "int")
+
+        # Generate the input elements
+        field = str(field)
+        fieldname = field.replace(".", "_")
+        selector = self.selector
+        _variable = self._variable
+        for operator in self.operator:
+            input_id = "%s-%s" % (_id, operator)
+            input = INPUT(_name = input_id,
+                          _disabled = True,
+                          _id = input_id,
+                          _style = "border:0",
+                          )
+            # Populate with the value, if given
+            # if user has not set any of the limits, we get [] in values.
+            variable = _variable(selector, operator)
+            value = values.get(variable, None)
+            if value not in [None, []]:
+                if type(value) is list:
+                    value = value[0]
+                input["_value"] = value
+                input["value"] = value
+
+        slider = DIV(_id="%s_slider" % fieldname, **attributes)
+
+        s3 = current.response.s3
+
+        validator = field.requires
+        if isinstance(validator, IS_EMPTY_OR):
+            validator = validator.other
+        _min = validator.minimum
+        # Max Value depends upon validator type
+        if isinstance(validator, IS_INT_IN_RANGE):
+            _max = validator.maximum - 1
+        elif isinstance(validator, IS_FLOAT_IN_RANGE):
+            _max = validator.maximum 
+
+        if values is None:
+            # JSONify
+            value = "null"
+            script = '''i18n.slider_help="%s"''' % \
+                current.T("Click on the slider to choose a value")
+            s3.js_global.append(script)
+
+        if _type == "int":
+            script = '''S3.range_slider('%s',%i,%i,%i,%s)''' % (fieldname,
+                                                                _min,
+                                                                _max,
+                                                                step,
+                                                                values)
+        else:
+            # Float
+            script = '''S3.range_slider('%s',%f,%f,%f,%s)''' % (fieldname,
+                                                                _min,
+                                                                _max,
+                                                                step,
+                                                                values)
+        s3.jquery_ready.append(script)
+
+        return TAG[""](input1, input2, slider)
 
 # =============================================================================
 class S3LocationFilter(S3FilterWidget):
@@ -2047,8 +2152,8 @@ class S3FilterForm(object):
                                       },
                               _class="filter-advanced-label",
                               ),
-                         I(" ", _class="icon-down"),
-                         I(" ", _class="icon-up", _style="display:none"),
+                         ICON("down"),
+                         ICON("up", _style="display:none"),
                          _class=_class
                          )
             controls.append(advanced)

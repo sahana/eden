@@ -22,6 +22,7 @@ import s3db.cms
 import s3db.cr
 import s3db.delphi
 import s3db.deploy
+import s3db.disease
 import s3db.doc
 import s3db.dvi
 import s3db.dvr

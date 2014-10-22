@@ -30,9 +30,13 @@
 __all__ = ("S3HRModel",
            "S3HRSiteModel",
            "S3HRSalaryModel",
+           "S3HRInsuranceModel",
+           "S3HRContractModel",
            "S3HRSkillModel",
            "S3HRAppraisalModel",
            "S3HRExperienceModel",
+           "S3HRAwardModel",
+           "S3HRDisciplinaryActionModel",
            "S3HRProgrammeModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
@@ -51,7 +55,7 @@ __all__ = ("S3HRModel",
            "hrm_training_controller",
            "hrm_training_event_controller",
            "hrm_cv",
-           "hrm_record",
+           "hrm_Record",
            "hrm_configure_pr_group_membership",
            "hrm_human_resource_onaccept",
            #"hrm_competency_list_layout",
@@ -625,6 +629,10 @@ class S3HRModel(S3Model):
                                         "pkey": "person_id",
                                         },
                         hrm_salary = "human_resource_id",
+                        hrm_insurance = "human_resource_id",
+                        hrm_contract = {"joinby": "human_resource_id",
+                                        "multiple": False,
+                                        },
                         hrm_training={"link": "pr_person",
                                       "joinby": "id",
                                       "key": "id",
@@ -1383,25 +1391,25 @@ class S3HRSiteModel(S3Model):
 # =============================================================================
 class S3HRSalaryModel(S3Model):
     """ Data Model to track salaries of staff """
-    
+
     names = ("hrm_staff_level",
              "hrm_salary_grade",
              "hrm_salary",
              )
 
     def model(self):
-        
+
         db = current.db
         T = current.T
         define_table = self.define_table
         configure = self.configure
-        
+
         organisation_id = self.org_organisation_id
         organisation_requires = self.org_organisation_requires
 
         # =====================================================================
         # Staff Level
-        # 
+        #
         tablename = "hrm_staff_level"
         table = define_table(tablename,
                              organisation_id(
@@ -1412,12 +1420,16 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = self.staff_level_duplicate,
+                  )
+
         ADD_STAFF_LEVEL = T("Add Staff Level")
-        staff_level_represent = hrm_SalaryInfoRepresent(lookup="hrm_staff_level")
+        staff_level_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_staff_level")
 
         # =====================================================================
         # Salary Grades
-        # 
+        #
         tablename = "hrm_salary_grade"
         table = define_table(tablename,
                              organisation_id(
@@ -1428,12 +1440,16 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = self.salary_grade_duplicate,
+                  )
+
         ADD_SALARY_GRADE = T("Add Salary Grade")
-        salary_grade_represent = hrm_SalaryInfoRepresent(lookup="hrm_salary_grade")
+        salary_grade_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_salary_grade")
 
         # =====================================================================
         # Salary
-        # 
+        #
         tablename = "hrm_salary"
         table = define_table(tablename,
                              self.pr_person_id(),
@@ -1446,7 +1462,7 @@ class S3HRSalaryModel(S3Model):
                                    label = T("Staff Level"),
                                    represent = staff_level_represent,
                                    requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, 
+                                                IS_ONE_OF(db,
                                                           "hrm_staff_level.id",
                                                           staff_level_represent,
                                                           )),
@@ -1457,7 +1473,7 @@ class S3HRSalaryModel(S3Model):
                                    label = T("Salary Grade"),
                                    represent = salary_grade_represent,
                                    requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, 
+                                                IS_ONE_OF(db,
                                                           "hrm_salary_grade.id",
                                                           salary_grade_represent,
                                                           )),
@@ -1483,7 +1499,7 @@ class S3HRSalaryModel(S3Model):
                                    default = 0.0,
                                    ),
                              *s3_meta_fields())
-        
+
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add Salary"),
             title_display = T("Salary Details"),
@@ -1496,7 +1512,7 @@ class S3HRSalaryModel(S3Model):
             msg_record_deleted = T("Salary removed"),
             msg_no_match = T("No entries found"),
             msg_list_empty = T("Currently no salary registered"))
-            
+
         configure(tablename,
                   onvalidation = self.hrm_salary_onvalidation,
                   orderby = "%s.start_date desc" % tablename,
@@ -1504,47 +1520,92 @@ class S3HRSalaryModel(S3Model):
 
         # =====================================================================
         # Salary Coefficient
-        # 
+        #
         # @todo: implement
-        
+
         # =====================================================================
         # Allowance Level
-        # 
+        #
         # @todo: implement
-        
+
         return {}
-        
+
     # -------------------------------------------------------------------------
     def defaults(self):
-        
+
         return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
     def hrm_salary_onvalidation(form):
-        
+
         try:
             form_vars = form.vars
             start_date = form_vars.get("start_date")
             end_date = form_vars.get("end_date")
         except AttributeError:
             return
-            
+
         if start_date and end_date and start_date > end_date:
             form.errors["end_date"] = current.T("End date must be after start date.")
         return
 
-# =============================================================================
-class hrm_SalaryInfoRepresent(S3Represent):
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def staff_level_duplicate(item):
+        """ Callback to identify the original of an update import item """
 
-    def __init__(self, lookup="hrm_salary_grade"):
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def salary_grade_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
+class hrm_OrgSpecificTypeRepresent(S3Represent):
+    """ Representation of organisation-specific taxonomic categories """
+
+    def __init__(self, lookup=None):
         """ Constructor """
 
-        super(hrm_SalaryInfoRepresent, self).__init__(lookup = lookup,
-                                                      fields = ["name", 
-                                                                "organisation_id",
-                                                                ]
-                                                      )
+        if lookup is None:
+            raise SyntaxError("must specify a lookup table")
+
+        fields = ("name", "organisation_id")
+        super(hrm_OrgSpecificTypeRepresent, self).__init__(lookup = lookup,
+                                                           fields = fields,
+                                                           )
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
@@ -1598,6 +1659,145 @@ class hrm_SalaryInfoRepresent(S3Represent):
             return "%s (%s)" % (name, organisation.name)
         else:
             return name
+
+# =============================================================================
+class S3HRInsuranceModel(S3Model):
+    """ Data Model to track insurance information of staff members """
+
+    names = ("hrm_insurance",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        insurance_types = {"SOCIAL": T("Social Insurance"),
+                           "HEALTH": T("Health Insurance"),
+                           }
+        insurance_type_represent = S3Represent(options = insurance_types)
+
+        # =====================================================================
+        # Insurance Information
+        #
+        tablename = "hrm_insurance"
+        table = self.define_table(tablename,
+                                  self.hrm_human_resource_id(),
+                                  Field("type",
+                                        requires = IS_IN_SET(insurance_types),
+                                        represent = insurance_type_represent,
+                                        ),
+                                  Field("insurance_number",
+                                        length = 128,
+                                        ),
+                                  Field("insurer",
+                                        length = 255,
+                                        ),
+                                  Field("provider",
+                                        length = 255,
+                                        ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.insurance_duplicate,
+                       )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def insurance_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        human_resource_id = data.human_resource_id
+        insurance_type = data.type
+
+        if human_resource_id and insurance_type:
+
+            table = item.table
+            query = (table.human_resource_id == human_resource_id) & \
+                    (table.type == insurance_type)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
+class S3HRContractModel(S3Model):
+    """ Data model to track employment contract details of staff members """
+
+    names = ("hrm_contract",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        contract_terms = {"SHORT": T("short-term"),
+                          "LONG": T("long-term"),
+                          "PERMANENT": T("permanent")
+                          }
+        contract_term_represent = S3Represent(options = contract_terms)
+
+        hours_models = {"PARTTIME": T("part-time"),
+                        "FULLTIME": T("full-time"),
+                        }
+        hours_model_represent = S3Represent(options = hours_models)
+
+        # =====================================================================
+        # Employment Contract Details
+        #
+        tablename = "hrm_contract"
+        table = self.define_table(tablename,
+                                  self.hrm_human_resource_id(),
+                                  Field("term",
+                                        requires = IS_IN_SET(contract_terms),
+                                        represent = contract_term_represent,
+                                        ),
+                                  Field("hours",
+                                        requires = IS_IN_SET(hours_models),
+                                        represent = hours_model_represent,
+                                        ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.contract_duplicate,
+                       )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def contract_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        human_resource_id = data.human_resource_id
+
+        if human_resource_id:
+
+            table = item.table
+            query = (table.human_resource_id == human_resource_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3HRJobModel(S3Model):
@@ -2585,7 +2785,8 @@ class S3HRSkillModel(S3Model):
                                      widget = widget,
                                      ),
                      Field("expiry", "integer",
-                           label = T("Expiry (months)")),
+                           label = T("Expiry (months)"),
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -2889,63 +3090,63 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_competency_duplicate(job):
+    def hrm_competency_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same person_id and skill_id
         """
 
-        if job.tablename == "hrm_competency":
-            data = job.data
+        if item.tablename == "hrm_competency":
+            data = item.data
             person = "person_id" in data and data.person_id
             skill = "skill_id" in data and data.skill_id
-            table = job.table
+            table = item.table
             query = (table.person_id == person) & \
                     (table.skill_id == skill)
 
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_certificate_duplicate(job):
+    def hrm_certificate_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "hrm_certificate":
-            data = job.data
+        if item.tablename == "hrm_certificate":
+            data = item.data
             name = "name" in data and data.name
 
-            table = job.table
+            table = item.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3017,33 +3218,33 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_competency_rating_duplicate(job):
+    def hrm_competency_rating_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case and skill_type
         """
 
-        if job.tablename == "hrm_competency_rating":
-            data = job.data
+        if item.tablename == "hrm_competency_rating":
+            data = item.data
             name = "name" in data and data.name
             skill = False
-            for cjob in job.components:
-                if cjob.tablename == "hrm_skill_type":
-                    cdata = cjob.data
+            for citem in item.components:
+                if citem.tablename == "hrm_skill_type":
+                    cdata = citem.data
                     if "name" in cdata:
                         skill = cdata.name
             if skill == False:
                 return
 
-            table = job.table
+            table = item.table
             stable = current.s3db.hrm_skill_type
             query = (table.name.lower() == name.lower()) & \
                     (table.skill_type_id == stable.id) & \
@@ -3051,115 +3252,115 @@ class S3HRSkillModel(S3Model):
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_course_duplicate(job):
+    def hrm_course_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "hrm_course":
-            data = job.data
+        if item.tablename == "hrm_course":
+            data = item.data
             name = "name" in data and data.name
 
-            table = job.table
+            table = item.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_skill_duplicate(job):
+    def hrm_skill_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "hrm_skill":
-            data = job.data
+        if item.tablename == "hrm_skill":
+            data = item.data
             name = "name" in data and data.name
 
-            table = job.table
+            table = item.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_skill_type_duplicate(job):
+    def hrm_skill_type_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "hrm_skill_type":
-            data = job.data
+        if item.tablename == "hrm_skill_type":
+            data = item.data
             name = "name" in data and data.name
 
-            table = job.table
+            table = item.table
             query = (table.name.lower() == name.lower())
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_training_event_duplicate(job):
+    def hrm_training_event_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same course name & date (& site, if-present)
         """
 
-        if job.tablename == "hrm_training_event":
-            data = job.data
+        if item.tablename == "hrm_training_event":
+            data = item.data
             # Mandatory Data
             course_id = data.get("course_id", None)
             start_date = data.get("start_date", None)
@@ -3198,7 +3399,7 @@ class S3HRSkillModel(S3Model):
             #    minute = 0
             #start_end_date = datetime.datetime(year, month, day, hour, minute)
 
-            table = job.table
+            table = item.table
             query = (table.course_id == course_id) & \
                     (table.start_date == start_date)
             if site_id:
@@ -3206,33 +3407,33 @@ class S3HRSkillModel(S3Model):
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm_training_duplicate(job):
+    def hrm_training_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
+          @param item: An S3ImportItem object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same person, date & course
         """
 
-        if job.tablename == "hrm_training":
-            data = job.data
+        if item.tablename == "hrm_training":
+            data = item.data
             person_id = "person_id" in data and data.person_id
             course_id = "course_id" in data and data.course_id
             date = "date" in data and data.date
 
-            table = job.table
+            table = item.table
             query = (table.person_id == person_id) & \
                     (table.course_id == course_id)
             if date:
@@ -3240,9 +3441,9 @@ class S3HRSkillModel(S3Model):
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
             if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = _duplicate.id
+                item.data.id = _duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def hrm_training_onvalidation(form):
@@ -3744,6 +3945,180 @@ class S3HRExperienceModel(S3Model):
         return dict()
 
 # =============================================================================
+class S3HRAwardModel(S3Model):
+    """ Data model for staff awards """
+
+    names = ("hrm_award_type",
+             "hrm_award",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        define_table = self.define_table
+
+        # =====================================================================
+        # Award types
+        #
+        tablename = "hrm_award_type"
+        table = define_table(tablename,
+                             self.org_organisation_id(
+                                requires = self.org_organisation_requires(updateable=True),
+                             ),
+                             Field("name",
+                                   label = T("Award Type"),
+                             ),
+                             *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.award_type_duplicate,
+                       )
+
+        ADD_AWARD_TYPE = T("Add Award Type")
+        award_type_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_award_type")
+
+        # =====================================================================
+        # Salary
+        #
+        tablename = "hrm_award"
+        table = define_table(tablename,
+                             self.pr_person_id(),
+                             s3_date(),
+                             Field("awarding_body"),
+                             Field("award_type_id", "reference hrm_award_type",
+                                   label = T("Award Type"),
+                                   represent = award_type_represent,
+                                   requires = IS_ONE_OF(db,
+                                                        "hrm_award_type.id",
+                                                        award_type_represent,
+                                                        ),
+                                   comment = S3AddResourceLink(f = "award_type",
+                                                               label = ADD_AWARD_TYPE),
+                                   ),
+                             *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Award"),
+            title_display = T("Award Details"),
+            title_list = T("Awards"),
+            title_update = T("Edit Award"),
+            label_list_button = T("List Awards"),
+            label_delete_button = T("Delete Award"),
+            msg_record_created = T("Award added"),
+            msg_record_modified = T("Award updated"),
+            msg_record_deleted = T("Award removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no awards registered"))
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def award_type_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
+class S3HRDisciplinaryActionModel(S3Model):
+    """ Data model for staff disciplinary record """
+
+    names = ("hrm_disciplinary_type",
+             "hrm_disciplinary_action",
+             )
+
+    def model(self):
+        
+        T = current.T
+
+        define_table = self.define_table
+
+        # =====================================================================
+        # Types of disciplinary action
+        #
+        tablename = "hrm_disciplinary_type"
+        define_table(tablename,
+                     self.org_organisation_id(
+                        requires = self.org_organisation_requires(updateable=True),
+                     ),
+                     Field("name",
+                           label = T("Disciplinary Action Type"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+                     
+        self.configure(tablename,
+                       deduplicate = self.disciplinary_type_duplicate,
+                       )
+
+        ADD_DISCIPLINARY_TYPE = T("Add Disciplinary Action Type")
+        disciplinary_type_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_disciplinary_type")
+
+        # =====================================================================
+        # Disciplinary record
+        tablename = "hrm_disciplinary_action"
+        define_table(tablename,
+                     self.pr_person_id(),
+                     s3_date(),
+                     Field("disciplinary_body"),
+                     Field("disciplinary_type_id", "reference hrm_disciplinary_type",
+                           label = T("Disciplinary Action Type"),
+                           represent = disciplinary_type_represent,
+                           requires = IS_ONE_OF(current.db,
+                                                "hrm_disciplinary_type.id",
+                                                disciplinary_type_represent,
+                                                ),
+                           comment = S3AddResourceLink(f = "disciplinary_type",
+                                                       label = ADD_DISCIPLINARY_TYPE,
+                                                       ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def disciplinary_type_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        organisation_id = data.organisation_id
+        name = data.name
+
+        if organisation_id and name:
+
+            table = item.table
+            query = (table.organisation_id == organisation_id) & \
+                    (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
 class S3HRProgrammeModel(S3Model):
     """
         Record Volunteer Hours on Programmes
@@ -4216,8 +4591,8 @@ class hrm_AssignMethod(S3Method):
             # Data table
             resource = s3db.resource("hrm_human_resource")
             totalrows = resource.count()
-            if "iDisplayLength" in get_vars:
-                display_length = get_vars["iDisplayLength"]
+            if "pageLength" in get_vars:
+                display_length = get_vars["pageLength"]
                 if display_length == "None":
                     display_length = None
                 else:
@@ -4261,14 +4636,14 @@ class hrm_AssignMethod(S3Method):
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_displayLength=display_length,
                                 dt_ajax_url=URL(args = r.args,
                                                 extension="aadata",
                                                 vars={},
                                                 ),
-                                dt_bFilter="false",
-                                dt_pagination="true",
                                 dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength=display_length,
+                                dt_pagination="true",
+                                dt_searching="false",
                                 )
 
                 # Filter form
@@ -4316,8 +4691,8 @@ class hrm_AssignMethod(S3Method):
 
             elif r.representation == "aadata":
                 # Ajax refresh
-                if "sEcho" in get_vars:
-                    echo = int(get_vars.sEcho)
+                if "draw" in get_vars:
+                    echo = int(get_vars.draw)
                 else:
                     echo = None
                 items = dt.json(totalrows,
@@ -4892,7 +5267,7 @@ def hrm_compose():
     T = current.T
     s3db = current.s3db
     vars = current.request.vars
-    
+
     if "human_resource.id" in vars:
         fieldname = "human_resource.id"
         id = vars.get(fieldname)
@@ -5376,7 +5751,7 @@ def hrm_rheader(r, tabs=[],
             id_tab = (T("ID"), "identity")
         else:
             id_tab = None
-            
+
         if settings.get_hrm_salary():
             salary_tab = (T("Salary"), "salary")
         else:
@@ -5696,7 +6071,6 @@ def hrm_experience_controller():
                 refresh = r.get_vars.get("refresh")
                 if refresh and refresh.startswith("profile-list-hrm_experience"):
                     field.readable = field.writable = False
-
         return True
     current.response.s3.prep = prep
 
@@ -6356,7 +6730,7 @@ def hrm_person_controller(**attr):
     # Custom Method for HR Record
     set_method("pr", "person",
                method = "record",
-               action = hrm_record)
+               action = hrm_Record)
 
     if settings.has_module("asset"):
         # Assets as component of people
@@ -6560,7 +6934,7 @@ def hrm_person_controller(**attr):
 
                 elif r.component_name == "group_membership":
                     hrm_configure_pr_group_membership()
-                    
+
                 elif r.component_name == "salary":
                     hrm_configure_salary(r)
 
@@ -6961,136 +7335,275 @@ def hrm_cv(r, **attr):
         raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
-def hrm_record(r, **attr):
-    """
-        HR Record
-        - Custom Profile page with multiple DataTables:
-        * Human Resource
-        * Hours (for volunteers)
-        * Teams
-    """
+class hrm_Record(S3Method):
 
-    if r.name == "person" and r.id and not r.component and \
-       r.representation in ("html", "aadata"):
-        T = current.T
-        s3db = current.s3db
-        settings = current.deployment_settings
-        tablename = r.tablename
-        if r.controller == "vol":
-            controller = "vol"
-        else:
-            controller = "hrm"
+    def __init__(self, 
+                 salary=False, 
+                 awards=False,
+                 disciplinary_record=False,
+                 org_experience=False, 
+                 other_experience=False):
+        """
+            Constructor
+            
+            @param salary: show a Salary widget
+            @param awards: show an Awards History widget
+            @param disciplinary_record: show a Disciplinary Record widget
+            @param org_experience: show widget with Professional Experience
+                                   within registered organisations, can be a
+                                   dict with overrides for widget defaults
+            @param other_experience: show widget with Other Experience, can
+                                     be a dict with overrides for widget defaults
+        """
 
-        def dt_row_actions(component):
-            return lambda r, list_id: [
-                {"label": T("Open"),
-                 "url": r.url(component=component,
-                              component_id="[id]",
-                              method="update.popup",
-                              vars={"refresh": list_id}),
-                 "_class": "action-btn edit s3_modal",
-                },
-                {"label": T("Delete"),
-                 "url": r.url(component=component,
-                              component_id="[id]",
-                              method="delete"),
-                 "_class": "action-btn delete-btn delete-btn-ajax",
-                },
-            ]
+        self.salary = salary
+        self.awards = awards
+        self.disciplinary_record = disciplinary_record
+        self.org_experience = org_experience
+        self.other_experience = other_experience
 
-        if controller == "vol":
-            label = "Volunteer Record"
-        else:
-            label = "Staff Record"
+    def apply_method(self, r, **attr):
+        """
+            HR Record
+            - Custom Profile page with multiple DataTables:
+            * Human Resource
+            * Hours (for volunteers)
+            * Teams
+        """
 
-        table = s3db.hrm_human_resource
-        profile_widgets = [
-            dict(label = label,
-                 type = "form",
-                 tablename = "hrm_human_resource",
-                 context = "person",
-                 )
-            ]
+        if r.name == "person" and r.id and not r.component and \
+           r.representation in ("html", "aadata"):
+            T = current.T
+            s3db = current.s3db
+            settings = current.deployment_settings
+            tablename = r.tablename
+            if r.controller == "vol":
+                controller = "vol"
+            else:
+                controller = "hrm"
 
-        if controller == "vol":
-            vol_experience = settings.get_hrm_vol_experience()
-            if vol_experience in ("programme", "both"):
-                # Exclude records which are just to link to Programme & also Training Hours
-                filter = (FS("hours") != None) & \
-                         (FS("programme_id") != None)
-                list_fields = ["id",
-                               "date",
-                               "programme_id",
-                               ]
-                if s3db.hrm_programme_hours.job_title_id.readable:
-                    list_fields.append("job_title_id")
-                list_fields.append("hours")
-                hours_widget = dict(label = "Program Hours",
-                                    label_create = "Add Program Hours",
+            def dt_row_actions(component):
+                return lambda r, list_id: [
+                    {"label": T("Open"),
+                     "url": r.url(component=component,
+                                  component_id="[id]",
+                                  method="update.popup",
+                                  vars={"refresh": list_id},
+                                  ),
+                     "_class": "action-btn edit s3_modal",
+                     },
+                    {"label": T("Delete"),
+                     "_ajaxurl": r.url(component=component,
+                                       component_id="[id]",
+                                       method="delete.json",
+                                       ),
+                     "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                     },
+                ]
+
+            if controller == "vol":
+                label = "Volunteer Record"
+            else:
+                label = "Staff Record"
+
+            table = s3db.hrm_human_resource
+            profile_widgets = [
+                dict(label = label,
+                     type = "form",
+                     tablename = "hrm_human_resource",
+                     context = "person",
+                     )
+                ]
+
+            if controller == "vol":
+                vol_experience = settings.get_hrm_vol_experience()
+                if vol_experience in ("programme", "both"):
+                    # Exclude records which are just to link to Programme & also Training Hours
+                    filter = (FS("hours") != None) & \
+                             (FS("programme_id") != None)
+                    list_fields = ["id",
+                                   "date",
+                                   "programme_id",
+                                   ]
+                    if s3db.hrm_programme_hours.job_title_id.readable:
+                        list_fields.append("job_title_id")
+                    list_fields.append("hours")
+                    hours_widget = dict(label = "Program Hours",
+                                        label_create = "Add Program Hours",
+                                        type = "datatable",
+                                        actions = dt_row_actions("hours"),
+                                        tablename = "hrm_programme_hours",
+                                        context = "person",
+                                        filter = filter,
+                                        list_fields = list_fields,
+                                        create_controller = controller,
+                                        create_function = "person",
+                                        create_component = "hours",
+                                        pagesize = None, # all records
+                                        )
+                    profile_widgets.append(hours_widget)
+
+            teams = settings.get_hrm_teams()
+            if teams:
+                hrm_configure_pr_group_membership()
+                if teams == "Teams":
+                    label_create = "Add Team"
+                elif teams == "Groups":
+                    label_create = "Create Group"
+                teams_widget = dict(label = teams,
+                                    label_create = label_create,
                                     type = "datatable",
-                                    actions = dt_row_actions("hours"),
-                                    tablename = "hrm_programme_hours",
+                                    actions = dt_row_actions("group_membership"),
+                                    tablename = "pr_group_membership",
                                     context = "person",
-                                    filter = filter,
-                                    list_fields = list_fields,
                                     create_controller = controller,
                                     create_function = "person",
-                                    create_component = "hours",
+                                    create_component = "group_membership",
                                     pagesize = None, # all records
                                     )
-                profile_widgets.append(hours_widget)
+                profile_widgets.append(teams_widget)
 
-        teams = settings.get_hrm_teams()
-        if teams:
-            hrm_configure_pr_group_membership()
-            if teams == "Teams":
-                label_create = "Add Team"
-            elif teams == "Groups":
-                label_create = "Create Group"
-            teams_widget = dict(label = teams,
-                                label_create = label_create,
-                                type = "datatable",
-                                actions = dt_row_actions("group_membership"),
-                                tablename = "pr_group_membership",
-                                context = "person",
-                                create_controller = controller,
-                                create_function = "person",
-                                create_component = "group_membership",
-                                pagesize = None, # all records
-                                )
-            profile_widgets.append(teams_widget)
+            if controller == "hrm":
 
-        if r.representation == "html":
-            # Maintain normal rheader for consistency
-            response = current.response
-            title = response.s3.crud_strings["pr_person"].title_display
-            profile_header = TAG[""](H2(title),
-                                     DIV(hrm_rheader(r),
-                                     _id="rheader"))
+                org_experience = self.org_experience
+                if org_experience:
+                    # Use primary hrm/experience controller
+                    # (=> defaults to staff-style experience form)
+                    
+                    # Need different action URLs
+                    def experience_row_actions(component):
+                        return lambda r, list_id: [
+                            {"label": T("Open"),
+                            "url": URL(f="experience",
+                                       args=["[id]", "update.popup"],
+                                       vars={"refresh": list_id},
+                                       ),
+                            "_class": "action-btn edit s3_modal",
+                            },
+                            {"label": T("Delete"),
+                            "_ajaxurl": URL(f="experience",
+                                            args=["[id]", "delete.json"],
+                                            ),
+                            "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                            },
+                        ]
+
+                    # Configure widget, apply overrides
+                    widget = dict(label = T("Experience"),
+                                  label_create = T("Add Experience"),
+                                  type = "datatable",
+                                  actions = experience_row_actions("experience"),
+                                  tablename = "hrm_experience",
+                                  pagesize = None, # all records
+                                  )
+                    if isinstance(org_experience, dict):
+                        widget.update(org_experience)
+
+                    # Retain the person filter
+                    person_filter = FS("person_id") == r.id
+                    widget_filter = widget.get("filter")
+                    if widget_filter:
+                        widget["filter"] = person_filter & widget_filter
+                    else:
+                        widget["filter"] = person_filter
+
+                    profile_widgets.append(widget)
+
+                other_experience = self.other_experience
+                if other_experience:
+                    # Use experience component in hrm/person controller
+                    # (=> defaults to vol-style experience form)
+                    
+                    # Configure widget and apply overrides
+                    widget = dict(label = "Experience",
+                                  label_create = "Add Experience",
+                                  type = "datatable",
+                                  actions = dt_row_actions("experience"),
+                                  tablename = "hrm_experience",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "experience",
+                                  pagesize = None, # all records
+                                  )
+                    if isinstance(other_experience, dict):
+                        widget.update(other_experience)
+
+                    profile_widgets.append(widget)
+
+                if self.awards:
+                    widget = dict(label = T("Awards"),
+                                  label_create = T("Add Award"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("staff_award"),
+                                  tablename = "hrm_award",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "staff_award",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
+
+                if self.disciplinary_record:
+                    widget = dict(label = T("Disciplinary Record"),
+                                  label_create = T("Add Disciplinary Action"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("disciplinary_action"),
+                                  tablename = "hrm_disciplinary_action",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "disciplinary_action",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
+
+                if self.salary:
+                    widget = dict(label = T("Salary"),
+                                  label_create = T("Add Salary"),
+                                  type = "datatable",
+                                  actions = dt_row_actions("salary"),
+                                  tablename = "hrm_salary",
+                                  context = "person",
+                                  create_controller = controller,
+                                  create_function = "person",
+                                  create_component = "salary",
+                                  pagesize = None, # all records
+                                  )
+                    profile_widgets.append(widget)
+
+            if r.representation == "html":
+                # Maintain normal rheader for consistency
+                response = current.response
+                title = response.s3.crud_strings["pr_person"].title_display
+                profile_header = TAG[""](H2(title),
+                                         DIV(hrm_rheader(r),
+                                         _id="rheader"))
+            else:
+                profile_header = None
+
+            s3db.configure(tablename,
+                           profile_cols = 1,
+                           profile_header = profile_header,
+                           profile_widgets = profile_widgets,
+                           )
+
+            profile = S3Profile()
+            profile.tablename = tablename
+            profile.request = r
+            output = profile.profile(r, **attr)
+            if r.representation == "html":
+                output["title"] = response.title = title
+            return output
+
         else:
-            profile_header = None
-
-        s3db.configure(tablename,
-                       profile_cols = 1,
-                       profile_header = profile_header,
-                       profile_widgets = profile_widgets,
-                       )
-
-        profile = S3Profile()
-        profile.tablename = tablename
-        profile.request = r
-        output = profile.profile(r, **attr)
-        if r.representation == "html":
-            output["title"] = response.title = title
-        return output
-
-    else:
-        raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def hrm_configure_salary(r):
-    """ 
-        Configure the salary tab 
+    """
+        Configure the salary tab
 
         @param r: the S3Request
     """
@@ -7125,7 +7638,7 @@ def hrm_configure_salary(r):
         # Default to the staff record selected in URL
         default_hr_id = hr_id
         if "human_resource.id" in r.get_vars:
-            try: 
+            try:
                 default_hr_id = long(r.get_vars["human_resource.id"])
             except ValueError:
                 pass
@@ -7148,7 +7661,7 @@ def hrm_configure_salary(r):
         field.writable = False
 
         # Hiding the field can be confusing if there are mixed single/multi HR
-        #field.readable = False 
+        #field.readable = False
 
         # Hide the list field
         if "human_resource_id" in list_fields:

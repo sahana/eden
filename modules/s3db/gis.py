@@ -39,8 +39,9 @@ __all__ = ("S3LocationModel",
            "S3FeatureLayerModel",
            "S3MapModel",
            "S3GISThemeModel",
-           "S3POIModel",
-           "S3POIFeedModel",
+           "S3PoIModel",
+           "S3PoIOrganisationGroupModel",
+           "S3PoIFeedModel",
            "gis_location_filter",
            "gis_LocationRepresent",
            "gis_layer_represent",
@@ -455,10 +456,10 @@ class S3LocationModel(S3Model):
         """
 
         auth = current.auth
-        vars = form.vars
-        id = vars.id
+        form_vars = form.vars
+        id = form_vars.id
 
-        if vars.path and current.response.s3.bulk:
+        if form_vars.path and current.response.s3.bulk:
             # Don't import path from foreign sources as IDs won't match
             db = current.db
             db(db.gis_location.id == id).update(path=None)
@@ -468,7 +469,7 @@ class S3LocationModel(S3Model):
             # Update the Path (async if-possible)
             # (skip during prepop)
             feature = json.dumps(dict(id=id,
-                                      level=vars.get("level", False),
+                                      level=form_vars.get("level", False),
                                       ))
             current.s3task.async("gis_update_location_tree",
                                  args=[feature])
@@ -484,9 +485,11 @@ class S3LocationModel(S3Model):
         T = current.T
         db = current.db
         gis = current.gis
+        auth = current.auth
         response = current.response
+        settings = current.deployment_settings
 
-        MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
+        MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
 
         form_vars = form.vars
         vars_get = form_vars.get
@@ -498,11 +501,13 @@ class S3LocationModel(S3Model):
 
         if addr_street and lat is None and lon is None and \
            response.s3.bulk:
-            geocoder = current.deployment_settings.get_gis_geocode_imported_addresses()
+            geocoder = settings.get_gis_geocode_imported_addresses()
             if geocoder:
                 # Geocode imported addresses
                 postcode = vars_get("postcode", None)
-                # Build Path (won't be populated yet)
+                # Build Path (won't be populated yet). Note get_parents will not
+                # construct the path during prepopulate. Updating the location
+                # tree is deferred til after the prepopulate data is loaded.
                 if parent:
                     Lx_ids = gis.get_parents(parent, ids_only=True)
                     if Lx_ids:
@@ -514,9 +519,14 @@ class S3LocationModel(S3Model):
                 results = gis.geocode(addr_street, postcode, Lx_ids, geocoder)
                 if isinstance(results, basestring):
                     # Error
-                    current.log.error(results)
-                    form.errors["addr_street"] = results
-                    return
+                    if auth.override and not \
+                       settings.get_gis_check_within_parent_boundaries():
+                        # Just Warn
+                        current.log.warning(results)
+                    else:
+                        # Make this check mandatory
+                        form.errors["addr_street"] = results
+                        return
                 else:
                     form_vars.lon = lon = results["lon"]
                     form_vars.lat = lat = results["lat"]
@@ -595,10 +605,14 @@ class S3LocationModel(S3Model):
                 #if lat not in (None, "") and lon not in (None, ""):
                 if lat and lon:
                     name = form_vars.name
-                    if parent and current.deployment_settings.get_gis_check_within_parent_boundaries():
-                        # Check within Bounds of the Parent
+                    if parent and settings.get_gis_check_within_parent_boundaries():
+                        # Check within Bounds of the Parent if possible.
                         # Rough (Bounding Box)
-                        lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_bounds(parent=parent)
+                        # During prepopulate, the location tree update is
+                        # disabled. This is what propagates location and bounds
+                        # down the hierarchy so the parent may not have bounds.
+                        # Prepopulate data should be prepared to be correct.
+                        lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_parent_bounds(parent=parent)
                         if (lat > lat_max) or (lat < lat_min):
                             lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
                                                           lat_min, lat_max)
@@ -1339,13 +1353,13 @@ class S3LocationTagModel(S3Model):
             table = job.table
             data = job.data
             tag = data.get("tag", None)
-            location = data.get("location", None)
+            location_id = data.get("location_id", None)
 
-            if not tag or not location:
+            if not tag or not location_id:
                 return
 
             query = (table.tag.lower() == tag.lower()) & \
-                    (table.location_id == location)
+                    (table.location_id == location_id)
 
             _duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
@@ -4761,7 +4775,7 @@ class S3GISThemeModel(S3Model):
         return json.dumps(style)
 
 # =============================================================================
-class S3POIModel(S3Model):
+class S3PoIModel(S3Model):
     """
         Data Model for PoIs (Points of Interest)
     """
@@ -4769,16 +4783,20 @@ class S3POIModel(S3Model):
     names = ("gis_poi_type",
              #"gis_poi_type_tag",
              "gis_poi",
+             "gis_poi_id",
              )
 
     def model(self):
 
+        db = current.db
         T = current.T
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # PoI Category
+        #
+        # @ToDo: Optionally restrict by Feature Type?
         #
         tablename = "gis_poi_type"
         define_table(tablename,
@@ -4796,7 +4814,7 @@ class S3POIModel(S3Model):
                                       ondelete = "SET NULL",
                                       represent = represent,
                                       requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(current.db, "gis_poi_type.id",
+                                        IS_ONE_OF(db, "gis_poi_type.id",
                                                   represent)),
                                       sortby = "name",
                                       )
@@ -4838,11 +4856,18 @@ class S3POIModel(S3Model):
                          # @ToDo: S3PoIWidget() to allow other resources to pickup the passed Lat/Lon/WKT
                          widget = S3LocationLatLonWidget(),
                      ),
+                     # Enable in Templates as-required
+                     self.org_organisation_id(readable = False,
+                                              writable = False,
+                                              ),
+                     # Enable in Templates as-required
+                     self.pr_person_id(readable = False,
+                                       writable = False,
+                                       ),
                      *s3_meta_fields())
 
-        ADD_POI = T("Create Point of Interest")
         crud_strings[tablename] = Storage(
-            label_create = ADD_POI,
+            label_create = T("Create Point of Interest"),
             title_display = T("Point of Interest Details"),
             title_list = T("Points of Interest"),
             title_update = T("Edit Point of Interest"),
@@ -4854,8 +4879,33 @@ class S3POIModel(S3Model):
             msg_record_deleted = T("Point of Interest deleted"),
             msg_list_empty = T("No Points of Interest currently available"))
 
+        represent = S3Represent(lookup=tablename)
+        poi_id = S3ReusableField("poi_id", "reference %s" % tablename,
+                                 label = T("Point of Interest"),
+                                 ondelete = "RESTRICT",
+                                 represent = represent,
+                                 requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "gis_poi.id",
+                                                          represent)
+                                                ),
+                                 sortby = "name",
+                                 )
+
+        # Components
+        self.add_components(tablename,
+                            # Organisation Groups (Coalitions/Networks)
+                            org_group = {"link": "gis_poi_group",
+                                         "joinby": "poi_id",
+                                         "key": "group_id",
+                                         "actuate": "hide",
+                                         },
+                            # Format for InlineComponent/filter_widget
+                            gis_poi_group = "poi_id",
+                            )
+
         # Pass names back to global scope (s3.*)
-        return dict()
+        return dict(gis_poi_id = poi_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4933,7 +4983,8 @@ class S3POIModel(S3Model):
             # Create It
             f_id = ltable.insert(controller = "gis",
                                  function = "poi",
-                                 attributes = ["name, poi_type_id"],
+                                 attr_fields = ["name", "poi_type_id"],
+                                 name = "PoIs",
                                  )
             record = dict(id=f_id)
             s3db.update_super(ltable, record)
@@ -4980,7 +5031,64 @@ class S3POIModel(S3Model):
             current.log.warning("Unable to update GIS PoI Style as there are multiple possible")
 
 # =============================================================================
-class S3POIFeedModel(S3Model):
+class S3PoIOrganisationGroupModel(S3Model):
+    """
+        PoI Organisation Group Model
+
+        This model allows PoIs to link to Organisation Groups
+    """
+
+    names = ("gis_poi_group",
+             )
+
+    def model(self):
+
+        #T = current.T
+
+        # ---------------------------------------------------------------------
+        # PoIs <> Organisation Groups - Link table
+        #
+        tablename = "gis_poi_group"
+        self.define_table(tablename,
+                          self.gis_poi_id(empty = False,
+                                          ondelete = "CASCADE",
+                                          ),
+                          self.org_group_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.gis_poi_group_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_poi_group_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "gis_poi_group":
+            return
+
+        data = item.data
+        poi_id = data.get("poi_id", None)
+        group_id = data.get("group_id", None)
+        if poi_id and group_id:
+            table = item.table
+            query = (table.poi_id == poi_id) & \
+                    (table.group_id == group_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3PoIFeedModel(S3Model):
     """ Data Model for PoI feeds """
 
     names = ("gis_poi_feed",)

@@ -728,7 +728,7 @@ class organisations():
             raise HTTP(404, "Unable to open Custom View: %s" % view)
 
         s3 = response.s3
-        s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+        s3["dataTable_dom"] = 'ripl<"dataTable_table"t>p'
 
         tables = []
         table = request.vars.get("table", None)
@@ -848,17 +848,17 @@ class organisations():
                 rows[i].append(records[i][colname])
 
         options = json.dumps({
-            "iDisplayLength": limit,
-            "iDeferLoading": data["numrows"],
-            "bProcessing": True,
-            #"bServerSide": True,
-            #"sAjaxSource": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),
-            "aoColumnDefs": [{"bVisible": False,
-                              "aTargets": [0]
-                              }],
-            "aoColumns": [{"sName": col["name"]} for col in cols],
-            "sDom": 'rifpl<"dataTable_table"t>p'
-        })
+            #"ajax": "/%s/default/index/organisations/?table=%s" % (current.request.application, name),
+            "deferLoading": data["numrows"],
+            "columnDefs": [{"targets": [0]}],
+            "columns": [{"name": col["name"],
+                         "visible": False,
+                         } for col in cols],
+            "dom": 'rifpl<"dataTable_table"t>p',
+            "pageLength": limit,
+            "processing": True,
+            #"serverSide": True,
+            })
 
         script = '''S3.dataTablesInstances.push({'options':%s})''' % XML(options)
         current.response.s3.js_global.append(script)

@@ -208,11 +208,11 @@
   /* Used for Resource Inventory */
   content: "\f0ad";
 }
-.icon-down:before {
-  /* Used for filter forms and AddPersonWidget2's deduplicator */
+.icon-caret-down:before {
+  /* Used for filter forms, profile update form and AddPersonWidget2 deduplicator */
   content: "\f0d7";
 }
-.icon-up:before {
-  /* Used for filter forms */
+.icon-caret-up:before {
+  /* Used for filter forms and profile update form */
   content: "\f0d8";
 }

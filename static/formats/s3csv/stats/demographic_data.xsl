@@ -16,6 +16,7 @@
          Date...........................optional.....demographic_data.date
          Year...........................optional.....demographic_data.date
          Source.........................optional.....doc_document.name
+         Source Organisation............optional.....doc_document.organisation_id
          Source URL.....................optional.....doc_document.url
          Country........................optional.....gis_location.L0
          L1.............................optional.....gis_location.L1
@@ -85,13 +86,20 @@
                          col[@field='L5'])"/>
 
     <xsl:key name="demographic" match="row" use="col[@field='Demographic']"/>
-
+    <xsl:key name="org" match="row" use="col[@field='Source Organisation']"/>
     <xsl:key name="source" match="row" use="col[@field='Source']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
+            <!-- Organisations -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('org',
+                                                        col[@field='Source Organisation'])[1])]">
+                <xsl:call-template name="Organisation" />
+            </xsl:for-each>
+
             <!-- Sources -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('source',
@@ -361,10 +369,27 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+        <xsl:variable name="OrgName" select="col[@field='Source Organisation']"/>
+
+         <xsl:if test="$OrgName!=''">
+             <resource name="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('organisation/',$OrgName)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$OrgName"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Source">
         <xsl:variable name="SourceName" select="col[@field='Source']"/>
+
         <xsl:if test="$SourceName!=''">
             <xsl:variable name="date" select="col[@field='Date']"/>
+            <xsl:variable name="OrgName" select="col[@field='Source Organisation']"/>
             <xsl:variable name="url" select="col[@field='Source URL']"/>
             <xsl:variable name="location">
                 <xsl:call-template name="LocationUid"/>
@@ -387,11 +412,18 @@
                     <xsl:value-of select="concat('doc_document/',$SourceName)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$SourceName"/></data>
-                <xsl:if test="$url!=''">
-                    <data field="url"><xsl:value-of select="$url"/></data>
-                </xsl:if>
                 <xsl:if test="$date!=''">
                     <data field="date"><xsl:value-of select="$date"/></data>
+                </xsl:if>
+                <xsl:if test="$OrgName!=''">
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('organisation/',$OrgName)"/>
+                        </xsl:attribute>
+                    </reference>
+                </xsl:if>
+                <xsl:if test="$url!=''">
+                    <data field="url"><xsl:value-of select="$url"/></data>
                 </xsl:if>
 
                 <!-- Link to Location -->

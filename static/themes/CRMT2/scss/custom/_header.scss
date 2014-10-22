@@ -1,0 +1,45 @@
+@charset "utf-8";
+
+// headers
+
+.top-bar {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.top-bar-section .right li > a {
+  font-size: 75%;
+}
+
+@media only screen and (min-width: $topbar-breakpoint) { 
+  .top-bar-section .right li > a {
+    color: $navy;
+  }
+} 
+
+
+.top-bar-section .right .has-dropdown > a:after {
+  border-color: rgba(55, 81, 139, 0.7) transparent transparent transparent; // faded navy
+}
+
+.top-bar-section .dropdown li {
+  height: 49px;
+  a {
+    line-height: 49px !important;
+    padding: 0 20px;
+  }
+}
+
+.top-bar-section .back a {
+  color: $wave !important;
+  &:before {
+    content: '← ';
+  }
+}
+
+
+.name img {
+  margin-top: -5px;
+  margin-right: 7px;
+}
+
+

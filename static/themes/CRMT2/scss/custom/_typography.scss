@@ -1,0 +1,55 @@
+
+
+.row-title {
+  margin-bottom: $space-double;
+  .data & {
+    margin-bottom: $space-third;
+  }
+}
+
+.details-title {
+  margin-bottom: 0;
+}
+
+.lede {
+  font-size: 1.1em;
+}
+
+h6 {
+  text-transform: uppercase;
+  letter-spacing: $tracking;
+  color: $text-color;
+}
+
+
+figcaption {
+  line-height: 1.2;
+  color: $text-color;
+  padding: 5px;
+}
+
+
+.timestamp {
+  color: $stone;
+  font-size: 75%;
+  margin-bottom: $space;
+}
+
+
+
+// FORMS
+
+.postscript {
+  position: relative;
+  top: -$space-half;
+  line-height: 1;
+}
+
+.req, 
+.req-key {
+  color: $warning-color;
+}
+
+.row.collapse div:first-child label {
+  padding-right: 1rem;
+}

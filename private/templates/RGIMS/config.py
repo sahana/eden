@@ -76,7 +76,7 @@ settings.ui.cluster = True
 # Enable this to use the label 'Camp' instead of 'Shelter'
 settings.ui.camp = True
 
-# Request
+# Requests
 settings.req.use_commit = False
 settings.req.req_form_name = "Request Issue Form"
 settings.req.req_shortname = "RIS"

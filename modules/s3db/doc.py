@@ -78,10 +78,12 @@ class S3DocumentLibrary(S3Model):
                                cr_shelter=T("Shelter"),
                                deploy_mission=T("Mission"),
                                doc_sitrep=T("Situation Report"),
+                               event_incident_report=T("Incident Report"),
                                hms_hospital=T("Hospital"),
                                hrm_human_resource=T("Human Resource"),
                                inv_adj=T("Stock Adjustment"),
                                inv_warehouse=T("Warehouse"),
+                               # @ToDo: Deprecate
                                irs_ireport=T("Incident Report"),
                                pr_group=T("Team"),
                                project_project=T("Project"),
@@ -91,6 +93,7 @@ class S3DocumentLibrary(S3Model):
                                org_office=T("Office"),
                                org_facility=T("Facility"),
                                org_group=T("Organization Group"),
+                               # @ToDo: Deprecate
                                stats_people=T("People"),
                                vulnerability_document=T("Vulnerability Document"),
                                vulnerability_risk=T("Risk"),
@@ -115,7 +118,7 @@ class S3DocumentLibrary(S3Model):
                      # Instance
                      self.stats_source_superlink,
                      # Component not instance
-                     super_link("doc_id", "doc_entity"),
+                     super_link(doc_id, "doc_entity"),
                      # @ToDo: Remove since Site Instances are doc entities?
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
@@ -240,7 +243,7 @@ class S3DocumentLibrary(S3Model):
         tablename = "doc_image"
         define_table(tablename,
                      # Component not instance
-                     super_link("doc_id", "doc_entity"),
+                     super_link(doc_id, "doc_entity"),
                      super_link("pe_id", "pr_pentity"), # @ToDo: Remove & make Persons doc entities instead?
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload", autodelete=True,

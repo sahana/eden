@@ -911,6 +911,7 @@ label.ui-corner-all span {
 
 .auth_login .controls {
     margin-left: 90px;
+    white-space: pre;
 }
 
 #auth_user_email,
