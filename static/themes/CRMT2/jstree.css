@@ -380,11 +380,11 @@
 #jstree-dnd.jstree-er {
   background-position: -39px -71px;
 }
-> .jstree-striped {
+.jstree-striped {
   background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAkCAMAAAB/qqA+AAAABlBMVEUAAAAAAAClZ7nPAAAAAnRSTlMNAMM9s3UAAAAXSURBVHjajcEBAQAAAIKg/H/aCQZ70AUBjAATb6YPDgAAAABJRU5ErkJggg==") left top repeat;
 }
-> .jstree-wholerow-ul .jstree-hovered,
-> .jstree-wholerow-ul .jstree-clicked {
+.jstree-wholerow-ul .jstree-hovered,
+.jstree-wholerow-ul .jstree-clicked {
   background: transparent;
   box-shadow: none;
   border-radius: 0;
@@ -459,14 +459,14 @@
 .jstree-themeicon {
   background-position: -260px -4px;
 }
-> .jstree-no-dots .jstree-node,
-> .jstree-no-dots .jstree-leaf > .jstree-ocl {
+.jstree-no-dots .jstree-node,
+.jstree-no-dots .jstree-leaf > .jstree-ocl {
   background: transparent;
 }
-> .jstree-no-dots .jstree-open > .jstree-ocl {
+.jstree-no-dots .jstree-open > .jstree-ocl {
   background-position: -36px -4px;
 }
-> .jstree-no-dots .jstree-closed > .jstree-ocl {
+.jstree-no-dots .jstree-closed > .jstree-ocl {
   background-position: -4px -4px;
 }
 .jstree-disabled {
@@ -498,7 +498,7 @@
 .jstree-anchor > .jstree-undetermined:hover {
   background-position: -196px -36px;
 }
-> .jstree-striped {
+.jstree-striped {
   background-size: auto 48px;
 }
 .jstree-rtl .jstree-node {
@@ -533,7 +533,7 @@
   background-image: none;
   background-position: 0 0;
 }
-> .jstree-container-ul .jstree-loading > .jstree-ocl {
+.jstree-container-ul .jstree-loading > .jstree-ocl {
   background: url("img/throbber.gif") center center no-repeat;
 }
 .jstree-file {
@@ -993,7 +993,7 @@
     background-size: 120px 240px;
   }
 }
-> .jstree-container-ul > .jstree-node {
+.jstree-container-ul > .jstree-node {
   margin-left: 0;
   margin-right: 0;
 }
