@@ -144,7 +144,7 @@ class S3BudgetModel(S3Model):
                 f = "budget",
                 label = ADD_BUDGET,
                 title = T("Budget"),
-                tooltip = T("You can create a new budget by clicking link '%s'." % ADD_BUDGET)
+                tooltip = T("You can create a new budget by clicking link '%s'.") % ADD_BUDGET
                 ),
             )
 
@@ -264,7 +264,7 @@ class S3BudgetModel(S3Model):
                 f = "location",
                 label = ADD_LOCATION,
                 title = T("Location"),
-                tooltip = T("You can create a new location by clicking link '%s'." % ADD_LOCATION)
+                tooltip = T("You can create a new location by clicking link '%s'.") % ADD_LOCATION
                 ),
             )
 
@@ -341,7 +341,7 @@ class S3BudgetModel(S3Model):
                 f = "staff",
                 label = ADD_STAFF_TYPE,
                 title = T("Staff"),
-                tooltip = T("You can create new staff by clicking link '%s'." % ADD_STAFF_TYPE)
+                tooltip = T("You can create new staff by clicking link '%s'.") % ADD_STAFF_TYPE
                 ),
             )
 
@@ -586,7 +586,7 @@ class S3BudgetKitModel(S3Model):
                 f = "kit",
                 label = ADD_KIT,
                 title = T("Kit"),
-                tooltip = T("You can create a new kit by clicking link '%s'." % ADD_KIT)
+                tooltip = T("You can create a new kit by clicking link '%s'.") % ADD_KIT
                 ),
             )
 
@@ -712,7 +712,7 @@ class S3BudgetKitModel(S3Model):
                 f = "item",
                 label = ADD_ITEM,
                 title = T("Item"),
-                tooltip = T("You can create a new item by clicking link '%s'." % ADD_ITEM)
+                tooltip = T("You can create a new item by clicking link '%s'.") % ADD_ITEM
                 ),
             )
 
@@ -966,7 +966,7 @@ class S3BudgetBundleModel(S3Model):
                 f = "bundle",
                 label = ADD_BUNDLE,
                 title = T("Bundle"),
-                tooltip = T("You can create a new bundle by clicking link '%s'." % ADD_BUNDLE)
+                tooltip = T("You can create a new bundle by clicking link '%s'.") % ADD_BUNDLE
                 ),
             )
 
