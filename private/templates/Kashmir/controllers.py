@@ -252,7 +252,7 @@ $(document).ready(function(){
 
 # END =========================================================================
 class listoforganizations(S3CustomController):
-	  """ Custom Page for rendering list of participating organizations """
-	  def __call__(self):
-		 self._view(TEMPLATE, "listoforg.html")
-		 return{"title":"List of Participating Organizations"}
+    """ Custom Page for rendering list of participating organizations """
+    def __call__(self):
+        self._view(TEMPLATE, "listoforg.html")
+        return{"title":"List of Participating Organizations"}
