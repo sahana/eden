@@ -1482,13 +1482,13 @@ class S3HRSalaryModel(S3Model):
                                    ),
                              s3_date("start_date",
                                      default = "now",
-                                     label = T("From"),
+                                     label = T("Start Date"),
                                      widget = S3DateTimeWidget(hide_time=True,
                                                                set_min="hrm_salary_end_date",
                                                                ),
                                      ),
                              s3_date("end_date",
-                                     label = T("To"),
+                                     label = T("End Date"),
                                      widget = S3DateTimeWidget(hide_time=True,
                                                                set_max="hrm_salary_start_date",
                                                                ),
@@ -3983,7 +3983,7 @@ class S3HRAwardModel(S3Model):
         award_type_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_award_type")
 
         # =====================================================================
-        # Salary
+        # Awards
         #
         tablename = "hrm_award"
         table = define_table(tablename,
