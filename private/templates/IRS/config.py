@@ -240,7 +240,7 @@ def customise_stats_demographic_data_resource(r, tablename):
     #               report_options = report_options,
     #               )
 
-#settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
+settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

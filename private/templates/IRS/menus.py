@@ -44,4 +44,39 @@ class S3MainMenu(default.S3MainMenu):
             ),
         ]
 
+# =============================================================================
+class S3OptionsMenu(default.S3OptionsMenu):
+    """ Custom Controller Menus """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dvi():
+        """ DVI / Disaster Victim Identification """
+
+        return M(c="dvi")(
+                    #M("Home", f="index"),
+                    M("Recovery Requests", f="recreq")(
+                        M("New Request", m="create"),
+                        M("List Current",
+                          vars={"recreq.status":"1,2,3"}),
+                    ),
+                    M("Dead Bodies", f="body")(
+                        M("Add", m="create"),
+                        M("List unidentified",
+                          vars={"identification.status": "None"}),
+                        M("Report by Age/Gender", m="report",
+                          vars=dict(rows="age_group",
+                                    cols="gender",
+                                    fact="pe_label",
+                                    aggregate="count")),
+                    ),
+                    #M("Missing Persons", f="person")(
+                    #    M("List all"),
+                    #),
+                    M("Morgues", f="morgue")(
+                        M("Create", m="create"),
+                    ),
+                    M("Dashboard", f="index"),
+                )
+
 # END =========================================================================
