@@ -192,6 +192,10 @@ def extractRow(row):
         return
 
     country = row[0].strip()
+    if country != "Sierra Leone":
+        # This deployment is only interested in SL data
+        return
+
     if not location in location_list:
         # Ensure some standard Capitalisation - or at least try ;)
         location = string.capwords(location)
