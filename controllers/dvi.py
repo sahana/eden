@@ -104,11 +104,11 @@ def morgue():
     """ Morgue Registry """
 
     morgue_tabs = [(T("Morgue Details"), ""),
-                   (T("Bodies"), "body")]
+                   (T("Bodies"), "body"),
+                   ]
 
-    rheader = S3ResourceHeader([
-                    [(T("Morgue"), "name")]
-              ], tabs=morgue_tabs)
+    rheader = S3ResourceHeader([[(T("Morgue"), "name")]
+                                ], tabs=morgue_tabs)
 
     # Pre-processor
     def prep(r):
@@ -142,13 +142,14 @@ def body():
                 (T("Effects Inventory"), "effects"),
                 (T("Journal"), "note"),
                 (T("Identification"), "identification"),
-               ]
+                ]
 
     rheader = S3ResourceHeader([[(T("ID Tag Number"), "pe_label")],
                                 ["gender"],
                                 ["age_group"],
-                               ],
-                               tabs=dvi_tabs)
+                                ],
+                                tabs=dvi_tabs)
+
     return s3_rest_controller(rheader=rheader)
 
 # -----------------------------------------------------------------------------
@@ -164,24 +165,26 @@ def person():
         msg_no_match = T("No Persons currently reported missing"))
 
     s3db.configure("pr_group_membership",
-                   list_fields=["id",
-                                "group_id",
-                                "group_head",
-                                "comments"
-                                ])
+                   list_fields = ["id",
+                                  "group_id",
+                                  "group_head",
+                                  "comments"
+                                  ],
+                   )
 
     s3db.configure("pr_person",
-                   listadd=False,
-                   editable=False,
-                   deletable=False,
-                   list_fields=["id",
-                                "first_name",
-                                "middle_name",
-                                "last_name",
-                                "picture",
-                                "gender",
-                                "age_group"
-                                ])
+                   deletable = False,
+                   editable = False,
+                   listadd = False,
+                   list_fields = ["id",
+                                  "first_name",
+                                  "middle_name",
+                                  "last_name",
+                                  "picture",
+                                  "gender",
+                                  "age_group"
+                                  ],
+                   )
 
     def prep(r):
         if not r.id and not r.method and not r.component:
@@ -210,8 +213,7 @@ def person():
     if len(request.args) == 0:
         s3.filter = (db.pr_person.missing == True)
 
-    mpr_tabs = [
-                (T("Missing Report"), "missing_report"),
+    mpr_tabs = [(T("Missing Report"), "missing_report"),
                 (T("Person Details"), None),
                 (T("Physical Description"), "physical_description"),
                 (T("Images"), "image"),
@@ -219,14 +221,15 @@ def person():
                 (T("Address"), "address"),
                 (T("Contact Data"), "contact"),
                 (T("Journal"), "note"),
-               ]
+                ]
 
     rheader = lambda r: s3db.pr_rheader(r, tabs=mpr_tabs)
 
     output = s3_rest_controller("pr", "person",
-                                main="first_name",
-                                extra="last_name",
-                                rheader=rheader)
+                                main = "first_name",
+                                extra = "last_name",
+                                rheader = rheader,
+                                )
     return output
 
 # -------------------------------------------------------------------------

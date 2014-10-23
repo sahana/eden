@@ -174,35 +174,41 @@ def customise_stats_demographic_data_resource(r, tablename):
     s3db = current.s3db
     table = s3db.stats_demographic_data
 
-    # @ToDo: 'Month' VF
-    #from s3 import S3OptionsFilter
-    #filter_widgets = [S3OptionsFilter("parameter_id",
-    #                                  label = T("Type"),
-    #                                  multiple = False,
-    #                                  # Not translateable
-    #                                  #represent = "%(name)s",
-    #                                  ),
-    #                  S3OptionsFilter("month",
-    #                                  #multiple = False,
-    #                                  operator = "anyof",
-    #                                  options = lambda: \
-    #                                    stats_month_options("stats_demographic_data"),
-    #                                  ),
-    #                  S3OptionsFilter("location_id$level",
-    #                                  label = T("Level"),
-    #                                  multiple = False,
-    #                                  # Not translateable
-    #                                  #represent = "%(name)s",
-    #                                  ),
-    #                  S3LocationFilter("location_id",
-    #                                   levels = levels,
-    #                                   ),
-    #                  ]
+    # Add a Timeplot tab to summary page
+    # @ToDo: Widget version of timeplot
+    #settings.ui.summary = list(settings.ui.summary) + {"name": "timeplot",
+    #                                                   "label": "TimePlot",
+    #                                                   "widgets": [{"method": "timeplot", "ajax_init": True}],
+    #                                                   }
 
-    # Sum doesn't make sense for this data as it's already cumulative
-    report_options = s3db.get_config(tablename, "report_options")
-    report_options.fact = [(T("Value"), "max(value)")]
-    report_options.defaults.fact = "max(value)"
+    from s3 import S3OptionsFilter, S3LocationFilter
+    filter_widgets = [S3OptionsFilter("parameter_id",
+                                      label = T("Type"),
+                                      multiple = False,
+                                      # Not translateable
+                                      #represent = "%(name)s",
+                                      ),
+                      # @ToDo: 'Month' &/or Week VF
+                      #S3OptionsFilter("month",
+                      #                #multiple = False,
+                      #                operator = "anyof",
+                      #                options = lambda: \
+                      #                  stats_month_options("stats_demographic_data"),
+                      #                ),
+                      # This is critical for the Map, but breaks aggregated Report data
+                      #S3OptionsFilter("location_id$level",
+                      #                label = T("Level"),
+                      #                multiple = False,
+                      #                # Not translateable
+                      #                #represent = "%(name)s",
+                      #                ),
+                      S3LocationFilter("location_id"),
+                      ]
+
+    # Sum doesn't make sense for data which is already cumulative
+    #report_options = s3db.get_config(tablename, "report_options")
+    #report_options.fact = [(T("Value"), "max(value)")]
+    #report_options.defaults.fact = "max(value)"
 
     #report_options = Storage(rows = location_fields + ["month"],
     #                         cols = ["parameter_id"],
@@ -217,10 +223,20 @@ def customise_stats_demographic_data_resource(r, tablename):
     #                                            )
     #                         )
 
-    #s3db.configure(tablename,
-    #               filter_widgets = filter_widgets,
-    #               report_options = report_options,
-    #               )
+    s3db.configure(tablename,
+                   filter_widgets = filter_widgets,
+                   #report_options = report_options,
+                   timeplot_options = {
+                            "defaults": {
+                                # @ToDo: Total Population?
+                                #"baseline": "budget_id$total_volume",
+                                "fact": "cumulate(value)",
+                                "slots": "",
+                                "start": "",
+                                #"end": "+1month",
+                            },
+                       },
+                       )
 
 settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 

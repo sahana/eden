@@ -184,6 +184,13 @@ def customise_stats_demographic_data_resource(r, tablename):
     s3db = current.s3db
     table = s3db.stats_demographic_data
 
+    # Add a Timeplot tab to summary page
+    # @ToDo: Widget version of timeplot
+    #settings.ui.summary = list(settings.ui.summary) + {"name": "timeplot",
+    #                                                   "label": "TimePlot",
+    #                                                   "widgets": [{"method": "timeplot", "ajax_init": True}],
+    #                                                   }
+
     # @ToDo: 'Month' VF
     #from s3 import S3OptionsFilter
     #filter_widgets = [S3OptionsFilter("parameter_id",
@@ -209,10 +216,10 @@ def customise_stats_demographic_data_resource(r, tablename):
     #                                   ),
     #                  ]
 
-    # Sum doesn't make sense for this data as it's already cumulative
-    report_options = s3db.get_config(tablename, "report_options")
-    report_options.fact = [(T("Value"), "max(value)")]
-    report_options.defaults.fact = "max(value)"
+    # Sum doesn't make sense for data which is already cumulative
+    #report_options = s3db.get_config(tablename, "report_options")
+    #report_options.fact = [(T("Value"), "max(value)")]
+    #report_options.defaults.fact = "max(value)"
 
     #report_options = Storage(rows = location_fields + ["month"],
     #                         cols = ["parameter_id"],
@@ -232,8 +239,9 @@ def customise_stats_demographic_data_resource(r, tablename):
     #               report_options = report_options,
     #               )
 
-settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
+#settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([
@@ -344,6 +352,11 @@ settings.modules = OrderedDict([
     ("hms", Storage(
         name_nice = T("Hospitals"),
         #description = "Helps to monitor status of hospitals",
+        restricted = True,
+        module_type = 10
+    )),
+    ("dvi", Storage(
+        name_nice = T("Burials"),
         restricted = True,
         module_type = 10
     )),

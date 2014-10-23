@@ -774,7 +774,8 @@ class S3LocationModel(S3Model):
             if end_date:
                 query &= (table.end_date == end_date)
             if start_date:
-                query &= (table.start_date == start_date)
+                query &= ((table.start_date == start_date) | \
+                          (table.end_date == None))
 
             duplicate = current.db(query).select(table.id,
                                                  orderby=~table.end_date,

@@ -96,22 +96,23 @@ settings.mail.approver = "ADMIN"
 #settings.security.policy = 7 # Organisation-ACLs
 
 # RSS feeds
-settings.frontpage.rss = [
-    {"title": "Eden",
-     # Trac timeline
-     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
-    },
-    {"title": "Twitter",
-     # @SahanaFOSS
-     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
-     # Hashtag
-     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
-    }
-]
+#settings.frontpage.rss = [
+#    {"title": "Eden",
+#     # Trac timeline
+#     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+#    },
+#    {"title": "Twitter",
+#     # @SahanaFOSS
+#     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
+#     # Hashtag
+#     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
+#    }
+#]
 
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([

@@ -1662,6 +1662,7 @@ class S3OptionsMenu(object):
                     ),
                     M("Demographic Data", f="demographic_data", args="summary")(
                         M("Create", m="create"),
+                        M("Time Plot", m="timeplot"),
                         M("Import", m="import"),
                     ),
                 )
