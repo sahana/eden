@@ -91,9 +91,11 @@ class S3StatsModel(S3Model):
         super_entity(tablename, "parameter_id",
                      sp_types,
                      Field("name",
-                           label = T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("description",
-                           label = T("Description")),
+                           label = T("Description"),
+                           ),
                      )
         # @todo: make lazy_table
         table = db[tablename]

@@ -191,30 +191,31 @@ def customise_stats_demographic_data_resource(r, tablename):
     #                                                   "widgets": [{"method": "timeplot", "ajax_init": True}],
     #                                                   }
 
-    # @ToDo: 'Month' VF
-    #from s3 import S3OptionsFilter
-    #filter_widgets = [S3OptionsFilter("parameter_id",
-    #                                  label = T("Type"),
-    #                                  multiple = False,
-    #                                  # Not translateable
-    #                                  #represent = "%(name)s",
-    #                                  ),
-    #                  S3OptionsFilter("month",
-    #                                  #multiple = False,
-    #                                  operator = "anyof",
-    #                                  options = lambda: \
-    #                                    stats_month_options("stats_demographic_data"),
-    #                                  ),
-    #                  S3OptionsFilter("location_id$level",
-    #                                  label = T("Level"),
-    #                                  multiple = False,
-    #                                  # Not translateable
-    #                                  #represent = "%(name)s",
-    #                                  ),
-    #                  S3LocationFilter("location_id",
-    #                                   levels = levels,
-    #                                   ),
-    #                  ]
+    from s3 import S3OptionsFilter, S3LocationFilter
+    filter_widgets = [S3OptionsFilter("parameter_id",
+                                      label = T("Type"),
+                                      multiple = False,
+                                      # Not translateable
+                                      #represent = "%(name)s",
+                                      ),
+                      # @ToDo: 'Month' &/or Week VF
+                      #S3OptionsFilter("month",
+                      #                #multiple = False,
+                      #                operator = "anyof",
+                      #                options = lambda: \
+                      #                  stats_month_options("stats_demographic_data"),
+                      #                ),
+                      ]
+    
+    if r.method != "timeplot":
+        # This is critical for the Map, but breaks aggregated Report data
+        filter_widgets.append(S3OptionsFilter("location_id$level",
+                                              label = T("Level"),
+                                              multiple = False,
+                                              # Not translateable
+                                              #represent = "%(name)s",
+                                              ))
+    filter_widgets.append(S3LocationFilter("location_id"))
 
     # Sum doesn't make sense for data which is already cumulative
     #report_options = s3db.get_config(tablename, "report_options")
