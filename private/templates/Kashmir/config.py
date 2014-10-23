@@ -46,7 +46,7 @@ settings.auth.registration_link_user_to_default = "staff"
 # Configure frontpage request email address
 #settings.frontpage.request_email = "athewaas.requests@revivekashmir.org"
 # Configure frontpage phone number
-#settings.frontpage.phone_number = "#0194-230-0452"
+settings.frontpage.phone_number = "0194-230-0452"
 
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
@@ -277,5 +277,23 @@ settings.modules = OrderedDict([
         #description = "Receiving and Sending Items",
         restricted = True,
         module_type = 4
+    )),
+    ("vol", Storage(
+        name_nice = T("Voluntary"),
+        #description = "",
+        restricted = True,
+        module_type = 7
+    )),
+    ("stats", Storage(
+        name_nice = T("Statis"),
+        #description = "Enabled because organization resourse model needs this",
+        restricted = True,
+        module_type = 8
+    )),
+    ("project", Storage(
+        name_nice = T("Project"),
+        #description = "",
+        restricted = True,
+        module_type = 9
     )),
 ])
