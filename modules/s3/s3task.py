@@ -88,8 +88,8 @@ class S3Task(object):
     def configure_tasktable_crud(self,
                                  task=None,
                                  function=None,
-                                 args=[],
-                                 vars={},
+                                 args=None,
+                                 vars=None,
                                  period = 3600, # seconds, so 1 hour
                                  ):
         """
@@ -101,6 +101,11 @@ class S3Task(object):
             @param args: the function position arguments
             @param vars: the function named arguments
         """
+
+        if args is None:
+            args = []
+        if vars is None:
+            vars = {}
 
         T = current.T
         NONE = current.messages["NONE"]
@@ -226,7 +231,7 @@ class S3Task(object):
     # -------------------------------------------------------------------------
     # API Function run within the main flow of the application
     # -------------------------------------------------------------------------
-    def async(self, task, args=[], vars={}, timeout=300):
+    def async(self, task, args=None, vars=None, timeout=300):
         """
             Wrapper to call an asynchronous task.
             - run from the main request
@@ -238,6 +243,11 @@ class S3Task(object):
             @param timeout: The length of time available for the task to complete
                             - default 300s (5 mins)
         """
+        
+        if args is None:
+            args = []
+        if vars is None:
+            vars = {}
 
         # Check that task is defined
         tasks = current.response.s3.tasks
@@ -288,8 +298,8 @@ class S3Task(object):
     # -------------------------------------------------------------------------
     def schedule_task(self,
                       task,
-                      args=[], # args to pass to the task
-                      vars={}, # vars to pass to the task
+                      args=None, # args to pass to the task
+                      vars=None, # vars to pass to the task
                       function_name=None,
                       start_time=None,
                       next_run_time=None,
@@ -319,6 +329,11 @@ class S3Task(object):
             @param ignore_duplicate: disable or enable duplicate checking
             @param sync_output: sync output every n seconds (0 = disable sync)
         """
+
+        if args is None:
+            args = []
+        if vars is None:
+            vars = {}
 
         kwargs = {}
 
