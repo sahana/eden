@@ -29,9 +29,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["FaceBookAccount",
+__all__ = ("FaceBookAccount",
            "GooglePlusAccount",
-           ]
+           )
 
 import time
 import urllib

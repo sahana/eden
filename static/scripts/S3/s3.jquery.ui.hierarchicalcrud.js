@@ -10,6 +10,7 @@
  */
 (function($, undefined) {
 
+    "use strict";
     var hierarchicalcrudID = 0;
 
     /**
@@ -36,8 +37,8 @@
             addTitle: 'Add Record',
             addLabel: 'Add',
             addURL: null,
-            themesFolder: 'static/styles/jstree',
-            theme: 'default',
+            icons: false,
+            stripes: true,
             htmlTitles: true
         },
 
@@ -63,7 +64,7 @@
             var el = $(this.element);
             
             // The tree
-            this.tree = el.find('.s3-hierarchy-tree')
+            this.tree = el.find('.s3-hierarchy-tree');
             
             this.refresh();
         },
@@ -99,11 +100,9 @@
             tree.jstree({
                 'core': {
                     'themes': {
-                        url: true,
-                        dir: S3.Ap.concat('/', opts.themesFolder, '/'),
-                        name: opts.theme,
-                        icons: false,
-                        stripes: true
+                        name: 's3',
+                        icons: opts.icons,
+                        stripes: opts.stripes
                     },
                     animation: 100,
                     multiple: false,
@@ -112,25 +111,25 @@
                 'contextmenu': {
                     items: function($node) {
                         return {
-                            "open": {
+                            'open': {
                                 label: self.options.openLabel,
                                 action: function(obj) {
                                     self._openNode($node);
                                 },
                                 separator_after: true
                             },
-                            "edit": {
+                            'edit': {
                                 label: self.options.editLabel,
                                 action: function(obj) {
                                     self._editNode($node);
                                 }
                             },
-                            "delete": {
+                            'delete': {
                                 label: self.options.deleteLabel,
                                 separator_after: true,
                                 _disabled: true
                             },
-                            "add": {
+                            'add': {
                                 label: self.options.addLabel,
                                 action: function(obj) {
                                     self._addNode($node);

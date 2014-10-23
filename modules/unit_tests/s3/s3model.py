@@ -3,7 +3,7 @@
 # S3 Model Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3model.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3model.py
 #
 import unittest
 from gluon import current

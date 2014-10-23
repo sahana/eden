@@ -1,0 +1,194 @@
+Service,SubService,SubSubService
+Arts and Recreation,Beaches and Marinas,
+Arts and Recreation,Campgrounds,
+Arts and Recreation,Cruise Line Terminals,
+Arts and Recreation,Cultural and Performing Arts Centers,
+Arts and Recreation,Golf Courses,
+Arts and Recreation,Museums and Aquariums,
+Arts and Recreation,Natural Areas and Wildlife Sanctuaries,Ranger Stations
+Arts and Recreation,Parks and Gardens,
+Arts and Recreation,Picnic Areas,
+Arts and Recreation,Pools,
+Arts and Recreation,Ranches,
+Arts and Recreation,Recreation Centers,
+Arts and Recreation,Recreation Clubs,
+Arts and Recreation,Recreation Programs,
+Arts and Recreation,Ski Areas,
+Arts and Recreation,Sports Venues,Horse Race Track
+Arts and Recreation,Sports Venues,IRL
+Arts and Recreation,Sports Venues,MLB
+Arts and Recreation,Sports Venues,MLS
+Arts and Recreation,Sports Venues,NBA
+Arts and Recreation,Sports Venues,NCAA Division 1 Basketball
+Arts and Recreation,Sports Venues,NCAA Division 1 bowl game
+Arts and Recreation,Sports Venues,NCAA Division 1-A Football
+Arts and Recreation,Sports Venues,NHL
+Arts and Recreation,Sports Venues,Raceways
+Arts and Recreation,Sports Venues,WNBA
+Arts and Recreation,Tourist Assistance,
+Arts and Recreation,Trails,
+Arts and Recreation,Wineries,
+Communications,IT Portal Locations,
+Communications,Internet Exchange Points,
+Communications,Internet Service Providers,
+Communications,Internet Service Providers,
+Community Groups,Churches,
+Community Groups,Community Organizations,
+Community Groups,Farmers Markets,
+Community Groups,Red Cross Offices,
+Community Groups,Volunteer Opportunities,
+Education,Adult Education,
+Education,Colleges and Universities,
+Education,Early Childhood Education and Head Start,
+Education,Guidance and Tutoring Programs,
+Education,Private and Charter Schools,
+Education,Public Elementary Schools,
+Education,Public High Schools,
+Education,Public Middle Schools,
+Education,School Districts,
+Education,Special Curriculum Schools and Programs,Flight Schools
+Emergency Response,Cooling and Warming Centers,
+Emergency Response,Emergency and Disaster Offices,
+Emergency Response,National Shelter System,
+Emergency Response,Points of Dispensing,
+Environment,Conservation Programs,
+Environment,Hazardous Waste Disposal,
+Environment,Recycling,
+Government,Chambers of Commerce,
+Government,City Halls,
+Government,Consulate Offices,
+Government,County Offices,
+Government,Government Offices,Office of Field Operations (OFO) Facilities
+Government,Government Offices,Office of Field Operations (OFO) Port Facilities
+Government,Military Facilities,AF Active
+Government,Military Facilities,Air National Guard Combined Support Maintenance Shops
+Government,Military Facilities,Air National Guard Field Maintenance Shop
+Government,Military Facilities,Air National Guard Maintenance Shop
+Government,Military Facilities,Air National Guard Readiness Centers and Armories
+Government,Military Facilities,Army National Guard Sites
+Government,Military Facilities,Army Recruiting Centers
+Government,Military Facilities,Navy Active
+Government,Military Facilities,Navy Reserve
+Government,Military Facilities,US Army Reserves Locations
+Government,Military Facilities,US Coast Guard Units
+Government,Passports,
+Government,Representative Offices,
+Government,Social Security Administration,
+Health and Mental Health,DHS Health Clinics,
+Health and Mental Health,Dental Care,
+Health and Mental Health,Health Centers,
+Health and Mental Health,Health Clinics,
+Health and Mental Health,Health Education and Counseling,
+Health and Mental Health,Health Screening and Testing,
+Health and Mental Health,Hospitals and Medical Centers,911 Receiving
+Health and Mental Health,Hospitals and Medical Centers,Acute Care
+Health and Mental Health,Hospitals and Medical Centers,Base Hospital
+Health and Mental Health,Hospitals and Medical Centers,Disaster Resource Center
+Health and Mental Health,Hospitals and Medical Centers,EDAP-PMC
+Health and Mental Health,Hospitals and Medical Centers,Perinatal
+Health and Mental Health,Hospitals and Medical Centers,Rehabilitation
+Health and Mental Health,Hospitals and Medical Centers,Respiratory Hospital
+Health and Mental Health,Hospitals and Medical Centers,SART (Sexual Assault Response Team Center)
+Health and Mental Health,Hospitals and Medical Centers,STEMI
+Health and Mental Health,Hospitals and Medical Centers,Stroke
+Health and Mental Health,Hospitals and Medical Centers,Trauma Center
+Health and Mental Health,Immunization,
+Health and Mental Health,Medicare and Medicaid Offices,
+Health and Mental Health,Mental Health Centers,NGA
+Health and Mental Health,Mental Health Counseling,
+Health and Mental Health,Mental Health Programs,
+Health and Mental Health,Safe Havens,
+Health and Mental Health,Substance Abuse Programs,
+Municipal Services,Animals and Pets,
+Municipal Services,Building Inspections,
+Municipal Services,Cemeteries,
+Municipal Services,Community Services,
+Municipal Services,Consumer Services,
+Municipal Services,Economic Development,
+Municipal Services,Elections,
+Municipal Services,Environmental Programs,
+Municipal Services,Health and Housing Inspections,
+Municipal Services,Libraries,
+Municipal Services,Licenses and Permits,
+Municipal Services,Planning and Zoning,
+Municipal Services,Property and Tax,
+Municipal Services,Public Internet Access,
+Municipal Services,Public Records,
+Municipal Services,Rubbish Disposal,
+Municipal Services,Street Maintenance,
+Municipal Services,Utilities,Waste Water
+Postal,DHL Locations,DHL Staffed Facility
+Postal,DHL Locations,Drop Box
+Postal,DHL Locations,Drop Off Facility
+Postal,Federal Express Locations,Authorized Ship Center
+Postal,Federal Express Locations,Fed Ex Staffed
+Postal,Federal Express Locations,Self-Service
+Postal,Post Offices,
+Postal,Private Non Retail Shipping Locations,
+Postal,UPS Locations,
+Postal,USPS Bulk Mail Centers,
+Private Industry,Agriculture and Food,Agriculture and Mineral Operations
+Private Industry,Agriculture and Food,Food Processing
+Private Industry,Agriculture and Food,Game Propagation
+Private Industry,Agriculture and Food,Public Refrigerated Warehouses
+Private Industry,Banking and Finance,Bank Main Offices
+Private Industry,Banking and Finance,Brokerages
+Private Industry,Banking and Finance,Bullion Repositories
+Private Industry,Banking and Finance,Credit Unions
+Private Industry,Banking and Finance,FDIC Insured Banks
+Private Industry,Banking and Finance,Federal Reserve Branches
+Private Industry,Banking and Finance,Financial Processing Center
+Private Industry,Banking and Finance,Insurance
+Private Industry,Business Centers,
+Private Industry,Corporate Headquarters,
+Private Industry,Manufacturing,Construction Minerals
+Private Industry,Manufacturing,Crushed Stone Operations
+Private Industry,Manufacturing,Sand and Gravel Operations
+Private Industry,Mines,
+Private Industry,Oilfields,
+Private Industry,Shopping Centers,
+Private Industry,TV and Movie Studios,
+Public Safety,Courthouses,
+Public Safety,Crime Prevention and Support,
+Public Safety,Crime Reporting and Investigation,Fusion Centers
+Public Safety,District Attorney,
+Public Safety,Fingerprinting,
+Public Safety,Fire Stations,Battalion HQ
+Public Safety,Jails and Prisons,
+Public Safety,Legal Services and Counseling,
+Public Safety,Lifeguard Towers,
+Public Safety,Parole and Offender Assistance,
+Public Safety,Probation Camps and Juvenile Halls,
+Public Safety,Probation Offices,
+Public Safety,Public Defender,
+Public Safety,Self-Help Legal Centers,
+Public Safety,Sheriff and Police Stations,FBI Field Offices
+Social Services,Adoption,
+Social Services,Child Care,
+Social Services,Child Support Services,
+Social Services,Children and Family Services,
+Social Services,Clothing,
+Social Services,Disability Support Services,
+Social Services,Domestic Violence Services,
+Social Services,Donation Services,
+Social Services,Food Assistance,
+Social Services,Forms Assistance,
+Social Services,Homeless Shelters and Services,
+Social Services,Housing Assistance and Information,
+Social Services,Immigration,
+Social Services,Job Training,
+Social Services,Life Links,LL - African American
+Social Services,Life Links,LL - Latino
+Social Services,NEG Program WorkSource Centers,
+Social Services,Payment Assistance,
+Social Services,Public Housing,
+Social Services,Public Information Services,
+Social Services,Senior Services,Convalescent Hospitals
+Social Services,Senior Services,Meals
+Social Services,Support Groups,
+Social Services,Thrift Shops,
+Social Services,Transportation Assistance,
+Social Services,Unemployment Insurance Offices,
+Social Services,Veterans Services,
+Social Services,Welfare Offices and Programs,
+Transportation,Transit Systems,

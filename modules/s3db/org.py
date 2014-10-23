@@ -403,8 +403,8 @@ class S3OrganisationModel(S3Model):
         if settings.get_org_summary():
             # Include Summary fields in form 
             position = form_fields.index("year")
-            form_fields.insert(position+1, "summary.national_staff")
-            form_fields.insert(position+2, "summary.international_staff")    
+            form_fields.insert(position + 1, "summary.national_staff")
+            form_fields.insert(position + 2, "summary.international_staff")
         
         crud_form = S3SQLCustomForm(*form_fields
                                     )
@@ -5988,8 +5988,8 @@ class org_AssignMethod(S3Method):
             # Data table
             resource = s3db.resource("org_organisation")
             totalrows = resource.count()
-            if "iDisplayLength" in get_vars:
-                display_length = get_vars["iDisplayLength"]
+            if "pageLength" in get_vars:
+                display_length = get_vars["pageLength"]
                 if display_length == "None":
                     display_length = None
                 else:
@@ -6033,14 +6033,14 @@ class org_AssignMethod(S3Method):
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_displayLength=display_length,
                                 dt_ajax_url=URL(args = r.args,
                                                 extension="aadata",
                                                 vars={},
                                                 ),
-                                dt_bFilter="false",
-                                dt_pagination="true",
                                 dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength=display_length,
+                                dt_pagination="true",
+                                dt_searching="false",
                                 )
 
                 # Filter form
@@ -6087,8 +6087,8 @@ class org_AssignMethod(S3Method):
 
             elif r.representation == "aadata":
                 # Ajax refresh
-                if "sEcho" in get_vars:
-                    echo = int(get_vars.sEcho)
+                if "draw" in get_vars:
+                    echo = int(get_vars.draw)
                 else:
                     echo = None
                 items = dt.json(totalrows,

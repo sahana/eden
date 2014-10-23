@@ -1025,21 +1025,22 @@ class S3XML(S3Codec):
 
             if tablename in markers:
                 _markers = markers[tablename]
-                if _markers.get("image", None):
-                    # Single Marker here
-                    m = _markers
-                else:
-                    # We have a separate Marker per-Feature
-                    m = _markers[record_id]
-                if m:
-                    # Assume being used within the Sahana Mapping client
-                    # so use local URLs to keep filesize down
-                    download_url = "/%s/static/img/markers" % \
-                        request.application
-                    attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
-                                                            m["image"])
-                    attr[ATTRIBUTE.marker_height] = str(m["height"])
-                    attr[ATTRIBUTE.marker_width] = str(m["width"])
+                if _markers:
+                    if _markers.get("image", None):
+                        # Single Marker here
+                        m = _markers
+                    else:
+                        # We have a separate Marker per-Feature
+                        m = _markers[record_id]
+                    if m:
+                        # Assume being used within the Sahana Mapping client
+                        # so use local URLs to keep filesize down
+                        download_url = "/%s/static/img/markers" % \
+                            request.application
+                        attr[ATTRIBUTE.marker_url] = "%s/%s" % (download_url,
+                                                                m["image"])
+                        attr[ATTRIBUTE.marker_height] = str(m["height"])
+                        attr[ATTRIBUTE.marker_width] = str(m["width"])
 
             if tablename in styles:
                 # Add Styles

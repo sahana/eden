@@ -29,9 +29,8 @@ settings.base.system_name_short = T("Sahana Eden for Italy")
 
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "EVASS"
-settings.ui.formstyle = "foundation"
-settings.ui.filter_formstyle = "foundation_inline"
-settings.ui.hierarchy_theme = "default"
+#settings.ui.formstyle = "foundation"
+#settings.ui.filter_formstyle = "foundation_inline"
 
 # -----------------------------------------------------------------------------
 # Email settings

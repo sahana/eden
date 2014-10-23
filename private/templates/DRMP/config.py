@@ -107,6 +107,7 @@ settings.auth.realm_entity = drmp_realm_entity
 settings.base.theme = "DRMP"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+settings.ui.filter_formstyle = "table_inline"
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854
 
@@ -164,6 +165,10 @@ settings.ui.camp = True
 settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
+
+# Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
+settings.ui.datatables_responsive = False
 
 # Disabled until ready for prime-time
 settings.search.filter_manager = False

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# Utils Unit Tests
+# Time Plot Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3timeplot.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3timeplot.py
 #
 import datetime
 import random

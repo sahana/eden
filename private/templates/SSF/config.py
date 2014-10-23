@@ -25,6 +25,11 @@ settings.base.prepopulate = ("SSF", "default/users")
 settings.base.theme = "SSF"
 settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
+settings.ui.filter_formstyle = "table_inline"
+
+# Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
+settings.ui.datatables_responsive = False
 
 # Should users be allowed to register themselves?
 settings.security.self_registration = True

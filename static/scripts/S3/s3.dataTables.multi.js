@@ -1,15 +1,15 @@
 /* Support for a page with multiple dataTables such as DRRPP's 'Organisations' page */
 S3.pluginDefaults = {
 	'dataTables': {
-		'iDisplayLength': 25,
-		'bProcessing': true,
-		'bServerSide': false,
-		'bFilter': true,
-		'aaSorting': [[1, 'asc']],
-		'sDom': 'fril<"dataTable_table"t>pi',
-		'sPaginationType': 'full_numbers',
-        'aLengthMenu': [[ 25, 50, -1], [ 25, 50, i18n.all]],
-		'fnRowCallback': function(nRow, aData, iDisplayIndex) {
+		'dom': 'fril<"dataTable_table"t>pi',
+		'lengthMenu': [[ 25, 50, -1], [ 25, 50, i18n.all]],
+		'order': [[1, 'asc']],
+		'pageLength': 25,
+		'pagingType': 'full_numbers',
+        'processing': true,
+		'searching': true,
+		'serverSide': false,
+		'rowCallback': function(nRow, aData, iDisplayIndex) {
 			var instance_id = this.data('instance');
 			var instance = S3.dataTablesInstances[instance_id];
 			var $row = $(nRow);

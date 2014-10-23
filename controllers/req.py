@@ -270,7 +270,7 @@ def req_controller(template = False):
                 table.request_for_id.label = T("Deliver To")
                 table.requester_id.label = T("Site Contact")
                 table.recv_by_id.label = T("Delivered To")
-     
+
             elif type == 3: # Person
                 table.date_required_until.readable = table.date_required_until.writable = True
 
@@ -363,6 +363,9 @@ def req_controller(template = False):
             pass
 
         elif r.representation == "geojson":
+            req_ref_represent = table.req_ref.represent
+            table.req_ref.represent = lambda v, show_link=False, pdf=False: \
+                req_ref_represent(v, show_link)
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
             s3db.configure("req_req", marker_fn=marker_fn)
@@ -372,24 +375,24 @@ def req_controller(template = False):
             record = r.record
             stable = s3db.org_site
             commit_status = record.commit_status
-            
+
             # Commits belonging to this request
             rsites = []
             query = (table.deleted == False)&(table.req_id == record.id)
             req_sites = db(query).select(table.site_id)
             for req_site in req_sites:
                 rsites += [req_site.site_id]
-            
+
             # All the sites
             commit_sites = db((stable.deleted == False)).select(stable.id,
                                                               stable.code)
-            
+
             # Sites which have not committed to this request yet
             site_opts = {}
             for site in commit_sites:
                 if (site.id not in site_opts) and (site.id not in rsites):
                     site_opts[site.id] = site.code
-            
+
             table.site_id.requires = IS_IN_SET(site_opts)
             if (commit_status == 2) and settings.get_req_restrict_on_complete():
                 # Restrict from committing to completed requests                
@@ -397,7 +400,7 @@ def req_controller(template = False):
             else:    
                 # Allow commitments to be added when doing so as a component
                 listadd = True
-                
+
             s3db.configure(table,
                            # Don't want filter_widgets in the component view
                            filter_widgets = None,

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 #
-# Utils Unit Tests
+# S3Hierarchy Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3hierarchy.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3hierarchy.py
 #
 import unittest
 try:

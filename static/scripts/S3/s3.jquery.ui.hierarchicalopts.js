@@ -11,6 +11,7 @@
  */
 (function($, undefined) {
 
+    "use strict";
     var hierarchicaloptsID = 0;
 
     /**
@@ -30,8 +31,8 @@
             noOptionsText: 'No options available',
             multiple: true,
             leafonly: true,
-            themesFolder: 'static/styles/jstree',
-            theme: 'default',
+            icons: false,
+            stripes: true,
             htmlTitles: true
         },
 
@@ -52,6 +53,10 @@
 
             // The hidden input field
             this.input = el.find('.s3-hierarchy-input').first();
+            var s = opts.selected;
+            if (s) {
+                this.input.val(JSON.stringify(s));
+            }
 
             // The button
             this.button = $('<button type="button" class="s3-hierarchy-button ui-multiselect ui-widget ui-state-default ui-corner-all"><span class="ui-icon ui-icon-triangle-1-s"></span></button>');
@@ -114,13 +119,15 @@
             }
 
             // Initially selected nodes
-            var s = opts.selected;
-            if (s) {
-                var treeID = this.treeID, nodeID;
-                $.each(s, function() {
+            var currentValue = this.input.val();
+            if (currentValue) {
+                var selectedValues = JSON.parse(currentValue);
+                var treeID = this.treeID;
+                $.each(selectedValues, function() {
                     $('#' + treeID + '-' + this).data('jstree', {selected: true});
-                })
+                });
             }
+
             // If there's only one root node, start with this node open
             var roots = tree.find('> ul > li');
             if (roots.length == 1) {
@@ -135,11 +142,9 @@
             tree.jstree({
                 'core': {
                     'themes': {
-                        url: true,
-                        dir: S3.Ap.concat('/', opts.themesFolder, '/'),
-                        name: opts.theme,
-                        icons: false,
-                        stripes: true
+                        name: 's3',
+                        icons: opts.icons,
+                        stripes: opts.stripes
                     },
                     animation: 100,
                     multiple: multiple,
@@ -156,7 +161,6 @@
 
             // Multiple/LeafOnly selection mode logic
             if (!multiple) {
-                var tree = this.tree;
                 var inst = jQuery.jstree.reference(tree);
                 tree.bind('select_node.jstree', function(e, data) {
                     var node = data.node;
@@ -233,11 +237,13 @@
         _updateButtonText: function(selected_ids) {
 
             var text = null,
-                options = this.options;
+                options = this.options,
+                limit = 1, // @todo: make configurable?
+                numSelected = 0;
 
-            var limit = 1; // @todo: make configurable?
-
-            numSelected = selected_ids ? selected_ids.length : 0;
+            if (selected_ids) {
+                numSelected = selected_ids.length;
+            }
             if (numSelected) {
                 if (numSelected > limit) {
                     text = options.selectedText.replace('#', numSelected);
@@ -251,7 +257,6 @@
             } else {
                 text = options.noneSelectedText;
             }
-
             this.buttonText.text(text);
         },
 
@@ -264,7 +269,7 @@
 
             this.tree.jstree('uncheck_all');
             if (values) {
-                for (var i=0, len=values.length, node_id; i < len; i++) {
+                for (var i=0, len=values.length, node; i < len; i++) {
                     node = $('#' + this.treeID + '-' + values[i]);
                     this.tree.jstree('check_node', node);
                 }
@@ -409,7 +414,7 @@
             }).bind("open_node.jstree", function (event, data) {
                 var instance = data.instance,
                     node = data.node;
-                var parent = instance.get_parent(node)
+                var parent = instance.get_parent(node);
                 if(parent.length) {
                     instance.open_node(parent, false, true);
                 }

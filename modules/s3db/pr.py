@@ -1015,6 +1015,10 @@ class S3PersonModel(S3Model):
                        # Appraisals
                        hrm_appraisal = "person_id",
                        # Awards
+                       hrm_award = {"name": "staff_award",
+                                    "joinby": "person_id",
+                                    },
+                       hrm_disciplinary_action = "person_id",
                        vol_volunteer_award = {"name": "award",
                                               "joinby": "person_id",
                                               },
@@ -3449,7 +3453,7 @@ class S3PersonPresence(S3Model):
                                 label = T("Procedure"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Procedure"),
-                                                                T('Describe the procedure which this record relates to (e.g. "medical examination")')))),
+                                                                T("Describe the procedure which this record relates to (e.g. 'medical examination')")))),
                           location_id("orig_id",
                                       label=T("Origin"),
                                       widget = S3LocationAutocompleteWidget(),

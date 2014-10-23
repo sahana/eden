@@ -83,7 +83,7 @@
             }
         } else {
             // Hide the main row & move out the Error
-            $(selector + '__row1').hide();
+            $(selector + '__row1').hide(); // Tuple themes
             real_row.hide()
                     .after(error_row);
             if (reverse_lx) {
@@ -134,23 +134,23 @@
             // Show the Country row
             L0_row.removeClass('hide').show();
             if (!div_style) {
-                $(selector + '_L0__row1').removeClass('hide').show();
+                $(selector + '_L0__row1').removeClass('hide').show(); // Tuple themes
             }
         }
         if (L0) {
             lx_select(fieldname, 0, L0);
         }
-        if (L1) {
-            lx_select(fieldname, 1, L1);
+        if (L1 || L2) { // || is to support Missing levels
+            lx_select(fieldname, 1, L1 || L2);
         }
-        if (L2) {
-            lx_select(fieldname, 2, L2);
+        if (L2 || L3) {
+            lx_select(fieldname, 2, L2 || L3);
         }
-        if (L3) {
-            lx_select(fieldname, 3, L3);
+        if (L3 || L4) {
+            lx_select(fieldname, 3, L3 || L4);
         }
-        if (L4) {
-            lx_select(fieldname, 4, L4);
+        if (L4 || L5) {
+            lx_select(fieldname, 4, L4 || L5);
         }
         if (L5) {
             lx_select(fieldname, 5, L5);
@@ -367,7 +367,7 @@
                             return true;
                         }
                     default:
-                        // Something has gone wrong!
+                        // Something has gone wrong! (e.g. str not int)
                         S3.showAlert('LocationSelector cannot validate!', 'error');
                         return false;
                 }
@@ -484,10 +484,10 @@
                 if ($(s).hasClass('required')) {
                     // @ToDo: Client-side s3_mark_required function
                     $(s + '__row label').html('<div>' + label + ':<span class="req"> *</span></div>');
-                    $(s + '__row1 label').html('<div>' + label + ':<span class="req"> *</span></div>'); // Non-Bootstrap
+                    $(s + '__row1 label').html('<div>' + label + ':<span class="req"> *</span></div>'); // Tuple themes
                 } else {
                     $(s + '__row label').html(label + ':');
-                    $(s + '__row1 label').html(label + ':'); // Non-Bootstrap
+                    $(s + '__row1 label').html(label + ':'); // Tuple themes
                 }
                 $(s + ' option[value=""]').html(i18n.select + ' ' + label);
             }
@@ -500,7 +500,7 @@
                 s = selector + '_L' + lev;
                 if (hide_lx) {
                     $(s + '__row').hide();
-                    $(s + '__row1').hide(); // Non-Bootstrap
+                    $(s + '__row1').hide(); // Tuple themes
                 } else {
                     // Hide the limited options
                     $(s + ' option').remove('[value != ""]');
@@ -516,65 +516,86 @@
             level += 1;
             var dropdown = $(selector + '_L' + level + '__row');
             if (dropdown.length) {
-                dropdown.removeClass('hide').show();
-                $(selector + '_L' + level + '__row1').removeClass('hide').show();
                 // Do we need to read hierarchy?
-                var read = true; 
-                for (var i in l) {
-                    if (l[i].f == id) {
-                        read = false;
-                        break;
+                if ($(selector + '_L' + (level - 1) + ' option[value="' + id + '"]').hasClass('missing')) {
+                    // Missing level: we already have the data
+                    var v = l[id];
+                    // Add the ID inside
+                    v['i'] = id;
+                    var values = [v];
+                } else {
+                    var read = true;
+                    for (var i in l) {
+                        if (l[i].f == id) {
+                            // We have a child, so assume we have all
+                            read = false;
+                            break;
+                        }
+                    }
+                    if (read) {
+                        // AJAX Read extra hierarchy options
+                        readHierarchy(fieldname, level, id);
+                    }
+                    var v,
+                        values = [];
+                    for (var i in l) {
+                        v = l[i];
+                        //if ((v['l'] == level) && (v['f'] == id)) {
+                        if (v['f'] == id) {
+                            // Add the ID inside
+                            v['i'] = i;
+                            values.push(v);
+                        }
                     }
                 }
-                if (read) {
-                    // AJAX Read extra hierarchy options
-                    readHierarchy(fieldname, level, id);
-                }
-                var v,
-                    values = [];
-                for (var i in l) {
-                    v = l[i];
-                    if ((v['l'] == level) && (v['f'] == id)) {
-                        v['i'] = i;
-                        values.push(v);
+                var len_values = values.length;
+                if (len_values) {
+                    dropdown.removeClass('hide').show();
+                    $(selector + '_L' + level + '__row1').removeClass('hide').show(); // Tuple themes
+                    values.sort(nameSort);
+                    var _id,
+                        location,
+                        missing,
+                        option,
+                        selected;
+                    var select = $(selector + '_L' + level);
+                    // Remove old entries
+                    $(selector + '_L' + level + ' option').remove('[value != ""]');
+                    for (var i=0; i < len_values; i++) {
+                        location = values[i];
+                        _id = location['i'];
+                        if (id == _id) {
+                            selected = ' selected="selected"';
+                        } else {
+                            selected = '';
+                        }
+                        if (l[_id]['l'] == level) {
+                            // A normal level
+                            missing = '';
+                        } else {
+                            // A link for a missing level
+                            missing = ' class="missing"';
+                        }
+                        option = '<option value="' + _id + '"' + selected + missing + '>' + location['n'] + '</option>';
+                        select.append(option);
                     }
-                }
-                values.sort(nameSort);
-                var len_values = values.length,
-                    _id,
-                    location,
-                    option,
-                    selected;
-                var select = $(selector + '_L' + level);
-                // Remove old entries
-                $(selector + '_L' + level + ' option').remove('[value != ""]');
-                for (var i=0; i < len_values; i++) {
-                    location = values[i];
-                    _id = location['i'];
-                    if (id == _id) {
-                        selected = ' selected="selected"';
-                    } else {
-                        selected = '';
+                    if (select.hasClass('multiselect')) {
+                        select.multiselect({//allSelectedText: i18n.allSelectedText,
+                                            //selectedText: i18n.selectedText,
+                                            header: false,
+                                            height: 300,
+                                            minWidth: 0,
+                                            selectedList: 3,
+                                            noneSelectedText: $(selector + '_L' + level + ' option[value=""]').html(),
+                                            multiple: false
+                                            });
                     }
-                    option = '<option value="' + _id + '"' + selected + '>' + location['n'] + '</option>';
-                    select.append(option);
-                }
-                if (select.hasClass('multiselect')) {
-                    select.multiselect({//allSelectedText: i18n.allSelectedText,
-                                        //selectedText: i18n.selectedText,
-                                        header: false,
-                                        height: 300,
-                                        minWidth: 0,
-                                        selectedList: 3,
-                                        noneSelectedText: $(selector + '_L' + level + ' option[value=""]').html(),
-                                        multiple: false
-                                        });
-                }
-                if (len_values == 1) {
-                    // Only 1 option so select this one
-                    lx_select(fieldname, level, _id);
-                    // Nothing more for this old level
-                    return;
+                    if (len_values == 1) {
+                        // Only 1 option so select this one
+                        lx_select(fieldname, level, _id);
+                        // Nothing more for this old level
+                        return;
+                    }
                 }
             } else {
                 // We're at the top of the hierarchy
@@ -589,11 +610,11 @@
             resetHidden(fieldname);
             // Hide all lower levels
             // & remove their values
-            for (var lev=level + 1; lev < 6; lev++) {
+            for (var lev = level + 1; lev < 6; lev++) {
                 var s = selector + '_L' + lev;
                 if (hide_lx) {
                     $(s + '__row').hide();
-                    $(s + '__row1').hide(); // Non-Bootstrap
+                    $(s + '__row1').hide(); // Tuple themes
                 } else {
                     // Hide the limited options
                     $(s + ' option').remove('[value != ""]');
@@ -710,12 +731,14 @@
             var lon = $(selector + '_lon').val();
             var wkt = $(selector + '_wkt').val();
             if (!address && !postcode && !lat && !lon && !wkt) {
+                // No specific data, so point directly to the Lowest-set Lx
                 var id = lookupParent(fieldname);
                 // Update the real_input
                 real_input.val(id);
                 // Clear the parent field
                 parent_input.val('');
             } else {
+                // We have specific data
                 // Dummify the real_input to trigger a create in IS_LOCATION_SELECTOR2
                 real_input.val('dummy');
                 // Set the Parent field
@@ -738,9 +761,9 @@
 
         // Display the rows
         $(selector + '_address__row').removeClass('hide').show();
-        $(selector + '_address__row1').removeClass('hide').show(); // Non-Bootstrap
+        $(selector + '_address__row1').removeClass('hide').show(); // Tuple themes
         $(selector + '_postcode__row').removeClass('hide').show();
-        $(selector + '_postcode__row1').removeClass('hide').show(); // Non-Bootstrap
+        $(selector + '_postcode__row1').removeClass('hide').show(); // Tuple themes
 
         var geocode_button = $(selector + '_geocode button');
         if (geocode_button.length) {

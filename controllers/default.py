@@ -384,8 +384,8 @@ def organisation():
 
     resource = s3db.resource("org_organisation")
     totalrows = resource.count()
-    display_start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
-    display_length = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else 10
+    display_start = int(get_vars.displayStart) if get_vars.displayStart else 0
+    display_length = int(get_vars.pageLength) if get_vars.pageLength else 10
     limit = 4 * display_length
 
     list_fields = ["id", "name"]
@@ -413,23 +413,22 @@ def organisation():
         items = dt.html(totalrows,
                         totalrows,
                         "org_dt",
-                        dt_displayLength=display_length,
                         dt_ajax_url=URL(c="default",
                                         f="organisation",
                                         extension="aadata",
                                         vars={"id": "org_dt"},
                                         ),
+                        dt_pageLength=display_length,
                         dt_pagination="true",
                         )
     elif representation == "aadata":
-        if "sEcho" in request.vars:
-            echo = int(request.vars.sEcho)
-        else:
-            echo = None
+        draw = request.get_vars.get("draw")
+        if draw:
+            draw = int(draw)
         items = dt.json(totalrows,
                         filteredrows,
                         "org_dt",
-                        echo)
+                        draw)
     else:
         from gluon.http import HTTP
         raise HTTP(501, ERROR.BAD_FORMAT)

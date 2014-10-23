@@ -239,26 +239,37 @@
     // updates the button text. call refresh() to rebuild
     update: function() {
         var o = this.options;
-        var $inputs = this.inputs;
-        var $checked = $inputs.filter(':checked');
-        var numChecked = $checked.length;
         var value;
 
-        if (numChecked === 0) {
-            value = o.noneSelectedText;
-        } else if (numChecked === $inputs.length) {
-            value = o.allSelectedText;
-        } else {
-            if ($.isFunction(o.selectedText)) {
-                value = o.selectedText.call(this, numChecked, $inputs.length, $checked.get());
-            } else if (/\d/.test(o.selectedList) && o.selectedList > 0 && numChecked <= o.selectedList) {
-                //value = $checked.map(function() { return $(this).next().html(); }).get().join(', ');
-                // Hack to deal with HTML entities:
-                value = $checked.map(function() {
-                    return $('<div>').html($(this).next().html()).text();
-                }).get().join(', ');
+        if (o.multiple) {
+            var $inputs = this.inputs;
+            var $checked = $inputs.filter(':checked');
+            var numChecked = $checked.length;
+
+            if (numChecked === 0) {
+                value = o.noneSelectedText;
+            } else if (numChecked === $inputs.length) {
+                value = o.allSelectedText;
             } else {
-                value = o.selectedText.replace('#', numChecked).replace('#', $inputs.length);
+                if ($.isFunction(o.selectedText)) {
+                    value = o.selectedText.call(this, numChecked, $inputs.length, $checked.get());
+                } else if (/\d/.test(o.selectedList) && o.selectedList > 0 && numChecked <= o.selectedList) {
+                    //value = $checked.map(function() { return $(this).next().html(); }).get().join(', ');
+                    // Hack to deal with HTML entities:
+                    value = $checked.map(function() {
+                        return $('<div>').html($(this).next().html()).text();
+                    }).get().join(', ');
+                } else {
+                    value = o.selectedText.replace('#', numChecked).replace('#', $inputs.length);
+                }
+            }
+        } else {
+            // multiple=False
+            // @ToDo: API way of doing this (doesn't seem geared to multiple=False of course)
+            if (!this.element[0].value) {
+                value = o.noneSelectedText;
+            } else {
+                value = this.element[0].selectedOptions[0].innerHTML;
             }
         }
 

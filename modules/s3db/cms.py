@@ -159,7 +159,7 @@ class S3ContentModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Posts
-        # - single blocks of rich text which can be embedded into a page,
+        # - single blocks of [rich] text which can be embedded into a page,
         #   be viewed as full pages or as part of a Series
         #
 

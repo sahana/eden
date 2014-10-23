@@ -146,25 +146,72 @@ class S3SQLForm(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _submit_buttons(items):
+    def _submit_buttons(readonly=False):
         """
-            Render custom submit buttons
+            Render submit buttons
 
-            @param items: list of tuples (<HTML name>, label, <HTML class>)
-            @return: list of additional submit buttons
+            @param readonly: render the form read-only
+            @return: list of submit buttons
         """
 
-        buttons = []
-        for name, label, _class in items:
-            if isinstance(label, basestring):
-                label = current.T(label)
-            button = INPUT(_type="submit",
-                           _class="btn crud-submit-button",
-                           _name=name,
-                           _value=label)
-            if _class:
-                button.add_class(_class)
-            buttons.append(button)
+        T = current.T
+        s3 = current.response.s3
+        settings = s3.crud
+
+        if settings.custom_submit:
+            submit = [(None,
+                       settings.submit_button,
+                       settings.submit_style)]
+            submit.extend(settings.custom_submit)
+            buttons = []
+            for name, label, _class in submit:
+                if isinstance(label, basestring):
+                    label = T(label)
+                button = INPUT(_type="submit",
+                               _class="btn crud-submit-button",
+                               _name=name,
+                               _value=label)
+                if _class:
+                    button.add_class(_class)
+                buttons.append(button)
+        else:
+            buttons = ["submit"]
+
+        # Cancel button
+        if not readonly and s3.cancel:
+            if not settings.custom_submit:
+                if settings.submit_button:
+                    submit_label = T(settings.submit_button)
+                else:
+                    submit_label = T("Save")
+                submit_button = INPUT(_type="submit",
+                                      _value=submit_label)
+                if settings.submit_style:
+                    submit_button.add_class(settings.submit_style)
+                buttons = [submit_button]
+
+            cancel = s3.cancel
+            if isinstance(cancel, DIV):
+                cancel_button = cancel
+            else:
+                cancel_button = A(T("Cancel"),
+                                  _class="cancel-form-btn action-lnk")
+                if isinstance(cancel, dict):
+                    # Script-controlled cancel button (embedded form)
+                    if "script" in cancel:
+                        # Custom script
+                        script = cancel["script"]
+                    else:
+                        # Default script: hide form, show add-button
+                        script = \
+'''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
+                    s3.jquery_ready.append(script % cancel)
+                elif s3.cancel is True:
+                    cancel_button.add_class("s3-cancel")
+                else:
+                    cancel_button.update(_href=s3.cancel)
+            buttons.append(cancel_button)
+
         return buttons
 
     # -------------------------------------------------------------------------
@@ -334,45 +381,7 @@ class S3SQLDefaultForm(S3SQLForm):
             formstyle = settings.formstyle
 
         # Submit buttons
-        if settings.custom_submit:
-            submit = [(None,
-                       settings.submit_button,
-                       settings.submit_style)]
-            submit.extend(settings.custom_submit)
-            buttons = self._submit_buttons(submit)
-        else:
-            buttons = ["submit"]
-
-        # Cancel button
-        if not readonly and s3.cancel:
-            T = current.T
-            if not settings.custom_submit:
-                if settings.submit_button:
-                    submit_label = T(settings.submit_button)
-                else:
-                    submit_label = T("Save")
-                submit_button = INPUT(_type="submit",
-                                    _value=submit_label)
-                if settings.submit_style:
-                    submit_button.add_class(settings.submit_style)
-                buttons = [submit_button]
-
-            cancel = s3.cancel
-            cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
-            if isinstance(cancel, dict):
-                # Script-controlled cancel button (embedded form)
-                if "script" in cancel:
-                    # Custom script
-                    script = cancel["script"]
-                else:
-                    # Default script: hide form, show add-button
-                    script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})'''
-                s3.jquery_ready.append(script % cancel)
-            elif s3.cancel is True:
-                cancel_button.add_class("s3-cancel")
-            else:
-                cancel_button.update(_href=s3.cancel)
-            buttons.append(cancel_button)
+        buttons = self._submit_buttons(readonly)
 
         # Generate the form
         if record is None:
@@ -898,37 +907,7 @@ class S3SQLCustomForm(S3SQLForm):
         formfields = [f[-1] for f in fields]
 
         # Submit buttons
-        if settings.custom_submit:
-            submit = [(None,
-                       settings.submit_button,
-                       settings.submit_style)]
-            submit.extend(settings.custom_submit)
-            buttons = self._submit_buttons(submit)
-        else:
-            buttons = ["submit"]
-
-        # Cancel button
-        if not readonly and s3.cancel:
-            T = current.T
-            if settings.submit_button:
-                submit_label = T(settings.submit_button)
-            else:
-                submit_label = T("Save")
-            submit_button = INPUT(_type="submit",
-                                  _value=submit_label)
-            if settings.submit_style:
-                submit_button.add_class(settings.submit_style)
-
-            cancel = s3.cancel
-            cancel_button = A(T("Cancel"), _class="cancel-form-btn action-lnk")
-            if isinstance(cancel, dict):
-                script = '''$('.cancel-form-btn').click(function(){$('#%(hide)s').slideUp('medium',function(){$('#%(show)s').show()})})''' % cancel
-                s3.jquery_ready.append(script)
-            elif s3.cancel is True:
-                cancel_button.add_class("s3-cancel")
-            else:
-                cancel_button.update(_href=s3.cancel)
-            buttons = [submit_button, cancel_button]
+        buttons = self._submit_buttons(readonly)
 
         # Render the form
         tablename = self.tablename
@@ -2210,9 +2189,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
             prefix = component.prefix
             name = component.name
             tablename = component.tablename
-            table = component.table
 
             db = current.db
+            table = db[tablename]
+
             s3db = current.s3db
             auth = current.auth
 
@@ -2870,6 +2850,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             w_opts = widget_opts(("represent",
                                   "multiple",
                                   "leafonly",
+                                  "columns",
                                   ))
             w_opts["lookup"] = component.tablename
             w = S3HierarchyWidget(**w_opts)
@@ -2881,6 +2862,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "selectedList",
                                   "noneSelectedText",
                                   "multiple",
+                                  "columns",
                                   ))
             w = S3MultiSelectWidget(**w_opts)
 
@@ -3061,6 +3043,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             # filterby is a field selector for the component
             # that shall match certain conditions
             filter_selector = FS(filterby)
+            filter_query = None
 
             if filteropts is not None:
                 # filterby-field shall match one of the given filteropts
@@ -3599,8 +3582,8 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
         """
-            Widget method for this form element. Renders a SELECT MULTIPLE with
-            all available options.
+            Widget method for this form element.
+            Renders a SELECT MULTIPLE with all available options.
             This widget uses s3.inline_component.js to facilitate
             manipulation of the entries.
 
@@ -3625,9 +3608,11 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
 
         T = current.T
 
+        opts = self.options
+
         jquery_ready = current.response.s3.jquery_ready
 
-        script = self.options.get("script", None)
+        script = opts.get("script", None)
         if script and script not in jquery_ready:
             jquery_ready.append(script)
 
@@ -3647,7 +3632,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             widget = T("No options currently available")
         else:
             # Translate the Options?
-            translate = self.options.get("translate", None)
+            translate = opts.get("translate", None)
             if translate is None:
                 # Try to lookup presence of reusable field
                 # - how do we know the module though?
@@ -3660,9 +3645,9 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                             translate = represent.translate
 
             # Render the options
-            opts = []
+            _opts = []
             vals = []
-            oappend = opts.append
+            oappend = _opts.append
             for _id in options:
                 option = options[_id]
                 v = option["name"]
@@ -3674,7 +3659,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                 if option["selected"]:
                     vals.append(_id)
 
-            widget = SELECT(*opts,
+            widget = SELECT(*_opts,
                             value=vals,
                             _id=field_name,
                             _name=field_name,
@@ -3684,7 +3669,6 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                             )
             # jQueryUI widget
             # (this section could be made optional)
-            opts = self.options
             opt_filter = opts.get("filter", False)
             header = opts.get("header", False)
             selectedList = opts.get("selectedList", 3)
@@ -3725,6 +3709,9 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                      #_class="inline-multiselect",
                      _name="%s_widget" % field_name,
                      )
+        columns = opts.get("columns")
+        if columns:
+            output.add_class("small-%s columns" % columns)
 
         return output
 

@@ -68,10 +68,14 @@ settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 
 # @ToDo: Investigate
-settings.ui.use_button_glyphicons = True
+settings.ui.use_button_icons = True
 
 # Uncomment to show a default cancel button in standalone create/update forms
 settings.ui.default_cancel_button = True
+
+# Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
+settings.ui.datatables_responsive = False
 
 #settings.gis.map_height = 600
 #settings.gis.map_width = 854

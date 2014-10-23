@@ -1,0 +1,34 @@
+@import "settings";
+
+$include-html-classes: false;
+$include-html-global-classes: false;
+@import "../../foundation/scss/components/global";
+@import "../../foundation/scss/components/forms";
+
+// CUSTOM VARIABLES & MIXINS
+// before writing custom CSS, search variables in _settings 
+
+@import "custom/variables";
+
+
+// CUSTOM MODULES 
+
+@import "custom/containers";
+@import "custom/header";
+@import "custom/footer";
+@import "custom/typography";
+@import "custom/lists";
+@import "custom/buttons";
+@import "custom/progress";
+@import "custom/tables";
+
+
+// CUSTOM PAGES
+ 
+@import "custom/home";
+@import "custom/dashboard";
+
+
+// VENDOR PLUGINS
+ 
+//@import "vendor/jstree";

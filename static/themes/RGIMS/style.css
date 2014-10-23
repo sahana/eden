@@ -101,6 +101,9 @@ form .action-lnk {
 form table.embeddedComponent {
   border-collapse: separate;
 }
+form.auth_login #submit_record__row {
+  white-space: pre;
+}
 
 /* General Widgets */
 input[type="text"],
@@ -142,6 +145,10 @@ select {
 }
 
 /* Form and Item containers */
+#last_update {
+  float: none;
+}
+
 .form-container,
 .item-container {
   width: auto;
@@ -223,6 +230,7 @@ div.tabs {
   padding: 0.5em 0;
   text-align: left;
   width: 100%;
+  line-height: 1em;
 }
 div.tabs span {
   float: left;
@@ -501,9 +509,9 @@ div.tabs span.tab_other a:hover {
   font-size: 0.75rem;
 }
 
-table.dataTable th, table.dataTable td {
+table.dataTable thead th, table.dataTable th, table.dataTable td {
   border: 1px solid #cccccc;
-  padding: 0.7em 0.7em 0.7em 0.5em;
+  padding: 0.2em 1.5em 0.2em 0.5em;
 }
 table.dataTable thead th, table.dataTable thead td {
   background-color: #ffffff;

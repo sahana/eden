@@ -137,6 +137,24 @@ google.load('feeds','1')
 google.setOnLoadCallback(LoadDynamicFeedControl)'''))
             s3.js_global.append(feed_control)
 
+        # Slick slider
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/slick.js" % request.application)
+        else:
+            s3.scripts.append("/%s/static/scripts/slick.min.js" % request.application)
+        script = '''
+$(document).ready(function(){
+ $('#title-image').slick({
+  autoplay:true,
+  autoplaySpeed:5000,
+  speed:1000,
+  fade:true,
+  cssEase:'linear',
+  adaptiveHeight:true
+ });
+});'''
+        s3.jquery_ready.append(script)
+
         self._view(THEME, "index.html")
         return output
 

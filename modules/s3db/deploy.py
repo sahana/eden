@@ -1349,8 +1349,8 @@ class deploy_Inbox(S3Method):
         # Data table filter & sorting
         get_vars = r.get_vars
         totalrows = resource.count()
-        if "iDisplayLength" in get_vars:
-            display_length = get_vars["iDisplayLength"]
+        if "pageLength" in get_vars:
+            display_length = get_vars["pageLength"]
             if display_length == "None":
                 display_length = None
             else:
@@ -1402,15 +1402,15 @@ class deploy_Inbox(S3Method):
             items = dt.html(totalrows,
                             filteredrows,
                             dt_id,
-                            dt_displayLength = display_length,
                             dt_ajax_url=URL(c = "deploy",
                                             f = "email_inbox",
                                             extension = "aadata",
                                             vars = {},
                                             ),
-                            dt_bFilter = "true",
-                            dt_pagination = "true",
                             dt_bulk_actions = dt_bulk_actions,
+                            dt_pageLength = display_length,
+                            dt_pagination = "true",
+                            dt_searching = "true",
                             )
 
             response.view = "list_filter.html"
@@ -1420,7 +1420,7 @@ class deploy_Inbox(S3Method):
 
         elif r.representation == "aadata":
             # Ajax refresh
-            echo = int(get_vars.sEcho) if "sEcho" in get_vars else None
+            echo = int(get_vars.draw) if "draw" in get_vars else None
 
             response = current.response
             response.headers["Content-Type"] = "application/json"
@@ -1521,8 +1521,8 @@ def deploy_apply(r, **attr):
         # Data table
         resource = r.resource
         totalrows = resource.count()
-        if "iDisplayLength" in get_vars:
-            display_length = get_vars["iDisplayLength"]
+        if "pageLength" in get_vars:
+            display_length = get_vars["pageLength"]
             if display_length == "None":
                 display_length = None
             else:
@@ -1567,13 +1567,13 @@ def deploy_apply(r, **attr):
             items = dt.html(totalrows,
                             filteredrows,
                             dt_id,
-                            dt_displayLength=display_length,
+                            dt_pageLength=display_length,
                             dt_ajax_url=URL(c="deploy",
                                             f="application",
                                             extension="aadata",
                                             vars={},
                                             ),
-                            dt_bFilter="false",
+                            dt_searching="false",
                             dt_pagination="true",
                             dt_bulk_actions=dt_bulk_actions,
                             )
@@ -1623,8 +1623,8 @@ def deploy_apply(r, **attr):
 
         elif r.representation == "aadata":
             # Ajax refresh
-            if "sEcho" in get_vars:
-                echo = int(get_vars.sEcho)
+            if "draw" in get_vars:
+                echo = int(get_vars.draw)
             else:
                 echo = None
             items = dt.json(totalrows,
@@ -1731,8 +1731,8 @@ def deploy_alert_select_recipients(r, **attr):
 
     # Data table
     totalrows = resource.count()
-    if "iDisplayLength" in get_vars:
-        display_length = get_vars["iDisplayLength"]
+    if "pageLength" in get_vars:
+        display_length = get_vars["pageLength"]
         if display_length == "None":
             display_length = None
         else:
@@ -1771,11 +1771,11 @@ def deploy_alert_select_recipients(r, **attr):
         items = dt.html(totalrows,
                         filteredrows,
                         dt_id,
-                        dt_displayLength=display_length,
                         dt_ajax_url=r.url(representation="aadata"),
-                        dt_bFilter="false",
-                        dt_pagination="true",
                         dt_bulk_actions=dt_bulk_actions,
+                        dt_pageLength=display_length,
+                        dt_pagination="true",
+                        dt_searching="false",
                         )
 
         # Filter form
@@ -1828,8 +1828,8 @@ def deploy_alert_select_recipients(r, **attr):
 
     elif r.representation == "aadata":
         # Ajax refresh
-        if "sEcho" in get_vars:
-            echo = int(get_vars.sEcho)
+        if "draw" in get_vars:
+            echo = int(get_vars.draw)
         else:
             echo = None
         items = dt.json(totalrows,
@@ -1925,8 +1925,8 @@ def deploy_response_select_mission(r, **attr):
 
     # Data table
     totalrows = resource.count()
-    if "iDisplayLength" in get_vars:
-        display_length = get_vars["iDisplayLength"]
+    if "pageLength" in get_vars:
+        display_length = get_vars["pageLength"]
         if display_length == "None":
             display_length = None
         else:
@@ -1982,10 +1982,10 @@ def deploy_response_select_mission(r, **attr):
         items = dt.html(totalrows,
                         filteredrows,
                         dt_id,
-                        dt_displayLength=display_length,
                         dt_ajax_url=r.url(representation="aadata"),
-                        dt_bFilter="false",
+                        dt_pageLength=display_length,
                         dt_pagination="true",
+                        dt_searching="false",
                         )
 
         # Filter form
@@ -2101,8 +2101,8 @@ def deploy_response_select_mission(r, **attr):
 
     elif r.representation == "aadata":
         # Ajax refresh
-        if "sEcho" in get_vars:
-            echo = int(get_vars.sEcho)
+        if "draw" in get_vars:
+            echo = int(get_vars.draw)
         else:
             echo = None
         items = dt.json(totalrows,

@@ -230,7 +230,29 @@ $('#login-btn').click(function(e){
         output["register_form"] = register_form
         output["contact_form"] = contact_form
 
+        # Slick slider
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/slick.js" % request.application)
+        else:
+            s3.scripts.append("/%s/static/scripts/slick.min.js" % request.application)
+        script = '''
+$(document).ready(function(){
+ $('#title-image').slick({
+  autoplay:true,
+  autoplaySpeed:5000,
+  speed:1000,
+  fade:true,
+  cssEase:'linear'
+ });
+});'''
+        s3.jquery_ready.append(script)
+
         self._view(TEMPLATE, "index.html")
         return output
 
 # END =========================================================================
+class listoforganizations(S3CustomController):
+    """ Custom Page for rendering list of participating organizations """
+    def __call__(self):
+        self._view(TEMPLATE, "listoforg.html")
+        return{"title":"List of Participating Organizations"}

@@ -16,8 +16,8 @@ settings = current.deployment_settings
 """
     Template settings for DRR Project Portal
 """
-# =============================================================================
-# Base Deployment Settings
+
+# Base Settings
 
 # Pre-Populate
 settings.base.prepopulate = ("DRRPP", "default/users")
@@ -29,7 +29,7 @@ settings.base.system_name_short = T("DRRPP")
 settings.base.theme = "DRRPP"
 
 # =============================================================================
-# Auth Deployment Settings
+# Auth Settings
 
 # Security Policy
 settings.security.policy = 6 # Realm
@@ -54,7 +54,7 @@ settings.auth.record_approval_required_for = ("org_organisation",
                                               )
 
 # =============================================================================
-# L10n Deployment Settings
+# L10n Settings
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
 ])
@@ -70,7 +70,7 @@ settings.L10n.thousands_separator = ","
 #settings.L10n.date_format = "%d-%b-%Y"
 
 # =============================================================================
-# Finance Deployment Settings
+# Finance Settings
 settings.fin.currencies = {
     #"AUD" : T("Australian Dollars"),
     #"CAD" : T("Canadian Dollars"),
@@ -83,7 +83,7 @@ settings.fin.currencies = {
 }
 
 # =============================================================================
-# GIS Deployment Settings
+# GIS Settings
 # Theme
 settings.gis.map_height = 600
 settings.gis.map_width = 960 # container_12
@@ -97,13 +97,13 @@ settings.gis.countries = [ "AF", "AU", "BD", "BN", "CK", "CN", "FJ", "FM", "HK",
 settings.gis.poi_create_resources = None
 
 # =============================================================================
-# Organisation Deployment Settings
+# Organisation Settings
 # Enable the use of Organisation Branches
 # RMS-compatibility
 settings.org.branches = True
 
 # =============================================================================
-# Project Deployment Settings
+# Project Settings
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 settings.project.mode_3w = True
 # Uncomment this to use DRR (Disaster Risk Reduction) extensions
@@ -137,7 +137,7 @@ settings.project.organisation_roles = {
 }
 
 # =============================================================================
-# UI Deployment Settings
+# UI Settings
 # Enable this for a UN-style deployment
 settings.ui.cluster = True
 
@@ -149,6 +149,10 @@ settings.ui.export_formats = ["xls", "xml"]
 
 # Uncomment to include an Interim Save button on CRUD forms
 settings.ui.interim_save = True
+
+# Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
+settings.ui.datatables_responsive = False
 
 # -----------------------------------------------------------------------------
 # Formstyle
@@ -252,7 +256,7 @@ def customise_project_project_controller(**attr):
         table.email.requires = IS_EMAIL()
 
     # Custom dataTable
-    s3["dataTable_sDom"] = 'ripl<"dataTable_table"t>p'
+    s3["dataTable_dom"] = 'ripl<"dataTable_table"t>p'
 
     # Don't show export buttons for XLS/XML    
     s3.formats = Storage(xls=None, xml=None)
@@ -262,7 +266,7 @@ def customise_project_project_controller(**attr):
     
     # Only show 10 Project by default to improve load time
     attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, T("All")]]
-    s3.dataTable_iDisplayLength = 10
+    s3.dataTable_pageLength = 10
     
     # Custom PreP
     standard_prep = s3.prep

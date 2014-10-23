@@ -239,11 +239,11 @@ you can use the generic selector below, but it's slower:
     /* icon-truck */
     content: "\f0d1";
 }
-.icon-down:before {
-  /* Used for filter forms */
+.icon-caret-down:before {
+  /* Used for filter forms, profile update form and AddPersonWidget2 deduplicator */
   content: "\f0d7";
 }
-.icon-up:before {
-  /* Used for filter forms */
+.icon-caret-up:before {
+  /* Used for filter forms and profile update form */
   content: "\f0d8";
 }

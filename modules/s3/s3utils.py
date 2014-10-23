@@ -537,6 +537,7 @@ def s3_truncate(text, length=48, nice=True):
         @param nice: do not truncate words
     """
 
+    text = s3_unicode(text)
     if len(text) > length:
         if nice:
             return "%s..." % text[:length].rsplit(" ", 1)[0][:45]

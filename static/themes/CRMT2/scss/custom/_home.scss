@@ -1,0 +1,100 @@
+
+// first row
+
+.home-intro {
+  background: $navy url('img/home/bg-map.jpg') no-repeat center center;
+  min-height: 430px;
+}
+
+.intro-hed {
+  line-height: 1.4;
+  margin-bottom: 8px;
+  .highlight {
+    padding: 8px 20px 16px;
+    background: $teal;
+  }
+}
+
+.intro-dek {
+  line-height: 1.7;
+  margin-left: 12px;
+  margin-bottom: 3px;
+  .highlight {
+    padding: 10px 20px 15px;
+    background: $wave;
+  }
+}
+
+// four levers
+
+.home-levers {
+  background: $beige;
+  color: $black;
+  strong {
+    display: block;
+    background: $teal;
+    color: $white;
+    padding: 10px;
+    font-size: 150%;
+    font-weight: 400;
+    text-align: left;
+  }
+  span {
+    float: left;
+    margin: -20px 4px 0 -20px;
+    display: inline-block;
+    background: #222;
+    border-radius: 100%;
+    height: 40px;
+    width: 40px;
+    text-align: center;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    margin-bottom: 5px;
+  }
+  a {
+    color: #444;
+  }
+  figcaption {
+    padding-bottom: $space;
+  }
+}
+
+
+// steps diagram and activities list
+
+.home-actions {
+  background: $navy;
+  padding-bottom: 0 !important;
+  .row-title {
+    color: $white;
+  }
+}
+.steps-check {
+  margin-left: -64px;
+  margin-right: 10px;
+}
+
+.home-activities {
+  background: $white;
+  padding: 20px 20px 0;
+  border-bottom: 1px solid $ghost;
+}
+
+
+
+// partner logos
+
+.home-partners {
+  background: $beige;
+  .row {
+    margin-top: $space;
+  }
+  .row-title {
+    margin-bottom: 0;
+  }
+}
+
+

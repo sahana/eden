@@ -58,8 +58,8 @@ def index2():
                 query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                 if orderby is None:
                     orderby = default_orderby
-            start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
-            limit = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else s3.ROWSPERPAGE
+            start = int(get_vars.displayStart) if get_vars.displayStart else 0
+            limit = int(get_vars.pageLength) if get_vars.pageLength else s3.ROWSPERPAGE
             data = resource.select(list_fields,
                                    start=start,
                                    limit=limit,
@@ -77,19 +77,19 @@ def index2():
                 warehouses = dt.html(totalrows,
                                      filteredrows,
                                      "warehouse_list_1",
-                                     dt_bFilter="true",
-                                     dt_group=2,
                                      dt_ajax_url=URL(c="inv",
                                                   f="index2",
                                                   extension="aadata",
                                                   vars={"id":"warehouse_list_1"},
                                                   ),
+                                     dt_group=2,
+                                     dt_searching="true",
                                      )
             else:
                 warehouse = dt.json(totalrows,
                                     filteredrows,
                                     "warehouse_list_1",
-                                    int(get_vars.sEcho),
+                                    int(get_vars.draw),
                                     )
                 return warehouse
         # Second Table
@@ -137,8 +137,8 @@ def index2():
                     formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
                     orderby = [table.site_id, stable.name, ~table.quantity]
-                start = int(get_vars.iDisplayStart) if get_vars.iDisplayStart else 0
-                limit = int(get_vars.iDisplayLength) if get_vars.iDisplayLength else s3.ROWSPERPAGE
+                start = int(get_vars.displayStart) if get_vars.displayStart else 0
+                limit = int(get_vars.pageLength) if get_vars.pageLength else s3.ROWSPERPAGE
                 data = resource.select(list_fields,
                                        orderby=orderby,
                                        start=start,
@@ -174,9 +174,6 @@ def index2():
                     inventory = dt.html(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
-                                        dt_bFilter="true",
-                                        dt_group=[1,2],
-                                        dt_group_totals=[formatted_site_list],
                                         dt_action_col=-1,
                                         dt_ajax_url=URL(c="inv",
                                                      f="index2",
@@ -184,6 +181,9 @@ def index2():
                                                      vars={"id":"inventory_list_1"},
                                                      ),
                                         dt_bulk_actions = "Adjust",
+                                        dt_group=[1,2],
+                                        dt_group_totals=[formatted_site_list],
+                                        dt_searching="true",
                                         dt_styles = {"dtdisable": errorList,
                                                      "dtwarning": warningList,
                                                      "dtalert": alertList,
@@ -200,7 +200,7 @@ def index2():
                     inventory = dt.json(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
-                                        int(get_vars.sEcho),
+                                        int(get_vars.draw),
                                         dt_action_col=-1,
                                         dt_bulk_actions = "Adjust",
                                         dt_group_totals=[formatted_site_list],
@@ -249,19 +249,19 @@ def index2():
                 supply_items = dt.html(numrows,
                                        numrows,
                                        "supply_list_1",
-                                       dt_displayLength=10,
                                        dt_action_col=1,
                                        dt_ajax_url=URL(c="inv",
                                                        f="index2",
                                                        extension="aadata",
                                                        vars={"id": "supply_list_1"},
                                                        ),
+                                       dt_pageLength=10,
                                        )
             else:
                 supply_items = dt.json(numrows,
                                        numrows,
                                        "supply_list_1",
-                                       int(get_vars.sEcho),
+                                       int(get_vars.draw),
                                        dt_action_col=1,
                                        )
                 return supply_items

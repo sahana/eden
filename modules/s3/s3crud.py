@@ -58,7 +58,7 @@ from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
 from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
-from s3widgets import S3EmbedComponentWidget
+from s3widgets import S3EmbedComponentWidget, ICON
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -387,6 +387,8 @@ class S3CRUD(S3Method):
                     next_vars = self._remove_filters(r.get_vars)
                     create_next = r.url(target="[id]", method="update",
                                         vars=next_vars)
+                elif r.http == "POST" and "save_close" in r.post_vars:
+                    create_next = _config("create_next_close")
                 elif session.s3.rapid_data_entry and not r.component:
                     create_next = r.url()
                 else:
@@ -518,7 +520,7 @@ class S3CRUD(S3Method):
                     output["form"] = form
                     output["showadd_btn"] = self.crud_button(tablename=tablename,
                                                              name="label_create",
-                                                             icon="icon-plus",
+                                                             icon="add",
                                                              _id="show-add-btn")
                     addtitle = self.crud_string(tablename, "label_create")
                     output["addtitle"] = addtitle
@@ -537,7 +539,7 @@ class S3CRUD(S3Method):
                 add_btn = self.crud_button(
                                     tablename=tablename,
                                     name="label_create",
-                                    icon="icon-plus",
+                                    icon="add",
                                     _id="add-btn")
                 if buttons:
                     output["buttons"] = {"add_btn": add_btn}
@@ -874,7 +876,8 @@ class S3CRUD(S3Method):
             self._interim_save_button()
 
             # Default Cancel Button
-            if r.representation == "html" and r.method == "update":
+            if r.representation == "html" and \
+               (r.method == "update" or not r.method):
                 self._default_cancel_button(r)
 
             # Get the form
@@ -1017,7 +1020,8 @@ class S3CRUD(S3Method):
             r.http = "DELETE" # must be set for immediate redirect
             self.next = delete_next or r.url(method="")
 
-        elif r.http == "DELETE":
+        elif r.http == "DELETE" or \
+             r.representation == "json" and r.http == "POST" and record_id:
             # Delete the records and return a JSON message
             numrows = self.resource.delete(format=r.representation)
             if numrows > 1:
@@ -1076,8 +1080,8 @@ class S3CRUD(S3Method):
                 # Hide datatable filter box if we have a filter form
                 if filter_widgets and not hide_filter:
                     dtargs = attr.get("dtargs", {})
-                    if "dt_bFilter" not in dtargs:
-                        dtargs["dt_bFilter"] = False
+                    if "dt_searching" not in dtargs:
+                        dtargs["dt_searching"] = False
                     _attr = dict(attr)
                     _attr["dtargs"] = dtargs
                 else:
@@ -1116,7 +1120,8 @@ class S3CRUD(S3Method):
                                                  vars={},
                                                  representation="options"))
 
-                filter_clear = get_config("filter_clear", True)
+                filter_clear = get_config("filter_clear",
+                                          current.deployment_settings.get_ui_filter_clear())
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
@@ -1166,7 +1171,7 @@ class S3CRUD(S3Method):
                         showadd_btn = self.crud_button(None,
                                                        tablename=tablename,
                                                        name="label_create",
-                                                       icon="icon-plus",
+                                                       icon="add",
                                                        _id="show-add-btn")
                         output["showadd_btn"] = showadd_btn
 
@@ -1330,36 +1335,48 @@ class S3CRUD(S3Method):
         # Default orderby
         orderby = get_config("orderby", None)
 
+        response = current.response
+        s3 = response.s3
         representation = r.representation
 
         # Pagination
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", 0)
-        else:
             start = get_vars.get("start", None)
             limit = get_vars.get("limit", 0)
-        if limit:
-            if limit.lower() == "none":
-                limit = None
+            # Deal with overrides (pagination limits come last)
+            if isinstance(start, list):
+                start = start[-1]
+            if isinstance(limit, list):
+                limit = limit[-1]
+            if limit:
+                # Ability to override default limit to "Show All"
+                if limit.lower() == "none":
+                    #start = None # needed?
+                    limit = None
+                else:
+                    try:
+                        start = int(start) if start is not None else None
+                        limit = int(limit)
+                    except (ValueError, TypeError):
+                        # Fall back to defaults
+                        start, limit = None, 0
             else:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = 0 # use default
+                # Use defaults, assume sspag because this is a
+                # pagination request by definition
+                start = None
+                limit = 0
         else:
-            # Use defaults
+            # Initial page request always uses defaults (otherwise
+            # filtering and pagination would have to be relative to
+            # the initial limits, but there is no use-case for that)
             start = None
+            limit = None if s3.no_sspag else 0
 
         # Initialize output
         output = {}
 
         # Filter
-        response = current.response
-        s3 = response.s3
         if s3.filter is not None:
             resource.add_filter(s3.filter)
 
@@ -1374,8 +1391,8 @@ class S3CRUD(S3Method):
         if r.interactive:
 
             # How many records per page?
-            if s3.dataTable_iDisplayLength:
-                display_length = s3.dataTable_iDisplayLength
+            if s3.dataTable_pageLength:
+                display_length = s3.dataTable_pageLength
             else:
                 display_length = 25
 
@@ -1435,7 +1452,7 @@ class S3CRUD(S3Method):
             #        shows the right empty-message (ZeroRecords instead
             #        of EmptyTable)
             dtargs["dt_pagination"] = dt_pagination
-            dtargs["dt_displayLength"] = display_length
+            dtargs["dt_pageLength"] = display_length
             dtargs["dt_base_url"] = r.url(method="", vars={})
             dtargs["dt_permalink"] = r.url()
             datatable = dt.html(totalrows,
@@ -1477,21 +1494,21 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(get_vars.sEcho or 0)
+            draw = int(get_vars.draw or 0)
 
             # Representation
             if dt is not None:
                 output = dt.json(totalrows,
                                  displayrows,
                                  list_id,
-                                 sEcho,
+                                 draw,
                                  **dtargs)
             else:
-                output = '{"iTotalRecords":%s,' \
-                         '"iTotalDisplayRecords":0,' \
+                output = '{"recordsTotal":%s,' \
+                         '"recordsFiltered":0,' \
                          '"dataTable_id":"%s",' \
-                         '"sEcho":%s,' \
-                         '"aaData":[]}' % (totalrows, list_id, sEcho)
+                         '"draw":%s,' \
+                         '"data":[]}' % (totalrows, list_id, draw)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -1741,8 +1758,8 @@ class S3CRUD(S3Method):
         # Pagination
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("iDisplayStart", None)
-            limit = get_vars.get("iDisplayLength", 0)
+            start = get_vars.get("displayStart", None)
+            limit = get_vars.get("pageLength", 0)
         else:
             start = get_vars.get("start", None)
             limit = get_vars.get("limit", 0)
@@ -1798,8 +1815,8 @@ class S3CRUD(S3Method):
             output["title"] = title
 
             # How many records per page?
-            if s3.dataTable_iDisplayLength:
-                display_length = s3.dataTable_iDisplayLength
+            if s3.dataTable_pageLength:
+                display_length = s3.dataTable_pageLength
             else:
                 display_length = 25
 
@@ -1837,11 +1854,13 @@ class S3CRUD(S3Method):
                 s3.no_formats = True
                 datatable = current.T("No records to review")
             else:
-                dt_sDom = s3.get("dataTable_sDom", 'fril<"dataTable_table"t>pi')
+                dt_dom = s3.get("dataTable_dom",
+                                current.deployment_settings.get_ui_datatables_dom())
                 datatable = dt.html(totalrows, displayrows, list_id,
                                     dt_pagination=dt_pagination,
-                                    dt_displayLength=display_length,
-                                    dt_sDom = dt_sDom)
+                                    dt_pageLength=display_length,
+                                    dt_dom = dt_dom,
+                                    )
                 s3.actions = [{"label": str(current.T("Review")),
                                "url": r.url(id="[id]", method="review"),
                                "_class": "action-btn"}]
@@ -1879,20 +1898,20 @@ class S3CRUD(S3Method):
                 totalrows = displayrows
 
             # Echo
-            sEcho = int(get_vars.sEcho or 0)
+            draw = int(get_vars.draw or 0)
 
             # Representation
             if dt is not None:
                 output = dt.json(totalrows,
                                  displayrows,
                                  list_id,
-                                 sEcho)
+                                 draw)
             else:
-                output = '{"iTotalRecords": %s, ' \
-                         '"iTotalDisplayRecords": 0,' \
+                output = '{"recordsTotal": %s, ' \
+                         '"recordsFiltered": 0,' \
                          '"dataTable_id": "%s", ' \
-                         '"sEcho": %s, ' \
-                         '"aaData": []}' % (totalrows, list_id, sEcho)
+                         '"draw": %s, ' \
+                         '"data": []}' % (totalrows, list_id, draw)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -2203,7 +2222,7 @@ class S3CRUD(S3Method):
             @param label: the link label (None if using CRUD string)
             @param tablename: the name of table for CRUD string selection
             @param name: name of CRUD string for the button label
-            @param icon: class name of the glyphicon icon (e.g. "icon-plus")
+            @param icon: name of the icon (e.g. "add")
             @param _href: the target URL
             @param _id: the HTML id of the link
             @param _class: the HTML class of the link
@@ -2237,9 +2256,9 @@ class S3CRUD(S3Method):
         else:
             labelstr = str(label)
 
-        # Show glyphicon icon on button?
-        if icon and settings.get_ui_use_button_glyphicons():
-            button = A(I(" ", _class=icon), labelstr, _id=_id, _class=_class)
+        # Show icon on button?
+        if icon and settings.get_ui_use_button_icons():
+            button = A(ICON(icon), labelstr, _id=_id, _class=_class)
         else:
             button = A(labelstr, _id=_id, _class=_class)
 
@@ -2332,7 +2351,7 @@ class S3CRUD(S3Method):
                     _href = url(method="create",
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-plus",
+                                      icon="add",
                                       _href=_href,
                                       _id="add-btn")
                 output[ADD_BTN] = btn
@@ -2350,7 +2369,7 @@ class S3CRUD(S3Method):
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-list",
+                                      icon="list",
                                       _href=_href,
                                       _id="list-btn")
                 output[LIST_BTN] = btn
@@ -2368,7 +2387,7 @@ class S3CRUD(S3Method):
                                 vars=remove_filters(r.get_vars),
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-list",
+                                      icon="list",
                                       _href=_href,
                                       _id="summary-btn")
                 output[SUMMARY_BTN] = btn
@@ -2388,7 +2407,7 @@ class S3CRUD(S3Method):
                     _href = url(method="update",
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-edit",
+                                      icon="edit",
                                       _href=_href,
                                       _id="edit-btn")
                 output[EDIT_BTN] = btn
@@ -2405,7 +2424,7 @@ class S3CRUD(S3Method):
                     _href = url(method="delete",
                                 representation=representation)
                     btn = crud_button(label=label,
-                                      icon="icon-trash",
+                                      icon="delete",
                                       _href=_href,
                                       _id="delete-btn",
                                       _class="delete-btn")
@@ -2425,11 +2444,12 @@ class S3CRUD(S3Method):
         """
 
         link = dict(attr)
-        link.update(label=str(label), url=url)
-        if icon and current.deployment_settings.get_ui_use_button_glyphicons():
-            link.update(icon=icon)
+        link["label"] = str(label)
+        link["url"] = url
+        if icon and current.deployment_settings.get_ui_use_button_icons():
+            link["icon"] = ICON.css_class(icon)
         if "_class" not in link:
-            link.update(_class="action-btn")
+            link["_class"] = "action-btn"
 
         s3 = current.response.s3
         if s3.actions is None:
@@ -2525,12 +2545,13 @@ class S3CRUD(S3Method):
                                  # To use modals
                                  #_class="action-btn s3_modal"
                                  _class="action-btn read",
+                                 icon = "file",
                                  **target
                                  )
 
         # Delete-action
         if deletable and has_permission("delete", table):
-            icon = "trash"
+            icon = "delete"
             if not delete_url:
                 delete_url = iframe_safe(URL(args = args + ["delete"],
                                              vars = get_vars))
@@ -2563,7 +2584,7 @@ class S3CRUD(S3Method):
                 copy_url = iframe_safe(URL(args = args + ["copy"]))
             s3crud.action_button(labels.COPY,
                                  copy_url,
-                                 icon="copy",
+                                 icon="icon-copy",
                                  **target
                                  )
 
@@ -2610,7 +2631,7 @@ class S3CRUD(S3Method):
                             default_url = r.url(method="summary", id=0)
                         else:
                             default_url = r.url(method="", id=0)
-                elif method == "update":
+                elif method == "update" or not method:
                     if r.component:
                         default_url = r.url(method = "",
                                             component_id= "",
@@ -2993,20 +3014,19 @@ class S3CRUD(S3Method):
             form for the same record after create/update
         """
 
-        settings = current.response.s3.crud
         label = current.deployment_settings.get_ui_interim_save()
         if label:
-            T = current.T
             _class = "interim-save"
             if isinstance(label, basestring):
-                label = T(label)
+                label = current.T(label)
             elif isinstance(label, (tuple, list)) and len(label) > 1:
                 label, _class = label[:2]
             elif not isinstance(label, lazyT):
-                label = T("Save and Continue Editing")
+                label = current.T("Save and Continue Editing")
             item = ("interim_save", label, _class)
         else:
             return
+        settings = current.response.s3.crud
         if settings.custom_submit:
             settings.custom_submit.insert(0, item)
         else:

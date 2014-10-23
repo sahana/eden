@@ -8,7 +8,9 @@ python:
 env:
  - DB=mysql
  - DB=sqlite3
- - DB=postgres
+ - DB=postgres-9.1
+ - DB=postgres-9.3
+ - DB=postgres-9.3+postgis
 
 virtualenv:
   system_site_packages: true

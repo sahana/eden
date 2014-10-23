@@ -1509,11 +1509,11 @@ def cr_notification_dispatcher(r, **attr):
 
         text += "************************************************"
         text += "\n%s " % T("Automatic Message")
-        text += "\n%s " % T("Shelter ID: %s ") % s_id
-        text += T(" Shelter name: %s") % s_name
-        text += "\n%s " % T("Email: %s") % s_email
-        text += T(" Phone: %s") % s_phone
-        text += "\n%s " % T("Working Status: %s") % s_status
+        text += "\n%s: %s " % (T("Shelter ID"), s_id)
+        text += " %s: %s" % (T("Shelter name"), s_name)
+        text += "\n%s: %s " % (T("Email"), s_email)
+        text += " %s: %s" % (T("Phone"), s_phone)
+        text += "\n%s: %s " % (T("Working Status"), s_status)
         text += "\n************************************************\n"
 
         # Encode the message as an OpenGeoSMS

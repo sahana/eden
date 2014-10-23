@@ -49,6 +49,9 @@ settings.L10n.default_country_code = 1
 settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
 settings.ui.label_postcode = "ZIP Code"
+# Uncomment to disable responsive behavior of datatables
+# - Disabled until tested
+settings.ui.datatables_responsive = False
 # PDF to Letter
 settings.base.paper_size = T("Letter")
 
@@ -122,7 +125,7 @@ settings.ui.update_label = "Update"
 settings.ui.export_formats = ("xls", "xml")
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
 settings.ui.multiselect_widget = True
-settings.ui.use_button_glyphicons = True
+settings.ui.use_button_icons = True
 
 # Set Map to fill the container
 settings.gis.map_width = 1178
@@ -2199,6 +2202,7 @@ class ActivityLogLayout(S3DataListLayout):
             user_id = row[ltable.user_id]
             avatar = s3_avatar_represent(user_id,
                                          _class="media-object",
+                                         # @ToDo: Move to CSS
                                          _style="width:50px;padding:5px;padding-top:0px;")
             person_id = row[ptable.id]
             if person_id:
@@ -2219,6 +2223,8 @@ class ActivityLogLayout(S3DataListLayout):
             @param tablename: the tablename
             @param method: the method ("create" or "update")
         """
+
+        T = current.T
 
         activity = None
         if tablename == "pr_filter":
@@ -2284,8 +2290,6 @@ class ActivityLogLayout(S3DataListLayout):
         record_id = raw["s3_audit.record_id"]
 
         T = current.T
-        db = current.db
-        s3db = current.s3db
 
         if tablename == "pr_filter":
             label = T("Saved Filters")

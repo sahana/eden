@@ -67,12 +67,14 @@ __all__ = ("S3ACLWidget",
            "S3SelectWidget",
            "S3SiteAutocompleteWidget",
            "S3SliderWidget",
+           "S3StringWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
            "CheckboxesWidgetS3",
            "s3_comments_widget",
            "s3_richtext_widget",
            "search_ac",
+           "ICON",
            )
 
 import datetime
@@ -703,6 +705,8 @@ class S3AddPersonWidget2(FormWidget):
             date_of_birth = None
         if settings.get_pr_request_gender():
             gender = ptable.gender
+            if request.env.request_method == "POST":
+                gender.requires = IS_EMPTY_OR(gender.requires)
         else:
             gender = None
 
@@ -1266,7 +1270,7 @@ class S3DateWidget(FormWidget):
             #    # Urdu uses Arabic
             #    language = "ar"
             elif "-" in language:
-                parts = language.split("_", 1)
+                parts = language.split("-", 1)
                 language = "%s-%s" % (parts[0], parts[1].upper())
             path = os.path.join(request.folder, "static", "scripts", "ui", "i18n", "datepicker-%s.js" % language)
             if os.path.exists(path):
@@ -1574,7 +1578,7 @@ class S3DateTimeWidget(FormWidget):
  useLocalTimezone:true,
  defaultValue:'%(default)s',
  onClose:%(onclose)s
-})
+}).one('click',function(){$(this).focus()})
 var clear_button=$('<button id="%(selector)s_clear" class="btn date-clear-btn" type="button">%(clear)s</button>').click(function(){
  $('#%(selector)s').val('');%(onclear)s;$('#%(selector)s').closest('.filter-form').trigger('optionChanged')
 })
@@ -3855,7 +3859,6 @@ class S3LocationSelectorWidget2(FormWidget):
 
         Limitations:
         * Doesn't support variable Levels by Country
-        * Doesn't support non-strict hierarchies
         * Doesn't allow creation of new Lx Locations
         * Doesn't allow selection of existing specific Locations
         * Doesn't support manual entry of LatLons
@@ -4399,6 +4402,7 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # Build initial location_dict
         # Read all visible levels
+        # NB (level != None) is to handle Missing Levels
         if "L0" in levels:
             query = (gtable.level == "L0")
             if len(countries):
@@ -4407,64 +4411,64 @@ class S3LocationSelectorWidget2(FormWidget):
                           (ttable.value.belongs(countries)) & \
                           (ttable.location_id == gtable.id))
             if L0 and "L1" in levels:
-                query |= (gtable.level == "L1") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L0)
             if L1 and "L2" in levels:
-                query |= (gtable.level == "L2") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L1)
             if L2 and "L3" in levels:
-                query |= (gtable.level == "L3") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L0 and "L1" in levels:
-            query = (gtable.level == "L1") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L0)
             if L1 and "L2" in levels:
-                query |= (gtable.level == "L2") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L1)
             if L2 and "L3" in levels:
-                query |= (gtable.level == "L3") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L1 and "L2" in levels:
-            query = (gtable.level == "L2") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L1)
             if L2 and "L3" in levels:
-                query |= (gtable.level == "L3") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L2 and "L3" in levels:
-            query = (gtable.level == "L3") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L2)
             if L3 and "L4" in levels:
-                query |= (gtable.level == "L4") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L3 and "L4" in levels:
-            query = (gtable.level == "L4") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L3)
             if L4 and "L5" in levels:
-                query |= (gtable.level == "L5") & \
+                query |= (gtable.level != None) & \
                          (gtable.parent == L4)
         elif L4 and "L5" in levels:
-            query = (gtable.level == "L5") & \
+            query = (gtable.level != None) & \
                     (gtable.parent == L4)
 
         query &= (gtable.deleted == False)
@@ -4597,21 +4601,21 @@ class S3LocationSelectorWidget2(FormWidget):
             use_callback = False
 
         specific = values["specific"]
-        args = [L0]
+        # Add only required args
         if specific:
-            # We need to provide all args
-            args += [L1, L2, L3, L4, L5, specific]
+            args = [L0, L1, L2, L3, L4, L5, specific]
+        elif L5:
+            args = [L0, L1, L2, L3, L4, L5]
+        elif L4:
+            args = [L0, L1, L2, L3, L4]
+        elif L3:
+            args = [L0, L1, L2, L3]
+        elif L2:
+            args = [L0, L1, L2]
         elif L1:
-            # Add only required args
-            args.append(L1)
-            if L2:
-                args.append(L2)
-                if L3:
-                    args.append(L3)
-                    if L4:
-                        args.append(L4)
-                        if L5:
-                            args.append(L5)
+            args = [L0, L1]
+        else:
+            args = [L0]
 
         args = [str(arg) for arg in args]
         args = ''','''.join(args)
@@ -4688,6 +4692,7 @@ class S3LocationSelectorWidget2(FormWidget):
             if not self.color_picker:
                 color_picker = False
             else:
+                toolbar = True
                 # Requires the custom controller to store this before calling the widget
                 # - a bit hacky, but can't think of a better option currently without rewriting completely as an S3SQLSubForm
                 record_id = s3.record_id
@@ -4735,7 +4740,9 @@ class S3LocationSelectorWidget2(FormWidget):
                                 color_picker = color_picker,
                                 toolbar = toolbar,
                                 # Hide controls from toolbar
+                                clear_layers = False,
                                 nav = False,
+                                print_control = False,
                                 area = False,
                                 zoomWheelEnabled = False,
                                 # Don't use normal callback (since we postpone rendering Map until DIV unhidden)
@@ -4854,6 +4861,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                  multiple = True,
                  selectedList = 3,
                  noneSelectedText = "Select",
+                 columns = None,
                  create = None,
                  ):
         """
@@ -4873,6 +4881,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                                  selected")
             @param noneSelectedText: text to show on the widget button when no option is
                                      selected (automatic l10n, no T() required)
+            @param columns: set the columns width class for Foundation forms
             @param create: options to create a new record {c: 'controller',
                                                            f: 'function',
                                                            label: 'label',
@@ -4880,7 +4889,6 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                                                            child: 'child', (optional: which field to lookup options for)
                                                            }
             @ToDo: Complete the 'create' feature:
-                * Check User is allowed to create resources before rendering the option
                 * Ensure the Create option doesn't get filtered out when searching for items
                 * Style option to make it clearer that it's an Action item
         """
@@ -4890,6 +4898,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         self.multiple = multiple
         self.selectedList = selectedList
         self.noneSelectedText = noneSelectedText
+        self.columns = columns
         self.create = create
 
     def __call__(self, field, value, **attr):
@@ -4918,8 +4927,12 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                 # Base widget requires single value, so enforce that
                 # if necessary, and convert to string to match options
                 value = str(value[0] if type(value) is list else value)
-        widget = TAG[""](w.widget(field, value, **attr),
-                         requires = field.requires)
+        widget = w.widget(field, value, **attr)
+        options_len = len(widget)
+        if self.columns:
+            widget = DIV(widget,
+                         _class = "small-%s columns" % self.columns,
+                         )
 
         # Filter and header for multiselect options list
         filter_opt = self.filter
@@ -4929,7 +4942,7 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
             header_opt = False
         if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
             max_options = 10 if filter_opt == "auto" else filter_opt
-            if len(widget[0]) > max_options:
+            if options_len > max_options:
                 filter_opt = True
             else:
                 filter_opt = False
@@ -4950,10 +4963,13 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         noneSelectedText = self.noneSelectedText
         if not isinstance(noneSelectedText, lazyT):
             noneSelectedText = T(noneSelectedText)
-        if self.create:
-            create = ",create:%s" % json.dumps(self.create, separators=SEPARATORS)
-        else:
-            create = ""
+        create = self.create or ""
+        if create:
+            tablename = "%s_%s" % (create["c"], create["f"])
+            if current.auth.s3_has_permission("create", tablename):
+                create = ",create:%s" % json.dumps(create, separators=SEPARATORS)
+            else:
+                create = ""
         script = '''$('#%s').multiselect({allSelectedText:'%s',selectedText:'%s',%s,height:300,minWidth:0,selectedList:%s,noneSelectedText:'%s',multiple:%s%s})''' % \
                  (selector,
                   T("All selected"),
@@ -5075,11 +5091,12 @@ class S3HierarchyWidget(FormWidget):
     """ Selector Widget for Hierarchies """
 
     def __init__(self,
-                 lookup=None,
-                 represent=None,
-                 multiple=True,
-                 leafonly=True,
-                 filter=None,
+                 lookup = None,
+                 represent = None,
+                 multiple = True,
+                 leafonly = True,
+                 filter = None,
+                 columns = None,
                  ):
         """
             Constructor
@@ -5092,14 +5109,15 @@ class S3HierarchyWidget(FormWidget):
             @param leafonly: True = only leaf nodes can be selected
                              False = any nodes to be selected independently
             @param filter: filter query for the lookup table
+            @param columns: set the columns width class for Foundation forms
         """
 
         self.lookup = lookup
         self.represent = represent
         self.filter = filter
-
         self.multiple = multiple
         self.leafonly = leafonly
+        self.columns = columns
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -5155,6 +5173,10 @@ class S3HierarchyWidget(FormWidget):
                          _class = "s3-hierarchy-tree"),
                      **attr)
         widget.add_class("s3-hierarchy-widget")
+        if self.columns:
+            widget = DIV(widget,
+                         _class = "small-%s columns" % self.columns,
+                         )
 
         s3 = current.response.s3
         scripts = s3.scripts
@@ -5171,17 +5193,26 @@ class S3HierarchyWidget(FormWidget):
             if isinstance(v, (int, long)) or str(v).isdigit():
                 append(v)
 
+        # Custom theme
+        theme = current.deployment_settings.get_ui_hierarchy_theme()
+
         if s3.debug:
-            script = "%s/jquery.jstree.js" % script_dir
+            script = "%s/jstree.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
             script = "%s/S3/s3.jquery.ui.hierarchicalopts.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
+            style = "%s/jstree.css" % theme.get("css", "plugins")
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
         else:
             script = "%s/S3/s3.jstree.min.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
+            style = "%s/jstree.min.css" % theme.get("css", "plugins")
+            if style not in s3.stylesheets:
+                s3.stylesheets.append(style)
 
         T = current.T
 
@@ -5189,17 +5220,18 @@ class S3HierarchyWidget(FormWidget):
                        "selectedText": str(T("# selected")),
                        "noneSelectedText": str(T("Select")),
                        "noOptionsText": str(T("No options available")),
-                       "multiple": self.multiple,
-                       "leafonly": leafonly,
                        }
-
-        # Custom theme
-        theme = current.deployment_settings.get_ui_hierarchy_theme()
-        if theme and hasattr(theme, "rsplit"):
-            folder, theme = ([None] + theme.rsplit("/", 1))[-2:]
-            if folder:
-                widget_opts["themesFolder"] = folder
-            widget_opts["theme"] = theme
+        # Only include non-default options
+        if not self.multiple:
+            widget_opts["multiple"] = False
+        if not leafonly:
+            widget_opts["leafonly"] = False
+        icons = theme.get("icons", False)
+        if icons:
+            widget_opts["icons"] = icons
+        stripes = theme.get("stripes", True)
+        if not stripes:
+            widget_opts["stripes"] = stripes
 
         script = '''$('#%(widget_id)s').hierarchicalopts(%(widget_opts)s)''' % \
                  {"widget_id": widget_id,
@@ -5744,14 +5776,14 @@ class S3SliderWidget(FormWidget):
 
         if isinstance(validator, IS_EMPTY_OR):
             validator = validator.other
-        
+
         self.min = validator.minimum
 
         # Max Value depends upon validator type
         if isinstance(validator, IS_INT_IN_RANGE):
             self.max = validator.maximum - 1
         elif isinstance(validator, IS_FLOAT_IN_RANGE):
-            self.max = validator.maximum 
+            self.max = validator.maximum
 
         if value is None:
             # JSONify
@@ -5776,6 +5808,60 @@ class S3SliderWidget(FormWidget):
         s3.jquery_ready.append(script)
 
         return TAG[""](input, slider)
+
+# =============================================================================
+class S3StringWidget(StringWidget):
+    """
+        Extend the default Web2Py widget to include a Placeholder
+    """
+
+    def __init__(self,
+                 columns = 10,
+                 placeholder = None,
+                 prefix = None,
+                 textarea = False,
+                 ):
+        self.cols = columns
+        self.placeholder = placeholder
+        self.prefix = prefix
+        self.textarea = textarea
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(
+            _type = "text",
+            value = (value != None and str(value)) or "",
+            )
+        attr = StringWidget._attributes(field, default, **attributes)
+
+        placeholder = self.placeholder
+        if placeholder:
+            attr["_placeholder"] = placeholder
+
+        if self.textarea:
+            widget = TEXTAREA(**attr)
+        else:
+            widget = INPUT(**attr)
+
+        if self.prefix:
+            # NB These classes target Foundation Themes
+            widget = TAG[""](DIV(SPAN(self.prefix,
+                                      _class="prefix",
+                                      ),
+                                 _class="small-1 columns",
+                                 ),
+                             DIV(widget,
+                                 _class="small-%s columns" % (self.cols - 1),
+                                 ),
+                             # Tell the formstyle not to wrap & collapse
+                             _class="columns collapse",
+                             )
+        else:
+            widget = DIV(widget,
+                         _class="small-%s columns" % self.cols,
+                         )
+
+        return widget
 
 # =============================================================================
 class S3TimeIntervalWidget(FormWidget):
@@ -6013,7 +6099,7 @@ class S3PasswordWidget(FormWidget):
                                                                      fieldname),
                             _id = "%s_%s_unmask" % (tablename, fieldname),
                             )
-        return DIV(password_input, 
+        return DIV(password_input,
                    password_unmask,
                    )
 
@@ -6240,5 +6326,235 @@ def search_ac(r, **attr):
 
     current.response.headers["Content-Type"] = "application/json"
     return json.dumps(output, separators=SEPARATORS)
+
+# =============================================================================
+class ICON(I):
+    """
+        Helper class to render <i> tags for icons, mapping abstract
+        icon names to theme-specific CSS classes. The standard icon
+        set can be configured using settings.ui.icons
+
+        e.g. ICON("book"), gives:
+            - font-awesome: <i class="icon icon-book">
+            - foundation: <i class="fi-book">
+
+        Standard sets are defined below.
+
+        Additional icons (beyond the standard set) can be configured
+        per deployment (settings.ui.custom_icons).
+
+        If <i class=""> is not suitable for the CSS, a custom HTML
+        layout can be configured as settings.ui.icon_layout. See
+        S3Config for more details.
+
+        @todo: apply in widgets/crud/profile+datalist layouts etc.
+        @todo: better abstract names for the icons to indicate what they
+               symbolize rather than what they depict, e.g. "sitemap" is
+               typically used to symbolize an organisation => rename into
+               "organisation".
+    """
+
+    # -------------------------------------------------------------------------
+    # Standard icon sets,
+    # - "_base" can be used to define a common CSS class for all icons
+    #
+    icons = {
+        "font-awesome": {
+            "_base": "icon",
+            "add": "icon-plus",
+            "arrow-down": "icon-arrow-down",
+            "bar-chart": "icon-bar-chart",
+            "book": "icon-book",
+            "bookmark": "icon-bookmark",
+            "bookmark-empty": "icon-bookmark-empty",
+            "briefcase": "icon-briefcase",
+            "calendar": "icon-calendar",
+            "certificate": "icon-certificate",
+            "comment-alt": "icon-comment-alt",
+            "delete": "icon-trash",
+            "down": "icon-caret-down",
+            "edit": "icon-edit",
+            "envelope-alt": "icon-envelope-alt",
+            "exclamation": "icon-exclamation",
+            "file": "icon-file",
+            "file-alt": "icon-file-alt",
+            "folder-open-alt": "icon-folder-open-alt",
+            "fullscreen": "icon-fullscreen",
+            "globe": "icon-globe",
+            "home": "icon-home",
+            "link": "icon-link",
+            "list": "icon-list",
+            "map-marker": "icon-map-marker",
+            "offer": "icon-truck",
+            "paper-clip": "icon-paper-clip",
+            "phone": "icon-phone",
+            "plus": "icon-plus",
+            "plus-sign": "icon-plus-sign",
+            "remove": "icon-remove",
+            "request": "icon-flag",
+            "sitemap": "icon-sitemap",
+            "star": "icon-star",
+            "table": "icon-table",
+            "tag": "icon-tag",
+            "tags": "icon-tags",
+            "time": "icon-time",
+            "trash": "icon-trash",
+            "truck": "icon-truck",
+            "up": "icon-caret-up",
+            "user": "icon-user",
+            "wrench": "icon-wrench",
+            "zoomin": "icon-zoomin",
+            "zoomout": "icon-zoomout",
+        },
+        # @todo: integrate
+        #"font-awesome4": {
+            #"_base": "fa",
+            #"add": "fa-plus",
+            #"arrow-down": "fa-arrow-down",
+            #"bar-chart": "fa-bar-chart",
+            #"book": "fa-book",
+            #"bookmark": "fa-bookmark",
+            #"bookmark-empty": "fa-bookmark-empty",
+            #"briefcase": "fa-briefcase",
+            #"calendar": "fa-calendar",
+            #"certificate": "fa-certificate",
+            #"comment-alt": "fa-comment-o",
+            #"delete": "fa-trash",
+            #"down": "fa-caret-down",
+            #"edit": "fa-edit",
+            #"envelope-alt": "fa-envelope-o",
+            #"exclamation": "fa-exclamation",
+            #"file": "fa-file",
+            #"file-alt": "fa-file-alt",
+            #"folder-open-alt": "fa-folder-open-o",
+            #"fullscreen": "fa-fullscreen",
+            #"globe": "fa-globe",
+            #"home": "fa-home",
+            #"link": "fa-link",
+            #"list": "fa-list",
+            #"map-marker": "fa-map-marker",
+            #"offer": "fa-truck",
+            #"paper-clip": "fa-paper-clip",
+            #"phone": "fa-phone",
+            #"plus": "fa-plus",
+            #"plus-sign": "fa-plus-sign",
+            #"remove": "fa-remove",
+            #"request": "fa-flag",
+            #"sitemap": "fa-sitemap",
+            #"star": "fa-star",
+            #"table": "fa-table",
+            #"tag": "fa-tag",
+            #"tags": "fa-tags",
+            #"time": "fa-time",
+            #"trash": "fa-trash",
+            #"truck": "fa-truck",
+            #"up": "fa-caret-up",
+            #"user": "fa-user",
+            #"wrench": "fa-wrench",
+            #"zoomin": "fa-zoomin",
+            #"zoomout": "fa-zoomout",
+        #},
+        "foundation": {
+            "add": "fi-plus",
+            "arrow-down": "fi-arrow-down",
+            "bar-chart": "fi-graph-bar",
+            "book": "fi-book",
+            "bookmark": "fi-bookmark",
+            "bookmark-empty": "fi-bookmark-empty",
+            "calendar": "fi-calendar",
+            "certificate": "fi-burst",
+            "comment-alt": "fi-comment",
+            "delete": "fi-trash",
+            "edit": "fi-page-edit",
+            "envelope-alt": "fi-mail",
+            "exclamation": "fi-alert",
+            "file": "fi-page-filled",
+            "file-alt": "fi-page",
+            "folder-open-alt": "fi-folder",
+            "fullscreen": "fi-arrows-out",
+            "globe": "fi-map",
+            "home": "fi-home",
+            "link": "fi-link",
+            "list": "fi-list",
+            "map-marker": "fi-marker",
+            "offer": "fi-burst",
+            "paper-clip": "fi-paperclip",
+            "phone": "fi-telephone",
+            "plus": "fi-plus",
+            "plus-sign": "fi-plus",
+            "remove": "fi-x",
+            "request": "fi-flag",
+            "star": "fi-star",
+            "table": "fi-list-thumbnails",
+            "tag": "fi-price-tag",
+            "tags": "fi-pricetag-multiple",
+            "time": "fi-clock",
+            "trash": "fi-trash",
+            "user": "fi-torso",
+            "wrench": "fi-wrench",
+            "zoomin": "fi-zoom-in",
+            "zoomout": "fi-zoom-out",
+        },
+    }
+
+    # -------------------------------------------------------------------------
+    def __init__(self, name, **attr):
+        """
+            Constructor
+
+            @param name: the abstract icon name
+            @param attr: additional HTML attributes (optional)
+        """
+
+        self.name = name
+        super(ICON, self).__init__(" ", **attr)
+
+    # -------------------------------------------------------------------------
+    def xml(self):
+        """
+            Render this instance as XML
+        """
+
+        # Custom layout?
+        layout = current.deployment_settings.get_ui_icon_layout()
+        if layout:
+            return layout(self)
+
+        css_class = self.css_class(self.name)
+
+        if css_class:
+            self.add_class(css_class)
+
+        return super(ICON, self).xml()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def css_class(cls, name):
+
+        settings = current.deployment_settings
+        fallback = "font-awesome"
+
+        # Lookup the default set
+        icons = cls.icons
+        default_set = settings.get_ui_icons()
+        default = icons[fallback]
+        if default_set != fallback:
+            default.pop("_base", None)
+            default.update(icons.get(default_set, {}))
+
+        # Custom set?
+        custom = settings.get_ui_custom_icons()
+
+        if custom and name in custom:
+            css = custom[name]
+            base = custom.get("_base")
+        elif name in default:
+            css = default[name]
+            base = default.get("_base")
+        else:
+            css = name
+            base = None
+
+        return " ".join([c for c in (css, base) if c])
 
 # END =========================================================================

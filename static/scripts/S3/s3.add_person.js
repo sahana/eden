@@ -586,7 +586,7 @@
                 if (data.length) {
                     // Display new count
                     var count = i18n.dupes_found.replace('_NUM_', data.length);
-                    $(selector + '_duplicates').html(count + ' <i class="icon-down"> </i>')
+                    $(selector + '_duplicates').html(count + ' <i class="icon-caret-down"> </i>')
                                                .show()
                                                .data('results', data);
                 } else {

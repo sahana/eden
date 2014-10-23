@@ -22,6 +22,7 @@ class S3MainMenu(default.S3MainMenu):
         return [
             homepage(name=sysname),
             homepage("gis"),
+            homepage("event", f="incident_report"),
             homepage("org"),
             homepage("hrm"),
             homepage("inv"),
@@ -29,6 +30,21 @@ class S3MainMenu(default.S3MainMenu):
             homepage("req"),
             homepage("vol"),
             homepage("project"),
-       ]
+        ]
 
+# =============================================================================
+class S3OptionsMenu(default.S3OptionsMenu):
+    """ Custom Application Side Menu """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event():
+        """ EVENT / Event Module """
+
+        return M()(
+                    M("Incident Reports", c="event", f="incident_report")(
+                        M("Create", m="create"),
+                    ),
+                )
+        
 # END =========================================================================
