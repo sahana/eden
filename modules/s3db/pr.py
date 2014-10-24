@@ -154,10 +154,16 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Person Super-Entity
         #
-        if current.deployment_settings.get_ui_label_camp():
+        settings = current.deployment_settings
+        if settings.get_ui_label_camp():
             SHELTER = T("Camp")
         else:
             SHELTER = T("Shelter")
+        org_group_label = settings.get_org_groups()
+        if org_group_label:
+            org_group_label = T(org_group_label)
+        else:
+            org_group_label = T("Organization group")
         pe_types = Storage(cr_shelter = SHELTER,
                            deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
@@ -168,7 +174,8 @@ class S3PersonEntity(S3Model):
                            hms_hospital = T("Hospital"),
                            inv_warehouse = T("Warehouse"),
                            org_organisation = messages.ORGANISATION,
-                           org_group = T("Organization group"),
+                           org_group = org_group_label,
+                           org_facility = T("Facility"),
                            org_office = T("Office"),
                            pr_person = T("Person"),
                            pr_group = T("Group"),

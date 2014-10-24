@@ -94,7 +94,6 @@ class S3LocationModel(S3Model):
         NONE = messages["NONE"]
 
         # Shortcuts
-        add_components = self.add_components
         #define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -386,27 +385,27 @@ class S3LocationModel(S3Model):
                         action = self.gis_search_ac)
 
         # Components
-        add_components(tablename,
-                       # Tags
-                       gis_location_tag = {"name": "tag",
-                                           "joinby": "location_id",
-                                           },
-                       # Names
-                       gis_location_name = {"name": "name",
-                                            "joinby": "location_id",
-                                            },
-                       # Alternate Names
-                       gis_location_name_alt = {"name": "name_alt",
+        self.add_components(tablename,
+                            # Tags
+                            gis_location_tag = {"name": "tag",
                                                 "joinby": "location_id",
                                                 },
-                       # Child Locations
-                       #gis_location = {"joinby": "parent",
-                       #                "multiple": False,
-                       #                },
-
-                       # Sites
-                       org_site = "location_id",
-                       )
+                            # Names
+                            gis_location_name = {"name": "name",
+                                                 "joinby": "location_id",
+                                                 },
+                            # Alternate Names
+                            gis_location_name_alt = {"name": "name_alt",
+                                                     "joinby": "location_id",
+                                                     },
+                            # Child Locations
+                            #gis_location = {"joinby": "parent",
+                            #                "multiple": False,
+                            #                },
+ 
+                            # Sites
+                            org_site = "location_id",
+                            )
 
         # ---------------------------------------------------------------------
         # Error
@@ -1629,6 +1628,7 @@ class S3GISConfigModel(S3Model):
 
         location_id = self.gis_location_id
 
+        settings = current.deployment_settings
         NONE = current.messages["NONE"]
 
         # Shortcuts
@@ -1808,13 +1808,20 @@ class S3GISConfigModel(S3Model):
         #        according to any active Event or Region config and any OU or
         #        Personal config found
 
-        pe_types = {1: "person",
-                    2: "group",
-                    4: "facility",
-                    6: "branch",
-                    7: "organisation",
+        org_group_label = settings.get_org_groups()
+        org_site_label = settings.get_org_site_label()
+        teams_label = settings.get_hrm_teams()
+
+        pe_types = {1: T("Person"),
+                    2: T(teams_label),
+                    4: T(org_site_label),
+                    7: T("Organization"),
                     9: "SITE_DEFAULT",
                     }
+        if settings.get_org_branches():
+            pe_types[6] = T("Branch")
+        if org_group_label:
+            pe_types[8] = T(org_group_label)
 
         tablename = "gis_config"
         define_table(tablename,
@@ -1956,7 +1963,7 @@ class S3GISConfigModel(S3Model):
                        gis_style = "config_id",
                        )
 
-        if current.deployment_settings.get_security_map() and not \
+        if settings.get_security_map() and not \
            current.auth.s3_has_role("MapAdmin"):
             configure(tablename,
                       deletable = False,
