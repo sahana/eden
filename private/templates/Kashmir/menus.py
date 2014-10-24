@@ -24,10 +24,12 @@ class S3MainMenu(default.S3MainMenu):
             homepage("gis"),
             homepage("event", f="incident_report"),
             homepage("org"),
-            #homepage("hrm"),
+            homepage("hrm"),
             homepage("inv"),
             homepage("cr"),
             homepage("req"),
+            homepage("vol"),
+            homepage("project"),
         ]
 
 # =============================================================================
