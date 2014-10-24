@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# ORG Unit Tests
+# Org Unit Tests
 #
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3db/org.py

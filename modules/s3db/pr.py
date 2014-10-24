@@ -2292,35 +2292,35 @@ class S3AddressModel(S3Model):
         # Address
         #
         pr_address_type_opts = {
-            1:T("Current Home Address"),
-            2:T("Permanent Home Address"),
-            3:T("Office Address"),
-            #4:T("Holiday Address"),
-            9:T("Other Address")
+            1: T("Current Home Address"),
+            2: T("Permanent Home Address"),
+            3: T("Office Address"),
+            #4: T("Holiday Address"),
+            9: T("Other Address")
         }
 
         tablename = "pr_address"
         self.define_table(tablename,
                           self.super_link("pe_id", "pr_pentity",
-                                           orderby="instance_type",
-                                           represent=self.pr_pentity_represent,
+                                           orderby = "instance_type",
+                                           represent = self.pr_pentity_represent,
                                            ),
                           Field("type", "integer",
-                                requires = IS_IN_SET(pr_address_type_opts, zero=None),
-                                widget = RadioWidget.widget,
                                 default = 1,
                                 label = T("Address Type"),
                                 represent = lambda opt: \
                                             pr_address_type_opts.get(opt,
-                                                    messages.UNKNOWN_OPT)),
+                                                    messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(pr_address_type_opts, zero=None),
+                                widget = RadioWidget.widget,
+                                ),
                           self.gis_location_id(),
                           s3_comments(),
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ADDRESS = T("Add Address")
         s3.crud_strings[tablename] = Storage(
-            label_create = ADD_ADDRESS,
+            label_create = T("Add Address"),
             title_display = T("Address Details"),
             title_list = T("Addresses"),
             title_update = T("Edit Address"),
@@ -2348,16 +2348,16 @@ class S3AddressModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       onaccept = self.pr_address_onaccept,
                        deduplicate = self.pr_address_deduplicate,
                        list_fields = list_fields,
                        list_layout = pr_address_list_layout,
+                       onaccept = self.pr_address_onaccept,
                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_address_type_opts = pr_address_type_opts
+        return dict(pr_address_type_opts = pr_address_type_opts,
                     )
 
     # -------------------------------------------------------------------------
@@ -2370,45 +2370,96 @@ class S3AddressModel(S3Model):
             requested
         """
 
-        vars = form.vars
-        location_id = vars.location_id
+        form_vars = form.vars
+        location_id = form_vars.location_id
         if not location_id:
             return
 
         db = current.db
         s3db = current.s3db
         atable = db.pr_address
-        pe_id = db(atable.id == vars.id).select(atable.pe_id,
-                                                limitby=(0, 1)).first().pe_id
-        requestvars = current.request.vars
+        pe_id = db(atable.id == form_vars.id).select(atable.pe_id,
+                                                     limitby=(0, 1)
+                                                     ).first().pe_id
+        requestvars = current.request.form_vars
         settings = current.deployment_settings
         person = None
         table = s3db.pr_person
-        if "base_location" in requestvars and \
+        if requestvars and "base_location" in requestvars and \
            requestvars.base_location == "on":
             # Specifically requested
-            S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
+            S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
             person = db(table.pe_id == pe_id).select(table.id,
                                                      limitby=(0, 1)).first()
         else:
             # Check if a base location already exists
-            query = (table.pe_id == pe_id)
-            person = db(query).select(table.id,
-                                      table.location_id).first()
+            person = db(table.pe_id == pe_id).select(table.id,
+                                                     table.location_id,
+                                                     limitby=(0, 1)
+                                                     ).first()
             if person and not person.location_id:
                 # Hasn't yet been set so use this
-                S3Tracker()(s3db.pr_pentity, pe_id).set_base_location(location_id)
+                S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
 
-        if person and str(vars.type) == "1": # Home Address
+        if person and str(form_vars.type) == "1": # Home Address
             if settings.has_module("hrm"):
-                # Also check for any Volunteer HRM record(s)
-                htable = s3db.hrm_human_resource
-                query = (htable.person_id == person.id) & \
-                        (htable.type == 2) & \
-                        (htable.deleted != True)
-                hrs = db(query).select(htable.id)
-                for hr in hrs:
-                    db(htable.id == hr.id).update(location_id=location_id)
+                # Also check for relevant HRM record(s)
+                staff_settings = settings.get_hrm_location_staff()
+                staff_person = "person_id" in staff_settings
+                vol_settings = settings.get_hrm_location_vol()
+                vol_person = "person_id" in vol_settings
+                if staff_person or vol_person:
+                    htable = s3db.hrm_human_resource
+                    query = (htable.person_id == person.id) & \
+                            (htable.deleted != True)
+                    fields = [htable.id]
+                    if staff_person and vol_person:
+                        # Unfiltered in query, need to separate afterwards
+                        fields.append(htable.type)
+                        vol_site = "site_id" == vol_settings[0]
+                        staff_site = "site_id" == staff_settings[0]
+                        if staff_site or vol_site:
+                            fields.append(htable.site_id)
+                    elif vol_person:
+                        vol_site = "site_id" == vol_settings[0]
+                        if vol_site:
+                            fields.append(htable.site_id)
+                        query &= (htable.type == 2)
+                    elif staff_person:
+                        staff_site = "site_id" == staff_settings[0]
+                        if staff_site:
+                            fields.append(htable.site_id)
+                        query &= (htable.type == 1)
+                    hrs = db(query).select(*fields)
+                    for hr in hrs:
+                        # @ToDo: Only update if not site_id 1st in list & a site_id exists!
+                        if staff_person and vol_person:
+                            vol = hr.type == 2
+                            if vol and vol_site and hr.site_id:
+                                # Volunteer who prioritises getting their location from their site
+                                pass
+                            elif not vol and staff_site and hr.site_id:
+                                # Staff who prioritises getting their location from their site
+                                pass
+                            else:
+                                # Update this HR's location from the Home Address
+                                db(htable.id == hr.id).update(location_id=location_id)
+                        elif vol_person:
+                            if vol_site and hr.site_id:
+                                # Volunteer who prioritises getting their location from their site
+                                pass
+                            else:
+                                # Update this HR's location from the Home Address
+                                db(htable.id == hr.id).update(location_id=location_id)
+                        else:
+                            # Staff-only
+                            if staff_site and hr.site_id:
+                                # Staff who prioritises getting their location from their site
+                                pass
+                            else:
+                                # Update this HR's location from the Home Address
+                                db(htable.id == hr.id).update(location_id=location_id)
+
             if settings.has_module("member"):
                 # Also check for any Member record(s)
                 mtable = s3db.member_membership

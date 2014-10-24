@@ -74,7 +74,7 @@ settings.gis.countries = ("SL",)
 #    ("zh-tw", "中文 (繁體)"),
 #])
 # Default language for Language Toolbar (& GIS Locations in future)
-#settings.L10n.default_language = "en"
+settings.L10n.default_language = "en_gb"
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
 # Default timezone for users

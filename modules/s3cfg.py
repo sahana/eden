@@ -2075,6 +2075,32 @@ class S3Config(Storage):
         """
         return self.hrm.get("email_required", True)
 
+    def get_hrm_location_staff(self):
+        """
+            What to use to position Staff on the Map when not Tracking them
+            - valid options are:
+                "site_id" - Use the HR's Site Location
+                "person_id" - Use the HR's Person Location (i.e. Home Address)
+                ("person_id", "site_id") - Use the HR's Person Location if-available, fallback to the Site if-not
+                ("site_id","person_id") - Use the HR's Site Location if-available, fallback to the Person's Home Address if-not
+            NB This is read onaccept of editing Home Addresses & Assigning Staff to Sites so is not a fully-dynamic change
+            - onaccept is used for performance (avoiding joins)
+        """
+        return self.hrm.get("location_staff", "site_id")
+
+    def get_hrm_location_vol(self):
+        """
+            What to use to position Volunteers on the Map when not Tracking them
+            - valid options are:
+                "site_id" - Use the HR's Site Location
+                "person_id" - Use the HR's Person Location (i.e. Home Address)
+                ("person_id", "site_id") - Use the HR's Person Location if-available, fallback to the Site if-not
+                ("site_id","person_id") - Use the HR's Site Location if-available, fallback to the Person's Home Address if-not
+            NB This is read onaccept of editing Home Addresses & Assigning Volunteers to Sites so is not a fully-dynamic change
+            - onaccept is used for performance (avoiding joins)
+        """
+        return self.hrm.get("location_vol", "person_id")
+
     def get_hrm_org_dependent_job_titles(self):
         """
             If set to True then the Job Titles Catalog is Organisation-dependent (i.e. each root org sees a different Catalog)

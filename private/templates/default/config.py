@@ -550,6 +550,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.org_dependent_job_titles = True
 # Uncomment to hide the Staff resource
 #settings.hrm.show_staff = False
+# Uncomment to have Staff use their Home Address as fallback if they have no Site defined
+#settings.hrm.location_staff = ("site_id", "person_id")
+# Uncomment to have Volunteers use their Site Address as fallback if they have no Home Address defined
+#settings.hrm.location_vol = ("person_id", "site_id")
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
 # Uncomment to disable Staff experience

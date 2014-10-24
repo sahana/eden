@@ -341,6 +341,8 @@ settings.hrm.use_credentials = False
 settings.hrm.use_skills = False
 # Uncomment to disable the use of HR Teams
 settings.hrm.teams = False
+# Uncomment to have Staff use their Home Address as their base location, with a fallback to their site
+settings.hrm.location_staff = ("person_id", "site_id")
 
 # -----------------------------------------------------------------------------
 # Organisation Registry
