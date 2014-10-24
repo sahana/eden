@@ -255,7 +255,7 @@ class S3DocumentLibrary(S3Model):
                            uploadfolder = os.path.join(folder,
                                                        "uploads",
                                                        "images"),
-                           widget = S3ImageCropWidget((300, 300)),
+                           widget = S3ImageCropWidget((600, 600)),
                            ),
                      Field("mime_type",
                            readable = False,
@@ -384,7 +384,8 @@ class S3DocumentLibrary(S3Model):
 
         form_vars = form.vars
         doc = form_vars.file
-        if (not document) and (not doc):
+
+        if not document:
             encoded_file = form_vars.get("imagecrop-data", None)
             if encoded_file:
                 import base64
@@ -396,7 +397,9 @@ class S3DocumentLibrary(S3Model):
                 import cStringIO
                 f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
                 form_vars.file = f
-        
+                if not form_vars.name:
+                    form_vars.name = filename
+
         if doc is None:
             # This is a prepop, so file not in form
             return

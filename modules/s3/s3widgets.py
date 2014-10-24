@@ -2444,27 +2444,34 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 class S3ImageCropWidget(FormWidget):
     """
         Allows the user to crop an image and uploads it.
-        Cropping is done client-side where supported, otherwise using PIL.
+        Cropping & Scaling( if necessary ) done at client-side
 
         @ToDo: Doesn't currently work with Inline Component Forms
     """
 
-    DEFAULT_WIDTH = 300
-
     def __init__(self, image_bounds=None):
+        """
+            @param image_bounds: Limits the Size of the Image that can be
+                                 uploaded.
+                                 Tuple/List - (MaxWidth, MaxHeight)
+        """
         self.image_bounds = image_bounds
 
     def __call__(self, field, value, download_url=None, **attributes):
-
+        """
+            @param field: Field using this widget
+            @param value: value if any
+            @param download_url: Download URL for saved Image
+        """
         T = current.T
-        CROP_IMAGE = T("Crop Image")
 
         script_dir = "/%s/static/scripts" % current.request.application
-
+        
         s3 = current.response.s3
         debug = s3.debug
         scripts = s3.scripts
-
+        settings = current.deployment_settings
+        
         if debug:
             script = "%s/jquery.color.js" % script_dir
             if script not in scripts:
@@ -2475,22 +2482,19 @@ class S3ImageCropWidget(FormWidget):
             script = "%s/S3/s3.imagecrop.widget.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
-                s3.js_global.append('''
-i18n.invalid_image='%s'
-i18n.crop_image='%s'
-i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
-                            CROP_IMAGE,
-                            T("Cancel Crop")))
         else:
             script = "%s/S3/s3.imagecrop.widget.min.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
-                s3.js_global.append('''
+
+        s3.js_global.append('''
 i18n.invalid_image='%s'
-i18n.crop_image='%s'
-i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
-                            CROP_IMAGE,
-                            T("Cancel Crop")))
+i18n.supported_image_formats='%s' 
+i18n.upload_new_image='%s'
+i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
+                              T("Supported formats"),
+                              T("Upload different Image"),  
+                              T("Upload Image")))
 
         stylesheets = s3.stylesheets
         sheet = "plugins/jquery.Jcrop.css"
@@ -2505,48 +2509,79 @@ i18n.cancel_crop="%s"''' % (T("Please select a valid image!"),
         elements = [INPUT(_type="hidden", _name="imagecrop-points")]
         append = elements.append
 
+        append(DIV(_class="tooltip",
+                   _title="%s|%s" % \
+                 (T("Crop Image"),
+                 T("Select an image to upload. You can crop this later by opening this record."))))
+
+        # Set up the canvas
+        # Canvas is used to scale and crop the Image on the client side
+        canvas = TAG["canvas"](_class="imagecrop-canvas",
+                               _style="display:none")
+        image_bounds = self.image_bounds
+
+        if image_bounds:
+            canvas.attributes["_width"] = image_bounds[0]
+            canvas.attributes["_height"] = image_bounds[1]
+        else:
+            # Images are not scaled and are uploaded as it is
+            canvas.attributes["_width"] = 0
+        
+        append(canvas)
+    
+        btn_class = "imagecrop-btn button"
+        if settings.ui.formstyle == "bootstrap":
+            btn_class = "imagecrop-btn"
+                
+        buttons = [ A(T("Enable Crop"),
+                      _id="select-crop-btn",
+                      _class=btn_class,
+                      _role="button"),
+                    A(T("Crop Image"),
+                      _id="crop-btn",
+                      _class=btn_class,
+                      _role="button"),
+                    A(T("Cancel"),
+                      _id="remove-btn",
+                      _class="imagecrop-btn")
+                    ]
+
+        parts = [LEGEND(T("Uploaded Image"))] + buttons + \
+                [HR(_style="display:none"),
+                 IMG(_id="uploaded-image",
+                     _style="display:none;")]
+
+        display_div = FIELDSET(parts,
+                               _class="image-container")
+
+        crop_data_attr = { "_type": "hidden",
+                           "_name": "imagecrop-data",
+                           "_class": "imagecrop-data" }
+
         if value and download_url:
             if callable(download_url):
                 download_url = download_url()
 
             url = "%s/%s" % (download_url ,value)
-
-            append(IMG(_src=url,
-                       _class="imagecrop-preview",
-                       _style="display:hidden;",
-                       _width="%spx" % self.DEFAULT_WIDTH))
-            append(P(T("You can select an area on the image and save to crop it."),
-                     _class="imagecrop-help",
-                     _style="display:none;"))
-            append(INPUT(_value=CROP_IMAGE,
-                         _type="button",
-                         _class="imagecrop-toggle"))
-            append(INPUT(**attr))
-            # Set up the canvas
-            canvas = TAG["canvas"](_class="imagecrop-canvas",
-                                   _style="display:none")
-            append(canvas)
-
+            # Add Image 
+            crop_data_attr["_value"] = url
+            append(FIELDSET(LEGEND(A(T("Upload different Image")),
+                                   _id="upload-title"),
+                            DIV(INPUT(**attr),
+                                DIV(T("or Drop here"),
+                                    _class="imagecrop-drag"),
+                                _id="upload-container",
+                                _style="display: none")))
         else:
-            append(DIV(_class="tooltip",
-                       _title="%s|%s" % \
-                (CROP_IMAGE,
-                 T("Select an image to upload. You can crop this later by opening this record."))))
-            # Set up the canvas
-            canvas = TAG["canvas"](_class="imagecrop-canvas",
-                                   _style="display:none")
-            image_bounds = self.image_bounds
-            if image_bounds:
-                canvas.attributes["_width"] = image_bounds[0]
-                canvas.attributes["_height"] = image_bounds[1]
-                canvas.attributes["_style"] = "background:black"
-            append(INPUT(**attr))
-            append(INPUT(_type="hidden",
-                         _name="imagecrop-data",
-                         _class="imagecrop-data"))
-            append(P(T("Drag an image below to crop and scale it before uploading it:")))
-            append(canvas)
+            append(FIELDSET(LEGEND(T("Upload Image"),
+                                   _id="upload-title"),
+                            DIV(INPUT(**attr),
+                                DIV(T("or Drop here"),
+                                    _class="imagecrop-drag"),
+                                _id="upload-container")))
 
+        append(INPUT(**crop_data_attr))
+        append(display_div)
         # Prevent multiple widgets on the same page from interfering with each
         # other.
         import uuid
