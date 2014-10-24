@@ -170,6 +170,7 @@ def define_map(height = None,
             else:
                 # Remove from list
                 not_permitted.append(res)
+        poi_resources = list(poi_resources)
         for res in not_permitted:
             poi_resources.remove(res)
 

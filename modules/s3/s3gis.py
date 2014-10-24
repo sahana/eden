@@ -120,7 +120,7 @@ CLUSTER_DISTANCE = 20   # pixels
 CLUSTER_THRESHOLD = 2   # minimum # of features to form a cluster
 
 # Garmin GPS Symbols
-GPS_SYMBOLS = ["Airport",
+GPS_SYMBOLS = ("Airport",
                "Amusement Park"
                "Ball Park",
                "Bank",
@@ -241,7 +241,7 @@ GPS_SYMBOLS = ["Airport",
                "White Buoy",
                "White Dot",
                "Zoo"
-               ]
+               )
 
 # -----------------------------------------------------------------------------
 class GIS(object):
@@ -1342,7 +1342,8 @@ class GIS(object):
             # Read personalised config, if available.
             auth = current.auth
             if auth.is_logged_in():
-                pe_id = auth.user.pe_id
+                user = auth.user
+                pe_id = user.pe_id
                 # OU configs
                 # List of roles to check (in order)
                 roles = ("Staff", "Volunteer")
@@ -1357,6 +1358,20 @@ class GIS(object):
                         pes = role_paths[role].nodes()
                         # Staff don't check Volunteer's OUs
                         break
+                if current.deployment_settings.get_auth_registration_requests_organisation_group() and \
+                   user.org_group_id:
+                    # Add the user account's Org Group the list
+                    # (Will take lower-priority than Site/Org)
+                    ogtable = s3db.org_group
+                    ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+                    pes = list(pes)
+                    try:
+                        pes.append(ogroup.pe_id)
+                    except:
+                        current.log.warning("Unable to find Org Group %s" % user.org_group_id)
+
                 query = (ctable.uuid == "SITE_DEFAULT") | \
                         ((ctable.pe_id == pe_id) & \
                          (ctable.pe_default != False))

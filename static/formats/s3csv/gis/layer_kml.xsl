@@ -28,7 +28,8 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
-    <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
+    <xsl:key name="layers" match="row" use="concat(col[@field='Config'], '/',
+                                                   col[@field='Name'])"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
 
     <!-- ****************************************************************** -->
@@ -42,7 +43,8 @@
 
             <!-- Layers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
-                                                                   col[@field='Name'])[1])]">
+                                                                   concat(col[@field='Config'], '/',
+                                                                          col[@field='Name']))[1])]">
                 <xsl:call-template name="Layer"/>
             </xsl:for-each>
 

@@ -2139,11 +2139,13 @@ class S3GISConfigModel(S3Model):
 
         """
 
-        if item.tablename == "gis_config" and \
-           "name" in item.data:
+        if item.tablename == "gis_config":
             # Match by name (all-lowercase)
-            table = item.table
             name = item.data.name
+            if not name:
+                return
+
+            table = item.table
             query = (table.name.lower() == name.lower())
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -3053,21 +3055,6 @@ class S3FeatureLayerModel(S3Model):
                        super_entity = "gis_layer_entity",
                        )
 
-        # Components (already done at Super Entity level)
-        #self.add_components(tablename,
-        #                    # Configs
-        #                    gis_config = {"link": "gis_layer_config",
-        #                                  "pkey": "layer_id",
-        #                                  "joinby": "layer_id",
-        #                                  "key": "config_id",
-        #                                  "actuate": "hide",
-        #                                  "autocomplete": "name",
-        #                                  "autodelete": False,
-        #                                  },
-        #                    # Styles 
-        #                    gis_style = "layer_id",
-        #                    )
-
         # Pass names back to global scope (s3.*)
         return dict()
 
@@ -3155,12 +3142,10 @@ class S3MapModel(S3Model):
         db = current.db
         request = current.request
 
-        #location_id = self.gis_location_id
         marker_id = self.gis_marker_id
         projection_id = self.gis_projection_id
 
         # Shortcuts
-        #add_components = self.add_components
         configure = self.configure
         define_table = self.define_table
 
@@ -3279,19 +3264,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
-
         # ---------------------------------------------------------------------
         # Bing tiles
         #
@@ -3315,20 +3287,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
-
         # ---------------------------------------------------------------------
         # Coordinate grid
         #
@@ -3346,19 +3304,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
-
         # ---------------------------------------------------------------------
         # Empty (no baselayer, so can display just overlays)
         #
@@ -3375,19 +3320,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # GeoJSON
@@ -3415,21 +3347,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               # Styles
-        #               gis_style = "layer_id",
-        #               )
 
         # ---------------------------------------------------------------------
         # GeoRSS
@@ -3467,21 +3384,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               # Styles
-        #               gis_style = "layer_id",
-        #               )
-
         # ---------------------------------------------------------------------
         # Google tiles
         #
@@ -3506,19 +3408,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # GPX - GPS eXchange format
@@ -3565,19 +3454,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
-
         # ---------------------------------------------------------------------
         # JS
         # - raw JavaScript code for advanced users
@@ -3600,19 +3476,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # KML
@@ -3650,21 +3513,6 @@ class S3MapModel(S3Model):
                   super_entity="gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               # Styles
-        #               gis_style = "layer_id",
-        #               )
-
         # ---------------------------------------------------------------------
         # MGRS
         #
@@ -3687,19 +3535,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # OpenStreetMap tiles
@@ -3749,19 +3584,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
-
         # ---------------------------------------------------------------------
         # OpenWeatherMap
         #
@@ -3784,19 +3606,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # Shapefiles
@@ -3866,21 +3675,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               # Styles
-        #               gis_style = "layer_id",
-        #               )
-
         # ---------------------------------------------------------------------
         # TMS
         #
@@ -3925,19 +3719,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # WFS
@@ -4025,21 +3806,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               # Styles
-        #               gis_style = "layer_id",
-        #               )
 
         # ---------------------------------------------------------------------
         # WMS
@@ -4162,19 +3928,6 @@ class S3MapModel(S3Model):
                   super_entity = "gis_layer_entity",
                   )
 
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
-
         # ---------------------------------------------------------------------
         # XYZ
         # - e.g. used by OSM community for JOSM/Potlatch
@@ -4218,19 +3971,6 @@ class S3MapModel(S3Model):
                   onaccept = gis_layer_onaccept,
                   super_entity = "gis_layer_entity",
                   )
-
-        # Components (already done at Super Entity level)
-        #add_components(tablename,
-        #               # Configs
-        #               gis_config = {"link": "gis_layer_config",
-        #                             "pkey": "layer_id",
-        #                             "joinby": "layer_id",
-        #                             "key": "config_id",
-        #                             "actuate": "hide",
-        #                             "autocomplete": "name",
-        #                             "autodelete": False,
-        #                             },
-        #               )
 
         # ---------------------------------------------------------------------
         # GIS Cache

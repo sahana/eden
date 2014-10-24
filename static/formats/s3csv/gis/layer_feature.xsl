@@ -40,7 +40,8 @@
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
     <xsl:key name="configs" match="row" use="col[@field='Config']/text()"/>
-    <xsl:key name="layers" match="row" use="col[@field='Name']/text()"/>
+    <xsl:key name="layers" match="row" use="concat(col[@field='Config'], '/',
+                                                   col[@field='Name'])"/>
     <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
 
     <!-- ****************************************************************** -->
@@ -54,7 +55,8 @@
 
             <!-- Layers -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('layers',
-                                                                   col[@field='Name'])[1])]">
+                                                                   concat(col[@field='Config'], '/',
+                                                                          col[@field='Name']))[1])]">
                 <xsl:call-template name="Layer"/>
             </xsl:for-each>
 
@@ -75,7 +77,7 @@
         <xsl:if test="$Config!=''">
             <resource name="gis_config">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Config"/>
+                    <xsl:value-of select="concat('Config:', $Config)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Config"/></data>
             </resource>
@@ -138,7 +140,7 @@
                     <xsl:choose>
                         <xsl:when test="$Config!=''">
                             <xsl:attribute name="tuid">
-                                <xsl:value-of select="$Config"/>
+                                <xsl:value-of select="concat('Config:', $Config)"/>
                             </xsl:attribute>
                         </xsl:when>
                         <xsl:otherwise>
