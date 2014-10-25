@@ -134,25 +134,6 @@ def customise_hms_hospital_resource(r, tablename):
         current.s3db.hms_status.facility_status.represent = None
         return
 
-    # Limit options to just those used & relabel them for context
-    hms_facility_type_opts = {
-        1: T("Hospital"),
-        #2: T("Field Hospital"),
-        #3: T("Specialized Hospital"),
-        #11: T("Health center"),
-        #12: T("Health center with beds"),
-        #13: T("Health center without beds"),
-        #21: T("Dispensary"),
-        #31: T("Long-term care"),
-        #41: T("Emergency Treatment Centre"),
-        41: T("ETC"),
-        42: T("Triage"),
-        43: T("Holding Center"),
-        44: T("Transit Center"),
-        #98: T("Other"),
-        #99: T("Unknown"),
-    }
-
     hms_facility_status_opts = {
         #1: T("Normal"),
         1: T("Functioning"),
@@ -167,10 +148,6 @@ def customise_hms_hospital_resource(r, tablename):
 
     s3db = current.s3db
     NONE = current.messages["NONE"]
-
-    field = s3db.hms_hospital.facility_type
-    field.represent = lambda opt: hms_facility_type_opts.get(opt, NONE)
-    field.requires = IS_EMPTY_OR(IS_IN_SET(hms_facility_type_opts))
 
     field = s3db.hms_status.facility_status
     field.represent = lambda opt: hms_facility_status_opts.get(opt, NONE)

@@ -55,6 +55,9 @@ class HospitalDataModel(S3Model):
              "hms_image",
              "hms_resources",
              "hms_hospital_id",
+             "hms_hospital_type",
+             "hms_hospital_type_id",
+             "hms_hospital_hospital_type",
              )
 
     def model(self):
@@ -74,28 +77,66 @@ class HospitalDataModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
+        # Hospital facility types
+
+        tablename = "hms_hospital_type"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        type_represent = S3Represent(lookup=tablename, translate=True)
+        type_filter = S3OptionsFilter("hospital_hospital_type.hospital_type_id",
+                                      label = T("Facility Type"),
+                                      )
+        type_widget = "multiselect"
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Facility Type"),
+            title_display = T("Facility Type Details"),
+            title_list = T("Facility Types"),
+            title_update = T("Edit Facility Type"),
+            label_list_button = T("List Facility Types"),
+            label_delete_button = T("Delete Facility Type"),
+            msg_record_created = T("Facility Type added"),
+            msg_record_modified = T("Facility Type updated"),
+            msg_record_deleted = T("Facility Type deleted"),
+            msg_list_empty = T("No Facility Types currently registered"))
+
+        hospital_type_id = S3ReusableField("hospital_type_id",
+            "reference %s" % tablename,
+            label = T("Facility Type"),
+            ondelete = "SET NULL",
+            represent = type_represent,
+            requires = IS_EMPTY_OR(
+                        IS_ONE_OF(db,
+                                  "hms_hospital_type.id",
+                                  type_represent,
+                                  sort = True
+                                  )),
+            sortby = "name",
+            widget = type_widget,
+            comment = S3AddResourceLink(c="hms",
+                                        f="hospital_type",
+                                        label=T("Create Facility Type"),
+                                        title=T("Facility Type"),
+                                        tooltip=T("If you don't see the Facility Type in the list, you can add a new one by clicking link 'Create Facility Type'.")
+                                        ),
+            )
+
+        configure(tablename,
+                  deduplicate = self.hms_hospital_type_deduplicate,
+                  )
+
+        # ---------------------------------------------------------------------
         # Hospitals
         #
 
         # Use government-assigned UUIDs instead of internal UUIDs
         HMS_HOSPITAL_USE_GOVUUID = True
-
-        hms_facility_type_opts = {
-            1: T("Hospital"),
-            2: T("Field Hospital"),
-            3: T("Specialized Hospital"),
-            11: T("Health center"),
-            12: T("Health center with beds"),
-            13: T("Health center without beds"),
-            21: T("Dispensary"),
-            31: T("Long-term care"),
-            41: T("Emergency Treatment Centre"),
-            42: T("Triage"),
-            43: T("Holding Center"),
-            44: T("Transit Center"),
-            98: T("Other"),
-            99: T("Unknown"),
-        } #: Facility Type Options
 
         # Status opts defined here for use in Search widgets
         hms_facility_status_opts = {
@@ -115,7 +156,7 @@ class HospitalDataModel(S3Model):
         } #: Power Supply Type Options
 
         tablename = "hms_hospital"
-        define_table(tablename,
+        table = define_table(tablename,
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
                      super_link("site_id", "org_site"),
@@ -157,15 +198,6 @@ class HospitalDataModel(S3Model):
                            label = T("Code"),
                            ),
 
-                     Field("facility_type", "integer",
-                           default = 1,
-                           label = T("Facility Type"),
-                           represent = lambda opt: \
-                                       hms_facility_type_opts.get(opt, NONE),
-                           requires = IS_EMPTY_OR(
-                                       IS_IN_SET(hms_facility_type_opts)
-                                       ),
-                           ),
                      self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
                         ),
@@ -250,6 +282,28 @@ class HospitalDataModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # Custom form, including types.
+        # @ToDo: Do we want a services widget here too? How would that deal
+        # with services profiles?
+        # Get current fields from the table.
+        form_fields = [f.name for f in table if f.readable]
+        # Place types just below the name / identifying fields (as is done for
+        # organization).
+        id_fields = ["name", "aka1", "aka2", "code"]
+        insert_after = max([form_fields.index(id) for id in id_fields if id in form_fields])
+        # @ToDo: Investigate whether S3SQLInlineLink could get info out of the
+        # table(s) involved, or out of a supplied reusable field.
+        hospital_type_id_field = hospital_type_id()
+        type_field = S3SQLInlineLink("hospital_type",
+                                     field = "hospital_type_id",
+                                     label = hospital_type_id_field.label,
+                                     multiple = True,
+                                     widget = hospital_type_id_field.widget,
+                                     comment = hospital_type_id_field.comment,
+                                     )
+        form_fields.insert(insert_after, type_field)
+        crud_form = S3SQLCustomForm(*form_fields)
+
         # CRUD Strings
         ADD_HOSPITAL = T("Create Hospital")
         crud_strings[tablename] = Storage(
@@ -278,9 +332,10 @@ class HospitalDataModel(S3Model):
                              label=T("Name"),
                              _class="filter-search",
                              ),
-                S3OptionsFilter("facility_type",
-                                label = T("Type"),
+                S3OptionsFilter("hospital_hospital_type.hospital_type_id",
+                                label = T("Facility Type"),
                                 represent = "%(name)s",
+                                multiple=True,
                                 #hidden=True,
                                 ),
                 S3LocationFilter("location_id",
@@ -308,7 +363,7 @@ class HospitalDataModel(S3Model):
                 ]
 
         report_fields = ["name",
-                         (T("Type"), "facility_type"),
+                         (T("Facility Type"), "hospital_hospital_type.hospital_type_id"),
                          #"organisation_id",
                          "location_id$L1",
                          "location_id$L2",
@@ -321,12 +376,13 @@ class HospitalDataModel(S3Model):
 
         # Resource configuration
         configure(tablename,
+                  crud_form = crud_form,
                   deduplicate = self.hms_hospital_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  #"gov_uuid",
                                  "name",
-                                 "facility_type",
+                                 "hospital_hospital_type.hospital_type_id",
                                  "status.facility_status",
                                  "status.power_supply_type",
                                  #"organisation_id",
@@ -379,6 +435,15 @@ class HospitalDataModel(S3Model):
                        hms_bed_capacity=multiple,
                        hms_services=single,
                        hms_resources=multiple,
+                       # Types
+                       hms_hospital_type = {"link": "hms_hospital_hospital_type",
+                                            "joinby": "hospital_id",
+                                            "key": "hospital_type_id",
+                                            "multiple": True,
+                                            "actuate": "hide",
+                                            },
+                       # Format for filter_widget
+                       hms_hospital_hospital_type = "hospital_id",
                        )
 
         # Optional components
@@ -391,6 +456,22 @@ class HospitalDataModel(S3Model):
         self.set_method("hms", "hospital",
                         method = "assign",
                         action = self.hrm_AssignMethod(component="human_resource_site"))
+
+        # ---------------------------------------------------------------------
+        # Hospital <-> Facility Type
+        #
+        tablename = "hms_hospital_hospital_type"
+        define_table(tablename,
+                     hospital_id(empty = False,
+                                 ondelete = "CASCADE",
+                                 ),
+                     hospital_type_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  )
 
         # ---------------------------------------------------------------------
         # Hosptial Tags
@@ -946,6 +1027,7 @@ class HospitalDataModel(S3Model):
         # Return global names to s3db
         #
         return dict(hms_hospital_id = hospital_id,
+                    hms_hospital_type_id = hospital_type_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -1072,6 +1154,29 @@ class HospitalDataModel(S3Model):
 
             db(htable.id == hospital.id).update(total_beds=t_beds,
                                                 available_beds=a_beds)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hms_hospital_type_deduplicate(item):
+        """ Import item de-duplication """
+
+        if item.tablename != "hms_hospital_type":
+            return
+
+        data = item.data
+        if "hospital_id" in data and \
+           "hospital_type_id" in data:
+            hospital_id = data.hospital_id
+            hospital_type_id = data.hospital_type_id
+            table = item.table
+            query = (table.hospital_id == hospital_id) & \
+                    (table.hospital_type_id == hospital_type_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class CholeraTreatmentCapabilityModel(S3Model):
