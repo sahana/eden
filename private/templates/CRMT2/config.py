@@ -1658,7 +1658,7 @@ def customise_gis_config_controller(**attr):
                     (ltable.user_id == utable.id) & \
                     (utable.org_group_id == coalition)
             rows = db(query).select(ltable.pe_id,
-                                    distinct=True)
+                                    distinct = True)
             if rows:
                 coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
                 from s3 import S3OptionsFilter

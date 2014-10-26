@@ -81,7 +81,7 @@ class S3MainMenu(default.S3MainMenu):
                    always_display=True),
             ),
             MM("Share", link=False)(
-                MM("Maps", c="gis", f="config", always_display=True),
+                MM("Maps", c="gis", f="config", args="datalist", always_display=True),
                 MM("Stories", c="cms", f="blog", always_display=True),
             ),
             MM("Map", c="gis", f="index", always_display=True),
@@ -112,6 +112,7 @@ class S3MainMenu(default.S3MainMenu):
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
                             MM("Your Maps", c="gis", f="config",
+                               args="datalist",
                                vars={"~.pe_id": auth.user.pe_id}),
                             MM("Admin Users", c="admin", f="user"),
                             MM("Edit Profile", m="profile"),
