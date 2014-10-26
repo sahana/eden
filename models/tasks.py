@@ -32,21 +32,6 @@ def maintenance(period="daily"):
 tasks["maintenance"] = maintenance
 
 # -----------------------------------------------------------------------------
-def crop_image(path, x1, y1, x2, y2, width):
-    """
-        Crop Image - used by S3ImageCropWidget through IS_PROCESSED_IMAGE
-    """
-    from PIL import Image
-    image = Image.open(path)
-
-    scale_factor = image.size[0] / float(width)
-
-    points = map(int, map(lambda a: a * scale_factor, (x1, y1, x2, y2)))
-    image.crop(points).save(path)
-
-tasks["crop_image"] = crop_image
-
-# -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 
     # -----------------------------------------------------------------------------

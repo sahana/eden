@@ -1161,6 +1161,27 @@ li.ui-draggable-dragging {
     background: none repeat scroll 0 0 #cfdde7;
 }
 
+.imagecrop-drag {
+    font-weight: bold;
+    text-align: center;
+    padding: 3em 0;
+    margin: 1em 0;
+    color: #555;
+    border: 2px dashed #555;
+    border-radius: 7px;
+    cursor: default;
+}
+
+.imagecrop-drag.hover {
+    border-style: solid;
+    background-color: #F7F8F9;
+}
+
+.imagecrop-btn {
+    display: none;
+    cursor: pointer;
+}
+
 /* Ext button (e.g. on Bulk Upload form */
 #show-dialog-btn {
     border: 1px solid #efefef;

@@ -2533,7 +2533,7 @@ class S3PersonImageModel(S3Model):
                                 ),
                           Field("image", "upload", autodelete=True,
                                 represent = self.pr_image_represent,
-                                widget = S3ImageCropWidget((300, 300)),
+                                widget = S3ImageCropWidget((600, 600)),
                                 comment =  DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Image"),
                                                                  T("Upload an image file here. If you don't upload an image file, then you must specify its location in the URL field.")))),
