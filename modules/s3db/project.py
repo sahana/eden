@@ -6539,7 +6539,15 @@ def project_project_filters(org_label):
                          # Default should introspect
                          #levels = ("L0", "L1", "L2"),
                          hidden = True,
-                         )
+                         ),
+        S3DateFilter("start_date",
+                    label=T("Start Date"),
+                    hide_time=True,
+                    ),
+        S3DateFilter("end_date",
+                    label=T("End Date"),
+                    hide_time=True,
+                    )
         ]
 
     append_filter = filter_widgets.append
