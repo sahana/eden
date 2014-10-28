@@ -102,58 +102,21 @@ class S3TimePlot(S3Method):
     # -------------------------------------------------------------------------
     def widget(self, r, method=None, widget_id=None, visible=True, **attr):
         """
-            @todo: docstring
-            @todo: DRY + cleanup
+            Widget-render entry point for S3Summary.
+
+            @param r: the S3Request
+            @param method: the widget method
+            @param widget_id: the widget ID
+            @param visible: whether the widget is initially visible
+            @param attr: controller attributes
         """
-        
-        output = {}
 
-        # Extract the relevant GET vars
-        # @todo: option for grouping
-        report_vars = ("timestamp",
-                       "fact",
-                       "start",
-                       "end",
-                       "slots",
-                       "baseline",
-                       )
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
-
-        # Execute on component?
-        resource = self.resource
-        alias = r.get_vars.get("component")
-        if alias and alias not in (resource.alias, "~"):
-            if alias not in resource.components:
-                hook = current.s3db.get_component(resource.tablename, alias)
-                if hook:
-                    resource._attach(alias, hook)
-            if alias in resource.components:
-                resource = resource.components[alias]
-
+        # Get the target resource
+        resource = self.get_target(r)
         tablename = resource.tablename
-        get_config = resource.get_config
 
-        # Apply filter defaults (before rendering the data!)
-        show_filter_form = False
-        if r.representation in ("html", "iframe"):
-            filter_widgets = get_config("filter_widgets", None)
-            if filter_widgets and not self.hide_filter:
-                from s3filter import S3FilterForm
-                show_filter_form = True
-                S3FilterForm.apply_filter_defaults(r, resource)
-
-        # Fall back to report options defaults
-        report_options = resource.get_config("timeplot_options", {})
-        defaults = report_options.get("defaults", {})
-        if not any(k in get_vars for k in report_vars):
-            get_vars = defaults
-        else:
-            # Optional URL args always fall back to config:
-            optional = ("timestamp",)
-            for opt in optional:
-                if opt not in get_vars and opt in defaults:
-                    get_vars[opt] = defaults[opt]
+        # Read the relevant GET vars
+        report_vars, get_vars = self.get_options(r, resource)
 
         # Parse event timestamp option
         timestamp = get_vars.get("timestamp")
@@ -200,9 +163,6 @@ class S3TimePlot(S3Method):
 
         # Render output
         if r.representation in ("html", "iframe"):
-            # Page load
-
-            output["title"] = self.crud_string(tablename, "title_report")
 
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
@@ -214,7 +174,6 @@ class S3TimePlot(S3Method):
                                                 representation="json",
                                                 vars=ajax_vars,
                                                 ))
-
             output = S3TimePlotForm(resource).html(data,
                                                    get_vars = get_vars,
                                                    filter_widgets = None,
@@ -222,12 +181,7 @@ class S3TimePlot(S3Method):
                                                    filter_url = filter_url,
                                                    widget_id = widget_id,
                                                    )
-
             # @todo: render using view template (see S3Report)
-
-        elif r.representation == "json":
-            # Ajax load
-            output = json.dumps(data, separators=SEPARATORS)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -241,38 +195,15 @@ class S3TimePlot(S3Method):
 
             @param r: the S3Request instance
             @param attr: controller attributes for the request
-            
-            @todo: DRY + cleanup
         """
 
         output = {}
-
-        # Extract the relevant GET vars
-        # @todo: option for grouping
-        report_vars = ("timestamp",
-                       "fact",
-                       "start",
-                       "end",
-                       "slots",
-                       "baseline",
-                       )
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
-
-        # Execute on component?
-        resource = self.resource
-        alias = r.get_vars.get("component")
-        if alias and alias not in (resource.alias, "~"):
-            if alias not in resource.components:
-                hook = current.s3db.get_component(resource.tablename, alias)
-                if hook:
-                    resource._attach(alias, hook)
-            if alias in resource.components:
-                resource = resource.components[alias]
-
+                
+        # Get the target resource
+        resource = self.get_target(r)
         tablename = resource.tablename
         get_config = resource.get_config
-
+        
         # Apply filter defaults (before rendering the data!)
         show_filter_form = False
         if r.representation in ("html", "iframe"):
@@ -282,17 +213,8 @@ class S3TimePlot(S3Method):
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
 
-        # Fall back to report options defaults
-        report_options = resource.get_config("timeplot_options", {})
-        defaults = report_options.get("defaults", {})
-        if not any(k in get_vars for k in report_vars):
-            get_vars = defaults
-        else:
-            # Optional URL args always fall back to config:
-            optional = ("timestamp",)
-            for opt in optional:
-                if opt not in get_vars and opt in defaults:
-                    get_vars[opt] = defaults[opt]
+        # Read the relevant GET vars
+        report_vars, get_vars = self.get_options(r, resource)
 
         # Parse event timestamp option
         timestamp = get_vars.get("timestamp")
@@ -400,6 +322,68 @@ class S3TimePlot(S3Method):
             r.error(501, current.ERROR.BAD_FORMAT)
 
         return output
+
+    # -------------------------------------------------------------------------
+    def get_target(self, r):
+        """
+            Identify the target resource, attach component if necessary
+            
+            @param r: the S3Request
+        """
+
+        # Fallback
+        resource = self.resource
+
+        # Read URL parameter
+        alias = r.get_vars.get("component")
+
+        # Identify target component
+        if alias and alias not in (resource.alias, "~"):
+            if alias not in resource.components:
+                # Try attach
+                hook = current.s3db.get_component(resource.tablename, alias)
+                if hook:
+                    resource._attach(alias, hook)
+            if alias in resource.components:
+                resource = resource.components[alias]
+
+        return resource
+
+    # -------------------------------------------------------------------------
+    def get_options(self, r, resource):
+        """
+            Read the relevant GET vars for the timeplot
+            
+            @param r: the S3Request
+            @param resource: the target S3Resource
+        """
+
+        # Extract the relevant GET vars
+        report_vars = ("timestamp",
+                       "start",
+                       "end",
+                       "slots",
+                       "fact",
+                       "baseline",
+                       "rows",
+                       "cols",
+                       )
+        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
+                        if k in report_vars)
+
+        # Fall back to report options defaults
+        report_options = resource.get_config("timeplot_options", {})
+        defaults = report_options.get("defaults", {})
+        if not any(k in get_vars for k in report_vars):
+            get_vars = defaults
+        else:
+            # Optional URL args always fall back to config:
+            optional = ("timestamp",)
+            for opt in optional:
+                if opt not in get_vars and opt in defaults:
+                    get_vars[opt] = defaults[opt]
+
+        return report_vars, get_vars
 
     # -------------------------------------------------------------------------
     @staticmethod
