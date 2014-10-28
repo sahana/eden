@@ -118,9 +118,12 @@
             var data = this.data;
             if (data === null) {
                 data = JSON.parse(this.input.val());
-                this.data = data;
             }
-            
+            if (!data) {
+                data = {empty: true};
+            }
+            this.data = data;
+
             // data = [[start, end, value], ...]
 
             // Remove previous plot
@@ -134,24 +137,32 @@
             var available_width = el.width();
             var available_height = available_width / 16 * 5;
 
-            var values = this._computeValues(data);
-            var marginLeft = this.options.burnDown ? 10 : values.maxValue.toString().length * 6 + 18;
-            var marginRight = this.options.burnDown ? values.maxValue.toString().length * 6 + 18 : 10;
-            
-            var margin = {top: 40, right: marginRight, bottom: 70, left: marginLeft},
-                width = available_width - margin.left - margin.right,
-                height = available_height - margin.top - margin.bottom;
+            if (!data.empty) {
+                // Hide empty section
+                el.find('.tp-empty').hide();
+                
+                var values = this._computeValues(data);
+                var marginLeft = this.options.burnDown ? 10 : values.maxValue.toString().length * 6 + 18;
+                var marginRight = this.options.burnDown ? values.maxValue.toString().length * 6 + 18 : 10;
+                
+                var margin = {top: 40, right: marginRight, bottom: 70, left: marginLeft},
+                    width = available_width - margin.left - margin.right,
+                    height = available_height - margin.top - margin.bottom;
 
-            // Generate new plot
-            var svg = d3.select("#timeplot .tp-chart")
-                        .append("svg")
-                        .attr("width", width + margin.left + margin.right)
-                        .attr("height", height + margin.top + margin.bottom)
-                        .append("g")
-                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-            this.svg = svg;
+                // Generate new plot
+                var svg = d3.select("#timeplot .tp-chart")
+                            .append("svg")
+                            .attr("width", width + margin.left + margin.right)
+                            .attr("height", height + margin.top + margin.bottom)
+                            .append("g")
+                            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                this.svg = svg;
 
-            this._renderBarChart(values, width, height);
+                this._renderBarChart(values, width, height);
+            } else {
+                // Show empty section
+                el.find('.tp-empty').show();
+            }
         },
 
         /**
@@ -162,23 +173,33 @@
          */
         _computeValues: function(data) {
             
-            var values = data.items,
-                baseline = data.baseline,
+            var baseline,
                 burnDown = this.options.burnDown;
+                
+            if (data.z) {
+                baseline = data.z[2];
+            } else {
+                baseline = 0;
+            }
 
             var results = [],
                 minValue,
                 maxValue;
-            if (!data.empty) {
-                var items = data.items, v, item;
+            if (!data.e) {
+                var items = data.p,
+                    v, 
+                    item;
                 for (var i=0, len=items.length; i<len; i++) {
-                    item = items[i];
+                    var item = items[i];
+                    var start = item.t[0],
+                        end = item.t[1],
+                        value = item.v;
                     if (burnDown && (baseline || baseline === 0)) {
-                        v = baseline - item[2];
+                        v = baseline - value;
                     } else {
-                        v = item[2];
+                        v = value;
                     }
-                    results.push([item[0], item[1], v]);
+                    results.push([start, end, v]);
                 }
                 minValue = d3.min(results, function(d) {
                     return burnDown ? d[2] : Math.min(d[2], baseline);
@@ -194,7 +215,7 @@
             return {
                 baseline: baseline,
                 items: results,
-                empty: data.empty,
+                empty: data.e,
                 minValue: minValue,
                 maxValue: maxValue
             };

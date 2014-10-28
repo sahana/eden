@@ -186,10 +186,11 @@ def customise_stats_demographic_data_resource(r, tablename):
 
     # Add a Timeplot tab to summary page
     # @ToDo: Widget version of timeplot
-    #settings.ui.summary = list(settings.ui.summary) + {"name": "timeplot",
-    #                                                   "label": "TimePlot",
-    #                                                   "widgets": [{"method": "timeplot", "ajax_init": True}],
-    #                                                   }
+    #summary = settings.get_ui_summary()
+    #settings.ui.summary = list(summary) + [{"name": "timeplot",
+    #                                       "label": "TimePlot",
+    #                                       "widgets": [{"method": "timeplot", "ajax_init": True}],
+    #                                       }]
 
     from s3 import S3OptionsFilter, S3LocationFilter
     filter_widgets = [S3OptionsFilter("parameter_id",

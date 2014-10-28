@@ -28,9 +28,10 @@
 """
 
 __all__ = ("S3TimePlot",
-           "S3TimePlotEvent",
-           "S3TimePlotEventFrame",
-           "S3TimePlotPeriod",
+           "S3TimeSeries",
+           "S3TimeSeriesEvent",
+           "S3TimeSeriesEventFrame",
+           "S3TimeSeriesPeriod",
            )
 
 import datetime
@@ -68,19 +69,20 @@ tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
+
 DEFAULT = lambda: None
+
+dt_regex = Storage(
+    YEAR = re.compile("\A\s*(\d{4})\s*\Z"),
+    YEAR_MONTH = re.compile("\A\s*(\d{4})-([0]*[1-9]|[1][12])\s*\Z"),
+    MONTH_YEAR = re.compile("\A\s*([0]*[1-9]|[1][12])/(\d{4})\s*\Z"),
+    DATE = re.compile("\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
+    DELTA = re.compile("\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
+)
 
 # =============================================================================
 class S3TimePlot(S3Method):
     """ RESTful method for time plot reports """
-
-    dt_regex = Storage(
-        YEAR = re.compile("\A\s*(\d{4})\s*\Z"),
-        YEAR_MONTH = re.compile("\A\s*(\d{4})-([0]*[1-9]|[1][12])\s*\Z"),
-        MONTH_YEAR = re.compile("\A\s*([0]*[1-9]|[1][12])/(\d{4})\s*\Z"),
-        DATE = re.compile("\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
-        DELTA = re.compile("\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
-    )
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -98,7 +100,140 @@ class S3TimePlot(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    # @todo: widget-method
+    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
+        """
+            @todo: docstring
+            @todo: DRY + cleanup
+        """
+        
+        output = {}
+
+        # Extract the relevant GET vars
+        # @todo: option for grouping
+        report_vars = ("timestamp",
+                       "fact",
+                       "start",
+                       "end",
+                       "slots",
+                       "baseline",
+                       )
+        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
+                        if k in report_vars)
+
+        # Execute on component?
+        resource = self.resource
+        alias = r.get_vars.get("component")
+        if alias and alias not in (resource.alias, "~"):
+            if alias not in resource.components:
+                hook = current.s3db.get_component(resource.tablename, alias)
+                if hook:
+                    resource._attach(alias, hook)
+            if alias in resource.components:
+                resource = resource.components[alias]
+
+        tablename = resource.tablename
+        get_config = resource.get_config
+
+        # Apply filter defaults (before rendering the data!)
+        show_filter_form = False
+        if r.representation in ("html", "iframe"):
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not self.hide_filter:
+                from s3filter import S3FilterForm
+                show_filter_form = True
+                S3FilterForm.apply_filter_defaults(r, resource)
+
+        # Fall back to report options defaults
+        report_options = resource.get_config("timeplot_options", {})
+        defaults = report_options.get("defaults", {})
+        if not any(k in get_vars for k in report_vars):
+            get_vars = defaults
+        else:
+            # Optional URL args always fall back to config:
+            optional = ("timestamp",)
+            for opt in optional:
+                if opt not in get_vars and opt in defaults:
+                    get_vars[opt] = defaults[opt]
+
+        # Parse event timestamp option
+        timestamp = get_vars.get("timestamp")
+        event_start, event_end = self.parse_timestamp(timestamp)
+
+        # Parse fact option
+        fact = get_vars.get("fact")
+        try:
+            method, base, slope, interval = self.parse_fact(fact)
+        except SyntaxError:
+            r.error(400, sys.exc_info()[1])
+        baseline = get_vars.get("baseline")
+            
+        # Parse grouping axes
+        rows = get_vars.get("rows")
+        cols = get_vars.get("cols")
+
+        # Parse event frame parameters
+        start = get_vars.get("start")
+        end = get_vars.get("end")
+        slots = get_vars.get("slots")
+
+        if visible:
+            # Create time series
+            # @todo: should become resource.timeseries()
+            ts = S3TimeSeries(resource,
+                            start=start,
+                            end=end,
+                            slots=slots,
+                            method=method,
+                            event_start=event_start,
+                            event_end=event_end,
+                            base=base,
+                            slope=slope,
+                            interval=interval,
+                            rows=rows,
+                            cols=cols,
+                            baseline=baseline)
+
+            # Extract aggregated results as JSON-serializable dict
+            data = ts.as_dict()
+        else:
+            data = None
+
+        # Render output
+        if r.representation in ("html", "iframe"):
+            # Page load
+
+            output["title"] = self.crud_string(tablename, "title_report")
+
+            ajax_vars = Storage(r.get_vars)
+            ajax_vars.update(get_vars)
+            filter_url = url=r.url(method="",
+                                   representation="",
+                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                            if k not in report_vars)))
+            ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
+                                                representation="json",
+                                                vars=ajax_vars,
+                                                ))
+
+            output = S3TimePlotForm(resource).html(data,
+                                                   get_vars = get_vars,
+                                                   filter_widgets = None,
+                                                   ajaxurl = ajaxurl,
+                                                   filter_url = filter_url,
+                                                   widget_id = widget_id,
+                                                   )
+
+            # @todo: render using view template (see S3Report)
+
+        elif r.representation == "json":
+            # Ajax load
+            output = json.dumps(data, separators=SEPARATORS)
+
+        else:
+            r.error(501, current.ERROR.BAD_FORMAT)
+
+        return output
+
     # -------------------------------------------------------------------------
     def timeplot(self, r, **attr):
         """
@@ -106,6 +241,8 @@ class S3TimePlot(S3Method):
 
             @param r: the S3Request instance
             @param attr: controller attributes for the request
+            
+            @todo: DRY + cleanup
         """
 
         output = {}
@@ -159,70 +296,43 @@ class S3TimePlot(S3Method):
 
         # Parse event timestamp option
         timestamp = get_vars.get("timestamp")
-        try:
-            event_start, event_end = self.resolve_timestamp(resource,
-                                                            timestamp)
-        except (SyntaxError, AttributeError):
-            r.error(400, sys.exc_info()[1])
+        event_start, event_end = self.parse_timestamp(timestamp)
 
         # Parse fact option
         fact = get_vars.get("fact")
         try:
-            method, base, slope, interval = self.resolve_fact(resource, fact)
-        except (SyntaxError, AttributeError):
+            method, base, slope, interval = self.parse_fact(fact)
+        except SyntaxError:
             r.error(400, sys.exc_info()[1])
+        baseline = get_vars.get("baseline")
+            
+        # Parse grouping axes
+        rows = get_vars.get("rows")
+        cols = get_vars.get("cols")
 
-        # Create event frame
+        # Parse event frame parameters
         start = get_vars.get("start")
         end = get_vars.get("end")
         slots = get_vars.get("slots")
-        try:
-            event_frame = self.create_event_frame(resource,
-                                                  event_start,
-                                                  event_end,
-                                                  start,
-                                                  end,
-                                                  slots,
-                                                  )
-        except (SyntaxError, ValueError):
-            r.error(400, sys.exc_info()[1])
 
-        # Add event data
-        baseline = get_vars.get("baseline")
-        try:
-            self.add_event_data(event_frame,
-                                resource,
-                                event_start,
-                                event_end,
-                                (base, slope),
-                                baseline= baseline,
-                                cumulative = method == "cumulate",
-                                )
-        except SyntaxError:
-            pass
+        # Create time series
+        # @todo: should become resource.timeseries()
+        ts = S3TimeSeries(resource,
+                          start=start,
+                          end=end,
+                          slots=slots,
+                          method=method,
+                          event_start=event_start,
+                          event_end=event_end,
+                          base=base,
+                          slope=slope,
+                          interval=interval,
+                          rows=rows,
+                          cols=cols,
+                          baseline=baseline)
 
-        # Iterate over the event frame to collect aggregates
-        items = []
-        new_item = items.append
-        for period in event_frame:
-            item_start = period.start
-            if item_start:
-                item_start = item_start.isoformat()
-            item_end = period.end
-            if item_end:
-                item_end = item_end.isoformat()
-            value = period.aggregate(method,
-                                     base.colname,
-                                     slope=slope.colname,
-                                     interval=interval,
-                                     )
-            new_item((item_start, item_end, value))
-
-        # Timeplot data
-        data = {"items": items,
-                "empty": event_frame.empty,
-                "baseline": event_frame.baseline,
-                }
+        # Extract aggregated results as JSON-serializable dict
+        data = ts.as_dict()
 
         # Widget ID
         widget_id = "timeplot"
@@ -284,7 +394,6 @@ class S3TimePlot(S3Method):
 
         elif r.representation == "json":
             # Ajax load
-
             output = json.dumps(data, separators=SEPARATORS)
 
         else:
@@ -293,332 +402,14 @@ class S3TimePlot(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def add_event_data(self,
-                       event_frame,
-                       resource,
-                       event_start,
-                       event_end,
-                       facts,
-                       cumulative=False,
-                       baseline=None):
-        """
-            Extract event data from resource and add them to the
-            event frame
-
-            @param event_frame: the event frame
-            @param resource: the resource
-            @param event_start: the event start field (S3ResourceField)
-            @param event_end: the event_end field (S3ResourceField)
-            @param fact: list of fact fields (S3ResourceField)
-            @param cumulative: whether the aggregation method is cumulative
-            @param baseline: field selector to extract the baseline value (e.g.
-                             for burn-down visualization)
-
-            @return: the extracted data (dict from S3Resource.select)
-        """
-
-        # Fields to extract
-        fields = set(fact.selector for fact in facts if fact is not None)
-        if event_start:
-            fields.add(event_start.selector)
-        else:
-            return None
-        if event_end:
-            fields.add(event_end.selector)
-        fields.add(resource._id.name)
-
-        # Filter by event frame start:
-        # End date of events must be after the event frame start date
-        if not cumulative and event_end:
-            end_selector = FS(event_end.selector)
-            start = event_frame.start
-            query = (end_selector == None) | (end_selector >= start)
-        else:
-            # No point if events have no end date, and wrong if
-            # method is cumulative
-            query = None
-
-        # Filter by event frame end:
-        # Start date of events must be before event frame end date
-        start_selector = FS(event_start.selector)
-        end = event_frame.end
-        q = (start_selector == None) | (start_selector <= end)
-        query = query & q if query is not None else q
-
-        # Add as temporary filter
-        resource.add_filter(query)
-
-        # Compute baseline
-        value = None
-        if baseline:
-            try:
-                rfield = resource.resolve_selector(baseline)
-            except (AttributeError, SyntaxError):
-                current.log.error(sys.exc_info[1])
-            else:
-                if rfield.field and rfield.ftype in ("integer", "double"):
-                    # Don't need s3db here - if there's an rfield.field,
-                    # then there's also a table!
-                    baseline_table = current.db[rfield.tname]
-                    pkey = str(baseline_table._id)
-                    colname = rfield.colname
-                    rows = resource.select([baseline],
-                                           groupby = [pkey, colname],
-                                           as_rows = True,
-                                           )
-                    value = 0
-                    for row in rows:
-                        v = row[colname]
-                        if v is not None:
-                            value += v
-                else:
-                    current.log.error("Invalid field type for baseline")
-        event_frame.baseline = value
-
-        # Extract the records
-        data = resource.select(fields)
-
-        # Remove the filter we just added
-        resource.rfilter.filters.pop()
-        resource.rfilter.query = None
-
-        # Do we need to convert dates into datetimes?
-        convert_start = True if event_start.ftype == "date" else False
-        convert_end = True if event_start.ftype == "date" else False
-        fromordinal = datetime.datetime.fromordinal
-        convert_date = lambda d: fromordinal(d.toordinal())
-
-        # Column names for extractions
-        pkey = str(resource._id)
-        start_colname = event_start.colname
-        end_colname = event_end.colname if event_end else None
-
-        # Use table name as event type
-        tablename = resource.tablename
-
-        # Create the events
-        events = []
-        add_event = events.append
-        for row in data.rows:
-            values = dict((fact.colname, row[fact.colname])
-                          for fact in facts)
-            start = row[start_colname]
-            if convert_start and start:
-                start = convert_date(start)
-            end = row[end_colname] if end_colname else None
-            if convert_end and end:
-                end = convert_date(end)
-            event = S3TimePlotEvent(row[pkey],
-                                    start = start,
-                                    end = end,
-                                    values = values)
-            add_event(event)
-
-        # Extend the event frame with these events
-        if events:
-            event_frame.extend(events)
-        return data
-
-    # -------------------------------------------------------------------------
-    def create_event_frame(self,
-                           resource,
-                           event_start,
-                           event_end,
-                           start=None,
-                           end=None,
-                           slots=None):
-        """
-            Create an event frame for this report
-
-            @param resource: the target resource
-            @param event_start: the event start field (S3ResourceField)
-            @param event_end: the event end field (S3ResourceField)
-            @param start: the start date/time (string)
-            @param end: the end date/time (string)
-            @param slots: the slot length (string)
-
-            @return: the event frame
-        """
-
-        now = tp_tzsafe(datetime.datetime.utcnow())
-
-        dtparse = self.dtparse
-
-        start_dt = end_dt = None
-
-        STANDARD_SLOT = "1 day"
-
-        # Parse start and end time
-        if start:
-            start_dt = dtparse(start, start=now)
-        if end:
-            relative_to = start_dt if start_dt else now
-            end_dt = dtparse(end, start=relative_to)
-
-        # Fall back to now if internval end is not specified
-        if not end_dt:
-            end_dt = now
-
-        if not start_dt and event_start and event_start.field:
-            # No interval start => fall back to first event start
-            query = FS(event_start.selector) != None
-            resource.add_filter(query)
-            rows = resource.select([event_start.selector],
-                                    limit=1,
-                                    orderby=event_start.field,
-                                    as_rows=True)
-            # Remove the filter we just added
-            resource.rfilter.filters.pop()
-            resource.rfilter.query = None
-            if rows:
-                first_event = rows.first()[event_start.colname]
-                if isinstance(first_event, datetime.date):
-                    first_event = tp_tzsafe(datetime.datetime.fromordinal(first_event.toordinal()))
-                start_dt = first_event
-
-        if not start_dt and event_end and event_end.field:
-            # No interval start => fall back to first event end minus
-            # one standard slot length:
-            query = FS(event_end.selector) != None
-            resource.add_filter(query)
-            rows = resource.select([event_end.selector],
-                                    limit=1,
-                                    orderby=event_end.field,
-                                    as_rows=True)
-            # Remove the filter we just added
-            resource.rfilter.filters.pop()
-            resource.rfilter.query = None
-            if rows:
-                last_event = rows.first()[event_end.colname]
-                if isinstance(last_event, datetime.date):
-                    last_event = tp_tzsafe(datetime.datetime.fromordinal(last_event.toordinal()))
-                start_dt = dtparse("-%s" % STANDARD_SLOT, start=last_event)
-
-        if not start_dt:
-            # No interval start => fall back to interval end minus
-            # one slot length:
-            if not slots:
-                slots = STANDARD_SLOT
-            try:
-                start_dt = dtparse("-%s" % slots, start=end_dt)
-            except (SyntaxError, ValueError):
-                slots = STANDARD_SLOT
-                start_dt = dtparse("-%s" % slots, start=end_dt)
-
-        if not slots:
-            # No slot length =>
-            # Determine optimum slot length automatically
-            # @todo: determine from density of events rather than
-            #        total interval length?
-            seconds = abs(end_dt - start_dt).total_seconds()
-            day = 86400
-            if seconds < day:
-                slots = "hours"
-            elif seconds < 3 * day:
-                slots = "6 hours"
-            elif seconds < 28 * day:
-                slots = "days"
-            elif seconds < 90 * day:
-                slots = "weeks"
-            elif seconds < 730 * day:
-                slots = "months"
-            elif seconds < 2190 * day:
-                slots = "3 months"
-            else:
-                slots = "years"
-
-        return S3TimePlotEventFrame(start_dt, end_dt, slots)
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def dtparse(cls, timestr, start=None):
-        """
-            Parse a string for start/end date(time) of an interval
-
-            @param timestr: the time string
-            @param start: the start datetime to relate relative times to
-        """
-
-        if start is None:
-            start = tp_tzsafe(datetime.datetime.utcnow())
-
-        if not timestr:
-            return start
-
-        regex = cls.dt_regex
-
-        # Relative to start: [+|-]{n}[year|month|week|day|hour]s
-        match = regex.DELTA.match(timestr)
-        if match:
-            groups = match.groups()
-            intervals = {"y": "years",
-                         "m": "months",
-                         "w": "weeks",
-                         "d": "days",
-                         "h": "hours"}
-            length = intervals.get(groups[2])
-            if not length:
-                raise SyntaxError("Invalid date/time: %s" % timestr)
-            num = int(groups[1])
-            if not num:
-                return start
-            if groups[0] == "-":
-                num *= -1
-            return start + relativedelta(**{length: num})
-
-        # Month/Year, e.g. "5/2001"
-        match = regex.MONTH_YEAR.match(timestr)
-        if match:
-            groups = match.groups()
-            year = int(groups[1])
-            month = int(groups[0])
-            return tp_datetime(year, month, 1, 0, 0, 0)
-
-        # Year-Month, e.g. "2001-05"
-        match = regex.YEAR_MONTH.match(timestr)
-        if match:
-            groups = match.groups()
-            month = int(groups[1])
-            year = int(groups[0])
-            return tp_datetime(year, month, 1, 0, 0, 0)
-
-        # Year only, e.g. "1996"
-        match = regex.YEAR.match(timestr)
-        if match:
-            groups = match.groups()
-            year = int(groups[0])
-            return tp_datetime(year, 1, 1, 0, 0, 0)
-
-        # Date, e.g. "2013-01-04"
-        match = regex.DATE.match(timestr)
-        if match:
-            groups = match.groups()
-            year = int(groups[0])
-            month = int(groups[1])
-            day = int(groups[2])
-            try:
-                return tp_datetime(year, month, day)
-            except ValueError:
-                # Day out of range
-                return tp_datetime(year, month, 1) + \
-                       datetime.timedelta(days = day-1)
-
-        # ISO datetime
-        xml = current.xml
-        dt = xml.decode_iso_datetime(str(timestr))
-        return xml.as_utc(dt)
-
-    # -------------------------------------------------------------------------
     @staticmethod
-    def resolve_timestamp(resource, timestamp):
+    def parse_timestamp(timestamp):
         """
-            Resolve a timestamp parameter against the current resource.
+            Parse timestamp expression
 
-            @param resource: the S3Resource
-            @param timestamp: the time stamp specifier
+            @param timestamp: the timestamp expression
         """
 
-        # Parse timestamp option
         if timestamp:
             fields = timestamp.split(",")
             if len(fields) > 1:
@@ -631,38 +422,15 @@ class S3TimePlot(S3Method):
             start = None
             end = None
 
-        # Defaults
-        if not start:
-            table = resource.table
-            for fname in ("date", "start_date", "created_on"):
-                if fname in table.fields:
-                    start = fname
-                    break
-            if start and not end:
-                for fname in ("end_date",):
-                    if fname in table.fields:
-                        end = fname
-                        break
-        if not start:
-            raise SyntaxError("No time stamps found in %s" % table)
-
-        # Get the fields
-        start_rfield = resource.resolve_selector(start)
-        if end:
-            end_rfield = resource.resolve_selector(end)
-        else:
-            end_rfield = None
-        return start_rfield, end_rfield
+        return start, end
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def resolve_fact(resource, fact):
+    def parse_fact(fact):
         """
-            Resolve a fact parameter of the format "method(selector)"
-            against a resource.
+            Parse fact expression
 
-            @param resource: the S3Resource
-            @param fact: the fact parameter
+            @param fact: the fact expression
         """
 
         # Parse the fact
@@ -676,17 +444,17 @@ class S3TimePlot(S3Method):
                 method, parameters = "count", fact
 
         # Validate method
-        if method not in S3TimePlotPeriod.methods:
+        if method not in S3TimeSeriesPeriod.methods:
             raise SyntaxError("Unsupported aggregation method: %s" % method)
 
+        # Extract parameters
         parameters = parameters.split(",")
+
         base = parameters[0]
-        
-        cumulate = method == "cumulate"
-        
         slope = None
         interval = None
-        if cumulate:
+
+        if method == "cumulate":
             if len(parameters) == 2:
                 # Slope, Slots
                 slope = base
@@ -696,37 +464,8 @@ class S3TimePlot(S3Method):
                 # Base, Slope, Slots
                 slope = parameters[1]
                 interval = parameters[2]
-                
-        base_rfield = None
-        if base:
-            try:
-                base_rfield = resource.resolve_selector(base)
-            except (AttributeError, SyntaxError):
-                base_rfield = None
-                
-        slope_rfield = None
-        if slope:
-            try:
-                slope_rfield = resource.resolve_selector(slope)
-            except (AttributeError, SyntaxError):
-                slope_rfield = None
-            
-        if base_rfield is None:
-            if not cumulate or slope_rfield is None:
-                raise SyntaxError("Invalid fact parameter")
-            
-        if method != "count":
-            # All methods except count require numeric input values
-            numeric_types = ("integer", "double")
-            if base_rfield and base_rfield.ftype not in numeric_types:
-                raise SyntaxError("Fact field type not numeric: %s (%s)" % 
-                                  (base, base_rfield.ftype))
 
-            if slope_rfield and slope_rfield.ftype not in numeric_types:
-                raise SyntaxError("Fact field type not numeric: %s (%s)" % 
-                                  (slope, slope_rfield.ftype))
-
-        return method, base_rfield, slope_rfield, interval
+        return method, base, slope, interval
 
 # =============================================================================
 class S3TimePlotForm(S3ReportForm):
@@ -774,6 +513,7 @@ class S3TimePlotForm(S3ReportForm):
         # @todo: report options
         # @todo: chart title
         # @todo: empty-section
+        empty = T("No report specified.")
         # @todo: CSS
 
         # Report form submit element
@@ -795,6 +535,7 @@ class S3TimePlotForm(S3ReportForm):
         else:
             submit = ""
 
+        # @todo: use view template (see S3ReportForm)
         form = DIV(DIV(FORM(filter_options,
                             report_options,
                             submit,
@@ -813,14 +554,33 @@ class S3TimePlotForm(S3ReportForm):
                            ),
                            _class="tp-chart-container"
                        ),
-                       #DIV(empty, _class="tp-empty"),
+                       DIV(empty, _class="tp-empty"),
                    ),
                    _class="tp-container",
                    _id=widget_id
                )
 
-        # Script to attach the timeplot widget
+        # D3/Timeplot scripts (injected so that they are available for summary)
+        s3 = current.response.s3
+        scripts = s3.scripts
+        appname = current.request.application
+        if s3.debug:
+            # @todo: support CDN
+            script = "/%s/static/scripts/d3/d3.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+            script = "/%s/static/scripts/d3/nv.d3.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+            script = "/%s/static/scripts/S3/s3.jquery.ui.timeplot.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            script = "/%s/static/scripts/S3/s3.timeplot.min.js" % appname
+            if script not in scripts:
+                scripts.append(script)
 
+        # Script to attach the timeplot widget
         settings = current.deployment_settings
         options = {
             "ajaxURL": ajaxurl,
@@ -831,7 +591,7 @@ class S3TimePlotForm(S3ReportForm):
                     {"widget_id": widget_id,
                      "options": json.dumps(options),
                     }
-        current.response.s3.jquery_ready.append(script)
+        s3.jquery_ready.append(script)
 
         return form
 
@@ -947,7 +707,729 @@ class S3TimePlotForm(S3ReportForm):
                                     )
 
 # =============================================================================
-class S3TimePlotEvent(object):
+class S3TimeSeries(object):
+    """ Class representing a time series """
+    
+    def __init__(self, 
+                 resource,
+                 start=None,
+                 end=None,
+                 slots=None,
+                 method=None,
+                 event_start=None,
+                 event_end=None,
+                 base=None,
+                 slope=None,
+                 interval=None,
+                 rows=None,
+                 cols=None,
+                 baseline=None):
+        """
+            Constructor
+            
+            @param resource: the resource
+            @param start: the start of the series (datetime or string expression)
+            @param end: the end of the time series (datetime or string expression)
+            @param slots: the slot size (string expression)
+            
+            @param event_start: the event start field (field selector)
+            @param event_end: the event end field (field selector)
+            
+            @param method: the aggregation method (default = count)
+            @param base: the base value to aggregate (field selector)
+            @param slope: the slope value for aggregation (field selector)
+            @param interval: the interval for the slope (string expression)
+            
+            @param rows: the rows axis for event grouping (field selector)
+            @param cols: the columns axis for event grouping (field selector)
+            
+            @param baseline: the baseline field (field selector)
+        """
+
+        self.resource = resource
+        self.rfields = {}
+        
+        # Resolve timestamp
+        self.resolve_timestamp(event_start, event_end)
+
+        # Resolve fact
+        if not method:
+            # Fall back to counting records
+            method = "count"
+            base = resource._id.name
+        self.resolve_fact(method, base, slope, baseline)
+        self.method = method
+        self.interval = interval
+
+        # Resolve grouping axes
+        self.resolve_axes(rows, cols)
+
+        # Create event frame
+        self.event_frame = self._event_frame(start,
+                                             end,
+                                             slots,
+                                             )
+
+        # ...and fill it with data
+        data = self._select()
+
+    # -------------------------------------------------------------------------
+    def as_dict(self):
+        """ Return the time series as JSON-serializable dict """
+        
+        rfields = self.rfields
+
+        # Method, base, slope and interval
+        method = self.method
+
+        base = None
+        slope = None
+        interval = None
+        
+        base_colname = None
+        rfield = rfields.get("base")
+        if rfield:
+            base = rfield.selector
+            base_colname = rfield.colname
+
+        slope_colname = None
+        if method == "cumulate":
+            rfield = rfields.get("slope")
+            if rfield:
+                slope = rfield.selector
+                slope_colname = rfield.colname
+                interval = self.interval
+
+        # Event start and end selectors
+        rfield = rfields.get("event_start")
+        if rfield:
+            event_start = rfield.selector
+        rfield = rfields.get("event_end")
+        if rfield:
+            event_end = rfield.selector
+
+        # Rows
+        rows = rfields.get("rows")
+        if rows:
+            rows_sorted = self._represent_axis(rows, self.rows_keys)
+            rows_keys = [row[0] for row in rows_sorted]
+            rows_data = {"s": rows.selector,
+                         "l": str(rows.label),
+                         "v": rows_sorted,
+                         }
+        else:
+            rows_keys = None
+            rows_data = None
+
+        # Columns
+        cols = rfields.get("cols")
+        if cols:
+            cols_sorted = self._represent_axis(cols, self.cols_keys)
+            cols_keys = [col[0] for col in cols_sorted]
+            cols_data = {"s": cols.selector,
+                         "l": str(cols.label),
+                         "v": cols_sorted,
+                         }
+        else:
+            cols_keys = None
+            cols_data = None
+
+        # Iterate over the event frame to collect aggregates
+        event_frame = self.event_frame
+        periods_data = []
+        append = periods_data.append
+        for period in event_frame:
+            # Aggregate
+            period.aggregate(method,
+                             base_colname,
+                             slope=slope_colname,
+                             interval=interval,
+                             )
+            # Extract
+            item = period.as_dict(rows = rows_keys, 
+                                  cols = cols_keys,
+                                  )
+            append(item)
+
+        # Baseline
+        rfield = rfields.get("baseline")
+        if rfield:
+            baseline = (rfield.selector,
+                        str(rfield.label),
+                        event_frame.baseline,
+                        )
+        else:
+            baseline = None
+
+        # Output dict
+        data = {"f": (method, base, slope, interval),
+                "t": (event_start, event_end),
+                "s": event_frame.slots,
+                "e": event_frame.empty,
+                # @todo: implement labels:
+                #"l": {"t": report_title,
+                      #"f": fact_title,
+                      #},
+                "r": rows_data,
+                "c": cols_data,
+                "p": periods_data,
+                "z": baseline,
+                }
+
+        return data
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _represent_axis(rfield, values):
+        """
+            @todo: docstring
+        """
+
+        if rfield.virtual:
+
+            representations = []
+            append = representations.append()
+            stripper = S3MarkupStripper()
+            for value in values:
+                if value is None:
+                    append((value, "-"))
+                text = s3_unicode(value)
+                if "<" in text:
+                    stripper.feed(text)
+                    append((value, stripper.stripped()))
+                else:
+                    append((value, text))
+        else:
+            field = rfield.field
+            represent = field.represent
+            if represent and hasattr(represent, "bulk"):
+                representations = represent.bulk(list(values),
+                                                 list_type = False,
+                                                 show_link = False,
+                                                 ).items()
+            else:
+                representations = []
+                for value in values:
+                    append((value, s3_represent_value(field,
+                                                      value,
+                                                      strip_markup = True,
+                                                      )))
+                                                      
+        return sorted(representations, key = lambda item: item[1])
+
+    # -------------------------------------------------------------------------
+    def _represent_method(self, field):
+        """
+            Get the representation method for a field in the report
+
+            @param field: the field selector
+        """
+
+        rfields = self.rfields
+        default = lambda value: None
+
+        if field and field in rfields:
+
+            rfield = rfields[field]
+
+            if rfield.field:
+                def repr_method(value):
+                    return s3_represent_value(rfield.field, value,
+                                              strip_markup=True)
+
+            elif rfield.virtual:
+                stripper = S3MarkupStripper()
+                def repr_method(val):
+                    if val is None:
+                        return "-"
+                    text = s3_unicode(val)
+                    if "<" in text:
+                        stripper.feed(text)
+                        return stripper.stripped() # = totally naked ;)
+                    else:
+                        return text
+            else:
+                repr_method = default
+        else:
+            repr_method = default
+
+        return repr_method
+
+    # -------------------------------------------------------------------------
+    def _event_frame(self,
+                     start=None,
+                     end=None,
+                     slots=None):
+        """
+            Create an event frame for this report
+
+            @param resource: the target resource
+            @param event_start: the event start field (S3ResourceField)
+            @param event_end: the event end field (S3ResourceField)
+            @param start: the start date/time (string)
+            @param end: the end date/time (string)
+            @param slots: the slot length (string)
+
+            @return: the event frame
+        """
+
+        resource = self.resource
+        rfields = self.rfields
+
+        STANDARD_SLOT = "1 day"
+        now = tp_tzsafe(datetime.datetime.utcnow())
+
+        # Parse start and end time
+        dtparse = self.dtparse
+        start_dt = end_dt = None
+        if start:
+            if isinstance(start, basestring):
+                start_dt = dtparse(start, start=now)
+            else:
+                if isinstance(start, datetime.date):
+                    start_dt = tp_tzsafe(datetime.datetime.fromordinal(start.toordinal()))
+                else:
+                    start_dt = tp_tzsafe(start)
+        if end:
+            if isinstance(end, basestring):
+                relative_to = start_dt if start_dt else now
+                end_dt = dtparse(end, start=relative_to)
+            else:
+                if isinstance(end, datetime.date):
+                    end_dt = tp_tzsafe(datetime.datetime.fromordinal(end.toordinal()))
+                else:
+                    ent_dt = tp_tzsafe(end)
+
+        # Fall back to now if end is not specified
+        if not end_dt:
+            end_dt = now
+
+        event_start = rfields["event_start"]
+        if not start_dt and event_start and event_start.field:
+            # No interval start => fall back to first event start
+            query = FS(event_start.selector) != None
+            resource.add_filter(query)
+            rows = resource.select([event_start.selector],
+                                    limit=1,
+                                    orderby=event_start.field,
+                                    as_rows=True)
+            # Remove the filter we just added
+            resource.rfilter.filters.pop()
+            resource.rfilter.query = None
+            if rows:
+                first_event = rows.first()[event_start.colname]
+                if isinstance(first_event, datetime.date):
+                    first_event = tp_tzsafe(datetime.datetime.fromordinal(first_event.toordinal()))
+                start_dt = first_event
+
+        event_end = rfields["event_end"]
+        if not start_dt and event_end and event_end.field:
+            # No interval start => fall back to first event end minus
+            # one standard slot length:
+            query = FS(event_end.selector) != None
+            resource.add_filter(query)
+            rows = resource.select([event_end.selector],
+                                    limit=1,
+                                    orderby=event_end.field,
+                                    as_rows=True)
+            # Remove the filter we just added
+            resource.rfilter.filters.pop()
+            resource.rfilter.query = None
+            if rows:
+                last_event = rows.first()[event_end.colname]
+                if isinstance(last_event, datetime.date):
+                    last_event = tp_tzsafe(datetime.datetime.fromordinal(last_event.toordinal()))
+                start_dt = dtparse("-%s" % STANDARD_SLOT, start=last_event)
+
+        if not start_dt:
+            # No interval start => fall back to interval end minus
+            # one slot length:
+            if not slots:
+                slots = STANDARD_SLOT
+            try:
+                start_dt = dtparse("-%s" % slots, start=end_dt)
+            except (SyntaxError, ValueError):
+                slots = STANDARD_SLOT
+                start_dt = dtparse("-%s" % slots, start=end_dt)
+
+        # Fall back for slot length
+        if not slots:
+            # No slot length specified => determine optimum automatically
+            # @todo: determine from density of events rather than from 
+            #        total interval length?
+            seconds = abs(end_dt - start_dt).total_seconds()
+            day = 86400
+            if seconds < day:
+                slots = "hours"
+            elif seconds < 3 * day:
+                slots = "6 hours"
+            elif seconds < 28 * day:
+                slots = "days"
+            elif seconds < 90 * day:
+                slots = "weeks"
+            elif seconds < 730 * day:
+                slots = "months"
+            elif seconds < 2190 * day:
+                slots = "3 months"
+            else:
+                slots = "years"
+
+        # Create event frame
+        ef = S3TimeSeriesEventFrame(start_dt, end_dt, slots)
+
+        return ef
+
+    # -------------------------------------------------------------------------
+    def _select(self):
+        """
+            Select records from the resource and store them as events in
+            this time series
+        """
+
+        resource = self.resource
+        rfields = self.rfields
+        
+        # Fields to extract
+        event_start = rfields.get("event_start")
+        fields = set([event_start.selector])
+        event_end = rfields.get("event_end")
+        if event_end:
+            fields.add(event_end.selector)
+        rows_rfield = rfields.get("rows")
+        if rows_rfield:
+            fields.add(rows_rfield.selector)
+        cols_rfield = rfields.get("cols")
+        if cols_rfield:
+            fields.add(cols_rfield.selector)
+        facts = []
+        for key in ("base", "slope"):
+            rfield = rfields.get(key)
+            if rfield:
+                facts.append(rfield)
+                fields.add(rfield.selector)
+        fields.add(resource._id.name)
+
+        # Get event frame
+        event_frame = self.event_frame
+
+        # Filter by event frame start:
+        # End date of events must be after the event frame start date
+        if self.method != "cumulate" and event_end:
+            end_selector = FS(event_end.selector)
+            start = event_frame.start
+            query = (end_selector == None) | (end_selector >= start)
+        else:
+            # No point if events have no end date, and wrong if
+            # method is cumulative
+            query = None
+
+        # Filter by event frame end:
+        # Start date of events must be before event frame end date
+        start_selector = FS(event_start.selector)
+        end = event_frame.end
+        q = (start_selector == None) | (start_selector <= end)
+        query = query & q if query is not None else q
+
+        # Add as temporary filter
+        resource.add_filter(query)
+        
+        # Compute baseline
+        value = None
+        baseline_rfield = rfields.get("baseline")
+        if baseline_rfield:
+            baseline_table = current.db[baseline_rfield.tname]
+            pkey = str(baseline_table._id)
+            colname = baseline_rfield.colname
+            rows = resource.select([baseline_rfield.selector],
+                                    groupby = [pkey, colname],
+                                    as_rows = True,
+                                    )
+            value = 0
+            for row in rows:
+                v = row[colname]
+                if v is not None:
+                    value += v
+        event_frame.baseline = value
+
+        # Extract the records
+        data = resource.select(fields)
+
+        # Remove the filter we just added
+        resource.rfilter.filters.pop()
+        resource.rfilter.query = None
+
+        # Do we need to convert dates into datetimes?
+        convert_start = True if event_start.ftype == "date" else False
+        convert_end = True if event_start.ftype == "date" else False
+        fromordinal = datetime.datetime.fromordinal
+        convert_date = lambda d: fromordinal(d.toordinal())
+
+        # Column names for extractions
+        pkey = str(resource._id)
+        start_colname = event_start.colname
+        end_colname = event_end.colname if event_end else None
+        rows_colname = rows_rfield.colname if rows_rfield else None
+        cols_colname = cols_rfield.colname if cols_rfield else None
+
+        # Create the events
+        events = []
+        add_event = events.append
+        rows_keys = set()
+        cols_keys = set()
+        for row in data.rows:
+
+            # Extract values
+            values = dict((fact.colname, row[fact.colname]) for fact in facts)
+
+            # Extract grouping keys
+            grouping = {}
+            if rows_colname:
+                grouping["row"] = row[rows_colname]
+            if cols_colname:
+                grouping["col"] = row[cols_colname]
+
+            # Extract start/end date
+            start = row[start_colname]
+            if convert_start and start:
+                start = convert_date(start)
+            end = row[end_colname] if end_colname else None
+            if convert_end and end:
+                end = convert_date(end)
+
+            # values = (base, slope)
+            event = S3TimeSeriesEvent(row[pkey],
+                                      start = start,
+                                      end = end,
+                                      values = values,
+                                      **grouping)
+            add_event(event)
+            rows_keys |= event.rows
+            cols_keys |= event.cols
+
+        # Extend the event frame with these events
+        if events:
+            event_frame.extend(events)
+
+        # Store the grouping keys
+        self.rows_keys = rows_keys
+        self.cols_keys = cols_keys
+
+        return data
+
+    # -------------------------------------------------------------------------
+    def resolve_timestamp(self, event_start, event_end):
+        """
+            Resolve the event_start and event_end field selectors
+            
+            @param event_start: the field selector for the event start field
+            @param event_end: the field selector for the event end field
+        """
+    
+        resource = self.resource
+        rfields = self.rfields
+
+        # Defaults
+        if not event_start:
+            table = resource.table
+            for fname in ("date", "start_date", "created_on"):
+                if fname in table.fields:
+                    event_start = fname
+                    break
+            if event_start and not event_end:
+                for fname in ("end_date",):
+                    if fname in table.fields:
+                        event_end = fname
+                        break
+        if not event_start:
+            raise SyntaxError("No time stamps found in %s" % table)
+
+        # Get the fields
+        start_rfield = resource.resolve_selector(event_start)
+        if event_end:
+            end_rfield = resource.resolve_selector(event_end)
+        else:
+            end_rfield = None
+
+        rfields["event_start"] = start_rfield
+        rfields["event_end"] = end_rfield
+        
+        return
+        
+    # -------------------------------------------------------------------------
+    def resolve_fact(self, method, base, slope, baseline):
+        """
+            Resolve the base, slope and baseline field selectors
+            
+            @param method: the aggregation method
+            @param base: the base field selector
+            @param slope: the slope field selector
+            @param baseline: the baseline selector
+        """
+
+        resource = self.resource
+        rfields = self.rfields
+        
+        # Resolve base selector
+        base_rfield = None
+        if base:
+            try:
+                base_rfield = resource.resolve_selector(base)
+            except (AttributeError, SyntaxError):
+                base_rfield = None
+
+        # Resolve slope selector
+        slope_rfield = None
+        if slope:
+            try:
+                slope_rfield = resource.resolve_selector(slope)
+            except (AttributeError, SyntaxError):
+                slope_rfield = None
+
+        # Resolve baseline selector
+        baseline_rfield = None
+        if baseline:
+            try:
+                baseline_rfield = resource.resolve_selector(baseline)
+            except (AttributeError, SyntaxError):
+                baseline_rfield = None
+                    
+        # Validate
+        if base_rfield is None:
+            if method != "cumulate" or slope_rfield is None:
+                raise SyntaxError("Invalid fact parameter")
+        if method != "count":
+            # All methods except count require numeric input values
+            numeric_types = ("integer", "double")
+            if base_rfield and base_rfield.ftype not in numeric_types:
+                raise SyntaxError("Fact field type not numeric: %s (%s)" % 
+                                  (base, base_rfield.ftype))
+
+            if slope_rfield and slope_rfield.ftype not in numeric_types:
+                raise SyntaxError("Fact field type not numeric: %s (%s)" % 
+                                  (slope, slope_rfield.ftype))
+        if baseline_rfield and \
+           baseline_rfield.ftype not in ("integer", "double"):
+            # Invalid field type - log and ignore gracefully
+            current.log.error("Invalid field type for baseline: %s (%s)" %
+                              (baseline, baseline_rfield.ftype))
+            baseline_rfield = None
+
+        rfields["base"] = base_rfield
+        rfields["slope"] = slope_rfield
+        rfields["baseline"] = baseline_rfield
+
+        return
+
+    # -------------------------------------------------------------------------
+    def resolve_axes(self, rows, cols):
+        """
+            Resolve the grouping axes field selectors
+            
+            @param rows: the rows field selector
+            @param cols: the columns field selector
+        """
+
+        resource = self.resource
+        rfields = self.rfields
+
+        # Resolve rows selector
+        rows_rfield = None
+        if rows:
+            try:
+                rows_rfield = resource.resolve_selector(rows)
+            except (AttributeError, SyntaxError):
+                rows_rfield = None
+
+        # Resolve columns selector
+        cols_rfield = None
+        if cols:
+            try:
+                cols_rfield = resource.resolve_selector(cols)
+            except (AttributeError, SyntaxError):
+                cols_rfield = None
+
+        rfields["rows"] = rows_rfield
+        rfields["cols"] = cols_rfield
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dtparse(timestr, start=None):
+        """
+            Parse a string for start/end date(time) of an interval
+
+            @param timestr: the time string
+            @param start: the start datetime to relate relative times to
+        """
+
+        if start is None:
+            start = tp_tzsafe(datetime.datetime.utcnow())
+
+        if not timestr:
+            return start
+
+        # Relative to start: [+|-]{n}[year|month|week|day|hour]s
+        match = dt_regex.DELTA.match(timestr)
+        if match:
+            groups = match.groups()
+            intervals = {"y": "years",
+                         "m": "months",
+                         "w": "weeks",
+                         "d": "days",
+                         "h": "hours"}
+            length = intervals.get(groups[2])
+            if not length:
+                raise SyntaxError("Invalid date/time: %s" % timestr)
+            num = int(groups[1])
+            if not num:
+                return start
+            if groups[0] == "-":
+                num *= -1
+            return start + relativedelta(**{length: num})
+
+        # Month/Year, e.g. "5/2001"
+        match = dt_regex.MONTH_YEAR.match(timestr)
+        if match:
+            groups = match.groups()
+            year = int(groups[1])
+            month = int(groups[0])
+            return tp_datetime(year, month, 1, 0, 0, 0)
+
+        # Year-Month, e.g. "2001-05"
+        match = dt_regex.YEAR_MONTH.match(timestr)
+        if match:
+            groups = match.groups()
+            month = int(groups[1])
+            year = int(groups[0])
+            return tp_datetime(year, month, 1, 0, 0, 0)
+
+        # Year only, e.g. "1996"
+        match = dt_regex.YEAR.match(timestr)
+        if match:
+            groups = match.groups()
+            year = int(groups[0])
+            return tp_datetime(year, 1, 1, 0, 0, 0)
+
+        # Date, e.g. "2013-01-04"
+        match = dt_regex.DATE.match(timestr)
+        if match:
+            groups = match.groups()
+            year = int(groups[0])
+            month = int(groups[1])
+            day = int(groups[2])
+            try:
+                return tp_datetime(year, month, day)
+            except ValueError:
+                # Day out of range
+                return tp_datetime(year, month, 1) + \
+                       datetime.timedelta(days = day-1)
+
+        # ISO datetime
+        xml = current.xml
+        dt = xml.decode_iso_datetime(str(timestr))
+        return xml.as_utc(dt)
+
+# =============================================================================
+class S3TimeSeriesEvent(object):
     """ Class representing an event """
     
     def __init__(self,
@@ -1057,7 +1539,7 @@ class S3TimePlotEvent(object):
         return result
 
 # =============================================================================
-class S3TimePlotPeriod(object):
+class S3TimeSeriesPeriod(object):
 
     methods = ("count", "cumulate", "sum", "avg", "min", "max")
 
@@ -1106,7 +1588,7 @@ class S3TimePlotPeriod(object):
         """
             Add a current event to this period
 
-            @param event: the S3TimePlotEvent
+            @param event: the S3TimeSeriesEvent
         """
 
         self.cevents[event.event_id] = event
@@ -1116,10 +1598,59 @@ class S3TimePlotPeriod(object):
         """
             Add a previous event to this period
 
-            @param event: the S3TimePlotEvent
+            @param event: the S3TimeSeriesEvent
         """
 
         self.pevents[event.event_id] = event
+
+    # -------------------------------------------------------------------------
+    def as_dict(self, rows=None, cols=None, isoformat=True):
+        """
+            Convert the aggregated results into a JSON-serializable dict
+            
+            @param rows: the row keys for the result
+            @param cols: the column keys for the result
+            @param isoformat: convert datetimes into ISO-formatted strings
+        """
+
+        # Start and end datetime
+        start = self.start
+        if start and isoformat:
+            start = start.isoformat()
+        end = self.end
+        if end and isoformat:
+            end = end.isoformat()
+
+        # Row totals
+        row_totals = None
+        if rows is not None:
+            row_data = self.rows
+            row_totals = [row_data.get(key) for key in rows]
+
+        # Column totals
+        col_totals = None
+        if cols is not None:
+            col_data = self.cols
+            col_totals = [col_data.get(key) for key in cols]
+
+        # Matrix
+        matrix = None
+        if rows is not None and cols is not None:
+            matrix_data = self.matrix
+            matrix = []
+            for row in rows:
+                matrix_row = []
+                for col in cols:
+                    matrix_row.append(matrix_data.get((row, col)))
+                matrix.append(matrix_row)
+
+        # Output
+        return {"t": (start, end),
+                "v": self.total,
+                "r": row_totals,
+                "c": col_totals,
+                "x": matrix,
+                }
 
     # -------------------------------------------------------------------------
     def group(self, cumulative=False):
@@ -1357,7 +1888,7 @@ class S3TimePlotPeriod(object):
             Compute the total duration of the given event before the end
             of this period, in number of interval
 
-            @param event: the S3TimePlotEvent
+            @param event: the S3TimeSeriesEvent
             @param interval: the interval expression (string)
         """
 
@@ -1409,7 +1940,7 @@ class S3TimePlotPeriod(object):
             return None
 
 # =============================================================================
-class S3TimePlotEventFrame(object):
+class S3TimeSeriesEventFrame(object):
     """ Class representing the whole time frame of a time plot """
 
     def __init__(self, start, end, slots=None):
@@ -1451,7 +1982,7 @@ class S3TimePlotEventFrame(object):
         if not slots:
             return None
 
-        return S3TimePlotPeriod.get_rule(self.start, self.end, slots)
+        return S3TimeSeriesPeriod.get_rule(self.start, self.end, slots)
 
     # -------------------------------------------------------------------------
     def extend(self, events):
@@ -1509,7 +2040,7 @@ class S3TimePlotEventFrame(object):
             # Add current events to current period
             period = periods.get(start)
             if period is None:
-                period = periods[start] = S3TimePlotPeriod(start, end=end)
+                period = periods[start] = S3TimeSeriesPeriod(start, end=end)
             for event in current_events.values():
                 period.add_current(event)
             for event in previous_events.values():
@@ -1554,7 +2085,7 @@ class S3TimePlotEventFrame(object):
                     end = rule.after(dt)
                     if not end:
                         end = self.end
-                    yield S3TimePlotPeriod(dt, end=end)
+                    yield S3TimeSeriesPeriod(dt, end=end)
         else:
             # @todo: continuous periods
             # sort actual periods and iterate over them

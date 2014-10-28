@@ -237,6 +237,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # timeplot
+    print "Compressing timeplot"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.timeplot.cfg"
+    outputFilename = "s3.timeplot.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # ImageCrop
     print "Compressing ImageCrop"
     sourceDirectory = ".."
