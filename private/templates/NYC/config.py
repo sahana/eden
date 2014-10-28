@@ -1048,20 +1048,19 @@ def chairperson(row):
         return current.messages["NONE"]
 
     db = current.db
-    mtable = current.s3db.pr_group_membership
+    mtable = db.pr_group_membership
     ptable = db.pr_person
     query = (mtable.group_id == group_id) & \
             (mtable.group_head == True) & \
             (mtable.person_id == ptable.id)
-    chair = db(query).select(ptable.first_name,
-                             ptable.middle_name,
-                             ptable.last_name,
-                             ptable.id,
-                             limitby=(0, 1)).first()
-    if chair:
+    chairs = db(query).select(ptable.first_name,
+                              ptable.middle_name,
+                              ptable.last_name,
+                              ptable.id)
+    if chairs:
         # Only used in list view so HTML is OK
-        return A(s3_fullname(chair),
-                 _href=URL(c="hrm", f="person", args=chair.id))
+        return ",".join([A(s3_fullname(chair),
+                           _href=URL(c="hrm", f="person", args=chair.id)).xml() for chair in chairs])
     else:
         return current.messages["NONE"]
 

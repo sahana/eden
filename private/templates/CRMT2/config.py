@@ -272,6 +272,8 @@ settings.gis.poi_create_resources = \
 # Uncomment to show the Print control:
 # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
 settings.gis.print_button = True
+# Uncomment to save a screenshot whenever a saved map is saved
+settings.gis.config_screenshot = True
 # Uncomment to hide the Save control, or set to "float"
 settings.gis.save = "float"
 # Uncomment to hide the GeoNames search box
@@ -1630,6 +1632,43 @@ settings.customise_org_facility_controller = customise_org_facility_controller
 # -----------------------------------------------------------------------------
 # Saved Maps
 #
+def gis_config_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Custom dataList item renderer for Saved Maps
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["gis_config.id"]
+
+    raw = record._row
+    name = record["gis_config.name"]
+    author = record["gis_config.pe_id"]
+    image = raw["gis_config.image"]
+
+    item = DIV(A(IMG(_src="/%s/static/cache/jpg/%s" % (current.request.application, image),
+                     _width="820",
+                     _height="410",
+                     _alt=name,
+                     _tabindex="0",
+                     ),
+                    TAG.figcaption(name,
+                                   " ",
+                                   TAG.small(T("by %(person)s") % author,
+                                             _tabindex="0",
+                                             ),
+                                   ),
+                _href=URL(c="gis", f="index",
+                          vars={"config": record_id}),
+                _tabindex="0",
+                ))
+
+    return item
+
 def customise_gis_config_controller(**attr):
 
     # Custom PreP
@@ -1642,40 +1681,51 @@ def customise_gis_config_controller(**attr):
             if not result:
                 return False
 
-        if r.interactive:
-            auth = current.auth
-            coalition = auth.user.org_group_id
-            if not coalition:
-                return True
+        from s3 import S3ImageCropWidget
 
-            db = current.db
-            s3db = current.s3db
-            utable = db.auth_user
-            ltable = s3db.pr_person_user
-            table = s3db.gis_config
-            query = (table.deleted == False) & \
-                    (table.pe_id == ltable.pe_id) & \
-                    (ltable.user_id == utable.id) & \
-                    (utable.org_group_id == coalition)
-            rows = db(query).select(ltable.pe_id,
-                                    distinct = True)
-            if rows:
-                coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
-                from s3 import S3OptionsFilter
-                filter_widgets = [
-                    S3OptionsFilter("pe_id",
-                                    label = "",
-                                    options = {"*": T("All"),
-                                               coalition_pe_ids: T("My Coalition's Maps"),
-                                               auth.user.pe_id: T("My Maps"),
-                                               },
-                                    cols = 3,
-                                    multiple = False,
-                                    )
-                    ]
-                s3db.configure("gis_config",
-                               filter_widgets = filter_widgets,
-                               )
+        s3db = current.s3db
+        table = s3db.gis_config
+        field = table.image
+        field.readable = True
+        #field.readable = field.writable = True
+        field.label = T("Image")
+        #field.widget = S3ImageCropWidget((820, 410))
+
+        s3db.configure("gis_config",
+                       list_layout = gis_config_list_layout,
+                       )
+
+        auth = current.auth
+        coalition = auth.user.org_group_id
+        if not coalition:
+            return True
+
+        db = current.db
+        utable = db.auth_user
+        ltable = s3db.pr_person_user
+        query = (table.deleted == False) & \
+                (table.pe_id == ltable.pe_id) & \
+                (ltable.user_id == utable.id) & \
+                (utable.org_group_id == coalition)
+        rows = db(query).select(ltable.pe_id,
+                                distinct = True)
+        if rows:
+            coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
+            from s3 import S3OptionsFilter
+            filter_widgets = [
+                S3OptionsFilter("pe_id",
+                                label = "",
+                                options = {"*": T("All"),
+                                           coalition_pe_ids: T("My Coalition's Maps"),
+                                           auth.user.pe_id: T("My Maps"),
+                                           },
+                                cols = 3,
+                                multiple = False,
+                                )
+                ]
+            s3db.configure("gis_config",
+                           filter_widgets = filter_widgets,
+                           )
 
         return True
     s3.prep = custom_prep

@@ -795,6 +795,12 @@ class S3Config(Storage):
         """
         return self.gis.get("clear_layers", False)
 
+    def get_gis_config_screenshot(self):
+        """
+            Should GIS configs save a screenshot when saved?
+        """
+        return self.gis.get("config_screenshot", False)
+
     def get_gis_countries(self):
         """
             Which country codes should be accessible to the location selector?
@@ -1023,8 +1029,11 @@ class S3Config(Storage):
     def get_gis_print(self):
         """
             Should the Map display a Print control?
+
+            NB Requires installation of additional components:
+               http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
         """
-        return self.gis.get("print_button", False) # Change to True once ready for prime-time
+        return self.gis.get("print_button", False)
 
     #def get_gis_print_service(self):
     #    """

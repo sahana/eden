@@ -342,11 +342,11 @@ def check_duplicates():
 def group():
     """ RESTful CRUD controller """
 
-    tablename = "pr_group"
-    table = s3db[tablename]
+    FS = s3base.S3FieldSelector
+    s3.filter = (FS("group.system") == False) # do not show system groups
 
-    s3.filter = (table.system == False) # do not show system groups
-
+    # Modify list_fields for the component tab
+    table = s3db.pr_group_membership
     s3db.configure("pr_group_membership",
                    list_fields = ["id",
                                   "person_id",

@@ -289,6 +289,8 @@ settings.L10n.decimal_separator = "."
 # Uncomment to show the Print control:
 # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
 #settings.gis.print_button = True
+# Uncomment to save a screenshot whenever a saved map is saved
+#settings.gis.config_screenshot = True
 # Uncomment to hide the Save control, or set to "float"
 #settings.gis.save = False
 # Uncomment to hide the ScaleLine control
