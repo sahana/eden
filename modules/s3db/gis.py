@@ -1914,6 +1914,19 @@ class S3GISConfigModel(S3Model):
                            writable = False,
                            ),
 
+                     Field("image", "upload", autodelete=False,
+                           # Enable in-templates as-required
+                           #label = T("Image"),
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(current.request.folder,
+                                                       "static",
+                                                       "cache",
+                                                       "jpg"),
+                           #readable = False,
+                           #writable = False,
+                           #widget = S3ImageCropWidget((820, 410)),
+                           ),
+
                      *s3_meta_fields())
 
         # Reusable field - used by Events & Scenarios
@@ -2257,6 +2270,11 @@ class S3GISConfigModel(S3Model):
             table = db.gis_location
             query = (table.id == form_vars.region_location_id)
             db(query).update(owned_by_group = MAP_ADMIN)
+
+        if current.deployment_settings.get_gis_config_screenshot():
+            # Save a screenshot
+            # @ToDo
+            pass
 
     # -------------------------------------------------------------------------
     @staticmethod

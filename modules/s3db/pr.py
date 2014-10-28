@@ -2051,7 +2051,8 @@ class S3GroupModel(S3Model):
                         (table.id != record.id) & \
                         (table.deleted != True)
                 deleted_fk = {"person_id": person_id,
-                              "group_id": group_id}
+                              "group_id": group_id,
+                              }
                 db(query).update(deleted = True,
                                  person_id = None,
                                  group_id = None,

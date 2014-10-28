@@ -1125,7 +1125,7 @@ def config():
                                        restrict = restrict
                                        ))
 
-            elif not r.component and r.method != "import":
+            elif not r.component and r.method not in ("datalist", "import"):
                 show = dict(url=URL(c="gis", f="index",
                                     vars={"config":"[id]"}),
                             label=str(T("Show")),
@@ -1208,13 +1208,9 @@ def config():
                             record = db(query).select(stable.id,
                                                       limitby=(0, 1)).first()
                             if record:
-                                #record_id = record.id
-                                #form_vars.id = record_id
-                                #db(stable.id == record_id).update(**form_vars)
                                 record.update_record(**form_vars)
                             else:
                                 # New Style
-                                #form_vars.id = stable.insert(**form_vars)
                                 stable.insert(**form_vars)
 
         return output
