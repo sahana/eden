@@ -102,7 +102,7 @@
             }
             $('#uploaded-image').attr({
                 src: scaled_image,
-                style: 'display: block;',
+                style: 'display: block'
             });
             $('#select-crop-btn').css({
                 display: 'inline'

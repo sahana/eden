@@ -2673,6 +2673,12 @@ class S3Config(Storage):
         """
         return self.pr.get("show_emergency_contacts", True)
 
+    def get_pr_public_private_contacts(self):
+        """
+            have 2 Tabs for contacts: Public & Private
+        """
+        return self.pr.get("public_private_contacts", False)
+
     # -------------------------------------------------------------------------
     # Proc
     #

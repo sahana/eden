@@ -769,6 +769,7 @@ class S3PersonModel(S3Model):
 
         tablename = "pr_person"
         define_table(tablename,
+                     # Instances
                      super_link("pe_id", "pr_pentity"),
                      super_link("track_id", "sit_trackable"),
                      # Base location
@@ -1806,6 +1807,7 @@ class S3GroupModel(S3Model):
 
         tablename = "pr_group"
         define_table(tablename,
+                     # Instances
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
                      Field("group_type", "integer",
@@ -2068,8 +2070,8 @@ class S3ContactModel(S3Model):
     """
 
     names = ("pr_contact",
-             "pr_contact_represent",
              "pr_contact_emergency",
+             "pr_contact_represent",
              )
 
     def model(self):
@@ -2090,9 +2092,15 @@ class S3ContactModel(S3Model):
         #
         contact_methods = current.msg.CONTACT_OPTS
 
+        access_opts = {1 : T("Private"),
+                       2 : T("Public"),
+                       }
+
         tablename = "pr_contact"
         define_table(tablename,
+                     # Component not instance
                      super_link("pe_id", "pr_pentity",
+                                empty = False,
                                 orderby = "instance_type",
                                 represent = self.pr_pentity_represent,
                                 ),
@@ -2119,6 +2127,17 @@ class S3ContactModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("What order to be contacted in."))),
+                           ),
+                     Field("access", "integer",
+                           default = 1, # Contacts default to Private
+                           label = T("Access"),
+                           represent = lambda opt: \
+                                       access_opts.get(opt, messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(access_opts,
+                                                zero=None),
+                           # Enable in templates as-required
+                           readable = False,
+                           writable = False,
                            ),
                      # Used to determine whether an RSS/Facebook/Twitter feed should be imported into the main newsfeed
                      # (usually used for Organisational ones)
@@ -2309,6 +2328,7 @@ class S3AddressModel(S3Model):
 
         tablename = "pr_address"
         self.define_table(tablename,
+                          # Component not Instance
                           self.super_link("pe_id", "pr_pentity",
                                            orderby = "instance_type",
                                            represent = self.pr_pentity_represent,
@@ -2527,6 +2547,7 @@ class S3PersonImageModel(S3Model):
 
         tablename = "pr_image"
         self.define_table(tablename,
+                          # Component not Instance
                           self.super_link("pe_id", "pr_pentity"),
                           Field("profile", "boolean",
                                 default = False,
@@ -2590,18 +2611,19 @@ class S3PersonImageModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       onaccept = self.pr_image_onaccept,
-                       onvalidation = self.pr_image_onvalidation,
-                       ondelete = self.pr_image_ondelete,
+                       list_fields = ["id",
+                                      "title",
+                                      "profile",
+                                      "type",
+                                      "image",
+                                      "url",
+                                      "description"
+                                      ],
                        #mark_required = ("url", "image"),
-                       list_fields=["id",
-                                    "title",
-                                    "profile",
-                                    "type",
-                                    "image",
-                                    "url",
-                                    "description"
-                                    ])
+                       onaccept = self.pr_image_onaccept,
+                       ondelete = self.pr_image_ondelete,
+                       onvalidation = self.pr_image_onvalidation,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2828,7 +2850,8 @@ class S3PersonIdentityModel(S3Model):
         tablename = "pr_identity"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
-                                            ondelete="CASCADE"),
+                                            ondelete = "CASCADE",
+                                            ),
                           Field("type", "integer",
                                 default = 1,
                                 label = T("ID type"),
@@ -2976,7 +2999,8 @@ class S3PersonEducationModel(S3Model):
         tablename = "pr_education"
         define_table(tablename,
                      self.pr_person_id(label = T("Person"),
-                                       ondelete="CASCADE"),
+                                       ondelete = "CASCADE",
+                                       ),
                      level_id(),
                      # Enable this field for backwards-compatibility or to store details of the 'other' level
                      Field("level",
@@ -3113,18 +3137,20 @@ class S3PersonDetailsModel(S3Model):
         tablename = "pr_person_details"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
-                                            ondelete="CASCADE"),
+                                            ondelete = "CASCADE",
+                                            ),
                           Field("nationality",
+                                label = T("Nationality"),
+                                represent = lambda code: \
+                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT,
                                 requires = IS_EMPTY_OR(
                                             IS_IN_SET_LAZY(lambda: \
                                                 gis.get_countries(key_type="code"),
                                                 zero = messages.SELECT_LOCATION)),
-                                label = T("Nationality"),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Nationality"),
                                                                 T("Nationality of the person."))),
-                                represent = lambda code: \
-                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT),
+                                ),
                           Field("place_of_birth",
                                 label = T("Place of Birth"),
                                 # Enable as-required in template
@@ -3134,9 +3160,9 @@ class S3PersonDetailsModel(S3Model):
                           pr_marital_status(),
                           Field("religion", length=128,
                                 label = T("Religion"),
-                                requires = IS_EMPTY_OR(IS_IN_SET(pr_religion_opts)),
                                 represent = lambda opt: \
                                     pr_religion_opts.get(opt, UNKNOWN_OPT),
+                                requires = IS_EMPTY_OR(IS_IN_SET(pr_religion_opts)),
                                 ),
                           # This field can either be used as a free-text version of religion, or to provide details of the 'other'
                           Field("religion_other",
@@ -3177,7 +3203,7 @@ class S3PersonDetailsModel(S3Model):
             msg_list_empty = T("There are no details for this person yet. Add Person's Details."))
 
         self.configure(tablename,
-                       deduplicate=self.pr_person_details_deduplicate,
+                       deduplicate = self.pr_person_details_deduplicate,
                        )
 
         # ---------------------------------------------------------------------
@@ -3235,22 +3261,23 @@ class S3SavedFilterModel(S3Model):
 
         represent = S3Represent(lookup=tablename, fields=["title"])
         filter_id = S3ReusableField("filter_id", "reference %s" % tablename,
+                                    label = T("Filter"),
+                                    ondelete = "SET NULL",
+                                    represent = represent,
                                     requires = IS_EMPTY_OR(IS_ONE_OF(
                                                     db, "pr_filter.id",
                                                     represent,
                                                     orderby="pr_filter.title",
                                                     sort=True)),
-                                    represent = represent,
-                                    label = T("Filter"),
-                                    ondelete = "SET NULL")
+                                    )
 
         self.configure(tablename,
+                       listadd = False,
                        list_fields = ["title",
                                       "resource",
                                       "url",
                                       "query",
                                       ],
-                       listadd = False,
                        list_layout = pr_filter_list_layout,
                        onvalidation = self.pr_filter_onvalidation,
                        orderby = "pr_filter.resource",
@@ -3323,6 +3350,7 @@ class S3SubscriptionModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "pr_subscription"
         self.define_table(tablename,
+                          # Component not Instance
                           self.super_link("pe_id", "pr_pentity"),
                           self.pr_filter_id(),
                           Field("notify_on", "list:string",
@@ -3743,7 +3771,9 @@ class S3PersonPresence(S3Model):
 
 # =============================================================================
 class S3PersonDescription(S3Model):
-    """ Additional tables for DVI/MPR """
+    """
+        Additional tables for DVI/MPR
+    """
 
     names = ("pr_age_group",
              "pr_age_group_opts",
@@ -3773,41 +3803,46 @@ class S3PersonDescription(S3Model):
 
         tablename = "pr_note"
         define_table(tablename,
+                     # Component not Instance
                      super_link("pe_id", "pr_pentity"),
                      # Reporter
                      #self.pr_person_id("reporter"),
                      Field("confirmed", "boolean",
-                           default=False,
-                           readable=False,
-                           writable=False),
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("closed", "boolean",
-                           default=False,
-                           readable=False,
-                           writable=False),
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("status", "integer",
-                           requires=IS_IN_SET(person_status,
-                                              zero=None),
-                           default=9,
-                           label=T("Status"),
-                           represent=lambda opt: \
-                                     person_status.get(opt, UNKNOWN_OPT)),
+                           default = 9,
+                           label = T("Status"),
+                           represent = lambda opt: \
+                                    person_status.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(person_status,
+                                                zero=None),
+                           ),
                      s3_datetime("timestmp",
-                                 label=T("Date/Time"),
-                                 default="now"
+                                 default = "now",
+                                 label = T("Date/Time"),
                                  ),
                      Field("note_text", "text",
-                           label=T("Text")),
+                           label = T("Text"),
+                           ),
                      Field("note_contact", "text",
-                           label=T("Contact Info"),
-                           readable=False,
-                           writable=False),
-                     self.gis_location_id(label=T("Last known location")),
+                           label = T("Contact Info"),
+                           readable = False,
+                           writable = False,
+                           ),
+                     self.gis_location_id(label = T("Last known location")),
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_NOTE = T("New Entry")
         crud_strings[tablename] = Storage(
-            label_create = ADD_NOTE,
+            label_create = T("New Entry"),
             title_display = T("Journal Entry Details"),
             title_list = T("Journal"),
             title_update = T("Edit Entry"),
@@ -3819,14 +3854,16 @@ class S3PersonDescription(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                        list_fields=["id",
-                                     "timestmp",
-                                     "location_id",
-                                     "note_text",
-                                     "status"],
-                        editable=False,
-                        onaccept=self.note_onaccept,
-                        ondelete=self.note_onaccept)
+                       editable = False,
+                       list_fields = ["id",
+                                      "timestmp",
+                                      "location_id",
+                                      "note_text",
+                                      "status",
+                                      ],
+                       onaccept = self.note_onaccept,
+                       ondelete = self.note_onaccept,
+                       )
 
         # =====================================================================
         # Physical Description
@@ -3841,13 +3878,14 @@ class S3PersonDescription(S3Model):
         }
         # Also used in DVI
         pr_age_group = S3ReusableField("age_group", "integer",
-                                       requires = IS_IN_SET(pr_age_group_opts,
-                                                            zero=None),
                                        default = 1,
                                        label = T("Age Group"),
                                        represent = lambda opt: \
                                                    pr_age_group_opts.get(opt,
-                                                                         UNKNOWN_OPT))
+                                                                         UNKNOWN_OPT),
+                                       requires = IS_IN_SET(pr_age_group_opts,
+                                                            zero=None),
+                                       )
 
         pr_race_opts = {
             1: T("caucasoid"),
@@ -3952,6 +3990,7 @@ class S3PersonDescription(S3Model):
 
         tablename = "pr_physical_description"
         define_table(tablename,
+                     # Component not Instance
                      super_link("pe_id", "pr_pentity",
                                 readable = True,
                                 writable = True,
@@ -4826,6 +4865,8 @@ def pr_contacts(r, **attr):
     T = current.T
     db = current.db
     s3db = current.s3db
+    response = current.response
+    s3 = response.s3
     has_permission = current.auth.s3_has_permission
 
     person = r.record
@@ -4875,10 +4916,15 @@ def pr_contacts(r, **attr):
                 # ))
 
     # Contacts
+
     ctable = s3db.pr_contact
     query = (ctable.pe_id == person.pe_id)
     resource = s3db.resource("pr_contact")
     resource.add_filter(query)
+    # Public or Private?
+    access = s3.pr_contacts
+    if access:
+        resource.add_filter(FS("contact.access") == access)
     fields = ["id",
               "contact_description",
               "value",
@@ -4926,11 +4972,11 @@ def pr_contacts(r, **attr):
     opts = current.msg.CONTACT_OPTS
 
     def action_buttons(table, id):
-        if has_permission("update", ctable, record_id = id):
+        if has_permission("update", ctable, record_id=id):
             edit_btn = A(T("Edit"), _class="editBtn action-btn fright")
         else:
             edit_btn = DIV()
-        if has_permission("delete", ctable, record_id = id):
+        if has_permission("delete", ctable, record_id=id):
             delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
         else:
             delete_btn = DIV()
@@ -4946,14 +4992,12 @@ def pr_contacts(r, **attr):
                 description = "%s, " % description
             (edit_btn, delete_btn) = action_buttons(ctable, id)
 
-            contacts_wrapper.append(
-                P(
-                  SPAN(description, value),
-                  edit_btn,
-                  delete_btn,
-                  _id="contact-%s" % id,
-                  _class="contact",
-                ))
+            contacts_wrapper.append(P(SPAN(description, value),
+                                      edit_btn,
+                                      delete_btn,
+                                      _id="contact-%s" % id,
+                                      _class="contact",
+                                      ))
 
     # Emergency Contacts
     show_emergency_contacts = current.deployment_settings.get_pr_show_emergency_contacts()
@@ -4989,13 +5033,12 @@ def pr_contacts(r, **attr):
                     for f in readable_fields]
             record_id = row["pr_contact_emergency.id"]
             (edit_btn, delete_btn) = action_buttons(etable, record_id)
-            emergency_wrapper.append(
-                P(SPAN(", ".join(data)),
-                  edit_btn,
-                  delete_btn,
-                  _id="emergency-%s" % record_id,
-                  _class="emergency",
-                ))        
+            emergency_wrapper.append(P(SPAN(", ".join(data)),
+                                       edit_btn,
+                                       delete_btn,
+                                       _id="emergency-%s" % record_id,
+                                       _class="emergency",
+                                       ))
 
     # Overall content
     content = DIV(#address_wrapper,
@@ -5005,8 +5048,6 @@ def pr_contacts(r, **attr):
                   )
 
     # Add the javascript
-    response = current.response
-    s3 = response.s3
     if s3.debug:
         s3.scripts.append(URL(c="static", f="scripts",
                               args=["S3", "s3.contacts.js"]))
@@ -5014,8 +5055,11 @@ def pr_contacts(r, **attr):
         s3.scripts.append(URL(c="static", f="scripts",
                               args=["S3", "s3.contacts.min.js"]))
 
-    s3.js_global.append("controller='%s'" % current.request.controller)
-    s3.js_global.append("personId=%s" % person.id);
+    s3.js_global += ["S3.pr_contacts_controller='%s'" % current.request.controller,
+                     "S3.pr_contacts_person_id=%s" % person.id,
+                     ]
+    if access:
+        s3.js_global.append("S3.pr_contacts_access=%s" % access)
 
     # Custom View
     response.view = "pr/contacts.html"
@@ -5025,9 +5069,9 @@ def pr_contacts(r, **attr):
     if callable(rheader):
         rheader = rheader(r)
 
-    return dict(title = T("Contacts"),
+    return dict(content = content,
                 rheader = rheader,
-                content = content,
+                title = T("Contacts"),
                 )
 
 # =============================================================================

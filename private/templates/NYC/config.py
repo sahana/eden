@@ -883,13 +883,18 @@ settings.pr.request_dob = False
 settings.pr.request_gender = False
 # Doesn't yet work (form fails to submit)
 #settings.pr.select_existing = False
-
 settings.pr.show_emergency_contacts = False
+# Have 2 Tabs for Contacts: Public & private
+settings.pr.public_private_contacts = True
 
 # -----------------------------------------------------------------------------
 # Persons
 def customise_pr_person_controller(**attr):
+    """
+        Used for instance by non-logged in users
+    """
 
+    s3db = current.s3db
     s3 = current.response.s3
 
     # Custom prep
@@ -900,8 +905,6 @@ def customise_pr_person_controller(**attr):
             result = standard_prep(r)
         else:
             result = True
-
-        s3db = current.s3db
 
         #if r.method == "validate":
         #    # Can't validate image without the file
@@ -1028,6 +1031,11 @@ def customise_pr_person_controller(**attr):
         return output
     s3.postp = custom_postp
 
+    # Modify RHeader Tabs
+    tabs = [(T("Basic Details"), None),
+            (T("Contacts"), "public_contacts"),
+            ]
+    attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
     return attr
 
 settings.customise_pr_person_controller = customise_pr_person_controller
@@ -1059,8 +1067,13 @@ def chairperson(row):
                               ptable.id)
     if chairs:
         # Only used in list view so HTML is OK
+        if current.auth.is_logged_in():
+            controller = "hrm"
+        else:
+            controller = "pr"
         return ",".join([A(s3_fullname(chair),
-                           _href=URL(c="hrm", f="person", args=chair.id)).xml() for chair in chairs])
+                           _href=URL(c=controller, f="person", args=chair.id)).xml()
+                         for chair in chairs])
     else:
         return current.messages["NONE"]
 

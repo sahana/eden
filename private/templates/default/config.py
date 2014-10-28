@@ -471,6 +471,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.pr.search_shows_hr_details = False
 # Uncomment to hide Emergency Contacts in Person Contacts page
 #settings.pr.show_emergency_contacts = False
+# Have 2 Tabs for Contacts: Public & private
+#settings.pr.public_private_contacts = True
 
 # -----------------------------------------------------------------------------
 # Organisations
