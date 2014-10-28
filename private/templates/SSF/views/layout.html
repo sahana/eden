@@ -85,7 +85,7 @@
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        <li class='divider'></li>
        {{pass}}
-       <li><a href='/{{=appname}}/pr/person/{{=auth.user.id}}'><i class='icon-edit'></i> Edit Profile</a></li>
+       <li><a href='/{{=appname}}/pr/person/{{=s3_logged_in_person()}}'><i class='icon-edit'></i> Edit Profile</a></li>
        <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        <li><a href='/{{=appname}}/default/index/subscriptions'><i class='icon-envelope'></i> {{=T("Notification Settings")}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
