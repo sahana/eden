@@ -12,7 +12,7 @@ if not settings.has_module(module):
 
 def index():
     """ Show the index """
-
+    s3.scripts.append("/%s/static/scripts/ui/progressbar.js" % appname)
     return dict()
 
 # -----------------------------------------------------------------------------
@@ -229,3 +229,11 @@ def upgrade_status():
         status = s3db.setup_upgrade_status(_id)
         if status:
             return json.dumps(status)
+        
+def schedule_test_task():
+    current.s3task.schedule_task("reporting_percentages",
+                                     sync_output = 2,
+                                     report_progress=True
+                                     )
+    current.session.flash = T("Task queued in scheduler")
+    

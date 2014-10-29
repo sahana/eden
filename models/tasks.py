@@ -31,6 +31,31 @@ def maintenance(period="daily"):
 
 tasks["maintenance"] = maintenance
 
+def reporting_percentages(user_id=-1):
+    import time
+    
+    time.sleep(5)
+    print '50%'
+    time.sleep(5)
+    print '!clear!100%'
+
+tasks["reporting_percentages"] = reporting_percentages
+
+# -----------------------------------------------------------------------------
+def crop_image(path, x1, y1, x2, y2, width):
+    """
+        Crop Image - used by S3ImageCropWidget through IS_PROCESSED_IMAGE
+    """
+    from PIL import Image
+    image = Image.open(path)
+
+    scale_factor = image.size[0] / float(width)
+
+    points = map(int, map(lambda a: a * scale_factor, (x1, y1, x2, y2)))
+    image.crop(points).save(path)
+
+tasks["crop_image"] = crop_image
+
 # -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 
@@ -253,7 +278,7 @@ if settings.has_module("msg"):
         return result
 
     tasks["msg_poll"] = msg_poll
-
+    
     # -----------------------------------------------------------------------------
     def msg_parse(channel_id, function_name, user_id=None):
         """
