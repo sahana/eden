@@ -184,13 +184,22 @@ def customise_stats_demographic_data_resource(r, tablename):
     s3db = current.s3db
     table = s3db.stats_demographic_data
 
-    # Add a Timeplot tab to summary page
-    # @ToDo: Widget version of timeplot
-    #summary = settings.get_ui_summary()
-    #settings.ui.summary = list(summary) + [{"name": "timeplot",
-    #                                       "label": "TimePlot",
-    #                                       "widgets": [{"method": "timeplot", "ajax_init": True}],
-    #                                       }]
+    # Add a TimePlot tab to summary page
+    summary = settings.get_ui_summary()
+    settings.ui.summary = list(summary) + [{"name": "timeplot",
+                                            "label": "Progression",
+                                            "widgets": [{"method": "timeplot",
+                                                         "ajax_init": True,
+                                                         }
+                                                        ],
+                                          }]
+
+    # Configure TimePlot defaults
+    timeplot_options = {"defaults": {"event_start": "date",
+                                     "event_end": "end_date",
+                                     "fact": "cumulate(value)",
+                                     }
+                        }
 
     from s3 import S3OptionsFilter, S3LocationFilter
     filter_widgets = [S3OptionsFilter("parameter_id",
@@ -207,15 +216,16 @@ def customise_stats_demographic_data_resource(r, tablename):
                       #                  stats_month_options("stats_demographic_data"),
                       #                ),
                       ]
-    
+
     if r.method != "timeplot":
-        # This is critical for the Map, but breaks aggregated Report data
+        # This is critical for the Map, but breaks aggregated Report data (does it?)
         filter_widgets.append(S3OptionsFilter("location_id$level",
                                               label = T("Level"),
                                               multiple = False,
                                               # Not translateable
                                               #represent = "%(name)s",
                                               ))
+
     filter_widgets.append(S3LocationFilter("location_id"))
 
     # Sum doesn't make sense for data which is already cumulative
@@ -236,10 +246,11 @@ def customise_stats_demographic_data_resource(r, tablename):
     #                                            )
     #                         )
 
-    #s3db.configure(tablename,
-    #               filter_widgets = filter_widgets,
-    #               report_options = report_options,
-    #               )
+    s3db.configure(tablename,
+                   timeplot_options = timeplot_options,
+                   #filter_widgets = filter_widgets,
+                   #report_options = report_options,
+                   )
 
 settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 

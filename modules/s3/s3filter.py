@@ -1789,6 +1789,12 @@ class S3OptionsFilter(S3FilterWidget):
             if none is True:
                 none = current.messages["NONE"]
             options.append((None, none))
+            
+        if not opts.get("multiple"):
+            # Browsers automatically select the first option in single-selects,
+            # but that doesn't filter the data, so the first option must be
+            # empty:
+            options.insert(0, ("", ""))
 
         # Sort the options
         return (ftype, options, None)

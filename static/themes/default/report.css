@@ -1,10 +1,17 @@
-/* Pivot Table Reports */
+/* Pivot Table and Time Plot Reports */
+.tp-form fieldset legend button:first-child,
 .pt-form fieldset legend button:first-child {
   /* hide initially, made visible by script */
   display: none;
 }
 
 /* Chart options */
+.tp-chart-tops,
+.pt-chart-opts {
+  height: 1.0em;
+}
+
+.tp-chart-icon,
 .pt-chart-icon {
   width: 16px;
   height: 16px;
@@ -13,9 +20,19 @@
   cursor: pointer;
 }
 
+.tp-chart-label,
 .pt-chart-label {
+  font-size: 0.7em;
   float: left;
-  margin-right: 5px;
+  margin-right: 8px;
+}
+
+.tp-lchart {
+  background: url(../../img/report/lchart.png) center no-repeat;
+}
+
+.tp-bchart {
+  background: url(../../img/report/vchart.png) center no-repeat;
 }
 
 .pt-pchart {
@@ -35,6 +52,7 @@
 }
 
 /* Chart contents */
+.tp-chart-contents,
 .pt-chart-contents {
   background-color: #fffdf6;
   padding: 8px;
@@ -43,10 +61,15 @@
   margin-bottom: 5px;
   position: relative;
 }
+
 .pt-chart-contents .pt-chart-title {
   position: absolute;
   left: 8;
   top: 0;
+}
+.pt-chart-contents .pt-chart-title h4 {
+  font-size: 1.0em;
+  font-weight: normal;
 }
 .pt-chart-contents .pt-hide-chart {
   cursor: pointer;
@@ -157,10 +180,19 @@
 }
 
 /* Throbber */
+.tp-throbber,
 .pt-throbber {
   float: right;
   padding: 5px;
   z-index: 999;
+}
+
+/* Empty-sections */
+.tp-empty,
+.pt-empty,
+.pt-no-data {
+  font-style: italic;
+  font-size: 0.8em;
 }
 
 /* Table toggle */
@@ -175,69 +207,12 @@
   display: none;
 }
 
+.tp-chart-controls,
+.tp-chart.contents,
 .pt-toggle-table,
 .pt-chart-controls,
 .pt-chart-contents,
 .pt-table-controls,
 .pt-table-contents {
   clear: left;
-}
-
-/* Time Plot Reports */
-.tp-form fieldset legend button:first-child {
-  /* hide initially, made visible by script */
-  display: none;
-}
-
-/* Static Time Plot SVG styles */
-.axis {
-  font: 10px sans-serif;
-}
-.axis path,
-.axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-.grid {
-  fill: none;
-}
-.grid .tick {
-  stroke: #ccc;
-  stroke-width: 0.5;
-  opacity: 0.7;
-}
-.grid path {
-  stroke-width: 0;
-}
-
-rect.basearea {
-  opacity: 0.4;
-  stroke-width: 0;
-}
-rect.basearea.positive {
-  fill: lightgreen;
-}
-rect.basearea.negative {
-  fill: #fcc;
-}
-rect.bar.positive {
-  fill: steelblue;
-}
-rect.bar.negative {
-  fill: brown;
-}
-
-line.baseline.positive {
-  stroke: green;
-}
-line.baseline.negative {
-  stroke: red;
-}
-
-text.empty {
-  font-size: 12px;
-  font-style: italic;
-  fill: black;
 }
