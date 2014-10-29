@@ -896,6 +896,7 @@ def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
     s3 = current.response.s3
+    AUTHENTICATED = current.auth.is_logged_in()
 
     # Custom prep
     standard_prep = s3.prep
@@ -974,7 +975,7 @@ def customise_pr_person_controller(**attr):
                                ]
 
                 # Don't include Email/Phone for unauthenticated users
-                if current.auth.is_logged_in():
+                if AUTHENTICATED:
                     MOBILE = settings.get_ui_label_mobile_phone()
                     EMAIL = T("Email")
                     list_fields += [(MOBILE, "phone.value"),
@@ -1031,11 +1032,12 @@ def customise_pr_person_controller(**attr):
         return output
     s3.postp = custom_postp
 
-    # Modify RHeader Tabs
-    tabs = [(T("Basic Details"), None),
-            (T("Contacts"), "public_contacts"),
-            ]
-    attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
+    if not AUTHENTICATED:
+        # Modify RHeader Tabs
+        tabs = [(T("Basic Details"), None),
+                (T("Contacts"), "public_contacts"),
+                ]
+        attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
     return attr
 
 settings.customise_pr_person_controller = customise_pr_person_controller

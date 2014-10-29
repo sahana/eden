@@ -40,8 +40,6 @@ class S3VehicleModel(S3Model):
         Vehicle Management Functionality
 
         http://eden.sahanafoundation.org/wiki/BluePrint/Vehicle
-
-        @ToDo: Merge into Transport module
     """
 
     names = ("vehicle_vehicle_type",
