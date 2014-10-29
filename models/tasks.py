@@ -31,6 +31,15 @@ def maintenance(period="daily"):
 
 tasks["maintenance"] = maintenance
 
+def reporting_percentages(user_id=-1):
+    import time
+    time.sleep(5)
+    print '50%'
+    time.sleep(5)
+    print '!clear!100%'
+
+tasks["reporting_percentages"] = reporting_percentages
+
 # -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 
@@ -253,7 +262,7 @@ if settings.has_module("msg"):
         return result
 
     tasks["msg_poll"] = msg_poll
-
+    
     # -----------------------------------------------------------------------------
     def msg_parse(channel_id, function_name, user_id=None):
         """
