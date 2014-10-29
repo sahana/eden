@@ -721,7 +721,7 @@ class S3DataTable(object):
                           _id="%s_configurations" % id,
                           _name="config",
                           _value=jsons(config)))
-                          
+
         # If we have a cache set up then pass it in
         if cache:
             form.append(INPUT(_type="hidden",
@@ -2059,7 +2059,8 @@ class S3PivotTable(object):
     # -------------------------------------------------------------------------
     # Internal methods
     # -------------------------------------------------------------------------
-    def _pivot(self, items, pkey_colname, rows_colname, cols_colname):
+    @staticmethod
+    def _pivot(items, pkey_colname, rows_colname, cols_colname):
         """
             2-dimensional pivoting of a list of unique items
 
@@ -2286,7 +2287,7 @@ class S3PivotTable(object):
             except (TypeError, ValueError):
                 return None
 
-        elif method in ("avg"):
+        elif method == "avg":
             try:
                 if len(values):
                     return sum(values) / float(len(values))

@@ -30,12 +30,21 @@
          *                               available for the time interval
          * @prop {bool} burnDown - render as burnDown from baseline
          *                         rather than as burnUp from zero
+         *
+         * @todo: complete documentation
          */
         options: {
             ajaxURL: null,
             autoSubmit: 1000,
             burnDown: false,
-            emptyMessage: 'No data available'
+            emptyMessage: 'No data available',
+
+            thousandSeparator: ' ',
+            thousandGrouping: '3',
+            precision: null,
+
+            defaultChartType: 'linechart',
+            defaultChartAxis: 'totals'
         },
 
         /**
@@ -52,11 +61,45 @@
          */
         _init: function() {
 
+            var $el = $(this.element),
+                opts = this.options;
+
             // Initialize instance data
-            this.widget_id = $(this.element).attr('id');
-            this.input = $(this.element).find('input[type="hidden"][name="tp-data"]').first();
+            this.widget_id = $el.attr('id');
+            this.input = $el.find('input[type="hidden"][name="tp-data"]').first();
             this.data = null;
             this.svg = null;
+
+            // Chart
+            var chart = $el.find('.tp-chart');
+            if (chart.length) {
+                this.chart = chart.first();
+            } else {
+                this.chart = null;
+            }
+
+            this.currentChart = {
+                type: null,
+                chart: null,
+                container: null
+            };
+
+            // Define number formatter
+            opts.numberFormatter = function(number) {
+
+                var decimals = opts.precision;
+                if (number === null || typeof number == 'undefined') {
+                    return '-';
+                }
+                var n = decimals || decimals == 0 ? number.toFixed(decimals) : number.toString();
+
+                n = n.split('.');
+                var n1 = n[0],
+                    n2 = n.length > 1 ? '.' + n[1] : '';
+                var re = new RegExp('\\B(?=(\\d{' + opts.thousandGrouping + '})+(?!\\d))', 'g');
+                n1 = n1.replace(re, opts.thousandSeparator);
+                return n1 + n2;
+            };
 
             // Refresh
             this.refresh();
@@ -84,7 +127,7 @@
 
             $.Widget.prototype.destroy.call(this);
         },
-        
+
         /**
          * Re-draw contents
          */
@@ -93,8 +136,9 @@
             var el = this.element;
 
             this._unbindEvents();
-            
+
             this._renderChart();
+            this._renderChartOptions();
 
             // Hide submit-button if autoSubmit
             if (this.options.autoSubmit) {
@@ -103,16 +147,89 @@
                 el.find('.tp-submit').show();
             }
             this._bindEvents();
-            
+
             el.find('.tp-throbber').hide();
         },
 
         /**
-         * Render the Chart
+         * Render the chart options (according to current options)
+         *
+         * @todo: better chart picker widget
          */
-        _renderChart: function() {
+        _renderChartOptions: function() {
 
+            var $el = $(this.element);
+            var container = $el.find('.tp-chart-controls').first().empty();
+
+            var data = this.data;
+            if (data.e) {
+                return;
+            }
+
+            var widgetID = $el.attr('id'),
+                chartOpts = $('<div class="pt-chart-opts">');
+
+            var bchartTotals = widgetID + '-bchart-totals',
+                lchartTotals = widgetID + '-lchart-totals';
+
+            $(chartOpts).append($(
+                '<span id="' + lchartTotals + '" class="tp-chart-icon tp-lchart"/>' +
+                '<span class="tp-chart-label">Line Chart</span>'
+            ));
+
+            $(chartOpts).append($(
+                '<span id="' + bchartTotals + '" class="tp-chart-icon tp-bchart"/>' +
+                '<span class="tp-chart-label">Bar Chart</span>'
+            ));
+
+            // Show the chart options
+            $(container).append(chartOpts);
+        },
+
+        /**
+         * Render the chart
+         *
+         * @todo: parameter description
+         */
+        _renderChart: function(chartOptions) {
+
+            // Get the chart container
+            var chart = this.chart;
+            if (!chart) {
+                return;
+            }
+
+            // Determine chart type and axis
+            var opts = this.options,
+                currentChart = this.currentChart,
+                chartType = null,
+                chartAxis = null;
+            if (chartOptions) {
+                // Follow the specified options
+                chartType = chartOptions.type;
+                chartAxis = chartOptions.axis;
+            } else {
+                // Use previous options, if any
+                if (currentChart) {
+                    chartType = currentChart.type;
+                    chartAxis = currentChart.axis;
+                }
+                // Fallback to defaults
+                if (!chartType || !chartAxis) {
+                    chartType = opts.defaultChartType;
+                    chartAxis = opts.defaultChartAxis;
+                }
+            }
+
+            // Remove current chart if type or axis changed
+            if (currentChart.type != chartType ||
+                currentChart.axis != chartAxis) {
+                this._removeChart();
+            }
+
+            // Empty section
             var el = this.element;
+            var emptySection = el.find('.tp-empty');
 
             // Lazy parse the JSON data
             var data = this.data;
@@ -120,218 +237,242 @@
                 data = JSON.parse(this.input.val());
             }
             if (!data) {
-                data = {empty: true};
+                data = {e: true};
             }
             this.data = data;
 
-            // data = [[start, end, value], ...]
-
-            // Remove previous plot
-            if (this.svg) {
-                this.svg.remove();
-                this.svg = null;
-                el.find('.tp-chart').empty();
-            }
-
-            // Compute width and height
-            var available_width = el.width();
-            var available_height = available_width / 16 * 5;
-
-            if (!data.empty) {
-                // Hide empty section
-                el.find('.tp-empty').hide();
-                
-                var values = this._computeValues(data);
-                var marginLeft = this.options.burnDown ? 10 : values.maxValue.toString().length * 6 + 18;
-                var marginRight = this.options.burnDown ? values.maxValue.toString().length * 6 + 18 : 10;
-                
-                var margin = {top: 40, right: marginRight, bottom: 70, left: marginLeft},
-                    width = available_width - margin.left - margin.right,
-                    height = available_height - margin.top - margin.bottom;
-
-                // Generate new plot
-                var svg = d3.select("#timeplot .tp-chart")
-                            .append("svg")
-                            .attr("width", width + margin.left + margin.right)
-                            .attr("height", height + margin.top + margin.bottom)
-                            .append("g")
-                            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-                this.svg = svg;
-
-                this._renderBarChart(values, width, height);
+            if (!data.e) {
+                // Hide empty section and render/update the chart
+                emptySection.hide();
+                chart.show();
+                switch(chartAxis) {
+                    case "totals":
+                        switch(chartType) {
+                            case "barchart":
+                                this._renderBarChart(chart, data.p);
+                                break;
+                            default:
+                                this._renderLineChart(chart, data.p);
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
             } else {
-                // Show empty section
+                // Remove the chart and show the empty section
+                this._removeChart();
                 el.find('.tp-empty').show();
             }
         },
 
         /**
-         * Compute the chart values
-         *
-         * @param {object} data - the data (from the server)
-         * @return chart data object including min/max values
+         * Remove the current chart and turn off events
          */
-        _computeValues: function(data) {
-            
-            var baseline,
-                burnDown = this.options.burnDown;
-                
-            if (data.z) {
-                baseline = data.z[2];
-            } else {
-                baseline = 0;
-            }
+        _removeChart: function() {
 
-            var results = [],
-                minValue,
-                maxValue;
-            if (!data.e) {
-                var items = data.p,
-                    v, 
-                    item;
-                for (var i=0, len=items.length; i<len; i++) {
-                    var item = items[i];
-                    var start = item.t[0],
-                        end = item.t[1],
-                        value = item.v;
-                    if (burnDown && (baseline || baseline === 0)) {
-                        v = baseline - value;
-                    } else {
-                        v = value;
-                    }
-                    results.push([start, end, v]);
-                }
-                minValue = d3.min(results, function(d) {
-                    return burnDown ? d[2] : Math.min(d[2], baseline);
-                });
-                maxValue = d3.max(results, function(d) {
-                    return burnDown ? d[2] : Math.max(d[2], baseline);
-                });
-            } else {
-                results = [];
-                minValue = d3.min([baseline, 0]);
-                maxValue = d3.max([baseline, 0]);
+            var chart = this.chart;
+            if (!chart) {
+                return;
             }
-            return {
-                baseline: baseline,
-                items: results,
-                empty: data.e,
-                minValue: minValue,
-                maxValue: maxValue
-            };
+            chart.empty().hide();
+
+            var currentChart = this.currentChart;
+            currentChart.container = null;
+            currentChart.chart = null;
+            currentChart.type = null;
+            currentChart.axis = null;
+
+            $(window).off('resize.tp');
         },
 
         /**
-         * Render Bar Chart
+         * Simple Bar Chart
          *
-         * @param {object} data - the computed data (from _computeValues)
-         * @param {number} width - the chart width
-         * @param {number} height - the chart height
+         * @todo: parameter description
          */
+        _renderBarChart: function(chart, data) {
 
-        _renderBarChart: function(data, width, height) {
+            // @todo: needed?
+            var defaultColor = 'silver';
 
-            var svg = this.svg,
-                burnDown = this.options.burnDown;
-
-            // Create the x axis
-            var x = d3.scale.ordinal()
-                            .rangeRoundBands([0, width], 0.05);
-
-            // @todo: dynamic tick formatter
-            var xAxis = d3.svg.axis()
-                              .scale(x)
-                              .orient("bottom")
-                              .tickFormat(d3.time.format("%Y-%m-%d"));
-
-            // Create the y axis
-            var y = d3.scale.linear()
-                            .range([height, 0]);
-
-            var yAxis = d3.svg.axis()
-                              .scale(y)
-                              .orient(burnDown? "right" : "left");
-
-            // Compute the scales
-            var self = this;
-            x.domain(data.items.map(function(d) {
-                return self._parseDate(d[0]);
-            }));
-            y.domain([Math.min(0, data.minValue), data.maxValue]);
-
-            // Add x axis
-            svg.append("g")
-               .attr("class", "x axis")
-               .attr("transform", "translate(0," + height + ")")
-               .call(xAxis)
-               .selectAll("text")
-               .style("text-anchor", "end")
-               .style("font", "10px sans-serif")
-               .attr("dx", "-.8em")
-               .attr("dy", "-.55em")
-               .attr("transform", "rotate(-90)" );
-
-            // Add y axis
-            var yAxisPosition = burnDown ? width : 0;
-            svg.append("g")
-               .attr("class", "y axis")
-               .attr("transform", "translate(" + yAxisPosition + ",0)")
-               .call(yAxis);
-
-            if (data.empty) {
-                // Display empty message
-                svg.selectAll("message")
-                   .data([this.options.emptyMessage])
-                   .enter()
-                   .append("text")
-                   .attr("class", "empty")
-                   .attr("x", 20)
-                   .attr("y", 30)
-                   .text(function(d) { return d; });
-            } else {
-                // Add horizontal grid lines
-                svg.append("g")
-                   .attr("class", "grid")
-                   .call(yAxis.tickSize(burnDown ? width : -width).tickFormat(""));
-
-                // Render baseline?
-                var baseline = data.baseline;
-                if (baseline && !burnDown) {
-                    
-                    svg.selectAll("basearea")
-                       .data([baseline])
-                       .enter()
-                       .append("rect")
-                       .attr("class", baseline > 0 ? "basearea positive" : "basearea negative")
-                       .attr("x", 0 )
-                       .attr("width", width )
-                       .attr("y", function(d) { return d < 0 ? y(0) : y(d); })
-                       .attr("height", function(d) { return Math.abs(y(d) - y(0)); });
-                       
-                    svg.selectAll("baseline")
-                       .data([baseline])
-                       .enter()
-                       .append("line")
-                       .attr("class",  baseline > 0 ? "baseline positive" : "baseline negative")
-                       .attr("x1", 0)
-                       .attr("x2", width)
-                       .attr("y1", function(d) { return y(d);} )
-                       .attr("y2", function(d) { return y(d);} );
-                }
-
-                // Add the bars
-                var bar = svg.selectAll("bar")
-                             .data(data.items);
-
-                bar.enter()
-                   .append("rect")
-                   .attr("class", function(d, i) { return d[2] < 0 ? "bar negative" : "bar positive"; })
-                   .attr("x", function(d) { return x(self._parseDate(d[0])); })
-                   .attr("width", x.rangeBand())
-                   .attr("y", function(d) { return d[2] < 0 ? y(0) : y(d[2]); })
-                   .attr("height", function(d) { return Math.abs(y(d[2]) - y(0)); });
+            var items = [];
+            for (var i=0; i<data.length; i++) {
+                var period = data[i];
+                items.push({
+                    start: new Date(period.t[0]).getTime(),
+                    value: period.v
+                });
             }
+
+            var currentChart = this.currentChart,
+                barChart,
+                barChartContainer;
+
+            if (currentChart.chart) {
+
+                barChartContainer = currentChart.container;
+                barChart = currentChart.chart;
+
+                // Update the data
+                // @todo: use the fact label as key
+                barChartContainer.datum([{key: "reportChart",
+                                          values: items
+                                          }]).transition().duration(500)
+                                     .call(barChart);
+            } else {
+
+                // Set the height of the chart container
+                $(chart).closest('.tp-chart-contents').show().css({width: '96%'});
+                $(chart).css({height: '360px'});
+
+                // Create SVG
+                barChartContainer = d3.select($(chart).get(0))
+                                      .append('svg')
+                                      .attr('class', 'nv');
+
+                // @todo: show tooltips instead of values (needs tooltipContent renderer)
+                barChart = nv.models.discreteBarChart()
+                                    .x(function(d) { return d.start; })
+                                    .y(function(d) { return d.value; })
+                                    .color([defaultColor])
+                                    .staggerLabels(true)
+                                    .tooltips(false)
+                                    //.tooltipContent(barChartTooltip)
+                                    .showValues(true)
+                                    .forceY([0, 1]);
+
+                var valueFormat = this.options.numberFormatter;
+
+                // Set value and tick formatters
+                barChart.valueFormat(valueFormat);
+                barChart.yAxis
+                        .tickFormat(valueFormat);
+                barChart.xAxis
+                        .tickFormat(function(d) {
+                                        return new Date(d).toLocaleDateString();
+                        });
+
+                nv.addGraph(function() {
+
+                    // Render the chart
+                    // @todo: use the fact label as key
+                    barChartContainer.datum([{key: "reportChart",
+                                              values: items
+                                              }])
+                                     .transition().duration(500)
+                                     .call(barChart);
+
+                    // Re-draw when window gets resized (using jQuery's method
+                    // here since NVD3 does not allow selective removal of handler)
+                    $(window).off('resize.tp')
+                             .on('resize.tp', function(e) {
+                        barChart.update(e);
+                    });
+
+                    return barChart;
+                });
+                currentChart.container = barChartContainer;
+                currentChart.chart = barChart;
+                currentChart.type = "barchart";
+                currentChart.axis = "totals";
+            }
+
         },
+
+        /**
+         * Simple Line Chart
+         *
+         * @todo: parameter description
+         */
+        _renderLineChart: function(chart, data) {
+
+            // Prepare the data items
+            var items = [];
+            for (var i=0; i<data.length; i++) {
+                var period = data[i];
+                items.push({
+                    start: new Date(period.t[0]).getTime(),
+                    value: period.v
+                });
+            }
+
+            var currentChart = this.currentChart,
+                lineChart,
+                lineChartContainer;
+
+            if (currentChart.chart) {
+
+                lineChartContainer = currentChart.container;
+                lineChart = currentChart.chart;
+
+                // Update the data
+                // @todo: use the fact label as key
+                lineChartContainer.datum([{key: "reportChart",
+                                           values: items,
+                                           area: true
+                                           }])
+                                  .transition().duration(250)
+                                  .call(lineChart);
+            } else {
+
+                // Set the height of the chart container
+                $(chart).closest('.tp-chart-contents').show().css({width: '96%'});
+                $(chart).css({height: '360px'});
+
+                // Create SVG
+                lineChartContainer = d3.select($(chart).get(0))
+                                       .append('svg')
+                                       .attr('class', 'nv');
+
+                // @todo: tooltipContent renderer
+                lineChart = nv.models.lineChart()
+                                     .x(function(d) { return d.start; })
+                                     .y(function(d) { return d.value; })
+                                     .margin({right: 50})
+                                     .transitionDuration(250)
+                                     .showLegend(false)
+                                     .useInteractiveGuideline(true)
+                                     .forceY([0, 1]);
+
+                var valueFormat = this.options.numberFormatter;
+
+                // Set value and tick formatters
+                lineChart.yAxis
+                         .tickFormat(valueFormat);
+                lineChart.xAxis
+                         .tickFormat(function(d) {
+                            return new Date(d).toLocaleDateString();
+                          });
+
+                nv.addGraph(function() {
+
+                    // Render the chart
+                    // @todo: use the fact label as key
+                    lineChartContainer.datum([{key: "reportChart",
+                                               values: items,
+                                               area: true
+                                               }])
+                                      .transition().duration(500)
+                                      .call(lineChart);
+
+                    // Re-draw when window gets resized (using jQuery's method
+                    // here since NVD3 does not allow selective removal of handler)
+                    $(window).off('resize.tp')
+                             .on('resize.tp', function(e) {
+                        lineChart.update(e);
+                    });
+
+                    return lineChart;
+                });
+                currentChart.container = lineChartContainer;
+                currentChart.chart = lineChart;
+                currentChart.type = "linechart";
+                currentChart.axis = "totals";
+            }
+
+        },
+
 
         /**
          * Ajax-reload the data and refresh all widget elements
@@ -356,11 +497,11 @@
                 needs_reload = false;
 
             $(this.element).find('.tp-throbber').show();
-            
+
             if (options || filters) {
                 needs_reload = this._updateAjaxURL(options, filters);
             }
-            
+
             if (needs_reload || force) {
 
                 // Reload data and refresh
@@ -382,9 +523,6 @@
                 });
             } else {
                 // Refresh without reloading the data
-                // @todo: this may be too fast to see the throbber, so user
-                //        doesn't get a visual feedback for clicking 'Submit'
-                //        => consider a micro-delay here
                 self.refresh();
             }
         },
@@ -402,7 +540,7 @@
                 start = null,
                 end = null,
                 slots = null;
-                
+
             if (time != 'custom') {
                 time_options = time.split('|');
                 if (time_options.length == 3) {
@@ -558,6 +696,8 @@
          * Convert an ISO datetime string into a JS Date
          *
          * @param {string} string - the datetime string
+         *
+         * @todo: unused?
          */
         _parseDate: function(string) {
 
@@ -571,34 +711,28 @@
         _bindEvents: function() {
 
             var self = this,
-                widget_id = this.widget_id;
+                widgetID = '#' + this.widget_id;
 
-            // Refresh on resize in order to adapt to page width
-            // @todo: make configurable
-            $(window).on("resize.timeplot", function() {
-                self.refresh();
-            });
-            
             // Show/hide report options
-            $('#' + widget_id + '-options legend').click(function() {
+            $(widgetID + '-options legend').click(function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
-            $('#' + widget_id + '-filters legend').click(function() {
+            $(widgetID + '-filters legend').click(function() {
                 $(this).siblings().toggle();
                 $(this).children().toggle();
             });
 
             // Axis selectors to fire optionChanged-event
-            $('#' + widget_id + '-time').on('change.autosubmit', function() {
-                $('#' + widget_id + '-tp-form').trigger('optionChanged');
+            $(widgetID + '-time').on('change.autosubmit', function() {
+                $(widgetID + '-tp-form').trigger('optionChanged');
             });
 
             // Form submission
             if (this.options.autoSubmit) {
                 // Auto-submit
                 var timeout = this.options.autoSubmit;
-                $('#' + this.widget_id + '-tp-form').on('optionChanged', function() {
+                $(widgetID + '-tp-form').on('optionChanged', function() {
                     var $this = $(this);
                     if ($this.data('noAutoSubmit')) {
                         // Event temporarily disabled
@@ -617,13 +751,21 @@
                 });
             } else {
                 // Manual submit
-                $('#' + this.widget_id + '-tp-form input.tp-submit').on('click.timeplot', function() {
+                $(widgetID + '-tp-form input.tp-submit').on('click.timeplot', function() {
                     // @todo: implement _getOptions
                     var options = self._getOptions(),
                         filters = self._getFilters();
                     self.reload(options, filters, false);
                 });
             }
+
+            // Charts
+            $(widgetID + '-lchart-totals').click(function() {
+                self._renderChart({type: 'linechart', axis: 'totals'});
+            });
+            $(widgetID + '-bchart-totals').click(function() {
+                self._renderChart({type: 'barchart', axis: 'totals'});
+            });
         },
 
         /**
@@ -631,15 +773,19 @@
          */
         _unbindEvents: function() {
 
-            var widget_id = this.widget_id;
+            var widgetID = '#' + this.widget_id;
 
             $(window).off("resize.timeplot");
-            $('#' + widget_id + '-tp-form').off('optionChanged');
-            $('#' + widget_id + '-tp-form input.tp-submit').off('click.timeplot');
-            $('#' + widget_id + '-time').unbind('change.autosubmit');
+            $(widgetID + '-tp-form').off('optionChanged');
+            $(widgetID + '-tp-form input.tp-submit').off('click.timeplot');
+            $(widgetID + '-time').unbind('change.autosubmit');
 
-            $('#' + widget_id + '-options legend').unbind('click');
-            $('#' + widget_id + '-filters legend').unbind('click');
+            $(widgetID + '-options legend').unbind('click');
+            $(widgetID + '-filters legend').unbind('click');
+
+            $(widgetID + '-lchart-totals,' +
+              widgetID + '-bchart-totals').unbind('click');
+
         }
     });
 })(jQuery);

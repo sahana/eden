@@ -44,12 +44,11 @@ try:
 except ImportError:
     try:
         import simplejson as json # try external module
-    except:
+    except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from dateutil.relativedelta import *
 from dateutil.rrule import *
-from itertools import izip, tee
 
 from gluon import current
 from gluon.storage import Storage
@@ -73,11 +72,11 @@ SEPARATORS = (",", ":")
 DEFAULT = lambda: None
 
 dt_regex = Storage(
-    YEAR = re.compile("\A\s*(\d{4})\s*\Z"),
-    YEAR_MONTH = re.compile("\A\s*(\d{4})-([0]*[1-9]|[1][12])\s*\Z"),
-    MONTH_YEAR = re.compile("\A\s*([0]*[1-9]|[1][12])/(\d{4})\s*\Z"),
-    DATE = re.compile("\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
-    DELTA = re.compile("\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
+    YEAR = re.compile(r"\A\s*(\d{4})\s*\Z"),
+    YEAR_MONTH = re.compile(r"\A\s*(\d{4})-([0]*[1-9]|[1][12])\s*\Z"),
+    MONTH_YEAR = re.compile(r"\A\s*([0]*[1-9]|[1][12])/(\d{4})\s*\Z"),
+    DATE = re.compile(r"\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
+    DELTA = re.compile(r"\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
 )
 
 # =============================================================================
@@ -113,7 +112,6 @@ class S3TimePlot(S3Method):
 
         # Get the target resource
         resource = self.get_target(r)
-        tablename = resource.tablename
 
         # Read the relevant GET vars
         report_vars, get_vars = self.get_options(r, resource)
@@ -129,7 +127,7 @@ class S3TimePlot(S3Method):
         except SyntaxError:
             r.error(400, sys.exc_info()[1])
         baseline = get_vars.get("baseline")
-            
+
         # Parse grouping axes
         rows = get_vars.get("rows")
         cols = get_vars.get("cols")
@@ -166,10 +164,10 @@ class S3TimePlot(S3Method):
 
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
+            filter_url = r.url(method="",
+                               representation="",
+                               vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                        if k not in report_vars)))
             ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
                                                 representation="json",
                                                 vars=ajax_vars,
@@ -198,12 +196,12 @@ class S3TimePlot(S3Method):
         """
 
         output = {}
-                
+
         # Get the target resource
         resource = self.get_target(r)
         tablename = resource.tablename
         get_config = resource.get_config
-        
+
         # Apply filter defaults (before rendering the data!)
         show_filter_form = False
         if r.representation in ("html", "iframe"):
@@ -227,7 +225,7 @@ class S3TimePlot(S3Method):
         except SyntaxError:
             r.error(400, sys.exc_info()[1])
         baseline = get_vars.get("baseline")
-            
+
         # Parse grouping axes
         rows = get_vars.get("rows")
         cols = get_vars.get("cols")
@@ -292,10 +290,10 @@ class S3TimePlot(S3Method):
 
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
+            filter_url = r.url(method="",
+                               representation="",
+                               vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                        if k not in report_vars)))
             ajaxurl = attr.get("ajaxurl", r.url(method="timeplot",
                                                 representation="json",
                                                 vars=ajax_vars,
@@ -327,7 +325,7 @@ class S3TimePlot(S3Method):
     def get_target(self, r):
         """
             Identify the target resource, attach component if necessary
-            
+
             @param r: the S3Request
         """
 
@@ -350,10 +348,11 @@ class S3TimePlot(S3Method):
         return resource
 
     # -------------------------------------------------------------------------
-    def get_options(self, r, resource):
+    @staticmethod
+    def get_options(r, resource):
         """
             Read the relevant GET vars for the timeplot
-            
+
             @param r: the S3Request
             @param resource: the target S3Resource
         """
@@ -378,7 +377,12 @@ class S3TimePlot(S3Method):
             get_vars = defaults
         else:
             # Optional URL args always fall back to config:
-            optional = ("timestamp",)
+            optional = ("timestamp",
+                        "fact",
+                        "baseline",
+                        "rows",
+                        "cols",
+                        )
             for opt in optional:
                 if opt not in get_vars and opt in defaults:
                     get_vars[opt] = defaults[opt]
@@ -421,7 +425,7 @@ class S3TimePlot(S3Method):
         if not fact:
             method, parameters = "count", "id"
         else:
-            match = re.match("([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,]+)\)\Z", fact)
+            match = re.match(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,]+)\)\Z", fact)
             if match:
                 method, parameters = match.groups()
             else:
@@ -497,7 +501,7 @@ class S3TimePlotForm(S3ReportForm):
         # @todo: report options
         # @todo: chart title
         # @todo: empty-section
-        empty = T("No report specified.")
+        empty = T("No data available")
         # @todo: CSS
 
         # Report form submit element
@@ -530,7 +534,7 @@ class S3TimePlotForm(S3ReportForm):
                        _class="tp-form-container form-container",
                        ),
                    DIV(DIV(_class="inline-throbber tp-throbber"),
-                       DIV(#DIV(_class="tp-chart-controls"),
+                       DIV(DIV(_class="tp-chart-controls"),
                            DIV(#DIV(_class="tp-hide-chart"),
                                #DIV(_class="tp-chart-title"),
                                DIV(_class="tp-chart"),
@@ -569,7 +573,7 @@ class S3TimePlotForm(S3ReportForm):
         options = {
             "ajaxURL": ajaxurl,
             "autoSubmit": settings.get_ui_report_auto_submit(),
-            "emptyMessage": str(T("No data available for this time interval")),
+            "emptyMessage": str(empty),
         }
         script = """$("#%(widget_id)s").timeplot(%(options)s)""" % \
                     {"widget_id": widget_id,
@@ -638,11 +642,11 @@ class S3TimePlotForm(S3ReportForm):
                      options=None,
                      get_vars=None,
                      widget_id=None):
+        """
+            @todo: docstring
+        """
 
         T = current.T
-
-        resource = self.resource
-        prefix = resource.prefix_selector
 
         # Time options:
         if options and "time" in options:
@@ -680,7 +684,7 @@ class S3TimePlotForm(S3ReportForm):
 
         # Dummy field
         dummy_field = Storage(name="time",
-                              requires=IS_IN_SET(widget_opts))
+                              requires=IS_IN_SET(widget_opts, zero=None))
 
         # Construct widget
         return OptionsWidget.widget(dummy_field,
@@ -693,8 +697,8 @@ class S3TimePlotForm(S3ReportForm):
 # =============================================================================
 class S3TimeSeries(object):
     """ Class representing a time series """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  resource,
                  start=None,
                  end=None,
@@ -710,29 +714,29 @@ class S3TimeSeries(object):
                  baseline=None):
         """
             Constructor
-            
+
             @param resource: the resource
             @param start: the start of the series (datetime or string expression)
             @param end: the end of the time series (datetime or string expression)
             @param slots: the slot size (string expression)
-            
+
             @param event_start: the event start field (field selector)
             @param event_end: the event end field (field selector)
-            
+
             @param method: the aggregation method (default = count)
             @param base: the base value to aggregate (field selector)
             @param slope: the slope value for aggregation (field selector)
             @param interval: the interval for the slope (string expression)
-            
+
             @param rows: the rows axis for event grouping (field selector)
             @param cols: the columns axis for event grouping (field selector)
-            
+
             @param baseline: the baseline field (field selector)
         """
 
         self.resource = resource
         self.rfields = {}
-        
+
         # Resolve timestamp
         self.resolve_timestamp(event_start, event_end)
 
@@ -755,12 +759,12 @@ class S3TimeSeries(object):
                                              )
 
         # ...and fill it with data
-        data = self._select()
+        self._select()
 
     # -------------------------------------------------------------------------
     def as_dict(self):
         """ Return the time series as JSON-serializable dict """
-        
+
         rfields = self.rfields
 
         # Method, base, slope and interval
@@ -769,7 +773,7 @@ class S3TimeSeries(object):
         base = None
         slope = None
         interval = None
-        
+
         base_colname = None
         rfield = rfields.get("base")
         if rfield:
@@ -830,7 +834,7 @@ class S3TimeSeries(object):
                              interval=interval,
                              )
             # Extract
-            item = period.as_dict(rows = rows_keys, 
+            item = period.as_dict(rows = rows_keys,
                                   cols = cols_keys,
                                   )
             append(item)
@@ -898,7 +902,7 @@ class S3TimeSeries(object):
                                                       value,
                                                       strip_markup = True,
                                                       )))
-                                                      
+
         return sorted(representations, key = lambda item: item[1])
 
     # -------------------------------------------------------------------------
@@ -1039,7 +1043,7 @@ class S3TimeSeries(object):
         # Fall back for slot length
         if not slots:
             # No slot length specified => determine optimum automatically
-            # @todo: determine from density of events rather than from 
+            # @todo: determine from density of events rather than from
             #        total interval length?
             seconds = abs(end_dt - start_dt).total_seconds()
             day = 86400
@@ -1072,7 +1076,7 @@ class S3TimeSeries(object):
 
         resource = self.resource
         rfields = self.rfields
-        
+
         # Fields to extract
         event_start = rfields.get("event_start")
         fields = set([event_start.selector])
@@ -1116,7 +1120,7 @@ class S3TimeSeries(object):
 
         # Add as temporary filter
         resource.add_filter(query)
-        
+
         # Compute baseline
         value = None
         baseline_rfield = rfields.get("baseline")
@@ -1204,11 +1208,11 @@ class S3TimeSeries(object):
     def resolve_timestamp(self, event_start, event_end):
         """
             Resolve the event_start and event_end field selectors
-            
+
             @param event_start: the field selector for the event start field
             @param event_end: the field selector for the event end field
         """
-    
+
         resource = self.resource
         rfields = self.rfields
 
@@ -1236,14 +1240,14 @@ class S3TimeSeries(object):
 
         rfields["event_start"] = start_rfield
         rfields["event_end"] = end_rfield
-        
+
         return
-        
+
     # -------------------------------------------------------------------------
     def resolve_fact(self, method, base, slope, baseline):
         """
             Resolve the base, slope and baseline field selectors
-            
+
             @param method: the aggregation method
             @param base: the base field selector
             @param slope: the slope field selector
@@ -1252,7 +1256,7 @@ class S3TimeSeries(object):
 
         resource = self.resource
         rfields = self.rfields
-        
+
         # Resolve base selector
         base_rfield = None
         if base:
@@ -1276,7 +1280,7 @@ class S3TimeSeries(object):
                 baseline_rfield = resource.resolve_selector(baseline)
             except (AttributeError, SyntaxError):
                 baseline_rfield = None
-                    
+
         # Validate
         if base_rfield is None:
             if method != "cumulate" or slope_rfield is None:
@@ -1285,11 +1289,11 @@ class S3TimeSeries(object):
             # All methods except count require numeric input values
             numeric_types = ("integer", "double")
             if base_rfield and base_rfield.ftype not in numeric_types:
-                raise SyntaxError("Fact field type not numeric: %s (%s)" % 
+                raise SyntaxError("Fact field type not numeric: %s (%s)" %
                                   (base, base_rfield.ftype))
 
             if slope_rfield and slope_rfield.ftype not in numeric_types:
-                raise SyntaxError("Fact field type not numeric: %s (%s)" % 
+                raise SyntaxError("Fact field type not numeric: %s (%s)" %
                                   (slope, slope_rfield.ftype))
         if baseline_rfield and \
            baseline_rfield.ftype not in ("integer", "double"):
@@ -1308,7 +1312,7 @@ class S3TimeSeries(object):
     def resolve_axes(self, rows, cols):
         """
             Resolve the grouping axes field selectors
-            
+
             @param rows: the rows field selector
             @param cols: the columns field selector
         """
@@ -1415,7 +1419,7 @@ class S3TimeSeries(object):
 # =============================================================================
 class S3TimeSeriesEvent(object):
     """ Class representing an event """
-    
+
     def __init__(self,
                  event_id,
                  start=None,
@@ -1478,9 +1482,9 @@ class S3TimeSeriesEvent(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def series(value):
-        """ 
+        """
             Convert a field value into a set of series keys
-            
+
             @param value: the field value
         """
 
@@ -1530,7 +1534,7 @@ class S3TimeSeriesPeriod(object):
     def __init__(self, start, end=None):
         """
             Constructor
-            
+
             @param start: the start of the time period (datetime)
             @param end: the end of the time period (datetime)
         """
@@ -1591,7 +1595,7 @@ class S3TimeSeriesPeriod(object):
     def as_dict(self, rows=None, cols=None, isoformat=True):
         """
             Convert the aggregated results into a JSON-serializable dict
-            
+
             @param rows: the row keys for the result
             @param cols: the column keys for the result
             @param isoformat: convert datetimes into ISO-formatted strings
@@ -1638,8 +1642,8 @@ class S3TimeSeriesPeriod(object):
 
     # -------------------------------------------------------------------------
     def group(self, cumulative=False):
-        """ 
-            Group events by their row and col axis values 
+        """
+            Group events by their row and col axis values
 
             @param cumulative: include previous events
         """
@@ -1686,7 +1690,7 @@ class S3TimeSeriesPeriod(object):
 
         # Reset
         self._reset()
-        
+
         # Select events
         if method == "cumulate":
             events = dict(self.pevents)
@@ -1749,11 +1753,11 @@ class S3TimeSeriesPeriod(object):
         append = values.append
 
         if method == "cumulate":
-            
+
             duration = self._duration
 
             for event in events:
-                
+
                 if event.start == None:
                     continue
 
@@ -1816,7 +1820,7 @@ class S3TimeSeriesPeriod(object):
 
         else:
             result = None
-            
+
         return result
 
     # -------------------------------------------------------------------------
@@ -1851,14 +1855,14 @@ class S3TimeSeriesPeriod(object):
                 return sum(values)
             except (TypeError, ValueError):
                 return None
-        elif method in ("avg"):
+        elif method == "avg":
             try:
                 num = len(values)
                 if num:
                     return sum(values) / float(num)
             except (TypeError, ValueError):
                 return None
-        elif method in ("cumulate"):
+        elif method == "cumulate":
             try:
                 return sum(base + slope * duration
                            for base, slope, duration in values)
@@ -1902,7 +1906,7 @@ class S3TimeSeriesPeriod(object):
             @param interval: time interval expression, like "days" or "2 weeks"
         """
 
-        match = re.match("\s*(\d*)\s*([hdwmy]{1}).*", interval)
+        match = re.match(r"\s*(\d*)\s*([hdwmy]{1}).*", interval)
         if match:
             num, delta = match.groups()
             deltas = {

@@ -22,7 +22,7 @@
 
         /**
          * Default options
-         * 
+         *
          * @prop {bool} showTotals - show totals in pivot table
          * @prop {string} ajaxURL - the URL to Ajax-load data from
          * @prop {object} defaultChart - the chart to show at start
@@ -638,7 +638,7 @@
          */
         _truncateLabel: function(label, len) {
 
-            if (label.length > len) {
+            if (label && label.length > len) {
                 return label.substring(0, len-3).replace(/\s+$/g,'') + '...';
             } else {
                 return label;
