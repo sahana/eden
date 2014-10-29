@@ -25,3 +25,4 @@ Public Safety,,org,organisation,emergency,Building,{name} (T('Organization')),na
 Social Services,,org,organisation,people,Building,{name} (T('Organization')),name,service.name__typeof=Social Services,,,,Organizations,False,,30,,,
 Transportation,,gis,poi,transport,Building,{name} (T('Point')),name,poi_type.name__typeof=Transportation&poi_type.name__ne=Alternative Fuel,,,,Points,False,,30,,,
 Transportation,,org,organisation,transport,Building,{name} (T('Organization')),name,service.name__typeof=Transportation,,,,Organizations,False,,30,,,
+People,,pr,person,trained,,{first_name} {last_name},"first_name,last_name",,True,,,People,False,,30,,,

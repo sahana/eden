@@ -29,6 +29,7 @@ Transportation (Community Data),,org,organisation,transport,Building,{name} (T('
 Debris Basins (Community Data),,org,facility,debris,,{name} (T('Debris Basin')),name,facility_type.name=Debris Basin,,,,,False,,30,,,
 Flood Channel / Street Intersections (Community Data),,org,facility,manhole,,{facility_type.name},facility_type.name,facility_type.name=Flood Channel / Street Intersection,,,,,False,,30,,,
 Water Storage Tanks (Community Data),,org,facility,water_tank,,{facility_type.name},facility_type.name,facility_type.name=Water Storage Tank,,,,,False,,30,,,
+People (Community Data),,pr,person,trained,,{first_name} {last_name},"first_name,last_name",,True,,,People,False,,30,,,
 Trained People (Community Data),,stats,people,people,,{name},name,~.parameter_id$name=Trained People&~.location_id$gis_feature_type=1,True,,,People,False,,30,,,
 Team Zones (Community Data),,stats,people,,,{name},name,~.parameter_id$name=Trained People&~.location_id$gis_feature_type__ne=1,,True,"{'fill':'ffffff','fillOpacity':0.01,'stroke':'006633'}",People,False,,,0,,0.9
 Hazards (Community Data),,vulnerability,risk,risk,Danger Area,{name} (T('Hazard')),name,~.location_id$gis_feature_type=1,True,,,Hazards,False,,,0,,

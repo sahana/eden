@@ -249,6 +249,12 @@ class GIS(object):
         GeoSpatial functions
     """
 
+    # Used to disable location tree updates during prepopulate.
+    # It is not appropriate to use auth.override for this, as there are times
+    # (e.g. during tests) when auth.override is turned on, but location tree
+    # updates should still be enabled.
+    disable_update_location_tree = False
+
     def __init__(self):
         messages = current.messages
         #messages.centroid_error = str(A("Shapely", _href="http://pypi.python.org/pypi/Shapely/", _target="_blank")) + " library not found, so can't find centroid!"
@@ -4438,12 +4444,6 @@ class GIS(object):
         return res
 
     # -------------------------------------------------------------------------
-    # Used to disable location tree updates during prepopulate.
-    # It is not appropriate to use auth.override for this, as there are times
-    # (e.g. during tests) when auth.override is turned on, but location tree
-    # updates should still be enabled.
-    disable_update_location_tree = False
-
     @staticmethod
     def update_location_tree(feature=None, all_locations=False):
         """
@@ -4532,7 +4532,7 @@ class GIS(object):
                     current.log.error("S3GIS: Unable to set bounds & centroid for feature %s: MemoryError" % feature.id)
 
         # ---------------------------------------------------------------------
-        def propagate(parent, all_locations=False):
+        def propagate(parent):
             """
                 Propagate Lat/Lon down to any Features which inherit from this one
 
@@ -4541,24 +4541,12 @@ class GIS(object):
                 this is an update of the whole tree
             """
 
-            # During a whole tree update, the levels are processed in order
-            # from L0 down through specific locations with no level.  Since
-            # all locations will be processed eventually, processing children
-            # is not needed. Note a whole tree update may occur after
-            # prepopulate, during normal operation, if import_admin_areas is
-            # used. (Note this assumes only hierarchy locations can be parents,
-            # else children among specific locations could be processed in any
-            # order, and the "parents before children" assumption would not
-            # hold.)
-            if all_locations:
-                return
-
             query = (table.parent == parent) & \
                     (table.inherited == True)
             rows = db(query).select(*fields)
             for row in rows:
                 try:
-                    update_location_tree(row) # all_locations is False here
+                    update_location_tree(row)
                 except RuntimeError:
                     current.log.error("Cannot propagate inherited latlon to child %s of location ID %s: too much recursion" % \
                         (row.id, parent))
@@ -4656,8 +4644,9 @@ class GIS(object):
                 feature.update(**fix_vars)
                 fixup(feature)
 
-            # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id, all_locations)
+            if not all_locations:
+                # Ensure that any locations which inherit their latlon from this one get updated
+                propagate(id)
 
             return path
 
@@ -4738,8 +4727,9 @@ class GIS(object):
                 feature.update(**fix_vars)
                 fixup(feature)
 
-            # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id, all_locations)
+            if not all_locations:
+                # Ensure that any locations which inherit their latlon from this one get updated
+                propagate(id)
 
             return _path
 
@@ -4840,8 +4830,9 @@ class GIS(object):
                 feature.update(**fix_vars)
                 fixup(feature)
 
-            # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id, all_locations)
+            if not all_locations:
+                # Ensure that any locations which inherit their latlon from this one get updated
+                propagate(id)
 
             return _path
 
@@ -4976,8 +4967,9 @@ class GIS(object):
                 feature.update(**fix_vars)
                 fixup(feature)
 
-            # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id, all_locations)
+            if not all_locations:
+                # Ensure that any locations which inherit their latlon from this one get updated
+                propagate(id)
 
             return _path
 
@@ -5142,8 +5134,9 @@ class GIS(object):
                 feature.update(**fix_vars)
                 fixup(feature)
 
-            # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id, all_locations)
+            if not all_locations:
+                # Ensure that any locations which inherit their latlon from this one get updated
+                propagate(id)
 
             return _path
 
@@ -5342,8 +5335,9 @@ class GIS(object):
                 feature.update(**fix_vars)
                 fixup(feature)
 
-            # Ensure that any locations which inherit their latlon from this one get updated
-            propagate(id, all_locations)
+            if not all_locations:
+                # Ensure that any locations which inherit their latlon from this one get updated
+                propagate(id)
 
             return _path
 
@@ -5565,8 +5559,9 @@ class GIS(object):
             feature.update(**fix_vars)
             fixup(feature)
 
-        # Ensure that any locations which inherit their latlon from this one get updated
-        propagate(id, all_locations)
+        if not all_locations:
+            # Ensure that any locations which inherit their latlon from this one get updated
+            propagate(id)
 
         return _path
 
