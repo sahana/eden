@@ -1827,10 +1827,55 @@ def customise_pr_person_controller(**attr):
 
         elif vnrc:
             if not r.component:
+                dtable = s3db.pr_person_details
+
                 # Use a free-text version of religion field
-                field = s3db.pr_person_details.religion_other
+                field = dtable.religion_other
                 field.label = T("Religion")
                 field.readable = field.writable = True
+
+                # Standard option for nationality
+                field = s3db.pr_person_details.nationality
+                VN = "VN"
+                field.default = VN
+                vnrc_only = False
+                try:
+                    options = dict(field.requires.options())
+                except AttributeError:
+                    pass
+                else:
+                    opts = [VN]
+                    if r.record:
+                        db = current.db
+                        # Get the nationality from the current record
+                        query = (r.table.id == r.id)
+                        left = dtable.on(dtable.person_id == r.id)
+                        row = db(query).select(dtable.nationality,
+                                               left = left,
+                                               limitby = (0, 1)).first()
+                        if row and row.nationality:
+                            opts.append(row.nationality)
+                        # Check wether this person is only VNRC-associated
+                        htable = s3db.hrm_human_resource
+                        otable = s3db.org_organisation
+                        query = (htable.person_id == r.id) & \
+                                (htable.deleted != True) & \
+                                (otable.id == htable.organisation_id) & \
+                                (otable.name != VNRC)
+                        row = db(query).select(htable.id, limitby=(0, 1)).first()
+                        if not row:
+                            vnrc_only = True
+                    opts = dict((k, options[k]) for k in opts if k in options)
+                    from gluon import IS_EMPTY_OR, IS_IN_SET
+                    if vnrc_only:
+                        # Person is only associated with VNRC => enforce update,
+                        # and limit options to either current value or VN
+                        field.requires = IS_IN_SET(opts, zero=None)
+                    else:
+                        # Person is (also) associated with another org
+                        # => can't enforce update, so just limit options
+                        field.requires = IS_EMPTY_OR(IS_IN_SET(opts))
+
                 # Also hide some other fields
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("first_name",
