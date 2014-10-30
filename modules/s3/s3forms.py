@@ -1710,10 +1710,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 orderby = component.get_config("orderby")
 
             if record_id:
-                # Filter
-                f = self._filterby_query()
-                if f is not None:
-                    component.build_query(filter=f)
+                if "filterby" in self.options:
+                    # Filter
+                    f = self._filterby_query()
+                    if f is not None:
+                        component.build_query(filter=f)
 
                 if "extra_fields" in options:
                     extra_fields = options["extra_fields"]
@@ -2450,13 +2451,14 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                            popup=popup,
                                            skip_post_validation=True)
 
-            # Get reduced options set
-            options = self._filterby_options(fname)
-            if options:
-                if len(options) < 2:
-                    formfield.requires = IS_IN_SET(options, zero=None)
-                else:
-                    formfield.requires = IS_IN_SET(options)
+            if "filterby" in self.options:
+                # Get reduced options set
+                options = self._filterby_options(fname)
+                if options:
+                    if len(options) < 2:
+                        formfield.requires = IS_IN_SET(options, zero=None)
+                    else:
+                        formfield.requires = IS_IN_SET(options)
 
             # Get filterby-default
             defaults = self._filterby_defaults()
@@ -2539,11 +2541,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             the existing rows in this inline-component
         """
 
-        if "filterby" in self.options:
-            filterby = self.options["filterby"]
-        else:
-            return None
-
+        filterby = self.options["filterby"]
         if not isinstance(filterby, (list, tuple)):
             filterby = [filterby]
 
@@ -2634,19 +2632,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param fieldname: the name of the field
         """
 
-        if "filterby" in self.options:
-            filterby = self.options["filterby"]
-        else:
-            return None
-        if not isinstance(filterby, (list, tuple)):
-            filterby = [filterby]
-
         component = self.resource.components[self.selector]
         table = component.table
 
         if fieldname not in table.fields:
             return None
         field = table[fieldname]
+
+        filterby = self.options["filterby"]
+        if not isinstance(filterby, (list, tuple)):
+            filterby = [filterby]
 
         filter_fields = dict((f["field"], f) for f in filterby)
         if fieldname not in filter_fields:
@@ -2673,12 +2668,12 @@ class S3SQLInlineComponent(S3SQLSubForm):
         r_opts = r.options()
 
         # Get the filter options
-        options = f["options"]
+        options = filterby["options"]
         if not isinstance(options, (list, tuple)):
             options = [options]
         subset = []
-        if "invert" in f:
-            invert = f["invert"]
+        if "invert" in filterby:
+            invert = filterby["invert"]
         else:
             invert = False
 
@@ -3165,10 +3160,11 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                 query = (resource.table._id == record_id) & \
                         component.get_join()
 
-                # Filter
-                f = self._filterby_query()
-                if f is not None:
-                    query &= f
+                if "filterby" in self.options:
+                    # Filter
+                    f = self._filterby_query()
+                    if f is not None:
+                        query &= f
 
                 # Get the rows:
                 rows = current.db(query).select(*qfields)

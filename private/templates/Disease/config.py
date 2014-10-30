@@ -44,7 +44,7 @@ settings.mail.approver = "ADMIN"
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-settings.gis.countries = ("GN", "LR", "SL",)
+settings.gis.countries = ("GN", "LR", "ML", "NG", "SL", "SN")
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 

@@ -579,14 +579,14 @@ class S3PersonEntity(S3Model):
             @param form: the CRUD form
         """
 
-        formvars = form.vars
-        if not formvars:
+        form_vars = form.vars
+        if not form_vars:
             return
-        if "role_type" in formvars:
+        if "role_type" in form_vars:
             role_id = form.record_id
             if not role_id:
                 return
-            role_type = formvars.role_type
+            role_type = form_vars.role_type
             db = current.db
             rtable = db.pr_role
             role = db(rtable.id == role_id).select(rtable.role_type,
@@ -594,7 +594,7 @@ class S3PersonEntity(S3Model):
             if role and str(role.role_type) != str(role_type):
                 # If role type has changed, then clear paths
                 if str(role_type) != str(OU):
-                    formvars["path"] = None
+                    form_vars["path"] = None
                 current.s3db.pr_role_rebuild_path(role_id, clear=True)
         return
 
@@ -635,10 +635,10 @@ class S3PersonEntity(S3Model):
             @param form: the CRUD form
         """
 
-        formvars = form.vars
-        role_id = formvars["role_id"]
-        pe_id = formvars["pe_id"]
-        record_id = formvars["id"]
+        form_vars = form.vars
+        role_id = form_vars["role_id"]
+        pe_id = form_vars["pe_id"]
+        record_id = form_vars["id"]
 
         if role_id and pe_id and record_id:
             # Remove duplicates
@@ -2218,13 +2218,13 @@ class S3ContactModel(S3Model):
     def pr_contact_onvalidation(form):
         """ Contact form validation """
 
-        formvars = form.vars
+        form_vars = form.vars
 
         # Get the contact method
-        contact_method = formvars.contact_method
-        if not contact_method and "id" in formvars:
+        contact_method = form_vars.contact_method
+        if not contact_method and "id" in form_vars:
             ctable = current.s3db.pr_contact
-            record = current.db(ctable._id == formvars.id).select(
+            record = current.db(ctable._id == form_vars.id).select(
                                 ctable.contact_method,
                                 limitby=(0, 1)).first()
             if record:
@@ -2235,20 +2235,19 @@ class S3ContactModel(S3Model):
             requires = IS_EMAIL(error_message = current.T("Enter a valid email"))
         elif contact_method == "SMS":
             requires = IS_PHONE_NUMBER(international = True)
-        elif contact_method in ("SMS", "HOME_PHONE", "WORK_PHONE"):
+        elif contact_method in ("HOME_PHONE", "WORK_PHONE"):
             requires = IS_MATCH(multi_phone_number_pattern,
                                 error_message = current.T("Enter a valid phone number"))
         else:
             requires = None
 
         # Validate the value
-        value = formvars.value
         if requires:
-            value, error = requires(value)
+            value, error = requires(form_vars.value)
             if error:
                 form.errors.value = error
             else:
-                formvars.value = value
+                form_vars.value = value
                 
         return
 
