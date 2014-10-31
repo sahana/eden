@@ -1347,7 +1347,7 @@ class S3SQLFormElement(object):
             required = False
             notnull = False
         elif skip_post_validation and \
-           current.request.env.request_method == "POST":
+             current.request.env.request_method == "POST":
             requires = SKIP_POST_VALIDATION(field.requires)
             # Some widgets may need disabling here
             widget = field.widget
@@ -1547,8 +1547,21 @@ class S3SQLSubForm(S3SQLFormElement):
 
 # =============================================================================
 class SKIP_POST_VALIDATION(Validator):
+    """
+        Pseudo-validator that allows introspection of field options
+        during GET, but does nothing during POST. Used for Ajax-validated
+        inline-components to prevent them from throwing validation errors
+        when the outer form gets submitted.
+    """
 
     def __init__(self, other=None):
+        """
+            Constructor, used like:
+            field.requires = SKIP_POST_VALIDATION(field.requires)
+
+            @param other: the actual field validator
+        """
+
         if other and isinstance(other, (list, tuple)):
             other = other[0]
         self.other = other
@@ -1559,6 +1572,12 @@ class SKIP_POST_VALIDATION(Validator):
                 self.options = other.options
 
     def __call__(self, value):
+        """
+            Validation
+
+            @param value: the value
+        """
+
         other = self.other
         if current.request.env.request_method == "POST" or not other:
             return value, None
@@ -2456,9 +2475,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 options = self._filterby_options(fname)
                 if options:
                     if len(options) < 2:
-                        formfield.requires = IS_IN_SET(options, zero=None)
+                        requires = IS_IN_SET(options, zero=None)
                     else:
-                        formfield.requires = IS_IN_SET(options)
+                        requires = IS_IN_SET(options)
+                    formfield.requires = SKIP_POST_VALIDATION(requires)
 
             # Get filterby-default
             defaults = self._filterby_defaults()
