@@ -11,7 +11,7 @@
 
 # Needs to be run in the web2py environment:
 # cd web2py
-# python web2py.py -S eden -M -R applications/eden/private/templates/Disease/ebola.cases.update.py
+# python web2py.py -S eden -M -R applications/eden/private/templates/IRS/ebola.cases.update.py
 
 from time import gmtime, strftime
 todays_date = strftime("%Y-%m-%d", gmtime())

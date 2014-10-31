@@ -5834,14 +5834,13 @@ def hrm_rheader(r, tabs=[],
                     description_tab,
                     (T("Address"), "address"),
                     ]
-            if settings.get_pr_public_private_contacts():
-                # 2 Tabs
-                tabs += [(T("Public Contacts"), "public_contacts"),
-                         (T("Private Contacts"), "private_contacts"),
-                         ]
-            else:
-                # 1 Tab
+            contacts_tabs = settings.get_pr_contacts_tabs()
+            if "all" in contacts_tabs:
                 tabs.append((T("Contacts"), "contacts"))
+            if "public" in contacts_tabs:
+                tabs.append((T("Public Contacts"), "public_contacts"))
+            if "private" in contacts_tabs:
+                tabs.append((T("Private Contacts"), "private_contacts"))
             tabs += [education_tab,
                      trainings_tab,
                      certificates_tab,
@@ -5859,14 +5858,13 @@ def hrm_rheader(r, tabs=[],
                     description_tab,
                     (T("Address"), "address"),
                     ]
-            if settings.get_pr_public_private_contacts():
-                # 2 Tabs
-                tabs += [(T("Public Contacts"), "public_contacts"),
-                         (T("Private Contacts"), "private_contacts"),
-                         ]
-            else:
-                # 1 Tab
+            contacts_tabs = settings.get_pr_contacts_tabs()
+            if "all" in contacts_tabs:
                 tabs.append((T("Contacts"), "contacts"))
+            if "public" in contacts_tabs:
+                tabs.append((T("Public Contacts"), "public_contacts"))
+            if "private" in contacts_tabs:
+                tabs.append((T("Private Contacts"), "private_contacts"))
             tabs += [trainings_tab,
                      certificates_tab,
                      skills_tab,
@@ -5894,14 +5892,13 @@ def hrm_rheader(r, tabs=[],
                     description_tab,
                     (T("Address"), "address"),
                     ]
-            if settings.get_pr_public_private_contacts():
-                # 2 Tabs
-                tabs += [(T("Public Contacts"), "public_contacts"),
-                         (T("Private Contacts"), "private_contacts"),
-                         ]
-            else:
-                # 1 Tab
+            contacts_tabs = settings.get_pr_contacts_tabs()
+            if "all" in contacts_tabs:
                 tabs.append((T("Contacts"), "contacts"))
+            if "public" in contacts_tabs:
+                tabs.append((T("Public Contacts"), "public_contacts"))
+            if "private" in contacts_tabs:
+                tabs.append((T("Private Contacts"), "private_contacts"))
             tabs += [salary_tab,
                      education_tab,
                      trainings_tab,
@@ -6787,17 +6784,18 @@ def hrm_person_controller(**attr):
     set_method = s3db.set_method
 
     # Custom Method(s) for Contacts
-    if settings.get_pr_public_private_contacts():
-        # 2 Tabs
+    contacts_tabs = settings.get_pr_contacts_tabs()
+    if "all" in contacts_tabs:
         set_method("pr", "person",
-                   method = "private_contacts",
+                   method = "contacts",
                    action = s3db.pr_contacts)
+    if "public" in contacts_tabs:
         set_method("pr", "person",
                    method = "public_contacts",
                    action = s3db.pr_contacts)
-    else:
+    if "private" in contacts_tabs:
         set_method("pr", "person",
-                   method = "contacts",
+                   method = "private_contacts",
                    action = s3db.pr_contacts)
 
     # Custom Method for CV

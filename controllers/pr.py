@@ -175,31 +175,23 @@ def person():
             #(T("Contacts"), "contact"),
             ]
 
-    if settings.get_pr_public_private_contacts():
-        if auth.is_logged_in():
-            # 2 Tabs
-            set_method = s3db.set_method
-            set_method(module, resourcename,
-                       method = "private_contacts",
-                       action = s3db.pr_contacts)
-            set_method(module, resourcename,
-                       method = "public_contacts",
-                       action = s3db.pr_contacts)
-            tabs += [(T("Public Contacts"), "public_contacts"),
-                     (T("Private Contacts"), "private_contacts"),
-                     ]
-        else:
-            # Public only
-            s3db.set_method(module, resourcename,
-                            method = "public_contacts",
-                            action = s3db.pr_contacts)
-            tabs.append((T("Contacts"), "public_contacts"))
-    else:
-        # Single Tab
+    set_method = s3db.set_method
+    contacts_tabs = settings.get_pr_contacts_tabs()
+    if "all" in contacts_tabs:
         s3db.set_method(module, resourcename,
                         method = "contacts",
                         action = s3db.pr_contacts)
-        tabs.append((T("Contact Details"), "contacts"))
+        tabs.append((T("Contacts"), "contacts"))
+    if "public" in contacts_tabs:
+        s3db.set_method(module, resourcename,
+                        method = "public_contacts",
+                        action = s3db.pr_contacts)
+        tabs.append((T("Public Contacts"), "public_contacts"))
+    if "private" in contacts_tabs and auth.is_logged_in():
+        s3db.set_method(module, resourcename,
+                        method = "private_contacts",
+                        action = s3db.pr_contacts)
+        tabs.append((T("Private Contacts"), "private_contacts"))
 
     tabs += [(T("Images"), "image"),
              (T("Identity"), "identity"),
@@ -235,16 +227,14 @@ def address():
             # - currently not used as can't load Google Maps properly
             # Lookup the controller
             controller = get_vars.get("controller", "pr")
-            if settings.get_pr_public_private_contacts():
-                access = get_vars.get("access", "1")
-                if access == "1":
-                    method = "private_contacts"
-                elif access == "2":
-                    method = "public_contacts"
-                else:
-                    raise
-            else:
+            # Lookup the access
+            access = get_vars.get("access", None)
+            if access is None:
                 method = "contacts"
+            elif access == "1":
+                method = "private_contacts"
+            elif access == "2":
+                method = "public_contacts"
             s3db.configure("pr_address",
                             create_next = URL(c=controller,
                                               f="person",
@@ -292,16 +282,14 @@ def contact():
             # Coming from s3.contacts.js [s3db.pr_contacts()]
             # Lookup the controller
             controller = get_vars.get("controller", "pr")
-            if settings.get_pr_public_private_contacts():
-                access = get_vars.get("access", "1")
-                if access == "1":
-                    method = "private_contacts"
-                elif access == "2":
-                    method = "public_contacts"
-                else:
-                    raise
-            else:
+            # Lookup the access
+            access = get_vars.get("access", None)
+            if access is None:
                 method = "contacts"
+            elif access == "1":
+                method = "private_contacts"
+            elif access == "2":
+                method = "public_contacts"
             s3db.configure("pr_contact",
                            create_next = URL(c=controller,
                                              f="person",
@@ -318,7 +306,6 @@ def contact():
                 table = s3db.pr_contact
                 table.pe_id.default = pe_id
                 # Public or Private?
-                access = get_vars.get("access", None)
                 if access:
                     table.access.default = access
         else:
@@ -366,16 +353,14 @@ def contact_emergency():
         person_id = get_vars.get("person", None)
         if person_id:
             controller = get_vars.get("controller", "pr")
-            if settings.get_pr_public_private_contacts():
-                access = get_vars.get("access", "1")
-                if access == "1":
-                    method = "private_contacts"
-                elif access == "2":
-                    method = "public_contacts"
-                else:
-                    raise
-            else:
+            # Lookup the access
+            access = get_vars.get("access", None)
+            if access is None:
                 method = "contacts"
+            elif access == "1":
+                method = "private_contacts"
+            elif access == "2":
+                method = "public_contacts"
             s3db.configure("pr_contact_emergency",
                            create_next=URL(c=controller,
                                            f="person",

@@ -884,8 +884,8 @@ settings.pr.request_gender = False
 # Doesn't yet work (form fails to submit)
 #settings.pr.select_existing = False
 settings.pr.show_emergency_contacts = False
-# Have 2 Tabs for Contacts: Public & private
-settings.pr.public_private_contacts = True
+# Only show Private Contacts Tab (Public is done via Basic Details tab)
+settings.pr.contacts_tabs = ("private",)
 
 # -----------------------------------------------------------------------------
 # Persons
@@ -1036,7 +1036,6 @@ def customise_pr_person_controller(**attr):
             elif r.component_name == "group_membership":
                 s3db.pr_group_membership.group_head.label = T("Group Chairperson")
 
-
         return result
     s3.prep = custom_prep
 
@@ -1057,11 +1056,10 @@ def customise_pr_person_controller(**attr):
     s3.postp = custom_postp
 
     if not AUTHENTICATED:
-        # Modify RHeader Tabs
-        tabs = [(T("Basic Details"), None),
-                (T("Contacts"), "public_contacts"),
-                ]
+        # Remove RHeader Tabs
+        tabs = None
         attr["rheader"] = lambda r: s3db.pr_rheader(r, tabs=tabs)
+
     return attr
 
 settings.customise_pr_person_controller = customise_pr_person_controller
