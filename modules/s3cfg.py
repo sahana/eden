@@ -2850,6 +2850,12 @@ class S3Config(Storage):
                                                        3: T("Normal"),
                                                        4: T("Low")
                                                        })
+    def get_project_task_member_roles(self):
+        """
+            Users can become "Members" of tasks by assigning themselves 
+            an already existing role or by creating a new one.
+        """
+        return self.project.get("task_member_roles", False)
 
     # -------------------------------------------------------------------------
     # Requests Management Settings

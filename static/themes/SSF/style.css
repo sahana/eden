@@ -21,6 +21,44 @@
 	padding: 4px;
 }
 
+.s3_add_resource_link {
+    float: left;
+    margin: -8px 0 -8px 5px;
+}
+
+/* 'Interested' Option 
+   (Members for Tasks) */
+#assign-role.as_div {
+    margin: 0.3em 0 0 1.1em;
+    outline: 0 none;
+}
+#project_task_role.as_div {
+    left: 0.8em;
+    position: relative;
+    top: 0.2em;
+}
+#project_task_role {
+    margin-top: 0.2em;
+}
+#sub-assign-container {
+    left: 6.2em;
+    position: relative;
+}
+#role_add {
+    position: relative;
+    right: 28.3em;
+    top: 2.1em;
+}
+#create-new-role > a {
+    left: 8.2em;
+    position: relative;
+    top: 0.6em;
+}
+#assign-container {
+    height: 50px;
+    outline: 0;
+}
+
 /* Sunflower Throbber */
 .s3-twitter-throbber {
     background-image: url(../../img/sunflower_spin_throbber.gif);
