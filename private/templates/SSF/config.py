@@ -7,9 +7,21 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import current, URL
 from gluon.storage import Storage
 from gluon.validators import IS_IN_SET
+from gluon.html import *
+
+from s3 import *
+from s3layouts import S3AddResourceLink
 
 T = current.T
 settings = current.deployment_settings
@@ -422,9 +434,19 @@ def customise_project_project_controller(**attr):
                 s3.actions[0]["url"] = URL(c="project", f="project",
                                            args=["[id]", "deployment"])
 
+        # Add Interested option
+        if r.component_name == "task" and r.component_id:
+            interest = task_member_option(record_id = r.component_id)
+            if "item" in output:
+                _item = output["item"]
+                _item.components.insert(0, interest)
+            if "form" in output:
+                _form = output["form"]
+                _form.components.insert(0, interest)
+
         return output
     s3.postp = custom_postp
-
+    
     args = current.request.args
     if len(args) > 1 and args[1] == "task":
         attr["hide_filter"] = False
@@ -444,6 +466,7 @@ def customise_project_task_resource(r, tablename):
 
     s3db = current.s3db
     db = current.db
+    auth = current.auth
 
     if r.interactive:
         trimmed_task = False
@@ -467,7 +490,13 @@ def customise_project_task_resource(r, tablename):
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
         if trimmed_task:
             # Show a trimmed view of creating task
-            crud_fields = ["name",
+            crud_fields = [S3SQLInlineComponent(
+                               "task_member",
+                               label = T("Members"),
+                               fields = [("", "member_id")],
+                               multiple = False,
+                           ),
+                           "name",
                            "description",
                            S3SQLInlineLink(
                                "tag",
@@ -497,6 +526,12 @@ def customise_project_task_resource(r, tablename):
         else:
             # Show all fields for creating the task
             crud_fields = [S3SQLInlineComponent(
+                               "task_member",
+                               label = T("Members"),
+                               fields = [("", "member_id")],
+                               multiple = False,
+                           ),
+                           S3SQLInlineComponent(
                                "task_milestone",
                                label = T("Milestone"),
                                fields = [("", "milestone_id")],
@@ -511,7 +546,6 @@ def customise_project_task_resource(r, tablename):
                            ),
                            "priority",
                            "status",
-                           "pe_id",
                            "source",
                            "date_due",
                            "time_estimated",
@@ -531,9 +565,10 @@ def customise_project_task_resource(r, tablename):
                            ),
                            "time_actual",
                            ]
+        
             if r.tablename == "project_task":
                 # Add the project field if it is not under the component
-                crud_fields.insert(0, S3SQLInlineComponent("task_project",
+                crud_fields.insert(1, S3SQLInlineComponent("task_project",
                                                            label = T("Project"),
                                                            fields = [("", "project_id")],
                                                            multiple = False,
@@ -568,6 +603,216 @@ def customise_delphi_problem_controller(**attr):
     return attr
 
 settings.customise_delphi_problem_controller = customise_delphi_problem_controller
+
+# -----------------------------------------------------------------------------
+def assign_role(r, **attr):
+    """
+        Assign Role selected to User logged in
+    """
+    auth = current.auth
+    s3db = current.s3db
+    db = current.db
+
+    if r.representation == "json" and r.http == "POST":
+
+        mtable = s3db.project_member
+        ltable = s3db.project_task_member
+        user_id = auth.s3_logged_in_person()
+
+        # Id of role
+        r_id = r.post_vars["role"]
+
+        if r.get_vars["action"] == "add":
+            # Get the Role id selected
+            r_id = r.post_vars["role"]
+            
+            # Check if role selected exists for user
+            query = (mtable.person_id == user_id) & \
+                    (mtable.role_id == r_id) 
+            row = db(query).select(mtable.id).first()
+            if row:
+                m_id = row.id 
+            else:
+                m_id = mtable.insert(person_id=user_id,
+                                     role_id=r_id)
+
+            ltable.insert(member_id=m_id,
+                          task_id=r.id)
+        else:
+
+            query = (mtable.person_id == user_id) & \
+                    (mtable.role_id == r_id)
+
+            # Get Member id of user
+            row = db(query).select(mtable.id).first()
+            
+            query = (ltable.member_id == row.id) & \
+                    (ltable.task_id == r.id)
+            
+            # Remove member from Link Table
+            db(query).delete()
+
+            # if a specific role no longer exists in any of the tasks
+            # remove the record(user, role) from Members
+            rows = db(ltable.member_id == row.id).select()
+            if not rows:
+                db(mtable.id == row.id).delete()
+
+    else:
+        r.error(501, current.ERROR.BAD_FORMAT)
+
+    current.response.headers["Content-Type"] = "application/json"
+    output = json.dumps(dict(status="Ok"))
+    return output
+
+# -----------------------------------------------------------------------------
+def customise_project_task_controller(**attr):
+    
+    s3db = current.s3db
+    auth = current.auth
+    s3 = current.response.s3
+
+    def task_rheader(r):
+    
+        if r.representation != "html":
+            # rheaders are only used in interactive views
+            return None
+        
+        response = current.response
+        T = current.T
+
+        tablename, record = s3_rheader_resource(r)
+
+        if not record:
+            return None
+        
+        table = s3db.table(tablename)
+
+        resourcename = r.name
+
+        T = current.T
+        #auth = current.auth
+        settings = current.deployment_settings
+
+        attachments_label = settings.get_ui_label_attachments()
+        # Tabs
+        tabs = [(T("Details"), None)]
+        append = tabs.append
+        append((attachments_label, "document"))
+        if settings.has_module("msg"):
+            append((T("Notify"), "dispatch"))
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        
+        # rheader
+        db = current.db
+        ltable = s3db.project_task_project
+        ptable = db.project_project
+        query = (ltable.deleted == False) & \
+                (ltable.task_id == r.id) & \
+                (ltable.project_id == ptable.id)
+        row = db(query).select(ptable.id,
+                               ptable.code,
+                               ptable.name,
+                               limitby=(0, 1)).first()
+        if row:
+            project = s3db.project_project_represent(None, row)
+            project = TR(TH("%s: " % T("Project")),
+                         project,
+                         )
+        else:
+            project = TR(TH("%s: " % T("Project")),
+                         "-",
+                         )
+
+        # Tags
+        ltable = s3db.project_task_tag
+        tag_represent = S3Represent(lookup="project_tag",
+                                    translate=True)
+
+        query = (ltable.task_id == r.id)
+        rows = db(query).select(ltable.tag_id)
+        tag_rows = [ str(tag_represent(row.tag_id)) for row in rows ]
+        _tags = ", ".join(tag_rows)
+
+        if rows:
+            tags = TR(TH("%s: " % T("Tags")),
+                      _tags)
+        else:
+            tags = TR(TH("%s: " % T("Tags")),
+                      "-")
+
+        if record.created_by:
+            creator = TR(TH("%s: " % T("Created By")),
+                         s3_auth_user_represent(record.created_by),
+                         )
+        else:
+            creator = TR(TH("%s: " % T("Created By")),
+                         "-"
+                         )
+        
+        # Milestone 
+        ltable = s3db.project_task_milestone
+        milestone_represent = S3Represent(lookup="project_milestone",
+                                          fields=["name", "date"],
+                                          labels="%(name)s: %(date)s")
+
+        query = (ltable.task_id == r.id) 
+        row = db(query).select(ltable.milestone_id).first()
+        
+        if row:
+            milestone = TR(TH("%s: " % T("Milestone")), 
+                           milestone_represent(row.milestone_id))
+        else:
+            milestone = TR(TH("%s: " % T("Milestone")),
+                           "-")
+
+        # Status
+        if record.status:
+            status = TR(TH("%s: " % T("Status")),
+                        table.status.represent(record.status))
+        else:
+            status = TR(TH("%s: " % T("Status")),
+                        "-")
+
+        rheader = DIV(TABLE(project,
+                            TR(TH("%s: " % table.name.label),
+                               record.name,
+                               ),
+                            tags,
+                            creator,
+                            milestone,
+                            status,
+                            #comments,
+                            ), rheader_tabs)
+
+        return rheader
+
+    standard_postp = s3.postp
+    def custom_postp(r, output):
+        # Call standard postp
+        if callable(standard_postp):
+            output = standard_postp(r, output)
+
+        interest = task_member_option(record_id = r.id)
+        if "item" in output:
+            _item = output["item"]
+            _item.components.insert(0, interest)
+        if "form" in output:
+            _form = output["form"]
+            _form.components.insert(0, interest)
+
+        return output
+    s3.postp = custom_postp
+
+    s3db.set_method("project", "task",
+                    method="assign",
+                    action=assign_role)
+    
+    attr["rheader"] = task_rheader
+    return attr
+
+settings.customise_project_task_controller = customise_project_task_controller
 
 # -----------------------------------------------------------------------------
 def customise_delphi_solution_controller(**attr):
@@ -699,6 +944,95 @@ def customise_pr_person_controller(**attr):
 
 settings.customise_pr_person_controller = customise_pr_person_controller
 
+# -----------------------------------------------------------------------------
+def task_member_option(record_id):
+    """
+        returns an option to allow Users to mark themselves as 'Interested' 
+        in a Task.
+        @param record_id: Task id 
+    """
+    s3 = current.response.s3
+    s3db = current.s3db
+    auth = current.auth
+    response = current.response
+    db = current.db
+
+    scripts = s3.scripts
+    scripts.append("/%s/static/themes/%s/js/role.js" % \
+                                        (current.request.application,
+                                         response.s3.theme))
+
+    s3.js_global.append('''
+i18n.assign_role="%s"
+i18n.revert_role="%s"''' % (T("Assign"),
+                            T("Revert")))
+
+    user_role = ""
+    btn_label = T("Assign")
+    is_disabled = "false"
+
+    create_role = S3AddResourceLink(c="project", f="role",
+                                    vars=dict(caller="project_task_role",
+                                              child="role_id",
+                                              parent="member",
+                                              prefix="project"),
+                                    label=T("Create Role"),
+                                    title=T("Create Role"))
+ 
+    mtable = s3db.project_member
+    ltable = s3db.project_task_member
+    user_id = auth.s3_logged_in_person()
+
+    interest = TD()
+    
+    if user_id:
+
+        # Allow Logged in Users to assign roles to 
+        # themselves.
+
+        query = (ltable.task_id == record_id) & \
+                (mtable.person_id == user_id) & \
+                (ltable.member_id == mtable.id)
+
+        row = db(query).select(mtable.role_id).first()
+        attr = {}
+        
+        if row:
+            user_role = row.role_id
+            # Disable Dropdown with role selected 
+            # Revert button
+            btn_label = T("Revert")
+            attr["_disabled"] = ""
+
+        attr["_id"] = "project_task_role"
+
+        btn_class = "btn btn-default as_div"
+        attr["_class"] = "as_div"
+
+        # Assign Button
+        assign_button = A(btn_label,
+                          _id="assign-role",
+                          _role="button",
+                          _class=btn_class)
+
+        # Select all records
+        rtable = s3db.project_role
+        rows = db(rtable.deleted == False).select(rtable.role, rtable.id)
+        options = [ OPTION(row.role, _value=row.id) for row in rows ]
+        _roles = SELECT([OPTION("")] + options,
+                        value=user_role,
+                        **attr)
+
+        interest = DIV(DIV(B(T("Interested")),
+                             _roles,
+                             assign_button,
+                             P(create_role,
+                               _id="create-new-role"),
+                             _id="sub-assign-container"),
+                       _id="assign-container")
+
+    return interest
+    
 # -----------------------------------------------------------------------------
 def customise_pr_contact_controller(**attr):
 

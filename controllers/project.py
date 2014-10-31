@@ -775,6 +775,24 @@ def task_tag():
     return s3_rest_controller()
 
 # =============================================================================
+def role():
+    """ RESTful CRUD controller """
+    
+    return s3_rest_controller()
+
+# =============================================================================
+def member():
+    """ RESTful CRUD Controller for options.s3json lookups """
+        
+    def prep(r):
+        if r.method != "options" or r.representation != "s3json":
+            return False
+        return True
+    s3.prep = prep    
+
+    return s3_rest_controller()
+
+# =============================================================================
 def milestone():
     """ RESTful CRUD controller """
 

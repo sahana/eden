@@ -4075,9 +4075,12 @@ class S3ProjectTaskModel(S3Model):
              "project_tag",
              "project_task",
              "project_task_id",
+             "project_role",
+             "project_member",
              "project_time",
              "project_comment",
              "project_task_project",
+             "project_task_member",
              "project_task_activity",
              "project_task_milestone",
              "project_task_tag",
@@ -4094,6 +4097,7 @@ class S3ProjectTaskModel(S3Model):
         request = current.request
         s3 = current.response.s3
         settings = current.deployment_settings
+        s3db = current.s3db
 
         project_id = self.project_project_id
 
@@ -4616,6 +4620,15 @@ class S3ProjectTaskModel(S3Model):
                                         "autocomplete": "name",
                                         "autodelete": False,
                                         },
+                       # Members 
+                       project_member = {"link": "project_task_member",
+                                         "joinby": "task_id",
+                                         "key": "member_id",
+                                         "actuate": "embed",
+                                         "autodelete": False,
+                                         },
+                       # Format for S3SQLInlineComponent
+                       project_task_member = "task_id",
                        # Human Resources (assigned)
                        hrm_human_resource = {"link": "project_task_human_resource",
                                              "joinby": "task_id",
@@ -4732,6 +4745,88 @@ class S3ProjectTaskModel(S3Model):
                                  ],
                   )
 
+        # ---------------------------------------------------------------------
+        # Project Task Roles
+        # - Users can assign themselves roles while working on tasks
+        #
+        
+        tablename = "project_role"
+        define_table(tablename,
+                     Field("role", length=128, notnull=True,
+                           label=T("Role"),
+                           requires = IS_NOT_IN_DB(db, 
+                                                   "project_role.role"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+        # CRUD Strings
+        ADD_TASK_ROLE = T("Create Role")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_TASK_ROLE,
+            title_display = T("Task Role"),
+            title_list = T("Task Roles"),
+            title_update = T("Edit Role"),
+            label_list_button = T("List Roles"),
+            label_delete_button = T("Delete Role"),
+            msg_record_created = T("Role added"),
+            msg_record_modified = T("Role updated"),
+            msg_record_deleted = T("Role deleted"),
+            msg_list_empty = T("No such Role exists"))
+        
+        represent = S3Represent(lookup=tablename,
+                                fields=["role"],
+                                translate=True,
+                                ) 
+        role_id = S3ReusableField("role_id", "reference %s" % tablename,
+                                  ondelete = "SET NULL",
+                                  requires = IS_ONE_OF(db, 
+                                                       "project_role.id",
+                                                       represent),
+                                  represent = represent,
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Project Members
+        # - Members for tasks in Project
+        #
+
+        person_id = s3db.pr_person_id
+
+        tablename = "project_member"
+        define_table(tablename,
+                     person_id(label=T("Member"),
+                               empty = False,
+                               ondelete = "CASCADE"),
+                     role_id(label=T("Role"),
+                             empty = False,
+                             ondelete = "CASCADE"),
+                     *s3_meta_fields())
+
+        represent = project_TaskMemberRepresent(fields=["person_id", "role_id"])
+
+        member_id = S3ReusableField("member_id", "reference %s" % tablename,
+                                    ondelete = "SET NULL",
+                                    requires = IS_ONE_OF(db,
+                                                         "project_member.id",
+                                                         represent),
+                                    represent = represent
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Link task <-> Members
+        #
+        # Tasks <> Members
+        tablename = "project_task_member"
+
+        define_table(tablename,
+                     member_id(empty = False,
+                               ondelete = "CASCADE",
+                               writable=False),
+                     task_id(empty = False,
+                             ondelete = "CASCADE",
+                             writable=False),
+                     *s3_meta_fields())
+ 
         # ---------------------------------------------------------------------
         # Project Time
         # - used to Log hours spent on a Task
@@ -5782,6 +5877,47 @@ class project_TaskRepresent(S3Represent):
 
         return output
 
+# =============================================================================
+class project_TaskMemberRepresent(S3Represent):
+    """ Representation of Tasks Members """
+    
+    def __init__(self,
+                 fields):
+        """
+            Constructor
+            @param fields: fields to be displayed and represented
+        """
+        
+        s3 = current.response.s3
+        
+        super(project_TaskMemberRepresent, self).__init__(lookup = "project_member",
+                                                          fields = fields
+                                                          )
+
+        self.person_represent = s3.pr_person_represent
+        self.role_represent = S3Represent(lookup="project_role",
+                                          fields=["role"],
+                                          translate=True)
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+       
+        # String format for Represent display 
+        strfmt = "%(person)s (%(role)s)"
+
+        p_id = row.person_id
+        r_id = row.role_id
+
+        output = strfmt % {"person": self.person_represent(p_id),
+                           "role": self.role_represent(r_id)
+                           }
+        return output
+ 
 # =============================================================================
 class project_ActivityRepresent(S3Represent):
     """ Representation of Project Activities """
