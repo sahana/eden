@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 try:
     # Python 2.7
     from collections import OrderedDict
 except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
-from datetime import timedelta
 
 from gluon import current
 from gluon.storage import Storage
@@ -1368,9 +1368,47 @@ def customise_inv_warehouse_resource(r, tablename):
 settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
 # -----------------------------------------------------------------------------
+def member_membership_paid(row):
+    """
+        Simplified variant of the original function in s3db/member.py,
+        with just "paid" and "unpaid" as possible values
+    """
+
+    if hasattr(row, "member_membership"):
+        row = row.member_membership
+    try:
+        start_date = row.start_date
+    except AttributeError:
+        start_date = None
+    try:
+        paid_date = row.membership_paid
+    except AttributeError:
+        paid_date = None
+    if start_date:
+        T = current.T
+        PAID = T("paid")
+        UNPAID = T("unpaid")
+        now = current.request.utcnow.date()
+        if not paid_date:
+            due = datetime.date(start_date.year + 1, start_date.month, start_date.day)
+        else:
+            due = datetime.date(paid_date.year, start_date.month, start_date.day)
+            if due < paid_date:
+                due = datetime.date(paid_date.year + 1, due.month, due.day)
+        result = PAID if now < due else UNPAID
+    else:
+        result = current.messages["NONE"]
+    return result
+
+# -----------------------------------------------------------------------------
 def customise_member_membership_controller(**attr):
 
     tablename = "member_membership"
+
+    root_org = current.auth.root_org_name()
+    vnrc = False
+    if root_org == VNRC:
+        vnrc = True
 
     # Default Filter
     from s3 import s3_set_default_filter
@@ -1414,6 +1452,20 @@ def customise_member_membership_controller(**attr):
             if widget.field == "organisation_id":
                 widget.opts.hidden = False
                 break
+
+        if vnrc:
+            table = r.table
+            from gluon import Field
+            table["paid"] = Field.Method("paid", member_membership_paid)
+            filter_options = {T("paid"): T("paid"), 
+                              T("unpaid"): T("unpaid"),
+                              }
+            filter_widgets = r.resource.get_config("filter_widgets")
+            if filter_widgets:
+                for filter_widget in filter_widgets:
+                    if filter_widget.field == "paid":
+                        filter_widget.opts.options = filter_options
+                        break
 
         return result
     s3.prep = custom_prep
@@ -1645,9 +1697,9 @@ def vol_active(person_id):
                                           orderby=htable.date)
     if programmes:
         # Ignore up to 3 months of records
-        three_months_prior = (now - timedelta(days=92))
+        three_months_prior = (now - datetime.timedelta(days=92))
         end = max(programmes.last().date, three_months_prior.date())
-        last_year = end - timedelta(days=365)
+        last_year = end - datetime.timedelta(days=365)
         # Is this the Volunteer's first year?
         if programmes.first().date > last_year:
             # Only start counting from their first month
