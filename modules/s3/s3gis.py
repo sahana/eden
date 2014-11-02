@@ -2745,7 +2745,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_screenshot(config_id):
+    def get_screenshot(config_id, temp=True, height=None, width=None):
         """
             Save a Screenshot of a saved map
 
@@ -2759,46 +2759,73 @@ class GIS(object):
         # @ToDo: allow selection of map_id
         map_id = "default_map"
 
-        from selenium import webdriver
+        #from selenium import webdriver
+        # Custom version which is patched to access native PhantomJS functions added to GhostDriver/PhantomJS in:
+        # https://github.com/watsonmw/ghostdriver/commit/d9b65ed014ed9ff8a5e852cc40e59a0fd66d0cf1
+        from webdriver import WebDriver
         from selenium.common.exceptions import WebDriverException
         from selenium.webdriver.support.ui import WebDriverWait
 
         request = current.request
-        response = current.response
 
-        driver = webdriver.PhantomJS()
+        cachepath = os.path.join(request.folder, "static", "cache", "jpg")
 
-        # Set the size of the browser to match the map
+        if not os.path.exists(cachepath):
+            try:
+                os.mkdir(cachepath)
+            except OSError, os_error:
+                error = "GIS: JPEG files cannot be saved: %s %s" % \
+                                  (cachepath, os_error)
+                current.log.error(error)
+                current.session.error = error
+                redirect(URL(c="gis", f="index", vars={"config_id": config_id}))
+
+        # Copy the current working directory to revert back to later
+        cwd = os.getcwd()
+        # Change to the Cache folder (can't render directly there from execute_phantomjs)
+        os.chdir(cachepath)
+
+        #driver = webdriver.PhantomJS()
+        driver = WebDriver()
+
+        # Change back for other parts
+        os.chdir(cwd)
+
         settings = current.deployment_settings
-        height = settings.get_gis_map_height()
-        width = settings.get_gis_map_width()
-        driver.set_window_size(width, height)
+        if height is None:
+            # Set the size of the browser to match the map
+            height = settings.get_gis_map_height()
+        if width is None:
+            width = settings.get_gis_map_width()
+        driver.set_window_size(width + 5, height + 20)
 
         # Load the homepage
         # (Cookie needs to be set on same domain as it takes effect)
-        public_url = settings.get_base_public_url()
-        appname = request.application
-        url = "%s/%s" % (public_url, appname)
-        driver.get(url)
+        base_url = "%s/%s" % (settings.get_base_public_url(),
+                              request.application)
+        driver.get(base_url)
 
-        # Reuse current session to allow access to ACL-controlled resources
-        session_id = response.session_id
-        driver.add_cookie({"name":  response.session_id_name,
-                           "value": session_id,
-                           "path":  "/",
-                           })
-        # For sync connections
-        current.session._unlock(response)
+        if not current.auth.override:
+            # Reuse current session to allow access to ACL-controlled resources
+            response = current.response
+            session_id = response.session_id
+            driver.add_cookie({"name":  response.session_id_name,
+                               "value": session_id,
+                               "path":  "/",
+                               })
+            # For sync connections
+            current.session._unlock(response)
 
         # Load the map
-        url = "%s/%s/gis/map_viewing_client?print=1&config=%s" % (public_url, appname, config_id)
+        url = "%s/gis/map_viewing_client?print=1&config=%s" % (base_url,
+                                                               config_id)
         driver.get(url)
 
-        # Wait for map to load
-        # @ToDo: Also need to catch layers (use throbber?)
+        # Wait for map to load (including it's layers)
         def map_loaded(driver):
+            test = '''return S3.gis.maps['%s'].s3.loaded''' % map_id
             try:
-                return driver.execute_script('''return S3.gis.maps['%s'].s3.loaded;''' % map_id)
+                return driver.execute_script(test)
             except WebDriverException:
                 return False
 
@@ -2806,38 +2833,62 @@ class GIS(object):
 
         # Save the Output
         # @ToDo: Can we use StringIO instead of cluttering filesystem?
-        # @ToDo: Allow option of PDF (as well as PNG)
-        cachepath = os.path.join(request.folder, "static", "cache", "png")
+        # @ToDo: Allow option of PDF (as well as JPG)
+        # https://github.com/ariya/phantomjs/blob/master/examples/rasterize.js
+        if temp:
+            filename = "%s.jpg" % session_id
+        else:
+            filename = "config_%s.jpg" % config_id
 
-        if not os.path.exists(cachepath):
-            try:
-                os.mkdir(cachepath)
-            except OSError, os_error:
-                error = "GIS: PNG files cannot be saved: %s %s" % \
-                                  (cachepath, os_error)
-                current.log.error(error)
-                current.session.error = error
-                redirect(URL(c="gis", f="index", vars={"config_id": config_id}))
+        # Cannot control file size (no access to clipRect) or file format
+        #driver.save_screenshot(os.path.join(cachepath, filename))
 
-        driver.save_screenshot(os.path.join(cachepath, "%s.png" % session_id))
+        #driver.page.clipRect = {"top": 10,
+        #                        "left": 5,
+        #                        "width": width,
+        #                        "height": height
+        #                        }
+        #driver.page.render(filename, {"format": "jpeg", "quality": "90"})
+
+        script = '''
+var page = this;
+page.clipRect = {top: 10,
+                 left: 5,
+                 width: %(width)s,
+                 height: %(height)s
+                 };
+page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
+                    dict(width = width,
+                         height = height,
+                         filename = filename,
+                         )
+        try:
+            result = driver.execute_phantomjs(script)
+        except WebDriverException, e:
+            #os.chdir(cwd)
+            driver.quit()
+            current.log.error(e)
+            return None
+
+        #os.chdir(cwd)
         driver.quit()
 
-        # If this was a temporary config for creating the screenshot, then delete it now
-        ctable = current.s3db.gis_config
-        set = current.db(ctable.id == config_id)
-        config = set.select(ctable.temp,
-                            limitby=(0, 1)
-                            ).first()
-        try:
-            if config.temp:
-                set.delete()
-        except:
-            # Record not found?
-            pass
+        if temp:
+            # This was a temporary config for creating the screenshot, then delete it now
+            ctable = current.s3db.gis_config
+            the_set = current.db(ctable.id == config_id)
+            config = the_set.select(ctable.temp,
+                                    limitby=(0, 1)
+                                    ).first()
+            try:
+                if config.temp:
+                    the_set.delete()
+            except:
+                # Record not found?
+                pass
 
         # Pass the result back to the User
-        redirect(URL(c="static", f="cache",
-                     args=["png", "%s.png" % session_id]))
+        return filename
 
     # -------------------------------------------------------------------------
     @staticmethod

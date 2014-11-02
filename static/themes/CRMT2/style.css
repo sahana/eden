@@ -192,6 +192,20 @@ table.dataTable .action-btn.read:before {
     width: 42px;
 } */
 
+/* Share Maps page */
+.dl {
+    background: none repeat scroll 0 0 #ffffff;
+}
+.dl-row {
+    border-top: 0;
+}
+.dl-row.even,
+.dl-row.even .dl-item,
+.dl-row.odd,
+.dl-row.odd .dl-item {
+    background-color: inherit;
+}
+
 /* END */
 
 .row .row {

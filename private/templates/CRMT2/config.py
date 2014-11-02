@@ -133,6 +133,7 @@ settings.ui.label_permalink = "Permalink"
 #settings.gis.map_width = 1178
 # Set map to be able to open Census Data & still view root labels
 #settings.gis.map_height = 816
+settings.gis.map_height = 750
 
 settings.base.youtube_id = (dict(id = "introduction",
                                  title = T("Introduction"),
@@ -273,7 +274,7 @@ settings.gis.poi_create_resources = \
 # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
 settings.gis.print_button = True
 # Uncomment to save a screenshot whenever a saved map is saved
-settings.gis.config_screenshot = True
+settings.gis.config_screenshot = (820, 410)
 # Uncomment to hide the Save control, or set to "float"
 settings.gis.save = "float"
 # Uncomment to hide the GeoNames search box
@@ -1658,7 +1659,7 @@ def gis_config_list_layout(list_id, item_id, resource, rfields, record):
                      ),
                     TAG.figcaption(name,
                                    " ",
-                                   TAG.small(T("by %(person)s") % author,
+                                   TAG.small(T("by %(person)s") % dict(person=author),
                                              _tabindex="0",
                                              ),
                                    ),
@@ -1685,6 +1686,13 @@ def customise_gis_config_controller(**attr):
 
         s3db = current.s3db
         table = s3db.gis_config
+
+        # Tweak DataList options
+        s3.dl_no_header = True
+        s3.dl_rowsize = 3
+        list_fields = s3db.get_config("gis_config", "list_fields")
+        list_fields.append("image")
+
         field = table.image
         field.readable = True
         #field.readable = field.writable = True

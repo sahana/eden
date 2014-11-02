@@ -2864,15 +2864,15 @@ class S3SiteDetailsModel(S3Model):
         # CRUD Strings
         site_label = settings.get_org_site_label()
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Add %(site_label)s Status") % site_label,
-            title_display = T("%(site_label)s Status") % site_label,
-            title_list = T("%(site_label)s Status") % site_label,
-            title_update = T("Edit %(site_label)s Status") % site_label,
-            label_list_button = T("List %(site_label)s Status") % site_label,
-            msg_record_created = T("%(site_label)s Status added") % site_label,
-            msg_record_modified = T("%(site_label)s Status updated") % site_label,
-            msg_record_deleted = T("%(site_label)s Status deleted") % site_label,
-            msg_list_empty = T("There is no status for this %(site_label)s yet. Add %(site_label)s Status.") % site_label
+            label_create = T("Add %(site_label)s Status") % dict(site_label=site_label),
+            title_display = T("%(site_label)s Status") % dict(site_label=site_label),
+            title_list = T("%(site_label)s Status") % dict(site_label=site_label),
+            title_update = T("Edit %(site_label)s Status") % dict(site_label=site_label),
+            label_list_button = T("List %(site_label)s Status") % dict(site_label=site_label),
+            msg_record_created = T("%(site_label)s Status added") % dict(site_label=site_label),
+            msg_record_modified = T("%(site_label)s Status updated") % dict(site_label=site_label),
+            msg_record_deleted = T("%(site_label)s Status deleted") % dict(site_label=site_label),
+            msg_list_empty = T("There is no status for this %(site_label)s yet. Add %(site_label)s Status.") % dict(site_label=site_label),
             )
 
         # ---------------------------------------------------------------------

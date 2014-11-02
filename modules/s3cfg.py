@@ -798,8 +798,9 @@ class S3Config(Storage):
     def get_gis_config_screenshot(self):
         """
             Should GIS configs save a screenshot when saved?
+            - set the size if True: (width, height)
         """
-        return self.gis.get("config_screenshot", False)
+        return self.gis.get("config_screenshot", None)
 
     def get_gis_countries(self):
         """

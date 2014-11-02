@@ -1915,13 +1915,21 @@ class S3GISConfigModel(S3Model):
                            ),
 
                      Field("image", "upload", autodelete=False,
-                           # Enable in-templates as-required
-                           #label = T("Image"),
+                           custom_retrieve = self.gis_marker_retrieve,
+                           custom_retrieve_file_properties = self.gis_marker_retrieve_file_properties,
+                           label = T("Image"),
+                           represent = lambda filename: \
+                               (filename and [DIV(IMG(_src=URL(c="static",
+                                                               f="cache",
+                                                               args=["jpg",
+                                                                     filename]),
+                                                      _height=40))] or [""])[0],
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(current.request.folder,
                                                        "static",
                                                        "cache",
                                                        "jpg"),
+                           # Enable in-templates as-required
                            #readable = False,
                            #writable = False,
                            #widget = S3ImageCropWidget((820, 410)),
@@ -1957,6 +1965,10 @@ class S3GISConfigModel(S3Model):
                   create_next = URL(c="gis", f="config",
                                     args=["[id]", "layer_entity"]),
                   deduplicate = self.gis_config_deduplicate,
+                  # These are amended as-required in the controller
+                  list_fields = ["name",
+                                 "pe_id",
+                                 ],
                   onaccept = self.gis_config_onaccept,
                   ondelete = self.gis_config_ondelete,
                   onvalidation = self.gis_config_onvalidation,
@@ -2231,7 +2243,7 @@ class S3GISConfigModel(S3Model):
         auth = current.auth
 
         form_vars = form.vars
-        id = form_vars.id
+        config_id = form_vars.id
         pe_id = form_vars.get("pe_id", None)
         if pe_id:
             user = auth.user
@@ -2242,14 +2254,14 @@ class S3GISConfigModel(S3Model):
                 # Ensure no other records for this PE are marked as default
                 table = db.gis_config
                 query = (table.pe_id == pe_id) & \
-                        (table.id != id)
+                        (table.id != config_id)
                 db(query).update(pe_default=False)
             # Add to GIS Menu
-            db.gis_menu.update_or_insert(config_id=id,
+            db.gis_menu.update_or_insert(config_id=config_id,
                                          pe_id=pe_id)
         else:
             config = current.response.s3.gis.config
-            if config and config.id == id:
+            if config and config.id == config_id:
                 # This is the currently active config, so clear our cache
                 config = None
 
@@ -2257,24 +2269,28 @@ class S3GISConfigModel(S3Model):
         # That makes Authenticated no longer an owner, so they only get whatever
         # is permitted by uacl (usually READ).
         if auth.override:
-            MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
-            table = db.gis_config
-            query = (table.id == id)
-            db(query).update(owned_by_group = MAP_ADMIN)
+            db(db.gis_config.id == config_id).update(
+                owned_by_group = current.session.s3.system_roles.MAP_ADMIN)
 
         # Locations which are referenced by Map Configs should be owned by MapAdmin.
         # That makes Authenticated no longer an owner, so they only get whatever
         # is permitted by uacl (usually READ).
         if form_vars.region_location_id:
-            MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
-            table = db.gis_location
-            query = (table.id == form_vars.region_location_id)
-            db(query).update(owned_by_group = MAP_ADMIN)
+            db(db.gis_location.id == form_vars.region_location_id).update(
+                owned_by_group = current.session.s3.system_roles.MAP_ADMIN)
 
-        if current.deployment_settings.get_gis_config_screenshot():
-            # Save a screenshot
-            # @ToDo
-            pass
+        if not form_vars.get("temp", None) and not auth.override:
+            settings = current.deployment_settings
+            screenshot = settings.get_gis_config_screenshot()
+            if screenshot is not None:
+                # Save a screenshot
+                width = screenshot[0]
+                height = screenshot[1]
+                filename = current.gis.get_screenshot(config_id,
+                                                      False,
+                                                      height,
+                                                      width)
+                db(db.gis_config.id == config_id).update(image=filename)
 
     # -------------------------------------------------------------------------
     @staticmethod

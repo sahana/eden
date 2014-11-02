@@ -16,7 +16,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -160,7 +160,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -383,7 +383,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -540,7 +540,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -676,7 +676,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -846,7 +846,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -1032,7 +1032,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 
@@ -1295,7 +1295,7 @@
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
-        if (dummy_input == 'undefined') {
+        if (!dummy_input.length) {
             return;
         }
 

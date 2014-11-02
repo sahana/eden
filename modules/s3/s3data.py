@@ -978,11 +978,16 @@ class S3DataList(object):
             if hasattr(render, "prep"):
                 render.prep(resource, records)
 
-            items = [
-                DIV(T("Total Records: %(numrows)s") % {"numrows": self.total},
-                    _class="dl-header",
-                    _id="%s-header" % list_id)
-            ]
+            if current.response.s3.dl_no_header:
+                items = []
+            else:
+                items = [DIV(T("Total Records: %(numrows)s") % \
+                                {"numrows": self.total},
+                             _class="dl-header",
+                             _id="%s-header" % list_id,
+                             )
+                         ]
+
             if empty is None:
                 empty = resource.crud.crud_string(resource.tablename,
                                                   "msg_no_match")

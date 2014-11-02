@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
     GIS Controllers
@@ -958,15 +959,12 @@ def config():
         elif r.interactive or r.representation == "aadata":
             if not r.component:
                 s3db.gis_config_form_setup()
+                list_fields = s3db.get_config("gis_config", "list_fields")
                 if auth.s3_has_role(MAP_ADMIN):
-                    list_fields = ["id",
-                                   "name",
-                                   "pe_id",
-                                   "region_location_id",
-                                   "default_location_id",
-                                   ]
+                    list_fields += ["region_location_id",
+                                    "default_location_id",
+                                    ]
                     s3db.configure("gis_config",
-                                   list_fields = list_fields,
                                    subheadings = {T("Map Settings"): "zoom",
                                                   T("Form Settings"): "default_location_id",
                                                   },
@@ -979,10 +977,7 @@ def config():
                     s3.filter = (FS("config.temp") == False) & \
                                 (FS("config.region_location_id") == None) & \
                                 (FS("config.uuid") != "SITE_DEFAULT")
-                    list_fields = ["name",
-                                   "pe_id",
-                                   "pe_default",
-                                   ]
+                    list_fields.append("pe_default")
                     CREATED_BY = T("Created By")
                     field = r.table.pe_id
                     field.label = CREATED_BY
@@ -1040,7 +1035,6 @@ def config():
                     s3db.configure("gis_config",
                                    crud_form = crud_form,
                                    insertable = False,
-                                   list_fields = list_fields,
                                    )
 
             elif r.component_name == "layer_entity":
@@ -3669,6 +3663,8 @@ def screenshot():
 
     config_id = request.args(0) or 1
 
-    return gis.get_screenshot(config_id)
+    filename = gis.get_screenshot(config_id)
+    redirect(URL(c="static", f="cache",
+                 args=["jpg", filename]))
 
 # END =========================================================================
