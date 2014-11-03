@@ -179,7 +179,13 @@ class S3TimePlot(S3Method):
                                                    filter_url = filter_url,
                                                    widget_id = widget_id,
                                                    )
-            # @todo: render using view template (see S3Report)
+
+            # Detect and store theme-specific inner layout
+            view = self._view(r, "timeplot.html")
+
+            # Render inner layout (outer page layout is set by S3Summary)
+            output["title"] = None
+            output = XML(current.response.render(view, output))
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -299,18 +305,23 @@ class S3TimePlot(S3Method):
                                                 vars=ajax_vars,
                                                 ))
 
-            output["form"] = S3TimePlotForm(resource) \
-                                           .html(data,
-                                                 get_vars = get_vars,
-                                                 filter_widgets = filter_widgets,
-                                                 ajaxurl = ajaxurl,
-                                                 filter_url = filter_url,
-                                                 widget_id = widget_id,
-                                                 )
+            output = S3TimePlotForm(resource).html(data,
+                                                   get_vars = get_vars,
+                                                   filter_widgets = filter_widgets,
+                                                   ajaxurl = ajaxurl,
+                                                   filter_url = filter_url,
+                                                   widget_id = widget_id,
+                                                   )
+
+            output["title"] = self.crud_string(tablename, "title_report")
+            output["report_type"] = "timeplot"
+
+            # Detect and store theme-specific inner layout
+            self._view(r, "timeplot.html")
 
             # View
             response = current.response
-            response.view = self._view(r, "timeplot.html")
+            response.view = self._view(r, "report.html")
 
         elif r.representation == "json":
             # Ajax load
@@ -524,29 +535,19 @@ class S3TimePlotForm(S3ReportForm):
             submit = ""
 
         # @todo: use view template (see S3ReportForm)
-        form = DIV(DIV(FORM(filter_options,
-                            report_options,
-                            submit,
-                            hidden = hidden,
-                            _class = "tp-form",
-                            _id = "%s-tp-form" % widget_id,
-                            ),
-                       _class="tp-form-container form-container",
-                       ),
-                   DIV(DIV(_class="inline-throbber tp-throbber"),
-                       DIV(DIV(_class="tp-chart-controls"),
-                           DIV(#DIV(_class="tp-hide-chart"),
-                               #DIV(_class="tp-chart-title"),
-                               DIV(_class="tp-chart"),
-                               _class="tp-chart-contents"
-                           ),
-                           _class="tp-chart-container"
-                       ),
-                       DIV(empty, _class="tp-empty"),
-                   ),
-                   _class="tp-container",
-                   _id=widget_id
-               )
+        form = FORM(filter_options,
+                    report_options,
+                    submit,
+                    hidden = hidden,
+                    _class = "tp-form",
+                    _id = "%s-tp-form" % widget_id,
+                    )
+
+        # View variables
+        output = {"form": form,
+                  "empty": empty,
+                  "widget_id": widget_id,
+                  }
 
         # D3/Timeplot scripts (injected so that they are available for summary)
         s3 = current.response.s3
@@ -581,7 +582,7 @@ class S3TimePlotForm(S3ReportForm):
                     }
         s3.jquery_ready.append(script)
 
-        return form
+        return output
 
     # -------------------------------------------------------------------------
     def report_options(self, get_vars=None, widget_id="timeplot"):

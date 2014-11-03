@@ -1,8 +1,22 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='rheader'>
-{{try:}}{{=XML(rheader)}}{{except:}}{{pass}}
+<div>
+ <div class='tp-container' {{try:}}id='{{=widget_id}}{{except:}}{{pass}}'>
+  <!-- Form -->
+  <div class='tp-form-container form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+  <!-- Throbber -->
+  <div class='tp-throbber inline-throbber'></div>
+  <!-- Chart Container -->
+  <div class='tp-chart-container'>
+   <div>
+    <div class='tp-chart-controls'></div>
+    <div class='tp-chart-contents'>
+     <div class='tp-chart'></div>
+   </div>
+  </div>
+  <!-- Empty-Section -->
+  <div class='tp-empty'>
+   {{try:}}{{=empty}}{{except:}}{{pass}}
+  </div>
+ </div>
 </div>
-<div id='table-container'>
-{{try:}}{{=form}}{{except:}}{{pass}}
-</div>
-{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

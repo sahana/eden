@@ -215,6 +215,7 @@ class S3Report(S3Method):
                                                  widget_id = widget_id)
 
             output["title"] = self.crud_string(tablename, "title_report")
+            output["report_type"] = "pivottable"
 
             # Detect and store theme-specific inner layout
             self._view(r, "pivottable.html")
