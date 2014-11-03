@@ -1878,16 +1878,61 @@ def customise_pr_person_controller(**attr):
                 s3db.pr_person_details.father_name.label = T("Name of Grandfather")
 
         elif vnrc:
+            controller = r.controller
             if not r.component:
+                crud_fields = ["first_name",
+                               "middle_name",
+                               "last_name",
+                               "date_of_birth",
+                               "gender",
+                               "person_details.marital_status",
+                               "person_details.nationality",
+                               ]
+
                 from gluon import IS_EMPTY_OR, IS_IN_SET
                 from s3 import IS_ONE_OF
                 db = current.db
                 dtable = s3db.pr_person_details
 
-                # Use a free-text version of religion field
-                field = dtable.religion_other
-                field.label = T("Religion")
-                field.readable = field.writable = True
+                # Context-dependend form fields
+                if controller in ("hrm", "vol"):
+                    # Provinces of Viet Nam
+                    ltable = s3db.gis_location
+                    ptable = ltable.with_alias("gis_parent_location")
+                    dbset = db((ltable.level == "L1") & \
+                            (ptable.name == "Viet Nam"))
+                    left = ptable.on(ltable.parent == ptable.id)
+                    vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
+                                                        "%(name)s", 
+                                                        left=left,
+                                                        ))
+                    # Place Of Birth
+                    field = dtable.place_of_birth
+                    field.readable = field.writable = True
+                    field.requires = vn_provinces
+
+                    # Home Town
+                    field = dtable.hometown
+                    field.readable = field.writable = True
+                    field.requires = vn_provinces
+
+                    # Use a free-text version of religion field
+                    # @todo: make drop-down list of options
+                    field = dtable.religion_other
+                    field.label = T("Religion")
+                    field.readable = field.writable = True
+
+                    crud_fields.extend(["person_details.place_of_birth",
+                                        "person_details.hometown",
+                                        "person_details.religion_other",
+                                        "person_details.mother_name",
+                                        "person_details.father_name",
+                                        "person_details.affiliations",
+                                        ])
+                else:
+                    # Have ethnicity inline
+                    # @todo: make drop-down list of options
+                    crud_fields.append("physical_description.ethnicity")
 
                 # Standard option for nationality
                 field = dtable.nationality
@@ -1929,51 +1974,11 @@ def customise_pr_person_controller(**attr):
                         # => can't enforce update, so just limit options
                         field.requires = IS_EMPTY_OR(IS_IN_SET(opts))
 
-                # Provinces of Viet Nam
-                ltable = s3db.gis_location
-                ptable = ltable.with_alias("gis_parent_location")
-                dbset = db((ltable.level == "L1") & \
-                           (ptable.name == "Viet Nam"))
-                left = ptable.on(ltable.parent == ptable.id)
-                vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
-                                                     "%(name)s", 
-                                                     left=left,
-                                                     ))
-
-                # Place Of Birth
-                field = dtable.place_of_birth
-                field.readable = field.writable = True
-                field.requires = vn_provinces
-
-                # Home Town
-                field = dtable.hometown
-                field.readable = field.writable = True
-                field.requires = vn_provinces
-
                 # Also hide some other fields
+                crud_fields.append("comments")
                 from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm("first_name",
-                                            "middle_name",
-                                            "last_name",
-                                            "date_of_birth",
-                                            #"initials",
-                                            #"preferred_name",
-                                            #"local_name",
-                                            "gender",
-                                            "person_details.marital_status",
-                                            "person_details.nationality",
-                                            "person_details.place_of_birth",
-                                            "person_details.hometown",
-                                            "person_details.religion_other",
-                                            "person_details.mother_name",
-                                            "person_details.father_name",
-                                            #"person_details.occupation",
-                                            #"person_details.company",
-                                            "person_details.affiliations",
-                                            "comments",
-                                            )
                 s3db.configure("pr_person",
-                               crud_form = crud_form,
+                               crud_form = S3SQLCustomForm(*crud_fields),
                                )
             if r.method == "record" or component_name == "human_resource":
                 # Hide job_title_id in programme hours
@@ -1991,7 +1996,7 @@ def customise_pr_person_controller(**attr):
                     field = htable[fname]
                     field.readable = field.writable = False
 
-                if r.method == "record" and r.controller == "hrm":
+                if r.method == "record" and controller == "hrm":
                     # Custom config for method handler
 
                     from s3 import FS
