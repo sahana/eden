@@ -2763,7 +2763,7 @@ class GIS(object):
         # Custom version which is patched to access native PhantomJS functions added to GhostDriver/PhantomJS in:
         # https://github.com/watsonmw/ghostdriver/commit/d9b65ed014ed9ff8a5e852cc40e59a0fd66d0cf1
         from webdriver import WebDriver
-        from selenium.common.exceptions import WebDriverException
+        from selenium.common.exceptions import TimeoutException, WebDriverException
         from selenium.webdriver.support.ui import WebDriverWait
 
         request = current.request
@@ -2829,7 +2829,12 @@ class GIS(object):
             except WebDriverException:
                 return False
 
-        WebDriverWait(driver, 10).until(map_loaded)
+        try:
+            WebDriverWait(driver, 10).until(map_loaded)
+        except TimeoutException, e:
+            driver.quit()
+            current.log.error(e)
+            return None
 
         # Save the Output
         # @ToDo: Can we use StringIO instead of cluttering filesystem?
@@ -2865,12 +2870,10 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         try:
             result = driver.execute_phantomjs(script)
         except WebDriverException, e:
-            #os.chdir(cwd)
             driver.quit()
             current.log.error(e)
             return None
 
-        #os.chdir(cwd)
         driver.quit()
 
         if temp:

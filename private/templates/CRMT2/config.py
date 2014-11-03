@@ -1631,6 +1631,119 @@ def customise_org_facility_controller(**attr):
 settings.customise_org_facility_controller = customise_org_facility_controller
 
 # -----------------------------------------------------------------------------
+# Shared Stories
+#
+def cms_post_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Custom dataList item renderer for Shared Stories
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["cms_post.id"]
+
+    raw = record._row
+    series = record["cms_post.series_id"]
+    series_id = raw["cms_post.series_id"]
+    title = record["cms_post.title"]
+    body = record["cms_post.body"]
+    author = record["cms_post.created_by"]
+    coalition = record["auth_user.org_group_id"]
+    date = record["cms_post.created_on"]
+    image = raw["doc_image.file"] or ""
+    if image:
+        image = IMG(_src="/%s/default/download/%s" % (current.request.application, image))
+
+    item = TAG.article(H2(A(title,
+                            _href=URL(c="cms", f="page", args=record_id),
+                            ),
+                          ),
+                       H6(author,
+                          BR(),
+                          coalition,
+                          BR(),
+                          date,
+                          ),
+                       image,
+                       body,
+                       H6(T("More about %(type)s") % \
+        dict(type=A(series,
+                    _href=URL(c="cms", f="post",
+                              args="datalist",
+                              vars={"~.series_id": series_id}),
+                    ),
+             )
+                          ),
+                       )
+
+    return item
+
+def customise_cms_post_controller(**attr):
+
+    s3 = current.response.s3
+
+    if "datalist" in current.request.args:
+        from s3 import FS
+        s3.filter = (FS("cms_post.series_id") != None)
+
+    # Custom PreP
+    standard_prep = s3.prep
+    def custom_prep(r):
+        # Call standard prep
+        if callable(standard_prep):
+            result = standard_prep(r)
+            if not result:
+                return False
+
+        s3db = current.s3db
+        table = s3db.cms_post
+
+        from s3 import S3ImageCropWidget
+        s3db.doc_image.file.widget = S3ImageCropWidget((400, 240))
+
+        if r.method == "datalist":
+            # Tweak DataList options
+            s3.dl_no_header = True
+            list_fields = ["series_id",
+                           "title",
+                           "body",
+                           "date",
+                           "created_on",
+                           "created_by",
+                           "created_by$org_group_id",
+                           "image.file",
+                           ]
+
+            from s3 import S3DateTime, s3_auth_user_represent_name
+            table.created_by.represent = s3_auth_user_represent_name
+            table.created_on.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+
+            from s3 import S3OptionsFilter
+            filter_widgets = [
+                S3OptionsFilter("series_id",
+                                label = "",
+                                cols = 1,
+                                multiple = False,
+                                )
+                ]
+            s3db.configure("cms_post",
+                           filter_widgets = filter_widgets,
+                           list_fields = list_fields,
+                           list_layout = cms_post_list_layout,
+                           )
+
+        return True
+    s3.prep = custom_prep
+
+    return attr
+
+settings.customise_cms_post_controller = customise_cms_post_controller
+
+# -----------------------------------------------------------------------------
 # Saved Maps
 #
 def gis_config_list_layout(list_id, item_id, resource, rfields, record):
@@ -1651,7 +1764,8 @@ def gis_config_list_layout(list_id, item_id, resource, rfields, record):
     author = record["gis_config.pe_id"]
     image = raw["gis_config.image"]
 
-    item = DIV(A(IMG(_src="/%s/static/cache/jpg/%s" % (current.request.application, image),
+    item = DIV(A(IMG(_src="/%s/static/cache/jpg/%s" % \
+                                        (current.request.application, image),
                      _width="820",
                      _height="410",
                      _alt=name,
@@ -1659,7 +1773,8 @@ def gis_config_list_layout(list_id, item_id, resource, rfields, record):
                      ),
                     TAG.figcaption(name,
                                    " ",
-                                   TAG.small(T("by %(person)s") % dict(person=author),
+                                   TAG.small(str(T("by %(person)s")) % \
+                                                        dict(person=author),
                                              _tabindex="0",
                                              ),
                                    ),
@@ -1682,8 +1797,6 @@ def customise_gis_config_controller(**attr):
             if not result:
                 return False
 
-        from s3 import S3ImageCropWidget
-
         s3db = current.s3db
         table = s3db.gis_config
 
@@ -1697,29 +1810,38 @@ def customise_gis_config_controller(**attr):
         field.readable = True
         #field.readable = field.writable = True
         field.label = T("Image")
+        #from s3 import S3ImageCropWidget
         #field.widget = S3ImageCropWidget((820, 410))
 
+        table.pe_id.represent = s3db.pr_PersonEntityRepresent(show_label = False,
+                                                              show_type = False,
+                                                              show_link = False, # We're rendering inside another A()
+                                                              )
+        # NB This page needs checking for responsiveness.
+        # Should be small-block-grid-1 medium-block-grid-2 large-block-grid-3
         s3db.configure("gis_config",
                        list_layout = gis_config_list_layout,
                        )
 
         auth = current.auth
         coalition = auth.user.org_group_id
-        if not coalition:
-            return True
 
-        db = current.db
-        utable = db.auth_user
-        ltable = s3db.pr_person_user
-        query = (table.deleted == False) & \
-                (table.pe_id == ltable.pe_id) & \
-                (ltable.user_id == utable.id) & \
-                (utable.org_group_id == coalition)
-        rows = db(query).select(ltable.pe_id,
-                                distinct = True)
+        from s3 import S3OptionsFilter
+        if coalition:
+            db = current.db
+            utable = db.auth_user
+            ltable = s3db.pr_person_user
+            query = (table.deleted == False) & \
+                    (table.pe_id == ltable.pe_id) & \
+                    (ltable.user_id == utable.id) & \
+                    (utable.org_group_id == coalition)
+            rows = db(query).select(ltable.pe_id,
+                                    distinct = True)
+        else:
+            rows = None
+
         if rows:
             coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
-            from s3 import S3OptionsFilter
             filter_widgets = [
                 S3OptionsFilter("pe_id",
                                 label = "",
@@ -1731,9 +1853,21 @@ def customise_gis_config_controller(**attr):
                                 multiple = False,
                                 )
                 ]
-            s3db.configure("gis_config",
-                           filter_widgets = filter_widgets,
-                           )
+        else:
+            filter_widgets = [
+                S3OptionsFilter("pe_id",
+                                label = "",
+                                options = {"*": T("All"),
+                                           auth.user.pe_id: T("My Maps"),
+                                           },
+                                cols = 2,
+                                multiple = False,
+                                )
+                ]
+            
+        s3db.configure("gis_config",
+                       filter_widgets = filter_widgets,
+                       )
 
         return True
     s3.prep = custom_prep

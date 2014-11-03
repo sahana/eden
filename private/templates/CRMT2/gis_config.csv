@@ -1,10 +1,10 @@
-UUID,Name,OU,OU Type,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker
-SITE_DEFAULT,Default,,,US,California,Los Angeles County,9,34.026689,-118.210315,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Acton & Agua Dulce,Acton & Agua Dulce,org_group,US,California,Los Angeles County,12,34.4998267777,-118.216151487,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Culver City,Culver City,org_group,US,California,Los Angeles County,13,34.0042128627,-118.383323206,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Huntington Park,Huntington Park,org_group,US,California,Los Angeles County,14,33.9776987662,-118.212546598,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,La Crescenta-Montrose,La Crescenta-Montrose,org_group,US,California,Los Angeles County,13,34.2295135891,-118.212173745,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Pico-Union,Pico-Union,org_group,US,California,Los Angeles County,15,34.043884023,-118.280696165,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Pomona,Pomona,org_group,US,California,Los Angeles County,12,34.0551217286,-117.737929124,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Watts,Watts,org_group,US,California,Los Angeles County,14,33.9394689102,-118.230742704,900913,33.4,34.65,-120.56,-115.85,True,marker_red
-,Wilmington,Wilmington,org_group,US,California,Los Angeles County,13,33.7927621111,-118.238810789,900913,33.4,34.65,-120.56,-115.85,True,marker_red
+UUID,Name,OU,OU Type,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker,Image
+SITE_DEFAULT,Default,,,US,California,Los Angeles County,9,34.026689,-118.210315,900913,33.4,34.65,-120.56,-115.85,True,marker_red,
+,Acton & Agua Dulce,Acton & Agua Dulce,org_group,US,California,Los Angeles County,12,34.4998267777,-118.216151487,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/ActonAguaDulce.jpg
+,Culver City,Culver City,org_group,US,California,Los Angeles County,13,34.0042128627,-118.383323206,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/CulverCity.jpg
+,Huntington Park,Huntington Park,org_group,US,California,Los Angeles County,14,33.9776987662,-118.212546598,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/HuntingtonPark.jpg
+,La Crescenta-Montrose,La Crescenta-Montrose,org_group,US,California,Los Angeles County,13,34.2295135891,-118.212173745,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/LaCrescentaMontrose.jpg
+,Pico-Union,Pico-Union,org_group,US,California,Los Angeles County,15,34.043884023,-118.280696165,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/Pico-Union.jpg
+,Pomona,Pomona,org_group,US,California,Los Angeles County,12,34.0551217286,-117.737929124,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/Pomona.jpg
+,Watts,Watts,org_group,US,California,Los Angeles County,14,33.9394689102,-118.230742704,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/Watts.jpg
+,Wilmington,Wilmington,org_group,US,California,Los Angeles County,13,33.7927621111,-118.238810789,900913,33.4,34.65,-120.56,-115.85,True,marker_red,http://aidiq.com/downloads/LACRMT/Wilmington.jpg

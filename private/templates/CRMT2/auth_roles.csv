@@ -7,6 +7,7 @@ ANONYMOUS,Anonymous,,cms,page,,,READ,READ,,,,Allow display of Map Layer Metadata
 ANONYMOUS,Anonymous,,,,s3_audit,,READ,,,,,Allow display of Site Activity on Homepage
 AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
 AUTHENTICATED,Authenticated,,default,person,gis_location,,READ|CREATE|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,cms,post,,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,gis,config,,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,gis,index,,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,gis,geocode,,,READ,,,,,

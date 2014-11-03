@@ -32,7 +32,7 @@
          Geocoder.............boolean.........gis_config.geocoder
          Marker...............string..........gis_style.marker_id
          WMS Browser..........float...........gis_config.wmsbrowser_url
-         
+         Image................string..........gis_config.image URL
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -214,6 +214,13 @@
             </xsl:if>
             <xsl:if test="$WMSBrowser!=''">
                 <data field="wmsbrowser_url"><xsl:value-of select="$WMSBrowser"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Image']!=''">
+                <data field="image">
+                    <xsl:attribute name="url">
+                        <xsl:value-of select="col[@field='Image']"/>
+                    </xsl:attribute>
+                </data>
             </xsl:if>
 
             <reference field="projection_id" resource="gis_projection">
