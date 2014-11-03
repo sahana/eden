@@ -3156,6 +3156,12 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          Field("hometown",
+                                label = T("Home Town"),
+                                # Enable as-required in template
+                                readable = False,
+                                writable = False,
+                                ),
                           pr_marital_status(),
                           Field("religion", length=128,
                                 label = T("Religion"),

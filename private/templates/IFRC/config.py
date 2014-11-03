@@ -1879,6 +1879,9 @@ def customise_pr_person_controller(**attr):
 
         elif vnrc:
             if not r.component:
+                from gluon import IS_EMPTY_OR, IS_IN_SET
+                from s3 import IS_ONE_OF
+                db = current.db
                 dtable = s3db.pr_person_details
 
                 # Use a free-text version of religion field
@@ -1887,7 +1890,7 @@ def customise_pr_person_controller(**attr):
                 field.readable = field.writable = True
 
                 # Standard option for nationality
-                field = s3db.pr_person_details.nationality
+                field = dtable.nationality
                 VN = "VN"
                 field.default = VN
                 vnrc_only = False
@@ -1898,7 +1901,6 @@ def customise_pr_person_controller(**attr):
                 else:
                     opts = [VN]
                     if r.record:
-                        db = current.db
                         # Get the nationality from the current record
                         query = (r.table.id == r.id)
                         left = dtable.on(dtable.person_id == r.id)
@@ -1918,7 +1920,6 @@ def customise_pr_person_controller(**attr):
                         if not row:
                             vnrc_only = True
                     opts = dict((k, options[k]) for k in opts if k in options)
-                    from gluon import IS_EMPTY_OR, IS_IN_SET
                     if vnrc_only:
                         # Person is only associated with VNRC => enforce update,
                         # and limit options to either current value or VN
@@ -1927,6 +1928,27 @@ def customise_pr_person_controller(**attr):
                         # Person is (also) associated with another org
                         # => can't enforce update, so just limit options
                         field.requires = IS_EMPTY_OR(IS_IN_SET(opts))
+
+                # Provinces of Viet Nam
+                ltable = s3db.gis_location
+                ptable = ltable.with_alias("gis_parent_location")
+                dbset = db((ltable.level == "L1") & \
+                           (ptable.name == "Viet Nam"))
+                left = ptable.on(ltable.parent == ptable.id)
+                vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
+                                                     "%(name)s", 
+                                                     left=left,
+                                                     ))
+
+                # Place Of Birth
+                field = dtable.place_of_birth
+                field.readable = field.writable = True
+                field.requires = vn_provinces
+
+                # Home Town
+                field = dtable.hometown
+                field.readable = field.writable = True
+                field.requires = vn_provinces
 
                 # Also hide some other fields
                 from s3 import S3SQLCustomForm
@@ -1940,6 +1962,8 @@ def customise_pr_person_controller(**attr):
                                             "gender",
                                             "person_details.marital_status",
                                             "person_details.nationality",
+                                            "person_details.place_of_birth",
+                                            "person_details.hometown",
                                             "person_details.religion_other",
                                             "person_details.mother_name",
                                             "person_details.father_name",
