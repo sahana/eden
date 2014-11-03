@@ -13,6 +13,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,FI,"Regional State Administrative Agency",Region,Sub-region,Municipality,,
 ,GE,"Region / Republic",District,,,,
 ,GN,Region,Prefecture,Sub-prefecture,,,
+,HN,Department,Municipality,,,,
 ,HR,County,"Town / Municipality",,,,
 ,ID,Province,"Regency / City",District,Administrative Village,,
 ,IN,State,District,Subdistrict,,,
