@@ -352,9 +352,6 @@ class S3DocumentLibrary(S3Model):
     def document_duplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename not in ("doc_document", "doc_image"):
-            return
-
         data = item.data
         query = None
         file = data.get("file", None)

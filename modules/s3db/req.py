@@ -1580,19 +1580,17 @@ $.filterOptionsS3({
            - If the Request Number exists then it's a duplicate
         """
 
-        if item.tablename == "req_req":
-            table = item.table
-            if "req_ref" in item.data:
-                request_number = item.data.req_ref
-            else:
-                return
+        request_number = item.data.get("req_ref")
+        if not request_number:
+            return
 
-            query = (table.req_ref == request_number)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.req_ref == request_number)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestItemModel(S3Model):
@@ -1885,11 +1883,11 @@ $.filterOptionsS3({
                 - The item is the same
         """
 
-        s3db = current.s3db
+        db = current.db
 
         itable = item.table
-        rtable = s3db.req_req
-        stable = s3db.supply_item
+        rtable = db.req_req
+        stable = db.supply_item
 
         req_id = None
         item_id = None
@@ -1909,14 +1907,14 @@ $.filterOptionsS3({
                     jobitem = item.job.items[uuid]
                     item_id = jobitem.id
 
-        if req_id != None and item_id != None:
+        if req_id is not None and item_id is not None:
             query = (itable.req_id == req_id) & \
                     (itable.item_id == item_id)
         else:
             return
 
-        duplicate = current.db(query).select(itable.id,
-                                             limitby=(0, 1)).first()
+        duplicate = db(query).select(itable.id,
+                                     limitby=(0, 1)).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE

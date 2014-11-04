@@ -61,8 +61,6 @@ class S3ScenarioModel(S3Model):
         T = current.T
         db = current.db
 
-        add_components = self.add_components
-
         # ---------------------------------------------------------------------
         # Scenarios
         #
@@ -74,20 +72,20 @@ class S3ScenarioModel(S3Model):
                           self.event_incident_type_id(),
                           Field("name", notnull=True,
                                 length=64,    # Mayon compatiblity
-                                label=T("Name")),
+                                label = T("Name"),
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
         self.configure(tablename,
                        # Open Map Config to set the default Location
-                       create_next=URL(args=["[id]", "config"]),
-                       deduplicate=self.scenario_duplicate,
+                       create_next = URL(args=["[id]", "config"]),
+                       deduplicate = self.scenario_duplicate,
                        )
 
         # CRUD strings
-        ADD_SCENARIO = T("New Scenario")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_SCENARIO,
+            label_create = T("Create Scenario"),
             title_display = T("Scenario Details"),
             title_list = T("Scenarios"),
             title_update = T("Edit Scenario"),
@@ -100,55 +98,55 @@ class S3ScenarioModel(S3Model):
             msg_list_empty = T("No Scenarios currently registered"))
 
         # Components
-        add_components(tablename,
-                       # Tasks
-                       project_task = {"link": "scenario_task",
-                                       "joinby": "scenario_id",
-                                       "key": "task_id",
-                                       # @ToDo: Widget to handle embedded LocationSelector
-                                       #"actuate": "embed",
-                                       "actuate": "link",
-                                       "autocomplete": "name",
-                                       "autodelete": False,
-                                       },
-                       # Human Resources
-                       hrm_human_resource = {"link": "scenario_human_resource",
-                                             "joinby": "scenario_id",
-                                             "key": "human_resource_id",
-                                             # @ToDo: Widget to handle embedded AddPersonWidget
-                                             #"actuate": "embed",
-                                             "actuate": "link",
-                                             "autocomplete": "name",
-                                             "autodelete": False,
-                                             },
-                       # Assets
-                       asset_asset = {"link": "scenario_asset",
-                                      "joinby": "scenario_id",
-                                      "key": "asset_id",
-                                      "actuate": "embed",
-                                      "autocomplete": "name",
-                                      "autodelete": False,
-                                      },
-                       # Facilities
-                       scenario_site = "scenario_id",
-                       # Organisations
-                       org_organisation = {"link": "scenario_organisation",
+        self.add_components(tablename,
+                            # Tasks
+                            project_task = {"link": "scenario_task",
+                                            "joinby": "scenario_id",
+                                            "key": "task_id",
+                                            # @ToDo: Widget to handle embedded LocationSelector
+                                            #"actuate": "embed",
+                                            "actuate": "link",
+                                            "autocomplete": "name",
+                                            "autodelete": False,
+                                            },
+                            # Human Resources
+                            hrm_human_resource = {"link": "scenario_human_resource",
+                                                  "joinby": "scenario_id",
+                                                  "key": "human_resource_id",
+                                                  # @ToDo: Widget to handle embedded AddPersonWidget
+                                                  #"actuate": "embed",
+                                                  "actuate": "link",
+                                                  "autocomplete": "name",
+                                                  "autodelete": False,
+                                                  },
+                            # Assets
+                            asset_asset = {"link": "scenario_asset",
                                            "joinby": "scenario_id",
-                                           "key": "organisation_id",
+                                           "key": "asset_id",
                                            "actuate": "embed",
                                            "autocomplete": "name",
                                            "autodelete": False,
                                            },
-                       # Map Config as a component of Scenarios
-                       gis_config = {"link": "scenario_config",
-                                     "joinby": "scenario_id",
-                                     "multiple": False,
-                                     "key": "config_id",
-                                     "actuate": "replace",
-                                     "autocomplete": "name",
-                                     "autodelete": True,
-                                     },
-                      )
+                            # Facilities
+                            scenario_site = "scenario_id",
+                            # Organisations
+                            org_organisation = {"link": "scenario_organisation",
+                                                "joinby": "scenario_id",
+                                                "key": "organisation_id",
+                                                "actuate": "embed",
+                                                "autocomplete": "name",
+                                                "autodelete": False,
+                                                },
+                            # Map Config as a component of Scenarios
+                            gis_config = {"link": "scenario_config",
+                                          "joinby": "scenario_id",
+                                          "multiple": False,
+                                          "key": "config_id",
+                                          "actuate": "replace",
+                                          "autocomplete": "name",
+                                          "autodelete": True,
+                                          },
+                            )
 
         represent = S3Represent(lookup=tablename)
         scenario_id = S3ReusableField("scenario_id", "reference %s" % tablename,
@@ -196,11 +194,8 @@ class S3ScenarioModel(S3Model):
             Deduplication of Scenarios
         """
 
-        if item.tablename != "scenario_scenario":
-            return
-
         data = item.data
-        name = data.get("name", None)
+        name = data.get("name")
 
         table = item.table
         query = (table.name == name)

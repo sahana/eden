@@ -678,7 +678,7 @@ class S3PersonEntity(S3Model):
             return
         if record and record.deleted_fk:
             data = json.loads(record.deleted_fk)
-            pe_id = data.get("pe_id", None)
+            pe_id = data.get("pe_id")
             if pe_id:
                 current.s3db.pr_rebuild_path(pe_id, clear=True)
         return
@@ -1180,16 +1180,16 @@ class S3PersonModel(S3Model):
 
         # Mandatory data
         data = item.data
-        fname = data.get("first_name", None)
-        mname = data.get("middle_name", None)
-        lname = data.get("last_name", None)
+        fname = data.get("first_name")
+        mname = data.get("middle_name")
+        lname = data.get("last_name")
         if fname:
             fname = fname.lower()
         if mname:
             mname = mname.lower()
         if lname:
             lname = lname.lower()
-        initials = data.get("initials", None)
+        initials = data.get("initials")
         if initials:
             initials = initials.lower()
 
@@ -1203,20 +1203,20 @@ class S3PersonModel(S3Model):
             return
 
         # Optional extra data
-        dob = data.get("date_of_birth", None)
+        dob = data.get("date_of_birth")
         email = sms = None
         id = {}
         for citem in item.components:
             if citem.tablename == "pr_contact":
                 data = citem.data
-                if data.get("contact_method", None) == "EMAIL":
+                if data.get("contact_method") == "EMAIL":
                     email = data.value
-                elif data.get("contact_method", None) == "SMS":
+                elif data.get("contact_method") == "SMS":
                     sms = data.value
             elif citem.tablename == "pr_identity":
                 data = citem.data
-                id_type = data.get("type", None)
-                id_value = data.get("value", None)
+                id_type = data.get("type")
+                id_value = data.get("value")
                 if id_type and id_value:
                     id[id_type] = id_value
 
@@ -2017,18 +2017,16 @@ class S3GroupModel(S3Model):
     def group_deduplicate(item):
         """ Group de-duplication """
 
-        if item.tablename == "pr_group":
-            table = item.table
-            name = item.data.get("name", None)
+        name = item.data.get("name")
 
-            query = (table.name == name) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
+        table = item.table
+        query = (table.name == name) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2263,26 +2261,24 @@ class S3ContactModel(S3Model):
     def pr_contact_deduplicate(item):
         """ Contact information de-duplication """
 
-        if item.tablename == "pr_contact":
-            data = item.data
-            pe_id = data.get("pe_id", None)
+        data = item.data
+        pe_id = data.get("pe_id")
+        if pe_id is None:
+            return
 
-            if pe_id is None:
-                return
+        table = item.table
+        contact_method = data.get("contact_method")
+        value = data.get("value")
 
-            table = item.table
-            contact_method = data.get("contact_method", None)
-            value = data.get("value", None)
-
-            query = (table.pe_id == pe_id) & \
-                    (table.contact_method == contact_method) & \
-                    (table.value == value) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        query = (table.pe_id == pe_id) & \
+                (table.contact_method == contact_method) & \
+                (table.value == value) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2292,19 +2288,18 @@ class S3ContactModel(S3Model):
             - currently only 1 of these expected per person
         """
 
-        if item.tablename == "pr_contact_emergency":
-            pe_id = item.data.get("pe_id", None)
-            if pe_id is None:
-                return
+        pe_id = item.data.get("pe_id")
+        if pe_id is None:
+            return
 
-            table = item.table
-            query = (table.pe_id == pe_id) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.pe_id == pe_id) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3AddressModel(S3Model):
@@ -2508,25 +2503,23 @@ class S3AddressModel(S3Model):
     def pr_address_deduplicate(item):
         """ Address de-duplication """
 
-        if item.tablename == "pr_address":
-            data = item.data
-            pe_id = data.get("pe_id", None)
+        data = item.data
+        pe_id = data.get("pe_id")
+        if pe_id is None:
+            return
 
-            if pe_id is None:
-                return
-
-            type = data.get("type", None)
-            location_id = data.get("location_id", None)
-            table = item.table
-            query = (table.pe_id == pe_id) & \
-                    (table.type == type) & \
-                    (table.location_id == location_id) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        type = data.get("type")
+        location_id = data.get("location_id")
+        table = item.table
+        query = (table.pe_id == pe_id) & \
+                (table.type == type) & \
+                (table.location_id == location_id) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonImageModel(S3Model):
@@ -2923,26 +2916,25 @@ class S3PersonIdentityModel(S3Model):
     def pr_identity_deduplicate(item):
         """ Identity de-duplication """
 
-        if item.tablename == "pr_identity":
-            data = item.data
-            person_id = data.get("person_id", None)
-            if person_id is None:
-                return
+        data = item.data
+        person_id = data.get("person_id")
+        if person_id is None:
+            return
 
-            id_type = data.get("type", None)
-            # People can have 1 more than 1 'Other', or even Passport
-            # - so this cannot be used to update the Number, only update comments
-            id_value = data.get("value", None)
-            table = item.table
-            query = (table.person_id == person_id) & \
-                    (table.type == id_type) & \
-                    (table.value == id_value) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        id_type = data.get("type")
+        # People can have 1 more than 1 'Other', or even Passport
+        # - so this cannot be used to update the Number, only update comments
+        id_value = data.get("value")
+        table = item.table
+        query = (table.person_id == person_id) & \
+                (table.type == id_type) & \
+                (table.value == id_value) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonEducationModel(S3Model):
@@ -3081,28 +3073,27 @@ class S3PersonEducationModel(S3Model):
     def pr_education_deduplicate(item):
         """ Education de-duplication """
 
-        if item.tablename == "pr_education":
-            data = item.data
-            person_id = data.get("person_id", None)
-            if person_id is None:
-                return
+        data = item.data
+        person_id = data.get("person_id")
+        if person_id is None:
+            return
 
-            level = data.get("level", None)
-            award = data.get("award", None)
-            year = data.get("year", None)
-            institute = data.get("institute", None)
-            table = item.table
-            query = (table.person_id == person_id) & \
-                    (table.level == level) & \
-                    (table.award == award) & \
-                    (table.year == year) & \
-                    (table.institute == institute) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        level = data.get("level")
+        award = data.get("award")
+        year = data.get("year")
+        institute = data.get("institute")
+        table = item.table
+        query = (table.person_id == person_id) & \
+                (table.level == level) & \
+                (table.award == award) & \
+                (table.year == year) & \
+                (table.institute == institute) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonDetailsModel(S3Model):
@@ -3231,19 +3222,18 @@ class S3PersonDetailsModel(S3Model):
             - only 1 of these expected per person
         """
 
-        if item.tablename == "pr_person_details":
-            person_id = item.data.get("person_id", None)
-            if person_id is None:
-                return
+        person_id = item.data.get("person_id")
+        if person_id is None:
+            return
 
-            table = item.table
-            query = (table.person_id == person_id) & \
-                    (table.deleted != True)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.person_id == person_id) & \
+                (table.deleted != True)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonTagModel(S3Model):
@@ -3286,9 +3276,8 @@ class S3PersonTagModel(S3Model):
         """
 
         data = item.data
-        tag = data.get("tag", None)
-        person_id = data.get("person_id", None)
-
+        tag = data.get("tag")
+        person_id = data.get("person_id")
         if not tag or not person_id:
             return
 

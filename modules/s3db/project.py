@@ -557,25 +557,27 @@ class S3ProjectModel(S3Model):
     def project_project_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename == "project_project":
-            data = item.data
+        data = item.data
+        # If we have a code, then assume this is unique, however the same
+        # project name may be used in multiple locations
+        code = data.get("code")
+        if code:
             table = item.table
-            # If we have a code, then assume this is unique, however the same
-            # project name may be used in multiple locations
-            if "code" in data and data.code:
-                query = (table.code.lower() == data.code.lower())
-            elif "name" in data and data.name:
-                query = (table.name.lower() == data.name.lower())
+            query = (table.code.lower() == code.lower())
+        else:
+            name = data.get("name")
+            if name:
+                table = item.table
+                query = (table.name.lower() == name.lower())
             else:
                 # Nothing we can work with
                 return
 
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1146,11 +1148,9 @@ class S3ProjectActivityModel(S3Model):
     def project_activity_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_activity":
-            return
         data = item.data
-        project_id = data.get("project_id", None)
-        name = data.get("name", None)
+        project_id = data.get("project_id")
+        name = data.get("name")
         # Match activity by project_id and name
         if project_id and name:
             table = item.table
@@ -1437,12 +1437,9 @@ class S3ProjectActivityOrganisationModel(S3Model):
     def project_activity_organisation_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_activity_organisation":
-            return
-
         data = item.data
-        activity_id = data.get("activity_id", None)
-        organisation_id = data.get("organisation_id", None)
+        activity_id = data.get("activity_id")
+        organisation_id = data.get("organisation_id")
         if activity_id and organisation_id:
             table = item.table
             query = (table.activity_id == activity_id) & \
@@ -1459,12 +1456,9 @@ class S3ProjectActivityOrganisationModel(S3Model):
     def project_activity_group_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_activity_group":
-            return
-
         data = item.data
-        activity_id = data.get("activity_id", None)
-        group_id = data.get("group_id", None)
+        activity_id = data.get("activity_id")
+        group_id = data.get("group_id")
         if activity_id and group_id:
             table = item.table
             query = (table.activity_id == activity_id) & \
@@ -1515,12 +1509,9 @@ class S3ProjectActivitySectorModel(S3Model):
     def project_sector_activity_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_sector_activity":
-            return
-
         data = item.data
-        activity_id = data.get("activity_id", None)
-        sector_id = data.get("sector_id", None)
+        activity_id = data.get("activity_id")
+        sector_id = data.get("sector_id")
         if activity_id and sector_id:
             table = item.table
             query = (table.activity_id == activity_id) & \
@@ -1957,12 +1948,9 @@ class S3ProjectBeneficiaryModel(S3Model):
     def project_beneficiary_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_beneficiary":
-            return
-
         data = item.data
-        parameter_id = data.get("parameter_id", None)
-        project_location_id = data.get("project_location_id", None)
+        parameter_id = data.get("parameter_id")
+        project_location_id = data.get("project_location_id")
         # Match beneficiary by type and project_location
         if parameter_id and project_location_id:
             table = item.table
@@ -1979,12 +1967,9 @@ class S3ProjectBeneficiaryModel(S3Model):
     def project_beneficiary_activity_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_beneficiary_activity":
-            return
-
         data = item.data
-        parameter_id = data.get("parameter_id", None)
-        activity_id = data.get("activity_id", None)
+        parameter_id = data.get("parameter_id")
+        activity_id = data.get("activity_id")
         # Match beneficiary by type and activity
         if parameter_id and activity_id:
             table = item.table
@@ -2001,12 +1986,9 @@ class S3ProjectBeneficiaryModel(S3Model):
     def project_beneficiary_activity_type_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_beneficiary_activity_type":
-            return
-
         data = item.data
-        parameter_id = data.get("parameter_id", None)
-        activity_type_id = data.get("activity_type_id", None)
+        parameter_id = data.get("parameter_id")
+        activity_type_id = data.get("activity_type_id")
         # Match beneficiary by type and activity_type
         if parameter_id and activity_type_id:
             table = item.table
@@ -2537,12 +2519,9 @@ class S3ProjectHazardModel(S3Model):
     def project_hazard_project_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_hazard_project":
-            return
-
         data = item.data
-        project_id = data.get("project_id", None)
-        hazard_id = data.get("hazard_id", None)
+        project_id = data.get("project_id")
+        hazard_id = data.get("hazard_id")
         if project_id and hazard_id:
             table = item.table
             query = (table.project_id == project_id) & \
@@ -3041,14 +3020,10 @@ class S3ProjectLocationModel(S3Model):
     def project_location_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_location":
-            return
-
         data = item.data
-        if "project_id" in data and \
-           "location_id" in data:
-            project_id = data.project_id
-            location_id = data.location_id
+        project_id = data.get("project_id")
+        location_id = data.get("location_id")
+        if project_id and location_id:
             table = item.table
             query = (table.project_id == project_id) & \
                     (table.location_id == location_id)
@@ -3157,11 +3132,11 @@ class S3ProjectOrganisationModel(S3Model):
 
         # Resource Configuration
         self.configure(tablename,
+                       deduplicate = self.project_organisation_deduplicate,
+                       onaccept = self.project_organisation_onaccept,
+                       ondelete = self.project_organisation_ondelete,
+                       onvalidation = self.project_organisation_onvalidation,
                        report_options = report_options,
-                       deduplicate=self.project_organisation_deduplicate,
-                       onvalidation=self.project_organisation_onvalidation,
-                       onaccept=self.project_organisation_onaccept,
-                       ondelete=self.project_organisation_ondelete,
                        )
 
         # Pass names back to global scope (s3.*)
@@ -3258,14 +3233,11 @@ class S3ProjectOrganisationModel(S3Model):
     def project_organisation_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_organisation":
-            return
         data = item.data
-        if "project_id" in data and \
-           "organisation_id" in data:
+        project_id = data.get("project_id")
+        organisation_id = data.get("organisation_id")
+        if project_id and organisation_id:
             table = item.table
-            project_id = data.project_id
-            organisation_id = data.organisation_id
             query = (table.project_id == project_id) & \
                     (table.organisation_id == organisation_id)
             duplicate = current.db(query).select(table.id,
@@ -3335,14 +3307,12 @@ class S3ProjectOutputModel(S3Model):
     def project_output_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_output":
-            return
         data = item.data
-        name = data.get("name", None)
-        project_id = data.get("project_id", None)
+        name = data.get("name")
         if name:
             table = item.table
             query = (table.name == name)
+            project_id = data.get("project_id")
             if project_id:
                 query &= ((table.project_id == project_id) | \
                           (table.project_id == None))
@@ -3751,12 +3721,9 @@ class S3ProjectThemeModel(S3Model):
     def project_theme_project_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_theme_project":
-            return
-
         data = item.data
-        project_id = data.get("project_id", None)
-        theme_id = data.get("theme_id", None)
+        project_id = data.get("project_id")
+        theme_id = data.get("theme_id")
         if project_id and theme_id:
             table = item.table
             query = (table.project_id == project_id) & \
@@ -3773,12 +3740,9 @@ class S3ProjectThemeModel(S3Model):
     def project_theme_activity_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "project_theme_activity":
-            return
-
         data = item.data
-        activity_id = data.get("activity_id", None)
-        theme_id = data.get("theme_id", None)
+        activity_id = data.get("activity_id")
+        theme_id = data.get("theme_id")
         if activity_id and theme_id:
             table = item.table
             query = (table.activity_id == activity_id) & \
@@ -5254,25 +5218,28 @@ class S3ProjectTaskModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_milestone_duplicate(item):
-        """ Import item de-duplication """
+        """
+            Import item de-duplication
+            - Duplicate if same Name & Project
+        """
 
-        if item.tablename == "project_milestone":
-            data = item.data
-            table = item.table
-            # Duplicate if same Name & Project
-            if "name" in data and data.name:
-                query = (table.name.lower() == data.name.lower())
-            else:
-                # Nothing we can work with
-                return
-            if "project_id" in data and data.project_id:
-                query &= (table.project_id == data.project_id)
+        data = item.data
+        name = data.get("name")
+        if not name:
+            # Nothing we can work with
+            return
 
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        project_id = data.get("project_id")
+        if project_id:
+            query &= (table.project_id == project_id)
+
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

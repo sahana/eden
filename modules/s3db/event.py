@@ -482,10 +482,7 @@ class S3EventModel(S3Model):
             Deduplication of Events
         """
 
-        if item.tablename != "event_event":
-            return
         table = item.table
-
         data = item.data
         query = None
         # Mandatory checks: Name &/or Start Date
@@ -519,12 +516,8 @@ class S3EventModel(S3Model):
             Deduplication of Event Types
         """
 
-        if item.tablename != "event_event_type":
-            return
-
         data = item.data
         name = data.get("name", None)
-
         if not name:
             return
 
@@ -543,13 +536,9 @@ class S3EventModel(S3Model):
            Deduplication of Event Tags
         """
 
-        if item.tablename != "event_event_tag":
-            return
-
         data = item.data
         tag = data.get("tag", None)
         event = data.get("event_id", None)
-
         if not tag or not event:
             return
 
@@ -913,9 +902,6 @@ class S3IncidentModel(S3Model):
         """
             Deduplication of Incidents
         """
-
-        if item.tablename != "event_incident":
-            return
 
         data = item.data
         name = data.get("name", None)
@@ -1332,12 +1318,8 @@ class S3IncidentTypeModel(S3Model):
             Deduplication of Incident Types
         """
 
-        if item.tablename != "event_incident_type":
-            return
-
         data = item.data
         name = data.get("name", None)
-
         if not name:
             return
 

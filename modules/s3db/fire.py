@@ -143,14 +143,13 @@ class S3FireModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "fire_zone_type":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == item.data.name)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3FireStationModel(S3Model):

@@ -261,7 +261,7 @@ def problem():
                 s3.actions = [
                         dict(label=str(T("Discuss")),
                              _class="action-btn",
-                             url=URL(args=["solution", "[id]", "discuss"])),
+                             url=URL(args=[r.id, "solution", "[id]", "discuss"])),
                     ]
         return output
     s3.postp = postp

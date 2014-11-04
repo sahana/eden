@@ -84,8 +84,8 @@ class DiseaseDataModel(S3Model):
                             )
 
         self.configure(tablename,
-                       super_entity = "doc_entity",
                        deduplicate = self.disease_duplicate,
+                       super_entity = "doc_entity",
                        )
 
         # CRUD strings

@@ -627,10 +627,7 @@ $.filterOptionsS3({
             Deduplication of Assets
         """
 
-        if item.tablename != "asset_asset":
-            return
         table = item.table
-
         data = item.data
         number = data.get("number", None)
         query = (table.number == number)

@@ -877,21 +877,19 @@ class S3HRModel(S3Model):
             @param item: the S3ImportItem
         """
 
-        if item.tablename == "hrm_department":
-            data = item.data
-            name = data.get("name", None)
-            org = data.get("organisation_id", None)
+        data = item.data
+        name = data.get("name", None)
+        org = data.get("organisation_id", None)
 
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            if org:
-                query  = query & (table.organisation_id == org)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        if org:
+            query  = query & (table.organisation_id == org)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -902,27 +900,25 @@ class S3HRModel(S3Model):
             @param item: the S3ImportItem
         """
 
-        if item.tablename == "hrm_job_title":
-            data = item.data
-            name = data.get("name", None)
-            if current.deployment_settings.get_hrm_org_dependent_job_titles():
-                org = data.get("organisation_id", None)
-            else:
-                org = None
-            role_type = data.get("type", None)
+        data = item.data
+        name = data.get("name", None)
+        if current.deployment_settings.get_hrm_org_dependent_job_titles():
+            org = data.get("organisation_id", None)
+        else:
+            org = None
+        role_type = data.get("type", None)
 
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            if org:
-                query  = query & (table.organisation_id == org)
-            if role_type:
-                query  = query & (table.type == role_type)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        if org:
+            query  = query & (table.organisation_id == org)
+        if role_type:
+            query  = query & (table.type == role_type)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1219,27 +1215,25 @@ class S3HRModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "hrm_human_resource":
-            data = item.data
-            person_id = "person_id" in data and data.person_id
-            org = "organisation_id" in data and data.organisation_id
+        data = item.data
+        person_id = "person_id" in data and data.person_id
+        org = "organisation_id" in data and data.organisation_id
 
-            # This allows only one HR record per person and organisation,
-            # if multiple HR records of the same person with the same org
-            # are desired, then this needs an additional criteria in the
-            # query (e.g. job title, or type):
+        # This allows only one HR record per person and organisation,
+        # if multiple HR records of the same person with the same org
+        # are desired, then this needs an additional criteria in the
+        # query (e.g. job title, or type):
 
-            table = item.table
-
-            query = (table.deleted != True) & \
-                    (table.person_id == person_id)
-            if org:
-                query = query & (table.organisation_id == org)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.deleted != True) & \
+                (table.person_id == person_id)
+        if org:
+            query = query & (table.organisation_id == org)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3HRSiteModel(S3Model):
@@ -1374,19 +1368,18 @@ class S3HRSiteModel(S3Model):
            - Each HR can only be assigned to one site at a time
         """
 
-        if item.tablename == "hrm_human_resource_site":
-            data = item.data
-            human_resource_id = data.get("human_resource_id", None)
-            if not human_resource_id:
-                return
+        data = item.data
+        human_resource_id = data.get("human_resource_id", None)
+        if not human_resource_id:
+            return
 
-            table = item.table
-            query = (table.human_resource_id == human_resource_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.human_resource_id == human_resource_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3HRSalaryModel(S3Model):
@@ -3104,19 +3097,18 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same person_id and skill_id
         """
 
-        if item.tablename == "hrm_competency":
-            data = item.data
-            person = "person_id" in data and data.person_id
-            skill = "skill_id" in data and data.skill_id
-            table = item.table
-            query = (table.person_id == person) & \
-                    (table.skill_id == skill)
+        data = item.data
+        person = data.get("person_id")
+        skill = data.get("skill_id")
+        table = item.table
+        query = (table.person_id == person) & \
+                (table.skill_id == skill)
 
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3134,17 +3126,15 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        if item.tablename == "hrm_certificate":
-            data = item.data
-            name = "name" in data and data.name
+        name = item.data.get("name")
 
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3230,28 +3220,26 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same name, ignoring case and skill_type
         """
 
-        if item.tablename == "hrm_competency_rating":
-            data = item.data
-            name = "name" in data and data.name
-            skill = False
-            for citem in item.components:
-                if citem.tablename == "hrm_skill_type":
-                    cdata = citem.data
-                    if "name" in cdata:
-                        skill = cdata.name
-            if skill == False:
-                return
+        name = item.data.get("name")
+        skill = False
+        for citem in item.components:
+            if citem.tablename == "hrm_skill_type":
+                cdata = citem.data
+                if "name" in cdata:
+                    skill = cdata.name
+        if skill == False:
+            return
 
-            table = item.table
-            stable = current.s3db.hrm_skill_type
-            query = (table.name.lower() == name.lower()) & \
-                    (table.skill_type_id == stable.id) & \
-                    (stable.value.lower() == skill.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        stable = current.s3db.hrm_skill_type
+        query = (table.name.lower() == name.lower()) & \
+                (table.skill_type_id == stable.id) & \
+                (stable.value.lower() == skill.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3269,17 +3257,15 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        if item.tablename == "hrm_course":
-            data = item.data
-            name = "name" in data and data.name
+        name = item.data.get("name")
 
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3297,17 +3283,15 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        if item.tablename == "hrm_skill":
-            data = item.data
-            name = "name" in data and data.name
+        name = item.data.get("name")
 
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3325,17 +3309,15 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        if item.tablename == "hrm_skill_type":
-            data = item.data
-            name = "name" in data and data.name
+        name = item.data.get("name")
 
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3353,56 +3335,55 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same course name & date (& site, if-present)
         """
 
-        if item.tablename == "hrm_training_event":
-            data = item.data
-            # Mandatory Data
-            course_id = data.get("course_id", None)
-            start_date = data.get("start_date", None)
-            if not course_id or not start_date:
-                return
-            # Optional Data
-            site_id = data.get("site_id", None)
+        data = item.data
+        # Mandatory Data
+        course_id = data.get("course_id", None)
+        start_date = data.get("start_date", None)
+        if not course_id or not start_date:
+            return
+        # Optional Data
+        site_id = data.get("site_id", None)
 
-            # No longer required since Imports don't add seconds:
-            # Need to provide a range of dates as otherwise second differences prevent matches
-            # - assume that if we have multiple training courses of the same
-            #   type at the same site then they start at least a minute apart
-            #
-            # @ToDo: refactor into a reusable function
-            #year = start_date.year
-            #month = start_date.month
-            #day = start_date.day
-            #hour = start_date.hour
-            #minute = start_date.minute
-            #start_start_date = datetime.datetime(year, month, day, hour, minute)
-            #if minute < 58:
-            #    minute = minute + 1
-            #elif hour < 23:
-            #    hour = hour + 1
-            #    minute = 0
-            #elif (day == 28 and month == 2) or \
-            #     (day == 30 and month in [4, 6, 9, 11]) or \
-            #     (day == 31 and month in [1, 3, 5, 7, 8, 10, 12]):
-            #    month = month + 1
-            #    day = 1
-            #    hour = 0
-            #    minute = 0
-            #else:
-            #    day = day + 1
-            #    hour = 0
-            #    minute = 0
-            #start_end_date = datetime.datetime(year, month, day, hour, minute)
+        # No longer required since Imports don't add seconds:
+        # Need to provide a range of dates as otherwise second differences prevent matches
+        # - assume that if we have multiple training courses of the same
+        #   type at the same site then they start at least a minute apart
+        #
+        # @ToDo: refactor into a reusable function
+        #year = start_date.year
+        #month = start_date.month
+        #day = start_date.day
+        #hour = start_date.hour
+        #minute = start_date.minute
+        #start_start_date = datetime.datetime(year, month, day, hour, minute)
+        #if minute < 58:
+        #    minute = minute + 1
+        #elif hour < 23:
+        #    hour = hour + 1
+        #    minute = 0
+        #elif (day == 28 and month == 2) or \
+        #     (day == 30 and month in [4, 6, 9, 11]) or \
+        #     (day == 31 and month in [1, 3, 5, 7, 8, 10, 12]):
+        #    month = month + 1
+        #    day = 1
+        #    hour = 0
+        #    minute = 0
+        #else:
+        #    day = day + 1
+        #    hour = 0
+        #    minute = 0
+        #start_end_date = datetime.datetime(year, month, day, hour, minute)
 
-            table = item.table
-            query = (table.course_id == course_id) & \
-                    (table.start_date == start_date)
-            if site_id:
-                query = query & (table.site_id == site_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.course_id == course_id) & \
+                (table.start_date == start_date)
+        if site_id:
+            query = query & (table.site_id == site_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3420,22 +3401,21 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same person, date & course
         """
 
-        if item.tablename == "hrm_training":
-            data = item.data
-            person_id = "person_id" in data and data.person_id
-            course_id = "course_id" in data and data.course_id
-            date = "date" in data and data.date
+        data = item.data
+        person_id = data.get("person_id")
+        course_id = data.get("course_id")
+        date = data.get("date")
 
-            table = item.table
-            query = (table.person_id == person_id) & \
-                    (table.course_id == course_id)
-            if date:
-                query = query & (table.date == date)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.person_id == person_id) & \
+                (table.course_id == course_id)
+        if date:
+            query = query & (table.date == date)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def hrm_training_onvalidation(form):
@@ -4329,20 +4309,19 @@ class S3HRProgrammeModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "hrm_programme":
-            data = item.data
-            name = "name" in data and data.name
-            org = data.organisation_id if "organisation_id" in data else None
+        data = item.data
+        name = data.get("name")
+        org = data.get("organisation_id")
 
-            table = item.table
-            query = (table.deleted != True) & \
-                    (table.name == name) & \
-                    (table.organisation_id == org)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.deleted != True) & \
+                (table.name == name) & \
+                (table.organisation_id == org)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def hrm_programme_hours_month(row):

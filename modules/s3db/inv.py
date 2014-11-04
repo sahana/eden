@@ -312,15 +312,14 @@ class S3WarehouseModel(S3Model):
     #def inv_warehouse_type_duplicate(item):
     #    """ Import item de-duplication """
 
-    #    if item.tablename == "inv_warehouse_type":
-    #        table = item.table
-    #        name = item.data.get("name", None)
-    #        query = (table.name.lower() == name.lower())
-    #        duplicate = current.db(query).select(table.id,
-    #                                             limitby=(0, 1)).first()
-    #        if duplicate:
-    #            item.id = duplicate.id
-    #            item.method = item.METHOD.UPDATE
+    #    name = item.data.get("name")
+    #    table = item.table
+    #    query = (table.name.lower() == name.lower())
+    #    duplicate = current.db(query).select(table.id,
+    #                                         limitby=(0, 1)).first()
+    #    if duplicate:
+    #        item.id = duplicate.id
+    #        item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -341,15 +340,14 @@ class S3WarehouseModel(S3Model):
             @param item: the S3ImportItem instance
         """
 
-        if item.tablename == "inv_warehouse":
-            table = item.table
-            name = "name" in item.data and item.data.name
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        name = item.data.get("name")
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3InventoryModel(S3Model):

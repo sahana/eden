@@ -278,9 +278,9 @@ class S3StatsDemographicModel(S3Model):
             msg_list_empty = T("No demographics currently defined"))
 
         configure(tablename,
-                  super_entity = "stats_parameter",
                   deduplicate = self.stats_demographic_duplicate,
                   requires_approval = True,
+                  super_entity = "stats_parameter",
                   )
 
         # ---------------------------------------------------------------------
@@ -503,35 +503,33 @@ class S3StatsDemographicModel(S3Model):
     def stats_demographic_duplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename == "stats_demographic":
-            table = item.table
-            name = item.data.get("name", None)
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        name = item.data.get("name")
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
     def stats_demographic_data_duplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename == "stats_demographic_data":
-            data = item.data
-            parameter_id = data.get("parameter_id", None)
-            location_id = data.get("location_id", None)
-            date = data.get("date", None)
-            table = item.table
-            query = (table.date == date) & \
-                    (table.location_id == location_id) & \
-                    (table.parameter_id == parameter_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        data = item.data
+        parameter_id = data.get("parameter_id")
+        location_id = data.get("location_id")
+        date = data.get("date")
+        table = item.table
+        query = (table.date == date) & \
+                (table.location_id == location_id) & \
+                (table.parameter_id == parameter_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1312,12 +1310,7 @@ class S3StatsImpactModel(S3Model):
             Deduplication of Impact Type
         """
 
-        if item.tablename != "stats_impact_type":
-            return
-
-        data = item.data
-        name = data.get("name", None)
-
+        name = item.data.get("name", None)
         if not name:
             return
 
@@ -1495,12 +1488,7 @@ class S3StatsPeopleModel(S3Model):
             Deduplication of Type of Peoples
         """
 
-        if item.tablename != "stats_people_type":
-            return
-
-        data = item.data
-        name = data.get("name", None)
-
+        name = item.data.get("name", None)
         if not name:
             return
 

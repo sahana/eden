@@ -862,22 +862,21 @@ class S3ShelterModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "cr_shelter":
-            data = item.data
-            #org = "organisation_id" in data and data.organisation_id
-            address = "address" in data and data.address
+        data = item.data
+        #org = data.get("organisation_id")
+        address = data.get("address")
 
-            table = item.table
-            query = (table.name == data.name)
-            #if org:
-            #    query = query & (table.organisation_id == org)
-            if address:
-                query = query & (table.address == address)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == data.name)
+        #if org:
+        #    query = query & (table.organisation_id == org)
+        if address:
+            query = query & (table.address == address)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -888,14 +887,13 @@ class S3ShelterModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "cr_shelter_type":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == item.data.name)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -906,14 +904,13 @@ class S3ShelterModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "cr_shelter_unit":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == item.data.name)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
