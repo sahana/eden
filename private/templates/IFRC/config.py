@@ -1016,7 +1016,7 @@ settings.customise_hrm_department_controller = customise_hrm_department_controll
 def customise_hrm_experience_controller(**attr):
 
     s3 = current.response.s3
-    
+
     root_org = current.auth.root_org_name()
     vnrc = False
     if root_org == VNRC:
@@ -1028,7 +1028,7 @@ def customise_hrm_experience_controller(**attr):
         if callable(standard_prep):
             if not standard_prep(r):
                 return False
-                
+
         if vnrc:
             department_id = r.table.department_id
             department_id.readable = department_id.writable = True
@@ -1457,7 +1457,7 @@ def customise_member_membership_controller(**attr):
             table = r.table
             from gluon import Field
             table["paid"] = Field.Method("paid", member_membership_paid)
-            filter_options = {T("paid"): T("paid"), 
+            filter_options = {T("paid"): T("paid"),
                               T("unpaid"): T("unpaid"),
                               }
             filter_widgets = r.resource.get_config("filter_widgets")
@@ -1755,19 +1755,28 @@ def customise_pr_person_controller(**attr):
         if root_org == CVTL:
             settings.member.cv_tab = True
     elif root_org == VNRC:
-
-        s3db.add_components("hrm_human_resource",
-                            hrm_insurance = ({"name": "social_insurance",
-                                              "joinby": "human_resource_id",
-                                              "filterby": "type",
-                                              "filterfor": "SOCIAL",
-                                              },
-                                             {"name": "health_insurance",
-                                              "joinby": "human_resource_id",
-                                              "filterby": "type",
-                                              "filterfor": "HEALTH",
-                                              }))
-
+        # Custom components
+        add_components = s3db.add_components
+        add_components("pr_person",
+                       pr_identity = {"name": "idcard",
+                                      "joinby": "person_id",
+                                      "filterby": "type",
+                                      "filterfor": (2,),
+                                      "multiple": False,
+                                      },
+                       )
+        add_components("hrm_human_resource",
+                       hrm_insurance = ({"name": "social_insurance",
+                                         "joinby": "human_resource_id",
+                                         "filterby": "type",
+                                         "filterfor": "SOCIAL",
+                                         },
+                                        {"name": "health_insurance",
+                                         "joinby": "human_resource_id",
+                                         "filterby": "type",
+                                         "filterfor": "HEALTH",
+                                         }),
+                       )
         vnrc = True
         # Remove 'Commune' level for Addresses
         #gis = current.gis
@@ -1781,11 +1790,7 @@ def customise_pr_person_controller(**attr):
         settings.hrm.use_skills = True
         settings.hrm.vol_experience = "both"
         settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-        try:
-            settings.modules.pop("asset")
-        except:
-            # Must be already removed
-            pass
+        settings.modules.pop("asset", None)
 
     if current.request.controller == "deploy":
         # Replace default title in imports:
@@ -1895,7 +1900,7 @@ def customise_pr_person_controller(**attr):
                 dtable = s3db.pr_person_details
 
                 # Context-dependend form fields
-                if controller in ("hrm", "vol"):
+                if controller in ("pr", "hrm", "vol"):
                     # Provinces of Viet Nam
                     ltable = s3db.gis_location
                     ptable = ltable.with_alias("gis_parent_location")
@@ -1903,7 +1908,7 @@ def customise_pr_person_controller(**attr):
                             (ptable.name == "Viet Nam"))
                     left = ptable.on(ltable.parent == ptable.id)
                     vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
-                                                        "%(name)s", 
+                                                        "%(name)s",
                                                         left=left,
                                                         ))
                     # Place Of Birth
@@ -1917,7 +1922,7 @@ def customise_pr_person_controller(**attr):
                     field.requires = vn_provinces
 
                     # Use a free-text version of religion field
-                    # @todo: make drop-down list of options
+                    # @todo: make religion a drop-down list of options
                     field = dtable.religion_other
                     field.label = T("Religion")
                     field.readable = field.writable = True
@@ -1930,9 +1935,19 @@ def customise_pr_person_controller(**attr):
                                         "person_details.affiliations",
                                         ])
                 else:
-                    # Have ethnicity inline
-                    # @todo: make drop-down list of options
-                    crud_fields.append("physical_description.ethnicity")
+                    # ID Card Number inline
+                    from s3 import S3SQLInlineComponent
+                    idcard_number = S3SQLInlineComponent("idcard",
+                                                         label = T("ID Card Number"),
+                                                         fields = (("", "value"),),
+                                                         default = {"type": 2,
+                                                                    },
+                                                         multiple = False,
+                                                         )
+                    # @todo: make ethnicity a drop-down list of options
+                    crud_fields.extend(["physical_description.ethnicity",
+                                        idcard_number,
+                                        ])
 
                 # Standard option for nationality
                 field = dtable.nationality
@@ -2029,9 +2044,9 @@ def customise_pr_person_controller(**attr):
                                         "filter": widget_filter,
                                         }
 
-                    s3db.set_method("pr", "person",     
+                    s3db.set_method("pr", "person",
                                     method = "record",
-                                    action = s3db.hrm_Record(salary=True, 
+                                    action = s3db.hrm_Record(salary=True,
                                                              awards=True,
                                                              disciplinary_record=True,
                                                              org_experience=org_experience,
@@ -2179,7 +2194,7 @@ def customise_pr_person_controller(**attr):
                 stable.salary_grade_id.label = T("Grade Code")
                 field = stable.monthly_amount
                 field.readable = field.writable = False
-                
+
             elif component_name == "competency":
                 ctable = s3db.hrm_competency
                 # Hide confirming organisation (defaults to VNRC)
