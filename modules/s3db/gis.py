@@ -402,7 +402,7 @@ class S3LocationModel(S3Model):
                             #gis_location = {"joinby": "parent",
                             #                "multiple": False,
                             #                },
- 
+
                             # Sites
                             org_site = "location_id",
                             )
@@ -694,15 +694,15 @@ class S3LocationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_location_duplicate(job):
+    def gis_location_duplicate(item):
         """
           This callback will be called when importing location records it will look
           to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
+          @param item: An S3ImportItem object which includes all the details
+                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Don't do deduplication if there is no level
@@ -717,9 +717,9 @@ class S3LocationModel(S3Model):
                    - make a deployment_setting for relevant function?
         """
 
-        if job.tablename == "gis_location":
-            table = job.table
-            data = job.data
+        if item.tablename == "gis_location":
+            table = item.table
+            data = item.data
             name = data.get("name", None)
 
             if not name:
@@ -732,7 +732,7 @@ class S3LocationModel(S3Model):
 
             # Don't try to update Countries
             if level == "L0":
-                job.method = None
+                item.method = None
                 return
 
             code = current.deployment_settings.get_gis_lookup_code()
@@ -751,8 +751,8 @@ class S3LocationModel(S3Model):
                     # @ToDo: Import Log
                     #current.log.debug("Location PCode Match")
                     data.name = duplicate.name # Don't update the name with the code
-                    job.id = duplicate.id
-                    job.method = job.METHOD.UPDATE
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
                     return
 
             parent = data.get("parent", None)
@@ -782,8 +782,8 @@ class S3LocationModel(S3Model):
             if duplicate:
                 # @ToDo: Import Log
                 #current.log.debug("Location Match")
-                job.id = duplicate.id
-                job.method = job.METHOD.UPDATE
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
                 return
 
             elif current.deployment_settings.get_L10n_translate_gis_location():
@@ -807,8 +807,8 @@ class S3LocationModel(S3Model):
                     # @ToDo: Import Log
                     #current.log.debug("Location l10n Match")
                     data.name = duplicate.name # Don't update the name
-                    job.id = duplicate.id
-                    job.method = job.METHOD.UPDATE
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
                 else:
                     # @ToDo: Import Log
                     #current.log.debug("No Match", name)
@@ -1217,14 +1217,14 @@ class S3LocationNameModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_location_name_deduplicate(job):
+    def gis_location_name_deduplicate(item):
         """
-           If the record is a duplicate then it will set the job method to update
+           If the record is a duplicate then it will set the item method to update
         """
 
-        if job.tablename == "gis_location_name":
-            table = job.table
-            data = job.data
+        if item.tablename == "gis_location_name":
+            table = item.table
+            data = item.data
             language = data.get("language", None)
             location = data.get("location", None)
 
@@ -1234,22 +1234,22 @@ class S3LocationNameModel(S3Model):
             query = (table.language == language) & \
                     (table.location_id == location)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_location_name_alt_deduplicate(job):
+    def gis_location_name_alt_deduplicate(item):
         """
-           If the record is a duplicate then it will set the job method to update
+           If the record is a duplicate then it will set the item method to update
         """
 
-        if job.tablename == "gis_location_name_alt":
-            table = job.table
-            data = job.data
+        if item.tablename == "gis_location_name_alt":
+            table = item.table
+            data = item.data
             location = data.get("location", None)
             name_alt = data.get("name_alt", None)
 
@@ -1259,11 +1259,11 @@ class S3LocationNameModel(S3Model):
             query = (table.name_alt == name_alt) & \
                     (table.location_id == location)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3LocationTagModel(S3Model):
@@ -1344,14 +1344,17 @@ class S3LocationTagModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_location_tag_deduplicate(job):
+    def gis_location_tag_deduplicate(item):
         """
-           If the record is a duplicate then it will set the job method to update
+           If the record is a duplicate then it will set the item method
+           to update
+
+           @param item: the S3ImportItem
         """
 
-        if job.tablename == "gis_location_tag":
-            table = job.table
-            data = job.data
+        if item.tablename == "gis_location_tag":
+            table = item.table
+            data = item.data
             tag = data.get("tag", None)
             location_id = data.get("location_id", None)
 
@@ -1361,11 +1364,11 @@ class S3LocationTagModel(S3Model):
             query = (table.tag.lower() == tag.lower()) & \
                     (table.location_id == location_id)
 
-            _duplicate = current.db(query).select(table.id,
+            duplicate = current.db(query).select(table.id,
                                                   limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3LocationGroupModel(S3Model):
@@ -2160,7 +2163,7 @@ class S3GISConfigModel(S3Model):
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
         """
 
@@ -2458,7 +2461,7 @@ class S3GISConfigModel(S3Model):
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
         """
 
@@ -2526,7 +2529,7 @@ class S3GISConfigModel(S3Model):
             @param item: An S3ImportItem object which includes all the details
                          of the record being imported
 
-            If the record is a duplicate then it will set the job method to update
+            If the record is a duplicate then it will set the item method to update
         """
 
         if item.tablename == "gis_projection" and \
@@ -4083,7 +4086,7 @@ class S3MapModel(S3Model):
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
         """
 
         if item.tablename == "gis_layer_kml":
@@ -4105,7 +4108,7 @@ class S3MapModel(S3Model):
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
         """
 
         if item.tablename == "gis_layer_openstreetmap":
@@ -4127,7 +4130,7 @@ class S3MapModel(S3Model):
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
         """
 
         if item.tablename == "gis_layer_wfs":
@@ -4151,7 +4154,7 @@ class S3MapModel(S3Model):
           @param item: An S3ImportJob object which includes all the details
                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
         """
 
         if item.tablename == "gis_layer_shapefile":
@@ -4691,25 +4694,25 @@ class S3PoIModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def gis_poi_type_deduplicate(job):
+    def gis_poi_type_deduplicate(item):
         """
-           If the record is a duplicate then it will set the job method to update
+           If the record is a duplicate then it will set the item method to update
         """
 
-        if job.tablename == "gis_poi_type":
-            table = job.table
-            data = job.data
+        if item.tablename == "gis_poi_type":
+            table = item.table
+            data = item.data
             name = data.get("name", None)
 
             if not name:
                 return
 
-            _duplicate = current.db(table.name == name).select(table.id,
-                                                               limitby=(0, 1)
-                                                               ).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(table.name == name).select(table.id,
+                                                              limitby=(0, 1)
+                                                              ).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

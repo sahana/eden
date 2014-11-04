@@ -506,11 +506,10 @@ class S3EventModel(S3Model):
         if event_type_id:
             query &= (table.event_type_id == event_type_id)
 
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -531,11 +530,10 @@ class S3EventModel(S3Model):
 
         table = item.table
         query = (table.name == name)
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -559,10 +557,10 @@ class S3EventModel(S3Model):
         query = (table.tag.lower() == tag.lower()) & \
                 (table.event_id == event)
 
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
@@ -929,11 +927,10 @@ class S3IncidentModel(S3Model):
             query = query & ((table.event_id == event_id) | \
                              (table.event_id == None))
 
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
@@ -1327,7 +1324,7 @@ class S3IncidentTypeModel(S3Model):
 
         return dict(event_incident_type_id = lambda **attr: dummy("incident_type_id"),
                     )
-        
+
     # ---------------------------------------------------------------------
     @staticmethod
     def incident_type_duplicate(item):
@@ -1346,11 +1343,10 @@ class S3IncidentTypeModel(S3Model):
 
         table = item.table
         query = (table.name.lower() == name.lower())
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
@@ -2129,7 +2125,7 @@ class S3EventSitRepModel(S3Model):
     @staticmethod
     def event_sitrep_duplicate(item):
         """ Import item de-duplication """
-        
+
         data = item.data
         incident_id = data.get("incident_id")
         sitrep_id = data.get("sitrep_id")
@@ -2200,7 +2196,7 @@ class S3EventTaskModel(S3Model):
     @staticmethod
     def event_task_duplicate(item):
         """ Import item de-duplication """
-        
+
         data = item.data
         incident_id = data.get("incident_id")
         task_id = data.get("task_id")
@@ -2326,7 +2322,7 @@ def event_notification_dispatcher(r, **attr):
             exercise = record.exercise
             event_id = record.event_id
             closed = record.closed
-            
+
             if event_id != None:
                 event = current.db(itable.id == event_id).select(etable.name,
                                                                  limitby=(0, 1)
@@ -2635,7 +2631,7 @@ def event_rheader(r):
             #    tabs.append((T("Requests"), "req"))
             if settings.has_module("msg"):
                 tabs.append((T("Send Notification"), "dispatch"))
-            
+
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             event = r.record

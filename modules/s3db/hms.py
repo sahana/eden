@@ -995,14 +995,14 @@ class HospitalDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hms_hospital_tag_deduplicate(job):
+    def hms_hospital_tag_deduplicate(item):
         """
-           If the record is a duplicate then it will set the job method to update
+           If the record is a duplicate then it will set the item method to update
         """
 
-        if job.tablename == "hms_hospital_tag":
-            table = job.table
-            data = job.data
+        if item.tablename == "hms_hospital_tag":
+            table = item.table
+            data = item.data
             tag = data.get("tag", None)
             hospital_id = data.get("hospital_id", None)
 
@@ -1012,11 +1012,11 @@ class HospitalDataModel(S3Model):
             query = (table.tag.lower() == tag.lower()) & \
                     (table.hospital_id == hospital_id)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1357,7 +1357,7 @@ def hms_hospital_rheader(r, tabs=[]):
                 if settings.has_module("hrm"):
                     STAFF = settings.get_hrm_staff_label()
                     tabs.append((STAFF, "human_resource"))
-                    permit = current.auth.s3_has_permission 
+                    permit = current.auth.s3_has_permission
                     if permit("update", tablename, r.id) and \
                        permit("create", "hrm_human_resource_site"):
                         tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))

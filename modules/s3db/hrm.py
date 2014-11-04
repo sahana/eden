@@ -3112,11 +3112,10 @@ class S3HRSkillModel(S3Model):
             query = (table.person_id == person) & \
                     (table.skill_id == skill)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3141,11 +3140,10 @@ class S3HRSkillModel(S3Model):
 
             table = item.table
             query = (table.name.lower() == name.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3249,11 +3247,10 @@ class S3HRSkillModel(S3Model):
             query = (table.name.lower() == name.lower()) & \
                     (table.skill_type_id == stable.id) & \
                     (stable.value.lower() == skill.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3278,11 +3275,10 @@ class S3HRSkillModel(S3Model):
 
             table = item.table
             query = (table.name.lower() == name.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3307,11 +3303,10 @@ class S3HRSkillModel(S3Model):
 
             table = item.table
             query = (table.name.lower() == name.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3336,11 +3331,10 @@ class S3HRSkillModel(S3Model):
 
             table = item.table
             query = (table.name.lower() == name.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3404,11 +3398,10 @@ class S3HRSkillModel(S3Model):
                     (table.start_date == start_date)
             if site_id:
                 query = query & (table.site_id == site_id)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -3438,11 +3431,10 @@ class S3HRSkillModel(S3Model):
                     (table.course_id == course_id)
             if date:
                 query = query & (table.date == date)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                item.id = _duplicate.id
-                item.data.id = _duplicate.id
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
@@ -4048,7 +4040,7 @@ class S3HRDisciplinaryActionModel(S3Model):
              )
 
     def model(self):
-        
+
         T = current.T
 
         define_table = self.define_table
@@ -4066,7 +4058,7 @@ class S3HRDisciplinaryActionModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
-                     
+
         self.configure(tablename,
                        deduplicate = self.disciplinary_type_duplicate,
                        )
@@ -7429,15 +7421,15 @@ def hrm_cv(r, **attr):
 # =============================================================================
 class hrm_Record(S3Method):
 
-    def __init__(self, 
-                 salary=False, 
+    def __init__(self,
+                 salary=False,
                  awards=False,
                  disciplinary_record=False,
-                 org_experience=False, 
+                 org_experience=False,
                  other_experience=False):
         """
             Constructor
-            
+
             @param salary: show a Salary widget
             @param awards: show an Awards History widget
             @param disciplinary_record: show a Disciplinary Record widget
@@ -7561,7 +7553,7 @@ class hrm_Record(S3Method):
                 if org_experience:
                     # Use primary hrm/experience controller
                     # (=> defaults to staff-style experience form)
-                    
+
                     # Need different action URLs
                     def experience_row_actions(component):
                         return lambda r, list_id: [
@@ -7605,7 +7597,7 @@ class hrm_Record(S3Method):
                 if other_experience:
                     # Use experience component in hrm/person controller
                     # (=> defaults to vol-style experience form)
-                    
+
                     # Configure widget and apply overrides
                     widget = dict(label = "Experience",
                                   label_create = "Add Experience",

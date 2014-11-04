@@ -37,6 +37,7 @@ __all__ = ("S3PersonEntity",
            "S3PersonIdentityModel",
            "S3PersonEducationModel",
            "S3PersonDetailsModel",
+           "S3PersonTagModel",
            "S3SavedFilterModel",
            "S3SubscriptionModel",
            "S3PersonPresence",
@@ -262,7 +263,7 @@ class S3PersonEntity(S3Model):
                        #   - OU configurations (Organisation/Branch/Facility/Team)
                        gis_config = pe_id,
                        )
-                      
+
         # Reusable fields
         pr_pe_label = S3ReusableField("pe_label", length=128,
                                       label = T("ID Tag Number"),
@@ -979,26 +980,8 @@ class S3PersonModel(S3Model):
 
         # Components
         add_components(tablename,
-                       # Personal Data
-                       pr_identity = (# All Identity Documents
-                                      {"name": "identity",
-                                       "joinby": "person_id",
-                                       },
-                                      # Passports in particular
-                                      {"name": "passport",
-                                       "joinby": "person_id",
-                                       "filterby": "type",
-                                       "filterfor": (1,),
-                                       },
-                                      ),
-                       pr_education = "person_id",
-                       pr_person_details = {"joinby": "person_id",
-                                            "multiple": False,
-                                            },
-                       # Group Memberships
-                       pr_group_membership = "person_id",
-                       # Organisation Memberships
-                       member_membership = "person_id",
+                       # Assets
+                       asset_asset = "assigned_to_id",
                        # User account
                        auth_user = {"link": "pr_person_user",
                                     "joinby": "pe_id",
@@ -1006,10 +989,26 @@ class S3PersonModel(S3Model):
                                     "fkey": "id",
                                     "pkey": "pe_id",
                                     },
+                       # Shelter (Camp) Registry
+                       cr_shelter_registration = {"joinby": "person_id",
+                                                  # A person can be assigned to only one shelter
+                                                  # @todo: when fully implemented this needs to allow
+                                                  # multiple instances for tracking reasons
+                                                  "multiple": False,
+                                                  },
+                       # Evacuee Registry
+                       evr_case = {"joinby": "person_id",
+                                   "multiple": False,
+                                   },
+                       evr_medical_details = {"joinby": "person_id",
+                                              "multiple": False,
+                                              },
+                       evr_background = {"joinby": "person_id",
+                                         "multiple": False,
+                                         },
+
                        # HR Records
                        hrm_human_resource = "person_id",
-                       hrm_salary = "person_id",
-
                        # Skills
                        hrm_certification = "person_id",
                        hrm_competency = "person_id",
@@ -1026,30 +1025,38 @@ class S3PersonModel(S3Model):
                        hrm_award = {"name": "staff_award",
                                     "joinby": "person_id",
                                     },
+                       # Disciplinary Record
                        hrm_disciplinary_action = "person_id",
+                       # Salary Information
+                       hrm_salary = "person_id",
+                       # Organisation Memberships
+                       member_membership = "person_id",
+                       # Education history
+                       pr_education = "person_id",
+                       # Group Memberships
+                       pr_group_membership = "person_id",
+                       # Identity Documents
+                       pr_identity = (# All Identity Documents
+                                      {"name": "identity",
+                                       "joinby": "person_id",
+                                       },
+                                      # Passports in particular
+                                      {"name": "passport",
+                                       "joinby": "person_id",
+                                       "filterby": "type",
+                                       "filterfor": (1,),
+                                       },
+                                      ),
+                       # Personal Details
+                       pr_person_details = {"joinby": "person_id",
+                                            "multiple": False,
+                                            },
+                       # Tags
+                       pr_person_tag = "person_id",
+                       # Volunteer Awards
                        vol_volunteer_award = {"name": "award",
                                               "joinby": "person_id",
                                               },
-                       # Assets
-                       asset_asset = "assigned_to_id",
-
-                       # Evacuee Registry
-                       evr_case = {"joinby": "person_id",
-                                   "multiple": False,
-                                   },
-                       evr_medical_details = {"joinby": "person_id",
-                                              "multiple": False,
-                                              },
-                       evr_background = {"joinby": "person_id",
-                                         "multiple": False,
-                                         },
-                       # Shelter (Camp) Registry
-                       cr_shelter_registration = {"joinby": "person_id",
-                                                  # A person can be assigned to only one shelter
-                                                  # @todo: when fully implemented this needs to allow
-                                                  # multiple instances for tracking reasons
-                                                  "multiple": False,
-                                                  },
                        )
 
         # ---------------------------------------------------------------------
@@ -1067,7 +1074,7 @@ class S3PersonModel(S3Model):
     def pr_person_age(cls, row):
         """
             Virtual Field to display the Age of a person
-            
+
             @param row: a Row containing the person record
         """
 
@@ -1125,7 +1132,7 @@ class S3PersonModel(S3Model):
             return relativedelta(current.request.utcnow.date(), dob).years
         else:
             return None
-            
+
     # -------------------------------------------------------------------------
     @staticmethod
     def pr_person_onaccept(form):
@@ -1618,7 +1625,7 @@ class S3PersonModel(S3Model):
 
         resource = r.resource
         resource.add_filter(query)
-        
+
         fields = ["id",
                   "first_name",
                   "middle_name",
@@ -1737,7 +1744,7 @@ class S3PersonModel(S3Model):
                            )
             name = s3_fullname(name)
             item = {"id"     : row["pr_person.id"],
-                    "name"   : name, 
+                    "name"   : name,
                     }
             date_of_birth = row.get("pr_person.date_of_birth", None)
             if date_of_birth:
@@ -1795,7 +1802,7 @@ class S3GroupModel(S3Model):
         NONE = messages["NONE"]
 
         # ---------------------------------------------------------------------
-        # Hard Coded Group types. Add/Comment entries, but don't remove! 
+        # Hard Coded Group types. Add/Comment entries, but don't remove!
         #
         pr_group_types = {1 : T("Family"),
                           2 : T("Tourist Group"),
@@ -1912,7 +1919,7 @@ class S3GroupModel(S3Model):
         # Components
         self.add_components(tablename,
                             pr_group_membership = "group_id",
-                            
+
                             # Shelter (Camp) Registry
                             cr_shelter_allocation = {"joinby": "group_id",
                                                      # A group can be assigned to only one shelter
@@ -2248,7 +2255,7 @@ class S3ContactModel(S3Model):
                 form.errors.value = error
             else:
                 form_vars.value = value
-                
+
         return
 
     # -------------------------------------------------------------------------
@@ -2359,7 +2366,7 @@ class S3AddressModel(S3Model):
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
-        
+
         # Display in reverse order, like Addresses
         levels.reverse()
 
@@ -2581,7 +2588,7 @@ class S3PersonImageModel(S3Model):
 
         # @todo: make lazy_table
         table = db[tablename]
-        
+
         def get_file():
             """ Callback to return the file field for our record """
             if len(current.request.args) < 3:
@@ -3239,6 +3246,63 @@ class S3PersonDetailsModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
+class S3PersonTagModel(S3Model):
+    """ Key-Value store for person records """
+
+    names = ("pr_person_tag",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        tablename = "pr_person_tag"
+        self.define_table(tablename,
+                          self.pr_person_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         ),
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          #s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.person_tag_duplicate,
+                       )
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def person_tag_duplicate(item):
+        """
+            Update detection for pr_person_tag
+
+            @param item: the S3ImportItem
+        """
+
+        data = item.data
+        tag = data.get("tag", None)
+        person_id = data.get("person_id", None)
+
+        if not tag or not person_id:
+            return
+
+        table = item.table
+        query = (table.person_id == person_id) & \
+                (table.tag.lower() == tag.lower())
+
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
+
+# =============================================================================
 class S3SavedFilterModel(S3Model):
     """ Saved Filters """
 
@@ -3305,7 +3369,7 @@ class S3SavedFilterModel(S3Model):
             query = query.replace("'", "\"")
             try:
                 json.loads(query)
-            except ValueError, e: 
+            except ValueError, e:
                 form.errors.query = "%s: %s" % (current.T("Query invalid"), e)
             form.vars.query = query
 
@@ -4351,7 +4415,7 @@ class pr_RoleRepresent(S3Represent):
                  translate=True):
         """
             Constructor
-            
+
             @param show_link: whether to add a URL to representations
             @param multiple: web2py list-type (all values will be lists)
             @param translate: translate all representations (using T)
@@ -4490,14 +4554,14 @@ class pr_PersonEntityRepresent(S3Represent):
         instance_fields = {
             "pr_person": ["first_name", "middle_name", "last_name"],
         }
-        
+
         # Get all super-entity rows
         etable = s3db.pr_pentity
         rows = db(key.belongs(values)).select(key,
                                               etable.pe_label,
                                               etable.instance_type)
         self.queries += 1
-        
+
         keyname = key.name
         types = {}
         for row in rows:
@@ -4529,7 +4593,7 @@ class pr_PersonEntityRepresent(S3Represent):
             query = (table[keyname].belongs(types[instance_type].keys()))
             rows = db(query).select(*fields)
             self.queries += 1
-            
+
             sdata = types[instance_type]
             for row in rows:
                 # Construct a new Row which contains both, the super-entity
@@ -5938,7 +6002,7 @@ def pr_descendants(pe_ids, skip=None, root=True):
     ogetattr = object.__getattribute__
 
     result = dict()
-    
+
     skip.update(pe_ids)
     for row in rows:
 

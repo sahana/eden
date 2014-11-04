@@ -108,7 +108,7 @@ class S3DelphiModel(S3Model):
                        delphi_membership="group_id",
                        delphi_problem="group_id",
                       )
-                      
+
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    notnull=True,
                                    label = T("Problem Group"),
@@ -414,60 +414,58 @@ class S3DelphiModel(S3Model):
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def group_duplicate(job):
+    def group_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
+          @param item: An S3ImportItem object which includes all the details
+                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "delphi_group":
-            table = job.table
-            data = job.data
+        if item.tablename == "delphi_group":
+            table = item.table
+            data = item.data
             name = "name" in data and data.name
 
             query = (table.name.lower() == name.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # ---------------------------------------------------------------------
     @staticmethod
-    def problem_duplicate(job):
+    def problem_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
+          @param item: An S3ImportItem object which includes all the details
+                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - Look for a record with the same name, ignoring case
         """
 
-        if job.tablename == "delphi_problem":
-            table = job.table
-            name = "name" in job.data and job.data.name
+        if item.tablename == "delphi_problem":
+            table = item.table
+            name = "name" in item.data and item.data.name
 
             query = (table.name.lower() == name.lower())
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def delphi_solution_comments(row):
@@ -480,18 +478,18 @@ def delphi_solution_comments(row):
         problem_id = row.problem_id
     except AttributeError:
         return None
-        
+
     ctable = current.s3db.delphi_comment
     query = (ctable.solution_id == solution_id)
     comments = current.db(query).count()
-    
+
     url = URL(c="delphi", f="problem",
               args=[problem_id, "solution", solution_id, "discuss"])
     return A(comments, _href=url)
 
 def delphi_solution_votes(row):
     """ Clickable number of solutions for a problem, virtual field """
-    
+
     if hasattr(row, "delphi_solution"):
         row = row.delphi_solution
     try:

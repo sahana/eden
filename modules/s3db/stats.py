@@ -352,8 +352,8 @@ class S3StatsDemographicModel(S3Model):
 
         list_fields = ["parameter_id"]
         list_fields.extend(location_fields)
-        list_fields.extend((("value", 
-                             "date", 
+        list_fields.extend((("value",
+                             "date",
                              "source_id",
                              )))
 
@@ -1054,7 +1054,7 @@ class S3StatsDemographicModel(S3Model):
         # Get the most recent aggregate for this location for the total parameter
         if total_id == "None": # converted to string as async parameter
             total_id = None
-        
+
         # Collect the values, skip duplicate records for the
         # same location => use the most recent one, which is
         # the first row for each location as per the orderby
@@ -1323,11 +1323,10 @@ class S3StatsImpactModel(S3Model):
 
         table = item.table
         query = (table.name.lower() == name.lower())
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
@@ -1507,11 +1506,10 @@ class S3StatsPeopleModel(S3Model):
 
         table = item.table
         query = (table.name.lower() == name.lower())
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
 # =============================================================================

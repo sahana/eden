@@ -380,7 +380,7 @@ $.filterOptionsS3({
                                  "ajax_init": True}],
                     },
                    ]
-                   
+
         # Resource Configuration
         configure(tablename,
                   # Open Tabs after creation
@@ -643,11 +643,10 @@ $.filterOptionsS3({
         if site_id:
             query &= (table.site_id == site_id)
 
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------

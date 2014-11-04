@@ -1566,34 +1566,33 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_req_duplicate(job):
+    def req_req_duplicate(item):
         """
           This callback will be called when importing records
           it will look to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
+          @param item: An S3ImportItem object which includes all the details
+                       of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+          If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
            - If the Request Number exists then it's a duplicate
         """
 
-        if job.tablename == "req_req":
-            table = job.table
-            if "req_ref" in job.data:
-                request_number = job.data.req_ref
+        if item.tablename == "req_req":
+            table = item.table
+            if "req_ref" in item.data:
+                request_number = item.data.req_ref
             else:
                 return
 
             query = (table.req_ref == request_number)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestItemModel(S3Model):
@@ -1871,64 +1870,56 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_item_delete(row):
+    def req_item_duplicate(item):
         """
-            Update the
-        """
-        h
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_item_duplicate(job):
-        """
-          This callback will be called when importing records
-          it will look to see if the record being imported is a duplicate.
+            This callback will be called when importing records. It will look
+            to see if the record being imported is a duplicate.
 
-          @param job: An S3ImportJob object which includes all the details
-                      of the record being imported
+            @param item: An S3ImportItem object which includes all the details
+                         of the record being imported
 
-          If the record is a duplicate then it will set the job method to update
+            If the record is a duplicate then it will set the item method to update
 
-          Rules for finding a duplicate:
-           - If the Request Number matches
-           - The item is the same
+            Rules for finding a duplicate:
+                - If the Request Number matches
+                - The item is the same
         """
 
-        if job.tablename == "req_req_item":
-            itable = job.table
-            s3db = current.s3db
-            rtable = s3db.req_req
-            stable = s3db.supply_item
-            req_id = None
-            item_id = None
-            for ref in job.references:
-                if ref.entry.tablename == "req_req":
-                    if ref.entry.id != None:
-                        req_id = ref.entry.id
-                    else:
-                        uuid = ref.entry.item_id
-                        jobitem = job.job.items[uuid]
-                        req_id = jobitem.id
-                elif ref.entry.tablename == "supply_item":
-                    if ref.entry.id != None:
-                        item_id = ref.entry.id
-                    else:
-                        uuid = ref.entry.item_id
-                        jobitem = job.job.items[uuid]
-                        item_id = jobitem.id
+        s3db = current.s3db
 
-            if req_id != None and item_id != None:
-                query = (itable.req_id == req_id) & \
-                        (itable.item_id == item_id)
-            else:
-                return
+        itable = item.table
+        rtable = s3db.req_req
+        stable = s3db.supply_item
 
-            _duplicate = current.db(query).select(itable.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+        req_id = None
+        item_id = None
+        for ref in item.references:
+            if ref.entry.tablename == "req_req":
+                if ref.entry.id != None:
+                    req_id = ref.entry.id
+                else:
+                    uuid = ref.entry.item_id
+                    jobitem = item.job.items[uuid]
+                    req_id = jobitem.id
+            elif ref.entry.tablename == "supply_item":
+                if ref.entry.id != None:
+                    item_id = ref.entry.id
+                else:
+                    uuid = ref.entry.item_id
+                    jobitem = item.job.items[uuid]
+                    item_id = jobitem.id
 
+        if req_id != None and item_id != None:
+            query = (itable.req_id == req_id) & \
+                    (itable.item_id == item_id)
+        else:
+            return
+
+        duplicate = current.db(query).select(itable.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestSkillModel(S3Model):
@@ -2143,24 +2134,6 @@ class S3RequestRecurringModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_recurring_duplicate(job):
-        """
-            De-duplicate Recurring Request Jobs
-        """
-
-        if job.tablename == "req_recurring":
-            table = job.table
-            name = job.data.get("name", None)
-            query = (table.name == name)
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.data.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestSummaryModel(S3Model):
