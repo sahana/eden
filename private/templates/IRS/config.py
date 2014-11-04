@@ -200,33 +200,53 @@ def customise_stats_demographic_data_resource(r, tablename):
                                      "fact": "cumulate(value)",
                                      }
                         }
+                        
+    #from s3 import S3OptionsFilter, S3LocationFilter
+    #filter_widgets = [S3OptionsFilter("parameter_id",
+    #                                  label = T("Type"),
+    #                                  multiple = False,
+    #                                  default = 1,
+    #                                  # Not translateable
+    #                                  #represent = "%(name)s",
+    #                                  ),
+    #                  # @ToDo: 'Month' &/or Week VF
+    #                  S3OptionsFilter("month",
+    #                                 #multiple = False,
+    #                                 operator = "anyof",
+    #                                 options = lambda: \
+    #                                   stats_month_options("stats_demographic_data"),
+    #                                 ),
+    #                  ]
 
-    from s3 import S3OptionsFilter, S3LocationFilter
-    filter_widgets = [S3OptionsFilter("parameter_id",
-                                      label = T("Type"),
-                                      multiple = False,
-                                      # Not translateable
-                                      #represent = "%(name)s",
-                                      ),
-                      # @ToDo: 'Month' &/or Week VF
-                      #S3OptionsFilter("month",
-                      #                #multiple = False,
-                      #                operator = "anyof",
-                      #                options = lambda: \
-                      #                  stats_month_options("stats_demographic_data"),
-                      #                ),
-                      ]
+    #if r.method != "timeplot":
+    #    # This is critical for the Map, but breaks aggregated Report data (does it?)
+    #    filter_widgets.append(S3OptionsFilter("location_id$level",
+    #                                          label = T("Level"),
+    #                                          multiple = False,
+    #                                          # Not translateable
+    #                                          #represent = "%(name)s",
+    #                                          ))
 
-    if r.method != "timeplot":
-        # This is critical for the Map, but breaks aggregated Report data (does it?)
-        filter_widgets.append(S3OptionsFilter("location_id$level",
-                                              label = T("Level"),
-                                              multiple = False,
-                                              # Not translateable
-                                              #represent = "%(name)s",
-                                              ))
+    #filter_widgets.append(S3LocationFilter("location_id"))
 
-    filter_widgets.append(S3LocationFilter("location_id"))
+    # Default parameter filter
+    def default_parameter_filter(selector, tablename=None):
+        ptable = s3db.stats_parameter
+        row = current.db(ptable.name == "Cases").select(ptable.parameter_id,
+                                                        limitby = (0, 1)).first()
+        if row:
+            return row.parameter_id
+        else:
+            return None
+
+    # Set filter defaults
+    resource = r.resource
+    filter_widgets = resource.get_config("filter_widgets", [])
+    for filter_widget in filter_widgets:
+        if filter_widget.field == "parameter_id":
+            filter_widget.opts.default = default_parameter_filter
+        elif filter_widget.field == "location_id$level":
+            filter_widget.opts.default = "L0"
 
     # Sum doesn't make sense for data which is already cumulative
     #report_options = s3db.get_config(tablename, "report_options")
