@@ -1058,7 +1058,7 @@ settings.modules = OrderedDict([
     #   module_type = 1,
     #)),
     #("water", Storage(
-    #    name_nice = T("Flood Warnings"),
+    #    name_nice = T("Water"),
     #    #description = "Flood Gauges show water levels in various parts of the country",
     #    restricted = True,
     #    module_type = 10
