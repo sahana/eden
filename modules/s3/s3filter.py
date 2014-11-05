@@ -1764,14 +1764,14 @@ class S3OptionsFilter(S3FilterWidget):
             opt_list = [(opt_value, s3_unicode(opt_value))
                         for opt_value in opt_keys if opt_value]
 
-        none = opts["none"]
-
-        try:
-            opt_list.sort(key=lambda item: item[1])
-        except:
-            opt_list.sort(key=lambda item: s3_unicode(item[1]))
+        if opts.get("sort", True):
+            try:
+                opt_list.sort(key=lambda item: item[1])
+            except:
+                opt_list.sort(key=lambda item: s3_unicode(item[1]))
         options = []
         empty = False
+        none = opts["none"]
         for k, v in opt_list:
             if k is None:
                 if none:

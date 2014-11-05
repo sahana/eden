@@ -1,19 +1,7 @@
-<div class='row'>
 {{if s3.has_required:}}<label class='req-key right'>{{=T("* Required Fields")}}</label>{{pass}}
 {{try:}}{{=H1(title, _class="row-title")}}{{except:}}{{pass}}
- <div class='row'>
-  <div id='rheader' class='small-12 columns'>
-  {{try:}}{{=XML(rheader)}}
-  </div>
- </div>
- <div id='component' class='row'>
-  {{except:}}
-  </div>
- </div>
- <div class='row'>
-  {{pass}}
-  <div class='small-12'>
-  {{try:}}{{=form}}{{except:}}{{pass}}
-  </div>
+<div class='row'>
+ <div class='small-12'>
+ {{try:}}{{=form}}{{except:}}{{pass}}
  </div>
 </div>

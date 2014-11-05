@@ -343,6 +343,7 @@ class S3ContentModel(S3Model):
         # Components
         add_components(tablename,
                        cms_comment = "post_id",
+                       cms_post_layer = "post_id",
                        cms_post_module = "post_id",
                        cms_post_user = {"name": "bookmark",
                                         "joinby": "post_id",
@@ -354,7 +355,7 @@ class S3ContentModel(S3Model):
                                   },
 
                        # For filter widget
-                       cms_post_tag = "post_id",
+                       cms_tag_post = "post_id",
 
                        cms_post_organisation = {"joinby": "post_id",
                                                 # @ToDo: deployment_setting
@@ -473,13 +474,25 @@ class S3ContentModel(S3Model):
             msg_record_deleted = T("Tag deleted"),
             msg_list_empty = T("No tags currently defined"))
 
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        tag_id = S3ReusableField("tag_id", "reference %s" % tablename,
+                                 label = T("Tag"),
+                                 ondelete = "CASCADE",
+                                 represent = represent,
+                                 requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "cms_tag.id",
+                                                          represent)),
+                                 sortby = "name",
+                                 )
+
         # ---------------------------------------------------------------------
         # Tags <> Posts link table
         #
         tablename = "cms_tag_post"
         define_table(tablename,
-                     post_id(empty=False),
-                     Field("tag_id", "reference cms_tag"),
+                     post_id(empty = False),
+                     tag_id(empty = False),
                      *s3_meta_fields())
 
         # CRUD Strings

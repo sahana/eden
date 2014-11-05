@@ -11,7 +11,12 @@
         extension,
         $canvas = $('.imagecrop-canvas'),
         canvas = $canvas[0];
-    
+
+    if (undefined == canvas) {
+        // Bail
+        return;
+    }
+
     var widthLimit = canvas.width;
         heightLimit = canvas.height;
         toScale = true;
@@ -38,7 +43,7 @@
             }
         }
     };
-    
+
     var userEvent,
         scaleFactor;
 
@@ -47,7 +52,7 @@
     };
 
     var calculateScale = function(canvas_size, image_size) {
-		
+
         if (image_size[0] > canvas_size[0]) {   
             scaleFactor = canvas_size[0] / image_size[0];
             image_size[0] *= scaleFactor;
@@ -79,7 +84,7 @@
         scale, 
         fileName,
         image = new Image;
- 
+
     var loadImage = function(data) {
         var scaled_image;
         // Image uploaded by user
@@ -112,7 +117,7 @@
             });
         };
     };
-    
+
     var $uploadTitle = $('#upload-title'),
         $uploadContainer = $('#upload-container');
 
@@ -122,7 +127,6 @@
         });    
     });
 
-    
     var FileSelectHandler = function(e) {
 
         if (jCropAPI) {
@@ -141,16 +145,16 @@
         var files = e.target.files || e.originalEvent.dataTransfer.files;
         var file = files[0];
         fileName = file.name;
-  
+
         saveEvent(e);
- 
+
         if (e.type == 'drop') {
             // Remove CSS property
             FileHoverHandler(e);
         }
-        
+
         var $upload = $('.imagecrop-upload');
- 
+
         if (!isValidImage(file)) {
             alert(i18n.invalid_image + '\n' + i18n.supported_image_formats + ': ' + formats);
             $upload.val('');
@@ -177,7 +181,7 @@
             midy = b[1]/2,
             addx = b[0]/4,
             addy = b[1]/4;
-        
+
         var defaultSelection = [midx - addx, midy - addy, midx + addx, midy + addy];
         jCropAPI.animateTo(defaultSelection);
         $selectCrop.css({
@@ -224,10 +228,10 @@
     };
 
     var disableCrop = function(e) {
-       
+
         jCropAPI.release();
         jCropAPI.disable();
-            
+
         $crop.css({
             display: 'none'
         });
@@ -247,7 +251,7 @@
          var points = coords.x + ',' + coords.y + ',' + coords.x2 + ',' + coords.y2;
          $points.val(points); 
     };
-    
+
     var bounds;
 
     var EnableCrop = function(e) {
@@ -276,10 +280,10 @@
     };
 
     $('#uploaded-image').bind('load', EnableCrop);
-  
+
     // Image already stored in DB ( Update form )
     // load the Image
-        
+
     var imgData = $('.imagecrop-data').attr('value');
     if (typeof imgData != undefined) {
         // dummy Event

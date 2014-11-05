@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import s3_avatar_represent, S3DataListLayout
+from s3 import S3DataListLayout, s3_unicode
 
 T = current.T
 settings = current.deployment_settings
@@ -32,8 +32,8 @@ settings.base.system_name_short = T("CRMT")
 # -----------------------------------------------------------------------------
 # Default timezone for users
 settings.L10n.utc_offset = "UTC -0800"
-# Uncomment these to use US-style dates in English (localisations can still convert to local format)
-settings.L10n.date_format = T("%m-%d-%Y")
+# Uncomment these to use US-style dates
+settings.L10n.date_format = "%m-%d-%Y"
 # Start week on Sunday
 settings.L10n.firstDOW = 0
 # Number formats (defaults to ISO 31-0)
@@ -1647,19 +1647,45 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     record_id = record["cms_post.id"]
 
     raw = record._row
-    series = record["cms_post.series_id"]
-    series_id = raw["cms_post.series_id"]
     title = record["cms_post.title"]
     body = record["cms_post.body"]
+    comments = raw["cms_post.comments"] or ""
+    #if comments:
+    #    # Format them, if-formatted
+    #    comments = record["cms_post.comments"]
     author = record["cms_post.created_by"]
-    coalition = record["auth_user.org_group_id"]
+    coalition = raw["auth_user.org_group_id"] or ""
+    if coalition:
+        # Use Represent
+        coalition = record["auth_user.org_group_id"]
     date = record["cms_post.created_on"]
     image = raw["doc_image.file"] or ""
     if image:
-        image = IMG(_src="/%s/default/download/%s" % (current.request.application, image))
+        image = IMG(_src="/%s/default/download/%s" % \
+                        (current.request.application, image))
+    tag_ids = raw["cms_tag_post.tag_id"]
+    if tag_ids:
+        tags = record["cms_tag_post.tag_id"]
+        if isinstance(tag_ids, (tuple, list)):
+            tags = tags.xml().split(", ")
+        else:
+            tag_ids = [tag_ids]
+            tags = [tags]
+        _tags = []
+        index = 0
+        for tag_id in tag_ids:
+            _tags.append(A(tags[index],
+                           _href=URL(c="cms", f="post",
+                                     args="datalist",
+                                     vars={"cms_tag_post.tag_id": tag_id}),
+                           ).xml())
+            index += 1
+        tags = H6(XML(s3_unicode(T("More about %(tags)s")) % dict(tags=" | ".join(_tags))))
+    else:
+        tags = ""
 
     item = TAG.article(H2(A(title,
-                            _href=URL(c="cms", f="page", args=record_id),
+                            _href=URL(c="cms", f="post", args=[record_id, "datalist"]),
                             ),
                           ),
                        H6(author,
@@ -1669,15 +1695,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                           date,
                           ),
                        image,
-                       body,
-                       H6(T("More about %(type)s") % \
-        dict(type=A(series,
-                    _href=URL(c="cms", f="post",
-                              args="datalist",
-                              vars={"~.series_id": series_id}),
-                    ),
-             )
-                          ),
+                       P(body),
+                       P(comments),
+                       tags,
                        )
 
     return item
@@ -1686,9 +1706,16 @@ def customise_cms_post_controller(**attr):
 
     s3 = current.response.s3
 
-    if "datalist" in current.request.args:
-        from s3 import FS
-        s3.filter = (FS("cms_post.series_id") != None)
+    get_vars = current.request.get_vars
+    mod = get_vars.get("module")
+    if not mod:
+        layer = get_vars.get("layer_id")
+        if not layer:
+            from s3 import FS
+            # Hide Posts linked to Modules and Maps
+            s3.filter = (FS("post_module.module") == None) & (FS("post_layer.layer_id") == None)
+            # Only show Blog Posts
+            #s3.filter = (FS("cms_post.series_id$name") == "Blog")
 
     # Custom PreP
     standard_prep = s3.prep
@@ -1700,44 +1727,125 @@ def customise_cms_post_controller(**attr):
                 return False
 
         s3db = current.s3db
-        table = s3db.cms_post
+        tablename = "cms_post"
+        table = s3db[tablename]
 
-        from s3 import S3ImageCropWidget
-        s3db.doc_image.file.widget = S3ImageCropWidget((400, 240))
+        # Look up the Blog series
+        #stable = s3db.cms_series
+        #try:
+        #    blog = current.db(stable.name == "Blog").select(stable.id,
+        #                                                    limitby=(0, 1),
+        #                                                    cache = s3db.cache,
+        #                                                    ).first().series_id
+        #except:
+        #    # Prepop not run - e.g. just testing Theme
+        #    pass
+        #else:
+        #    table.series_id.default = blog
 
-        if r.method == "datalist":
-            # Tweak DataList options
-            s3.dl_no_header = True
-            list_fields = ["series_id",
-                           "title",
-                           "body",
-                           "date",
-                           "created_on",
-                           "created_by",
-                           "created_by$org_group_id",
-                           "image.file",
-                           ]
+        s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Story"),
+            title_display = T("Story Details"),
+            title_list = T("Stories"),
+            title_update = T("Update Story Details"),
+            label_list_button = T("List Stories"),
+            label_delete_button = T("Delete Story"),
+            msg_record_created = T("Story added"),
+            msg_record_modified = T("Story details updated"),
+            msg_record_deleted = T("Story deleted"),
+            msg_list_empty = T("No Stories currently registered"))
 
-            from s3 import S3DateTime, s3_auth_user_represent_name
-            table.created_by.represent = s3_auth_user_represent_name
-            table.created_on.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
+        # Custom Form
+        from gluon import IS_NOT_EMPTY
+        #S3SQLInlineLink
+        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+        # Not yet working Inline
+        #s3db.doc_image.file.widget = S3ImageCropWidget((400, 240))
+        s3db.doc_image.file.widget = None
+        s3db.doc_image.file.requires = None
+        table.title.requires = IS_NOT_EMPTY()
+        table.body.label = T("Challenges")
+        table.body.widget = S3StringWidget(placeholder=T("In building your community's resilience, what particular challenges did you face? (Up to 200 words)"),
+                                           textarea=True)
+        table.comments.label = T("Lessons")
+        table.comments.widget = S3StringWidget(placeholder=T("What strategies, tactics, or lessons did you learn? (Up to 200 words)"),
+                                               textarea=True)
+        crud_form = S3SQLCustomForm("title",
+                                    # Not working
+                                    #S3SQLInlineLink("tag",
+                                    #                cols = 4,
+                                    #                label = T("Topic(s)"),
+                                    #                field = "tag_id",
+                                    #                ),
+                                    S3SQLInlineComponentCheckbox("tag",
+                                                                 cols = 4,
+                                                                 label = T("Topic(s)"),
+                                                                 field = "tag_id",
+                                                                 translate = True,
+                                                                 ),
+                                    "body",
+                                    "comments",
+                                    S3SQLInlineComponent(
+                                            "image",
+                                            #name = "image",
+                                            label = T("Add an Image"),
+                                            multiple = False,
+                                            fields = [("", "file"),
+                                                      #"comments",
+                                                      ],
+                                            ),
+                                    )
 
-            from s3 import S3OptionsFilter
-            filter_widgets = [
-                S3OptionsFilter("series_id",
-                                label = "",
-                                cols = 1,
-                                multiple = False,
-                                )
-                ]
-            s3db.configure("cms_post",
-                           filter_widgets = filter_widgets,
-                           list_fields = list_fields,
-                           list_layout = cms_post_list_layout,
-                           )
+        s3.cancel = A(T("Cancel"),
+                      _class="button small secondary cancel",
+                      _href=r.url(method="datalist", id=0),
+                      )
+
+        # Tweak DataList options
+        s3.dl_no_header = True
+        list_fields = ("title",
+                       "body",
+                       "comments",
+                       "date",
+                       "created_on",
+                       "created_by",
+                       "created_by$org_group_id",
+                       "image.file",
+                       "tag_post.tag_id",
+                       )
+
+        settings.L10n.date_format = "%B %d, %Y"
+        from s3 import S3DateTime, s3_auth_user_represent_name
+        table.created_by.represent = s3_auth_user_represent_name
+        table.created_on.represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+
+        from s3 import S3OptionsFilter
+        filter_widgets = (
+            S3OptionsFilter("tag_post.tag_id",
+                            label = "",
+                            cols = 1,
+                            multiple = False,
+                            ),
+            )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       delete_next = r.url(method="datalist", id=0),
+                       filter_clear = False,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       list_layout = cms_post_list_layout,
+                       )
 
         return True
-    s3.prep = custom_prep
+    if mod or layer:
+        # Resource or Map layer
+        pass
+    else:
+        # Story
+        s3.prep = custom_prep
+
+    attr["rheader"] = None
 
     return attr
 
@@ -1845,27 +1953,32 @@ def customise_gis_config_controller(**attr):
             filter_widgets = [
                 S3OptionsFilter("pe_id",
                                 label = "",
-                                options = {"*": T("All"),
-                                           coalition_pe_ids: T("My Coalition's Maps"),
-                                           auth.user.pe_id: T("My Maps"),
-                                           },
+                                options = OrderedDict([(auth.user.pe_id, T("Your Maps")),
+                                                       (coalition_pe_ids, T("Your Coalition's Maps")),
+                                                       ("*", T("All Maps")),
+                                                       ]),
                                 cols = 3,
                                 multiple = False,
+                                # Not working
+                                sort = False,
                                 )
                 ]
         else:
             filter_widgets = [
                 S3OptionsFilter("pe_id",
                                 label = "",
-                                options = {"*": T("All"),
-                                           auth.user.pe_id: T("My Maps"),
-                                           },
+                                options = OrderedDict([(auth.user.pe_id, T("Your Maps")),
+                                                       ("*", T("All Maps")),
+                                                       ]),
                                 cols = 2,
                                 multiple = False,
+                                # Not working
+                                sort = False,
                                 )
                 ]
             
         s3db.configure("gis_config",
+                       filter_clear = False,
                        filter_widgets = filter_widgets,
                        )
 

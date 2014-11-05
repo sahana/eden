@@ -193,6 +193,9 @@ table.dataTable .action-btn.read:before {
 } */
 
 /* Share Maps page */
+.no-overflow {
+    overflow: visible;
+}
 .dl {
     background: none repeat scroll 0 0 #ffffff;
 }
@@ -204,6 +207,48 @@ table.dataTable .action-btn.read:before {
 .dl-row.odd,
 .dl-row.odd .dl-item {
     background-color: inherit;
+}
+
+/* Share Stories page */
+aside .form-container {
+    overflow: visible;
+}
+aside .form-container form {
+    background-color: inherit;
+    border: 0;
+    padding: 0;
+}
+aside .form-container .medium-offset-2 {
+    margin-left: 0 !important;
+    width: 100%;
+}
+aside .form-container .inline-tooltip {
+    width: 0;
+}
+aside .form-container table {
+    background-color: inherit;
+}
+aside .form-container table label {
+    color: #04a4a4;
+    font-size: 1rem;
+}
+aside .form-container table label:hover,
+aside .form-container table label:focus {
+    color: #038d8d;
+}
+aside .form-container input[type="radio"] {
+    display: none;
+}
+aside .form-container input[type=radio] + label:before {
+    content: "";
+    display: inline-block;
+    width: 6px; 
+    height: 6px;
+    vertical-align: middle;
+    margin-right: 8px;
+    background-color: #444;
+    box-shadow: inset 0px 2px 2px rgba(0, 0, 0, .3);
+    border-radius: 5px;
 }
 
 /* END */
