@@ -1,15 +1,5 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{=title}}</title>
+{{extend "layout.html"}}
 <style>
-
-body {
-    font-family: 'trebuchet MS', 'Lucida sans', Arial;
-    color: #444;
-	
-}
-
 table {
     *border-collapse: collapse; /* IE7 and lower */
     border-spacing: 0;
@@ -91,29 +81,10 @@ table {
     -webkit-border-radius: 0 0 6px 0;
     border-radius: 0 0 6px 0;
 }
-.S3menulogo{
-    background: url("../../static/themes/Kashmir/img/athewaas_menu_logo.png") no-repeat scroll left top rgba(0, 0, 0, 0);
-    display: inline-block;
-    height: 28px;
-    margin-left: 5px;
-    margin-top: 10px;
-    text-shadow: none;
-    width: 35px;
-	}
-	.row{
-	height:40px;
-	background-color: black;
-    color: white;
-	}
 </style>
 
 </head>
 
-<body>
-<div class="row"><a class="S3menulogo" href="/eden/default/index"></a><span style="    font-size: 22px;
-    font-variant: sub;
-    position: relative;
-    top: -11px;">Athewaas</span></div>
 <h2 style="text-align:center;">{{=title}}</h2>
 <table class="bordered"  align="center">
     <thead>
@@ -291,8 +262,3 @@ table {
     </tr>
 </table>
 
-<br>
-    
-
-</body>
-</html>

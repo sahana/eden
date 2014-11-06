@@ -13,6 +13,7 @@ except ImportError:
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
+from gluon.http import redirect
 
 from s3 import FS, S3CustomController
 from s3theme import formstyle_foundation_inline
@@ -256,3 +257,22 @@ class listoforganizations(S3CustomController):
     def __call__(self):
         self._view(TEMPLATE, "listoforg.html")
         return{"title":"List of Participating Organizations"}
+# END =========================================================================
+class about(S3CustomController):
+    """ Custom Page for rendering about"""
+    def __call__(self):
+        #redirect('https://docs.google.com/a/iquasar.com/file/d/0B3_TmWrJ52YBRmNoVVBhZkI1ZG8/edit')
+        self._view(TEMPLATE, "about.html")
+        return{} 
+# END =========================================================================
+class contact(S3CustomController):
+    """ Custom Page for rendering contact us """
+    def __call__(self):
+        self._view(TEMPLATE, "contact.html")
+        return{}  
+# END =========================================================================
+class userguide(S3CustomController):
+     """ user guide """
+     def __call__(self):
+        self._view(TEMPLATE, "userguide.html")
+        return{} 
