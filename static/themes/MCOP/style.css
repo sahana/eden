@@ -351,3 +351,8 @@ h2 {
        -o-transition: background-position 0.1s linear;
           transition: background-position 0.1s linear;
 }
+
+/* Incidents profile Header */
+.profile-header .attachments {
+    margin-top: -20px;
+}

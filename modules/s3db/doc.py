@@ -78,6 +78,7 @@ class S3DocumentLibrary(S3Model):
                                cr_shelter=T("Shelter"),
                                deploy_mission=T("Mission"),
                                doc_sitrep=T("Situation Report"),
+                               event_incident=T("Incident"),
                                event_incident_report=T("Incident Report"),
                                hms_hospital=T("Hospital"),
                                hrm_human_resource=T("Human Resource"),

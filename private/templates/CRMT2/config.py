@@ -1700,7 +1700,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                        tags,
                        )
 
-    return item
+    return TAG[""](item,
+                   HR(),
+                   )
 
 def customise_cms_post_controller(**attr):
 

@@ -210,6 +210,9 @@ table.dataTable .action-btn.read:before {
 }
 
 /* Share Stories page */
+.blog .dl {
+    background-color: inherit;
+}
 aside .form-container {
     overflow: visible;
 }

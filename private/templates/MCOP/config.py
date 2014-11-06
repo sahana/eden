@@ -124,7 +124,7 @@ levels = ("L1", "L2", "L3")
 #settings.gis.geocode_imported_addresses = "google"
 
 # Until we add support to LocationSelector2 to set dropdowns from LatLons
-#settings.gis.check_within_parent_boundaries = False
+settings.gis.check_within_parent_boundaries = False
 # GeoNames username
 settings.gis.geonames_username = "mcop"
 # Uncomment to hide Layer Properties tool
@@ -458,12 +458,20 @@ def customise_event_incident_resource(r, tablename):
 
     #from gluon.validators import IS_EMPTY_OR
     #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
-    from s3 import S3SQLCustomForm
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_fields = ["zero_hour",
                    "name",
                    "location_id",
                    "comments",
                    "organisation_id",
+                   S3SQLInlineComponent(
+                       "document",
+                       name = "file",
+                       label = T("Documents"),
+                       fields = [("", "file"),
+                                 #"comments",
+                                 ],
+                       ),
                    ]
     if r.method != "create":
         crud_fields.append("closed")
@@ -554,7 +562,7 @@ def customise_event_incident_resource(r, tablename):
         record = r.record
         record_id = record.id
         record_name = record.name
-        title = "%s : %s" % (crud_strings["event_incident"].title_list, record_name)
+        title = "%s: %s" % (T("Incident"), record_name)
         marker = current.gis.get_marker(controller = "event",
                                         function = "incident")
         layer = dict(name = record_name,
@@ -575,10 +583,47 @@ def customise_event_incident_resource(r, tablename):
                          )
         else:
             edit_btn = ""
+        # Dropdown of available documents
+        # @ToDo: Use resource.components instead of DAL for security (not required here but good practise)
+        dtable = s3db.doc_document
+        rows = current.db(dtable.doc_id == r.record.doc_id).select(dtable.file)
+        documents = [row.file for row in rows]
+        if documents:
+            doc_list = UL(_class="dropdown-menu",
+                          _role="menu",
+                          )
+            retrieve = dtable.file.retrieve
+            for doc in documents:
+                try:
+                    doc_name = retrieve(doc)[0]
+                except (IOError, TypeError):
+                    doc_name = current.messages["NONE"]
+                doc_url = URL(c="default", f="download",
+                              args=[doc])
+                doc_item = LI(A(I(_class="icon-file"),
+                                " ",
+                                doc_name,
+                                _href=doc_url,
+                                ),
+                              _role="menuitem",
+                              )
+                doc_list.append(doc_item)
+            docs = DIV(A(I(_class="icon-paper-clip"),
+                         SPAN(_class="caret"),
+                         _class="btn dropdown-toggle",
+                         _href="#",
+                         **{"_data-toggle": "dropdown"}
+                         ),
+                       doc_list,
+                       _class="btn-group attachments dropdown pull-right",
+                       )
+        else:
+            docs = ""
         s3db.configure("event_incident",
                        profile_title = title,
                        profile_header = DIV(edit_btn,
                                             H2(title),
+                                            docs,
                                             _class="profile-header",
                                             ),
                        profile_layers = [layer],

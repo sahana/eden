@@ -1118,7 +1118,7 @@ def render_posts(list_id, item_id, resource, rfields, record, type=None):
     documents = raw["doc_document.file"]
     if documents:
         if not isinstance(documents, list):
-            documents = [documents]
+            documents = (documents,)
         doc_list = UL(_class="dropdown-menu",
                       _role="menu",
                       )
@@ -1347,7 +1347,7 @@ def render_profile_posts(list_id, item_id, resource, rfields, record):
     documents = raw["doc_document.file"]
     if documents:
         if not isinstance(documents, list):
-            documents = [documents]
+            documents = (documents,)
         doc_list = UL(_class="dropdown-menu",
                       _role="menu",
                       )
@@ -1597,7 +1597,7 @@ def render_projects(list_id, item_id, resource, rfields, record):
     documents = raw["doc_document.file"]
     if documents:
         if not isinstance(documents, list):
-            documents = [documents]
+            documents = (documents,)
         doc_list = UL(_class="dropdown-menu",
                       _role="menu",
                       )

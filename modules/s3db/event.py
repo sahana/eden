@@ -582,6 +582,7 @@ class S3IncidentModel(S3Model):
         #
         tablename = "event_incident"
         self.define_table(tablename,
+                          self.super_link("doc_id", "doc_entity"),
                           # Enable in template if-required
                           self.event_event_id(readable = False,
                                               writable = False,
@@ -678,6 +679,7 @@ class S3IncidentModel(S3Model):
                        list_layout = event_incident_list_layout,
                        # Most recent Incident first
                        orderby = "event_incident.zero_hour desc",
+                       super_entity = "doc_entity",
                        update_onaccept = self.incident_update_onaccept,
                        )
 

@@ -14,15 +14,14 @@ T = current.T
 settings = current.deployment_settings
 
 """
-    Template settings
-
-    All settings which are to configure a specific template are located here
-
-    Deployers should ideally not need to edit any other files outside of their template folder
+    Template settings for a hosted environment to allow NGOs to share data
+    Prototype being developed for CAR (Central African Republic)
 """
 
-settings.base.system_name = T("Magnu")
-settings.base.system_name_short = T("Magnu")
+#settings.base.system_name = T("Magnu")
+#settings.base.system_name_short = T("Magnu")
+settings.base.system_name = T("Central African Republic")
+settings.base.system_name_short = T("CAR")
 
 # PrePopulate data
 settings.base.prepopulate = ("Magnu", "default/users")
