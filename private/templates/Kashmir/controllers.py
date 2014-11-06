@@ -47,23 +47,23 @@ class index(S3CustomController):
         login_div = None
         register_form = None
         register_div = None
-        
+
         # Contact Form
         request_email = settings.get_frontpage("request_email")
         if request_email:
             from gluon.dal import Field
             from gluon.validators import IS_NOT_EMPTY
             from gluon.sqlhtml import SQLFORM
-            fields = [Field("name", 
+            fields = [Field("name",
                             label="Your name",
                             requires=IS_NOT_EMPTY(),
                             ),
                       Field("address",
-                            label="Your e-mail address", 
+                            label="Your e-mail address",
                             requires=IS_NOT_EMPTY(),
                             ),
                       Field("subject",
-                            label="Subject", 
+                            label="Subject",
                             requires=IS_NOT_EMPTY(),
                             ),
                       Field("message", "text",
@@ -74,7 +74,7 @@ class index(S3CustomController):
             from s3 import s3_mark_required
             labels, required = s3_mark_required(fields)
             s3.has_required = required
-            
+
             response.form_label_separator = ""
             contact_form = SQLFORM.factory(formstyle = settings.get_ui_formstyle(),
                                            submit_button = T("Submit"),
@@ -146,12 +146,12 @@ $('#mailform').validate({
  }
 })'''
             s3.jquery_ready.append(validation_script)
-                    
+
         else:
             contact_form = ""
 
         if AUTHENTICATED not in roles:
-            
+
             login_buttons = DIV(A(T("Login"),
                                   _id="show-login",
                                   _class="tiny secondary button"),
@@ -172,7 +172,7 @@ $('#show-login').click(function(e){
  $('#intro').slideUp()
 })'''
             s3.jquery_ready.append(script)
-            
+
             # This user isn't yet logged-in
             if request.cookies.has_key("registered"):
                 # This browser has logged-in before
@@ -211,7 +211,7 @@ $('#login-btn').click(function(e){
  $('#login_form').show()
 })'''
                 s3.jquery_ready.append(register_script)
-                
+
             # Provide a login box on front page
             auth.messages.submit_button = T("Login")
             login_form = auth.login(inline=True)
@@ -251,28 +251,41 @@ $(document).ready(function(){
         self._view(TEMPLATE, "index.html")
         return output
 
-# END =========================================================================
+# =============================================================================
 class listoforganizations(S3CustomController):
     """ Custom Page for rendering list of participating organizations """
+
     def __call__(self):
+
         self._view(TEMPLATE, "listoforg.html")
-        return{"title":"List of Participating Organizations"}
-# END =========================================================================
+        return {"title": "List of Participating Organizations"}
+
+# =============================================================================
 class about(S3CustomController):
     """ Custom Page for rendering about"""
+
     def __call__(self):
+
         #redirect('https://docs.google.com/a/iquasar.com/file/d/0B3_TmWrJ52YBRmNoVVBhZkI1ZG8/edit')
         self._view(TEMPLATE, "about.html")
-        return{} 
-# END =========================================================================
+        return {}
+
+# =============================================================================
 class contact(S3CustomController):
     """ Custom Page for rendering contact us """
+
     def __call__(self):
+
         self._view(TEMPLATE, "contact.html")
-        return{}  
-# END =========================================================================
+        return {}
+
+# =============================================================================
 class userguide(S3CustomController):
-     """ user guide """
+     """ User Guide """
+
      def __call__(self):
+
         self._view(TEMPLATE, "userguide.html")
-        return{} 
+        return {}
+
+# END =========================================================================
