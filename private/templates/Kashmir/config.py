@@ -279,7 +279,7 @@ settings.modules = OrderedDict([
         module_type = 4
     )),
     ("vol", Storage(
-        name_nice = T("Voluntary"),
+        name_nice = T("Volunteers"),
         #description = "",
         restricted = True,
         module_type = 7

@@ -31,7 +31,17 @@ class S3MainMenu(default.S3MainMenu):
             homepage("vol"),
             homepage("project"),
         ]
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_help(cls, **attr):
+        """ Help Menu """
 
+        menu_help = MM("Help", c="default", f="help", **attr)(
+            MM("Contact us", f="contact"),
+            MM("About Us", f="about"),
+            MM("User Guide", f="index/userguide"),
+        )
+        return menu_help
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
     """ Custom Application Side Menu """
