@@ -39,7 +39,8 @@ class S3SecurityModel(S3Model):
     """
     """
 
-    names = ("security_zone_type",
+    names = ("security_level",
+             "security_zone_type",
              "security_zone",
              "security_staff_type",
              "security_staff",
@@ -52,6 +53,86 @@ class S3SecurityModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        location_id = self.gis_location_id
+
+        # -----------------------------------------------------------
+        # Security Levels
+        # - according to the UN Security Level System (SLS)
+        # http://ictemergency.wfp.org/c/document_library/get_file?uuid=c025cb98-2297-4208-bcc6-76ba02719c02&groupId=10844
+        # http://geonode.wfp.org/layers/geonode:wld_bnd_securitylevel_wfp
+        #
+        
+        level_opts = {1: T("Minimal"),
+                      2: T("Low"),
+                      3: T("Moderate"),
+                      4: T("Substantial"),
+                      5: T("High"),
+                      6: T("Extreme"),
+                      }
+
+        tablename = "security_level"
+        define_table(tablename,
+                     location_id(
+                        #label = T("Security Level Area"),
+                        widget = S3LocationSelectorWidget2(
+                            show_map = False,
+                            ),
+                        ),
+                     # Overall Level
+                     Field("level", "integer",
+                           label = T("Security Level"),
+                           represent = lambda v: level_opts.get(v,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(level_opts),
+                           ),
+                     # Categories
+                     Field("armed_conflict", "integer",
+                           label = T("Armed Conflict"),
+                           represent = lambda v: level_opts.get(v,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(level_opts),
+                           ),
+                     Field("terrorism", "integer",
+                           label = T("Terrorism"),
+                           represent = lambda v: level_opts.get(v,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(level_opts),
+                           ),
+                     Field("crime", "integer",
+                           label = T("Crime"),
+                           represent = lambda v: level_opts.get(v,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(level_opts),
+                           ),
+                     Field("civil_unrest", "integer",
+                           label = T("Civil Unrest"),
+                           represent = lambda v: level_opts.get(v,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(level_opts),
+                           ),
+                     Field("hazards", "integer",
+                           label = T("Hazards"),
+                           represent = lambda v: level_opts.get(v,
+                                                current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(level_opts),
+                           comment = T("e.g. earthquakes or floods"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Classify Area"),
+            title_display = T("Security Level Details"),
+            title_list = T("Security Levels"),
+            title_update = T("Edit Security Level"),
+            title_upload = T("Import Security Levels"),
+            label_list_button = T("List Security Levels"),
+            label_delete_button = T("Delete Security Level"),
+            msg_record_created = T("Security Area classified"),
+            msg_record_modified = T("Security Level updated"),
+            msg_record_deleted = T("Security Level deleted"),
+            msg_list_empty = T("No Security Areas currently classified"))
 
         # -----------------------------------------------------------
         # Security Zone Types
@@ -105,13 +186,13 @@ class S3SecurityModel(S3Model):
                                                        label=ADD_ZONE_TYPE,
                                                        tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                            ),
-                     self.gis_location_id(
-                     widget = S3LocationSelectorWidget2(
-                         catalog_layers = True,
-                         points = False,
-                         polygons = True,
-                         )
-                     ),
+                     location_id(
+                        widget = S3LocationSelectorWidget2(
+                            catalog_layers = True,
+                            points = False,
+                            polygons = True,
+                            ),
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 

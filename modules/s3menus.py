@@ -770,7 +770,7 @@ class S3OptionsMenu(object):
                     M("Incidents", c="event", f="incident")(
                         M("Create", m="create"),
                     ),
-                    M("Incident Reports", c="event", f="incident_report")(
+                    M("Incident Reports", c="event", f="incident_report", m="summary")(
                         M("Create", m="create"),
                     ),
                     M("Incident Types", c="event", f="incident_type")(
@@ -1226,39 +1226,35 @@ class S3OptionsMenu(object):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="security")(
-                    M("Incident Reports", c="irs", f="ireport")(
+                    M("Incident Reports", c="event", f="incident_report", m="summary")(
                         M("Create", m="create"),
-                        M("Open Incidents", vars={"open":1}),
-                        M("Map", m="map"),
-                        M("Timeline", args="timeline"),
                         M("Import", m="import"),
-                        M("Report", m="report",
-                          vars=dict(rows="L1",
-                                    cols="category",
-                                    fact="datetime",
-                                    aggregate="count"))
                     ),
-                    M("Incident Categories", c="irs", f="icategory",
-                      restrict=[ADMIN])(
+                    M("Security Levels", f="level")(
+                        M("level", m="create"),
+                    ),
+                    M("Security Zones", f="zone")(
                         M("Create", m="create"),
                     ),
                     M("Facilities", c="org", f="facility", m="summary")(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
+                    ),
+                    M("Personnel", f="staff")(
+                        M("Create", m="create"),
+                        M("List All Security-related Staff"),
+                        M("List All Essential Staff", f="essential"),
+                    ),
+                    M("Incident Categories", c="event", f="incident_type",
+                      restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
                     M("Facility Types", c="org", f="facility_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Zones", f="zone")(
-                        M("Create", m="create"),
-                    ),
                     M("Zone Types", f="zone_type", restrict=[ADMIN])(
                         M("Create", m="create"),
-                    ),
-                    M("Personnel", f="staff")(
-                        M("Create", m="create"),
-                        M("List All Security-related Staff"),
-                        M("List All Essential Staff", f="essential"),
                     ),
                     M("Security Staff Types", f="staff_type", restrict=[ADMIN])(
                         M("Create", m="create"),

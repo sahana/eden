@@ -234,6 +234,12 @@ settings.modules = OrderedDict([
         # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         module_type = None,
     )),
+    ("security", Storage(
+       name_nice = T("Security"),
+       #description = "Security Management System",
+       restricted = True,
+       module_type = 10,
+    )),
     ("supply", Storage(
         name_nice = T("Supply Chain Management"),
         #description = "Used within Inventory Management, Request Management and Asset Management",
@@ -294,12 +300,6 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = None,
     )),
-    #("security", Storage(
-    #   name_nice = T("Security"),
-    #   #description = "Security Management System",
-    #   restricted = True,
-    #   module_type = 10,
-    #)),
     ("water", Storage(
         name_nice = T("Water"),
         #description = "Flood Gauges show water levels in various parts of the country",
