@@ -1150,10 +1150,8 @@ def asset_rheader(r):
                                    ltable.site_id.represent(current_log.site_id),
                                    ),
                                 ),
-                          DIV(_style = "margin-top:5px", # @ToDo: Move to CSS
-                              *asset_action_btns
-                              ),
                           rheader_tabs)
+            s3.rfooter = TAG[""](*asset_action_btns)
             return rheader
     return None
 
