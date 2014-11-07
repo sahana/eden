@@ -1677,7 +1677,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             _tags.append(A(tags[index],
                            _href=URL(c="cms", f="post",
                                      args="datalist",
-                                     vars={"cms_tag_post.tag_id": tag_id}),
+                                     vars={"tag_post.tag_id__belongs": tag_id}),
                            ).xml())
             index += 1
         tags = H6(XML(s3_unicode(T("More about %(tags)s")) % dict(tags=" | ".join(_tags))))
@@ -1685,7 +1685,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         tags = ""
 
     item = TAG.article(H2(A(title,
-                            _href=URL(c="cms", f="post", args=[record_id, "datalist"]),
+                            _href=URL(c="cms", f="post",
+                                      args="datalist",
+                                      vars={"~.id": record_id}),
                             ),
                           ),
                        H6(author,
@@ -1700,9 +1702,9 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                        tags,
                        )
 
-    return TAG[""](item,
-                   HR(),
-                   )
+    return DIV(item,
+               HR(),
+               )
 
 def customise_cms_post_controller(**attr):
 

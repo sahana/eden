@@ -357,7 +357,7 @@ S3.search = {};
         return queries;
     };
 
-    // Pass to global scope to be called by s3.jquery.ui.pivottable.js
+    // Pass to global scope to be called by s3.ui.pivottable.js
     S3.search.getCurrentFilters = getCurrentFilters;
 
     /**

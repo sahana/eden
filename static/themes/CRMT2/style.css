@@ -199,6 +199,9 @@ table.dataTable .action-btn.read:before {
 .dl {
     background: none repeat scroll 0 0 #ffffff;
 }
+div.dl {
+    border-bottom: 0;
+}
 .dl-row {
     border-top: 0;
 }
