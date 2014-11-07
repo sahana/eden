@@ -125,6 +125,7 @@ select {
   padding: 0.25rem;
   margin: 0;
   display: inline-block;
+  font-weight: normal;
 }
 
 input[type="text"],
