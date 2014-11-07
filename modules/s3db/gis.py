@@ -3018,6 +3018,7 @@ class S3FeatureLayerModel(S3Model):
                                 #              _title="%s|%s" % (T("Popup Fields"),
                                 #                                T("Used to build onHover Tooltip & 1st field also used in Cluster Popups to differentiate between records."))),
                                 ),
+                          # NB To use complex attributes, use the full-format, e.g. "~.location_id$gis_feature_type"
                           Field("attr_fields", "list:string",
                                 label = T("Attributes"),
                                 comment = DIV(_class="tooltip",
