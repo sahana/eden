@@ -181,7 +181,6 @@ def customise_no_rheader_controller(**attr):
     attr["rheader"] = None
     return attr
 
-settings.customise_cms_post_controller = customise_no_rheader_controller
 settings.customise_org_facility_controller = customise_no_rheader_controller
 settings.customise_org_organisation_controller = customise_no_rheader_controller
 settings.customise_org_resource_controller = customise_no_rheader_controller
@@ -242,10 +241,21 @@ def cms_post_age(row):
         return 3
 
 # -----------------------------------------------------------------------------
+def customise_cms_post_controller(**attr):
+
+    # Make GeoJSON output smaller
+    current.s3db.gis_location.gis_feature_type.represent = None
+
+    # Remove rheader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_cms_post_controller = customise_cms_post_controller
+
 def customise_cms_post_resource(r, tablename):
     """
         Customise cms_post resource
-        - CRD Strings
+        - CRUD Strings
         - Datatable
         - Fields
         - Form
@@ -284,7 +294,10 @@ def customise_cms_post_resource(r, tablename):
     table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
     table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
                                                          show_address=True,
-                                                         show_map=True)
+                                                         show_map=True,
+                                                         points = True,
+                                                         polygons = True,
+                                                         )
     # Don't add new Locations here
     table.location_id.comment = None
 
@@ -863,42 +876,6 @@ def customise_org_organisation_resource(r, tablename):
                                    show_on_map = False, # No Marker yet & only show at L1-level anyway
                                    #list_layout = s3db.event_incident_list_layout,
                                    )
-            #activities_widget = dict(label = "Activities",
-            #                         label_create = "Create Activity",
-            #                         type = "datalist",
-            #                         tablename = "cms_post",
-            #                         context = "organisation",
-            #                         filter = FS("series_id$name") == "Activity",
-            #                         icon = "icon-activity",
-            #                         layer = "Activities",
-            #                         # provided by Catalogue Layer
-            #                         #marker = "activity",
-            #                         list_layout = render_profile_posts,
-            #                         )
-            #reports_widget = dict(label = "Reports",
-            #                      label_create = "Create Report",
-            #                      type = "datalist",
-            #                      tablename = "cms_post",
-            #                      context = "organisation",
-            #                      filter = FS("series_id$name") == "Report",
-            #                      icon = "icon-report",
-            #                      layer = "Reports",
-            #                      # provided by Catalogue Layer
-            #                      #marker = "report",
-            #                      list_layout = render_profile_posts,
-            #                      )
-            #assessments_widget = dict(label = "Assessments",
-            #                          label_create = "Create Assessment",
-            #                          type = "datalist",
-            #                          tablename = "cms_post",
-            #                          context = "organisation",
-            #                          filter = FS("series_id$name") == "Assessment",
-            #                          icon = "icon-assessment",
-            #                          layer = "Assessments",
-            #                          # provided by Catalogue Layer
-            #                          #marker = "assessment",
-            #                          list_layout = render_profile_posts,
-            #                          )
             record = r.record
             title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, record.name)
             if record.logo:
