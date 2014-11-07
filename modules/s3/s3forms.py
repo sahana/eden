@@ -1570,6 +1570,8 @@ class SKIP_POST_VALIDATION(Validator):
                 self.multiple = other.multiple
             if hasattr(other, "options"):
                 self.options = other.options
+            if hasattr(other, "formatter"):
+                self.formatter = other.formatter
 
     def __call__(self, value):
         """
@@ -1944,7 +1946,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
             has_rows = True
             item = items[i]
             # Get the item record ID
-            if "_id" in item:
+            if "_delete" in item and item["_delete"]:
+                continue
+            elif "_id" in item:
                 record_id = item["_id"]
                 # Check permissions to edit this item
                 if _editable:
@@ -2081,8 +2085,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         output = DIV(INPUT(**attr),
                      hidden,
                      widget,
-                     _id=self._formname(separator="-"),
-                     _field=real_input
+                     _id = self._formname(separator="-"),
+                     _field = real_input,
+                     _class = "inline-component",
                      )
 
         return output
@@ -2258,7 +2263,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     record_id = item["_id"]
 
                     # Delete..?
-                    if "_delete" in item:
+                    if "_delete" in item and item["_delete"]:
                         authorized = has_permission("delete", tablename, record_id)
                         if not authorized:
                             continue
@@ -2291,6 +2296,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             # Onaccept
                             onaccept(table, Storage(vars=values), method="update")
                 else:
+                    if "_delete" in item and item["_delete"]:
+                        # Row has been added and then removed again, so just
+                        # ignore it
+                        continue
                     # Create a new record
                     authorized = has_permission("create", tablename)
                     if not authorized:
@@ -2891,6 +2900,8 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             else:
                 attr["_class"] = "hide"
         widget = w(dummy_field, value, **attr)
+        if hasattr(widget, "add_class"):
+            widget.add_class("inline-component")
 
         # Append the attached script to jquery_ready
         script = options.get("script")
@@ -3345,7 +3356,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
                      widget,
                      _id=self._formname(separator="-"),
                      _field=real_input,
-                     _class="inline-checkbox",
+                     _class="inline-checkbox inline-component",
                      _name="%s_widget" % field_name,
                      )
 
@@ -3722,7 +3733,7 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
                      widget,
                      _id=self._formname(separator="-"),
                      _field=real_input,
-                     #_class="inline-multiselect",
+                     _class="inline-multiselect inline-component",
                      _name="%s_widget" % field_name,
                      )
         columns = opts.get("columns")

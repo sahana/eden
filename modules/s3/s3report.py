@@ -694,7 +694,7 @@ class S3ReportForm(object):
             script = "/%s/static/scripts/d3/nv.d3.js" % appname
             if script not in scripts:
                 scripts.append(script)
-            script = "/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.pivottable.js" % appname
             if script not in scripts:
                 scripts.append(script)
         else:
