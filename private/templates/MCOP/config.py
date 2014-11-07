@@ -549,6 +549,7 @@ def customise_event_incident_resource(r, tablename):
                              filter = FS("expired") == False,
                              icon = "icon-alert",
                              colspan = 1,
+                             layer = "Alerts",
                              #list_layout = s3db.cms_post_list_layout,
                              )
         resources_widget = dict(label = "Resources",
@@ -639,12 +640,12 @@ def customise_event_incident_resource(r, tablename):
                                             docs,
                                             _class="profile-header",
                                             ),
-                       profile_layers = [layer],
-                       profile_widgets = [alerts_widget,
+                       profile_layers = (layer,),
+                       profile_widgets = (alerts_widget,
                                           resources_widget,
                                           tasks_widget,
                                           map_widget,
-                                          ],
+                                          ),
                        profile_cols = 4
                        )
 

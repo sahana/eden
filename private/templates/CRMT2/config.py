@@ -1669,8 +1669,8 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         if isinstance(tag_ids, (tuple, list)):
             tags = tags.xml().split(", ")
         else:
-            tag_ids = [tag_ids]
-            tags = [tags]
+            tag_ids = (tag_ids,)
+            tags = (tags,)
         _tags = []
         index = 0
         for tag_id in tag_ids:
