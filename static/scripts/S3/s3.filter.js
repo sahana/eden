@@ -676,8 +676,10 @@ S3.search = {};
 
         var query = [];
 
-        if (url_parts.length > 1) {
-
+        if (S3.search.stripFilters == 1) {
+            // Strip existing URL filters
+        } else if (url_parts.length > 1) {
+            // Keep existing URL filters
             var qstr = url_parts[1];
             var url_vars = qstr.split('&');
 

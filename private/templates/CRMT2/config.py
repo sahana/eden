@@ -1832,6 +1832,10 @@ def customise_cms_post_controller(**attr):
                             ),
             )
 
+        # Filter Widgets should override any URL filters
+        # (this allows overriding the single-page filter)
+        s3.js_global.append('''S3.search.stripFilters=1''')
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        delete_next = r.url(method="datalist", id=0),
