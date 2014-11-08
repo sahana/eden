@@ -393,7 +393,6 @@ def dojs(dogis = False, warnings = True):
 
     if dogis:
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
-        sourceDirectoryOpenLayersExten = "../gis"
         sourceDirectoryMGRS = "../gis"
         sourceDirectoryGeoExt = "../gis/GeoExt/lib"
         sourceDirectoryGxp = "../gis/gxp"

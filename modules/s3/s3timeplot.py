@@ -793,9 +793,13 @@ class S3TimeSeries(object):
         rfield = rfields.get("event_start")
         if rfield:
             event_start = rfield.selector
+        else:
+            event_start = None
         rfield = rfields.get("event_end")
         if rfield:
             event_end = rfield.selector
+        else:
+            event_end = None
 
         # Rows
         rows = rfields.get("rows")

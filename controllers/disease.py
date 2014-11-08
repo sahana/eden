@@ -86,4 +86,22 @@ def tracing():
 
     return s3_rest_controller(rheader = s3db.disease_rheader)
 
+# -----------------------------------------------------------------------------
+def statistic():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def stats_data():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def stats_aggregate():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================

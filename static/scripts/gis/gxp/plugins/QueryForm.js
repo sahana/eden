@@ -79,13 +79,7 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
      *  ``String``
      *  Text for query by location (i18n).
      */
-    queryByLocationText: "Query by location",
-
-    /** api: config[currentTextText]
-     *  ``String``
-     *  Text for query by current extent (i18n).
-     */
-    currentTextText: "Current extent",
+    queryByLocationText: "Query by current map extent",
 
     /** api: config[queryByAttributesText]
      *  ``String``
@@ -124,25 +118,47 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
      */
     outputAction: 0,
     
-    constructor: function(config) {
-        Ext.applyIf(config, {
-            actions: [{
-                text: this.queryActionText,
-                menuText: this.queryMenuText,
-                iconCls: "gxp-icon-find",
-                tooltip: this.queryActionTip,
-                disabled: true
-            }]
-        });
-        gxp.plugins.QueryForm.superclass.constructor.apply(this, arguments);
-    },
+    /** api: config[autoExpand]
+     *  ``String`` If set to the id of a container, the container will be
+     *  expanded when the Query Form is enabled, and collapsed when it is
+     *  disabled. Once the user manually expands/collapses the contaienr, the
+     *  user setting will stick for the current session.
+     */
+    autoExpand: null,
     
     /** api: method[addActions]
      */
     addActions: function(actions) {
-        gxp.plugins.QueryForm.superclass.addActions.apply(this, arguments);
+        if (!this.initialConfig.actions && !actions) {
+            actions = [{
+                text: this.queryActionText,
+                menuText: this.queryMenuText,
+                iconCls: "gxp-icon-find",
+                tooltip: this.queryActionTip,
+                disabled: true,
+                toggleGroup: this.toggleGroup,
+                enableToggle: true,
+                allowDepress: true,
+                toggleHandler: function(button, pressed) {
+                    if (this.autoExpand && this.output.length > 0) {
+                        var expandContainer = Ext.getCmp(this.autoExpand);
+                        expandContainer[pressed ? 'expand' : 'collapse']();
+                        if (pressed) {
+                            expandContainer.expand();
+                            if (expandContainer.ownerCt && expandContainer.ownerCt instanceof Ext.Panel) {
+                                expandContainer.ownerCt.expand();
+                            }
+                        } else {
+                            this.target.tools[this.featureManager].loadFeatures();
+                        }
+                    }
+                },
+                scope: this
+            }];
+        }
+        this.actions = gxp.plugins.QueryForm.superclass.addActions.apply(this, actions);
         // support custom actions
-        if (this.actions) {
+        if (this.actionTarget !== null && this.actions) {
             this.target.tools[this.featureManager].on("layerchange", function(mgr, rec, schema) {
                 for (var i=this.actions.length-1; i>=0; --i) {
                     this.actions[i].setDisabled(!schema);
@@ -160,24 +176,22 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
             border: false,
             bodyStyle: "padding: 10px",
             layout: "form",
+            width: 320,
             autoScroll: true,
             items: [{
                 xtype: "fieldset",
                 ref: "spatialFieldset",
                 title: this.queryByLocationText,
-                checkboxToggle: true,
-                items: [{
-                    xtype: "textfield",
-                    ref: "../extent",
-                    anchor: "100%",
-                    fieldLabel: this.currentTextText,
-                    value: this.getFormattedMapExtent(),
-                    readOnly: true
-                }]
+                anchor: "97%",
+                // This fieldset never expands
+                style: "margin-bottom:0; border-left-color:transparent; border-right-color:transparent; border-width:1px 1px 0 1px; padding-bottom:0",
+                checkboxToggle: true
             }, {
                 xtype: "fieldset",
                 ref: "attributeFieldset",
                 title: this.queryByAttributesText,
+                anchor: "97%",
+                style: "margin-bottom:0",
                 checkboxToggle: true
             }],
             bbar: ["->", {
@@ -188,12 +202,12 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
                         queryForm.ownerCt.ownerCt;
                     if (ownerCt && ownerCt instanceof Ext.Window) {
                         ownerCt.hide();
-                    } else {
-                        addAttributeFilter(
-                            featureManager, featureManager.layerRecord,
-                            featureManater.schema
-                        );
                     }
+                    addFilterBuilder(
+                        featureManager, featureManager.layerRecord,
+                        featureManager.schema
+                    );
+                    featureManager.loadFeatures();
                 }
             }, {
                 text: this.queryActionText,
@@ -224,9 +238,33 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
         }, config || {});
         var queryForm = gxp.plugins.QueryForm.superclass.addOutput.call(this, config);
         
+        var expandContainer = null, userExpand = true;
+        if (this.autoExpand) {
+            expandContainer = Ext.getCmp(this.autoExpand);
+            function stopAutoExpand() {
+                if (userExpand) {
+                    expandContainer.un('expand', stopAutoExpand);
+                    expandContainer.un('collapse', stopAutoExpand);
+                    expandContainer = null;
+                }
+                userExpand = true;
+            }
+            expandContainer.on({
+                'expand': stopAutoExpand,
+                'collapse': stopAutoExpand
+            });
+        }
         var addFilterBuilder = function(mgr, rec, schema) {
             queryForm.attributeFieldset.removeAll();
             queryForm.setDisabled(!schema);
+            if (expandContainer) {
+                userExpand = false;
+                expandContainer[schema ? 'expand' : 'collapse']();
+                // if we're wrapped in another collapsed container, expand it
+                if (schema && expandContainer && expandContainer.ownerCt && expandContainer.ownerCt instanceof Ext.Panel) {
+                    expandContainer.ownerCt.expand();
+                }
+            }
             if (schema) {
                 queryForm.attributeFieldset.add({
                     xtype: "gxp_filterbuilder",
@@ -248,10 +286,6 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
             featureManager.layerRecord, featureManager.schema
         );
         
-        this.target.mapPanel.map.events.register("moveend", this, function() {
-            queryForm.extent.setValue(this.getFormattedMapExtent());
-        });
-        
         featureManager.on({
             "beforequery": function() {
                 new Ext.LoadMask(queryForm.getEl(), {
@@ -261,16 +295,18 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
             },
             "query": function(tool, store) {
                 if (store) {
-                    store.getCount() || Ext.Msg.show({
-                        title: this.noFeaturesTitle,
-                        msg: this.noFeaturesMessage,
-                        buttons: Ext.Msg.OK,
-                        icon: Ext.Msg.INFO
-                    });
-                    if (this.autoHide) {
-                        var ownerCt = this.outputTarget ? queryForm.ownerCt :
-                            queryForm.ownerCt.ownerCt;
-                        ownerCt instanceof Ext.Window && ownerCt.hide();
+                    if (this.target.tools[this.featureManager].featureStore !== null) {
+                        store.getCount() || Ext.Msg.show({
+                            title: this.noFeaturesTitle,
+                            msg: this.noFeaturesMessage,
+                            buttons: Ext.Msg.OK,
+                            icon: Ext.Msg.INFO
+                        });
+                        if (this.autoHide) {
+                            var ownerCt = this.outputTarget ? queryForm.ownerCt :
+                                queryForm.ownerCt.ownerCt;
+                            ownerCt instanceof Ext.Window && ownerCt.hide();
+                        }
                     }
                 }
             },
@@ -278,11 +314,6 @@ gxp.plugins.QueryForm = Ext.extend(gxp.plugins.Tool, {
         });
         
         return queryForm;
-    },
-    
-    getFormattedMapExtent: function() {
-        var extent = this.target.mapPanel.map.getExtent();
-        return extent && extent.toArray().join(", ");
     }
         
 });

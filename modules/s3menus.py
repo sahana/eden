@@ -687,6 +687,16 @@ class S3OptionsMenu(object):
                       c="disease", f="tracing")(
                        M("Create", m="create"),
                     ),
+                    M("Statistics Data",
+                      c="disease", f="stats_data", args="summary")(
+                        M("Create", m="create"),
+                        M("Time Plot", m="timeplot"),
+                        M("Import", m="import"),
+                    ),
+                    M("Statistics",
+                      c="disease", f="statistic")(
+                        M("Create", m="create"),
+                    ),
                     M("Diseases",
                       c="disease", f="disease")(
                         M("Create", m="create"),
@@ -1658,6 +1668,7 @@ class S3OptionsMenu(object):
                     ),
                     M("Demographic Data", f="demographic_data", args="summary")(
                         M("Create", m="create"),
+                        # Not usually dis-aggregated
                         M("Time Plot", m="timeplot"),
                         M("Import", m="import"),
                     ),

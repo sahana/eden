@@ -145,8 +145,8 @@ def storeRow(location, row, country):
     """
         Store a row in our data structure
     """
-    demographic = row[2].strip()
-    if demographic == "New cases":
+    statistic = row[2].strip()
+    if statistic == "New cases":
         # Not needed since we're disaggregating
         return
     value = row[3]
@@ -163,20 +163,20 @@ def storeRow(location, row, country):
     else:
         source_url = "" 
 
-    if demographic not in demographics:
-        demographics[demographic] = {}
+    if statistic not in statistics:
+        statistics[statistic] = {}
 
-    if location not in demographics[demographic]:
-        demographics[demographic][location] = {}
+    if location not in statistics[statistic]:
+        statistics[statistic][location] = {}
 
-    demographics[demographic][location][date] = [value, org, source_url]
+    statistics[statistic][location][date] = [value, org, source_url]
 
 def extractRow(row):
     """
         Extract a row from our Source Spreadsheet
     """
-    demographic = row[2].strip()
-    if demographic == "New cases":
+    statistic = row[2].strip()
+    if statistic == "New cases":
         # Not relevant as we dis-aggregate anyway
         return
 
@@ -209,7 +209,7 @@ def extractRow(row):
 
 print "Extracting data..."
 location_list = {}
-demographics = {}
+statistics = {}
 
 for rcnt in xrange(1, ws.nrows):
     row = ws.row_values(rcnt, 0, 7)
@@ -220,38 +220,38 @@ print "Dis-aggregating data..."
 rejected_data = {}
 suspect_data = {}
 
-def disaggregate(demographic, data):
+def disaggregate(statistic, data):
     """
-        Dis-aggregate the running total for each demographic
+        Dis-aggregate the running total for each statistic
     """
     #ignored = False
-    new_demographic = {}
+    new_statistic = {}
     for (loc, details) in data.items():
-        new_demographic[loc] = {}
+        new_statistic[loc] = {}
         prev_value = 0
         for key in sorted(details.keys()):
             new_value = details[key][0]
             if prev_value != new_value:
                 if new_value is None:
                     if prev_value:
-                        rejected_data[loc] = [key, "None value", demographic, new_value, prev_value]
+                        rejected_data[loc] = [key, "None value", statistic, new_value, prev_value]
                         continue
                     else:
                         new_value = 0
                 if (new_value < prev_value) and \
-                   (demographic not in ("Suspected cases", "Probable cases")): # and not ignored:
+                   (statistic not in ("Suspected cases", "Probable cases")): # and not ignored:
                     # ignore the data value - but never ignore consecutive cases
                     #ignored = True
-                    suspect_data[loc] = [key, "Value went down", demographic, new_value, prev_value]
+                    suspect_data[loc] = [key, "Value went down", statistic, new_value, prev_value]
                     #continue
                 #ignored = False
                 details[key][0] = new_value - prev_value
                 prev_value = new_value
-                new_demographic[loc][key] = details[key]
-    return new_demographic
+                new_statistic[loc][key] = details[key]
+    return new_statistic
 
-for d in demographics:
-    demographics[d] = disaggregate(d, demographics[d])
+for d in statistics:
+    statistics[d] = disaggregate(d, statistics[d])
 
 # Write this out in Sahana CSV format
 print "Writing out in Sahana format..."
@@ -263,10 +263,12 @@ from s3 import s3_unicode
 new_file = open(OUTPUT_CSV, "wb")
 new_csv = csv.writer(new_file, delimiter=",", quotechar='"')
 # Header row
-new_csv.writerow(["Demographic", "Value", "Country", "L1", "L2", "L3", "Date", "Source", "Source Organisation", "Source URL"])
+new_csv.writerow(["Statistic", "Value", "Country", "L1", "L2", "L3", "Date", "Source", "Source Organisation", "Source URL"])
 
-def write_details_to_csv(csv_file, demographic, data):
+split = os.path.split
+def write_details_to_csv(csv_file, statistic, data):
     cnt = 0
+    writerow = csv_file.writerow
     for (location, details) in data.items():
         loc = location_list[location]
         for key in sorted(details.keys()):
@@ -276,13 +278,13 @@ def write_details_to_csv(csv_file, demographic, data):
             url = urlparse(source)
             if url[0] != "":
                 source_url = source
-                (head, tail) = os.path.split(url[2])
+                (head, tail) = split(url[2])
                 source = tail.replace("%20", " ")
-            cnt = cnt +1
-            csv_file.writerow([demographic, row[0], loc[0], loc[1], loc[2], loc[3], key, s3_unicode(source).encode("utf-8"), row[1], source_url])
+            cnt += 1
+            writerow([statistic, row[0], loc[0], loc[1], loc[2], loc[3], key, s3_unicode(source).encode("utf-8"), row[1], source_url])
             
-for d in demographics:
-    write_details_to_csv(new_csv, d, demographics[d])
+for s in statistics:
+    write_details_to_csv(new_csv, s, statistics[s])
 
 new_file.close()
 
@@ -295,8 +297,8 @@ new_file.close()
 # Import the new data into the database
 print "Importing data..."
 auth.override = True
-stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "stats", "demographic_data.xsl")
-resource = s3db.resource("stats_demographic_data")
+stylesheet = os.path.join(request.folder, "static", "formats", "s3csv", "disease", "stats_data.xsl")
+resource = s3db.resource("disease_stats_data")
 File = open(OUTPUT_CSV, "r")
 resource.import_xml(File, format="csv", stylesheet=stylesheet)
 db.commit()

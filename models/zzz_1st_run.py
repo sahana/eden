@@ -290,6 +290,14 @@ if len(pop_list) > 0:
     # Countries are only editable by MapAdmin
     db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
 
+    if has_module("disease"):
+        # Populate disease_stats_aggregate (disabled during prepop)
+        # - needs to be done after locations
+        start = datetime.datetime.now()
+        s3db.disease_stats_rebuild_all_aggregates()
+        end = datetime.datetime.now()
+        print >> sys.stdout, "Disease Statistics data aggregation completed in %s" % (end - start)
+
     if has_module("stats"):
         # Populate stats_demographic_aggregate (disabled during prepop)
         # - needs to be done after locations

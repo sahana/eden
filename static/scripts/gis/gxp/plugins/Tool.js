@@ -7,7 +7,7 @@
  */
 
 /**
- * requires GeoExt/widgets/Action.js
+ * @require GeoExt/widgets/Action.js
  */
 
 /** api: (define)
@@ -42,11 +42,13 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
 
     /** api: config[actions]
      *  ``Array`` Custom actions for tools that do not provide their own. Array
-     *  elements are expected to be valid Ext config objects. Actions provided
-     *  here may have an additional ``menuText`` property, which will be used
-     *  as text when the action is used in a menu. The ``text`` property will
-     *  only be used in buttons. Optional, only needed to create custom
-     *  actions.
+     *  elements are expected to be valid Ext config objects or strings
+     *  referencing a valid Ext component. Actions provided here may have
+     *  additional ``menuText`` and ``buttonText`` properties. The former
+     *  will be used as text when the action is used in a menu. The latter will
+     *  be conditionally used on buttons, only if ``showButtonText`` is set to
+     *  true. The native ``text`` property will unconditionally be used for
+     *  buttons. Optional, only needed to create custom actions.
      */
     
     /** api: config[outputAction]
@@ -101,6 +103,12 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
      *  should configure a defaultAction to make sure that an action is active.
      */
     actionTarget: "map.tbar",
+    
+    /** api: config[showButtonText]
+     *  Show the ``buttonText`` an action is configured with, if used as a
+     *  button. Default is false.
+     */
+    showButtonText: false,
         
     /** api: config[toggleGroup]
      *  ``String`` If this tool should be radio-button style toggled with other
@@ -116,7 +124,8 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
      *  ``String`` Where to add the tool's output container? This can be any
      *  string that references an ``Ext.Container`` property on the portal, or
      *  "map" to access the viewer's main map. If not provided, a window will
-     *  be created.
+     *  be created. To reference one of the toolbars of an ``Ext.Panel``,
+     *  ".tbar", ".bbar" or ".fbar" has to be appended.
      */
      
     /** api: config[outputConfig]
@@ -214,6 +223,43 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
         }
     },
     
+    /** private: method[getContainer]
+     *  :arg target: ``String`` A reference as described for :obj:`actionTarget`
+     *      and :obj:`outputTarget`
+     *  :returns: ``Ext.Component`` The container reference matching the target.
+     */
+    getContainer: function(target) {
+        var ct, item, meth,
+            parts = target.split("."),
+            ref = parts[0];
+        if (ref) {
+            if (ref == "map") {
+                ct = this.target.mapPanel;
+            } else {
+                ct = Ext.getCmp(ref) || this.target.portal[ref];
+                if (!ct) {
+                    throw new Error("Can't find component with id: " + ref);
+                }
+            }
+        } else {
+            ct = this.target.portal;
+        }
+        item = parts.length > 1 && parts[1];
+        if (item) {
+            meth = {
+                "tbar": "getTopToolbar",
+                "bbar": "getBottomToolbar",
+                "fbar": "getFooterToolbar"
+            }[item];
+            if (meth) {
+                ct = ct[meth]();
+            } else {
+                ct = ct[item];
+            }
+        }
+        return ct;
+    },
+    
     /** api: method[addActions]
      *  :arg actions: ``Array`` Optional actions to add. If not provided,
      *      this.actions will be added.
@@ -223,14 +269,15 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
         actions = actions || this.actions;
         if (!actions || this.actionTarget === null) {
             // add output immediately if we have no actions to trigger it
-            this.addOutput();
+            this.removeOutput();
+            this.addOutput(this.outputConfig);
             return;
         }
         
         var actionTargets = this.actionTarget instanceof Array ?
             this.actionTarget : [this.actionTarget];
         var a = actions instanceof Array ? actions : [actions];
-        var action, actionTarget, i, j, jj, parts, ref, item, ct, meth, index = null;
+        var action, actionTarget, cmp, i, j, jj, ct, index = null;
         for (i=actionTargets.length-1; i>=0; --i) {
             actionTarget = actionTargets[i];
             if (actionTarget) {
@@ -238,36 +285,14 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
                     index = actionTarget.index;
                     actionTarget = actionTarget.target;
                 }
-                parts = actionTarget.split(".");
-                ref = parts[0];
-                if (ref) {
-                    if (ref == "map") {
-                        ct = this.target.mapPanel;
-                    } else {
-                        ct = Ext.getCmp(ref) || this.target.portal[ref];
-                        if (!ct) {
-                            throw new Error("Can't find component with id: " + ref);
-                        }
-                    }
-                } else {
-                    ct = this.target.portal;
-                }
-                item = parts.length > 1 && parts[1];
-                if (item) {
-                    meth = {
-                        "tbar": "getTopToolbar",
-                        "bbar": "getBottomToolbar",
-                        "fbar": "getFooterToolbar"
-                    }[item];
-                    if (meth) {
-                        ct = ct[meth]();
-                    } else {
-                        ct = ct[item];
-                    }
-                }
+                ct = this.getContainer(actionTarget);
             }
             for (j=0, jj=a.length; j<jj; ++j) {
                 if (!(a[j] instanceof Ext.Action || a[j] instanceof Ext.Component)) {
+                    cmp = Ext.getCmp(a[j]);
+                    if (cmp) {
+                        a[j] = cmp;
+                    }
                     if (typeof a[j] != "string") {
                         if (j == this.defaultAction) {
                             a[j].pressed = true;
@@ -282,6 +307,9 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
                         action.control.activate();
                 }
                 if (ct) {
+                    if (this.showButtonText) {
+                        action.setText(action.initialConfig.buttonText);
+                    }
                     if (ct instanceof Ext.menu.Menu) {
                         action = Ext.apply(new Ext.menu.CheckItem(action), {
                             text: action.initialConfig.menuText,
@@ -346,11 +374,7 @@ gxp.plugins.Tool = Ext.extend(Ext.util.Observable, {
         var ref = this.outputTarget;
         var container;
         if (ref) {
-            if (ref === "map") {
-                container = this.target.mapPanel;
-            } else {
-                container = Ext.getCmp(ref) || this.target.portal[ref];
-            }
+            container = this.getContainer(ref);
             if (!(config instanceof Ext.Component)) {
                 Ext.apply(config, this.outputConfig);
             }

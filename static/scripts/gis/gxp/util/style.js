@@ -7,7 +7,7 @@
  */
 
 /**
- * @require util/color.js
+ * @requires util/color.js
  */
 
 Ext.ns("gxp.util");

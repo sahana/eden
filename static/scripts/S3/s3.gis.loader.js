@@ -414,7 +414,7 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
                     'gis/GeoExt/lib/GeoExt/Lang.js',
 
                     // GXP
-                    'gis/gxp/RowExpander.js',
+                    'ext-community-extensions/RowExpander.js',
                     'gis/gxp/widgets/NewSourceWindow.js',
                     'gis/gxp/plugins/LayerSource.js',
                     'gis/gxp/plugins/WMSSource.js',
@@ -426,8 +426,8 @@ var s3_gis_loadjs = function(debug, projection, callback, scripts) {
                     gxt_files.push('gis/GeoExt/ux/GeoNamesSearchCombo.js');
                 }
                 if (i18n.gis_uploadlayer) {
-                    gxt_files.push('gis/gxp/FileUploadField.js');
-                    gxt_files.push('gis/gxp/LayerUploadPanel.js');
+                    gxt_files.push('ext-community-extensions/FileUploadField.js');
+                    gxt_files.push('gis/gxp/widgets/LayerUploadPanel.js');
                 }
                 jsFiles = jsFiles.concat(gxt_files)
             }

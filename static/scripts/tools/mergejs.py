@@ -160,6 +160,12 @@ def run (sourceDirectory, outputFilename = None, configFile = None):
                 elif (not cfg) or (not undesired(filepath, cfg.exclude)):
                     allFiles.append(filepath)
 
+    if cfg:
+        # Add files from other locations
+        for line in cfg.include:
+            if line.startswith(".."):
+                allFiles.append(line)
+
     ## Header inserted at the start of each file in the output
     HEADER = "/* " + "=" * 70 + "\n    %s\n" + "   " + "=" * 70 + " */\n\n"
 

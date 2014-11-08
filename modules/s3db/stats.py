@@ -73,7 +73,8 @@ class S3StatsModel(S3Model):
         # ---------------------------------------------------------------------
         # Super entity: stats_parameter
         #
-        sp_types = Storage(org_resource_type = T("Organization Resource Type"),
+        sp_types = Storage(disease_statistic = T("Disease Statistic"),
+                           org_resource_type = T("Organization Resource Type"),
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            project_campaign_keyword = T("Project Campaign Keyword"),
                            stats_demographic = T("Demographic"),
@@ -104,7 +105,8 @@ class S3StatsModel(S3Model):
         # ---------------------------------------------------------------------
         # Super entity: stats_data
         #
-        sd_types = Storage(org_resource = T("Organization Resource"),
+        sd_types = Storage(disease_stats_data = T("Disease Data"),
+                           org_resource = T("Organization Resource"),
                            project_beneficiary = T("Project Beneficiary"),
                            project_campaign_response_summary = T("Project Campaign Response Summary"),
                            stats_demographic_data = T("Demographic Data"),
@@ -344,7 +346,7 @@ class S3StatsDemographicModel(S3Model):
             msg_record_created = T("Demographic Data added"),
             msg_record_modified = T("Demographic Data updated"),
             msg_record_deleted = T("Demographic Data deleted"),
-            msg_list_empty = T("No demographic data currently defined"))
+            msg_list_empty = T("No demographic data currently available"))
 
         levels = current.gis.get_relevant_hierarchy_levels()
 
@@ -384,7 +386,7 @@ class S3StatsDemographicModel(S3Model):
                                  cols = ["parameter_id"],
                                  fact = [(T("Value"), "sum(value)"),
                                          ],
-                                 defaults = Storage(rows = location_fields[0],
+                                 defaults = Storage(rows = location_fields[0], # => L0 for multi-country, L1 for single country
                                                     cols = "parameter_id",
                                                     fact = "sum(value)",
                                                     totals = True,
@@ -397,9 +399,21 @@ class S3StatsDemographicModel(S3Model):
                   deduplicate = self.stats_demographic_data_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
+                  # @ToDo: Wrapper function to call this for the record linked
+                  # to the relevant place dependeing on whether approval is
+                  # required or not
+                  #onaccept = self.stats_demographic_update_aggregates,
+                  #onapprove = self.stats_demographic_update_aggregates,
                   report_options = report_options,
+                  # @ToDo: deployment_setting
                   requires_approval = True,
                   super_entity = "stats_data",
+                  # If using dis-aggregated data
+                  #timeplot_options = {"defaults": {"event_start": "date",
+                  #                                 "event_end": "end_date",
+                  #                                 "fact": "cumulate(value)",
+                  #                                 },
+                  #                    },
                   )
 
         #----------------------------------------------------------------------
@@ -566,12 +580,14 @@ class S3StatsDemographicModel(S3Model):
         # Delete the existing aggregates
         current.s3db.stats_demographic_aggregate.truncate()
 
-        # Read all the approved vulnerability_data records
+        # Read all the approved stats_demographic_data records
         dtable = db.stats_demographic
         ddtable = db.stats_demographic_data
         query = (ddtable.deleted != True) & \
-                (ddtable.approved_by != None) & \
-                (ddtable.parameter_id == dtable.parameter_id)
+                (ddtable.parameter_id == dtable.parameter_id) & \
+                (ddtable.approved_by != None)
+        # @ToDo: deployment_setting for whether records need to be approved
+        #   query &= (ddtable.approved_by != None)
         records = db(query).select(ddtable.data_id,
                                    ddtable.parameter_id,
                                    ddtable.date,
@@ -609,8 +625,12 @@ class S3StatsDemographicModel(S3Model):
     @staticmethod
     def stats_demographic_update_aggregates(records=None):
         """
-            This will calculate the stats_demographic_aggregate for the
-            specified parameter(s) at the specified location(s).
+            This will calculate the stats_demographic_aggregates for the
+            specified records. Either all (when rebuild_all is invoked) or for
+            the individual parameter(s) at the specified location(s) when run
+            onapprove - which currently happens inside the vulnerability
+            approve_report() controller.
+            @ToDo: onapprove/onaccept wrapper function for other workflows.
 
             This will get the raw data from stats_demographic_data and generate
             a stats_demographic_aggregate record for the given time period.
@@ -625,7 +645,7 @@ class S3StatsDemographicModel(S3Model):
             exists for this parameter_id and location for every time period from
             the first data item until the current time period.
 
-            Where appropriate add test cases to modules/unit_tests/s3db/stats.py
+            @ToDo: Add test cases to modules/unit_tests/s3db/stats.py
         """
 
         if not records:
@@ -683,6 +703,8 @@ class S3StatsDemographicModel(S3Model):
             query = (dtable.location_id == location_id) & \
                     (dtable.deleted != True) & \
                     (dtable.approved_by != None)
+            # @ToDo: deployment_setting for whether records need to be approved
+            #   query &= (dtable.approved_by != None)
             fields = [dtable.data_id,
                       dtable.date,
                       dtable.value,
@@ -960,6 +982,7 @@ class S3StatsDemographicModel(S3Model):
         # updates (for each time period) (i.e. 15 updates rather than 48)
 
         # Get all the parents
+        # @ToDo: Optimise by rewriting as custom routine rather than using this wrapper
         parents = {}
         get_parents = current.gis.get_parents
         for loc_id in location_dict.keys():
@@ -1033,8 +1056,10 @@ class S3StatsDemographicModel(S3Model):
         # Get the most recent stats_demographic_data record for all child locations
         query = (dtable.parameter_id == parameter_id) & \
                 (dtable.deleted != True) & \
-                (dtable.approved_by != None) & \
-                (dtable.location_id.belongs(child_ids))
+                (dtable.location_id.belongs(child_ids)) & \
+                (dtable.approved_by != None)
+        # @ToDo: deployment_setting for whether records need to be approved
+        #   query &= (dtable.approved_by != None)
         if end_date == "None": # converted to string as async parameter
             end_date = None
         else:
@@ -1050,8 +1075,8 @@ class S3StatsDemographicModel(S3Model):
                                 )
 
         # Get the most recent aggregate for this location for the total parameter
-        if total_id == "None": # converted to string as async parameter
-            total_id = None
+        #if total_id == "None": # converted to string as async parameter
+        #    total_id = None
 
         # Collect the values, skip duplicate records for the
         # same location => use the most recent one, which is

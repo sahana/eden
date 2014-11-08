@@ -8,7 +8,7 @@
 
 /**
  * @requires plugins/LayerSource.js
- * requires OpenLayers/Layer/TMS.js
+ * @require OpenLayers/Layer/TMS.js
  */
 
 /** api: (define)
@@ -143,13 +143,15 @@ gxp.plugins.MapBoxSource = Ext.extend(gxp.plugins.LayerSource, {
             layers[i] = new OpenLayers.Layer.TMS(
                 this[OpenLayers.String.camelize(config.name) + "Title"],
                 [
-                    "http://a.tiles.mapbox.com/mapbox/",
-                    "http://b.tiles.mapbox.com/mapbox/",
-                    "http://c.tiles.mapbox.com/mapbox/",
-                    "http://d.tiles.mapbox.com/mapbox/"
+                    "//a.tiles.mapbox.com/mapbox/",
+                    "//b.tiles.mapbox.com/mapbox/",
+                    "//c.tiles.mapbox.com/mapbox/",
+                    "//d.tiles.mapbox.com/mapbox/"
                 ],
                 OpenLayers.Util.applyDefaults({
-                    attribution: "<a href='http://mapbox.com'>MapBox</a> | <a href='http://mapbox.com/tos'>Terms of Service</a>",
+                    attribution: /^world/.test(name) ?
+                        "<a href='http://mapbox.com'>MapBox</a> | Some Data &copy; OSM CC-BY-SA | <a href='http://mapbox.com/tos'>Terms of Service</a>" :
+                        "<a href='http://mapbox.com'>MapBox</a> | <a href='http://mapbox.com/tos'>Terms of Service</a>",
                     type: "png",
                     tileOrigin: new OpenLayers.LonLat(-128 * 156543.03390625, -128 * 156543.03390625),
                     layername: config.name,

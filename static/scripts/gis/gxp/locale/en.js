@@ -20,7 +20,9 @@ GeoExt.Lang.add("en", {
         panelTitleText: "Title",
         layerSelectionText: "View available data from:",
         doneText: "Done",
-        uploadText: "Upload Data"
+        uploadText: "Upload layers",
+        addFeedActionMenuText: "Add feeds",
+        searchText: "Search for layers"
     },
     
     "gxp.plugins.BingSource.prototype": {
@@ -31,8 +33,13 @@ GeoExt.Lang.add("en", {
     },
 
     "gxp.plugins.FeatureEditor.prototype": {
+        splitButtonText: "Edit",
+        createFeatureActionText: "Create",
+        editFeatureActionText: "Modify",
         createFeatureActionTip: "Create a new feature",
-        editFeatureActionTip: "Edit existing feature"
+        editFeatureActionTip: "Edit existing feature",
+        commitTitle: "Commit message",
+        commitText: "Please enter a commit message for this edit:"
     },
     
     "gxp.plugins.FeatureGrid.prototype": {
@@ -41,8 +48,8 @@ GeoExt.Lang.add("en", {
         previousPageTip: "Previous page",
         zoomPageExtentTip: "Zoom to page extent",
         nextPageTip: "Next page",
-        nextPageTip: "Last page",
-        totalMsg: "Total: {0} records"
+        lastPageTip: "Last page",
+        totalMsg: "Features {1} to {2} of {0}"
     },
 
     "gxp.plugins.GoogleEarth.prototype": {
@@ -70,13 +77,17 @@ GeoExt.Lang.add("en", {
         baseNodeText: "Base Layers"
     },
 
+    "gxp.plugins.LayerManager.prototype": {
+        baseNodeText: "Base Maps"
+    },
+
     "gxp.plugins.Legend.prototype": {
-        menuText: "Show Legend",
-        tooltip: "Show Legend"
+        menuText: "Show legend",
+        tooltip: "Show legend"
     },
 
     "gxp.plugins.LoadingIndicator.prototype": {
-        loadingMapMessage: "Loading Map..."
+        loadingMapMessage: "Loading map..."
     },
 
     "gxp.plugins.MapBoxSource.prototype": {
@@ -97,6 +108,7 @@ GeoExt.Lang.add("en", {
     },
 
     "gxp.plugins.Measure.prototype": {
+        buttonText: "Measure",
         lengthMenuText: "Length",
         areaMenuText: "Area",
         lengthTooltip: "Measure length",
@@ -105,26 +117,27 @@ GeoExt.Lang.add("en", {
     },
 
     "gxp.plugins.Navigation.prototype": {
-        menuText: "Pan Map",
-        tooltip: "Pan Map"
+        menuText: "Pan map",
+        tooltip: "Pan map"
     },
 
     "gxp.plugins.NavigationHistory.prototype": {
-        previousMenuText: "Zoom To Previous Extent",
-        nextMenuText: "Zoom To Next Extent",
-        previousTooltip: "Zoom To Previous Extent",
-        nextTooltip: "Zoom To Next Extent"
+        previousMenuText: "Zoom to previous extent",
+        nextMenuText: "Zoom to next extent",
+        previousTooltip: "Zoom to previous extent",
+        nextTooltip: "Zoom to next extent"
     },
 
     "gxp.plugins.OSMSource.prototype": {
         title: "OpenStreetMap Layers",
-        mapnikAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>",
+        mapnikAttribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
         osmarenderAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>"
     },
 
     "gxp.plugins.Print.prototype": {
-        menuText: "Print Map",
-        tooltip: "Print Map",
+        buttonText:"Print",
+        menuText: "Print map",
+        tooltip: "Print map",
         previewText: "Print Preview",
         notAllNotPrintableText: "Not All Layers Can Be Printed",
         nonePrintableText: "None of your current map layers can be printed"
@@ -142,8 +155,7 @@ GeoExt.Lang.add("en", {
         queryActionText: "Query",
         queryMenuText: "Query layer",
         queryActionTip: "Query the selected layer",
-        queryByLocationText: "Query by location",
-        currentTextText: "Current extent",
+        queryByLocationText: "Query by current map extent",
         queryByAttributesText: "Query by attributes",
         queryMsg: "Querying...",
         cancelButtonText: "Cancel",
@@ -157,26 +169,29 @@ GeoExt.Lang.add("en", {
     },
     
     "gxp.plugins.Styler.prototype": {
-        menuText: "Edit Styles",
-        tooltip: "Manage layer styles"
+        menuText: "Layer Styles",
+        tooltip: "Layer Styles"
 
     },
 
     "gxp.plugins.WMSGetFeatureInfo.prototype": {
+        buttonText:"Identify",
         infoActionTip: "Get Feature Info",
         popupTitle: "Feature Info"
     },
 
     "gxp.plugins.Zoom.prototype": {
-        zoomInMenuText: "Zoom In",
-        zoomOutMenuText: "Zoom Out",
-        zoomInTooltip: "Zoom In",
-        zoomOutTooltip: "Zoom Out"
+        zoomMenuText: "Zoom box",
+        zoomInMenuText: "Zoom in",
+        zoomOutMenuText: "Zoom out",
+        zoomTooltip: "Zoom by dragging a box",
+        zoomInTooltip: "Zoom in",
+        zoomOutTooltip: "Zoom out"
     },
     
     "gxp.plugins.ZoomToExtent.prototype": {
-        menuText: "Zoom To Max Extent",
-        tooltip: "Zoom To Max Extent"
+        menuText: "Zoom to max extent",
+        tooltip: "Zoom to max extent"
     },
     
     "gxp.plugins.ZoomToDataExtent.prototype": {
@@ -298,6 +313,7 @@ GeoExt.Lang.add("en", {
     },
     
     "gxp.WMSLayerPanel.prototype": {
+        attributionText: "Attribution",
         aboutText: "About",
         titleText: "Title",
         nameText: "Name",
@@ -308,9 +324,19 @@ GeoExt.Lang.add("en", {
         transparentText: "Transparent",
         cacheText: "Cache",
         cacheFieldText: "Use cached version",
-        stylesText: "Styles",
+        stylesText: "Available Styles",
         infoFormatText: "Info format",
-        infoFormatEmptyText: "Select a format"
+        infoFormatEmptyText: "Select a format",
+        displayOptionsText: "Display options",
+        queryText: "Limit with filters",
+        scaleText: "Limit by scale",
+        minScaleText: "Min scale",
+        maxScaleText: "Max scale",
+        switchToFilterBuilderText: "Switch back to filter builder",
+        cqlPrefixText: "or ",
+        cqlText: "use CQL filter instead",
+        singleTileText: "Single tile",
+        singleTileFieldText: "Use a single tile"
     },
 
     "gxp.EmbedMapDialog.prototype": {
@@ -359,17 +385,23 @@ GeoExt.Lang.add("en", {
         fileLabel: "Data",
         fieldEmptyText: "Browse for data archive...",
         uploadText: "Upload",
+        uploadFailedText: "Upload failed",
+        processingUploadText: "Processing upload...",
         waitMsgText: "Uploading your data...",
         invalidFileExtensionText: "File extension must be one of: ",
         optionsText: "Options",
         workspaceLabel: "Workspace",
         workspaceEmptyText: "Default workspace",
         dataStoreLabel: "Store",
-        dataStoreEmptyText: "Default datastore"
+        dataStoreEmptyText: "Choose a store",
+        dataStoreNewText: "Create new store",
+        crsLabel: "CRS",
+        crsEmptyText: "Coordinate Reference System ID",
+        invalidCrsText: "CRS identifier should be an EPSG code (e.g. EPSG:4326)"
     },
     
     "gxp.NewSourceDialog.prototype": {
-        title: "Add New Server...",
+        title: "Add new server...",
         cancelText: "Cancel",
         addServerText: "Add Server",
         invalidURLText: "Enter a valid URL to a WMS endpoint (e.g. http://example.com/geoserver/wms)",
@@ -378,6 +410,23 @@ GeoExt.Lang.add("en", {
 
     "gxp.ScaleOverlay.prototype": { 
         zoomLevelText: "Zoom level"
+    },
+
+    "gxp.Viewer.prototype": {
+        saveErrorText: "Trouble saving: "
+    },
+
+    "gxp.FeedSourceDialog.prototype": {
+        feedTypeText: "Source",
+        addPicasaText: "Picasa Photos",
+        addYouTubeText: "YouTube Videos",
+        addRSSText: "Other GeoRSS Feed",
+        addFeedText: "Add to Map",
+        addTitleText: "Title",
+        keywordText: "Keyword",
+        doneText: "Done",
+        titleText: "Add Feeds",
+        maxResultsText: "Max Items"
     }
 
 });

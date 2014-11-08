@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -118,7 +118,17 @@ Ext.extend(GeoExt.data.ProtocolProxy, Ext.data.DataProxy, {
      */
     loadResponse: function(o, response) {
         if (response.success()) {
-            var result = o.reader.read(response);
+            var result;
+            try {
+                result = o.reader.read(response);
+            } catch(e) {
+                // @deprecated: fire old loadexception for backwards-compat.
+                // TODO remove
+                this.fireEvent('loadexception', this, o, response, e);
+                this.fireEvent('exception', this, 'response', null, o, response, e);
+                o.request.callback.call(o.request.scope, null, o.request.arg, false);
+                return;
+            }
             this.fireEvent("load", this, o, o.request.arg);
             o.request.callback.call(
                o.request.scope, result, o.request.arg, true);

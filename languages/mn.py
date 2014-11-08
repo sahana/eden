@@ -2805,7 +2805,7 @@
 'No data available': 'Мэдээлэл байхгүй',
 'No Data currently defined for this Theme Layer': 'Энэ сэдвийн давхаргад мэдээлэл тодорхойлоогүй',
 'No databases in this application': 'Энэ үйлдэлд мэдээллийн сан байхгүй',
-'No demographic data currently defined': 'Одоогийн байдлаар хүн ам зүйн мэдээлэл тодорхойлогдоогүй байна',
+'No demographic data currently available': 'Одоогийн байдлаар хүн ам зүйн мэдээлэл тодорхойлогдоогүй байна',
 'No demographics currently defined': 'Одоогийн байдлаар хүн ам зүйн мэдээ тодорхойлогдоогүй байна',
 'No Disaster Assessments': 'Гамшгийн үнэлгээ байхгүй',
 'No Distribution Items Found': 'Түгээгдэж буй зүйл олдохгүй байна',

@@ -161,8 +161,7 @@
             var $el = $(this.element);
             var container = $el.find('.tp-chart-controls').first().empty();
 
-            var data = this.data;
-            if (data.e) {
+            if (this.data.e) {
                 return;
             }
 
@@ -297,7 +296,7 @@
             var defaultColor = 'silver';
 
             var items = [];
-            for (var i=0; i<data.length; i++) {
+            for (var i=0; i < data.length; i++) {
                 var period = data[i];
                 items.push({
                     start: new Date(period.t[0]).getTime(),
@@ -389,7 +388,7 @@
 
             // Prepare the data items
             var items = [];
-            for (var i=0; i<data.length; i++) {
+            for (var i=0; i < data.length; i++) {
                 var period = data[i];
                 items.push({
                     start: new Date(period.t[0]).getTime(),
