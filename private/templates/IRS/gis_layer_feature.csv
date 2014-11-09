@@ -1,4 +1,5 @@
 Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Cases,,disease,stats_aggregate,,,{location_id}: {sum},"location_id,sum",~.date=2014-11-08&~.location_id$level=L2&~.parameter_id$name=Cases,,"[{'prop':'sum','fillOpacity':0.5}]",0.5,Disease,False,,0,0
 Confirmed cases,,disease,stats_aggregate,,,{location_id}: {sum},"location_id,sum",~.date=2014-11-08&~.location_id$level=L2&~.parameter_id$name=Confirmed cases,,"[{'prop':'sum','fillOpacity':0.5}]",0.5,Disease,False,,0,0
 Probable cases,,disease,stats_aggregate,,,{location_id}: {sum},"location_id,sum",~.date=2014-11-08&~.location_id$level=L2&~.parameter_id$name=Cases,,"[{'prop':'sum','fillOpacity':0.5}]",0.5,Disease,False,,0,0
 Suspected cases,,disease,stats_aggregate,,,{location_id}: {sum},"location_id,sum",~.date=2014-11-08&~.location_id$level=L2&~.parameter_id$name=Suspected cases,,"[{'prop':'sum','fillOpacity':0.5}]",0.5,Disease,False,,0,0

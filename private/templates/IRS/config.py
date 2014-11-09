@@ -198,8 +198,8 @@ def customise_disease_stats_data_resource(r, tablename):
     # Default parameter filter
     def default_parameter_filter(selector, tablename=None):
         ptable = s3db.stats_parameter
-        row = current.db(ptable.name == "Confirmed cases").select(ptable.parameter_id,
-                                                                  limitby = (0, 1)).first()
+        row = current.db(ptable.name == "Cases").select(ptable.parameter_id,
+                                                        limitby = (0, 1)).first()
         if row:
             return row.parameter_id
         else:
