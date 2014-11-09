@@ -30,7 +30,7 @@ Create a project
 Serach a Project
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD} 
     Go To  ${PROJECT URL}/project   	
-	Input Text  ${PorjecTextFilter}  Test Pro
+    Input Text  ${PorjecTextFilter}  Test Pro
     Wait For Filter Result
     Should Give X Results  1
     DataTable Row Should Contain  1  Name  Test Project
@@ -38,16 +38,16 @@ Serach a Project
 Create a milestone under the project
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${PROJECT URL}/milestone/create 
-	Select Option  ${MilestoneProjectSelector}  Test Project
-	Intput Text ${MilestoneNameField}  Its Demo Milestone  
+    Select Option  ${MilestoneProjectSelector}  Test Project
+    Intput Text ${MilestoneNameField}  Its Demo Milestone  
     Submit CRUD Form
     Should Show Confirmation
 
 Create a task within the project with the above milestone
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
-	Go To  ${PROJECT URL}/task/create
+    Go To  ${PROJECT URL}/task/create
     Select Option  ${TaskProjectSelector}  Test Project	
-	Click Element  rheader_tab_task
+    Click Element  rheader_tab_task
     Wait Until Page Contains Element  xpath=//div[@class='form-container']
     Select Option  ${TaskMilestoneSelector}  Its Demo Milestone
     Input Text  ${TaskNameField}  Test Task
