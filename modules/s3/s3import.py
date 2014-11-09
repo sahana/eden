@@ -4149,8 +4149,10 @@ class S3BulkImporter(object):
         from gluon.restricted import restricted
 
         environment = build_environment(current.request, current.response, current.session)
+        environment["current"] = current
         environment["auth"] = current.auth
         environment["db"] = current.db
+        environment["gis"] = current.gis
         environment["s3db"] = current.s3db
         environment["settings"] = current.deployment_settings
 

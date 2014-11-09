@@ -1688,7 +1688,7 @@ class DiseaseStatsModel(S3Model):
                                     )
         exists = {}
         for e in existing:
-            exists[exists.date] = exists.id
+            exists[e.date] = e.id
 
         from dateutil.parser import parse
         dates = json.loads(dates)

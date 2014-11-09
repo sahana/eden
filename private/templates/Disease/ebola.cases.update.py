@@ -82,7 +82,7 @@ def lookup_loc(location, country):
     # LR
     if location[-6:] == "County":
         # If the location ends with "County", then strip it out and try again
-        return get_loc_from_db(location[:-6].strip(), country)
+        return get_loc_from_db(location[:-6].strip(), "Liberia") # reset the country as there is a bug in the data (Lofa County is in Liebria, not Guinea)
     # SL
     if location.startswith("Western Area"):
         return get_loc_from_db(location[12:].strip(), country)
