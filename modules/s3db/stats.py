@@ -42,6 +42,17 @@ __all__ = ("S3StatsModel",
 
 import datetime
 
+try:
+    # try stdlib (Python 2.6)
+    import json
+except ImportError:
+    try:
+        # try external module
+        import simplejson as json
+    except:
+        # fallback to pure-Python module
+        import gluon.contrib.simplejson as json
+
 from gluon import *
 from gluon.storage import Storage
 
@@ -400,8 +411,8 @@ class S3StatsDemographicModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   # @ToDo: Wrapper function to call this for the record linked
-                  # to the relevant place dependeing on whether approval is
-                  # required or not
+                  # to the relevant place depending on whether approval is
+                  # required or not. Disable when auth.override is True.
                   #onaccept = self.stats_demographic_update_aggregates,
                   #onapprove = self.stats_demographic_update_aggregates,
                   report_options = report_options,
@@ -641,7 +652,7 @@ class S3StatsDemographicModel(S3Model):
             table, and if it's not there then try the data table. Rather just
             look at the aggregate table.
 
-            Once this has run then a complete set of  aggregate records should
+            Once this has run then a complete set of aggregate records should
             exists for this parameter_id and location for every time period from
             the first data item until the current time period.
 
@@ -983,6 +994,8 @@ class S3StatsDemographicModel(S3Model):
 
         # Get all the parents
         # @ToDo: Optimise by rewriting as custom routine rather than using this wrapper
+        # - we only need immediate children not descendants, so can use parent not path
+        # - look at disease_stats_update_aggregates()
         parents = {}
         get_parents = current.gis.get_parents
         for loc_id in location_dict.keys():
@@ -1049,7 +1062,7 @@ class S3StatsDemographicModel(S3Model):
         dtable = current.s3db.stats_demographic_data
         atable = db.stats_demographic_aggregate
 
-        # Get all the child locations
+        # Get all the child locations (immediate children only, not all descendants)
         child_locations = current.gis.get_children(location_id, location_level)
         child_ids = [row.id for row in child_locations]
 

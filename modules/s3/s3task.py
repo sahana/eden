@@ -266,7 +266,9 @@ class S3Task(object):
                 elif isinstance(arg, basestring):
                     _args.append("%s" % str(json.dumps(arg)))
                 else:
-                    raise HTTP(501, "Unhandled arg type")
+                    error = "Unhandled arg type: %s" % arg
+                    current.log.error(error)
+                    raise HTTP(501, error)
             args = ",".join(_args)
             _vars = ",".join(["%s=%s" % (str(var),
                                          str(vars[var])) for var in vars])

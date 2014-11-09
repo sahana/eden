@@ -443,6 +443,7 @@ if settings.has_module("setup"):
 
 # --------------------e--------------------------------------------------------
 if settings.has_module("stats"):
+
     def stats_demographic_update_aggregates(records=None, user_id=None):
         """
             Update the stats_demographic_aggregate table for the given
@@ -462,6 +463,7 @@ if settings.has_module("stats"):
 
     tasks["stats_demographic_update_aggregates"] = stats_demographic_update_aggregates
 
+    # -------------------------------------------------------------------------
     def stats_demographic_update_location_aggregate(location_level,
                                                     root_location_id,
                                                     parameter_id,
@@ -494,6 +496,7 @@ if settings.has_module("stats"):
 
     tasks["stats_demographic_update_location_aggregate"] = stats_demographic_update_location_aggregate
 
+    # -------------------------------------------------------------------------
     if settings.has_module("vulnerability"):
 
         def vulnerability_update_aggregates(records=None, user_id=None):
@@ -514,6 +517,7 @@ if settings.has_module("stats"):
 
         tasks["vulnerability_update_aggregates"] = vulnerability_update_aggregates
 
+        # ---------------------------------------------------------------------
         def vulnerability_update_location_aggregate(#location_level,
                                                     root_location_id,
                                                     parameter_id,
@@ -548,6 +552,7 @@ if settings.has_module("stats"):
 
 # --------------------e--------------------------------------------------------
 if settings.has_module("disease"):
+
     def disease_stats_update_aggregates(records=None, all=False, user_id=None):
         """
             Update the disease_stats_aggregate table for the given
@@ -567,39 +572,39 @@ if settings.has_module("disease"):
 
     tasks["disease_stats_update_aggregates"] = disease_stats_update_aggregates
 
-    def disease_stats_update_location_aggregate(location_level,
-                                                root_location_id,
-                                                parameter_id,
-                                                date,
-                                                user_id=None):
+    # -------------------------------------------------------------------------
+    def disease_stats_update_location_aggregates(location_id,
+                                                 children,
+                                                 parameter_id,
+                                                 dates,
+                                                 user_id=None):
         """
             Update the disease_stats_aggregate table for the given location and parameter
             - called from within disease_stats_update_aggregates
 
-            @param location_level: gis level at which the data needs to be accumulated
-            @param root_location_id: id of the location
-            @param parameter_id: parameter for which the stats are being updated
-            @param date: date of the period in question
+            @param location_id: location to aggregate at
+            @param children: locations to aggregate from
+            @param parameter_id: parameter to aggregate
+            @param dates: dates to aggregate for
             @param user_id: calling request's auth.user.id or None
         """
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
         # Run the Task & return the result
-        result = s3db.disease_stats_update_location_aggregate(location_level,
-                                                              root_location_id,
-                                                              parameter_id,
-                                                              date,
-                                                              )
+        result = s3db.disease_stats_update_location_aggregates(location_id,
+                                                               children,
+                                                               parameter_id,
+                                                               dates,
+                                                               )
         db.commit()
         return result
 
-    tasks["disease_stats_update_location_aggregate"] = disease_stats_update_location_aggregate
+    tasks["disease_stats_update_location_aggregates"] = disease_stats_update_location_aggregates
 
 # -----------------------------------------------------------------------------
 if settings.has_module("sync"):
 
-    # -----------------------------------------------------------------------------
     def sync_synchronize(repository_id, user_id=None, manual=False):
         """
             Run all tasks for a repository, to be called from scheduler

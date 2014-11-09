@@ -9,6 +9,17 @@ __all__ = ("DiseaseDataModel",
 
 import datetime
 
+try:
+    # try stdlib (Python 2.6)
+    import json
+except ImportError:
+    try:
+        # try external module
+        import simplejson as json
+    except:
+        # fallback to pure-Python module
+        import gluon.contrib.simplejson as json
+
 from gluon import *
 from gluon.storage import Storage
 
@@ -1126,7 +1137,7 @@ class DiseaseStatsModel(S3Model):
              "disease_stats_aggregate",
              "disease_stats_rebuild_all_aggregates",
              "disease_stats_update_aggregates",
-             "disease_stats_update_location_aggregate",
+             "disease_stats_update_location_aggregates",
              )
 
     def model(self):
@@ -1286,8 +1297,8 @@ class DiseaseStatsModel(S3Model):
                   list_fields = list_fields,
                   report_options = report_options,
                   # @ToDo: Wrapper function to call this for the record linked
-                  # to the relevant place dependeing on whether approval is
-                  # required or not
+                  # to the relevant place depending on whether approval is
+                  # required or not. Disable when auth.override is True.
                   #onaccept = self.disease_stats_update_aggregates,
                   #onapprove = self.disease_stats_update_aggregates,
                   # @ToDo: deployment_setting
@@ -1355,7 +1366,7 @@ class DiseaseStatsModel(S3Model):
         return dict(
             disease_stats_rebuild_all_aggregates = self.disease_stats_rebuild_all_aggregates,
             disease_stats_update_aggregates = self.disease_stats_update_aggregates,
-            disease_stats_update_location_aggregate = self.disease_stats_update_location_aggregate,
+            disease_stats_update_location_aggregates = self.disease_stats_update_location_aggregates,
             )
 
     # -------------------------------------------------------------------------
@@ -1462,7 +1473,7 @@ class DiseaseStatsModel(S3Model):
             table, and if it's not there then try the data table. Rather just
             look at the aggregate table.
 
-            Once this has run then a complete set of  aggregate records should
+            Once this has run then a complete set of aggregate records should
             exists for this parameter_id and location for every time period from
             the first data item until the current time period.
 
@@ -1493,7 +1504,6 @@ class DiseaseStatsModel(S3Model):
             # @ToDo: Complete this
             return
             dtable = s3db.disease_stats_data
-            gtable = db.gis_location
 
         # For each location/parameter pair, create a time-aggregate summing all
         # the data so far
@@ -1503,14 +1513,17 @@ class DiseaseStatsModel(S3Model):
         # Assemble raw data
         earliest_period = now.date()
         locations = {}
+        parameters = []
+        pappend = parameters.append
         for record in records:
             location_id = record["location_id"]
             if location_id not in locations:
                 locations[location_id] = {}
             parameter_id = record["parameter_id"]
+            if parameter_id not in parameters:
+                pappend(parameter_id)
             if parameter_id not in locations[location_id]:
-                locations[location_id][parameter_id] = dict(totals={},
-                                                            values={})
+                locations[location_id][parameter_id] = {}
             if from_json:
                 date = parse(record["date"]) # produces a datetime
                 date = date.date()
@@ -1518,7 +1531,7 @@ class DiseaseStatsModel(S3Model):
                 date = record["date"]
             if date < earliest_period:
                 earliest_period = date
-            locations[location_id][parameter_id]["values"][date] = record["value"]
+            locations[location_id][parameter_id][date] = record["value"]
 
         # Full range of dates
         # 1 per day from the start of the data to the present day
@@ -1539,116 +1552,189 @@ class DiseaseStatsModel(S3Model):
             for parameter_id in location:
                 parameter = location[parameter_id]
                 q = query & (pfield == parameter_id)
-                totals = parameter["totals"]
-                values = parameter["values"]
                 for d in dates:
-                    sum = 0
-                    for date in values:
+                    values = []
+                    vappend = values.append
+                    for date in parameter:
                         if date <= d:
-                            sum += values[date]
-                    totals[d] = sum
+                            vappend(parameter[date])
+                    values_sum = sum(values)
                     exists = db(q & (dfield == d)).select(ifield,
                                                           limitby=(0, 1))
                     if exists:
-                        db(ifield == exists.first().id).update(sum = sum)
+                        db(ifield == exists.first().id).update(sum = values_sum)
                     else:
                         insert(agg_type = 1, # Time
                                location_id = location_id,
                                parameter_id = parameter_id,
                                date = d,
-                               sum = sum,
+                               sum = values_sum,
                                )
 
-        async = current.s3task.async
-
-        # @ToDo
-        # For each location/parameter pair, trigger a location-aggregate for
-        # all parents, by level (immediate parents first)
+        # For each location/parameter pair, build a location-aggregate for all
+        # ancestors, by level (immediate parents first).
+        # Ensure that we don't duplicate builds
         # Do this for all dates between the changed date and the current date
 
-        #async("disease_stats_update_location_aggregate",
-        #      args = [location_level, location_id, parameter_id, date],
-        #      timeout = 1800 # 30m
-        #      )
+        # Get all the ancestors
+        # Read all the Paths
+        # NB Currently we're assuming that all Paths have been built correctly
+        gtable = db.gis_location
+        ifield = gtable.id
+        location_ids = locations.keys()
+        paths = db(ifield.belongs(location_ids)).select(gtable.path)
+        paths = [p.path.split("/") for p in paths]
+        # Convert list of lists to flattened list & remove duplicates
+        import itertools
+        ancestors = tuple(itertools.chain.from_iterable(paths))
+        # Remove locations which we already have data for
+        ancestors = [a for a in ancestors if a not in location_ids]
+
+        # Get all the children for each ancestor (immediate children not descendants)
+        pfield = gtable.parent
+        query = (gtable.deleted == False) & \
+                (pfield.belongs(ancestors))
+        all_children = db(query).select(ifield,
+                                        pfield)
+
+        # Read the levels
+        rows = db(ifield.belongs(ancestors)).select(ifield,
+                                                    gtable.level)
+        L0 = []
+        L0_append = L0.append
+        L1 = []
+        L1_append = L1.append
+        L2 = []
+        L2_append = L2.append
+        L3 = []
+        L3_append = L3.append
+        L4 = []
+        L4_append = L4.append
+        for row in rows:
+            if row.level == "L0":
+                L0_append(row.id)
+            elif row.level == "L1":
+                L1_append(row.id)
+            elif row.level == "L2":
+                L2_append(row.id)
+            elif row.level == "L3":
+                L3_append(row.id)
+            elif row.level == "L4":
+                L4_append(row.id)
+
+        async = current.s3task.async
+        from gluon.serializers import json as jsons
+        dates = jsons(dates)
+        # Build the lowest level first
+        for level in (L4, L3, L2, L1):
+            for location_id in level:
+                children = [c.id for c in all_children if c.parent == location_id]
+                children = json.dumps(children)
+                for parameter_id in parameters:
+                    async("disease_stats_update_location_aggregates",
+                          args = [location_id, children, parameter_id, dates],
+                          timeout = 1800 # 30m
+                          )
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def disease_stats_update_location_aggregate(location_level,
-                                                location_id,
-                                                parameter_id,
-                                                date,
-                                                ):
+    def disease_stats_update_location_aggregates(location_id,
+                                                 children,
+                                                 parameter_id,
+                                                 dates,
+                                                 ):
         """
             Calculates the disease_stats_aggregate for a specific parameter at a
-            specific location.
+            specific location over the range of dates.
 
-            @param location_id: the location record ID
-            @param parameter_id: the parameter record ID
-            @param date: the date of the time period (as string)
+            @param location_id: location to aggregate at
+            @param children: locations to aggregate from
+            @param parameter_id: arameter to aggregate
+            @param dates: dates to aggregate for (as JSON string)
         """
 
         db = current.db
         atable = current.s3db.disease_stats_aggregate
+        ifield = atable.id
+        lfield = atable.location_id
+        pfield = atable.parameter_id
+        dfield = atable.date
 
-        # Get all the child locations (immediate children only, not all descendants)
-        child_locations = current.gis.get_children(location_id, location_level)
-        child_ids = [row.id for row in child_locations]
+        children = json.loads(children)
 
         # Get the most recent disease_stats_aggregate record for all child locations
-        query = (atable.parameter_id == parameter_id) & \
+        # - doesn't matter whether this is a time or location aggregate
+        query = (pfield == parameter_id) & \
                 (atable.deleted != True) & \
-                (atable.location_id.belongs(child_ids)) & \
-                (atable.date <= date)
-        rows = db(query).select(dtable.value,
-                                dtable.date,
-                                dtable.location_id,
-                                orderby=(dtable.location_id, ~dtable.date),
+                (lfield.belongs(children))
+        rows = db(query).select(atable.sum,
+                                dfield,
+                                lfield,
+                                orderby=(lfield, ~dfield),
                                 # groupby avoids duplicate records for the same
                                 # location, but is slightly slower than just
                                 # skipping the duplicates in the loop below
-                                #groupby=(dtable.location_id)
+                                #groupby=(lfield)
                                 )
 
-        # Collect the values, skip duplicate records for the
-        # same location => use the most recent one, which is
-        # the first row for each location as per the orderby
-        # in the query above
-        last_location = None
-        values = []
-        append = values.append
-        for row in rows:
-            new_location_id = row.location_id
-            if new_location_id != last_location:
-                last_location = new_location_id
-                append(row.value)
-
-        # Aggregate the values
-        if not len(values):
+        if not rows:
             return
 
-        values_sum = sum(values)
+        # Lookup which records already exist
+        query = (lfield == location_id) & \
+                (pfield == parameter_id)
+        existing = db(query).select(ifield,
+                                    dfield,
+                                    )
+        exists = {}
+        for e in existing:
+            exists[exists.date] = exists.id
 
-        # Add or update the aggregated values in the database
+        from dateutil.parser import parse
+        dates = json.loads(dates)
+        insert = atable.insert
 
-        # Do we already have a record?
-        query = (atable.location_id == location_id) & \
-                (atable.parameter_id == parameter_id) & \
-                (atable.date == date)
-        exists = db(query).select(atable.id, limitby=(0, 1)).first()
+        for date in dates:
+            # Collect the values, skip duplicate records for the
+            # same location => use the most recent one, which is
+            # the first row for each location as per the orderby
+            # in the query above
+            date = parse(date) # produces a datetime
+            date = date.date()
+            last_location = None
+            values = []
+            vappend = values.append
+            for row in rows:
+                if date < row.date:
+                    # Skip
+                    continue
+                new_location_id = row.location_id
+                if new_location_id != last_location:
+                    last_location = new_location_id
+                    vappend(row.sum)
 
-        attr = dict(agg_type = 2, # Location
-                    sum = values_sum,
-                    )
-        if exists:
-            # Update
-            db(query).update(**attr)
-        else:
-            # Insert new
-            atable.insert(parameter_id = parameter_id,
-                          location_id = location_id,
-                          date = date,
-                          **attr
-                          )
+            if values:
+                # Aggregate the values
+                values_sum = sum(values)
+            else:
+                values_sum = 0
+
+            # Add or update the aggregated values in the database
+
+            attr = dict(agg_type = 2, # Location
+                        sum = values_sum,
+                        )
+
+            # Do we already have a record?
+            if date in exists:
+                db(ifield == exists[date]).update(**attr)
+            else:
+                # Insert new
+                insert(parameter_id = parameter_id,
+                       location_id = location_id,
+                       date = date,
+                       **attr
+                       )
 
 # =============================================================================
 def disease_rheader(r, tabs=None):
