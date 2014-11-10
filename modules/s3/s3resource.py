@@ -615,7 +615,6 @@ class S3Resource(object):
         """
 
         s3db = current.s3db
-
         # Reset error
         self.error = None
 
@@ -668,7 +667,14 @@ class S3Resource(object):
         if current.deployment_settings.get_security_archive_not_delete() and \
            DELETED in table:
 
-            # Find all deletable rows
+            # Find all references
+            if not cascade:
+                # Must load all models to detect dependencies
+                s3db.load_all_models()
+            if db._lazy_tables:
+                # Must roll out all lazy tables to detect dependencies
+                for tn in db._LAZY_TABLES.keys():
+                    db[tn]
             references = table._referenced_by
             try:
                 rfields = [f for f in references if f.ondelete == "RESTRICT"]
@@ -750,6 +756,7 @@ class S3Resource(object):
                                                     unapproved=True)
                         rresource.delete(cascade=True)
                         if rresource.error:
+                            self.error = rresource.error
                             break
                     elif rfield.ondelete == "SET NULL":
                         try:
