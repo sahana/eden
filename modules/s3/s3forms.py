@@ -29,6 +29,7 @@
 
 __all__ = ("S3SQLCustomForm",
            "S3SQLDefaultForm",
+           "S3SQLSubFormLayout",
            "S3SQLInlineComponent",
            "S3SQLInlineComponentCheckbox",
            "S3SQLInlineComponentMultiSelectWidget",
@@ -1592,6 +1593,241 @@ class SKIP_POST_VALIDATION(Validator):
         return value, None
 
 # =============================================================================
+class S3SQLSubFormLayout(object):
+    """ Layout for S3SQLInlineComponent (Base Class) """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def subform(cls, 
+                data, 
+                item_rows, 
+                action_rows, 
+                empty=False, 
+                readonly=False):
+        """
+            Outer container for the subform
+            
+            @param data: the data dict (as returned from extract())
+            @param item_rows: the item rows
+            @param action_rows: the (hidden) action rows
+            @param empty: no data in this component
+            @param readonly: render read-only
+        """
+
+        headers = cls.headers(data, readonly=readonly)
+        if empty:
+            subform = current.T("No entries currently available")
+        else:
+            subform = TABLE(headers,
+                            TBODY(item_rows),
+                            TFOOT(action_rows),
+                            _class="embeddedComponent",
+                            )
+        return subform
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def readonly(cls, resource, data):
+        """
+            Render this component read-only (table-style)
+            
+            @param resource: the S3Resource
+            @param data: the data dict (as returned from extract())
+        """
+
+        audit = current.audit
+        prefix, name = resource.prefix, resource.name
+
+        xml_decode = current.xml.xml_decode
+
+        items = data["data"]
+        fields = data["fields"]
+
+        # Render as table with each item in an individual row (+headers)
+        thead = cls.headers(data, readonly=True)
+
+        trs = []
+        for item in items:
+            if "_id" in item:
+                record_id = item["_id"]
+            else:
+                continue
+            audit("read", prefix, name, 
+                  record=record_id,  representation="html")
+            trow = TR(_class="read-row")
+            for f in fields:
+                text = xml_decode(item[f["name"]]["text"])
+                trow.append(XML(xml_decode(text)))
+            trs.append(trow)
+
+        return cls.subform(data, trs, [], empty=False, readonly=True)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def render_list(cls, resource, data):
+        """
+            Render this component read-only (list-style)
+            
+            @param resource: the S3Resource
+            @param data: the data dict (as returned from extract())
+        """
+        
+        audit = current.audit
+        prefix, name = resource.prefix, resource.name
+
+        xml_decode = current.xml.xml_decode
+        
+        items = data["data"]
+        fields = data["fields"]
+        
+        # Render as comma-separated list of values (no header)
+        elements = []
+        for item in items:
+            if "_id" in item:
+                record_id = item["_id"]
+            else:
+                continue
+            audit("read", prefix, name,
+                    record=record_id, representation="html")
+            t = []
+            for f in fields:
+                t.append([XML(xml_decode(item[f["name"]]["text"])), " "])
+            elements.append([TAG[""](list(chain.from_iterable(t))[:-1]), ", "])
+
+        return DIV(list(chain.from_iterable(elements))[:-1],
+                    _class="embeddedComponent")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def headers(data, readonly=False):
+        """
+            Render the header row with field labels
+
+            @param data: the input field data as Python object
+            @param readonly: whether the form is read-only
+            @param attributes: HTML attributes for the header row
+        """
+
+        fields = data["fields"]
+        
+        # Don't render a header row if there are no labels
+        render_header = False
+        header_row = TR(_class="label-row")
+        happend = header_row.append
+        for f in fields:
+            label = f["label"]
+            if label:
+                render_header = True
+            label = TD(LABEL(label))
+            happend(label)
+
+        if render_header:
+            if not readonly:
+                # Add columns for the Controls
+                happend(TD())
+                happend(TD())
+            return THEAD(header_row)
+        else:
+            return THEAD(_class="hide")
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def actions(cls,
+                subform,
+                formname,
+                index,
+                item = None,
+                readonly=True, 
+                editable=True, 
+                deletable=True):
+        """
+            Render subform row actions into the row
+
+            @param subform: the subform row
+            @param formname: the form name
+            @param index: the row index
+            @param item: the row data
+            @param readonly: this is a read-row
+            @param editable: this row is editable
+            @param deletable: this row is deletable
+        """
+
+        T = current.T
+        action_id = "%s-%s" % (formname, index)
+
+        # Action button helper
+        def action(title, name, throbber=False):
+            btn = DIV(_id="%s-%s" % (name, action_id),
+                      _class="inline-%s" % name)
+            if throbber:
+                return DIV(btn,
+                        DIV(_class="inline-throbber hide",
+                            _id="throbber-%s" % action_id))
+            else:
+                return DIV(btn)
+
+        # Render the action icons for this row
+        append = subform.append
+        if readonly:
+            if editable:
+                append(action(T("Edit this entry"), "edt"))
+            else:
+                append(TD())
+                
+            if deletable:
+                append(action(T("Remove this entry"), "rmv"))
+            else:
+                append(TD())
+        else:
+            if index != "none" or item:
+                append(action(T("Update this entry"), "rdy", throbber=True))
+                append(action(T("Cancel editing"), "cnc"))
+            else:
+                append(TD())
+                append(action(T("Add this entry"), "add", throbber=True))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def rowstyle(form, fields, *args, **kwargs):
+        """
+            Formstyle for subform rows
+        """
+
+        def render_col(col_id, label, widget, comment, hidden=False):
+
+            if col_id == "submit_record__row":
+                if hasattr(widget, "add_class"):
+                    widget.add_class("inline-row-actions")
+                col = TD(widget)
+            elif comment:
+                col = TD(DIV(widget, comment), _id=col_id)
+            else:
+                col = TD(widget, _id=col_id)
+            return col
+
+        if args:
+            col_id = form
+            label = fields
+            widget, comment = args
+            hidden = kwargs.get("hidden", False)
+            return render_col(col_id, label, widget, comment, hidden)
+        else:
+            parent = TR()
+            for col_id, label, widget, comment in fields:
+                parent.append(render_col(col_id, label, widget, comment))
+            return parent
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def script():
+        """
+            Inject custom JS to render new read-rows
+        """
+
+        # @todo: implement
+        pass
+
+# =============================================================================
 class S3SQLInlineComponent(S3SQLSubForm):
     """
         Form element for an inline-component-form
@@ -1887,7 +2123,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             value = json.dumps(value, separators=SEPARATORS)
         if data is None:
             raise SyntaxError("No resource structure information")
-
+        
         self.upload = Storage()
 
         options = self.options
@@ -1911,11 +2147,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         formname = self._formname()
 
-        # Add the header row
-        thead = self._render_headers(data,
-                                     readonly=False,
-                                     _class="label-row")
-
         fields = data["fields"]
         items = data["data"]
 
@@ -1929,6 +2160,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         audit = current.audit
         has_permission = current.auth.s3_has_permission
         tablename = component.tablename
+
+        # @todo: make configurable
+        layout = S3SQLSubFormLayout
 
         get_config = current.s3db.get_config
         _editable = get_config(tablename, "editable")
@@ -1978,6 +2212,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                          readonly=True,
                                          multiple=multiple,
                                          index=i,
+                                         layout=layout,
                                          _id="read-row-%s" % rowname,
                                          _class=_class)
             if record_id:
@@ -1998,6 +2233,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                      readonly=False,
                                      multiple=multiple,
                                      index=0,
+                                     layout=layout,
                                      _id="edit-row-%s" % formname,
                                      _class=_class)
         action_rows.append(edit_row)
@@ -2025,6 +2261,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                         deletable=True,
                                         readonly=False,
                                         multiple=multiple,
+                                        layout=layout,
                                         _id="add-row-%s" % formname,
                                         _class=_class
                                         )
@@ -2037,6 +2274,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                       readonly=False,
                                       multiple=multiple,
                                       index="default",
+                                      layout=layout,
                                       _id="empty-edit-row-%s" % formname,
                                       _class="empty-row inline-form hide")
         action_rows.append(empty_row)
@@ -2048,6 +2286,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                       readonly=True,
                                       multiple=multiple,
                                       index="none",
+                                      layout=layout,
                                       _id="empty-read-row-%s" % formname,
                                       _class="empty-row inline-form hide")
         action_rows.append(empty_row)
@@ -2061,14 +2300,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
         attr["_class"] = "%s hide" % attr["_class"]
         attr["_id"] = real_input
 
-        if has_rows:
-            widget = TABLE(thead,
-                           TBODY(item_rows),
-                           TFOOT(action_rows),
-                           _class="embeddedComponent",
-                           )
-        else:
-            widget = current.T("No entries currently available")
+        widget = layout.subform(data,
+                                item_rows, 
+                                action_rows, 
+                                empty = not has_rows,
+                                )
 
         if self.upload:
             hidden = DIV(_class="hidden", _style="display:none")
@@ -2109,59 +2345,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
             # Don't render a subform for NONE
             return current.messages["NONE"]
 
+        resource = self.resource
+        component = resource.components[data["component"]]
+
+        layout = S3SQLSubFormLayout
+
         fields = data["fields"]
-        items = data["data"]
-
-        component = self.resource.components[data["component"]]
-
-        audit = current.audit
-        prefix, name = component.prefix, component.name
-
-        xml_decode = current.xml.xml_decode
-
         if len(fields) == 1 and self.options.get("render_list", False):
-
-            # Render as comma-separated list of values (no header)
-            elements = []
-            for item in items:
-                if "_id" in item:
-                    record_id = item["_id"]
-                else:
-                    continue
-                audit("read", prefix, name,
-                      record=record_id, representation="html")
-                t = []
-                for f in fields:
-                    t.append([XML(xml_decode(item[f["name"]]["text"])), " "])
-                elements.append([TAG[""](list(chain.from_iterable(t))[:-1]), ", "])
-
-            return DIV(list(chain.from_iterable(elements))[:-1],
-                       _class="embeddedComponent")
-
+            return layout.render_list(component, data)
         else:
-
-            # Render as table with each item in an individual row (+headers)
-            thead = self._render_headers(data,
-                                         readonly=True,
-                                         _class="label-row")
-            trs = []
-            for item in items:
-                if "_id" in item:
-                    record_id = item["_id"]
-                else:
-                    continue
-                audit("read", prefix, name,
-                    record=record_id, representation="html")
-                trow = TR(_class="read-row")
-                for f in fields:
-                    text = xml_decode(item[f["name"]]["text"])
-                    trow.append(XML(xml_decode(text)))
-                trs.append(trow)
-
-            return TABLE(thead,
-                         TBODY(trs),
-                         TFOOT(),
-                         _class="embeddedComponent")
+            return layout.readonly(component, data)
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):
@@ -2378,67 +2571,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
-    def _render_headers(self, data, readonly=False, **attributes):
-        """
-            Render the header row with field labels
-
-            @param data: the input field data as Python object
-            @param readonly: whether the form is read-only
-            @param attributes: HTML attributes for the header row
-        """
-
-        fields = data["fields"]
-        # Don't render a header row if there are no labels
-        render_header = False
-        header_row = TR(**attributes)
-        happend = header_row.append
-        for f in fields:
-            label = f["label"]
-            if label:
-                render_header = True
-            label = TD(LABEL(label))
-            happend(label)
-
-        if render_header:
-            if not readonly:
-                # Add columns for the Controls
-                happend(TD())
-                happend(TD())
-            return THEAD(header_row)
-        else:
-            return THEAD(_class="hide")
-
-    # -------------------------------------------------------------------------
-    def _action_icon(self, title, name, index, throbber=False):
-        """
-            Render an action icon for one of the form actions
-
-            @param title: title for the icon
-            @param name: element name of the action icon
-            @param index: the row index within the form
-            @param throbber: True to render a hidden throbber (activity
-                             indicator) for this icon
-        """
-
-        formname = self._formname()
-
-        action = DIV(_id="%s-%s-%s" % (name, formname, index),
-                     _class="inline-%s" % name)
-
-        if throbber:
-            return DIV(action,
-                       DIV(_class="inline-throbber hide",
-                           _id="throbber-%s-%s" % (formname, index)))
-        else:
-            return DIV(action)
-
-    # -------------------------------------------------------------------------
-    def _render_item(self, table, item, fields,
+    def _render_item(self, 
+                     table,
+                     item,
+                     fields,
                      readonly=True,
                      editable=False,
                      deletable=False,
                      multiple=True,
                      index="none",
+                     layout=None,
                      **attributes):
         """
             Render a read- or edit-row.
@@ -2515,53 +2657,33 @@ class S3SQLInlineComponent(S3SQLSubForm):
             data = None
         elif pkey not in data:
             data[pkey] = None
-
+            
         subform_name = "sub_%s" % formname
-
         subform = SQLFORM.factory(*formfields,
                                   record=data,
                                   showid=False,
-                                  formstyle=self._formstyle,
+                                  formstyle=layout.rowstyle,
                                   upload = s3.download_url,
                                   readonly=readonly,
                                   table_name=subform_name,
-                                  submit_button = settings.submit_button)
+                                  submit = False,
+                                  buttons = [])
 
-        for tr in subform[0]:
-            if not tr.attributes["_id"] == "submit_record__row":
-                columns.append(tr[0])
-
+        subform = subform[0]
+        subform.update(**attributes)
+        
         if multiple:
-            # Render the action icons for this item
-            action = self._action_icon
-            if readonly:
-                if editable:
-                    edt = action(T("Edit this entry"),
-                                 "edt", index)
-                    columns.append(edt)
-                else:
-                    columns.append(TD())
-                if deletable:
-                    rmv = action(T("Remove this entry"),
-                                 "rmv", index)
-                    columns.append(rmv)
-                else:
-                    columns.append(TD())
-            else:
-                if index != "none" or item:
-                    rdy = action(T("Update this entry"),
-                                 "rdy", index, throbber=True)
-                    columns.append(rdy)
-                    cnc = action(T("Cancel editing"),
-                                 "cnc", index)
-                    columns.append(cnc)
-                else:
-                    columns.append(TD())
-                    add = action(T("Add this entry"),
-                                 "add", index, throbber=True)
-                    columns.append(add)
+            # Render row actions
+            layout.actions(subform,
+                           formname,
+                           index,
+                           item = item,
+                           readonly = readonly,
+                           editable = editable,
+                           deletable = deletable,
+                           )
 
-        return TR(columns, **attributes)
+        return subform
 
     # -------------------------------------------------------------------------
     def _filterby_query(self):
@@ -2760,25 +2882,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 return f
 
         return None
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _formstyle(id, label, widget, comment):
-        """
-            Formstyle for the inline rows
-
-            @param id: the HTML element id
-            @param label: the field label
-            @param widget: the widget
-            @param comment: the comment
-        """
-
-        if id == "submit_record__row":
-            return TR(_id=id)
-        elif comment:
-            return TR(DIV(widget, comment), _id=id)
-        else:
-            return TR(widget, _id=id)
 
 # =============================================================================
 class S3SQLInlineLink(S3SQLInlineComponent):
