@@ -1216,16 +1216,15 @@ class DiseaseStatsModel(S3Model):
                                 ),
                      location_id(
                          requires = IS_LOCATION(),
-                         required = True,
                          widget = S3LocationAutocompleteWidget(),
                      ),
                      Field("value", "double",
                            label = T("Value"),
                            represent = lambda v: \
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           required = True,
+                           requires = IS_NOT_EMPTY(),
                            ),
-                     s3_date(required = True),
+                     s3_date(empty = False),
                      #Field("end_date", "date",
                      #      # Just used for the year() VF
                      #      readable = False,
