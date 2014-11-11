@@ -731,7 +731,7 @@ button.close {
 #rheader td {
     text-align: left;
     padding: 1px 5px 1px 5px;
-    white-space: pre;
+    white-space: pre-line;
 }
 #rheader th {
     font-weight: bold;
@@ -1067,7 +1067,7 @@ li input + a {
     padding: 0;
 }
 #comments div.comment-body {
-    white-space: normal;
+    white-space: pre-line;
 }
 #comments div.comment-body p {
     margin-left: 25px;
@@ -1118,7 +1118,7 @@ li input + a {
     float: left;
 }
 .comment-text div {
-    white-space: pre;
+    white-space: pre-line;
 }
 .comment-header {
     margin: 0 0 10px 0;
