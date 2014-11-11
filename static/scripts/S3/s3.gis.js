@@ -3548,6 +3548,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
                 if (undefined != attributes.url) {
                     contents += "<li><a href='javascript:S3.gis.loadClusterPopup(" + "\"" + map_id + "\", \"" + attributes.url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
+                } else if (undefined != layer.s3_url_format) {
+                    // Feature Layer or Feature Resource
+                    // Popup contents are pulled via AJAX
+                    _.templateSettings = {interpolate: /\{(.+?)\}/g};
+                    //var s3_url_format = layer.s3_url_format;
+                    var template = _.template(layer.s3_url_format);
+                    // Ensure we have all keys (we don't transmit empty attr)
+                    /* Only needed once we start getting non-id formats
+                    var defaults = {},
+                        key,
+                        keys = s3_popup_format.split('{');
+                    for (var j = 0; j < keys.length; j++) {
+                        key = keys[j].split('}')[0];
+                        defaults[key] = '';
+                    }
+                    _.defaults(attributes, defaults);*/
+                    popup_url = template(attributes);
+                    contents += "<li><a href='javascript:S3.gis.loadClusterPopup(" + "\"" + map_id + "\", \"" + popup_url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
                 } else {
                     // @ToDo: Provide a way to load non-URL based popups
                     contents += '<li>' + name + '</li>';
@@ -3639,13 +3657,13 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     popup_url = feature.attributes.url;
                     // Defaulted within addPopup()
                     //contents = i18n.gis_loading + "...<div class='throbber'></div>";
-                } else if (undefined != feature.layer.s3_url_format) {
+                } else if (undefined != layer.s3_url_format) {
                     // Feature Layer or Feature Resource
                     // Popup contents are pulled via AJAX
                     _.templateSettings = {interpolate: /\{(.+?)\}/g};
                     //var attributes = feature.attributes;
-                    //var s3_url_format = feature.layer.s3_url_format;
-                    var template = _.template(feature.layer.s3_url_format);
+                    //var s3_url_format = layer.s3_url_format;
+                    var template = _.template(layer.s3_url_format);
                     // Ensure we have all keys (we don't transmit empty attr)
                     /* Only needed once we start getting non-id formats
                     var defaults = {},
