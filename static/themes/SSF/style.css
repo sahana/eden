@@ -14,6 +14,26 @@
 	position: relative;
 	top: -19px;
 }
+
+.row {
+	margin-left: -15px;
+	margin-right: -15px;
+}
+
+@media (max-width: 979px) and (min-width: 768px) {
+	.row {
+		margin-left: -20px;
+		margin-right: -20px;
+	}
+}
+
+@media (max-width: 767px) {
+	.row {
+		margin-left: 0px;
+		margin-right: 0px;
+	}
+}
+
 #feed-control span {
 	color: #676767;
 	font-size: 11px;
