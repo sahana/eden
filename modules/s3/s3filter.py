@@ -2463,7 +2463,10 @@ class S3FilterForm(object):
                     default = applicable_defaults
                 else:
                     continue
-                if not isinstance(default, (list, type(None))):
+                if default is None:
+                    # Ignore (return [None] to filter for None)
+                    continue
+                elif not isinstance(default, list):
                     default = [default]
                 filter_widget.values[variable] = [str(v) if v is None else v
                                                   for v in default]

@@ -921,6 +921,10 @@ class S3RecordMerger(object):
         s3db = current.s3db
         if main:
             s3db.load_all_models()
+        if db._lazy_tables:
+            # Must roll out all lazy tables to detect dependencies
+            for tn in db._LAZY_TABLES.keys():
+                db[tn]
 
         # Get the records
         original = None

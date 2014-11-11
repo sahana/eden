@@ -326,6 +326,11 @@ class S3Model(object):
             Helper function to load all models
         """
 
+        s3 = current.response.s3
+        if s3.all_models_loaded:
+            # Already loaded
+            return
+
         models = current.models
 
         # Load models
@@ -341,6 +346,8 @@ class S3Model(object):
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
 
+        # Don't do this again within the current request cycle
+        s3.all_models_loaded = True
         return
 
     # -------------------------------------------------------------------------
@@ -1203,9 +1210,9 @@ class S3Model(object):
 
             # Delete the super record
             sresource = define_resource(sname, id=value)
-            success = sresource.delete(cascade=True)
+            sresource.delete(cascade=True)
 
-            if not success:
+            if sresource.error:
                 # Restore the super key
                 # @todo: is this really necessary? => caller must roll back
                 #        anyway in this case, which would automatically restore
