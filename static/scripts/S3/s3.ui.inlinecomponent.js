@@ -138,50 +138,8 @@
                 self.catchSubmit(this);
             });
         },
-
-        // Utilities ----------------------------------------------------------
-
-        /**
-         * Mark a row as changed
-         *
-         * @param {jQuery} element - the trigger element
-         */
-        _markChanged: function(element) {
-
-            $(element).closest('.inline-form').addClass('changed');
-        },
-
-        /**
-         * Parse the JSON from the real input, and bind the result
-         * as 'data' object to the real input
-         *
-         * @return {object} the data object
-         */
-        _deserialize: function() {
-
-            var input = this.input;
-
-            var data = JSON.parse(input.val());
-            input.data('data', data);
-
-            return data;
-        },
-
-        /**
-         * Serialize the 'data' object of the real input as JSON and
-         * set the JSON as value for the real input
-         *
-         * @return {string} the JSON
-         */
-        _serialize: function() {
-
-            var input = this.input;
-
-            var json = JSON.stringify(input.data('data'));
-            input.val(json);
-
-            return json;
-        },
+        
+        // Layout -------------------------------------------------------------
 
         /**
          * Render a read-row (default row layout)
@@ -268,6 +226,63 @@
         },
 
         /**
+         * Update (replace) the content of a column, needed to write
+         * read-only field data into an edit row
+         * 
+         * @param {jQuery} row - the row
+         * @param {number} colIndex - the column index
+         * @param {string|HTML} contents - the column contents
+         */
+        _updateColumn: function(row, colIndex, contents) {
+
+            $(row).find('td').eq(colIndex).html(contents);
+        },
+
+        // Utilities ----------------------------------------------------------
+
+        /**
+         * Mark a row as changed
+         *
+         * @param {jQuery} element - the trigger element
+         */
+        _markChanged: function(element) {
+
+            $(element).closest('.inline-form').addClass('changed');
+        },
+
+        /**
+         * Parse the JSON from the real input, and bind the result
+         * as 'data' object to the real input
+         *
+         * @return {object} the data object
+         */
+        _deserialize: function() {
+
+            var input = this.input;
+
+            var data = JSON.parse(input.val());
+            input.data('data', data);
+
+            return data;
+        },
+
+        /**
+         * Serialize the 'data' object of the real input as JSON and
+         * set the JSON as value for the real input
+         *
+         * @return {string} the JSON
+         */
+        _serialize: function() {
+
+            var input = this.input;
+
+            var json = JSON.stringify(input.data('data'));
+            input.val(json);
+
+            return json;
+        },
+
+        /**
          * Display all errors
          */
         _displayErrors: function() {
@@ -285,18 +300,20 @@
          * Disable the add-row
          */
         _disableAddRow: function() {
-            var add_tds = $('#add-row-' + this.formname + ' > td');
-            add_tds.find('input, select, textarea').prop('disabled', true);
-            add_tds.find('.inline-add, .action-lnk').addClass('hide');
+
+            var addRow = $('#add-row-' + this.formname);
+            addRow.find('input, select, textarea').prop('disabled', true);
+            addRow.find('.inline-add, .action-lnk').addClass('hide');
         },
 
         /**
          * Enable the add-row
          */
         _enableAddRow: function() {
-            var add_tds = $('#add-row-' + this.formname + ' > td');
-            add_tds.find('input, select, textarea').prop('disabled', false);
-            add_tds.find('.inline-add, .action-lnk').removeClass('hide');
+
+            var addRow = $('#add-row-' + this.formname);
+            addRow.find('input, select, textarea').prop('disabled', false);
+            addRow.find('.inline-add, .action-lnk').removeClass('hide');
         },
 
         /**
@@ -639,9 +656,7 @@
                 input = $(element);
                 if (!input.length) {
                     // Read-only field
-                    text = row[fieldname]['text'];
-                    var td = $('#edit-row-' + formname + ' td')[i];
-                    td.innerHTML = text;
+                    this._updateColumn($('#edit-row-' + formname), i, row[fieldname]['text']);
                 } else {
                     if (input.attr('type') == 'file') {
                         // Update the existing upload item, if there is one
@@ -832,7 +847,6 @@
                     // Render new read row and append to container
                     var read_row = this._renderReadRow(formname, newindex, items);
                     $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
-                    this._buttonEvents();
                 }
             }
 
@@ -939,7 +953,6 @@
 
                         // Update the read row
                         var read_row = this._renderReadRow(formname, rowindex, items);
-                        this._buttonEvents();
 
                         // Hide and reset the edit row
                         edit_row.addClass('hide')
@@ -1277,163 +1290,113 @@
         // Event Management ---------------------------------------------------
 
         /**
-         * Bind event handlers to form widget events
+         * Bind event handlers (after refresh)
          */
-        _formEvents: function() {
+        _bindEvents: function() {
 
-            var widgetID = '#' + $(this.element).attr('id');
-            var self = this,
-                ns = this.namespace;
+            var el = $(this.element),
+                ns = this.namespace,
+                self = this;
 
-            $(widgetID).undelegate(ns)
-                       .delegate('.read-row', 'click' + ns, function() {
-                        var names = $(this).attr('id').split('-');
-                        var rowindex = names.pop();
-                        self._editRow(rowindex);
-                        return false;
-                    });
-
-            // Change-events
-            $(widgetID + ' .edit-row input[type="text"],' +
-              widgetID + ' .edit-row textarea').bind('input', function() {
-                self._markChanged(this);
-                self._catchSubmit(this);
-            });
-            $(widgetID + ' .edit-row input[type!="text"],' +
-              widgetID + ' .edit-row select').bind('focusin', function() {
-                $(this).one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                }).one('focusout', function() {
-                    $(this).unbind('change.inline');
-                });
-            });
-            $(widgetID + ' .edit-row select.multiselect-widget').bind('multiselectopen', function() {
-                $(this).unbind('change.inline')
-                    .one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                });
-            });
-            $(widgetID + ' .add-row input[type="text"],' +
-              widgetID + ' .add-row textarea').bind('input', function() {
-                self._markChanged(this);
-                self._catchSubmit(this);
-            });
-            $(widgetID + ' .add-row input[type!="text"],' +
-              widgetID + ' .add-row select').bind('focusin', function() {
-                $(this).one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                }).one('focusout', function() {
-                    $(this).unbind('change.inline');
-                });
-            });
-            $(widgetID + ' .add-row select.multiselect-widget').bind('multiselectopen', function() {
-                $(this).unbind('change.inline')
-                    .one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                });
-            });
-            // Chrome doesn't mark row as changed when just file input added
-            $(widgetID + ' .add-row input[type="file"]').change(function() {
-                self._markChanged(this);
-                self._catchSubmit(this);
-            });
-
-            // Submit the inline-row instead of the main form if pressing Enter
-            $(widgetID + ' .edit-row input').keypress(function(e) {
-                if (e.which == 13) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            }).keyup(function(e) {
-                if (e.which == 13) {
-                    var subform = $(this).parent().parent();
-                    var names = subform.attr('id').split('-');
-                    self._updateRow(subform.data('rowindex'));
-                }
-            });
-            $(widgetID + ' .add-row input').keypress(function(e) {
-                if (e.which == 13) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            }).keyup(function(e) {
-                if (e.which == 13) {
-                    var subform = $(this).parent().parent();
-                    var names = subform.attr('id').split('-');
-                    self._addRow();
-                }
-            });
-        },
-
-        /**
-         * Bind event handlers to form button events
-         */
-        _buttonEvents: function() {
-
-            var widgetID = '#' + $(this.element).attr('id');
-            var self = this;
-
-            $(widgetID + ' .inline-add').unbind('click')
-                            .click(function() {
+            // Button events
+            el.delegate('.read-row', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var rowindex = names.pop();
-                var formname = names.pop();
+                self._editRow(rowindex);
+                return false;
+            }).delegate('.inline-add', 'click' + ns, function() {
                 self._addRow();
                 return false;
-            });
-            $(widgetID + ' .inline-cnc').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-cnc', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var zero = names.pop();
                 var formname = names.pop();
                 var rowindex = $('#edit-row-' + formname).data('rowindex');
                 self._cancelEdit(rowindex);
                 return false;
-            });
-            $(widgetID + ' .inline-rdy').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-rdy', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var zero = names.pop();
                 var formname = names.pop();
                 var rowindex = $('#edit-row-' + formname).data('rowindex');
                 self._updateRow(rowindex);
                 return false;
-            });
-            $(widgetID + ' .inline-edt').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-edt', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var rowindex = names.pop();
-                var formname = names.pop();
                 self._editRow(rowindex);
                 return false;
-            });
-            $(widgetID + ' .inline-rmv').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-rmv', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var rowindex = names.pop();
-                var formname = names.pop();
                 self._removeRow(rowindex);
                 return false;
             });
-        },
 
-        /**
-         * Bind event handlers (after refresh)
-         */
-        _bindEvents: function() {
+            // Form events
+            var inputs = 'input',
+                textInputs = 'input[type="text"],input[type="file"],textarea',
+                otherInputs = 'input[type!="text"],select',
+                multiSelects = 'select.multiselect-widget';
+            
+            el.find('.add-row,.edit-row').each(function() {
+                var $this = $(this);
+                $this.find(textInputs).bind('input' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+                $this.find(otherInputs).bind('focusin' + ns, function() {
+                    $(this).one('change' + ns, function() {
+                        self._markChanged(this);
+                        self._catchSubmit(this);
+                    }).one('focusout', function() {
+                        $(this).unbind('change' + ns);
+                    });
+                });
+                $this.find(multiSelects).bind('multiselectopen' + ns, function() {
+                    $(this).unbind('change' + ns)
+                           .one('change' + ns, function() {
+                        self._markChanged(this);
+                        self._catchSubmit(this);
+                    });
+                });
+                $this.find(inputs).bind('keypress' + ns, function(e) {
+                    if (e.which == 13) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    return true;
+                });
+            });
 
-            var el = $(this.element),
-                ns = this.namespace;
+            el.find('.add-row').each(function() {
+                $(this).find(inputs).bind('keyup' + ns, function(e) {
+                    switch (e.which) {
+                        case 13: // Enter
+                            self._addRow();
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
 
-            this._buttonEvents();
-            this._formEvents();
-
+            el.find('.edit-row').each(function() {
+                $(this).find(inputs).bind('keyup' + ns, function(e) {
+                    var rowIndex = $(this).closest('.edit-row').data('rowindex');
+                    switch (e.which) {
+                        case 13: // Enter
+                            self._updateRow(rowIndex);
+                            break;
+                        case 27: // Escape
+                            self._cancelEdit(rowIndex);
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
+            
             // Event Management for S3SQLInlineComponentCheckbox
             if (el.hasClass('inline-checkbox')) {
                 var error_wrapper = $(this.element).closest('form')
@@ -1476,6 +1439,11 @@
             // Remove inline-locationselector-widget event handlers
             el.find('.inline-locationselector-widget')
               .unbind(ns);
+
+            // Remove all form event handlers
+            el.find('.add-row,.edit-row').each(function() {
+                $(this).find('input,textarea,select').unbind(ns);
+            });
 
             // Remove all delegations
             el.undelegate(ns);
