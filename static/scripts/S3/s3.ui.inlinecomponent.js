@@ -184,6 +184,52 @@
         },
 
         /**
+         * Render a read-row (default row layout)
+         * 
+         * @param {string} formname - the form name
+         * @param {string|number} rowindex - the row index
+         * @param {array} items - the data items
+         * 
+         * @return {jQuery} the row
+         */
+        _renderReadRow: function(formname, rowindex, items) {
+
+            var columns = '';
+
+            // Render the items
+            for (var i=0, len=items.length; i<len; i++) {
+                columns += '<td>' + items[i] + '</td>';
+            }
+
+            // Append edit-button
+            if ($('#edt-' + formname + '-none').length !== 0) {
+                columns += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
+            } else {
+                columns += '<td></td>';
+            }
+
+            // Append remove-button
+            if ($('#rmv-' + formname + '-none').length !== 0) {
+                columns += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
+            } else {
+                columns += '<td></td>';
+            }
+
+            // Get the row
+            var rowID = 'read-row-' + formname + '-' + rowindex;
+            var row = $('#' + rowID);
+            if (!row.length) {
+                // New row
+                row = $('<tr id="' + rowID + '" class="read-row">');
+            }
+
+            // Add the columns to the row
+            row.empty().html(columns);
+
+            return row;
+        },
+
+        /**
          * Append an error to a form field or row
          *
          * @param {string|number} rowindex - the row index
@@ -737,9 +783,9 @@
 
                 if (multiple) {
                     // Create a new read-row, clear add-row
-                    var read_row = '<tr id="read-row-' + formname + '-' + newindex + '" class="read-row">';
-                    var fields = data['fields'];
-                    var i, 
+                    var items = [],
+                        fields = data['fields'],
+                        i, 
                         field, 
                         upload, 
                         d, 
@@ -755,7 +801,7 @@
                             upload.attr('id', upload_id)
                                 .attr('name', upload_id);
                         }
-                        read_row += '<td>' + new_row[field]['text'] + '</td>';
+                        items.push(new_row[field]['text']);
                         // Reset add-field to default value
                         d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
                         f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
@@ -783,20 +829,8 @@
                     // Unmark changed
                     $('#add-row-' + formname).removeClass('changed');
 
-                    // Add edit-button
-                    if ($('#edt-' + formname + '-none').length !== 0) {
-                        read_row += '<td><div><div id="edt-' + formname + '-' + newindex + '" class="inline-edt"></div></div></td>';
-                    } else {
-                        read_row += '<td></td>';
-                    }
-                    // Add remove-button
-                    if ($('#rmv-' + formname + '-none').length !== 0) {
-                        read_row += '<td><div><div id="rmv-' + formname + '-' + newindex + '" class="inline-rmv"></div></div></td>';
-                    } else {
-                        read_row += '<td></td>';
-                    }
-                    read_row += '</tr>';
-                    // Append the new read-row to the table
+                    // Render new read row and append to container
+                    var read_row = this._renderReadRow(formname, newindex, items);
                     $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
                     this._buttonEvents();
                 }
@@ -871,13 +905,13 @@
 
                     if (multiple) {
                         // Update read-row in the table, clear edit-row
-                        var read_row = '',
+                        var items = [],
                             fields = data['fields'],
                             default_value,
                             i;
                         for (i=0; i < fields.length; i++) {
                             var field = fields[i]['name'];
-                            read_row += '<td>' + new_row[field]['text'] + '</td>';
+                            items.push(new_row[field]['text']);
                             // Reset edit-field to default value
                             var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
                             var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
@@ -903,21 +937,8 @@
                         var edit_row = $('#edit-row-' + formname);
                         edit_row.removeClass('changed');
 
-                        // Add edit-button
-                        if ($('#edt-' + formname + '-none').length !== 0) {
-                            read_row += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
-                        } else {
-                            read_row += '<td></td>';
-                        }
-                        // Add remove-button
-                        if ($('#rmv-' + formname + '-none').length !== 0) {
-                            read_row += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
-                        } else {
-                            read_row += '<td></td>';
-                        }
-
-                        $('#read-row-' + formname + '-' + rowindex + ' > td').remove();
-                        $('#read-row-' + formname + '-' + rowindex).html(read_row);
+                        // Update the read row
+                        var read_row = this._renderReadRow(formname, rowindex, items);
                         this._buttonEvents();
 
                         // Hide and reset the edit row
@@ -926,7 +947,7 @@
                                 .data('rowindex', null);
 
                         // Show the read row
-                        $('#read-row-' + rowname).removeClass('hide');
+                        read_row.removeClass('hide');
 
                         // Re-enable add-row
                         this._enableAddRow();
@@ -981,11 +1002,6 @@
             }
 
             return true;
-        },
-
-        _renderReadRow: function() {
-            // @todo: implement
-            return false;
         },
 
         // Event Handlers -----------------------------------------------------
