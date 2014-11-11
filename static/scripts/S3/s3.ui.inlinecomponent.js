@@ -138,16 +138,16 @@
                 self.catchSubmit(this);
             });
         },
-        
+
         // Layout -------------------------------------------------------------
 
         /**
          * Render a read-row (default row layout)
-         * 
+         *
          * @param {string} formname - the form name
          * @param {string|number} rowindex - the row index
          * @param {array} items - the data items
-         * 
+         *
          * @return {jQuery} the row
          */
         _renderReadRow: function(formname, rowindex, items) {
@@ -190,45 +190,37 @@
         /**
          * Append an error to a form field or row
          *
+         * @param {string} formname - the form name
          * @param {string|number} rowindex - the row index
          * @param {string} fieldname - the field name
          * @param {string} message - the error message
-         *
-         * @todo: make formstyle-dependend
          */
-        _appendError: function(rowindex, fieldname, message) {
+        _appendError: function(formname, rowindex, fieldname, message) {
 
-            var formname = this.formname;
+            var errorClass = formname + '_error',
+                target,
+                msg = '<div class="error">' + message + '</div>';
 
-            var field_id, msg;
             if (null === fieldname) {
+                // Append error message to the whole subform
                 if ('none' == rowindex) {
-                    field_id = '#add-row-' + formname;
+                    target = '#add-row-' + formname;
                 } else {
-                    field_id = '#edit-row-' + formname;
+                    target = '#edit-row-' + formname;
                 }
-                var l = $(field_id + '> td').length;
-                msg = '<tr class="' + formname + '_error">' +
-                        '<td colspan="' + l + '">' +
-                        '<div class="error">' +
-                            message +
-                        '</div></td></tr>';
+                msg = $('<tr><td colspan="' + $(target + '> td').length + '">' + msg + '</td></tr>');
             } else {
-                field_id = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
-                msg = '<div class="' + formname + '_error error">' + message + '</div>';
+                // Append error message to subform field
+                target = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
+                msg = $(msg);
             }
-            $(field_id).after(msg);
-            $('.' + formname + '_error').hide();
-            $('.error').click(function() {
-                $(this).fadeOut('slow');
-                return false;
-            });
+            msg.addClass(errorClass).hide().insertAfter(target);
         },
 
         /**
          * Update (replace) the content of a column, needed to write
          * read-only field data into an edit row
-         * 
+         *
          * @param {jQuery} row - the row
          * @param {number} colIndex - the column index
          * @param {string|HTML} contents - the column contents
@@ -576,7 +568,7 @@
                 has_errors = true;
             } else if (response.hasOwnProperty('_error')) {
                 has_errors = true;
-                this._appendError(rowindex, null, response._error);
+                this._appendError(formname, rowindex, null, response._error);
             }
             var item,
                 error,
@@ -589,7 +581,7 @@
                         // Virtual Field - not a real error
                         item.text = item.value;
                     } else {
-                        this._appendError(rowindex, field, error);
+                        this._appendError(formname, rowindex, field, error);
                         has_errors = true;
                     }
                 }
@@ -800,11 +792,11 @@
                     // Create a new read-row, clear add-row
                     var items = [],
                         fields = data['fields'],
-                        i, 
-                        field, 
-                        upload, 
-                        d, 
-                        f, 
+                        i,
+                        field,
+                        upload,
+                        d,
+                        f,
                         default_value;
                     for (i=0; i < fields.length; i++) {
                         field = fields[i]['name'];
@@ -1331,6 +1323,9 @@
                 var rowindex = names.pop();
                 self._removeRow(rowindex);
                 return false;
+            }).delegate('.error', 'click' + ns, function() {
+                $(this).fadeOut('medium', function() { $(this).remove(); });
+                return false;
             });
 
             // Form events
@@ -1338,7 +1333,7 @@
                 textInputs = 'input[type="text"],input[type="file"],textarea',
                 otherInputs = 'input[type!="text"],select',
                 multiSelects = 'select.multiselect-widget';
-            
+
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
                 $this.find(textInputs).bind('input' + ns, function() {
@@ -1396,7 +1391,7 @@
                     }
                 });
             });
-            
+
             // Event Management for S3SQLInlineComponentCheckbox
             if (el.hasClass('inline-checkbox')) {
                 var error_wrapper = $(this.element).closest('form')

@@ -1598,15 +1598,15 @@ class S3SQLSubFormLayout(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def subform(cls, 
-                data, 
-                item_rows, 
-                action_rows, 
-                empty=False, 
+    def subform(cls,
+                data,
+                item_rows,
+                action_rows,
+                empty=False,
                 readonly=False):
         """
             Outer container for the subform
-            
+
             @param data: the data dict (as returned from extract())
             @param item_rows: the item rows
             @param action_rows: the (hidden) action rows
@@ -1630,7 +1630,7 @@ class S3SQLSubFormLayout(object):
     def readonly(cls, resource, data):
         """
             Render this component read-only (table-style)
-            
+
             @param resource: the S3Resource
             @param data: the data dict (as returned from extract())
         """
@@ -1652,7 +1652,7 @@ class S3SQLSubFormLayout(object):
                 record_id = item["_id"]
             else:
                 continue
-            audit("read", prefix, name, 
+            audit("read", prefix, name,
                   record=record_id,  representation="html")
             trow = TR(_class="read-row")
             for f in fields:
@@ -1667,19 +1667,19 @@ class S3SQLSubFormLayout(object):
     def render_list(cls, resource, data):
         """
             Render this component read-only (list-style)
-            
+
             @param resource: the S3Resource
             @param data: the data dict (as returned from extract())
         """
-        
+
         audit = current.audit
         prefix, name = resource.prefix, resource.name
 
         xml_decode = current.xml.xml_decode
-        
+
         items = data["data"]
         fields = data["fields"]
-        
+
         # Render as comma-separated list of values (no header)
         elements = []
         for item in items:
@@ -1709,7 +1709,7 @@ class S3SQLSubFormLayout(object):
         """
 
         fields = data["fields"]
-        
+
         # Don't render a header row if there are no labels
         render_header = False
         header_row = TR(_class="label-row")
@@ -1737,8 +1737,8 @@ class S3SQLSubFormLayout(object):
                 formname,
                 index,
                 item = None,
-                readonly=True, 
-                editable=True, 
+                readonly=True,
+                editable=True,
                 deletable=True):
         """
             Render subform row actions into the row
@@ -1773,7 +1773,7 @@ class S3SQLSubFormLayout(object):
                 append(action(T("Edit this entry"), "edt"))
             else:
                 append(TD())
-                
+
             if deletable:
                 append(action(T("Remove this entry"), "rmv"))
             else:
@@ -2123,7 +2123,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             value = json.dumps(value, separators=SEPARATORS)
         if data is None:
             raise SyntaxError("No resource structure information")
-        
+
         self.upload = Storage()
 
         options = self.options
@@ -2301,8 +2301,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         attr["_id"] = real_input
 
         widget = layout.subform(data,
-                                item_rows, 
-                                action_rows, 
+                                item_rows,
+                                action_rows,
                                 empty = not has_rows,
                                 )
 
@@ -2571,7 +2571,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
-    def _render_item(self, 
+    def _render_item(self,
                      table,
                      item,
                      fields,
@@ -2657,7 +2657,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             data = None
         elif pkey not in data:
             data[pkey] = None
-            
+
         subform_name = "sub_%s" % formname
         subform = SQLFORM.factory(*formfields,
                                   record=data,
@@ -2671,7 +2671,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         subform = subform[0]
         subform.update(**attributes)
-        
+
         if multiple:
             # Render row actions
             layout.actions(subform,
