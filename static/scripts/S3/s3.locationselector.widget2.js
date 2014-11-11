@@ -514,8 +514,8 @@
 
             // Show next dropdown
             level += 1;
-            var dropdown = $(selector + '_L' + level + '__row');
-            if (dropdown.length) {
+            var dropdown_row = $(selector + '_L' + level + '__row');
+            if (dropdown_row.length) {
                 // Do we need to read hierarchy?
                 if ($(selector + '_L' + (level - 1) + ' option[value="' + id + '"]').hasClass('missing')) {
                     // Missing level: we already have the data
@@ -550,7 +550,8 @@
                 }
                 var len_values = values.length;
                 if (len_values) {
-                    dropdown.removeClass('hide').show();
+                    // Show dropdown
+                    dropdown_row.removeClass('hide').show();
                     $(selector + '_L' + level + '__row1').removeClass('hide').show(); // Tuple themes
                     values.sort(nameSort);
                     var _id,
@@ -580,15 +581,27 @@
                         select.append(option);
                     }
                     if (select.hasClass('multiselect')) {
-                        select.multiselect({//allSelectedText: i18n.allSelectedText,
-                                            //selectedText: i18n.selectedText,
-                                            header: false,
-                                            height: 300,
-                                            minWidth: 0,
-                                            selectedList: 3,
-                                            noneSelectedText: $(selector + '_L' + level + ' option[value=""]').html(),
-                                            multiple: false
-                                            });
+                        if (select.hasClass('search')) {
+                            select.multiselect({header: '',
+                                                height: 300,
+                                                minWidth: 0,
+                                                selectedList: 1,
+                                                noneSelectedText: $(selector + '_L' + level + ' option[value=""]').html(),
+                                                multiple: false
+                                                }).multiselectfilter({label: '',
+                                                                      placeholder: i18n.search
+                                                                      });
+                            // Show headers
+                            $('.ui-multiselect-header').show();
+                        } else {
+                            select.multiselect({header: false,
+                                                height: 300,
+                                                minWidth: 0,
+                                                selectedList: 1,
+                                                noneSelectedText: $(selector + '_L' + level + ' option[value=""]').html(),
+                                                multiple: false
+                                                });
+                        }
                     }
                     if (len_values == 1) {
                         // Only 1 option so select this one
@@ -653,6 +666,11 @@
         // Hide dropdown
         var dropdown = $(selector + '_L' + level);
         dropdown.hide();
+        if (dropdown.hasClass('multiselect')) {
+            // Hide Multiselect button
+            var button = $(selector + '_L' + level + '__row button');
+            button.hide();
+        }
 
         // Show Throbber
         var throbber = $(selector + '_L' + level + '__throbber');
@@ -673,8 +691,13 @@
                 n = null;
                 // Hide Throbber
                 throbber.hide();
-                // Show dropdown
-                dropdown.removeClass('hide').show();
+                if (dropdown.hasClass('multiselect')) {
+                    // Show button
+                    button.removeClass('hide').show();
+                } else {
+                    // Show dropdown
+                    dropdown.removeClass('hide').show();
+                }
             },
             error: function(request, status, error) {
                 if (error == 'UNAUTHORIZED') {
@@ -687,8 +710,13 @@
                 // Revert state of widget to allow user to retry without reloading page
                 // Hide Throbber
                 throbber.hide();
-                // Show dropdown
-                dropdown.removeClass('hide').show();
+                if (dropdown.hasClass('multiselect')) {
+                    // Show button
+                    button.removeClass('hide').show();
+                } else {
+                    // Show dropdown
+                    dropdown.removeClass('hide').show();
+                }
             }
         });
     }

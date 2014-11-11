@@ -1497,6 +1497,11 @@ class S3Config(Storage):
         """
             Whether all dropdowns should use the S3MultiSelectWidget
             - currently respected by Auth Registration & S3LocationSelectorWidget2
+
+            Options:
+                False (default): No widget
+                True: Widget, with no header
+                "search": Widget with the search header
         """
         return self.ui.get("multiselect_widget", False)
 

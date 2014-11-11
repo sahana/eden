@@ -67,7 +67,7 @@ settings.ui.formstyle = "bootstrap"
 settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
-settings.ui.multiselect_widget = True
+settings.ui.multiselect_widget = "search"
 
 # @ToDo: Investigate
 settings.ui.use_button_icons = True

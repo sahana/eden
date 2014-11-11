@@ -4398,6 +4398,10 @@ class S3LocationSelectorWidget2(FormWidget):
 
         # Lx Dropdowns
         ui_multiselect_widget = settings.get_ui_multiselect_widget()
+        if ui_multiselect_widget == "search":
+            ui_multiselect_search = True
+        else:
+            ui_multiselect_search = False
         Lx_rows = DIV()
         # 1st level is always hidden until populated
         hidden = True
@@ -4405,7 +4409,9 @@ class S3LocationSelectorWidget2(FormWidget):
         for level in levels:
             _id = "%s_%s" % (fieldname, level)
             lattr = {"_id" : _id}
-            if ui_multiselect_widget:
+            if ui_multiselect_search:
+                lattr["_class"] = "multiselect search"
+            elif ui_multiselect_widget:
                 lattr["_class"] = "multiselect"
             label = labels.get(level, level)
             noneSelectedText = T("Select %(location)s") % dict(location = label)
@@ -4622,11 +4628,9 @@ class S3LocationSelectorWidget2(FormWidget):
             global_append(script)
             script = '''i18n.select="%s"''' % T("Select")
             global_append(script)
-            #if ui_multiselect_widget:
-            #    script = '''i18n.allSelectedText="%s"''' % T("All selected")
-            #    global_append(script)
-            #    script = '''i18n.selectedText="%s"''' % T("# selected")
-            #    global_append(script)
+            if ui_multiselect_search:
+                script = '''i18n.search="%s"''' % T("Search")
+                global_append(script)
 
         # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the MapJS loader
