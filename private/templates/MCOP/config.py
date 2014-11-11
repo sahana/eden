@@ -462,6 +462,7 @@ def customise_event_incident_resource(r, tablename):
                    "location_id",
                    "comments",
                    "organisation_id",
+                   "closed",
                    ]
 
     # Custom Form

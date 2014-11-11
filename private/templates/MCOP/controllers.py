@@ -46,7 +46,7 @@ for(var i=0,len=layers.length;i<len;i++){
         # Only show Open Alerts
         resource.add_filter(FS("expired") == False)
         # Only show Alerts which are linked to Open Incidents
-        resource.add_filter(FS("incident.closed") == False)
+        resource.add_filter(FS("incident") == None or FS("incident.closed") == False)
         list_id = "cms_post_datalist"
         list_fields = [#"series_id",
                        "location_id",
