@@ -61,6 +61,13 @@
             this.formname = el.attr('id').split('-').pop();
             this.input = $('#' + el.attr('field'));
 
+            // Configure layout-dependend functions
+            // @todo: make customizable
+            var layout = this._layout;
+            this._renderReadRow = layout.renderReadRow;
+            this._appendError = layout.appendError;
+            this._updateColumn = layout.updateColumn;
+
             this.refresh();
         },
 
@@ -134,100 +141,106 @@
             // Check for required subforms
             el.find('.inline-form.add-row.required').each(function() {
                 // Ensure these get validated whether or not they are changed
-                self.markChanged(this);
-                self.catchSubmit(this);
+                self._markChanged(this);
+                self._catchSubmit(this);
             });
         },
 
         // Layout -------------------------------------------------------------
-
+        
         /**
-         * Render a read-row (default row layout)
-         *
-         * @param {string} formname - the form name
-         * @param {string|number} rowindex - the row index
-         * @param {array} items - the data items
-         *
-         * @return {jQuery} the row
+         * The default layout-dependend functions
          */
-        _renderReadRow: function(formname, rowindex, items) {
+        _layout: {
+            
+            /**
+            * Render a read-row (default row layout)
+            *
+            * @param {string} formname - the form name
+            * @param {string|number} rowindex - the row index
+            * @param {array} items - the data items
+            *
+            * @return {jQuery} the row
+            */
+            renderReadRow: function(formname, rowindex, items) {
 
-            var columns = '';
+                var columns = '';
 
-            // Render the items
-            for (var i=0, len=items.length; i<len; i++) {
-                columns += '<td>' + items[i] + '</td>';
-            }
-
-            // Append edit-button
-            if ($('#edt-' + formname + '-none').length !== 0) {
-                columns += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
-            } else {
-                columns += '<td></td>';
-            }
-
-            // Append remove-button
-            if ($('#rmv-' + formname + '-none').length !== 0) {
-                columns += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
-            } else {
-                columns += '<td></td>';
-            }
-
-            // Get the row
-            var rowID = 'read-row-' + formname + '-' + rowindex;
-            var row = $('#' + rowID);
-            if (!row.length) {
-                // New row
-                row = $('<tr id="' + rowID + '" class="read-row">');
-            }
-
-            // Add the columns to the row
-            row.empty().html(columns);
-
-            return row;
-        },
-
-        /**
-         * Append an error to a form field or row
-         *
-         * @param {string} formname - the form name
-         * @param {string|number} rowindex - the row index
-         * @param {string} fieldname - the field name
-         * @param {string} message - the error message
-         */
-        _appendError: function(formname, rowindex, fieldname, message) {
-
-            var errorClass = formname + '_error',
-                target,
-                msg = '<div class="error">' + message + '</div>';
-
-            if (null === fieldname) {
-                // Append error message to the whole subform
-                if ('none' == rowindex) {
-                    target = '#add-row-' + formname;
-                } else {
-                    target = '#edit-row-' + formname;
+                // Render the items
+                for (var i=0, len=items.length; i<len; i++) {
+                    columns += '<td>' + items[i] + '</td>';
                 }
-                msg = $('<tr><td colspan="' + $(target + '> td').length + '">' + msg + '</td></tr>');
-            } else {
-                // Append error message to subform field
-                target = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
-                msg = $(msg);
-            }
-            msg.addClass(errorClass).hide().insertAfter(target);
-        },
 
-        /**
-         * Update (replace) the content of a column, needed to write
-         * read-only field data into an edit row
-         *
-         * @param {jQuery} row - the row
-         * @param {number} colIndex - the column index
-         * @param {string|HTML} contents - the column contents
-         */
-        _updateColumn: function(row, colIndex, contents) {
+                // Append edit-button
+                if ($('#edt-' + formname + '-none').length !== 0) {
+                    columns += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
+                } else {
+                    columns += '<td></td>';
+                }
 
-            $(row).find('td').eq(colIndex).html(contents);
+                // Append remove-button
+                if ($('#rmv-' + formname + '-none').length !== 0) {
+                    columns += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
+                } else {
+                    columns += '<td></td>';
+                }
+
+                // Get the row
+                var rowID = 'read-row-' + formname + '-' + rowindex;
+                var row = $('#' + rowID);
+                if (!row.length) {
+                    // New row
+                    row = $('<tr id="' + rowID + '" class="read-row">');
+                }
+
+                // Add the columns to the row
+                row.empty().html(columns);
+
+                return row;
+            },
+
+            /**
+            * Append an error to a form field or row
+            *
+            * @param {string} formname - the form name
+            * @param {string|number} rowindex - the input row index ('none' for add, '0' for edit)
+            * @param {string} fieldname - the field name
+            * @param {string} message - the error message
+            */
+            appendError: function(formname, rowindex, fieldname, message) {
+
+                var errorClass = formname + '_error',
+                    target,
+                    msg = '<div class="error">' + message + '</div>';
+
+                if (null === fieldname) {
+                    // Append error message to the whole subform
+                    if ('none' == rowindex) {
+                        target = '#add-row-' + formname;
+                    } else {
+                        target = '#edit-row-' + formname;
+                    }
+                    msg = $('<tr><td colspan="' + $(target + '> td').length + '">' + msg + '</td></tr>');
+                } else {
+                    // Append error message to subform field
+                    target = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
+                    msg = $(msg);
+                }
+                msg.addClass(errorClass).hide().insertAfter(target);
+            },
+
+            /**
+            * Update (replace) the content of a column, needed to write
+            * read-only field data into an edit row
+            *
+            * @param {jQuery} row - the row
+            * @param {number} colIndex - the column index
+            * @param {string|HTML} contents - the column contents
+            */
+            updateColumn: function(row, colIndex, contents) {
+
+                $(row).find('td').eq(colIndex).html(contents);
+            },
         },
 
         // Utilities ----------------------------------------------------------
@@ -355,9 +368,7 @@
                 fields = data['fields'];
             for (var i=0; i < fields.length; i++) {
                 fieldname = fields[i]['name'];
-                selector = '#sub_' +
-                        formname + '_' + formname + '_i_' +
-                        fieldname + '_edit_' + rowindex;
+                selector = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
                 input = $(selector);
                 if (input.length) {
                     // Field is Writable
@@ -422,77 +433,63 @@
             var single = $('#read-row-' + formname + '-' + rowindex).hasClass('single');
             if (single) {
                 // A multiple=False subform being edited
-                // setting all fields to '' => delete
-                var del = true;
+                // => setting all fields to '' indicates delete
+                var deleteRow = true;
                 for (fieldname in row) {
                     if ((fieldname != '_id') && (row[fieldname] !== '')) {
-                        del = false;
+                        deleteRow = false;
+                        break;
                     }
                 }
-                if (del) {
+                if (deleteRow) {
+                    // Check whether subform is required
                     var required = $('#edit-row-' + formname).hasClass('required');
                     if (required) {
-                        // Cannot delete
-                        this._append_error(rowindex, fieldname, i18n.enter_value);
+                        // Subform is required => cannot delete
+                        this._appendError(formname, '0', fieldname, i18n.enter_value);
                         row['_error'] = true;
                     } else {
-                        // Delete
+                        // Delete it
                         row['_delete'] = true;
                     }
                 } else {
                     delete row['_error'];
                 }
             } else {
-                // Check if subform is required
-                var add_required = $('#add-row-' + formname).hasClass('required'),
-                    empty;
-                if (add_required) {
+                // Check whether subform is required
+                var subformRequired = false;
+                if ($('#add-row-' + formname).hasClass('required') ||
+                    $('#edit-row-' + formname).hasClass('required')) {
+                    subformRequired = true;
+                }
+                // Make sure there is at least one row
+                if (subformRequired) {
+                    // Check if empty
                     delete row['_error'];
-                    empty = true;
+                    var empty = true;
                     for (fieldname in row) {
                         if ((fieldname != '_id') && (row[fieldname] !== '')) {
                             empty = false;
                         }
                     }
                     if (empty) {
-                        // Check if we have other rows
+                        var errorIndex = 'none';
+                        if (rowindex != 'none') {
+                            // This is the edit-row, so the index is always '0'
+                            errorIndex = '0';
+                        }
+                        // Check whether rows can be added (=whether there is an add-button)
                         if ($('#add-' + formname + '-' + rowindex).length) {
-                            // multiple=true, can have other rows
+                            // Multiple=true, rows can be added
                             if (!$('#read-row-' + formname + '-0').length) {
-                                // No rows present
-                                this._append_error(rowindex, fieldname, i18n.enter_value);
+                                // No rows present => error
+                                this._appendError(formname, errorIndex, fieldname, i18n.enter_value);
                                 row['_error'] = true;
                             }
                         } else {
-                            // multiple=false, no other rows
-                            this._append_error(rowindex, fieldname, i18n.enter_value);
+                            // Multiple=false, no other rows can exist => error
+                            this._appendError(formname, errorIndex, fieldname, i18n.enter_value);
                             row['_error'] = true;
-                        }
-                    }
-                } else {
-                    var edit_required = $('#edit-row-' + formname).hasClass('required');
-                    if (edit_required) {
-                        delete row['_error'];
-                        empty = true;
-                        for (fieldname in row) {
-                            if ((fieldname != '_id') && (row[fieldname] !== '')) {
-                                empty = false;
-                            }
-                        }
-                        if (empty) {
-                            // Check if we have other rows
-                            if ($('#add-' + formname + '-' + rowindex).length) {
-                                // multiple=true, can have other rows
-                                if (!$('#read-row-' + formname + '-0').length) {
-                                    // No rows present
-                                    this._append_error(rowindex, fieldname, i18n.enter_value);
-                                    row['_error'] = true;
-                                }
-                            } else {
-                                // multiple=false, no other rows
-                                this._append_error(rowindex, fieldname, i18n.enter_value);
-                                row['_error'] = true;
-                            }
                         }
                     }
                 }
@@ -514,7 +511,7 @@
         /**
          * Validate a new/updated row
          *
-         * @param {string|number} rowindex - the row index
+         * @param {string|number} rowindex - the input row index ('none' for add, '0' for edit)
          * @param {object} data - the de-serialized JSON data
          * @param {object} row - the new row data
          */
@@ -524,7 +521,7 @@
 
             if (row._error) {
                 // Required row which has already been validated as bad
-                this._display_errors();
+                this._displayErrors();
                 return null;
             }
 
@@ -753,7 +750,8 @@
 
             // If this is an empty required=true row in a multiple=true with existing rows, then don't validate
             var add_required = $('#add-row-' + formname).hasClass('required'),
-                empty;
+                empty,
+                fieldname;
             if (add_required) {
                 empty = true;
                 for (fieldname in row_data) {
@@ -896,7 +894,7 @@
 
             } else {
                 // Validate the form data
-                var new_row = this._validate(data, rowindex, row_data);
+                var new_row = this._validate(data, '0', row_data);
 
                 var success = false;
                 if (null !== new_row) {
