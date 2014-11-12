@@ -243,7 +243,7 @@
             updateColumn: function(row, colIndex, contents) {
 
                 $(row).find('td').eq(colIndex).html(contents);
-            },
+            }
         },
 
         // Utilities ----------------------------------------------------------

@@ -19,7 +19,10 @@ def minimize(code):
     ntf2 = tempfile.NamedTemporaryFile(delete=False)
     ntf2.close()
 
-    os.system("java -jar %s %s --js %s --js_output_file %s" % (path, extra_params, ntf.name, ntf2.name))
+    ret = os.system("java -jar %s %s --js %s --js_output_file %s" % (path, extra_params, ntf.name, ntf2.name))
+    if ret:
+        # Error!
+        raise
     ntf2 = file(ntf2.name, "r")
     data = ntf2.read()
     ntf2.close()
