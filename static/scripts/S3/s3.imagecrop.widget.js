@@ -306,6 +306,7 @@
             var data = canvas.toDataURL('image/' + extension);
             loadImage(data);
         }
+        img.setAttribute('crossOrigin', 'anonymous');
     }
 
     // Bind Events to catch Image Upload Events
