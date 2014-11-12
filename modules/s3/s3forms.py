@@ -1595,6 +1595,11 @@ class SKIP_POST_VALIDATION(Validator):
 # =============================================================================
 class S3SQLSubFormLayout(object):
     """ Layout for S3SQLInlineComponent (Base Class) """
+    
+    def __init__(self):
+        """ Constructor """
+
+        self.inject_script()
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1819,13 +1824,20 @@ class S3SQLSubFormLayout(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def script():
-        """
-            Inject custom JS to render new read-rows
-        """
+    def inject_script():
+        """ Inject custom JS to render new read-rows """
 
-        # @todo: implement
-        pass
+        # Example:
+
+        #appname = current.request.application
+        #scripts = current.response.s3.scripts
+
+        #script = "/%s/static/themes/CRMT2/js/inlinecomponent.layout.js" % appname
+        #if script not in scripts:
+            #scripts.append(script)
+
+        # No custom JS in the default layout
+        return
 
 # =============================================================================
 class S3SQLInlineComponent(S3SQLSubForm):
@@ -2162,7 +2174,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         tablename = component.tablename
 
         # @todo: make configurable
-        layout = S3SQLSubFormLayout
+        layout = current.deployment_settings.get_ui_inline_component_layout()
 
         get_config = current.s3db.get_config
         _editable = get_config(tablename, "editable")
@@ -2348,7 +2360,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         resource = self.resource
         component = resource.components[data["component"]]
 
-        layout = S3SQLSubFormLayout
+        layout = current.deployment_settings.get_ui_inline_component_layout()
 
         fields = data["fields"]
         if len(fields) == 1 and self.options.get("render_list", False):
