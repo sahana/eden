@@ -269,15 +269,15 @@ def location():
     """ RESTful CRUD controller for Locations """
 
     tablename = "gis_location"
-    table = s3db[tablename]
+    table = s3db.gis_location
 
     # Custom Methods
     set_method = s3db.set_method
-    from s3.s3gis import S3ExportPOI
+    from s3 import S3ExportPOI
     set_method("gis", "location",
                method = "export_poi",
                action = S3ExportPOI())
-    from s3.s3gis import S3ImportPOI
+    from s3 import S3ImportPOI
     set_method("gis", "location",
                method = "import_poi",
                action = S3ImportPOI())
@@ -286,7 +286,7 @@ def location():
                action = s3_gis_location_parents)
 
     location_hierarchy = gis.get_location_hierarchy()
-    from s3.s3filter import S3TextFilter, S3OptionsFilter#, S3LocationFilter
+    from s3 import S3TextFilter, S3OptionsFilter#, S3LocationFilter
     search_fields = ["name",
                      "comments",
                      "tag.value",
@@ -366,11 +366,10 @@ def location():
 
     # Pre-processor
     # Allow prep to pass vars back to the controller
-    vars = {}
-    def prep(r, vars):
+    prep_vars = {}
+    def prep(r, prep_vars):
 
         if r.interactive and not r.component:
-
 
             # Restrict access to Polygons to just MapAdmins
             if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
@@ -415,12 +414,14 @@ def location():
             else:
                 if r.method == "report":
                     s3.filter = (table.level !=None)
+
                 # Add Map to allow locations to be found this way
                 config = gis.get_config()
                 lat = config.lat
                 lon = config.lon
                 zoom = config.zoom
-                feature_queries = []
+                bbox = {}
+                feature_resources = None
 
                 if r.method == "create":
                     # @ToDo: Support Polygons here
@@ -447,34 +448,71 @@ def location():
                         add_feature_active = False
 
                     record = r.record
-                    if record and record.lat is not None and record.lon is not None:
+                    if record.gis_feature_type == 1 and record.lat is not None and record.lon is not None:
                         lat = record.lat
                         lon = record.lon
-                    # Same as a single zoom on a cluster
-                    zoom = zoom + 2
+                        # Same as a single zoom on a cluster
+                        zoom = zoom + 2
+                    else:
+                        lat = lon = zoom = None
+                        bbox = {"lon_min" : record.lon_min,
+                                "lat_min" : record.lat_min,
+                                "lon_max" : record.lon_max,
+                                "lat_max" : record.lat_max,
+                                }
+                    feature_resources = {"name"      : T("Location"),
+                                         "id"        : "location",
+                                         "active"    : True,
+                                         }
+                    # Is there a layer defined for Locations?
+                    ftable = s3db.gis_layer_feature
+                    query = (ftable.controller == "gis") & \
+                            (ftable.function == "location")
+                    layer = db(query).select(ftable.layer_id,
+                                             limitby=(0, 1)
+                                             ).first()
+                    if layer:
+                        feature_resources.update(layer_id = layer.layer_id,
+                                                 filter = "~.id=%s" % record.id,
+                                                 )
+                    else:
+                        feature_resources.update(tablename = "gis_location",
+                                                 url = "/%s/gis/location.geojson?~.id=%s" % (appname, record.id),
+                                                 opacity = 0.9,
+                                                 # @ToDo: Style isn't taking effect since gis_feature_type isn't in the attributes
+                                                 style = '[{"prop":"gis_feature_type","cat":1,"externalGraphic":"img/markers/marker_red.png"},{"prop":"gis_feature_type","cat":3,"fill":"FFFFFF","fillOpacity":0.01,"stroke":"0000FF"},{"prop":"gis_feature_type","cat":6,"fill":"FFFFFF","fillOpacity":0.01,"stroke":"0000FF"}]',
+                                                 )
+                    feature_resources = (feature_resources,)
 
                 _map = gis.show_map(lat = lat,
                                     lon = lon,
                                     zoom = zoom,
-                                    feature_queries = feature_queries,
+                                    bbox = bbox,
+                                    feature_resources = feature_resources,
                                     add_feature = add_feature,
                                     add_feature_active = add_feature_active,
+                                    # We want to be able to see a location against Satellite imagery, etc
+                                    catalogue_layers = True,
                                     toolbar = True,
                                     collapsed = True)
 
                 # Pass the map back to the main controller
-                vars.update(_map=_map)
+                prep_vars.update(_map=_map)
         elif r.representation == "json":
             # Path field should be visible
             table.path.readable = True
+        elif r.representation == "geojson":
+            # Don't represent the feature_type
+            table.gis_feature_type.represent = None
+
         return True
-    s3.prep = lambda r, vars=vars: prep(r, vars)
+    s3.prep = lambda r, prep_vars=prep_vars: prep(r, prep_vars)
 
     # Options
     _vars = request.vars
     filters = []
 
-    parent = _vars.get("parent_", None)
+    parent = _vars.get("parent_")
     # Don't use 'parent' as the var name as otherwise it conflicts with the form's var of the same name & hence this will be triggered during form submission
     if parent:
         # We want to do case-insensitive searches
@@ -492,14 +530,14 @@ def location():
         from operator import __and__
         s3.filter = reduce(__and__, filters)
 
-    caller = _vars.get("caller", None)
+    caller = _vars.get("caller")
     if caller:
         # We've been called as a Popup
         if "gis_location_parent" in caller:
             # Hide unnecessary rows
             table.addr_street.readable = table.addr_street.writable = False
         else:
-            parent = _vars.get("parent_", None)
+            parent = _vars.get("parent_")
             # Don't use 'parent' as the var name as otherwise it conflicts with the form's var of the same name & hence this will be triggered during form submission
             if parent:
                 table.parent.default = parent
@@ -507,7 +545,7 @@ def location():
             # Hide unnecessary rows
             table.level.readable = table.level.writable = False
 
-    level = _vars.get("level", None)
+    level = _vars.get("level")
     if level:
         # We've been called from the Location Selector widget
         table.addr_street.readable = table.addr_street.writable = False
@@ -520,14 +558,14 @@ def location():
                               represent = lambda code: \
                                     gis.get_country(code, key_type="code") or UNKNOWN_OPT)
 
-    output = s3_rest_controller(rheader=s3db.gis_rheader,
-                                # CSV column headers, so no T()
-                                csv_extra_fields = [
-                                    dict(label="Country",
-                                         field=country())
-                                ])
+    output = s3_rest_controller(# CSV column headers, so no T()
+                                csv_extra_fields = [dict(label="Country",
+                                                         field=country())
+                                                    ],
+                                rheader = s3db.gis_rheader,
+                                )
 
-    _map = vars.get("_map", None)
+    _map = prep_vars.get("_map")
     if _map and isinstance(output, dict):
         output["_map"] = _map
 

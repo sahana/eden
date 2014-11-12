@@ -957,6 +957,11 @@ class S3IncidentReportModel(S3Model):
                           self.gis_location_id(),
                           self.pr_person_id(label = T("Reported By"),
                                             ),
+                          Field("closed", "boolean",
+                                default = False,
+                                label = T("Closed"),
+                                represent = s3_yes_no_represent,
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
