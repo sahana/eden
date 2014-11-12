@@ -1409,6 +1409,7 @@ class GIS(object):
                         )
                 # Order by pe_type (defined in gis_config)
                 # @ToDo: Sort orgs from the hierarchy?
+                # (Currently we just have branch > non-branch in pe_type)
                 rows = db(query).select(*fields,
                                         left=left,
                                         orderby=ctable.pe_type)
