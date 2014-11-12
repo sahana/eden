@@ -1862,14 +1862,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // CoordinateGrid
     var addCoordinateGrid = function(map) {
         var CoordinateGrid = map.s3.options.CoordinateGrid;
-        map.addLayer(new OpenLayers.Layer.cdauth.CoordinateGrid(null, {
-            name: CoordinateGrid.name,
-            shortName: 'grid',
-            visibility: CoordinateGrid.visibility,
-            // This is used to Save State
-            s3_layer_id: CoordinateGrid.id,
-            s3_layer_type: 'coordinate'
-        }));
+        var graticule = new OpenLayers.Control.Graticule({
+            //labelFormat: 'dm',
+            layerName: CoordinateGrid.name,
+            visible: CoordinateGrid.visibility
+        });
+        map.addControl(graticule);
     };
 
     // DraftLayer
