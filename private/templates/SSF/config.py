@@ -444,25 +444,31 @@ def customise_project_task_resource(r, tablename):
 
     s3db = current.s3db
     db = current.db
+    T = current.T
+    crud_strings = current.response.s3.crud_strings
 
     if r.interactive:
         trimmed_task = False
         get_vars = r.get_vars
+        ADD_TASK = T("Create Task")
 
         # Check if it is a bug report
         if get_vars.get("bug"):
             tagname = "bug"
             trimmed_task = True
+            ADD_TASK = T("Report a Bug")
 
         # Check if it is a feature request
         elif get_vars.get("featureRequest"):
             tagname = "feature request"
             trimmed_task = True
+            ADD_TASK = T("Request a Feature")
 
         # Check if it is a support task
         elif get_vars.get("support"):
             tagname = "support"
             trimmed_task = True
+            ADD_TASK = T("Request Support")
 
         from s3.s3forms import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
         if trimmed_task:
@@ -482,7 +488,8 @@ def customise_project_task_resource(r, tablename):
                                fields = ["", "file"],
                            ),
                            ]
-
+    
+            crud_strings["project_task"]["label_create"] = ADD_TASK
             tagtable = s3db.project_tag
             query = (tagtable.deleted != True) & \
                     (tagtable.name == tagname)
