@@ -62,8 +62,11 @@
             this.input = $('#' + el.attr('field'));
 
             // Configure layout-dependend functions
-            // @todo: make customizable
             var layout = this._layout;
+            if ($.inlineComponentLayout) {
+                // Use custom script
+                layout = $.inlineComponentLayout;
+            }
             this._renderReadRow = layout.renderReadRow;
             this._appendError = layout.appendError;
             this._updateColumn = layout.updateColumn;
