@@ -1942,7 +1942,6 @@ def customise_gis_config_controller(**attr):
         auth = current.auth
         coalition = auth.user.org_group_id
 
-        from s3 import S3OptionsFilter
         if coalition:
             db = current.db
             utable = db.auth_user
@@ -1953,11 +1952,15 @@ def customise_gis_config_controller(**attr):
                     (utable.org_group_id == coalition)
             rows = db(query).select(ltable.pe_id,
                                     distinct = True)
-        else:
-            rows = None
+            if rows:
+                coalition_pe_ids = ",".join([str(row.pe_id) for row in rows] + \
+                                            [str(coalition)])
+            else:
+                coalition_pe_ids = str(coalition)
+                
 
-        if rows:
-            coalition_pe_ids = ",".join([str(row.pe_id) for row in rows])
+        from s3 import S3OptionsFilter
+        if coalition:
             filter_widgets = [
                 S3OptionsFilter("pe_id",
                                 label = "",
@@ -1987,6 +1990,7 @@ def customise_gis_config_controller(**attr):
             
         s3db.configure("gis_config",
                        filter_clear = False,
+                       filter_formstyle = filter_formstyle,
                        filter_widgets = filter_widgets,
                        )
 

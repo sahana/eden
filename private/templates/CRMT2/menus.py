@@ -113,7 +113,7 @@ class S3MainMenu(default.S3MainMenu):
                            **attr)(
                             MM("Your Maps", c="gis", f="config",
                                args="datalist",
-                               vars={"~.pe_id": auth.user.pe_id}),
+                               vars={"~.pe_id__belongs": auth.user.pe_id}),
                             MM("Admin Users", c="admin", f="user"),
                             MM("Edit Profile", m="profile"),
                             MM("Change Password", m="change_password"),

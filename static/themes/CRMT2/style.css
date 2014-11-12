@@ -197,7 +197,8 @@ table.dataTable .action-btn.read:before {
     overflow: visible;
 }
 .dl {
-    background: none repeat scroll 0 0 #ffffff;
+    background: none repeat scroll 0 0 #fff;
+    padding: 24px;
 }
 div.dl {
     border-bottom: 0;
@@ -211,10 +212,40 @@ div.dl {
 .dl-row.odd .dl-item {
     background-color: inherit;
 }
+.form-container form {
+    background-color: inherit;
+    border: 0;
+    padding: 0;
+}
+.form-container form tr td {
+    padding: 0;
+}
+#config-gis_config_pe_id-options-filter__row {
+    padding-left: 0;
+}
+#config-gis_config_pe_id-options-filter__row table.s3-groupedopts-widget {
+    background-color: #efefef;
+    margin-bottom: 0;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:first-child {
+    border-right: 0;
+    padding: 0;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget label {
+    background-color: #fff;
+    font-size: 1rem;
+    margin: 0;
+    padding: 1rem 2rem;
+    white-space: nowrap;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget label.inactive {
+    background-color: #efefef;
+}
 
 /* Share Stories page */
 .blog .dl {
     background-color: inherit;
+    padding: 0;
 }
 aside .form-container {
     overflow: visible;

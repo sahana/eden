@@ -32,7 +32,7 @@
    <a class='first' href='/{{=appname}}/gis/index'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-risks.png' alt='{{=T("See your risks")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("See your %(br)s risks") % dict(br = "<br>"))}}</a>
    <a class='second' href='/{{=appname}}/org/organisation/summary'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-community.png' alt='{{=T("Know your community")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Know your %(br)s community") % dict(br = "<br>"))}}</a>
    <a class='third' href='/{{=appname}}/org/organisation/summary'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-partners.png' alt='{{=T("Find new partners")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Find new %(br)s partners") % dict(br = "<br>"))}}</a>
-   <a class='fourth' href='/{{=appname}}/gis/config/datalist?~.pe_id={{=auth.user and auth.user.pe_id}}'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-maps.png' alt='{{=T("Share your maps")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Share your %(br)s maps") % dict(br = "<br>"))}}</a>
+   <a class='fourth' href='/{{=appname}}/gis/config/datalist?~.pe_id__belongs={{=auth.user and auth.user.pe_id}}'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-maps.png' alt='{{=T("Share your maps")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Share your %(br)s maps") % dict(br = "<br>"))}}</a>
   </h5>
  </div>     
  <div class='medium-12 large-4 large-offset-1 columns home-activities'>
