@@ -394,7 +394,9 @@ def organisation():
         query, orderby, left = resource.datatable_filter(list_fields, get_vars)
         if orderby is None:
             orderby = default_orderby
-
+        if query:
+            resource.add_filter(query)
+    
     data = resource.select(list_fields,
                            start=display_start,
                            limit=limit,
