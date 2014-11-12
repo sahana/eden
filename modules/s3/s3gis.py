@@ -1346,29 +1346,44 @@ class GIS(object):
 
         # If no id supplied, extend the site config with any personal or OU configs
         if not rows and not row:
-            # Read personalised config, if available.
             auth = current.auth
             if auth.is_logged_in():
+                # Read personalised config, if available.
                 user = auth.user
                 pe_id = user.pe_id
-                # OU configs
-                # List of roles to check (in order)
-                roles = ("Staff", "Volunteer")
-                role_paths = s3db.pr_get_role_paths(pe_id, roles=roles)
-                # Unordered list of PEs
-                pes = ()
-                for role in roles:
-                    if role in role_paths:
-                        # @ToDo: Allow selection of which OU a person's config should inherit from for disambiguation
-                        # - store in s3db.gis_config?
-                        # - needs a method in gis_config_form_setup() to populate the dropdown from the OUs (in this person's Path for this person's,  would have to be a dynamic lookup for Admins)
-                        pes = role_paths[role].nodes()
-                        # Staff don't check Volunteer's OUs
-                        break
-                if current.deployment_settings.get_auth_registration_requests_organisation_group() and \
-                   user.org_group_id:
-                    # Add the user account's Org Group the list
-                    # (Will take lower-priority than Site/Org)
+                # Also look for OU configs
+                pes = []
+                if user.organisation_id:
+                    # Add the user account's Org to the list
+                    # (Will take lower-priority than Personal)
+                    otable = s3db.org_organisation
+                    org = db(otable.id == user.organisation_id).select(otable.pe_id,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                    try:
+                        pes.append(org.pe_id)
+                    except:
+                        current.log.warning("Unable to find Org %s" % user.organisation_id)
+                    if current.deployment_settings.get_org_branches():
+                        # Also look for Parent Orgs
+                        ancestors = s3db.pr_get_ancestors(org.pe_id)
+                        pes += ancestors
+
+                if user.site_id:
+                    # Add the user account's Site to the list
+                    # (Will take lower-priority than Org/Personal)
+                    stable = s3db.org_site
+                    site = db(stable.site_id == user.site_id).select(stable.pe_id,
+                                                                     limitby=(0, 1)
+                                                                     ).first()
+                    try:
+                        pes.append(site.pe_id)
+                    except:
+                        current.log.warning("Unable to find Site %s" % user.site_id)
+
+                if user.org_group_id:
+                    # Add the user account's Org Group to the list
+                    # (Will take lower-priority than Site/Org/Personal)
                     ogtable = s3db.org_group
                     ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
                                                                         limitby=(0, 1)
@@ -1382,19 +1397,18 @@ class GIS(object):
                 query = (ctable.uuid == "SITE_DEFAULT") | \
                         ((ctable.pe_id == pe_id) & \
                          (ctable.pe_default != False))
-                len_pes = len(pes)
-                if len_pes == 1:
+                if len(pes) == 1:
                     query |= (ctable.pe_id == pes[0])
-                elif len_pes:
+                else:
                     query |= (ctable.pe_id.belongs(pes))
-                # Personal may well not be complete, so Left Join
+                # Personal/OU may well not be complete, so Left Join
                 left = (ptable.on(ptable.id == ctable.projection_id),
                         stable.on((stable.config_id == ctable.id) & \
                                   (stable.layer_id == None)),
                         mtable.on(mtable.id == stable.marker_id),
                         )
                 # Order by pe_type (defined in gis_config)
-                # @ToDo: Do this purely from the hierarchy
+                # @ToDo: Sort orgs from the hierarchy?
                 rows = db(query).select(*fields,
                                         left=left,
                                         orderby=ctable.pe_type)
