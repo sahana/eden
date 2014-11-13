@@ -1764,7 +1764,7 @@ def customise_cms_post_controller(**attr):
 
         # Custom Form
         from gluon import IS_NOT_EMPTY
-        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox, S3SQLInlineLink
+        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         # Not yet working Inline
         #s3db.doc_image.file.widget = S3ImageCropWidget((400, 240))
         s3db.doc_image.file.widget = None
@@ -1778,11 +1778,11 @@ def customise_cms_post_controller(**attr):
                                                textarea=True)
         crud_form = S3SQLCustomForm("title",
                                     S3SQLInlineLink("tag",
-                                                   cols = 4,
-                                                   label = T("Topic(s)"),
-                                                   field = "tag_id",
-                                                   translate = True,
-                                                   ),
+                                                    cols = 4,
+                                                    label = T("Topic(s)"),
+                                                    field = "tag_id",
+                                                    translate = True,
+                                                    ),
                                     "body",
                                     "comments",
                                     S3SQLInlineComponent(
