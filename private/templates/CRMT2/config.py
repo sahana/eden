@@ -1023,7 +1023,7 @@ def customise_org_organisation_controller(**attr):
             if method in ("summary", "report"):
 
                 # Filter form
-                from s3 import S3OptionsFilter, S3TextFilter, S3HierarchyFilter
+                from s3 import S3Represent, S3OptionsFilter, S3TextFilter, S3HierarchyFilter
                 filter_widgets = [S3TextFilter(["name",
                                                 "group_membership.group_id",
                                                 "sector_organisation.sector_id",
@@ -1045,6 +1045,10 @@ def customise_org_organisation_controller(**attr):
                                   S3HierarchyFilter("service_organisation.service_id",
                                                     label = T("Service"),
                                                     header = True,
+                                                    represent = S3Represent(lookup="org_service",
+                                                                            # Disable the Hierarchy here as ugly
+                                                                            #hierarchy = True,
+                                                                            translate = True),
                                                     ),
                                   #S3HierarchyFilter("organisation_organisation_type.organisation_type_id",
                                   #                  label = T("Type of Organization"),
@@ -1155,7 +1159,7 @@ def customise_org_organisation_controller(**attr):
                 # Organisation's Resources
                 #s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
 
-                # Services show hierarchy in represent
+                # Services show hierarchy in dataTables represent
                 s3db.org_service_organisation.service_id.represent = S3Represent(lookup="org_service",
                                                                                  hierarchy = True,
                                                                                  translate = True)
