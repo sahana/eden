@@ -282,6 +282,18 @@ aside .form-container input[type=radio] + label:before {
     border-radius: 5px;
 }
 
+/* Inline Components */
+.inline-actions > div {
+    float: left;
+    margin-left: 6px;
+}
+.inline-form button.ui-multiselect {
+    margin-bottom: 0;
+}
+.embeddedComponent {
+    margin-bottom: 1.25rem;
+}
+
 /* END */
 
 .row .row {

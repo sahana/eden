@@ -68,6 +68,7 @@
                 layout = $.inlineComponentLayout;
             }
             this._renderReadRow = layout.renderReadRow;
+            this._appendReadRow = layout.appendReadRow;
             this._appendError = layout.appendError;
             this._updateColumn = layout.updateColumn;
 
@@ -200,6 +201,17 @@
                 row.empty().html(columns);
 
                 return row;
+            },
+
+            /**
+             * Append a new read-row to the inline component
+             * 
+             * @param {string} formname - the formname
+             * @param {jQuery} row - the row to append
+             */
+            appendReadRow: function(formname, row) {
+
+                $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(row);
             },
 
             /**
@@ -368,7 +380,8 @@
                 value,
                 cssclass,
                 intvalue,
-                fields = data['fields'];
+                fields = data['fields'],
+                upload_index;
             for (var i=0; i < fields.length; i++) {
                 fieldname = fields[i]['name'];
                 selector = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
@@ -665,8 +678,10 @@
                         input.prop('checked', value);
                     } else {
                         input.val(value);
-                        if (input.hasClass('multiselect-widget')) {
+                        if (input.hasClass('multiselect-widget') && typeof input.multiselect != 'undefined') {
                             input.multiselect('refresh');
+                        } else if (input.hasClass('groupedopts-widget') && typeof input.groupedopts != 'undefined') {
+                            input.groupedopts('refresh');
                         } else {
                             // Populate text in autocompletes
                             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
@@ -827,8 +842,13 @@
                         } else {
                             default_value = d.val();
                             f.val(default_value);
+                            // Update widgets
                             if (f.attr('type') == 'checkbox') {
                                 f.prop('checked', d.prop('checked'));
+                            } else if (f.hasClass('multiselect-widget') && typeof f.multiselect != 'undefined') {
+                                f.multiselect('refresh');
+                            } else if (f.hasClass('groupedopts-widget') && typeof f.groupedopts != 'undefined') {
+                                f.groupedopts('refresh');
                             }
                         }
                         default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
@@ -839,7 +859,9 @@
 
                     // Render new read row and append to container
                     var read_row = this._renderReadRow(formname, newindex, items);
-                    $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
+
+                    // Append read-row
+                    this._appendReadRow(formname, read_row);
                 }
             }
 
@@ -1332,12 +1354,17 @@
             // Form events
             var inputs = 'input',
                 textInputs = 'input[type="text"],input[type="file"],textarea',
-                otherInputs = 'input[type!="text"],select',
+                fileInputs = 'input[type="file"]',
+                otherInputs = 'input[type!="text"][type!="file"],select',
                 multiSelects = 'select.multiselect-widget';
 
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
                 $this.find(textInputs).bind('input' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+                $this.find(fileInputs).bind('change' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit(this);
                 });

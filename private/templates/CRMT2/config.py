@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import S3DataListLayout, s3_unicode
+from s3 import S3DataListLayout, s3_unicode, S3SQLSubFormLayout
 
 T = current.T
 settings = current.deployment_settings
@@ -187,7 +187,7 @@ settings.search.filter_manager = False
 # -----------------------------------------------------------------------------
 # Filter forms - style for Summary pages
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
-    return DIV(label, widget, comment, 
+    return DIV(label, widget, comment,
                _id=row_id,
                _class="large-3 columns")
 
@@ -765,7 +765,7 @@ def customise_project_activity_controller(**attr):
                     fields = [("", "file"),
                               ],
                     comment =  DIV(_class="tooltip",
-                                   _title="%s|%s" % 
+                                   _title="%s|%s" %
                                           (T("Files"),
                                            T("Upload Photos, Promotional Material, Documents or Reports related to the Activity")
                                            )
@@ -781,7 +781,7 @@ def customise_project_activity_controller(**attr):
                            delete_next = r.url(method="summary", id=0),
                            update_next = r.url(method="summary", id=0),
                            )
-            
+
             if method in ("summary", "report"):
                 from s3 import S3OptionsFilter, S3DateFilter
                 filter_widgets = [S3OptionsFilter("activity_group.group_id",
@@ -926,7 +926,7 @@ def customise_org_organisation_controller(**attr):
     standard_prep = s3.prep
 
     def custom_prep(r):
-        
+
         # Call standard prep
         if callable(standard_prep):
             result = standard_prep(r)
@@ -986,7 +986,7 @@ def customise_org_organisation_controller(**attr):
                            )
 
         if (r.interactive or r.representation == "json") and not r.component:
-            
+
             # CRUD Strings / Represent
             s3.crud_strings[tablename].update(
                 label_create = T("Add Organization"),
@@ -1084,7 +1084,7 @@ def customise_org_organisation_controller(**attr):
 
             # Custom CRUD Form
             if not current.auth.is_logged_in():
-                
+
                 # Anonymous user creating Org: Keep Simple
                 from s3 import S3SQLCustomForm
                 crud_form = S3SQLCustomForm("name",
@@ -1103,6 +1103,7 @@ def customise_org_organisation_controller(**attr):
                                "logo",
                                S3SQLInlineComponent(
                                     "group_membership",
+                                    columns = (3, 3),
                                     label = T("Coalition"),
                                     fields = [("", "group_id"),
                                               ("", "status_id"),
@@ -1125,7 +1126,7 @@ def customise_org_organisation_controller(**attr):
                                #S3SQLInlineComponent(
                                #     "resource",
                                #     label = T("Organization's Resources"),
-                               #     fields = ["parameter_id", 
+                               #     fields = ["parameter_id",
                                #               "value",
                                #               "comments",
                                #               ],
@@ -1135,12 +1136,13 @@ def customise_org_organisation_controller(**attr):
                                S3SQLInlineComponent(
                                     "contact",
                                     name = "twitter",
-                                    label = T("Twitter"),
-                                    multiple = False,
+                                    columns = (10,),
                                     fields = [("", "value")],
                                     filterby = dict(field = "contact_method",
                                                     options = "TWITTER"
-                                                    )
+                                                    ),
+                                    label = T("Twitter"),
+                                    multiple = False,
                                     ),
                                "comments",
                                ]
@@ -1203,7 +1205,7 @@ def customise_org_organisation_controller(**attr):
                                                              show_address=True,
                                                              show_postcode=True,
                                                              )
-                
+
                 # Human resource (currently only in read because S3AddPersonWidget
                 # not working inside inline component => consider HRAutoComplete
                 # with AddResourceLink instead?)
@@ -1282,7 +1284,7 @@ def customise_org_organisation_controller(**attr):
     #                                        )
     #    return output
     #s3.postp = custom_postp
-    
+
     # Remove rheader
     attr["rheader"] = None
 
@@ -1686,14 +1688,15 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                      vars={"tag_post.tag_id__belongs": tag_id}),
                            ).xml())
             index += 1
-        tags = H6(XML(s3_unicode(T("More about %(tags)s")) % dict(tags=" | ".join(_tags))))
+        tags = H6(XML(s3_unicode(T("More about %(tags)s") % dict(tags=" | ".join(_tags)))))
     else:
         tags = ""
 
     item = TAG.article(H2(A(title,
                             _href=URL(c="cms", f="post",
-                                      args="datalist",
-                                      vars={"~.id": record_id}),
+                                      args=[record_id], #"datalist",
+                                      #vars={"~.id": record_id},
+                                      ),
                             ),
                           ),
                        H6(author,
@@ -1767,8 +1770,7 @@ def customise_cms_post_controller(**attr):
 
         # Custom Form
         from gluon import IS_NOT_EMPTY
-        #S3SQLInlineLink
-        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         # Not yet working Inline
         #s3db.doc_image.file.widget = S3ImageCropWidget((400, 240))
         s3db.doc_image.file.widget = None
@@ -1781,31 +1783,25 @@ def customise_cms_post_controller(**attr):
         table.comments.widget = S3StringWidget(placeholder=T("What strategies, tactics, or lessons did you learn? (Up to 200 words)"),
                                                textarea=True)
         crud_form = S3SQLCustomForm("title",
-                                    # Not working
-                                    #S3SQLInlineLink("tag",
-                                    #                cols = 4,
-                                    #                label = T("Topic(s)"),
-                                    #                field = "tag_id",
-                                    #                ),
-                                    S3SQLInlineComponentCheckbox("tag",
-                                                                 cols = 4,
-                                                                 label = T("Topic(s)"),
-                                                                 field = "tag_id",
-                                                                 translate = True,
-                                                                 ),
+                                    S3SQLInlineLink("tag",
+                                                    cols = 4,
+                                                    label = T("Topic(s)"),
+                                                    field = "tag_id",
+                                                    translate = True,
+                                                    ),
                                     "body",
                                     "comments",
                                     S3SQLInlineComponent(
                                             "image",
                                             #name = "image",
-                                            label = T("Add an Image"),
-                                            multiple = False,
+                                            columns = (4,),
                                             fields = [("", "file"),
                                                       #"comments",
                                                       ],
                                             ),
+                                            label = T("Add an Image"),
+                                            multiple = False,
                                     )
-
         s3.cancel = A(T("Cancel"),
                       _class="button small secondary cancel",
                       _href=r.url(method="datalist", id=0),
@@ -1963,7 +1959,7 @@ def customise_gis_config_controller(**attr):
                                             [str(coalition)])
             else:
                 coalition_pe_ids = str(coalition)
-                
+
 
         from s3 import S3OptionsFilter
         if coalition:
@@ -1993,7 +1989,7 @@ def customise_gis_config_controller(**attr):
                                 sort = False,
                                 )
                 ]
-            
+
         s3db.configure("gis_config",
                        filter_clear = False,
                        filter_formstyle = filter_formstyle,
@@ -2151,6 +2147,7 @@ def customise_gis_poi_controller(**attr):
                                         "organisation_id",
                                         S3SQLInlineComponent(
                                             "poi_group",
+                                            columns = (4,),
                                             label = T("Coalition"),
                                             fields = [("", "group_id")],
                                             multiple = False,
@@ -2173,6 +2170,245 @@ def customise_gis_poi_controller(**attr):
     return attr
 
 settings.customise_gis_poi_controller = customise_gis_poi_controller
+
+# =============================================================================
+class CRMTSubFormLayout(S3SQLSubFormLayout):
+    """ Custom Layout for S3SQLInlineComponent """
+
+    # -------------------------------------------------------------------------
+    def subform(self,
+                data,
+                item_rows,
+                action_rows,
+                empty=False,
+                readonly=False):
+        """
+            Outer container for the subform
+
+            @param data: the data dict (as returned from extract())
+            @param item_rows: the item rows
+            @param action_rows: the (hidden) action rows
+            @param empty: no data in this component
+            @param readonly: render read-only
+        """
+
+        if empty:
+            subform = current.T("No entries currently available")
+        else:
+            subform = DIV(_class="embeddedComponent")
+            headers = self.headers(data, readonly=readonly)
+            if headers:
+                subform.append(headers)
+            subform.append(DIV(item_rows, _class="inline-items"))
+            if action_rows:
+                subform.append(DIV(action_rows, _class="inline-edit"))
+        return subform
+
+    # -------------------------------------------------------------------------
+    def readonly(self, resource, data):
+        """
+            Render this component read-only (table-style)
+
+            @param resource: the S3Resource
+            @param data: the data dict (as returned from extract())
+        """
+
+        audit = current.audit
+        prefix, name = resource.prefix, resource.name
+
+        xml_decode = current.xml.xml_decode
+
+        items = data["data"]
+        fields = data["fields"]
+
+        item_rows = []
+
+        columns = self.columns
+        for item in items:
+            if "_id" in item:
+                record_id = item["_id"]
+            else:
+                continue
+            audit("read", prefix, name,
+                  record=record_id, representation="html")
+            # Render a read-row
+            row = DIV(_class="read-row row")
+            for i, f in enumerate(fields):
+                # Determine column width
+                if columns and len(columns) > i:
+                    width = columns[i]
+                else:
+                    width = 1
+                column_class = "small-%s columns" % width
+                # Last column?
+                if i == len(fields) - 1:
+                    column_class = "%s end" % column_class
+                # Add the column to the row
+                text = xml_decode(item[f["name"]]["text"])
+                row.append(DIV(XML(xml_decode(text)),
+                               _class=column_class,
+                               ))
+            # Append the row
+            item_rows.append(row)
+
+        return self.subform(data, item_rows, [], empty=False, readonly=True)
+
+    # -------------------------------------------------------------------------
+    def headers(self, data, readonly=False):
+        """
+            Render the header row with field labels
+
+            @param data: the input field data as Python object
+            @param readonly: whether the form is read-only
+            @param attributes: HTML attributes for the header row
+        """
+
+        fields = data["fields"]
+
+        # Don't render a header row if there are no labels
+        render_header = False
+        header_row = DIV(_class="label-row row")
+
+        happend = header_row.append
+        numfields = len(fields)
+        columns = self.columns
+        for i, f in enumerate(fields):
+            label = f["label"]
+            if label:
+                render_header = True
+            # Determine column width
+            if columns and len(columns) > i:
+                width = columns[i]
+            else:
+                width = 1
+            column_class = "small-%s columns" % width
+            # Last column?
+            if i == len(fields) - 1:
+                column_class = "%s end" % column_class
+            label = DIV(LABEL(label), _class=column_class)
+            happend(label)
+
+        if render_header:
+            return DIV(header_row)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def actions(subform,
+                formname,
+                index,
+                item = None,
+                readonly=True,
+                editable=True,
+                deletable=True):
+        """
+            Render subform row actions into the row
+
+            @param subform: the subform row
+            @param formname: the form name
+            @param index: the row index
+            @param item: the row data
+            @param readonly: this is a read-row
+            @param editable: this row is editable
+            @param deletable: this row is deletable
+        """
+
+        T = current.T
+        action_id = "%s-%s" % (formname, index)
+
+        # Action button helper
+        def action(title, name, throbber=False):
+            btn = DIV(_id="%s-%s" % (name, action_id),
+                      _class="inline-%s" % name)
+            if throbber:
+                return DIV(btn,
+                        DIV(_class="inline-throbber hide",
+                            _id="throbber-%s" % action_id))
+            else:
+                return DIV(btn)
+
+        # Render the action icons for this row
+        action_col = DIV(_class="inline-actions small-1 columns end")
+        append = action_col.append
+        if readonly:
+            if editable:
+                append(action(T("Edit this entry"), "edt"))
+            if deletable:
+                append(action(T("Remove this entry"), "rmv"))
+        else:
+            if index != "none" or item:
+                append(action(T("Update this entry"), "rdy", throbber=True))
+                append(action(T("Cancel editing"), "cnc"))
+            else:
+                append(action(T("Add this entry"), "add", throbber=True))
+        subform.append(action_col)
+
+    # -------------------------------------------------------------------------
+    def rowstyle(self, form, fields, *args, **kwargs):
+        """
+            Formstyle for subform rows
+        """
+
+        def render_col(col_id, label, widget, comment, width=None, end=False):
+
+            # Render column
+            if comment:
+                col = DIV(DIV(widget, comment), _id=col_id)
+            else:
+                col = DIV(widget, _id=col_id)
+            # Add CSS class for column width
+            if width:
+                column_class = "small-%s columns" % width
+                if end:
+                    column_class = "%s end" % column_class
+                col.add_class(column_class)
+            return col
+
+        if args:
+            col_id = form
+            label = fields
+            widget, comment = args
+            return render_col(col_id, label, widget, comment)
+        else:
+            # Parent is always a row
+            parent = DIV(_class="row")
+            columns = self.columns
+            row_actions = self.row_actions
+            for i, (col_id, label, widget, comment) in enumerate(fields):
+                # Determine column width
+                if columns and len(columns) > i:
+                    width = columns[i]
+                else:
+                    width = 1
+                # Last column?
+                end = not row_actions and i == len(fields) - 1
+                # Render and append column
+                parent.append(render_col(col_id,
+                                         label,
+                                         widget,
+                                         comment,
+                                         width=width,
+                                         end=end,
+                                         ))
+            return parent
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script():
+        """ Inject custom JS to render new read-rows """
+
+        appname = current.request.application
+        scripts = current.response.s3.scripts
+
+        # @todo: support minified script in non-debug mode
+        script = "/%s/static/themes/CRMT2/js/inlinecomponent.layout.js" % appname
+        if script not in scripts:
+            scripts.append(script)
+        return
+
+# Configure this layout for this template
+settings.ui.inline_component_layout = CRMTSubFormLayout
 
 # =============================================================================
 class OrganisationProfileLayout(S3DataListLayout):
@@ -2201,7 +2437,7 @@ class OrganisationProfileLayout(S3DataListLayout):
         tablename = resource.tablename
         if tablename == "org_facility":
             icon_class = "icon-globe"
-            title = record["org_facility.location_id"] 
+            title = record["org_facility.location_id"]
         else:
             icon_class = "icon"
             title = ""
@@ -2257,7 +2493,7 @@ class OrganisationProfileLayout(S3DataListLayout):
         crud_string = S3Method.crud_string
 
         toolbox = DIV(_class="edit-bar fright")
-        
+
         if update_url and \
            has_permission("update", table,
                           record_id=record_id, c="org", f="facility"):
@@ -2279,7 +2515,7 @@ class OrganisationProfileLayout(S3DataListLayout):
                     _class="dl-item-delete",
                     _title=crud_string(tablename, "label_delete_button"))
             toolbox.append(btn)
-            
+
         return toolbox
 
 # =============================================================================
