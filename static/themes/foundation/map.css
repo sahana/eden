@@ -19,6 +19,10 @@
     padding: 0;
 }
 
+.map_legend_tab.right{
+    float: left !important;
+}
+
 /* Over-ride Style */
 #contents .map_wrapper a:not(.action-btn):not(.delete-btn) {
     text-decoration: none;

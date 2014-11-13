@@ -1,0 +1,47 @@
+/* Main Map */
+
+.map_home {
+    margin: 0;
+}
+.gis_fullscreen_map-btn {
+    display: none;
+}
+
+.map_save_button,
+.map_save_panel,
+.map_legend_tab,
+.map_legend_panel {
+    border: 1px solid #d0d0d0;
+}
+
+.x-panel-header {
+    background-image: -moz-linear-gradient(center top , #f9f9f9, #f2f2f2);
+    color: #656665;
+    font: 18px/18px "Open Sans",sans-serif;
+    text-indent: 4px;
+    text-transform: uppercase;
+}
+
+.map_legend_tab.right{
+    float: left !important;
+}
+
+/* Hide the large legend for the Floods layer */
+.map_legend_div {
+    max-width: 400px;
+}
+
+/* Increase Layer Fonts */
+.x-tree-root-node > .x-tree-node > .x-unselectable > a.x-tree-node-anchor span {
+    color: #656665;
+    font: normal 18px/30px 'Open Sans',sans-serif;
+    padding-left: 0;
+}
+.x-tree-root-node > .x-tree-node > .x-unselectable > img {
+    margin: 4px 0 0 4px;
+}
+
+.x-tree-node a.x-tree-node-anchor span {
+    color: #656665;
+    font: 14px/18px "Open Sans",sans-serif;
+}

@@ -18,12 +18,6 @@ header.row {
     padding: 0;
 }
 
-.map_home {
-    margin: 0;
-}
-.gis_fullscreen_map-btn {
-    display: none;
-}
 .x-btn button {
     background-color: #f0f0f0;
 }

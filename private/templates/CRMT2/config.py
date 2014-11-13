@@ -121,7 +121,7 @@ settings.ui.hierarchy_theme = dict(css = "../themes/CRMT2",
                                    stripes = False,
                                    )
 # Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
-settings.ui.multiselect_widget = True
+settings.ui.multiselect_widget = "search"
 settings.ui.use_button_icons = True
 # Uncomment to disable responsive behavior of datatables
 # - Disabled until tested
@@ -979,10 +979,10 @@ def customise_org_organisation_controller(**attr):
                            ]
 
             s3db.configure(tablename,
-                           list_fields = list_fields,
                            # Hide Open & Delete dataTable action buttons
                            deletable = False,
                            editable = False,
+                           list_fields = list_fields,
                            )
 
         if (r.interactive or r.representation == "json") and not r.component:
@@ -1097,7 +1097,8 @@ def customise_org_organisation_controller(**attr):
 
             elif method in ("read", "create", "update", "summary", "import", "profile"):
 
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
+                from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent, \
+                               S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
                 form_fields = ["name",
                                "logo",
                                S3SQLInlineComponent(
@@ -1151,6 +1152,11 @@ def customise_org_organisation_controller(**attr):
 
                 # Organisation's Resources
                 #s3db.org_resource.parameter_id.widget = S3MultiSelectWidget(multiple=False)
+
+                # Services show hierarchy in represent
+                s3db.org_service_organisation.service_id.represent = S3Represent(lookup="org_service",
+                                                                                 hierarchy = True,
+                                                                                 translate = True)
 
                 # Coalition Memberships
                 mtable = s3db.org_group_membership
