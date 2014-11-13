@@ -1102,11 +1102,11 @@ def customise_org_organisation_controller(**attr):
                                "logo",
                                S3SQLInlineComponent(
                                     "group_membership",
+                                    columns = (3, 3),
                                     label = T("Coalition"),
                                     fields = [("", "group_id"),
                                               ("", "status_id"),
                                               ],
-                                    columns = (3, 3),
                                     ),
                                S3SQLInlineComponentMultiSelectWidget(
                                     "sector",
@@ -1135,13 +1135,13 @@ def customise_org_organisation_controller(**attr):
                                S3SQLInlineComponent(
                                     "contact",
                                     name = "twitter",
-                                    label = T("Twitter"),
-                                    multiple = False,
+                                    columns = (10,),
                                     fields = [("", "value")],
                                     filterby = dict(field = "contact_method",
                                                     options = "TWITTER"
                                                     ),
-                                    columns = (10,),
+                                    label = T("Twitter"),
+                                    multiple = False,
                                     ),
                                "comments",
                                ]
@@ -1788,13 +1788,13 @@ def customise_cms_post_controller(**attr):
                                     S3SQLInlineComponent(
                                             "image",
                                             #name = "image",
-                                            label = T("Add an Image"),
-                                            multiple = False,
+                                            columns = (4,),
                                             fields = [("", "file"),
                                                       #"comments",
                                                       ],
-                                            columns = (4,),
                                             ),
+                                            label = T("Add an Image"),
+                                            multiple = False,
                                     )
         s3.cancel = A(T("Cancel"),
                       _class="button small secondary cancel",
@@ -2141,6 +2141,7 @@ def customise_gis_poi_controller(**attr):
                                         "organisation_id",
                                         S3SQLInlineComponent(
                                             "poi_group",
+                                            columns = (4,),
                                             label = T("Coalition"),
                                             fields = [("", "group_id")],
                                             multiple = False,
