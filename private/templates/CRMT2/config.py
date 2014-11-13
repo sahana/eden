@@ -1682,14 +1682,15 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                      vars={"tag_post.tag_id__belongs": tag_id}),
                            ).xml())
             index += 1
-        tags = H6(XML(s3_unicode(T("More about %(tags)s")) % dict(tags=" | ".join(_tags))))
+        tags = H6(XML(s3_unicode(T("More about %(tags)s") % dict(tags=" | ".join(_tags)))))
     else:
         tags = ""
 
     item = TAG.article(H2(A(title,
                             _href=URL(c="cms", f="post",
-                                      args="datalist",
-                                      vars={"~.id": record_id}),
+                                      args=[record_id], #"datalist",
+                                      #vars={"~.id": record_id},
+                                      ),
                             ),
                           ),
                        H6(author,
@@ -1763,8 +1764,7 @@ def customise_cms_post_controller(**attr):
 
         # Custom Form
         from gluon import IS_NOT_EMPTY
-        #S3SQLInlineLink
-        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox
+        from s3 import S3ImageCropWidget, S3StringWidget, S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentCheckbox, S3SQLInlineLink
         # Not yet working Inline
         #s3db.doc_image.file.widget = S3ImageCropWidget((400, 240))
         s3db.doc_image.file.widget = None
@@ -1777,18 +1777,12 @@ def customise_cms_post_controller(**attr):
         table.comments.widget = S3StringWidget(placeholder=T("What strategies, tactics, or lessons did you learn? (Up to 200 words)"),
                                                textarea=True)
         crud_form = S3SQLCustomForm("title",
-                                    # Not working
-                                    #S3SQLInlineLink("tag",
-                                    #                cols = 4,
-                                    #                label = T("Topic(s)"),
-                                    #                field = "tag_id",
-                                    #                ),
-                                    S3SQLInlineComponentCheckbox("tag",
-                                                                 cols = 4,
-                                                                 label = T("Topic(s)"),
-                                                                 field = "tag_id",
-                                                                 translate = True,
-                                                                 ),
+                                    S3SQLInlineLink("tag",
+                                                   cols = 4,
+                                                   label = T("Topic(s)"),
+                                                   field = "tag_id",
+                                                   translate = True,
+                                                   ),
                                     "body",
                                     "comments",
                                     S3SQLInlineComponent(
@@ -1799,9 +1793,9 @@ def customise_cms_post_controller(**attr):
                                             fields = [("", "file"),
                                                       #"comments",
                                                       ],
+                                            columns = (4,),
                                             ),
                                     )
-
         s3.cancel = A(T("Cancel"),
                       _class="button small secondary cancel",
                       _href=r.url(method="datalist", id=0),

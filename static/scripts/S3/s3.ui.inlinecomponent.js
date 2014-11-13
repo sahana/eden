@@ -380,7 +380,8 @@
                 value,
                 cssclass,
                 intvalue,
-                fields = data['fields'];
+                fields = data['fields'],
+                upload_index;
             for (var i=0; i < fields.length; i++) {
                 fieldname = fields[i]['name'];
                 selector = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
@@ -1353,12 +1354,17 @@
             // Form events
             var inputs = 'input',
                 textInputs = 'input[type="text"],input[type="file"],textarea',
-                otherInputs = 'input[type!="text"],select',
+                fileInputs = 'input[type="file"]',
+                otherInputs = 'input[type!="text"][type!="file"],select',
                 multiSelects = 'select.multiselect-widget';
 
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
                 $this.find(textInputs).bind('input' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+                $this.find(fileInputs).bind('change' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit(this);
                 });
