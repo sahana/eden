@@ -1595,15 +1595,29 @@ class SKIP_POST_VALIDATION(Validator):
 # =============================================================================
 class S3SQLSubFormLayout(object):
     """ Layout for S3SQLInlineComponent (Base Class) """
-    
+
     def __init__(self):
         """ Constructor """
 
         self.inject_script()
+        self.columns = None
+        self.row_actions = True
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def subform(cls,
+    def set_columns(self, columns, row_actions=True):
+        """
+            Set column widths for inline-widgets, can be used by subclasses
+            to render CSS classes for grid-width
+
+            @param columns: iterable of column widths
+            @param actions: whether the subform contains an action column
+        """
+
+        self.columns = columns
+        self.row_actions = row_actions
+
+    # -------------------------------------------------------------------------
+    def subform(self,
                 data,
                 item_rows,
                 action_rows,
@@ -1619,10 +1633,10 @@ class S3SQLSubFormLayout(object):
             @param readonly: render read-only
         """
 
-        headers = cls.headers(data, readonly=readonly)
         if empty:
             subform = current.T("No entries currently available")
         else:
+            headers = self.headers(data, readonly=readonly)
             subform = TABLE(headers,
                             TBODY(item_rows),
                             TFOOT(action_rows),
@@ -1631,8 +1645,7 @@ class S3SQLSubFormLayout(object):
         return subform
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def readonly(cls, resource, data):
+    def readonly(self, resource, data):
         """
             Render this component read-only (table-style)
 
@@ -1648,9 +1661,6 @@ class S3SQLSubFormLayout(object):
         items = data["data"]
         fields = data["fields"]
 
-        # Render as table with each item in an individual row (+headers)
-        thead = cls.headers(data, readonly=True)
-
         trs = []
         for item in items:
             if "_id" in item:
@@ -1665,11 +1675,11 @@ class S3SQLSubFormLayout(object):
                 trow.append(XML(xml_decode(text)))
             trs.append(trow)
 
-        return cls.subform(data, trs, [], empty=False, readonly=True)
+        return self.subform(data, trs, [], empty=False, readonly=True)
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def render_list(cls, resource, data):
+    @staticmethod
+    def render_list(resource, data):
         """
             Render this component read-only (list-style)
 
@@ -1693,18 +1703,18 @@ class S3SQLSubFormLayout(object):
             else:
                 continue
             audit("read", prefix, name,
-                    record=record_id, representation="html")
+                  record=record_id, representation="html")
             t = []
             for f in fields:
                 t.append([XML(xml_decode(item[f["name"]]["text"])), " "])
             elements.append([TAG[""](list(chain.from_iterable(t))[:-1]), ", "])
 
         return DIV(list(chain.from_iterable(elements))[:-1],
-                    _class="embeddedComponent")
+                   _class="embeddedComponent",
+                   )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def headers(data, readonly=False):
+    def headers(self, data, readonly=False):
         """
             Render the header row with field labels
 
@@ -1736,9 +1746,8 @@ class S3SQLSubFormLayout(object):
             return THEAD(_class="hide")
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def actions(cls,
-                subform,
+    @staticmethod
+    def actions(subform,
                 formname,
                 index,
                 item = None,
@@ -1792,8 +1801,7 @@ class S3SQLSubFormLayout(object):
                 append(action(T("Add this entry"), "add", throbber=True))
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def rowstyle(form, fields, *args, **kwargs):
+    def rowstyle(self, form, fields, *args, **kwargs):
         """
             Formstyle for subform rows
         """
@@ -2173,8 +2181,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
         has_permission = current.auth.s3_has_permission
         tablename = component.tablename
 
-        # @todo: make configurable
+        # Configure the layout
         layout = current.deployment_settings.get_ui_inline_component_layout()
+        columns = self.options.get("columns")
+        if columns:
+            layout.set_columns(columns, row_actions = multiple)
 
         get_config = current.s3db.get_config
         _editable = get_config(tablename, "editable")
@@ -2338,6 +2349,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                      _class = "inline-component",
                      )
 
+        # Reset the layout
+        layout.set_columns(None)
+
         return output
 
     # -------------------------------------------------------------------------
@@ -2361,12 +2375,20 @@ class S3SQLInlineComponent(S3SQLSubForm):
         component = resource.components[data["component"]]
 
         layout = current.deployment_settings.get_ui_inline_component_layout()
+        columns = self.options.get("columns")
+        if columns:
+            layout.set_columns(columns, row_actions=False)
 
         fields = data["fields"]
         if len(fields) == 1 and self.options.get("render_list", False):
-            return layout.render_list(component, data)
+            output = layout.render_list(component, data)
         else:
-            return layout.readonly(component, data)
+            output = layout.readonly(component, data)
+
+        # Reset the layout
+        layout.set_columns(None)
+
+        return output
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):
@@ -2670,6 +2692,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         elif pkey not in data:
             data[pkey] = None
 
+        # Render the subform
         subform_name = "sub_%s" % formname
         subform = SQLFORM.factory(*formfields,
                                   record=data,
@@ -2680,9 +2703,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                   table_name=subform_name,
                                   submit = False,
                                   buttons = [])
-
         subform = subform[0]
+
+        # Retain any CSS classes added by the layout
+        subform_class = subform["_class"]
         subform.update(**attributes)
+        if subform_class:
+            subform.add_class(subform_class)
 
         if multiple:
             # Render row actions

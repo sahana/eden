@@ -2466,12 +2466,12 @@ class S3ImageCropWidget(FormWidget):
         T = current.T
 
         script_dir = "/%s/static/scripts" % current.request.application
-        
+
         s3 = current.response.s3
         debug = s3.debug
         scripts = s3.scripts
         settings = current.deployment_settings
-        
+
         if debug:
             script = "%s/jquery.color.js" % script_dir
             if script not in scripts:
@@ -2489,11 +2489,11 @@ class S3ImageCropWidget(FormWidget):
 
         s3.js_global.append('''
 i18n.invalid_image='%s'
-i18n.supported_image_formats='%s' 
+i18n.supported_image_formats='%s'
 i18n.upload_new_image='%s'
 i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
                               T("Supported formats"),
-                              T("Upload different Image"),  
+                              T("Upload different Image"),
                               T("Upload Image")))
 
         stylesheets = s3.stylesheets
@@ -2526,13 +2526,13 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         else:
             # Images are not scaled and are uploaded as it is
             canvas.attributes["_width"] = 0
-        
+
         append(canvas)
-    
+
         btn_class = "imagecrop-btn button"
         if settings.ui.formstyle == "bootstrap":
             btn_class = "imagecrop-btn"
-                
+
         buttons = [ A(T("Enable Crop"),
                       _id="select-crop-btn",
                       _class=btn_class,
@@ -2563,7 +2563,7 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
                 download_url = download_url()
 
             url = "%s/%s" % (download_url ,value)
-            # Add Image 
+            # Add Image
             crop_data_attr["_value"] = url
             append(FIELDSET(LEGEND(A(T("Upload different Image")),
                                    _id="upload-title"),
@@ -5213,9 +5213,7 @@ class S3HierarchyWidget(FormWidget):
                      **attr)
         widget.add_class("s3-hierarchy-widget")
         if self.columns:
-            widget = DIV(widget,
-                         _class = "small-%s columns" % self.columns,
-                         )
+            widget.add_class("small-%s columns" % self.columns)
 
         s3 = current.response.s3
         scripts = s3.scripts
