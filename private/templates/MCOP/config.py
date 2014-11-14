@@ -408,6 +408,9 @@ def customise_event_incident_controller(**attr):
                               open_incident_filter,
                               tablename = "event_incident")
 
+    # Make GeoJSON output smaller
+    current.s3db.gis_location.gis_feature_type.represent = None
+
     s3 = current.response.s3
 
     # Custom postp
@@ -417,11 +420,7 @@ def customise_event_incident_controller(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.representation == "geojson":
-            # Make GeoJSON output smaller
-            current.s3db.gis_location.gis_feature_type.represent = None
-
-        elif r.interactive and isinstance(output, dict):
+        if r.interactive and isinstance(output, dict):
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
                             url=URL(c="event", f="incident",
