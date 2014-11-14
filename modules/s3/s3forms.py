@@ -1858,7 +1858,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         facilitates client-side manipulation of this JSON.
         This widget is a row of fields per component record.
 
-        The widget uses the s3.inline_component.js script for client-side
+        The widget uses the s3.ui.inline_component.js script for client-side
         manipulation of the JSON data. Changes made by the script will be
         validated through Ajax-calls to the CRUD.validate() method.
         During accept(), the component gets updated according to the JSON
@@ -1960,11 +1960,16 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             fields_opt = options.get("fields", None)
             labels = {}
+            widgets = {}
             if fields_opt:
                 fields = []
                 for f in fields_opt:
                     if isinstance(f, tuple):
-                        label, f = f
+                        if len(f) > 2:
+                            label, f, w = f
+                            widgets[f] = w
+                        else:
+                            label, f = f
                         labels[f] = label
                     if f in table.fields:
                         fields.append(f)
@@ -2036,6 +2041,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
             headers = [{"name": rfield.fname,
                         "label": s3_unicode(rfield.label)}
                         for rfield in rfields if rfield.fname != pkey]
+
+            self.widgets = widgets
 
             items = []
             has_permission = current.auth.s3_has_permission
@@ -2630,17 +2637,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param attributes: HTML attributes for the row
         """
 
-        T = current.T
         s3 = current.response.s3
-        settings = s3.crud
 
-        columns = []
         rowtype = readonly and "read" or "edit"
         pkey = table._id.name
 
         data = dict()
         formfields = []
         formname = self._formname()
+        widgets = self.widgets
         for f in fields:
             fname = f["name"]
             idxname = "%s_i_%s_%s_%s" % (formname, fname, rowtype, index)
@@ -2650,7 +2655,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 popup = Storage(parent=parent, caller=caller)
             else:
                 popup = None
-            formfield = self._rename_field(table[fname], idxname,
+
+            field = table[fname]
+            widget = widgets.get(fname, None)
+            if widget is not None:
+                field.widget = widget
+
+            formfield = self._rename_field(field, idxname,
                                            comments=False,
                                            popup=popup,
                                            skip_post_validation=True)

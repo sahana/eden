@@ -5880,6 +5880,7 @@ class S3StringWidget(StringWidget):
         else:
             widget = INPUT(**attr)
 
+        cols = self.cols
         if self.prefix:
             # NB These classes target Foundation Themes
             widget = TAG[""](DIV(SPAN(self.prefix,
@@ -5893,9 +5894,9 @@ class S3StringWidget(StringWidget):
                              # Tell the formstyle not to wrap & collapse
                              _class="columns collapse",
                              )
-        else:
+        elif cols:
             widget = DIV(widget,
-                         _class="small-%s columns" % self.cols,
+                         _class="small-%s columns" % cols,
                          )
 
         return widget

@@ -452,7 +452,7 @@ def customise_pr_person_controller(**attr):
             #represent = S3Represent(lookup="org_site")
             #site_field.represent = represent
             if widgets:
-                from s3 import IS_ONE_OF, S3MultiSelectWidget
+                from s3 import IS_ONE_OF, S3MultiSelectWidget, S3StringWidget
                 from s3layouts import S3AddResourceLink
                 htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
                 #site_field.widget = S3MultiSelectWidget(multiple=False)
@@ -464,7 +464,6 @@ def customise_pr_person_controller(**attr):
                 #                                       label=T("Add New Place"),
                 #                                       title=T("Place"),
                 #                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
-                from s3 import S3StringWidget
                 table = s3db[tablename]
                 table.first_name.widget = S3StringWidget(placeholder=T("Text"))
                 table.last_name.widget = S3StringWidget(placeholder=T("Text"))
@@ -522,6 +521,7 @@ def customise_pr_person_controller(**attr):
                     S3SQLInlineComponent(
                         "human_resource",
                         name = "human_resource",
+                        columns = (4,),
                         label = "",
                         multiple = False,
                         fields = hr_fields,
@@ -540,6 +540,7 @@ def customise_pr_person_controller(**attr):
                     S3SQLInlineComponent(
                         "image",
                         name = "image",
+                        columns = (4,),
                         label = T("Photo"),
                         multiple = False,
                         fields = [("", "image")],
@@ -549,25 +550,34 @@ def customise_pr_person_controller(**attr):
                         ),
                     S3SQLInlineComponent("contact",
                         name = "email",
+                        columns = (4,),
                         label = T("Email"),
                         multiple = False,
-                        fields = [("", "value")],
+                        #fields = [("", "value")],
+                        fields = [("", "value", S3StringWidget(columns=0,
+                                                               placeholder=T("username@domain")))],
                         filterby = dict(field = "contact_method",
                                         options = "EMAIL"),
                         ),
                     S3SQLInlineComponent("contact",
                         name = "phone",
+                        columns = (4,),
                         label = settings.get_ui_label_mobile_phone(),
                         multiple = False,
-                        fields = [("", "value")],
+                        #fields = [("", "value")],
+                        fields = [("", "value", S3StringWidget(columns=0,
+                                                               placeholder=T("+1 800-555-1212")))],
                         filterby = dict(field = "contact_method",
                                         options = "SMS"),
                         ),
                     S3SQLInlineComponent("contact",
                         name = "home",
+                        columns = (4,),
                         label = T("Home Phone"),
                         multiple = False,
-                        fields = [("", "value")],
+                        #fields = [("", "value")],
+                        fields = [("", "value", S3StringWidget(columns=0,
+                                                               placeholder=T("+1 800-555-1212")))],
                         filterby = dict(field = "contact_method",
                                         options = "HOME_PHONE"),
                         ),

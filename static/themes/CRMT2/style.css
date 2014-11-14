@@ -13,6 +13,15 @@ header.row {
   padding-bottom: 0; }
 
 /* Added Manually */
+
+/* Fix the bad style on Filter Search */
+.button.postfix {
+    margin-top: 2px;
+}
+.button.postfix i {
+    margin: 0;
+}
+
 /* Not considered in Theme */
 .row.alert-space {
     padding: 0;
@@ -79,14 +88,23 @@ table.dataTable tr.odd {
     margin: 0 0 1rem;
     padding: 0.5625rem 0;
 }
-.dataTables_length { /* Mimic subheader */
+.dataTables_length {
     float: left !important;
+}
+.dataTables_length label { /* Mimic subheader */
     color: #6f6f6f;
     font-weight: normal;
     line-height: 1.4;
     margin-bottom: 0.5rem;
     margin-top: 0.2rem;
 }
+.form-container form .dataTables_length label select {
+    font-family: Lato,"Helvetica Neue",Helvetica,Roboto,Arial,sans-serif;
+    font-size: 0.875rem;
+    margin: 0 0 1rem;
+    padding: 0.5rem;
+}
+
 div.dataTables_length {
     padding-top: 0;
 }
