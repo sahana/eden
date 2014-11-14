@@ -64,6 +64,7 @@ from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_i
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
+DEFAULT = lambda: None
 
 # =============================================================================
 class S3SQLForm(object):
@@ -1309,7 +1310,8 @@ class S3SQLFormElement(object):
     def _rename_field(field, name,
                       comments=True,
                       popup=None,
-                      skip_post_validation=False):
+                      skip_post_validation=False,
+                      widget=DEFAULT):
         """
             Rename a field (actually: create a new Field instance with the
             same attributes as the given Field, but a different field name).
@@ -1325,6 +1327,7 @@ class S3SQLFormElement(object):
             @param skip_post_validation: skip field validation during POST,
                                          useful for client-side processed
                                          dummy fields.
+            @param widget: override option for the original field widget
         """
 
         if not hasattr(field, "type"):
@@ -1344,19 +1347,22 @@ class S3SQLFormElement(object):
                             represent=lambda v: v or "",
                             )
             requires = None
-            widget = None
+            if widget is DEFAULT:
+                widget = None
             required = False
             notnull = False
         elif skip_post_validation and \
              current.request.env.request_method == "POST":
             requires = SKIP_POST_VALIDATION(field.requires)
             # Some widgets may need disabling here
-            widget = field.widget
+            if widget is DEFAULT:
+                widget = field.widget
             required = False
             notnull = False
         else:
             requires = field.requires
-            widget = field.widget
+            if widget is DEFAULT:
+                widget = field.widget
             required = field.required
             notnull = field.notnull
 
@@ -2656,15 +2662,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 popup = None
 
-            field = table[fname]
-            widget = widgets.get(fname, None)
-            if widget is not None:
-                field.widget = widget
-
-            formfield = self._rename_field(field, idxname,
+            formfield = self._rename_field(table[fname], 
+                                           idxname,
                                            comments=False,
                                            popup=popup,
-                                           skip_post_validation=True)
+                                           skip_post_validation=True,
+                                           widget=widgets.get(fname, DEFAULT),
+                                           )
 
             if "filterby" in self.options:
                 # Get reduced options set

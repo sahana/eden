@@ -312,6 +312,15 @@ aside .form-container input[type=radio] + label:before {
     margin-bottom: 1.25rem;
 }
 
+/* DatePicker */
+.date.string.hasDatepicker {
+    display: inline;
+    max-width: 12rem;
+}
+.ui-datepicker-trigger {
+    padding: 0;
+}
+
 /* END */
 
 .row .row {

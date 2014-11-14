@@ -678,9 +678,9 @@
                         input.prop('checked', value);
                     } else {
                         input.val(value);
-                        if (input.hasClass('multiselect-widget') && typeof input.multiselect != 'undefined') {
+                        if (input.hasClass('multiselect-widget') && input.multiselect('instance')) {
                             input.multiselect('refresh');
-                        } else if (input.hasClass('groupedopts-widget') && typeof input.groupedopts != 'undefined') {
+                        } else if (input.hasClass('groupedopts-widget') && input.groupedopts('instance')) {
                             input.groupedopts('refresh');
                         } else {
                             // Populate text in autocompletes
@@ -845,9 +845,9 @@
                             // Update widgets
                             if (f.attr('type') == 'checkbox') {
                                 f.prop('checked', d.prop('checked'));
-                            } else if (f.hasClass('multiselect-widget') && typeof f.multiselect != 'undefined') {
+                            } else if (f.hasClass('multiselect-widget') && f.multiselect('instance')) {
                                 f.multiselect('refresh');
-                            } else if (f.hasClass('groupedopts-widget') && typeof f.groupedopts != 'undefined') {
+                            } else if (f.hasClass('groupedopts-widget') && f.groupedopts('instance')) {
                                 f.groupedopts('refresh');
                             }
                         }
