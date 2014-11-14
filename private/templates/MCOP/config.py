@@ -417,7 +417,7 @@ def customise_event_incident_controller(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.represent == "geojson":
+        if r.representation == "geojson":
             # Make GeoJSON output smaller
             current.s3db.gis_location.gis_feature_type.represent = None
 
@@ -939,7 +939,7 @@ def customise_org_resource_resource(r, tablename):
         But runs before prep
     """
 
-    if r.represent == "geojson":
+    if r.representation == "geojson":
         # Make GeoJSON output smaller
         current.s3db.gis_location.gis_feature_type.represent = None
 
@@ -1018,7 +1018,7 @@ def customise_event_resource_resource(r, tablename):
         But runs before prep
     """
 
-    if r.represent == "geojson":
+    if r.representation == "geojson":
         # Make GeoJSON output smaller
         current.s3db.gis_location.gis_feature_type.represent = None
 
