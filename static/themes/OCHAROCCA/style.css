@@ -96,6 +96,7 @@ background: #CCE6FF
     padding: 0 0 20px 0;
     padding-bottom: 10px;
     text-shadow: none;
+    clear: both;
 }
 
 h1, h2, h3 {
