@@ -62,6 +62,7 @@ __all__ = ("S3ProjectModel",
            "project_project_filters",
            "project_project_list_layout",
            "project_task_list_layout",
+           "project_ckeditor",
            )
 
 import datetime
