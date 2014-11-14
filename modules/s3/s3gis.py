@@ -8018,7 +8018,7 @@ class LayerGoogle(Layer):
                 if sublayer.type == "earth":
                     ldict["Earth"] = str(T("Switch to 3D"))
                     #{"modules":[{"name":"earth","version":"1"}]}
-                    script = "http://www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
+                    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                     # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
@@ -8059,12 +8059,12 @@ class LayerGoogle(Layer):
                 # Need to use v2 API
                 # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
                 # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
-                script = "http://maps.google.com/maps?file=api&v=2&key=%s" % apikey
+                script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
                 if script not in s3_scripts:
                     s3_scripts.append(script)
             else:
                 # v3 API (3.16 is frozen, 3.17 release & 3.18 is nightly)
-                script = "http://maps.google.com/maps/api/js?v=3.17&sensor=false"
+                script = "//maps.google.com/maps/api/js?v=3.17&sensor=false"
                 if script not in s3_scripts:
                     s3_scripts.append(script)
                 if "StreetviewButton" in ldict:
