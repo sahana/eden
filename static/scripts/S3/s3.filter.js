@@ -73,10 +73,12 @@ S3.search = {};
             $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
                 $this.val('');
-                if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
+                if ($this.hasClass('groupedopts-filter-widget') && 
+                    $this.groupedopts('instance')) {
                     $this.groupedopts('refresh');
                 } else
-                if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
+                if ($this.hasClass('multiselect-filter-widget') && 
+                    $this.multiselect('instance')) {
                     $this.multiselect('refresh');
                 }
             } else {
@@ -464,11 +466,11 @@ S3.search = {};
                     }
                     $this.val(values);
                     if ($this.hasClass('groupedopts-filter-widget') &&
-                        typeof $this.groupedopts != 'undefined') {
+                        $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') &&
-                        typeof $this.multiselect != 'undefined') {
+                    if ($this.hasClass('multiselect-filter-widget') && 
+                        $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
                 }
@@ -554,12 +556,12 @@ S3.search = {};
                         toggleAdvanced(form);
                     }
                     $this.val(values);
-                    if ($this.hasClass('groupedopts-filter-widget') &&
-                        typeof $this.groupedopts != 'undefined') {
+                    if ($this.hasClass('groupedopts-filter-widget') && 
+                        $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') &&
-                        typeof $this.multiselect != 'undefined') {
+                    if ($this.hasClass('multiselect-filter-widget') && 
+                        $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
                     hierarchical_location_change(this);
@@ -785,10 +787,12 @@ S3.search = {};
                         }
 
                         // Refresh UI widgets
-                        if (widget.hasClass('groupedopts-filter-widget') && typeof widget.groupedopts != 'undefined') {
+                        if (widget.hasClass('groupedopts-filter-widget') && 
+                            widget.groupedopts('instance')) {
                             widget.groupedopts('refresh');
                         } else
-                        if (widget.hasClass('multiselect-filter-widget') && typeof widget.multiselect != 'undefined') {
+                        if (widget.hasClass('multiselect-filter-widget') && 
+                            widget.multiselect('instance')) {
                             widget.multiselect('refresh');
                         }
 
@@ -1373,14 +1377,14 @@ S3.search = {};
                     }
                 }
                 select.html(_options);
-                if (select.hasClass('groupedopts-filter-widget') &&
-                    typeof select.groupedopts != 'undefined') {
+                if (select.hasClass('groupedopts-filter-widget') && 
+                    select.groupedopts('instance')) {
                     try {
                         select.groupedopts('refresh');
                     } catch(e) { }
                 } else
-                if (select.hasClass('multiselect-filter-widget') &&
-                    typeof select.multiselect != 'undefined') {
+                if (select.hasClass('multiselect-filter-widget') && 
+                    select.multiselect('instance')) {
                     select.multiselect('refresh');
                 }
                 if (l === (level + 1)) {
@@ -1545,11 +1549,11 @@ S3.search = {};
                             selector.addClass('active');
                             // Refresh the contents
                             if (selector.hasClass('groupedopts-filter-widget') &&
-                                typeof selector.groupedopts != 'undefined') {
+                                selector.groupedopts('instance')) {
                                 selector.groupedopts('refresh');
                             } else
                             if (selector.hasClass('multiselect-filter-widget') &&
-                                typeof selector.multiselect != 'undefined') {
+                                selector.multiselect('instance')) {
                                 selector.multiselect('refresh');
                             }
                         });
