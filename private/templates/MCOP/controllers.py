@@ -103,8 +103,8 @@ for(var i=0,len=layers.length;i<len;i++){
         # Only show Active Tasks
         active_statuses = s3db.project_task_active_statuses
         resource.add_filter(FS("status").belongs(active_statuses))
-        # Only show Tasks which are linked to Open Incidents
-        resource.add_filter(FS("incident.incident_id$closed") == False)
+        # Only show Tasks which are linked to Open Incidents or not linked to any Incident
+        resource.add_filter((FS("incident.incident_id$closed") == False) | (FS("incident.id") == None))
         list_id = "project_task_datalist"
         list_fields = ["name",
                        "description",
