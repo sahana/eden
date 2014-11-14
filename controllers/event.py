@@ -98,8 +98,13 @@ def incident():
 
     # Pre-process
     def prep(r):
-        if r.interactive:
+        if r.interactive or r.representation == "aadata":
             if r.component:
+                if r.component.alias == "assign":
+                    if not r.method:
+                        r.method = "assign"
+                    if r.method == "assign":
+                        r.custom_action = s3db.hrm_AssignMethod(component="assign")
                 if r.component_name == "config":
                     s3db.configure("gis_config",
                                    deletable = False,
