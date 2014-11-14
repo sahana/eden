@@ -25,9 +25,7 @@
 <!--[if lt IE 9]>
  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" />
 <![endif]-->
-{{# Place favicon.ico and apple-touch-icon.png in the root of your domain and delete these references }}
-<link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon" />
-{{# <link rel="apple-touch-icon" href="/=appname/static/favicon.png" /> }}
+<link rel="shortcut icon" href="/{{=appname}}/static/themes/{{=theme}}/favicon.ico" type="image/x-icon" />
 {{# All JavaScript at the bottom, except for Modernizr which enables HTML5 elements & feature detects }}{{# This kills the map in IE8: VML.js }}
 {{#<script src="/=appname/static/scripts/modernizr.min.js"></script>}}
 {{for sheet in s3.external_stylesheets:}}
