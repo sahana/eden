@@ -1026,15 +1026,20 @@
             'headerCallback': function (nHead, aasData, iStart, iEnd, aiDisplay) {
                 $('#modeSelectionAll').unbind('click.selectAll')
                                       .on('click.selectAll', function(event) {
+                    selectedRows[t] = [];
+                    var rows = selectedRows[t];
+                    var posn = -1;
                     if ($(this).prop('checked')) {
                         selectionMode[t] = 'Exclusive';
-                        selectedRows[t] = [];
-                        dt.draw(false);
+                        rows.push(0);
                     } else {
                         selectionMode[t] = 'Inclusive';
-                        selectedRows[t] = [];
-                        dt.draw(false);
                     }
+                    $('.bulkcheckbox').each(function() {
+                        var row = $(this).closest('tr');
+                        togglePairActions(t);
+                        setSelectionClass(t, row, posn);
+                    });
                 });
                 $('.ui-icon-zoomin, .ui-icon-zoomout').unbind('click.dtToggleCell');
             },
