@@ -417,7 +417,11 @@ def customise_event_incident_controller(**attr):
         if callable(standard_postp):
             output = standard_postp(r, output)
 
-        if r.interactive and isinstance(output, dict):
+        if r.represent == "geojson":
+            # Make GeoJSON output smaller
+            current.s3db.gis_location.gis_feature_type.represent = None
+
+        elif r.interactive and isinstance(output, dict):
             actions = [dict(label=str(T("Open")),
                             _class="action-btn",
                             url=URL(c="event", f="incident",
@@ -935,7 +939,11 @@ def customise_org_resource_resource(r, tablename):
         But runs before prep
     """
 
-    if r.interactive:
+    if r.represent == "geojson":
+        # Make GeoJSON output smaller
+        current.s3db.gis_location.gis_feature_type.represent = None
+
+    elif r.interactive:
         s3 = current.response.s3
         s3db = current.s3db
         table = s3db.org_resource
@@ -1010,7 +1018,11 @@ def customise_event_resource_resource(r, tablename):
         But runs before prep
     """
 
-    if r.interactive:
+    if r.represent == "geojson":
+        # Make GeoJSON output smaller
+        current.s3db.gis_location.gis_feature_type.represent = None
+
+    elif r.interactive:
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add"),
             title_display = T("Resource Responding"),
@@ -1048,6 +1060,9 @@ def customise_project_task_controller(**attr):
         s3_set_default_filter("~.status",
                               active_status_filter,
                               tablename = "project_task")
+
+    # Make GeoJSON output smaller
+    current.s3db.gis_location.gis_feature_type.represent = None
 
     # Remove rheader
     attr["rheader"] = None
