@@ -11,6 +11,8 @@ from gluon import current, URL
 from gluon.storage import Storage
 from gluon.validators import IS_IN_SET
 
+from s3 import *
+
 T = current.T
 settings = current.deployment_settings
 
@@ -432,6 +434,75 @@ def customise_project_project_controller(**attr):
     return attr
 
 settings.customise_project_project_controller = customise_project_project_controller
+
+# -----------------------------------------------------------------------------
+def customise_project_task_controller(**attr):
+
+    response = current.response
+    s3db = current.s3db
+    auth = current.auth
+    s3 = response.s3
+
+    def task_rheader(r):
+
+        tablename, record = s3_rheader_resource(r)
+
+        if r.representation != "html" or not record:
+            # rheaders are only used in interactive views
+            return None
+
+        table = s3db.table(tablename)
+
+        settings = current.deployment_settings
+        attachments_label = settings.get_ui_label_attachments()
+        # Tabs
+        tabs = [(T("Details"), None),
+                (attachments_label, "document")]
+        append = tabs.append
+        if settings.has_module("msg"):
+            append((T("Notify"), "dispatch"))
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        # rheader
+        resource = r.resource
+        fields = resource.fields + ['task_tag.tag_id', 'task_milestone.milestone_id', \
+                                    'task_project.project_id']
+        data = resource.select(fields,
+                               represent=True)
+        row = data.rows[0]
+
+        project = TR(TH("%s: " % T("Project")),
+                     row.get("project_task_project.project_id", "-"))
+
+        tags = TR(TH("%s: " % T("Tags")),
+                  row.get("project_task_tag.tag_id", "-"))
+
+        created_by = TR(TH("%s: " % T("Created By")),
+                        row.get("project_task.created_by", "-"))
+
+        milestone = TR(TH("%s: " % T("Milestone")), 
+                       row.get("project_task_milestone.milestone_id", "-"))
+
+        status = TR(TH("%s: " % T("Status")), 
+                    row.get("project_task.status", "-"))
+
+        rheader = DIV(TABLE(project,
+                            TR(TH("%s: " % table.name.label),
+                               record.name,
+                               ),
+                            milestone,
+                            tags,
+                            status,
+                            created_by,
+                            ), rheader_tabs)
+
+        return rheader
+
+    attr["rheader"] = task_rheader
+    return attr
+
+settings.customise_project_task_controller = customise_project_task_controller
 
 # -----------------------------------------------------------------------------
 def customise_project_task_resource(r, tablename):
