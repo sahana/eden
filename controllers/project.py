@@ -257,6 +257,13 @@ def project():
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
 
+            if r.component_name == "task" and r.component_id:
+                # Put Comments in rfooter
+                s3db.project_ckeditor()
+                s3.rfooter = LOAD("project", "comments.load",
+                                  args=[r.component_id],
+                                  ajax=True)
+
         return output
     s3.postp = postp
 
