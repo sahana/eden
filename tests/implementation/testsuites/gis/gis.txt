@@ -19,14 +19,14 @@ ${LocTextFilter}        location-gis_location_name-gis_location_comments-gis_loc
 Create Location
     Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
     Go To  ${GIS URL}/location/create
-    Input Text   ${LocationName}   New Location
+    Input Text   ${LocationName}   New Place
     Select Option   ${LevelSelector}   L3
     Submit CRUD Form
     
 Find Location by name
     Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
     Go To  ${GIS URL}/location
-    Input Text   ${LocTextFilter}  New Loc
+    Input Text   ${LocTextFilter}  New Pla
     Wait For Filter Result
     Should Give X Results  1
     DataTable Row Should Contain  1  Name  New Location
@@ -37,7 +37,7 @@ Import Location
     Choose File  s3_import_upload_file   /eden/uploads/file.txt    
     Select Option  ${CountrySelector}  India
     Submit Crud Form 
-    Should Show Confirmation
+    
 	
 Create Marker 
      Login To Eden If Not Logged In  ${VALID USER}   ${VALID PASSWORD}
@@ -47,7 +47,7 @@ Create Marker
      Input Text  gis_marker_name   New Marker
      Choose File   gis_marker_image   /eden/uploads/yash.jpg
      Submit Crud Form 
-     Should Show Confirmation
+     
 
 	
 
