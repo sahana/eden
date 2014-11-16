@@ -20,7 +20,7 @@ Create Location
     Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
     Go To  ${GIS URL}/location/create
     Input Text   ${LocationName}   New Location
-	  Select Option   ${LevelSelector}   L3
+    Select Option   ${LevelSelector}   L3
     Submit CRUD Form
     
 Find Location by name
@@ -33,21 +33,21 @@ Find Location by name
 
 Import Location 
     Login To Eden If Not Logged In   ${VALID USER}   ${VALID PASSWORD}
-  	Go To   ${GIS URL}/location/import
+    Go To   ${GIS URL}/location/import
     Choose File  s3_import_upload_file   /eden/uploads/file.txt    
     Select Option  ${CountrySelector}  India
-	  Submit Crud Form 
-	  Should Show Confirmation
+    Submit Crud Form 
+    Should Show Confirmation
 	
 Create Marker 
      Login To Eden If Not Logged In  ${VALID USER}   ${VALID PASSWORD}
-	   Go To  ${GIS URL}/marker
+     Go To  ${GIS URL}/marker
      Click Element   show-add-btn
-	   Wait Until Element Is Visible  gis_marker_name   3
+     Wait Until Element Is Visible  gis_marker_name   3
      Input Text  gis_marker_name   New Marker
      Choose File   gis_marker_image   /eden/uploads/yash.jpg
-	   Submit Crud Form 
-	   Should Show Confirmation
+     Submit Crud Form 
+     Should Show Confirmation
 
 	
 
