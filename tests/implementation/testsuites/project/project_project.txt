@@ -1,5 +1,7 @@
 *** Settings ***
 Documentation     Test cases for project module
+...               Run using "python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A project_project"
+
 Resource          ../../resources/main.txt
 
 *** Variables ***
@@ -22,7 +24,7 @@ Updating Project Should Be Successful
     Wait Until Page Contains Element  project_project_name
 
     # Change the project's name
-    Input Text  project_project_name  FloodReliefMitigation
+    Input Text  project_project_comments  Test Comment
     Click Element  xpath=//input[@type="submit" and @value="Save"]
 
     #Assertion
