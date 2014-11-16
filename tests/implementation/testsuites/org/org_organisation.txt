@@ -31,10 +31,10 @@ Create Organisation
 Find Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}
-    Input Text  ${OrgTextFilter}  New Org
+    Input Text  ${OrgTextFilter}  Acme Suppliers
     Wait For Filter Result
     Should Give X Results  1
-    DataTable Row Should Contain  1  Name  New Organization
+    DataTable Row Should Contain  1  Name  Acme Suppliers
 
 Create Organisation Without Name
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
@@ -46,13 +46,13 @@ Create Organisation Without Name
 Update Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}
-    Input Text  ${OrgTextFilter}  New Org
+    Input Text  ${OrgTextFilter}  Acme Suppliers
     Wait For Filter Result
     Should Give X Results  1
-    DataTable Should Contain  New Organization
+    DataTable Should Contain  Acme Suppliers
     Click Edit In Row  1
     Location Should Contain  update
-    Input Text  ${OrgAcronymField}  NEW ORG
+    Input Text  ${OrgAcronymField}  ACME SUPPLIERS
     Submit CRUD Form
     Should Show Confirmation
 
@@ -63,14 +63,14 @@ Create Office
     Select Option  ${OfficeTypeSelector}  Headquarters
     Submit CRUD Form
     Field Should Have Error  ${OfficeOrgSelector}  # Organisation is required
-    Select Option  ${OfficeOrgSelector}  New Organization
+    Select Option  ${OfficeOrgSelector}  Acme Suppliers
     Submit CRUD Form
     Should Show Confirmation
 
 Find Office
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${OFFICE URL}
-    Input Text  ${OfficeTextFilter}  NO Head
+    Input Text  ${OfficeTextFilter}  AP Zone
     Wait For Filter Result
     Should Give X Results  1
-    DataTable Row Should Contain  1  Name  NO HeadQuarters
+    DataTable Row Should Contain  1  Name  AP Zone
