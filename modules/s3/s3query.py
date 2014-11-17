@@ -33,6 +33,7 @@ __all__ = ("FS",
            "S3ResourceField",
            "S3ResourceQuery",
            "S3URLQuery",
+           "S3URLQueryParser",
            )
 
 import datetime
@@ -2021,6 +2022,17 @@ class S3URLQuery(object):
         allof = lambda l, r: l if r is None else r if l is None else r & l
 
         for key, value in vars.iteritems():
+            
+            if key == "$filter":
+                parser = S3URLQueryParser()
+                q = parser.parse(value)
+                if q is not None:
+                    alias = resource.alias
+                    if alias not in query:
+                        query[alias] = [q]
+                    else:
+                        query[alias].append(q)
+                continue
 
             if not("." in key or key[0] == "(" and ")" in key):
                 continue
@@ -2212,5 +2224,105 @@ class S3URLQuery(object):
                 q |= rquery
 
         return q
+
+# =============================================================================
+class S3URLQueryParser(object):
+    
+    def __init__(self):
+
+        self.parser, self.result_type = self._parser()
+        
+    # -------------------------------------------------------------------------
+    def _parser(self):
+    
+        try:
+            import pyparsing as pp
+        except ImportError:
+            current.log.error("Advanced filter syntax requires pyparsing, $filter ignored")
+            return None, None
+            
+        context = lambda s, l, t: t[0].replace("[", "(").replace("]", ")")
+        
+        selector = pp.Word(pp.alphas + "[]~", pp.alphanums + "_.$:[]")
+        selector.setParseAction(context)
+
+        operator = pp.Regex("|".join(S3ResourceQuery.OPERATORS))
+        number = pp.Regex(r"[+-]?\d+(:?\.\d*)?(:?[eE][+-]?\d+)?")
+        value = number | \
+                pp.Keyword("NONE") | \
+                pp.quotedString | \
+                pp.Word(pp.alphanums + pp.printables)
+        qe = pp.Group(selector + operator + value)
+        
+        parser = pp.operatorPrecedence(qe, [("not", 1, pp.opAssoc.RIGHT, ),
+                                            ("and", 2, pp.opAssoc.LEFT, ),
+                                            ("or", 2, pp.opAssoc.LEFT, ),
+                                            ])
+        return parser, pp.ParseResults
+
+    # -------------------------------------------------------------------------
+    def parse(self, expression):
+        
+        parser = self.parser
+        if parser is None:
+            return None
+    
+        try:
+            parsed = parser.parseString(expression)
+        except pp.ParseException:
+            current.log.error("Invalid filter expression: %s" % query)
+            parsed = None
+            
+        if parsed:
+            query = self.convert_expression(parsed[0])
+        else:
+            query = None
+        return query
+
+    # -------------------------------------------------------------------------
+    def convert_expression(self, expression):
+    
+        result_type = self.result_type
+        convert = self.convert_expression
+
+        if isinstance(expression, result_type):
+            first, op, second = ([None, None, None] + list(expression))[-3:]
+            
+            if isinstance(first, result_type):
+                first = self.convert_expression(first)
+            if isinstance(second, result_type):
+                second = self.convert_expression(second)
+
+            if op == "not":
+                if isinstance(second, S3ResourceQuery):
+                    return ~second
+                else:
+                    return None
+            elif op == "and":
+                if isinstance(first, S3ResourceQuery) and \
+                   isinstance(second, S3ResourceQuery):
+                    return first & second
+                else:
+                    return None
+            elif op == "or":
+                if isinstance(first, S3ResourceQuery) and \
+                   isinstance(second, S3ResourceQuery):
+                    return first | second
+                else:
+                    return None
+            elif op in S3ResourceQuery.OPERATORS:
+                if isinstance(first, basestring):
+                    selector = FS(first)
+                    value = S3URLQuery.parse_value(second)
+                    if op == S3ResourceQuery.LIKE:
+                        if isinstance(value, basestring):
+                            value = value.replace("*", "%").lower()
+                        elif isinstance(value, list):
+                            value = [x.replace("*", "%").lower() for x in value if x is not None]
+                    return S3ResourceQuery(op, selector, value)
+                else:
+                    return None
+        else:
+            return None
 
 # END =========================================================================
