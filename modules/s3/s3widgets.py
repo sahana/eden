@@ -4791,11 +4791,24 @@ class S3LocationSelectorWidget2(FormWidget):
             icon_id = "%s_map_icon" % fieldname
             row_id = "%s_map_icon__row" % fieldname
             if use_wkt:
-                label = T("Draw on Map")
+                if wkt is not None:
+                    show_map_add = settings.get_ui_label_locationselector_map_polygon_add()
+                    show_map_view = label = settings.get_ui_label_locationselector_map_polygon_view()
+                else:
+                    show_map_add = label = settings.get_ui_label_locationselector_map_polygon_add()
+                    show_map_view = settings.get_ui_label_locationselector_map_polygon_view()
+            elif lat is not None or lon is not None:
+                show_map_add = settings.get_ui_label_locationselector_map_point_add()
+                show_map_view = label = settings.get_ui_label_locationselector_map_point_view()
             else:
-                label = T("Find on Map")
+                show_map_add = label = settings.get_ui_label_locationselector_map_point_add()
+                show_map_view = settings.get_ui_label_locationselector_map_point_view()
             if not location_selector_loaded:
-                global_append('''i18n.hide_map="%s"''' % T("Hide Map"))
+                global_append('''i18n.show_map_add="%s"
+i18n.show_map_view="%s"
+i18n.hide_map="%s"''' % (show_map_add,
+                         show_map_view,
+                         T("Hide Map")))
             _formstyle = settings.ui.formstyle
             if not _formstyle:
                 # Default: Foundation

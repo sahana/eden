@@ -747,8 +747,7 @@
 
         var parent_input = $(selector + '_parent');
         var real_input = $(selector);
-        var specific = real_input.data('specific');
-        if (specific) {
+        if (real_input.data('specific')) {
             // Set the Parent field
             var parent = lookupParent(fieldname);
             parent_input.val(parent);
@@ -1044,21 +1043,26 @@
         // Hide the Map
         $(selector + '_map_wrapper').hide();
 
-        // Remove the Feature (if-any)
-        var map_id = 'location_selector_' + fieldname;
-        var map = S3.gis.maps[map_id];
-        map.s3.draftLayer.removeAllFeatures();
+        if ($(selector).data('specific')) {
+            // Change the Label
+            $(selector + '_map_icon span').html(i18n.show_map_view);
+        } else {
+            // Remove the Feature (if-any)
+            var map_id = 'location_selector_' + fieldname;
+            var map = S3.gis.maps[map_id];
+            map.s3.draftLayer.removeAllFeatures();
 
-        // Clear the Lat/Lon/WKT fields
-        $(selector + '_lat').val('');
-        $(selector + '_lon').val('');
-        $(selector + '_wkt').val('');
+            // Clear the Lat/Lon/WKT fields
+            $(selector + '_lat').val('');
+            $(selector + '_lon').val('');
+            $(selector + '_wkt').val('');
 
-        // Change the Label
-        $(selector + '_map_icon span').html(i18n.show_map);
+            // Change the Label
+            $(selector + '_map_icon span').html(i18n.show_map_add);
 
-        // Reset the real_input
-        resetHidden(fieldname);
+            // Reset the real_input
+            resetHidden(fieldname);
+        }
     }
 
     /**
@@ -1102,7 +1106,6 @@
 
         // Change the Label
         var label = $(selector + '_map_icon span')
-        i18n.show_map = label.html();
         label.html(i18n.hide_map);
 
         // Show the Map

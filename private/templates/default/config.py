@@ -366,6 +366,9 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.iframe_opens_full = True
 # Enable this to change the label for 'Attachments' tabs
 #settings.ui.label_attachments = "Attachments"
+# Uncomment to configure the LocationSelector labels for the Map button with Points
+#settings.label_locationselector_map_point_add = "Find on Map"
+#settings.label_locationselector_map_point_view = "Find on Map"
 # Enable this to change the label for 'Mobile Phone'
 #settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'

@@ -1461,6 +1461,34 @@ class S3Config(Storage):
         """ UN-style deployment? """
         return self.ui.get("cluster", False)
 
+    def get_ui_label_locationselector_map_point_add(self):
+        """
+            Label for the Location Selector button to add a Point to the Map
+            e.g. 'Place on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_point_add", "Place on Map"))
+
+    def get_ui_label_locationselector_map_point_view(self):
+        """
+            Label for the Location Selector button to view a Point on the Map
+            e.g. 'View on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_point_view", "View on Map"))
+
+    def get_ui_label_locationselector_map_polygon_add(self):
+        """
+            Label for the Location Selector button to draw a Polygon on the Map
+            e.g. 'Draw on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_polygon_add", "Draw on Map"))
+
+    def get_ui_label_locationselector_map_polygon_view(self):
+        """
+            Label for the Location Selector button to view a Polygon on the Map
+            e.g. 'View on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_polygon_view", "View on Map"))
+
     def get_ui_label_mobile_phone(self):
         """
             Label for the Mobile Phone field

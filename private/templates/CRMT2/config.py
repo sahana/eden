@@ -128,6 +128,9 @@ settings.ui.use_button_icons = True
 settings.ui.datatables_responsive = False
 # Uncomment to modify the label of the Permalink
 settings.ui.label_permalink = "Permalink"
+# Uncomment to configure the LocationSelector labels for the Map button with Points
+settings.label_locationselector_map_point_add = "Find on Map"
+settings.label_locationselector_map_point_view = "Find on Map"
 
 # Set Map to fill the container
 #settings.gis.map_width = 1178

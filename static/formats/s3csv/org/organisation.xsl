@@ -502,7 +502,6 @@
                     <reference field="sector_id" resource="org_sector">
                         <resource name="org_sector">
                             <data field="abrv"><xsl:value-of select="$item"/></data>
-                            <data field="name"><xsl:value-of select="$item"/></data>
                         </resource>
                     </reference>
                 </resource>
