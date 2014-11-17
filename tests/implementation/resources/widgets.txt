@@ -24,7 +24,7 @@ Select From MultiSelect
     [Arguments]  ${selector}  ${label}
     [Documentation]  Selects option _label_ from the jQuery UI MultiSelect Menu for _selector_
     Open MultiSelect  ${selector}
-    ${count}=  Execute JavaScript  return $('input[type="checkbox"][id^="ui-multiselect-${selector}-option"]')
+    ${count}=  Execute JavaScript  return $('input[id^="ui-multiselect-${selector}-option"]')
                ...                 .filter(function(){return $(this).parent().text().indexOf("${label}") >= 0;})
                ...                 .each(function(){if (!$(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
     Should Be True  ${count} >= ${1}  Option not found: "${label}"

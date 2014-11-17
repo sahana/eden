@@ -1,5 +1,6 @@
 *** Settings ***
 Documentation     Test cases for org module
+...               Run using "python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A org"
 Resource          ../../resources/main.txt
 
 *** Variables ***
@@ -8,7 +9,7 @@ ${OFFICE URL}           http://${BASEURL}/org/office
 
 ${OrgNameField}         org_organisation_name
 ${OrgAcronymField}      org_organisation_acronym
-${OrgTypeSelector}      org_organisation_organisation_type_id
+${OrgTypeSelector}      link_defaultorganisation_type
 
 ${OfficeNameField}      org_office_name
 ${OfficeTypeSelector}   org_office_office_type_id
@@ -18,23 +19,22 @@ ${OrgTextFilter}        organisation-org_organisation_name-org_organisation_acro
 ${OfficeTextFilter}     office-org_office_name-org_office_code-org_office_comments-org_organisation_name-org_organisation_acronym-gis_location_L0-gis_location_L1-gis_location_L2-gis_location_L3-gis_location_L4-text-filter
 
 *** Test Cases ***
-
 Create Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}/create
     Input Text  ${OrgNameField}  New Organization
     Input Text  ${OrgAcronymField}  NO
-    Select From List By Label  ${OrgTypeSelector}  NGO
+    Select From MultiSelect  ${OrgTypeSelector}  NGO
     Submit CRUD Form
     Should Show Confirmation
 
-Find Organization
+Find Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}
-    Input Text  ${OrgTextFilter}  New Org
+    Input Text  ${OrgTextFilter}  Acme Suppliers
     Wait For Filter Result
     Should Give X Results  1
-    DataTable Row Should Contain  1  Name  New Organization
+    DataTable Row Should Contain  1  Name  Acme Suppliers
 
 Create Organisation Without Name
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
@@ -46,14 +46,13 @@ Create Organisation Without Name
 Update Organisation
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${ORGANIZATION URL}
-    Input Text  ${OrgTextFilter}  New Org
+    Input Text  ${OrgTextFilter}  Acme Suppliers
     Wait For Filter Result
     Should Give X Results  1
-    DataTable Should Contain  New Organization
+    DataTable Should Contain  Acme Suppliers
     Click Edit In Row  1
     Location Should Contain  update
-    Input Text  ${OrgAcronymField}  NEW ORG
-    Select Option  ${OrgTypeSelector}  Private
+    Input Text  ${OrgAcronymField}  ACME SUPPLIERS
     Submit CRUD Form
     Should Show Confirmation
 
@@ -64,14 +63,14 @@ Create Office
     Select Option  ${OfficeTypeSelector}  Headquarters
     Submit CRUD Form
     Field Should Have Error  ${OfficeOrgSelector}  # Organisation is required
-    Select Option  ${OfficeOrgSelector}  New Organization
+    Select Option  ${OfficeOrgSelector}  Acme Suppliers
     Submit CRUD Form
     Should Show Confirmation
 
 Find Office
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To  ${OFFICE URL}
-    Input Text  ${OfficeTextFilter}  NO Head
+    Input Text  ${OfficeTextFilter}  AP Zone
     Wait For Filter Result
     Should Give X Results  1
-    DataTable Row Should Contain  1  Name  NO HeadQuarters
+    DataTable Row Should Contain  1  Name  AP Zone
