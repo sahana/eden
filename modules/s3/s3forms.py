@@ -2147,6 +2147,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param attributes: keyword attributes for this widget
         """
 
+        options = self.options        
+        if options.readonly is True:
+            # Render read-only
+            return self.represent(value)
+
         if value is None:
             value = field.default
         if isinstance(value, basestring):
@@ -2159,7 +2164,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         self.upload = Storage()
 
-        options = self.options
         if options.multiple is False:
             multiple = False
         else:
@@ -2172,8 +2176,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
         component_name = data["component"]
         component = resource.components[component_name]
         table = component.table
-
-        # @ToDo: Render read-only if self.readonly
 
         # @ToDo: Hide completely if the user is not permitted to read this
         # component
