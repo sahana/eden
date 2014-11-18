@@ -47,6 +47,8 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ("CF",) # Initially, will change
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -80,8 +82,14 @@ settings.gis.countries = ("CF",) # Initially, will change
 #settings.L10n.default_language = "en"
 # Uncomment to Hide the language toolbar
 #settings.L10n.display_toolbar = False
+# @ToDO:These should be modified per-country
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0100"
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+#settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+#settings.L10n.thousands_separator = ","
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy

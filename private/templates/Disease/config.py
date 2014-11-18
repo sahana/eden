@@ -61,6 +61,11 @@ settings.L10n.languages = OrderedDict([
 #settings.L10n.display_toolbar = False
 # Default timezone for users
 #settings.L10n.utc_offset = "UTC +0100"
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+settings.L10n.thousands_separator = ","
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy

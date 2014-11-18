@@ -209,6 +209,7 @@ settings.L10n.languages = OrderedDict([
     ("ne", "नेपाली"),          # Nepali
     ("prs", "دری"),         # Dari
     ("ps", "پښتو"),         # Pashto
+    #("th", "ภาษาไทย"),        # Thai
     ("vi", "Tiếng Việt"),   # Vietnamese
     ("zh-cn", "中文 (简体)"),
 ])

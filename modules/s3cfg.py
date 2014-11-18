@@ -84,6 +84,7 @@ class S3Config(Storage):
                     "sv": "%Y-%m-%d",
                     "ta": "%d/%m/%Y",
                     #"tet": "",
+                    "th": "%d/%m/%Y",
                     #"tl": "",
                     #"ur": "",
                     "vi": "%d/%m/%Y",
@@ -1147,6 +1148,7 @@ class S3Config(Storage):
                                                        ("ru", "русский"),
                                                        #("si", "සිංහල"),                # Sinhala
                                                        #("ta", "தமிழ்"),               # Tamil
+                                                       #("th", "ภาษาไทย"),        # Thai
                                                        ("tl", "Tagalog"),
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),
