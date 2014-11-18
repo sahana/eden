@@ -214,6 +214,36 @@ def customise_disease_stats_data_resource(r, tablename):
 settings.customise_disease_stats_data_resource = customise_disease_stats_data_resource
 
 # -----------------------------------------------------------------------------
+def customise_stats_demographic_data_resource(r, tablename):
+
+    s3db = current.s3db
+    # Load model & set defaults
+    table = s3db.stats_demographic_data
+
+    # Default parameter filter
+    def default_parameter_filter(selector, tablename=None):
+        ptable = s3db.stats_parameter
+        query = (ptable.deleted == False) & \
+                (ptable.name == "Population Total")
+        row = current.db(query).select(ptable.parameter_id,
+                                       limitby = (0, 1)).first()
+        if row:
+            return row.parameter_id
+        else:
+            return None
+
+    # Set filter defaults
+    resource = r.resource
+    filter_widgets = resource.get_config("filter_widgets", [])
+    for filter_widget in filter_widgets:
+        if filter_widget.field == "parameter_id":
+            filter_widget.opts.default = default_parameter_filter
+        elif filter_widget.field == "location_id$level":
+            filter_widget.opts.default = "L2"
+
+settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
+
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([

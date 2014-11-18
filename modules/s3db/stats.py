@@ -394,7 +394,8 @@ class S3StatsDemographicModel(S3Model):
 
         report_options = Storage(rows = location_fields + ["year"],
                                  cols = ["parameter_id"],
-                                 fact = [(T("Value"), "sum(value)"),
+                                 fact = [(T("Average"), "avg(value)"),
+                                         (T("Total"), "sum(value)"),
                                          ],
                                  defaults = Storage(rows = location_fields[0], # => L0 for multi-country, L1 for single country
                                                     cols = "parameter_id",

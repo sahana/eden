@@ -569,7 +569,8 @@ def customise_stats_demographic_data_resource(r, tablename):
     table = r.table
     table.date.label = T("Year")
     table.date.represent = represent_year
-    
+
+    # Add PCode
     s3db.add_components("gis_location",
                         gis_location_tag = {"name": "pcode",
                                             "joinby": "location_id",
