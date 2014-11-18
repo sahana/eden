@@ -4992,7 +4992,9 @@ def pr_contacts(r, **attr):
 
     contact_groups = {}
     for key, group in groupby(contacts, lambda c: c["pr_contact.contact_method"]):
-        contact_groups[key] = list(group)
+        if key not in contact_groups:
+          contact_groups[key] = []
+        contact_groups[key].append(list(group)[0])
 
     contacts_wrapper = DIV(H2(T("Contacts")))
 
