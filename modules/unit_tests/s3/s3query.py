@@ -2039,56 +2039,71 @@ class URLQueryParserTests(unittest.TestCase):
     def testParser(self):
         """ Test parser response and error logging """
 
-        p = S3URLQueryParser()
-        log_recorder = current.log.recorder()
+        # Turn on logging (otherwise no point in recording)
+        settings = current.deployment_settings
+        debug = settings.base.debug
+        settings.base.debug = True
+        from s3log import S3Log
+        del current.log
+        S3Log.setup()
 
-        # Test with valid expression
-        expr = "~.test eq 1"
-        q = p.parse(expr)
-        log_messages = log_recorder.read()
+        try:
+            p = S3URLQueryParser()
 
-        self.assertTrue(isinstance(q, dict))
-        if PYPARSING:
-            self.assertTrue(None in q)
-            self.assertNotIn("Invalid URL Filter Expression", log_messages)
-        else:
+            log_recorder = current.log.recorder()
+
+            # Test with valid expression
+            expr = "~.test eq 1"
+            q = p.parse(expr)
+            log_messages = log_recorder.read()
+
+            self.assertTrue(isinstance(q, dict))
+            if PYPARSING:
+                self.assertTrue(None in q)
+                self.assertNotIn("Invalid URL Filter Expression", log_messages)
+            else:
+                self.assertEqual(q, {})
+
+            # Test with invalid expression
+            # => should succeed, but not return any query
+            expr = "invalidexpression"
+
+            log_recorder.clear()
+            q = p.parse(expr)
+            log_messages = log_recorder.read()
+
             self.assertEqual(q, {})
+            if PYPARSING:
+                self.assertIn("Invalid URL Filter Expression", log_messages)
 
-        # Test with invalid expression
-        # => should succeed, but not return any query
-        expr = "invalidexpression"
+            # Test with empty expression
+            # => should succeed, but not return any query
+            expr = ""
 
-        log_recorder.clear()
-        q = p.parse(expr)
-        log_messages = log_recorder.read()
+            log_recorder.clear()
+            q = p.parse(expr)
+            log_messages = log_recorder.read()
 
-        self.assertEqual(q, {})
-        if PYPARSING:
-            self.assertIn("Invalid URL Filter Expression", log_messages)
+            self.assertEqual(q, {})
+            if PYPARSING:
+                self.assertNotIn("Invalid URL Filter Expression", log_messages)
 
-        # Test with empty expression
-        # => should succeed, but not return any query
-        expr = ""
+            # Test without expression
+            # => should succeed, but not return any query
+            expr = None
 
-        log_recorder.clear()
-        q = p.parse(expr)
-        log_messages = log_recorder.read()
+            log_recorder.clear()
+            q = p.parse(expr)
+            log_messages = log_recorder.stop()
 
-        self.assertEqual(q, {})
-        if PYPARSING:
-            self.assertNotIn("Invalid URL Filter Expression", log_messages)
+            self.assertEqual(q, {})
+            if PYPARSING:
+                self.assertNotIn("Invalid URL Filter Expression", log_messages)
 
-        # Test without expression
-        # => should succeed, but not return any query
-        expr = None
-
-        log_recorder.clear()
-        q = p.parse(expr)
-        log_messages = log_recorder.stop()
-
-        self.assertEqual(q, {})
-        if PYPARSING:
-            self.assertNotIn("Invalid URL Filter Expression", log_messages)
+        finally:
+            settings.base.debug = debug
+            del current.log
+            S3Log.setup()
 
     # -------------------------------------------------------------------------
     def testAlias(self):
