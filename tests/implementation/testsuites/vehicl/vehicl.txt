@@ -16,17 +16,17 @@ ${SupplierSelector}     asset_asset_supply_org_id
 Add Vehicl Type 
   Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
   Go To ${VEHICL URL}/vehicl_type/ceate
-	Input Text  ${VehiclTypeCode}  1234
-	Input Text  ${VehiclTypeName}  New Type 
-	Submit Crud Form
-  Should Show Confirmation	
+  Input Text  ${VehiclTypeCode}  1234
+  Input Text  ${VehiclTypeName}  New Type 
+  Submit Crud Form
+  	
     
 Add Vehicl
     Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
     Go To ${VEHICL URL}/vehicl/create
-	  Input Text  ${AssetNoField}
+    Input Text  ${AssetNoField}
     Select Option  ${VehiclSelector}  New Type 	
     Select Option  ${OrganizationSeletor}  New Oraganization
     Select Option  ${SupplierSelector}  New Organization
-	  Submit CRUD Form
+    Submit CRUD Form
     Should Show Confirmation
