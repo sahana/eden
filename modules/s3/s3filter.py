@@ -804,7 +804,7 @@ class S3SliderFilter(S3RangeFilter):
         if isinstance(validator, IS_INT_IN_RANGE):
             _max = validator.maximum - 1
         elif isinstance(validator, IS_FLOAT_IN_RANGE):
-            _max = validator.maximum 
+            _max = validator.maximum
 
         if values is None:
             # JSONify
@@ -1789,7 +1789,7 @@ class S3OptionsFilter(S3FilterWidget):
             if none is True:
                 none = current.messages["NONE"]
             options.append((None, none))
-            
+
         if not opts.get("multiple") and not self.values:
             # Browsers automatically select the first option in single-selects,
             # but that doesn't filter the data, so the first option must be
@@ -2427,7 +2427,7 @@ class S3FilterForm(object):
                 widget_default = filter_widget.opts["default"]
                 if not isinstance(widget_default, dict):
                     if multiple:
-                        widget_default = dict((k, widget_default) 
+                        widget_default = dict((k, widget_default)
                                               for k in variable)
                     else:
                         widget_default = {variable: widget_default}

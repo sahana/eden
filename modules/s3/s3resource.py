@@ -1710,7 +1710,7 @@ class S3Resource(object):
                             after this datetime
             @param fields: data fields to include (default: all)
             @param dereference: include referenced resources
-            @param maxdepth: 
+            @param maxdepth:
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
                                 for all
@@ -1831,7 +1831,7 @@ class S3Resource(object):
             @param fields: data fields to include (default: all)
             @param references: foreign keys to include (default: all)
             @param dereference: also export referenced records
-            @param maxdepth: 
+            @param maxdepth:
             @param mcomponents: components of the master resource to
                                 include (list of tablenames), empty list
                                 for all
@@ -1842,7 +1842,7 @@ class S3Resource(object):
                             {tablename: {url_var: string}}
             @param maxbounds: include lat/lon boundaries in the top
                               level element (off by default)
-            @param xmlformat: 
+            @param xmlformat:
             @param location_data: dictionary of location data which has been
                                   looked-up in bulk ready for xml.gis_encode()
             @param map_data: dictionary of options which can be read by the map
@@ -2135,7 +2135,7 @@ class S3Resource(object):
             @param base_url: the base URL of the resource
             @param reference_map: the reference map of the request
             @param export_map: the export map of the request
-            @param lazy: 
+            @param lazy:
             @param components: list of components to include from referenced
                                resources (tablenames)
             @param filters: additional URL filters (Sync), as dict
@@ -2143,7 +2143,7 @@ class S3Resource(object):
             @param msince: the minimum update datetime for exported records
             @param master: True of this is the master resource
             @param location_data: the location_data for GIS encoding
-            @param xmlformat: 
+            @param xmlformat:
         """
 
         xml = current.xml
@@ -3714,7 +3714,7 @@ class S3Resource(object):
                 try:
                     rfield = rfields[iSortCol]
                 except KeyError:
-                    # iSortCol specifies a non-existent column, i.e. 
+                    # iSortCol specifies a non-existent column, i.e.
                     # iSortCol_x>=numcols => ignore
                     columns.append(Storage(field=None))
                 else:
