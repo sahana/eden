@@ -782,6 +782,20 @@ def task_tag():
     return s3_rest_controller()
 
 # =============================================================================
+def role():
+    """ RESTful CRUD controller """
+    
+    return s3_rest_controller()
+
+# =============================================================================
+def member():
+    """ RESTful CRUD Controller """
+    
+    s3.prep = lambda r: r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# =============================================================================
 def milestone():
     """ RESTful CRUD controller """
 
