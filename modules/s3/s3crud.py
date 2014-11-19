@@ -1228,17 +1228,9 @@ class S3CRUD(S3Method):
         elif representation == "json":
 
             get_vars = self.request.get_vars
-            start = get_vars.get("start", None)
-            limit = get_vars.get("limit", 0)
-            if limit:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = 0 # use default
-            else:
-                start = None
+
+            # Start/limit
+            start, limit = self._limits(get_vars)
 
             # Render extra "_tooltip" field for each row?
             if "tooltip" in get_vars:
@@ -1342,30 +1334,7 @@ class S3CRUD(S3Method):
         # Pagination
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("start", None)
-            limit = get_vars.get("limit", 0)
-            # Deal with overrides (pagination limits come last)
-            if isinstance(start, list):
-                start = start[-1]
-            if isinstance(limit, list):
-                limit = limit[-1]
-            if limit:
-                # Ability to override default limit to "Show All"
-                if limit.lower() == "none":
-                    #start = None # needed?
-                    limit = None
-                else:
-                    try:
-                        start = int(start) if start is not None else None
-                        limit = int(limit)
-                    except (ValueError, TypeError):
-                        # Fall back to defaults
-                        start, limit = None, 0
-            else:
-                # Use defaults, assume sspag because this is a
-                # pagination request by definition
-                start = None
-                limit = 0
+            start, limit = self._limits(get_vars)
         else:
             # Initial page request always uses defaults (otherwise
             # filtering and pagination would have to be relative to
@@ -1590,22 +1559,7 @@ class S3CRUD(S3Method):
             start = 0
             limit = 1
         else:
-            start = get_vars.get("start", None)
-            limit = get_vars.get("limit", 0)
-            if limit:
-                if limit.lower() == "none":
-                    limit = None
-                else:
-                    try:
-                        limit = int(limit)
-                    except ValueError:
-                        limit = 0 # use default
-                    try:
-                        start = int(start)
-                    except ValueError:
-                        start = None
-            else:
-                start = None
+            start, limit = self._limits(get_vars)
 
         # Initialize output
         output = {}
@@ -1758,24 +1712,10 @@ class S3CRUD(S3Method):
         # Pagination
         get_vars = self.request.get_vars
         if representation == "aadata":
-            start = get_vars.get("displayStart", None)
-            limit = get_vars.get("pageLength", 0)
+            start, limit = self._limits(get_vars)
         else:
-            start = get_vars.get("start", None)
-            limit = get_vars.get("limit", 0)
-        if limit:
-            if limit.lower() == "none":
-                limit = None
-            else:
-                try:
-                    start = int(start)
-                    limit = int(limit)
-                except ValueError:
-                    start = None
-                    limit = 0 # use default
-        else:
-            # Use defaults
             start = None
+            limit = None if s3.no_sspag else 0
 
         # Linkto
         if not linkto:
@@ -3081,5 +3021,41 @@ class S3CRUD(S3Method):
             return current.xml.json_message(message=message, uuid=uid)
         else:
             r.error(404, current.ERROR.BAD_RECORD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _limits(get_vars):
+        """
+            Extract page limits (start and limit) from GET vars
+
+            @param get_vars: the GET vars
+        """
+
+        start = get_vars.get("start", None)
+        limit = get_vars.get("limit", 0)
+        # Deal with overrides (pagination limits come last)
+        if isinstance(start, list):
+            start = start[-1]
+        if isinstance(limit, list):
+            limit = limit[-1]
+        if limit:
+            # Ability to override default limit to "Show All"
+            if limit.lower() == "none":
+                #start = None # needed?
+                limit = None
+            else:
+                try:
+                    start = int(start) if start is not None else None
+                    limit = int(limit)
+                except (ValueError, TypeError):
+                    # Fall back to defaults
+                    start, limit = None, 0
+        else:
+            # Use defaults, assume sspag because this is a
+            # pagination request by definition
+            start = None
+            limit = 0
+
+        return start, limit
 
 # END =========================================================================
