@@ -4992,7 +4992,8 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
         if not multiple_opt and header_opt is True:
             # Select All / Unselect All doesn't make sense if multiple == False
             header_opt = False
-        if filter_opt == "auto" or isinstance(filter_opt, (int, long)):
+        if not isinstance(filter_opt, bool) and \
+           (filter_opt == "auto" or isinstance(filter_opt, (int, long))):
             max_options = 10 if filter_opt == "auto" else filter_opt
             if options_len > max_options:
                 filter_opt = True
@@ -5871,7 +5872,16 @@ class S3StringWidget(StringWidget):
                  prefix = None,
                  textarea = False,
                  ):
-        self.cols = columns
+        """
+            Constructor
+            
+            @param columns: number of grid columns to span (Foundation-themes)
+            @param placeholder: placeholder text for the input field
+            @param prefix: text for prefix button (Foundation-themes)
+            @param textarea: render as textarea rather than string input
+        """
+
+        self.columns = columns
         self.placeholder = placeholder
         self.prefix = prefix
         self.textarea = textarea
@@ -5882,7 +5892,11 @@ class S3StringWidget(StringWidget):
             _type = "text",
             value = (value != None and str(value)) or "",
             )
-        attr = StringWidget._attributes(field, default, **attributes)
+
+        if self.textarea:
+            attr = TextWidget._attributes(field, default, **attributes)
+        else:
+            attr = StringWidget._attributes(field, default, **attributes)
 
         placeholder = self.placeholder
         if placeholder:
@@ -5893,23 +5907,21 @@ class S3StringWidget(StringWidget):
         else:
             widget = INPUT(**attr)
 
-        cols = self.cols
-        if self.prefix:
-            # NB These classes target Foundation Themes
-            widget = TAG[""](DIV(SPAN(self.prefix,
-                                      _class="prefix",
-                                      ),
-                                 _class="small-1 columns",
-                                 ),
-                             DIV(widget,
-                                 _class="small-%s columns" % (self.cols - 1),
-                                 ),
-                             # Tell the formstyle not to wrap & collapse
-                             _class="columns collapse",
-                             )
-        elif cols:
+        # NB These classes target Foundation Themes
+        prefix = self.prefix
+        if prefix:
+            widget = DIV(DIV(SPAN(prefix, _class="prefix"),
+                             _class="small-1 columns",
+                             ),
+                         DIV(widget, 
+                             _class="small-11 columns",
+                             ),
+                         _class="row collapse",
+                        )
+        columns = self.columns
+        if columns:
             widget = DIV(widget,
-                         _class="small-%s columns" % cols,
+                         _class="small-%s columns" % columns,
                          )
 
         return widget

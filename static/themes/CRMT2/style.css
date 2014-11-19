@@ -327,6 +327,33 @@ aside .form-container input[type=radio] + label:before {
     width: auto;
 }
 
+/* Apply theme styles for multiselect to the right selector */
+.ui-multiselect {
+    -webkit-appearance: none !important;
+    -webkit-border-radius: 0px;
+    background-color: #FAFAFA;
+    background-position: 100% center;
+    background-repeat: no-repeat;
+    border: 1px solid #cccccc;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: normal;
+    border-radius: 0;
+    height: 2.3125rem;
+    display: block;
+    text-align: left;
+}
+/* Force multiselect button to adapt to grid */
+.columns > .ui-multiselect {
+    width: 100% !important;
+}
+/* Restore textarea resizability in forms (override ext-all-notheme.css) */
+.form-row textarea {
+    resize: both;
+}
+
 /* END */
 
 .row .row {

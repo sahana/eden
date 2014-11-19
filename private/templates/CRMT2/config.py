@@ -1019,7 +1019,6 @@ def customise_org_organisation_controller(**attr):
             table.name.widget = S3StringWidget(placeholder=T("Text"))
             table.phone.widget = S3StringWidget(placeholder=T("+1 800-555-1212"))
             table.website.widget = S3StringWidget(placeholder=T("URL"), prefix="http://")
-            s3db.pr_contact.value.widget = S3StringWidget(placeholder=T("username"), prefix="@")
             table.comments.widget = S3StringWidget(placeholder=T("Comments"), textarea=True)
             if r.method == "update":
                 # Normal Submit buttons
@@ -1125,13 +1124,13 @@ def customise_org_organisation_controller(**attr):
                                "logo",
                                S3SQLInlineComponent(
                                     "group_membership",
-                                    columns = (3, 3),
+                                    columns = (4, 3),
                                     label = T("Coalition"),
                                     fields = [("", "group_id"),
                                               ("", "status_id"),
                                               ],
                                     ),
-                               S3SQLInlineComponentMultiSelectWidget(
+                               S3SQLInlineLink(
                                     "sector",
                                     columns = 4,
                                     label = T("Sectors"),
@@ -1159,7 +1158,11 @@ def customise_org_organisation_controller(**attr):
                                     "contact",
                                     name = "twitter",
                                     columns = (10,),
-                                    fields = [("", "value")],
+                                    fields = [("", "value", 
+                                               S3StringWidget(columns=0,
+                                                              prefix="@",
+                                                              placeholder=T("username"))),
+                                              ],
                                     filterby = dict(field = "contact_method",
                                                     options = "TWITTER"
                                                     ),

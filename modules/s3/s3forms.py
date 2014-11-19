@@ -3006,6 +3006,9 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             # a validator from it
             zero = None if multiple else options.get("zero", XML("&nbsp"))
             opts = self.get_options()
+            if zero is None:
+                # Remove the empty option
+                opts = dict((k, v) for k, v in opts.items() if k != "")
             requires = IS_IN_SET(opts,
                                  multiple=multiple,
                                  zero=zero,
@@ -3060,7 +3063,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 attr["_class"] = "hide"
         widget = w(dummy_field, value, **attr)
         if hasattr(widget, "add_class"):
-            widget.add_class("inline-component")
+            widget.add_class("inline-link")
 
         # Append the attached script to jquery_ready
         script = options.get("script")
