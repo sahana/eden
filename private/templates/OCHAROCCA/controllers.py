@@ -29,11 +29,12 @@ class index(S3CustomController):
         s3db = current.s3db
         db = current.db
 
-        levels = ("L0", "L1", "L2")
+        levels = ("L0", "L1", "L2", "L3", "L4")
         data = {}
         data["total"] = {"location": 0}
         data["total"]["event_event"] = 0
         for level in levels:
+            data["total"]["gis_location_%s" % level] = 0
             data["total"]["stats_demographic_data_%s" % level] = 0
             data["total"]["vulnerability_data_%s" % level] = 0
 
@@ -50,19 +51,24 @@ class index(S3CustomController):
             name = country["name"]
 
             data[code] = {}
+            base_query = (ltable.L0 == name)
 
             # Places
-            base_query = (ltable.L0 == name)
             count = db(base_query).count()
             data[code]["location"] = count
             data["total"]["location"] += count
 
-            # Demographic Data 
-            for table, tablename in ((ddtable, "stats_demographic_data"), (vdtable, "vulnerability_data")):
+            # Administrative Areas, Demographic Data, Baseline 
+            for table, tablename in ((ltable, "gis_location"),
+                                     (ddtable, "stats_demographic_data"), 
+                                     (vdtable, "vulnerability_data")):
 
                 count_field = table._id.count()
+                
                 query = base_query & \
-                        (level_field.belongs(levels)) & \
+                        (level_field.belongs(levels))
+                if tablename != "gis_location":
+                    query = (query) & \
                         (ltable.id == table.location_id)
                 rows = db(query).select(level_field,
                                         count_field,

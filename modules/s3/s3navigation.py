@@ -82,7 +82,7 @@ class S3NavigationItem(object):
         navigation elements.
 
         For more details, see the S3Navigation wiki page:
-        http://eden.sahanafoundation.org/wiki/S3Navigation
+        http://eden.sahanafoundation.org/wiki/S3/S3Navigation
     """
 
     # -------------------------------------------------------------------------

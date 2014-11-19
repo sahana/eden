@@ -14,11 +14,11 @@
    <div class='span3'>
     <h3>{{=T("Resources")}}</h3>
     <ul>
+    <li><a href='http://www.unocha.org/rocca' target='_blank'>{{=T("OCHA ROCCA Main Site")}}</a></li>
     {{if auth.is_logged_in():}}
      <li><a href='http://INTERNAL' target='_blank'>{{=T("ROCCA internal contact directory")}}</a></li>
      <li><a href='http://REGIONAL' target='_blank'>{{=T("Regional UN holidays 2014")}}</a></li>
     {{pass}}
-     <li><a href='http://www.unocha.org/rocca/' target='_blank'>{{=T("ROCCA corporate website")}}</a></li>
      <li><a href='https://cod.humanitarianresponse.info/' target='_blank'>{{=T("COD/FOD registry")}}</a></li>
      <li><a href='https://humanitarianresponse.info/' target='_blank'>{{=T("HumanitarianResponse.info")}}</a></li>
     </ul>
@@ -28,7 +28,6 @@
     <ul>
      <li><a href='/{{=appname}}/default/contact'>{{=T("Contact Us")}}</a></li>
      <li><a href='/{{=appname}}/default/tos' target='_blank'>{{=T("Terms of Service")}}</a></li>
-     <li><a href='http://www.unocha.org/rocca' target='_blank'>{{=T("OCHA ROCCA Main Site")}}</a></li>
     </ul>
    </div>
    <div id='footer-partner-logos' class='span3 hide-on-mobile'>
