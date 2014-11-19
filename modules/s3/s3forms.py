@@ -2147,7 +2147,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param attributes: keyword attributes for this widget
         """
 
-        options = self.options        
+        options = self.options
         if options.readonly is True:
             # Render read-only
             return self.represent(value)
@@ -2664,7 +2664,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 popup = None
 
-            formfield = self._rename_field(table[fname], 
+            formfield = self._rename_field(table[fname],
                                            idxname,
                                            comments=False,
                                            popup=popup,

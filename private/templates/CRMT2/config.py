@@ -1542,6 +1542,7 @@ def customise_org_facility_controller(**attr):
             crud_form = S3SQLCustomForm("name",
                                         S3SQLInlineLink(
                                             "facility_type",
+                                            columns = 4,
                                             label = T("Type of Place"),
                                             field = "facility_type_id",
                                             widget = "hierarchy",
@@ -1549,6 +1550,7 @@ def customise_org_facility_controller(**attr):
                                         "organisation_id",
                                         S3SQLInlineComponent(
                                             "site_org_group",
+                                            columns = (4,),
                                             label = T("Coalition"),
                                             fields = [("", "group_id")],
                                             multiple = False,
@@ -1569,6 +1571,7 @@ def customise_org_facility_controller(**attr):
                                         "email",
                                         S3SQLInlineComponent(
                                             "document",
+                                            columns = (4,),
                                             name = "file",
                                             label = T("Files"),
                                             fields = [("", "file"),

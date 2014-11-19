@@ -353,6 +353,10 @@ aside .form-container input[type=radio] + label:before {
 .form-row textarea {
     resize: both;
 }
+/* Add some spacing between submit buttons */
+.form-row .button {
+    margin-right: 0.175rem;
+}
 
 /* END */
 

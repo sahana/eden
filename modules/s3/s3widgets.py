@@ -5874,7 +5874,7 @@ class S3StringWidget(StringWidget):
                  ):
         """
             Constructor
-            
+
             @param columns: number of grid columns to span (Foundation-themes)
             @param placeholder: placeholder text for the input field
             @param prefix: text for prefix button (Foundation-themes)
@@ -5913,7 +5913,7 @@ class S3StringWidget(StringWidget):
             widget = DIV(DIV(SPAN(prefix, _class="prefix"),
                              _class="small-1 columns",
                              ),
-                         DIV(widget, 
+                         DIV(widget,
                              _class="small-11 columns",
                              ),
                          _class="row collapse",
