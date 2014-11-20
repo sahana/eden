@@ -4040,6 +4040,8 @@ class S3ProjectTaskModel(S3Model):
              "project_tag",
              "project_task",
              "project_task_id",
+             "project_role",
+             "project_member",
              "project_time",
              "project_comment",
              "project_task_project",
@@ -4563,6 +4565,8 @@ class S3ProjectTaskModel(S3Model):
                                             },
                        # Format for S3SQLInlineComponent
                        project_task_milestone = "task_id",
+                       # Members
+                       project_member = "task_id",
                        # Tags
                        project_tag = {"link": "project_task_tag",
                                       "joinby": "task_id",
@@ -4696,6 +4700,60 @@ class S3ProjectTaskModel(S3Model):
                                  "modified_on"
                                  ],
                   )
+
+        # ---------------------------------------------------------------------
+        # Project Task Roles
+        # - Users can assign themselves roles while working on tasks
+        #
+        tablename = "project_role"
+        define_table(tablename,
+                     Field("role", length=128, notnull=True, unique=True,
+                           label=T("Role"),
+                           requires = IS_NOT_ONE_OF(db,
+                                                    "project_role.role"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Role"),
+            title_display = T("Task Role"),
+            title_list = T("Task Roles"),
+            title_update = T("Edit Role"),
+            label_list_button = T("List Roles"),
+            label_delete_button = T("Delete Role"),
+            msg_record_created = T("Role added"),
+            msg_record_modified = T("Role updated"),
+            msg_record_deleted = T("Role deleted"),
+            msg_list_empty = T("No such Role exists"))
+
+        represent = S3Represent(lookup=tablename,
+                                fields=["role"])
+
+        role_id = S3ReusableField("role_id", "reference %s" % tablename,
+                                  ondelete = "CASCADE",
+                                  requires = IS_ONE_OF(db,
+                                                       "project_role.id",
+                                                       represent),
+                                  represent = represent,
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Project Members
+        # - Members for tasks in Project
+        #
+        person_id = self.pr_person_id
+        tablename = "project_member"
+
+        define_table(tablename,
+                     person_id(label = T("Member"),
+                               default = auth.s3_logged_in_person(),
+                               widget = SQLFORM.widgets.options.widget),
+                     role_id(label=T("Role"),
+                             empty = False),
+                     task_id(empty = False,
+                             ondelete = "CASCADE"),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Project Time

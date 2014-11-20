@@ -23,6 +23,19 @@
 .controls {
     white-space: pre-line;
 }
+.s3_add_resource_link {
+    float: left;
+    margin: -8px 0px -8px 5px;
+}
+#assign-role {
+    outline: 0;
+}
+#assign-role span {
+    margin-left: 8px;
+}
+#assign-container {
+    margin-left: 1%;
+}
 
 /* Sunflower Throbber */
 .s3-twitter-throbber {

@@ -10,6 +10,9 @@ except:
 from gluon import current, URL
 from gluon.storage import Storage
 from gluon.validators import IS_IN_SET
+from gluon.html import *
+
+from s3 import *
 
 T = current.T
 settings = current.deployment_settings
@@ -156,7 +159,6 @@ settings.project.hazards = True
 settings.project.themes = True
 # Uncomment this to use multiple Organisations per project
 settings.project.multiple_organisations = True
-
 # Uncomment this to use emergency contacts in pr
 settings.pr.show_emergency_contacts = False
 
@@ -240,6 +242,11 @@ def customise_project_project_controller(**attr):
             result = standard_prep(r)
             if not result:
                 return False
+
+        s3.crud_strings["project_member"] = Storage(
+            msg_record_created = None,
+            msg_record_deleted = None
+        )
 
         if r.interactive:
             is_deployment = False
@@ -422,6 +429,22 @@ def customise_project_project_controller(**attr):
                 s3.actions[0]["url"] = URL(c="project", f="project",
                                            args=["[id]", "deployment"])
 
+        # Add Interested option
+        if r.component_name == "task" and r.component_id:
+            task_table = s3db.project_task
+            query = (task_table.id == r.component_id)
+            row = db(query).select(task_table.uuid).first()
+            data = get_member_data(task_id = r.component_id,
+                                   task_uuid = row.uuid)
+            interest = task_member_option(data,
+                                          as_div = True)
+            if "item" in output:
+                item = output["item"]
+                item.components.insert(0, interest)
+            if "form" in output:
+                form = output["form"]
+                form.components.insert(0, interest)
+
         return output
     s3.postp = custom_postp
 
@@ -432,6 +455,181 @@ def customise_project_project_controller(**attr):
     return attr
 
 settings.customise_project_project_controller = customise_project_project_controller
+
+# -----------------------------------------------------------------------------
+def customise_project_task_controller(**attr):
+
+    response = current.response
+    s3db = current.s3db
+    auth = current.auth
+    s3 = response.s3
+
+    def task_rheader(r):
+
+        tablename = r.tablename
+        record = r.record
+        table = r.table
+
+        if r.representation != "html" or not record:
+            # rheaders are only used in interactive views
+            return None
+
+        settings = current.deployment_settings
+        attachments_label = settings.get_ui_label_attachments()
+        # Tabs
+        tabs = [(T("Details"), None),
+                (attachments_label, "document")]
+        append = tabs.append
+        if settings.has_module("msg"):
+            append((T("Notify"), "dispatch"))
+
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+
+        # rheader
+        resource = r.resource
+        fields = resource.fields + ['task_tag.tag_id',
+                                    'task_milestone.milestone_id',
+                                    'task_project.project_id']
+
+        data = resource.select(fields,
+                               getids=True,
+                               represent=True)
+        row = data.rows[0]
+        _data = get_member_data(r.id, row["project_task.uuid"])
+        interest = task_member_option(_data)
+
+        project = TR(TH("%s: " % T("Project")),
+                     row["project_task_project.project_id"])
+
+        tags = TR(TH("%s: " % T("Tags")),
+                  row["project_task_tag.tag_id"])
+
+        created_by = TR(TH("%s: " % T("Created By")),
+                        row["project_task.created_by"])
+
+        milestone = TR(TH("%s: " % T("Milestone")),
+                       row["project_task_milestone.milestone_id"])
+
+        status = TR(TH("%s: " % T("Status")),
+                    row["project_task.status"])
+
+        rheader = DIV(TABLE(project,
+                            TR(TH("%s: " % table.name.label),
+                               record.name,
+                               ),
+                            milestone,
+                            tags,
+                            status,
+                            created_by,
+                            interest,
+                            ), rheader_tabs)
+
+        return rheader
+
+    attr["rheader"] = task_rheader
+    return attr
+
+settings.customise_project_task_controller = customise_project_task_controller
+
+# -----------------------------------------------------------------------------
+def get_member_data(task_id,
+                    task_uuid):
+    """
+        Retreive the Data to be used by the 'Watch Button' in
+        Client-Side.
+
+        @param task_id: Task id
+        @param task_uuid: Task UUID
+    """
+    response = current.response
+    s3 = response.s3
+    s3db = current.s3db
+    auth = current.auth
+    db = current.db
+
+    # Check if the User has a role
+    user = auth.s3_logged_in_person()
+    mtable = s3db.project_member
+    rtable = s3db.project_role
+
+    query = (mtable.task_id == task_id) & \
+            (mtable.deleted == False) & \
+            (mtable.person_id == user) & \
+            (rtable.deleted == False) & \
+            (rtable.id == mtable.role_id)
+
+    user_role = db(query).select(mtable.id,
+                                 mtable.uuid).first()
+    data = dict(task_uuid = task_uuid,
+                url = "/project/task/%s/member/" % (str(task_id)),
+                id = "null")
+
+    if user_role:
+        data["id"] = str(user_role.id)
+
+    # Need UUID to insert via 's3json'
+    # UUID of 'Watching' Role
+    query = (rtable.role == "Watching") & \
+            (rtable.deleted == False)
+    role = db(query).select(rtable.uuid).first()
+    try:
+        data["role_uuid"] = role.uuid
+    except:
+        data["role_uuid"] = "null"
+        current.log.error("Task Roles not prepopulated")
+
+    return data
+
+# -----------------------------------------------------------------------------
+def task_member_option(data,
+                       as_div = False):
+    """
+        returns an Button to allow Users to 'Watch' Tasks.
+
+        @param data: Data to be added to the Button
+        @param as_div: button to be displayed in a form.
+                       default => rheader
+    """
+    auth = current.auth
+    s3 = current.response.s3
+    scripts = s3.scripts
+
+    WATCH = T("Watch")
+    UNWATCH = T("Unwatch")
+    scripts.append("/%s/static/themes/SSF/js/role.js" % \
+                                        (current.request.application))
+
+    s3.js_global.append('''
+i18n.assign_role="%s"
+i18n.revert_role="%s"''' % (WATCH,
+                            UNWATCH))
+
+    user_id = auth.s3_logged_in_person()
+
+    if not user_id:
+        interest = ""
+    else:
+        _id = data["id"]
+        if _id == "null":
+            icon_class = "icon-eye-open"
+            label = WATCH
+        else:
+            icon_class = "icon-eye-close"
+            label = UNWATCH
+
+        button = A(I(_class=icon_class),
+                   SPAN(label),
+                   data = data,
+                   _id="assign-role",
+                   _class="btn btn-default")
+        if as_div:
+            interest = DIV(BR(),
+                           button,
+                           _id="assign-container")
+        else:
+            interest = TD(button)
+
+    return interest
 
 # -----------------------------------------------------------------------------
 def customise_project_task_resource(r, tablename):
@@ -447,6 +645,10 @@ def customise_project_task_resource(r, tablename):
     T = current.T
     crud_strings = current.response.s3.crud_strings
 
+    crud_strings["project_member"] = Storage(
+        msg_record_created = None,
+        msg_record_deleted = None
+    )
     if r.interactive:
         trimmed_task = False
         get_vars = r.get_vars
@@ -488,7 +690,7 @@ def customise_project_task_resource(r, tablename):
                                fields = ["", "file"],
                            ),
                            ]
-    
+
             crud_strings["project_task"]["label_create"] = ADD_TASK
             tagtable = s3db.project_tag
             query = (tagtable.deleted != True) & \
@@ -518,7 +720,12 @@ def customise_project_task_resource(r, tablename):
                            ),
                            "priority",
                            "status",
-                           "pe_id",
+                           S3SQLInlineComponent(
+                               "member",
+                               label = T("Members"),
+                               fields = [("", "person_id")],
+                               readonly = True,
+                           ),
                            "source",
                            "date_due",
                            "time_estimated",
