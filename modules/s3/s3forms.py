@@ -3071,6 +3071,10 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         """
 
         options = self.options
+        if options.readonly is True:
+            #Render read-only
+            return self.represent(value)
+
         component, link = self.get_link()
 
         multiple = options.get("multiple", True)
@@ -3497,6 +3501,11 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             @ToDo: Option for Grouped Checkboxes (e.g. for Activity Types)
         """
 
+        opts = self.options
+        if opts.readonly is True:
+            # Render read-only
+            return self.represent(value)
+
         if value is None:
             value = field.default
         if isinstance(value, basestring):
@@ -3508,13 +3517,9 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
             raise SyntaxError("No resource structure information")
 
         T = current.T
-        opts = self.options
-
         script = opts.get("script", None)
         if script:
             current.response.s3.jquery_ready.append(script)
-
-        # @ToDo: Render read-only if self.readonly
 
         # @ToDo: Hide completely if the user is not permitted to read this
         # component
@@ -3866,6 +3871,11 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
             @ToDo: support Multiple=False
         """
 
+        opts = self.options
+        if opts.readonly is True:
+            # Render read-only
+            return self.represent(value)
+
         if value is None:
             value = field.default
         if isinstance(value, basestring):
@@ -3878,15 +3888,12 @@ class S3SQLInlineComponentMultiSelectWidget(S3SQLInlineComponentCheckbox):
 
         T = current.T
 
-        opts = self.options
-
         jquery_ready = current.response.s3.jquery_ready
 
         script = opts.get("script", None)
         if script and script not in jquery_ready:
             jquery_ready.append(script)
 
-        # @ToDo: Render read-only if self.readonly
 
         # @ToDo: Hide completely if the user is not permitted to read this
         # component
