@@ -97,13 +97,18 @@
 <div class='homepage menus'> 
   <div class='menu'>
    <a href='/{{=appname}}/gis/location/summary'>
-     <h3><span class='badge location throbber'></span>Places</h3>
+     <h3><span class='badge location throbber'></span>Administrative Areas</h3>
+     <p><span class='badge gis_location_L0 throbber'></span> Country</p>
+     <p><span class='badge gis_location_L1 throbber'></span> Admin 1</p>
+     <p><span class='badge gis_location_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge gis_location_L3 throbber'></span> Admin 3</p>
+     <p><span class='badge gis_location_L4 throbber'></span> Admin 4</p>
    </a>
   </div>
   <div class='menu'>
    <a href='/{{=appname}}/stats/demographic_data/summary'>
      <h3>Demographic Data</h3>
-     <p><span class='badge stats_demographic_data_L0 throbber'></span> Country</p>
+     <p><span class='badge stats_demographic_data_L0 throbber'></span> Countries</p>
      <p><span class='badge stats_demographic_data_L1 throbber'></span> Admin 1</p>
      <p><span class='badge stats_demographic_data_L2 throbber'></span> Admin 2</p>
    </a>
@@ -172,6 +177,11 @@ $(document).ready(function(){
 
     var _updateStats = function(code) {
         var resources = ['location',
+                         'gis_location_L0',
+                         'gis_location_L1',
+                         'gis_location_L2',
+                         'gis_location_L3',
+                         'gis_location_L4',
                          'stats_demographic_data_L0',
                          'stats_demographic_data_L1',
                          'stats_demographic_data_L2',
