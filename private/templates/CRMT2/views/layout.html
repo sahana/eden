@@ -61,7 +61,7 @@
    {{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
   </div>
  </div>
- {{if request.controller in ("default", "cms", "gis") and request.function in ("index", "post", "config"):}}
+ {{if (request.controller in ("default", "cms", "gis") and request.function in ("index", "post", "config")) or ("dashboard" in request.args):}}
   {{include}}
  {{else:}}
  <div class='row'>

@@ -16,16 +16,15 @@ class index(S3CustomController):
 
         output = {}
 
-        # latest Activities
+        # Latest Activities
         db = current.db
         s3db = current.s3db
         atable = s3db.project_activity
-        total_activities = db(atable.deleted == False).count()
-        output["total_activities"] = total_activities
+        query = (atable.deleted == False)
+        output["total_activities"] = db(query).count()
 
         gtable = s3db.gis_location
-        query = (atable.deleted == False) & \
-                (atable.location_id == gtable.id)
+        query &= (atable.location_id == gtable.id)
         rows = db(query).select(atable.id,
                                 atable.name,
                                 atable.date,

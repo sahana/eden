@@ -1,10 +1,8 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE|UPDATE,,,,,Allow new users to create orgs during registration 
 ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,Allow new users to create orgs during registration 
-ANONYMOUS,Anonymous,,org,group,,,READ,,,,,Allow display of Coalition Polygons on homepage
 ANONYMOUS,Anonymous,,,,org_group,,READ,,,,,Allow selection of Coalition during Registration
 ANONYMOUS,Anonymous,,cms,page,,,READ,READ,,,,Allow display of Map Layer Metadata
-ANONYMOUS,Anonymous,,,,s3_audit,,READ,,,,,Allow display of Site Activity on Homepage
 AUTHENTICATED,Authenticated,,default,person,,,READ|CREATE|UPDATE,,,,,
 AUTHENTICATED,Authenticated,,default,person,gis_location,,READ|CREATE|UPDATE,,,,,
 AUTHENTICATED,Authenticated,,cms,post,,,READ|CREATE,READ|CREATE|UPDATE,,,,
@@ -13,6 +11,7 @@ AUTHENTICATED,Authenticated,,gis,index,,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,gis,geocode,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,ldata,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,location,,,READ,,,,,
+AUTHENTICATED,Authenticated,,gis,poi,,,READ|CREATE|UPDATE,ALL,,,,
 AUTHENTICATED,Authenticated,,gis,proxy,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,screenshot,,,READ,,,,,
 AUTHENTICATED,Authenticated,,pr,person,,,READ|CREATE,READ|CREATE|UPDATE,,,,
@@ -35,7 +34,7 @@ AUTHENTICATED,Authenticated,,,,gis_layer_wms,,READ|CREATE,,,,,
 AUTHENTICATED,Authenticated,,,,gis_layer_xyz,,READ|CREATE,,,,,
 AUTHENTICATED,Authenticated,,,,gis_poi,,READ|CREATE|UPDATE,ALL,,,,
 AUTHENTICATED,Authenticated,,,,gis_poi_type,,READ|CREATE|UPDATE,ALL,,,,
-AUTHENTICATED,Authenticated,,,,hrm_human_resource,,,READ,,,,
+AUTHENTICATED,Authenticated,,,,hrm_human_resource,,,READ|CREATE|UPDATE,ALL,,,
 AUTHENTICATED,Authenticated,,,,hrm_training,,,READ,,,,
 AUTHENTICATED,Authenticated,,,,pr_contact,,,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,pr_filter,,READ,READ|CREATE|UPDATE,,,,
@@ -44,6 +43,7 @@ AUTHENTICATED,Authenticated,,,,pr_image,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,pr_person,,READ|CREATE,READ|UPDATE,,,,
 AUTHENTICATED,Authenticated,,event,,,,READ|CREATE|UPDATE,ALL,,,,
 AUTHENTICATED,Authenticated,,org,,,,READ|CREATE|UPDATE,ALL,,,,
+AUTHENTICATED,Authenticated,,org,group,,,READ,,,,,
 AUTHENTICATED,Authenticated,,org,organisation,,,READ|CREATE|UPDATE|REVIEW|APPROVE,ALL,,,,When authenticated users create orgs they are auto-approved
 AUTHENTICATED,Authenticated,,,,org_facility,,READ|CREATE|UPDATE,ALL,,,,Needed for Impersonated Import
 AUTHENTICATED,Authenticated,,,,org_facility_type,,READ|CREATE|UPDATE,ALL,,,,Needed for Impersonated Import

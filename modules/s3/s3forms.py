@@ -3048,7 +3048,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
 
         options = self.options
         if options.readonly is True:
-            #Render read-only
+            # Render read-only
             return self.represent(value)
 
         component, link = self.get_link()

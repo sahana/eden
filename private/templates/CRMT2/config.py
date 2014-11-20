@@ -441,7 +441,7 @@ def customise_pr_person_controller(**attr):
                     msg_list_empty = T("No People currently registered"))
 
             # Custom Form (Read/Create/Update)
-            from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent, S3StringWidget
             if r.method in ("create", "update"):
                 # Custom Widgets/Validators
                 widgets = True
@@ -455,7 +455,7 @@ def customise_pr_person_controller(**attr):
             #represent = S3Represent(lookup="org_site")
             #site_field.represent = represent
             if widgets:
-                from s3 import IS_ONE_OF, S3MultiSelectWidget, S3StringWidget
+                from s3 import IS_ONE_OF, S3MultiSelectWidget
                 from s3layouts import S3AddResourceLink
                 htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
                 #site_field.widget = S3MultiSelectWidget(multiple=False)
@@ -848,12 +848,14 @@ def customise_project_activity_controller(**attr):
                                report_options = report_options,
                                )
 
-            if method in ("create", "update", "summary"):
+            if method in ("create", "update"):
                 # Custom Widgets/Validators
                 from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
 
                 s3db.project_activity_activity_type.activity_type_id.widget = S3MultiSelectWidget(multiple=False)
-                s3db.project_activity_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+                field = s3db.project_activity_group.group_id
+                field.default = current.auth.user.org_group_id
+                field.widget = S3MultiSelectWidget(multiple=False)
                 s3db.project_activity_organisation.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
                 field = table.location_id
@@ -1104,7 +1106,8 @@ def customise_org_organisation_controller(**attr):
                                )
 
             # Custom CRUD Form
-            if not current.auth.is_logged_in():
+            auth = current.auth
+            if not auth.is_logged_in():
 
                 # Anonymous user creating Org: Keep Simple
                 from s3 import S3SQLCustomForm
@@ -1120,6 +1123,7 @@ def customise_org_organisation_controller(**attr):
 
                 from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent, \
                                S3SQLInlineComponentMultiSelectWidget, S3SQLInlineLink
+
                 form_fields = ["name",
                                "logo",
                                S3SQLInlineComponent(
@@ -1187,6 +1191,7 @@ def customise_org_organisation_controller(**attr):
 
                 # Coalition Memberships
                 mtable = s3db.org_group_membership
+                mtable.group_id.default = auth.user.org_group_id
                 mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
                 #from s3layouts import S3AddResourceLink
                 #mtable.status_id.comment = S3AddResourceLink(c="org",
@@ -1325,46 +1330,144 @@ def org_group_dashboard(r, **attr):
         Custom Method for a Coalition Dashboard page
     """
 
-    contacts_widget = dict(label = "Recent Contacts",
-                           #label_create = "Add Contact",
-                           type = "datalist",
-                           tablename = "hrm_human_resource",
-                           context = "org_group",
-                           )
-    org_width = dict(type = "datalist",
-                   tablename = "org_organisation",
-                   context = "org_group",
-                   list_fields = ["name",
-                                  ],
-                   #list_layout = coalition_org_layout,
-                   )
-    activities_widget = dict(label = "Latest Activities",
-                             #label_create = "Add Activity",
-                             type = "datalist",
-                             tablename = "project_activity",
-                             context = "org_group",
-                             list_fields = ["name",
-                                            "location_id",
-                                            ],
-                             #list_layout = coalition_activity_layout,
-                             )
-    from s3 import FS, S3CustomController
-    summary_widget = dict(type = "summary",
-                          context = "org_group",
-                          resources = [("People", "hrm_human_resource"),
-                                       ("Organizations", "org_organisation"),
-                                       ("Activities", "project_activity"),
-                                       ("Points", "gis_poi", FS("gis_location.gis_feature_type") == 1),
-                                       ("Routes", "gis_poi", FS("gis_location.gis_feature_type") == 2),
-                                       ("Areas", "gis_poi", FS("gis_location.gis_feature_type") == 3),
-                                       ],
-                          #layout = coalition_summary_layout,
-                          )
+    from s3 import S3CustomController, s3_fullname
 
-    title = T("%s Coalition") % r.record.name
+    db = current.db
+    s3db = current.s3db
 
-    S3CustomController()._view("CRMT2", "dashboard.htm")
-    return dict(title=title)
+    record = r.record
+    org_group_id = record.id
+    title = T("%s Coalition") % record.name
+
+    output = dict(title = title,
+                  coalition_id = org_group_id,
+                  )
+
+    # Maps
+    auth = current.auth
+    ctable = s3db.gis_config
+    query = (ctable.pe_id.belongs((org_group_id, auth.s3_user_pe_id(auth.user.id)))) & \
+            (ctable.deleted == False)
+    rows = db(query).select(ctable.id,
+                            ctable.name,
+                            ctable.image,
+                            )
+    maps = []
+    for row in rows:
+        maps.append(Storage(id = row.id,
+                            name = row.name,
+                            image = row.image,
+                            ))
+    output["maps"] = maps
+
+    # Slick slider
+    s3 = current.response.s3
+    if s3.debug:
+        s3.scripts.append("/%s/static/scripts/slick.js" % r.application)
+    else:
+        s3.scripts.append("/%s/static/scripts/slick.min.js" % r.application)
+    script = '''
+$(document).ready(function(){
+ $('.slick-slider').slick({
+  dots:true
+ });
+});'''
+    s3.jquery_ready.append(script)
+
+    # Recent Contacts
+    ptable = s3db.pr_person
+    query = (ptable.deleted == False)
+    output["total_contacts"] = db(query).count()
+
+    htable = s3db.hrm_human_resource
+    otable = s3db.org_organisation
+    query &= (htable.person_id == ptable.id) & \
+             (htable.organisation_id == otable.id)
+    rows = db(query).select(ptable.id,
+                            ptable.first_name,
+                            ptable.middle_name,
+                            ptable.last_name,
+                            ptable.created_on,
+                            otable.name,
+                            limitby = (0, 5),
+                            orderby = ~ptable.created_on
+                            )
+    recent_contacts = []
+    for row in rows:
+        person = row["pr_person"]
+        recent_contacts.append(Storage(id = person.id,
+                                       name = s3_fullname(person),
+                                       org = row["org_organisation.name"],
+                                       ))
+    output["recent_contacts"] = recent_contacts
+    
+    # Latest Activities
+    atable = s3db.project_activity
+    ltable = s3db.project_activity_group
+    query = (atable.deleted == False) & \
+            (ltable.group_id == org_group_id)
+    output["total_activities"] = db(query).count()
+
+    gtable = s3db.gis_location
+    query &= (atable.location_id == gtable.id)
+    rows = db(query).select(atable.id,
+                            atable.name,
+                            atable.date,
+                            gtable.L3,
+                            limitby = (0, 5),
+                            orderby = ~atable.date
+                            )
+    latest_activities = []
+    current.deployment_settings.L10n.date_format = "%d %b %y"
+    drepresent = atable.date.represent
+
+    for row in rows:
+        date = row["project_activity.date"]
+        if date:
+            nice_date = drepresent(date)
+        else:
+            nice_date = ""
+        latest_activities.append(Storage(id = row["project_activity.id"],
+                                         name = row["project_activity.name"],
+                                         date = nice_date,
+                                         date_iso = date or "",
+                                         location = row["gis_location.L3"],
+                                         ))
+    output["latest_activities"] = latest_activities
+
+    # Partner Organizations
+    ltable = s3db.org_group_membership
+    query = (otable.deleted == False) & \
+            (ltable.group_id == org_group_id)
+    output["total_orgs"] = db(query).count()
+
+    rows = db(query).select(otable.id,
+                            otable.name,
+                            limitby = (0, 5),
+                            )
+    partner_orgs = []
+    for row in rows:
+        partner_orgs.append(Storage(id = row["org_organisation.id"],
+                                    name = row["org_organisation.name"],
+                                    ))
+    output["partner_orgs"] = partner_orgs
+
+    # PoIs
+    ptable = s3db.gis_poi
+    ltable = s3db.gis_poi_group
+    query = (ptable.deleted == False) & \
+            (ltable.group_id == org_group_id) & \
+            (ptable.location_id == gtable.id)
+    q = query & (gtable.gis_feature_type == 1)
+    output["total_points"] = db(q).count()
+    q = query & (gtable.gis_feature_type == 2)
+    output["total_routes"] = db(q).count()
+    q = query & (gtable.gis_feature_type == 3)
+    output["total_areas"] = db(q).count()
+
+    S3CustomController()._view("CRMT2", "dashboard.html")
+
+    return output
 
 def customise_org_group_controller(**attr):
 
@@ -2188,7 +2291,10 @@ def customise_gis_poi_controller(**attr):
             field.label = T("Contact Person")
             field.requires = IS_ADD_PERSON_WIDGET2(allow_empty=True)
             field.widget = S3AddPersonWidget2(controller="pr")
-            s3db.gis_poi_group.group_id.widget = S3MultiSelectWidget(multiple=False)
+            field = s3db.gis_poi_group.group_id
+            user = current.auth.user
+            field.default = user and user.org_group_id
+            field.widget = S3MultiSelectWidget(multiple=False)
             if r.repesentation != "popup":
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
@@ -2238,9 +2344,9 @@ def customise_gis_poi_controller(**attr):
             s3db.configure(tablename,
                            create_next = create_next,
                            create_next_close = create_next_close,
+                           delete_next = r.url(method="summary", id=0),
                            crud_form = crud_form,
                            icon = icon,
-                           delete_next = r.url(method="summary", id=0),
                            update_next = r.url(method="summary", id=0),
                            )
         return True
