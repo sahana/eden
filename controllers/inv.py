@@ -799,7 +799,7 @@ def send_cancel():
 
     inv_ship_status = s3db.inv_ship_status
     if send_record.status != inv_ship_status["SENT"]:
-        session.error = T("This shipment has not been sent - it has NOT been canceled because can still be edited.")
+        session.error = T("This shipment has not been sent - it has NOT been canceled because it can still be edited.")
 
     if session.error:
         redirect(URL(c="inv", f="send",
@@ -1241,7 +1241,7 @@ def recv_cancel():
 
     inv_ship_status = s3db.inv_ship_status
     if recv_record.status != inv_ship_status["RECEIVED"]:
-        session.error = T("This shipment has not been received - it has NOT been canceled because can still be edited.")
+        session.error = T("This shipment has not been received - it has NOT been canceled because it can still be edited.")
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     stable = s3db.inv_send

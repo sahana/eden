@@ -254,6 +254,10 @@ def customise_project_project_controller(**attr):
             stable = s3db.project_sector_project
             otable = s3db.org_sector
 
+            # Edit the end_date label of "project_milestone" table
+            milestone_table = s3db.project_milestone
+            milestone_table.date.label = T("End Date")
+
             # Check if current record is Deployment
             if r.id:
                 # Viewing details of project_project record

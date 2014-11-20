@@ -1533,7 +1533,7 @@
 'This appears to be a duplicate of ': 'يظهر أن هذا مكرر لـ',
 'This file already exists on the server as': 'هذا الملف موجود مسبقا على الملقم (server) ك',
 'This level is not open for editing.': 'هذا المستوى غير مفتوح من أجل التحرير.',
-'This shipment has not been received - it has NOT been canceled because can still be edited.': 'لم تستقبل هده الشحنة.و.لم يتم الغائهاا لان لاتزال امكانية تحريرها',
+'This shipment has not been received - it has NOT been canceled because it can still be edited.': 'لم تستقبل هده الشحنة.و.لم يتم الغائهاا لان لاتزال امكانية تحريرها',
 'This shipment will be confirmed as received.': 'سيتم تأكيد هذه الشحنة كما سُلمت',
 'This value adds a small mount of distance outside the points. Without this, the outermost points would be on the bounding box, and might not be visible.': 'تضيف هذه القيمة مقدار صغير من المسافة خارجا النقاط. بدون هذا، فإن أبعد النقاط تكون على المربع المحيط، وربما لا تكون مرئية.',
 'This value gives a minimum width and height in degrees for the region shown. Without this, a map showing a single point would not show any extent around that point. After the map is displayed, it can be zoomed as desired.': 'هده القيمة تعطي عرض ادنى و ارتفا ع في درجات المنطقة المبينة.فمن دون دلك فتبين الخريطة نقطة واحدة لن تظهر اي مدى حولها.بعده يتم عرض الخريطة كما يمكن تكبيرهاعلى النحو المرغوب فيه.',
