@@ -1094,13 +1094,6 @@ class S3SQLCustomForm(S3SQLForm):
             component = self.resource.components[alias]
             subtable = component.table
 
-            # Apply component defaults
-            defaults = component.defaults
-            if isinstance(defaults, dict):
-                for k, v in defaults.items():
-                    if k not in subdata and k in subtable.fields:
-                        subdata[k] = v
-
             # Get the key (pkey) of the master record to link the
             # subtable record to, and update the subdata with it
             pkey = component.pkey
@@ -1119,6 +1112,14 @@ class S3SQLCustomForm(S3SQLForm):
                 subid = rows[alias][subtable._id]
             else:
                 subid = None
+                # Apply component defaults
+                defaults = component.defaults
+                if isinstance(defaults, dict):
+                    for k, v in defaults.items():
+                        if k != component.fkey and \
+                           k not in subdata and \
+                           k in component.fields:
+                            subdata[k] = v
 
             # Accept the subrecord
             self._accept(subid,
@@ -2473,7 +2474,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
         # Name of the real input field
         fname = self._formname(separator="_")
 
-        defaults = self.options.get("default", {})
+        options = self.options
+        multiple = options.get("multiple", True)
+        defaults = options.get("default", {})
 
         if fname in form.vars:
 
@@ -2498,7 +2501,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
             # Link table handling
             link = component.link
-            if link and self.options.get("link", True):
+            if link and options.get("link", True):
                 # data are for the link table
                 actuate_link = False
                 component = link
@@ -2521,6 +2524,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             has_permission = current.auth.s3_has_permission
             audit = current.audit
             onaccept = s3db.onaccept
+
             for item in data:
 
                 if not "_changed" in item and not "_delete" in item:
@@ -2555,14 +2559,29 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             if not error:
                                 values[f] = value
 
-                # @todo: if component is single, get the record_id even if not provided
-                # in the data!
+                record_id = item.get("_id")
+                delete = item.get("_delete")
 
-                if "_id" in item:
-                    record_id = item["_id"]
+                if not record_id:
+                    if delete:
+                        # Item has been added and then removed again,
+                        # so just ignore it
+                        continue
 
+                    elif not component.multiple or not multiple:
+                        # Do not create a second record in this component
+                        query = (resource._id == master_id) & \
+                                component.get_join()
+                        DELETED = current.xml.DELETED
+                        if DELETED in table.fields:
+                            query &= table[DELETED] != True
+                        row = db(query).select(table._id, limitby=(0, 1)).first()
+                        if row:
+                            record_id = row[table._id]
+
+                if record_id:
                     # Delete..?
-                    if "_delete" in item and item["_delete"]:
+                    if delete:
                         authorized = has_permission("delete", tablename, record_id)
                         if not authorized:
                             continue
@@ -2577,9 +2596,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         authorized = has_permission("update", tablename, record_id)
                         if not authorized:
                             continue
-                        values[table._id.name] = record_id
                         query = (table._id == record_id)
                         success = db(query).update(**values)
+                        values[table._id.name] = record_id
 
                         # Post-process update
                         if success:
@@ -2595,10 +2614,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             # Onaccept
                             onaccept(table, Storage(vars=values), method="update")
                 else:
-                    if "_delete" in item and item["_delete"]:
-                        # Row has been added and then removed again, so just
-                        # ignore it
-                        continue
                     # Create a new record
                     authorized = has_permission("create", tablename)
                     if not authorized:
@@ -2615,6 +2630,15 @@ class S3SQLInlineComponent(S3SQLSubForm):
                             return
                     else:
                         master = Storage({pkey: master_id})
+
+                    # Apply component defaults
+                    defaults = component.defaults
+                    if isinstance(defaults, dict):
+                        for k, v in defaults.items():
+                            if k != component.fkey and \
+                               k not in values and \
+                               k in component.fields:
+                                values[k] = v
 
                     if not actuate_link or not link:
                         # Add master record ID as linked directly
