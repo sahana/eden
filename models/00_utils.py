@@ -202,7 +202,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("timeplot", s3base.S3TimePlot) # temporary setting for testing
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
-    
+
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method
     if method == "import" and r.representation == "pdf":
@@ -224,7 +224,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                   "datatable",
                   "datatable_f",
                   "summary"):
-                      
+
         if s3.actions is None:
 
             # Add default action buttons

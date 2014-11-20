@@ -770,7 +770,6 @@ class S3Profile(S3CRUD):
                        onvalidation = onvalidation,
                        onaccept = onaccept,
                        )
-
         _class = self._lookup_class(r, widget)
 
         # Render the widget

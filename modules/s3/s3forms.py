@@ -82,13 +82,29 @@ class S3SQLForm(object):
         self.elements = []
         append = self.elements.append
 
+        debug = current.deployment_settings.get_base_debug()
         for element in elements:
+            if not element:
+                continue
             if isinstance(element, S3SQLFormElement):
                 append(element)
             elif isinstance(element, str):
                 append(S3SQLField(element))
+            elif isinstance(element, tuple):
+                l = len(element)
+                if l > 1:
+                    label, selector = element[:2]
+                    widget = element[2] if l > 2 else DEFAULT
+                else:
+                    selector = element[0]
+                    label = widget = DEFAULT
+                append(S3SQLField(selector, label=label, widget=widget))
             else:
-                raise SyntaxError("Invalid form element: %s" % str(element))
+                msg = "Invalid form element: %s" % str(element)
+                if debug:
+                    raise SyntaxError(msg)
+                else:
+                    current.log.error(msg)
 
         opts = {}
         attr = {}
@@ -1072,12 +1088,18 @@ class S3SQLCustomForm(S3SQLForm):
         for alias in self.subtables:
 
             subdata = self._extract(form, alias=alias)
-
             if not subdata:
                 continue
 
             component = self.resource.components[alias]
             subtable = component.table
+
+            # Apply component defaults
+            defaults = component.defaults
+            if isinstance(defaults, dict):
+                for k, v in defaults.items():
+                    if k not in subdata and k in subtable.fields:
+                        subdata[k] = v
 
             # Get the key (pkey) of the master record to link the
             # subtable record to, and update the subdata with it
@@ -1166,10 +1188,12 @@ class S3SQLCustomForm(S3SQLForm):
         """
 
         if not data:
-            if alias is None:
+            if alias is not None:
+                # Component, no data to create or update => skip
                 return None, Storage()
-            else:
-                return None
+            elif record_id:
+                # Existing master record, no data to update => skip
+                return record_id, Storage()
 
         s3db = current.s3db
 
@@ -1177,13 +1201,18 @@ class S3SQLCustomForm(S3SQLForm):
             component = self.resource
         else:
             component = self.resource.components[alias]
+
+        # Get the DB table (without alias)
         table = component.table
         tablename = component.tablename
+        if component._alias != tablename:
+            table = s3db.table(component.tablename)
 
         get_config = s3db.get_config
 
         oldrecord = None
         if record_id:
+            # Update existing record
             accept_id = record_id
             db = current.db
             onaccept = get_config(tablename, "update_onaccept",
@@ -1194,6 +1223,7 @@ class S3SQLCustomForm(S3SQLForm):
                                                               ).first()
             db(table._id == record_id).update(**data)
         else:
+            # Insert new record
             accept_id = table.insert(**data)
             if not accept_id:
                 raise RuntimeError("Could not create record")
@@ -1311,6 +1341,7 @@ class S3SQLFormElement(object):
                       comments=True,
                       popup=None,
                       skip_post_validation=False,
+                      label=DEFAULT,
                       widget=DEFAULT):
         """
             Rename a field (actually: create a new Field instance with the
@@ -1327,6 +1358,7 @@ class S3SQLFormElement(object):
             @param skip_post_validation: skip field validation during POST,
                                          useful for client-side processed
                                          dummy fields.
+            @param label: override option for the original field label
             @param widget: override option for the original field widget
         """
 
@@ -1338,7 +1370,7 @@ class S3SQLFormElement(object):
                             unique=False,
                             uploadfolder=None,
                             autodelete=False,
-                            label="", # @ToDo?
+                            label="",
                             writable=False,
                             readable=True,
                             default=None,
@@ -1347,24 +1379,23 @@ class S3SQLFormElement(object):
                             represent=lambda v: v or "",
                             )
             requires = None
-            if widget is DEFAULT:
-                widget = None
             required = False
             notnull = False
         elif skip_post_validation and \
              current.request.env.request_method == "POST":
             requires = SKIP_POST_VALIDATION(field.requires)
-            # Some widgets may need disabling here
-            if widget is DEFAULT:
-                widget = field.widget
             required = False
             notnull = False
         else:
             requires = field.requires
-            if widget is DEFAULT:
-                widget = field.widget
             required = field.required
             notnull = field.notnull
+
+        if widget is DEFAULT:
+            # Some widgets may need disabling during POST
+            widget = field.widget
+        if label is DEFAULT:
+            label = field.label
 
         if not comments:
             if popup:
@@ -1395,7 +1426,7 @@ class S3SQLFormElement(object):
                   autodelete = field.autodelete,
 
                   widget = widget,
-                  label = field.label,
+                  label = label,
                   comment = comment,
 
                   writable = field.writable,
@@ -1438,28 +1469,51 @@ class S3SQLField(S3SQLFormElement):
 
         rfield = S3ResourceField(resource, self.selector)
 
-        if resource.components:
-            subtables = Storage([(c.tablename, c.alias)
-                                 for c in resource.components.values()
-                                 if not c.multiple])
-        else:
-            subtables = Storage()
+        components = resource.components
+        subtables = {}
+        if components:
+            for alias, component in components.items():
+                if component.multiple:
+                    continue
+                if component._alias:
+                    tablename = component._alias
+                else:
+                    tablename = component.tablename
+                subtables[tablename] = alias
 
         tname = rfield.tname
         if rfield.field is not None:
 
+            field = rfield.field
+
+            options = self.options
+            label = options.get("label", DEFAULT)
+            widget = options.get("widget", DEFAULT)
+
             # Field in the main table
             if tname == resource.tablename:
-                return None, rfield.field.name, rfield.field
+                field = rfield.field
+
+                if label is not DEFAULT:
+                    field.label = label
+                if widget is not DEFAULT:
+                    field.widget = widget
+
+                return None, field.name, field
 
             # Field in a subtable (= single-record-component)
             elif tname in subtables:
-                alias = subtables[tname]
                 field = rfield.field
-                name = "sub_%s_%s" % (alias, rfield.fname)
-                f = self._rename_field(field, name)
-                return alias, rfield.field.name, f
 
+                alias = subtables[tname]
+                name = "sub_%s_%s" % (alias, rfield.fname)
+
+                renamed_field = self._rename_field(field,
+                                                   name,
+                                                   label = label,
+                                                   widget = widget,
+                                                   )
+                return alias, field.name, renamed_field
             else:
                 raise SyntaxError("Invalid subtable: %s" % tname)
         else:
@@ -2500,6 +2554,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 continue
                             if not error:
                                 values[f] = value
+
+                # @todo: if component is single, get the record_id even if not provided
+                # in the data!
 
                 if "_id" in item:
                     record_id = item["_id"]

@@ -70,6 +70,7 @@ __all__ = ("S3ACLWidget",
            "S3StringWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
+           "S3FixedOptionsWidget",
            "CheckboxesWidgetS3",
            "s3_comments_widget",
            "s3_richtext_widget",
@@ -6046,6 +6047,67 @@ class S3UploadWidget(UploadWidget):
                           A(UploadWidget.GENERIC_DESCRIPTION, _href = url),
                           "]", br, image)
         return inp
+
+# =============================================================================
+class S3FixedOptionsWidget(OptionsWidget):
+    """ Non-introspective options widget """
+
+    def __init__(self, options, translate=False, sort=True, empty=True):
+        """
+            Constructor
+
+            @param options: the options for the widget, either as iterable of
+                            tuples (value, representation) or as dict
+                            {value:representation}, or as iterable of strings
+                            if value is the same as representation
+            @param translate: automatically translate the representation
+            @param sort: alpha-sort options (by representation)
+            @param empty: add an empty-option (to select none of the options)
+        """
+
+        self.options = options
+        self.translate = translate
+        self.sort = sort
+        self.empty = empty
+
+    def __call__(self, field, value, **attributes):
+
+        default = dict(value=value)
+        attr = self._attributes(field, default, **attributes)
+
+        options = self.options
+
+        if isinstance(options, dict):
+            options = options.items()
+
+        opts = []
+        translate = self.translate
+        T = current.T
+        has_none = False
+        for option in options:
+            if isinstance(option, tuple):
+                k, v = option
+            else:
+                k, v = option, option
+            if v is None:
+                v = current.messages["NONE"]
+            elif translate:
+                v = T(v)
+            if k in (None, ""):
+                k = ""
+                has_none = True
+            opts.append((k, v))
+
+        sort = self.sort
+        if callable(sort):
+            opts = sorted(opts, key=sort)
+        elif sort:
+            opts = sorted(opts, key=lambda item: item[1])
+        if self.empty and not has_none:
+            opts.insert(0, ("", current.messages["NONE"]))
+
+        opts = [OPTION(v, _value=k) for (k, v) in opts]
+        return SELECT(*opts, **attr)
 
 # =============================================================================
 class CheckboxesWidgetS3(OptionsWidget):

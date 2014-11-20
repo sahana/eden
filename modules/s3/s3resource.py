@@ -229,6 +229,8 @@ class S3Resource(object):
         self.fields = table.fields
         self._id = table._id
 
+        self.defaults = None
+
         # Hooks ---------------------------------------------------------------
 
         # Authorization hooks
@@ -373,7 +375,7 @@ class S3Resource(object):
         component.autocomplete = hook.autocomplete
         component.alias = alias
         component.multiple = hook.multiple
-        component.values = hook.values
+        component.defaults = hook.defaults
 
         if hook.filterby is not None:
             filterfor = hook.filterfor

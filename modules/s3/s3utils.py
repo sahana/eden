@@ -125,6 +125,13 @@ def s3_store_last_record_id(tablename, record_id):
 
     session = current.session
 
+    # Web2py type "Reference" can't be pickled in session (no crash,
+    # but renders the server unresponsive) => always convert into long
+    try:
+        record_id = long(record_id)
+    except ValueError:
+        return False
+
     if RCVARS not in session:
         session[RCVARS] = Storage({tablename: record_id})
     else:
