@@ -108,16 +108,17 @@ class S3MainMenu(default.S3MainMenu):
                            vars=dict(_next=login_next), **attr)
         else:
             # Logged-in
-            menu_auth = MM("Welcome, %s!" % auth.user.first_name, c="default", f="user",
-                           translate=False, link=False, _id="auth_menu_email",
+            user = auth.user
+            menu_auth = MM("Welcome, %s!" % user.first_name, c="org", f="group",
+                           args=[user.org_group_id, "dashboard"], translate=False, _id="auth_menu_email",
                            **attr)(
                             MM("Your Maps", c="gis", f="config",
                                args="datalist",
                                vars={"~.pe_id__belongs": auth.user.pe_id}),
                             MM("Admin Users", c="admin", f="user"),
-                            MM("Edit Profile", m="profile"),
-                            MM("Change Password", m="change_password"),
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
+                            MM("Edit Profile", c="default", f="user", m="profile"),
+                            MM("Change Password", c="default", f="user", m="change_password"),
+                            MM("Logout", c="default", f="user", m="logout", _id="auth_menu_logout"),
                         )
 
         return menu_auth

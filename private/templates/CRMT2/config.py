@@ -1320,9 +1320,60 @@ settings.customise_org_organisation_controller = customise_org_organisation_cont
 # -----------------------------------------------------------------------------
 # Coalitions (org_group)
 #
+def org_group_dashboard(r, **attr):
+    """
+        Custom Method for a Coalition Dashboard page
+    """
+
+    contacts_widget = dict(label = "Recent Contacts",
+                           #label_create = "Add Contact",
+                           type = "datalist",
+                           tablename = "hrm_human_resource",
+                           context = "org_group",
+                           )
+    org_width = dict(type = "datalist",
+                   tablename = "org_organisation",
+                   context = "org_group",
+                   list_fields = ["name",
+                                  ],
+                   #list_layout = coalition_org_layout,
+                   )
+    activities_widget = dict(label = "Latest Activities",
+                             #label_create = "Add Activity",
+                             type = "datalist",
+                             tablename = "project_activity",
+                             context = "org_group",
+                             list_fields = ["name",
+                                            "location_id",
+                                            ],
+                             #list_layout = coalition_activity_layout,
+                             )
+    from s3 import FS, S3CustomController
+    summary_widget = dict(type = "summary",
+                          context = "org_group",
+                          resources = [("People", "hrm_human_resource"),
+                                       ("Organizations", "org_organisation"),
+                                       ("Activities", "project_activity"),
+                                       ("Points", "gis_poi", FS("gis_location.gis_feature_type") == 1),
+                                       ("Routes", "gis_poi", FS("gis_location.gis_feature_type") == 2),
+                                       ("Areas", "gis_poi", FS("gis_location.gis_feature_type") == 3),
+                                       ],
+                          #layout = coalition_summary_layout,
+                          )
+
+    title = T("%s Coalition") % r.record.name
+
+    S3CustomController()._view("CRMT2", "dashboard.htm")
+    return dict(title=title)
+
 def customise_org_group_controller(**attr):
 
+    s3db = current.s3db
     s3 = current.response.s3
+
+    s3db.set_method("org", "group",
+                    method = "dashboard",
+                    action = org_group_dashboard)
 
     # Custom prep
     standard_prep = s3.prep
@@ -1335,7 +1386,7 @@ def customise_org_group_controller(**attr):
 
         if r.interactive:
             from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
-            table = current.s3db.org_group
+            table = s3db.org_group
             table.name.label = T("Coalition Name")
             field = table.location_id
             field.label = "" # Gets replaced by widget

@@ -409,7 +409,7 @@ def location():
             if r.method in (None, "list") and r.record is None:
                 # List
                 pass
-            elif r.method in ("delete", "search", "profile"):
+            elif r.method in ("delete", "import", "profile", "summary"):
                 pass
             else:
                 if r.method == "report":
@@ -448,41 +448,42 @@ def location():
                         add_feature_active = False
 
                     record = r.record
-                    if record.gis_feature_type == 1 and record.lat is not None and record.lon is not None:
-                        lat = record.lat
-                        lon = record.lon
-                        # Same as a single zoom on a cluster
-                        zoom = zoom + 2
-                    else:
-                        lat = lon = zoom = None
-                        bbox = {"lon_min" : record.lon_min,
-                                "lat_min" : record.lat_min,
-                                "lon_max" : record.lon_max,
-                                "lat_max" : record.lat_max,
-                                }
-                    feature_resources = {"name"      : T("Location"),
-                                         "id"        : "location",
-                                         "active"    : True,
-                                         }
-                    # Is there a layer defined for Locations?
-                    ftable = s3db.gis_layer_feature
-                    query = (ftable.controller == "gis") & \
-                            (ftable.function == "location")
-                    layer = db(query).select(ftable.layer_id,
-                                             limitby=(0, 1)
-                                             ).first()
-                    if layer:
-                        feature_resources.update(layer_id = layer.layer_id,
-                                                 filter = "~.id=%s" % record.id,
-                                                 )
-                    else:
-                        feature_resources.update(tablename = "gis_location",
-                                                 url = "/%s/gis/location.geojson?~.id=%s" % (appname, record.id),
-                                                 opacity = 0.9,
-                                                 # @ToDo: Style isn't taking effect since gis_feature_type isn't in the attributes
-                                                 style = '[{"prop":"gis_feature_type","cat":1,"externalGraphic":"img/markers/marker_red.png"},{"prop":"gis_feature_type","cat":3,"fill":"FFFFFF","fillOpacity":0.01,"stroke":"0000FF"},{"prop":"gis_feature_type","cat":6,"fill":"FFFFFF","fillOpacity":0.01,"stroke":"0000FF"}]',
-                                                 )
-                    feature_resources = (feature_resources,)
+                    if record:
+                        if record.gis_feature_type == 1 and record.lat is not None and record.lon is not None:
+                            lat = record.lat
+                            lon = record.lon
+                            # Same as a single zoom on a cluster
+                            zoom = zoom + 2
+                        else:
+                            lat = lon = zoom = None
+                            bbox = {"lon_min" : record.lon_min,
+                                    "lat_min" : record.lat_min,
+                                    "lon_max" : record.lon_max,
+                                    "lat_max" : record.lat_max,
+                                    }
+                        feature_resources = {"name"      : T("Location"),
+                                             "id"        : "location",
+                                             "active"    : True,
+                                             }
+                        # Is there a layer defined for Locations?
+                        ftable = s3db.gis_layer_feature
+                        query = (ftable.controller == "gis") & \
+                                (ftable.function == "location")
+                        layer = db(query).select(ftable.layer_id,
+                                                 limitby=(0, 1)
+                                                 ).first()
+                        if layer:
+                            feature_resources.update(layer_id = layer.layer_id,
+                                                     filter = "~.id=%s" % record.id,
+                                                     )
+                        else:
+                            feature_resources.update(tablename = "gis_location",
+                                                     url = "/%s/gis/location.geojson?~.id=%s" % (appname, record.id),
+                                                     opacity = 0.9,
+                                                     # @ToDo: Style isn't taking effect since gis_feature_type isn't in the attributes
+                                                     style = '[{"prop":"gis_feature_type","cat":1,"externalGraphic":"img/markers/marker_red.png"},{"prop":"gis_feature_type","cat":3,"fill":"FFFFFF","fillOpacity":0.01,"stroke":"0000FF"},{"prop":"gis_feature_type","cat":6,"fill":"FFFFFF","fillOpacity":0.01,"stroke":"0000FF"}]',
+                                                     )
+                        feature_resources = (feature_resources,)
 
                 _map = gis.show_map(lat = lat,
                                     lon = lon,
