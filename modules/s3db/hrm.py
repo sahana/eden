@@ -7259,7 +7259,17 @@ class hrm_CV(S3Method):
             * Training
             * Skills
     """
-    
+
+    def __init__(self, form=None):
+        """
+            Constructor
+
+            @param form: widget config to inject at the top of the CV,
+                         or a callable to produce such a widget config
+        """
+
+        self.form = form
+
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
@@ -7310,6 +7320,12 @@ class hrm_CV(S3Method):
                 ]
 
             profile_widgets = []
+            form = self.form
+            if form:
+                if callable(form):
+                    form = form(r)
+                if form is not None:
+                    profile_widgets.append(form)
             if vol and settings.get_hrm_use_awards():
                 awards_widget = dict(label = "Awards",
                                      label_create = "Create Award",

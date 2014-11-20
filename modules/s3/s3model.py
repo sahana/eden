@@ -519,7 +519,7 @@ class S3Model(object):
                     actuate = None
                     autodelete = False
                     autocomplete = None
-                    values = None
+                    defaults = None
                     multiple = True
                     filterby = None
                     filterfor = None
@@ -550,7 +550,7 @@ class S3Model(object):
                     actuate = link.get("actuate")
                     autodelete = link.get("autodelete", False)
                     autocomplete = link.get("autocomplete")
-                    values = link.get("values")
+                    defaults = link.get("defaults")
                     multiple = link.get("multiple", True)
                     filterby = link.get("filterby")
                     filterfor = link.get("filterfor")
@@ -567,7 +567,7 @@ class S3Model(object):
                                     actuate=actuate,
                                     autodelete=autodelete,
                                     autocomplete=autocomplete,
-                                    values=values,
+                                    defaults=defaults,
                                     multiple=multiple,
                                     filterby=filterby,
                                     filterfor=filterfor)
@@ -657,7 +657,7 @@ class S3Model(object):
                 ltable = None
 
             prefix, name = tn.split("_", 1)
-            component = Storage(values=hook.values,
+            component = Storage(defaults=hook.defaults,
                                 multiple=hook.multiple,
                                 tablename=tn,
                                 table=ctable,
