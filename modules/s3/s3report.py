@@ -731,73 +731,85 @@ class S3ReportForm(object):
         resource = self.resource
         get_config = resource.get_config
         options = get_config("report_options")
-        report_formstyle = get_config("report_formstyle", None)
 
+        # Specific formstyle?
+        settings = current.deployment_settings
+        formstyle = settings.get_ui_report_formstyle()
+        # Fall back to inline-variant of current formstyle
+        if formstyle is None:
+            formstyle = settings.get_ui_inline_formstyle()
+
+        # Helper for labels
         label = lambda s, **attr: LABEL("%s:" % s, **attr)
 
-        if report_formstyle:
-            # @ToDo: Full formstyle support
-            selectors = DIV()
-        else:
-            selectors = TABLE()
+        formfields = []
 
         # Layer selector
         layer_id = "%s-fact" % widget_id
-        layer, single = self.layer_options(options=options,
-                                           get_vars=get_vars,
-                                           widget_id=layer_id)
-        single_opt = {"_class": "pt-fact-single-option"} if single else {}
-        if layer:
-            selectors.append(TR(TD(label(FACT, _for=layer_id)),
-                                TD(layer),
-                                **single_opt
-                               )
-                             )
+        layer_widget = self.layer_options(options=options,
+                                          get_vars=get_vars,
+                                          widget_id=layer_id)
+        formfields.append((layer_id + "-row",
+                           label(FACT, _for=layer_id),
+                           layer_widget,
+                           "",
+                           ))
 
         # Rows/Columns selectors
         axis_options = self.axis_options
         rows_id = "%s-rows" % widget_id
         cols_id = "%s-cols" % widget_id
-        select_rows = axis_options("rows",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=rows_id)
-        select_cols = axis_options("cols",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=cols_id)
-
-        selectors.append(TR(TD(label(ROWS, _for=rows_id)),
-                            TD(select_rows),
-                            TD(label(COLS, _for=cols_id)),
-                            TD(select_cols)
-                           )
-                        )
+        rows_options = axis_options("rows",
+                                    options=options,
+                                    get_vars=get_vars,
+                                    widget_id=rows_id)
+        cols_options = axis_options("cols",
+                                    options=options,
+                                    get_vars=get_vars,
+                                    widget_id=cols_id)
+        axis_widget = DIV(rows_options,
+                          label(COLS, _for=cols_id),
+                          cols_options,
+                          _class="pt-axis-options",
+                          )
+        formfields.append(("%s-axis-row" % widget_id,
+                           label(ROWS, _for=rows_id),
+                           axis_widget,
+                           "",
+                           ))
 
         # Show Totals switch
-        show_totals_id = "%s-totals" % widget_id
         show_totals = True
         if get_vars and "totals" in get_vars and \
            str(get_vars["totals"]).lower() in ("0", "false", "off"):
             show_totals = False
         self.show_totals = show_totals
 
-        selectors.append(TR(TD(label(SHOW_TOTALS, _for=show_totals_id)),
-                            TD(INPUT(_type="checkbox",
-                                     _id=show_totals_id,
-                                     _name="totals",
-                                     _class="pt-totals",
-                                     value=show_totals
-                                    )
-                              ),
-                            _class = "pt-show-totals-option"
-                           )
-                         )
+        show_totals_id = "%s-totals" % widget_id
+        totals_widget = INPUT(_type="checkbox",
+                              _id=show_totals_id,
+                              _name="totals",
+                              _class="pt-totals",
+                              value=show_totals
+                              )
 
-        # Render field set
+        formfields.append(("%s-show-totals-row" % widget_id,
+                           label(SHOW_TOTALS, _for=show_totals_id),
+                           totals_widget,
+                           "",
+                           ))
+
+        try:
+            widgets = formstyle(FIELDSET(), formfields)
+        except:
+            # Old style (should be avoided)
+            widgets = TAG[""]([formstyle(*formfield) for formfield in formfields])
+
+        # Render fieldset
         fieldset = self._fieldset(T("Report Options"),
-                                  selectors,
+                                  widgets,
                                   _id="%s-options" % widget_id)
+
         return fieldset
 
     # -------------------------------------------------------------------------
@@ -989,8 +1001,8 @@ class S3ReportForm(object):
                              INPUT(_type="hidden",
                                    _id=widget_id,
                                    _name=widget_id,
-                                   _value=default[0]))
-            single = True
+                                   _value=default[0],
+                                   _class="pt-fact-single-option"))
         else:
             # Render Selector
             dummy_field = Storage(name="fact",
@@ -1000,9 +1012,8 @@ class S3ReportForm(object):
                                           _id=widget_id,
                                           _name="fact",
                                           _class="pt-fact")
-            single = False
 
-        return widget, single
+        return widget
 
     # -------------------------------------------------------------------------
     @staticmethod

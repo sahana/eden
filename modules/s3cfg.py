@@ -1321,6 +1321,18 @@ class S3Config(Storage):
         else:
             return setting
 
+    def get_ui_report_formstyle(self):
+        """ Get the current report form style """
+
+        setting = self.ui.get("report_formstyle", None)
+        formstyles = self.FORMSTYLE
+        if callable(setting):
+            return setting
+        elif setting in formstyles:
+            return formstyles[setting]
+        else:
+            return setting
+
     def get_ui_inline_formstyle(self):
         """ Get the _inline formstyle for the current formstyle """
 

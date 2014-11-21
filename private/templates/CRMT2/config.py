@@ -89,6 +89,7 @@ settings.auth.person_realm_human_resource_site_then_org = False
 # Theme (folder to use for views/layout.html)
 settings.base.theme = "CRMT2"
 settings.ui.formstyle = "foundation_2col"
+#settings.ui.report_formstyle = "foundation_inline"
 settings.ui.hide_report_options = False
 settings.ui.read_label = "" # replaced with icon
 #settings.ui.update_label = "Update"
@@ -1162,7 +1163,7 @@ def customise_org_organisation_controller(**attr):
                                     "contact",
                                     name = "twitter",
                                     columns = (10,),
-                                    fields = [("", "value", 
+                                    fields = [("", "value",
                                                S3StringWidget(columns=0,
                                                               prefix="@",
                                                               placeholder=T("username"))),
@@ -1400,7 +1401,7 @@ $(document).ready(function(){
                                        org = row["org_organisation.name"],
                                        ))
     output["recent_contacts"] = recent_contacts
-    
+
     # Latest Activities
     atable = s3db.project_activity
     ltable = s3db.project_activity_group
