@@ -25,6 +25,7 @@
          Service.................org_organisation$service_id or org_service.parent
          SubService..............org_organisation$service_id or org_service.parent
          SubSubService...........org_organisation$service_id or org_service.parent
+         Groups..................org_group_membership$group_id
          Region..................org_organisation.region_id
          Country.................org_organisation.country (ISO Code)
          Website.................org_organisation.website
@@ -213,6 +214,7 @@
             <xsl:if test="$Row">
                 <!-- Use the data in this row -->
                 
+                <xsl:variable name="Groups" select="col[@field='Groups']/text()"/>
                 <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
                 <xsl:variable name="Services" select="col[@field='Services']/text()"/>
                 <xsl:variable name="Service">
@@ -352,6 +354,14 @@
                 
                 <xsl:if test="col[@field='Comments']!=''">
                     <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                </xsl:if>
+
+                <!-- Org Groups -->
+                <xsl:if test="$Groups!=''">
+                    <xsl:call-template name="splitList">
+                        <xsl:with-param name="list" select="$Groups"/>
+                        <xsl:with-param name="arg">group</xsl:with-param>
+                    </xsl:call-template>
                 </xsl:if>
 
                 <xsl:if test="$Sectors!=''">
@@ -496,6 +506,16 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
+            <!-- Org Groups -->
+            <xsl:when test="$arg='grop'">
+                <resource name="org_group_membership">
+                    <reference field="group_id" resource="org_group">
+                        <resource name="org_group">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
             <!-- Sectors -->
             <xsl:when test="$arg='sector'">
                 <resource name="org_sector_organisation">

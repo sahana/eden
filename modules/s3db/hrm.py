@@ -1216,8 +1216,9 @@ class S3HRModel(S3Model):
         """
 
         data = item.data
-        person_id = "person_id" in data and data.person_id
-        org = "organisation_id" in data and data.organisation_id
+        person_id = data.get("person_id")
+        if not person_id:
+            return
 
         # This allows only one HR record per person and organisation,
         # if multiple HR records of the same person with the same org
@@ -1227,6 +1228,7 @@ class S3HRModel(S3Model):
         table = item.table
         query = (table.deleted != True) & \
                 (table.person_id == person_id)
+        org = data.get("organisation_id")
         if org:
             query = query & (table.organisation_id == org)
         row = current.db(query).select(table.id,
@@ -1246,14 +1248,16 @@ class S3HRSiteModel(S3Model):
 
         # =========================================================================
         # Link between Human Resources & Facilities
-        # - this is used to allow the right UI interface when adding HRs to a
-        #   Facility via the Staff tab
+        # - this is used to allow different Site Contacts per Sector
+        # - it can be used to allow the right UI interface when adding HRs to a
+        #   Facility via the Staff tab, although we use hrm_Assign for that now.
         #
 
         tablename = "hrm_human_resource_site"
         self.define_table(tablename,
                           self.hrm_human_resource_id(ondelete = "CASCADE"),
                           self.org_site_id,
+                          self.org_sector_id(),
                           Field("site_contact", "boolean",
                                 label = T("Facility Contact"),
                                 represent = lambda opt: \
@@ -1328,8 +1332,10 @@ class S3HRSiteModel(S3Model):
 
             # Remove any additional records for this HR
             # (i.e. staff was assigned elsewhere previously)
+            # @ToDo: Allow one person to be the Site Contact for multiple sectors
             rows = db(ltable.human_resource_id == human_resource_id).select(ltable.id,
                                                                             ltable.site_id,
+                                                                            #ltable.sector_id,
                                                                             ltable.human_resource_id,
                                                                             ltable.site_contact,
                                                                             orderby=~ltable.id)
@@ -1369,12 +1375,15 @@ class S3HRSiteModel(S3Model):
         """
 
         data = item.data
-        human_resource_id = data.get("human_resource_id", None)
+        human_resource_id = data.get("human_resource_id")
         if not human_resource_id:
             return
 
         table = item.table
         query = (table.human_resource_id == human_resource_id)
+        sector_id = data.get("sector_id")
+        if sector_id:
+            query &= (table.sector_id == sector_id)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -5031,6 +5040,7 @@ def hrm_human_resource_onaccept(form):
     s3db = current.s3db
     auth = current.auth
     request = current.request
+    settings = current.deployment_settings
 
     # Get the 'full' record
     htable = db.hrm_human_resource
@@ -5048,8 +5058,7 @@ def hrm_human_resource_onaccept(form):
                                         limitby=(0, 1)).first()
 
     job_title_id = record.job_title_id
-    if job_title_id and \
-       current.deployment_settings.get_hrm_multiple_job_titles():
+    if job_title_id and settings.get_hrm_multiple_job_titles():
         # Update the link table
         ltable = db.hrm_job_title_human_resource
         query = (ltable.human_resource_id == id) & \
@@ -5080,7 +5089,7 @@ def hrm_human_resource_onaccept(form):
     ptable = s3db.pr_person
     person_id = record.person_id
     person = Storage(id = person_id)
-    if current.deployment_settings.get_auth_person_realm_human_resource_site_then_org():
+    if settings.get_auth_person_realm_human_resource_site_then_org():
         # Set pr_person.realm_entity to the human_resource's site pe_id
         entity = s3db.pr_get_pe_id("org_site", site_id) or \
                  s3db.pr_get_pe_id("org_organisation", organisation_id)
@@ -5098,11 +5107,11 @@ def hrm_human_resource_onaccept(form):
     if record.type == 1:
         # Staff
         vol = False
-        location_lookup = current.deployment_settings.get_hrm_location_staff()
+        location_lookup = settings.get_hrm_location_staff()
     elif record.type == 2:
         # Volunteer
         vol = True
-        location_lookup = current.deployment_settings.get_hrm_location_vol()
+        location_lookup = settings.get_hrm_location_vol()
 
     # Determine how the HR is positioned
     address = None
@@ -5195,15 +5204,17 @@ def hrm_human_resource_onaccept(form):
         hrm_tracker = tracker(htable, id)
         hrm_tracker.set_base_location(None)
 
-    # Ensure only one Facility Contact per Facility
-    if site_contact and site_id:
-        # Set all others in this Facility to not be the Site Contact
-        query  = (htable.site_id == site_id) & \
-                 (htable.site_contact == True) & \
-                 (htable.id != id)
-        # Prevent overwriting the person_id field!
-        htable.person_id.update = None
-        db(query).update(site_contact = False)
+    if settings.get_hr_site_contact_unique():
+        # Ensure only one Site Contact per Site
+        if site_contact and site_id:
+            # Set all others in this Facility to not be the Site Contact
+            # @ToDo: deployment_setting to allow multiple site contacts
+            query  = (htable.site_id == site_id) & \
+                     (htable.site_contact == True) & \
+                     (htable.id != id)
+            # Prevent overwriting the person_id field!
+            htable.person_id.update = None
+            db(query).update(site_contact = False)
 
     if vol:
         request_vars = request.vars

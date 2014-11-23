@@ -53,11 +53,11 @@ settings.gis.legend = "float"
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
-#settings.L10n.languages = OrderedDict([
+settings.L10n.languages = OrderedDict([
 #    ("ar", "العربية"),
 #    ("bs", "Bosanski"),
-#    ("en", "English"),
-#    ("fr", "Français"),
+    ("en", "English"),
+    ("fr", "Français"),
 #    ("de", "Deutsch"),
 #    ("el", "ελληνικά"),
 #    ("es", "Español"),
@@ -77,7 +77,7 @@ settings.gis.legend = "float"
 #    ("vi", "Tiếng Việt"),
 #    ("zh-cn", "中文 (简体)"),
 #    ("zh-tw", "中文 (繁體)"),
-#])
+])
 # Default language for Language Toolbar (& GIS Locations in future)
 #settings.L10n.default_language = "en"
 # Uncomment to Hide the language toolbar
@@ -145,6 +145,15 @@ settings.gis.poi_create_resources = \
 #    }
 #]
 
+settings.org.groups = "Coalition / Consortium"
+# @ToDo: Once we go global
+# Enable the use of Organisation Branches
+#settings.org.branches = True
+# Show branches as tree rather than as table
+#settings.org.branches_tree_view = True
+
+# Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
+settings.hrm.site_contact_unique = False
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

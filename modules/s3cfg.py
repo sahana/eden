@@ -2216,6 +2216,13 @@ class S3Config(Storage):
         """
         return self.hrm.get("show_staff", True)
 
+    def get_hrm_site_contact_unique(self):
+        """
+            Whether there can be multiple site contacts per site
+            - disable this if needing a separate contact per sector
+        """
+        return self.hrm.get("site_contact_unique", True)
+
     def get_hrm_skill_types(self):
         """
             If set to True then Skill Types are exposed to the UI

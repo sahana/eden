@@ -136,6 +136,12 @@
         </option>
     </column>
 
+    <column name="OfficeName">
+        <match>|Name|name|Office|office|</match>
+        <label>Name</label>
+        <label>Office</label>
+    </column>
+
     <column name="Country">
         <match>|Country|country|L0|ADM0_NAME|</match>
         <label>country</label>
