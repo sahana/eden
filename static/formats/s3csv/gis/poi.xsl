@@ -9,6 +9,7 @@
          CSV fields:
          Name....................gis_poi.name
          Type....................gis_poi_type.name
+         Organisation Group......gis_poi_group.group_id
          Country.................gis_location.L0 Name or ISO2
          Building................gis_location.name (Name used if not-provided)
          Address.................gis_location.addr_street
@@ -95,6 +96,7 @@
                          col[@field='L5'])"/>
 
     <xsl:key name="poi_type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="organisation_group" match="row" use="col[@field='Organisation Group']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -159,6 +161,12 @@
                 <xsl:call-template name="PoIType" />
             </xsl:for-each>
 
+            <!-- Organisation Groups -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
+                                                                       col[@field='Organisation Group'])[1])]">
+                <xsl:call-template name="OrganisationGroup"/>
+            </xsl:for-each>
+
             <!-- PoIs -->
             <xsl:apply-templates select="table/row"/>
 
@@ -196,6 +204,17 @@
                 </reference>
             </xsl:if>
 
+            <!-- Organisation Group -->
+            <xsl:if test="col[@field='Organisation Group']!=''">
+                <resource name="gis_poi_group">
+	                <reference field="group_id" resource="org_group">
+	                    <xsl:attribute name="tuid">
+	                        <xsl:value-of select="concat('OrganisationGroup:', col[@field='Organisation Group'])"/>
+	                    </xsl:attribute>
+	                </reference>
+                </resource>
+            </xsl:if>
+
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
         </resource>
@@ -220,6 +239,21 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="OrganisationGroup">
+
+        <xsl:variable name="OrganisationGroup" select="col[@field='Organisation Group']"/>
+
+        <xsl:if test="$OrganisationGroup!=''">
+            <resource name="org_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('OrganisationGroup:', $OrganisationGroup)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$OrganisationGroup"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+   <!-- ****************************************************************** -->
     <xsl:template name="L1">
         <xsl:if test="col[@field='L1']!=''">
 

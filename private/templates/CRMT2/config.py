@@ -243,7 +243,7 @@ settings.gis.layers_label = "Map Layers"
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 # Mouse Position: 'normal', 'mgrs' or None
-settings.gis.mouse_position = None
+#settings.gis.mouse_position = None
 # Uncomment to hide the Overview map (doesn't work with Google Maps)
 settings.gis.overview = False
 # Uncomment to hide the permalink control (we have our own saved maps functionality)
@@ -2310,6 +2310,8 @@ def customise_gis_poi_controller(**attr):
                                                          reverse_lx=True,
                                                          show_address=True,
                                                          show_postcode=True,
+                                                         # TEMP
+                                                         catalog_layers=True,
                                                          )
             if r.method == "update":
                 # Normal Submit buttons
@@ -2357,6 +2359,12 @@ def customise_gis_poi_controller(**attr):
 
 settings.customise_gis_poi_controller = customise_gis_poi_controller
 
+# Enable when required ;)
+#def customise_gis_location_resource(r, tablename):
+#    current.s3db.configure(tablename,
+#                           update_next = r.url(method="update"),
+#                           )
+#settings.customise_gis_location_resource = customise_gis_location_resource
 # =============================================================================
 class CRMTSubFormLayout(S3SQLSubFormLayout):
     """ Custom Layout for S3SQLInlineComponent """

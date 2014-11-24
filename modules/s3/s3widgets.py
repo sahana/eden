@@ -4768,7 +4768,9 @@ class S3LocationSelectorWidget2(FormWidget):
                             color_picker = True
             _map = gis.show_map(id = "location_selector_%s" % fieldname,
                                 collapsed = True,
+                                # @ToDo: Make this customisable (I find this way too small stll...perhaps a resizable window like we used to have might be better ;)
                                 height = 340,
+                                #height = 440,
                                 width = 480,
                                 add_feature = points,
                                 add_feature_active = add_points_active,

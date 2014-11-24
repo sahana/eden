@@ -26,3 +26,4 @@ Social Services,,org,organisation,people,Building,{name} (T('Organization')),nam
 Transportation,,gis,poi,transport,Building,{name} (T('Point')),name,poi_type.name__typeof=Transportation&poi_type.name__ne=Alternative Fuel,,,,Points,False,,30,,,
 Transportation,,org,organisation,transport,Building,{name} (T('Organization')),name,service.name__typeof=Transportation,,,,Organizations,False,,30,,,
 People,,pr,person,trained,,{first_name} {last_name},"first_name,last_name",,True,,,People,False,,30,,,
+Team Zones,,gis,poi,,,{name},name,poi_type.name__typeof=Team Zone,,,"{'fill':'00FF00','fillOpacity':0.5}",People,False,,,0,,0.9

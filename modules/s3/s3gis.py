@@ -749,7 +749,7 @@ class GIS(object):
                         shape = wkt_loads(row.wkt)
                         ok = test.intersects(shape)
                         if ok:
-                            print "Level: %s, id: %s" % (row.level, row.id)
+                            #print "Level: %s, id: %s" % (row.level, row.id)
                             results[row.level] = row.id
         return results
 
