@@ -5204,7 +5204,7 @@ def hrm_human_resource_onaccept(form):
         hrm_tracker = tracker(htable, id)
         hrm_tracker.set_base_location(None)
 
-    if settings.get_hr_site_contact_unique():
+    if settings.get_hrm_site_contact_unique():
         # Ensure only one Site Contact per Site
         if site_contact and site_id:
             # Set all others in this Facility to not be the Site Contact
