@@ -4218,7 +4218,7 @@ class S3MapModel(S3Model):
             # Unzip the file
             import zipfile
             myfile = zipfile.ZipFile(fp)
-            for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+            for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
                 fileName = "%s.%s" % (layerName, ext)
                 try:
                     file = myfile.read(fileName)

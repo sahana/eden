@@ -28,7 +28,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SHP"]
+__all__ = ("S3SHP",)
 
 import os
 
@@ -117,20 +117,28 @@ class S3SHP(S3Codec):
 
         # Get the attributes
         title = attr.get("title")
-        list_fields = attr.get("list_fields")
-        if not list_fields:
-            list_fields = data_source.list_fields()
-        if "location_id$wkt" not in list_fields:
-            list_fields.append("location_id$wkt")
 
         # Extract the data from the data_source
         if isinstance(data_source, (list, tuple)):
             headers = data_source[0]
-            types = data_source[1]
+            #types = data_source[1]
             items = data_source[2:]
         else:
-            (title, types, lfields, headers, items) = self.extractResource(data_source,
-                                                                           list_fields)
+            current.s3db.gis_location.wkt.represent = None
+            list_fields = attr.get("list_fields")
+            if not list_fields:
+                list_fields = data_source.list_fields()
+            if data_source.tablename == "gis_location":
+                wkt_field = "wkt"
+            else:
+                wkt_field = "location_id$wkt"
+            if wkt_field not in list_fields:
+                list_fields.append(wkt_field)
+
+            (_title, types, lfields, headers, items) = self.extractResource(data_source,
+                                                                            list_fields)
+            if not title:
+                title = _title
 
         # Create the data structure
         output = []
@@ -138,17 +146,24 @@ class S3SHP(S3Codec):
 
         # Header row
         headers["gis_location.wkt"] = "WKT"
+        fields = []
+        fappend = fields.append
         header = []
         happend = header.append
         for selector in lfields:
-            happend(s3_unicode(headers[selector]))
+            h = s3_unicode(headers[selector].replace(" ", "_"))
+            happend(h)
+            if selector != "gis_location.wkt":
+                # Don't include the WKT field as an Attribute in the Shapefile
+                fappend(h)
         oappend('"%s"' % '","'.join(header))
+        fields = ",".join(fields)
 
         for item in items:
             row = []
             rappend = row.append
-            for field in lfields:
-                represent = s3_strip_markup(s3_unicode(item[field]))
+            for selector in lfields:
+                represent = s3_strip_markup(s3_unicode(item[selector]))
                 rappend(represent)
             oappend('"%s"' % '","'.join(row))
 
@@ -183,16 +198,17 @@ class S3SHP(S3Codec):
         # @ToDo: Check that the data exists before writing out file
         # Write Points
         os.chdir(TEMP)
-        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_point.shp ' + vrt_filename + ' -skipfailures -nlt POINT -where "WKT LIKE \'%POINT%\'"'
-        #os.system('rm ' + title + '_point.*' )
+        # Use + not %s as % within string
+        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_point.shp ' + vrt_filename + ' -select ' + fields + ' -skipfailures -nlt POINT -where "WKT LIKE \'%POINT%\'"'
+        #os.system("rm %s_point.*" % title)
         os.system(cmd)
         # Write Lines
-        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_line.shp ' + vrt_filename + ' -skipfailures -nlt MULTILINESTRING -where "WKT LIKE \'%LINESTRING%\'"'
-        #os.system('rm ' + title + '_line.*' )
+        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_line.shp ' + vrt_filename + ' -select ' + fields + ' -skipfailures -nlt MULTILINESTRING -where "WKT LIKE \'%LINESTRING%\'"'
+        #os.system("rm %s_line.*" % title)
         os.system(cmd)
         # Write Polygons
-        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_polygon.shp ' + vrt_filename + ' -skipfailures -nlt MULTIPOLYGON -where "WKT LIKE \'%POLYGON%\'"'
-        #os.system('rm ' + title + '_polygon.*' )
+        cmd = 'ogr2ogr -a_srs "EPSG:4326" -f "ESRI Shapefile" ' + title + '_polygon.shp ' + vrt_filename + ' -select ' + fields + ' -skipfailures -nlt MULTIPOLYGON -where "WKT LIKE \'%POLYGON%\'"'
+        #os.system("rm %s_polygon.*" % title)
         os.system(cmd)
         os.close(os_handle_temp)
         os.unlink(temp_filepath)
@@ -201,10 +217,10 @@ class S3SHP(S3Codec):
         # Zip up
         import zipfile
         request = current.request
-        filename = "%s_%s.zip" % (request.env.server_name, str(title))
+        filename = "%s_%s.zip" % (request.env.server_name, title)
         fzip = zipfile.ZipFile(filename, "w")
-        for item in ["point", "line", "polygon"]:
-            for exten in ["shp", "shx", "prj", "dbf"]:
+        for item in ("point", "line", "polygon"):
+            for exten in ("shp", "shx", "prj", "dbf"):
                 tfilename = "%s_%s.%s" % (title, item, exten)
                 fzip.write(tfilename)
                 os.unlink(tfilename)
@@ -218,7 +234,7 @@ class S3SHP(S3Codec):
         response.headers["Content-Type"] = contenttype(".zip")
         response.headers["Content-disposition"] = disposition
 
-        stream = open(os.path.join(TEMP, filename))
+        stream = open(os.path.join(TEMP, filename), "rb")
         return response.stream(stream, chunk_size=DEFAULT_CHUNK_SIZE,
                                request=request)
 

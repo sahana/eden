@@ -3639,7 +3639,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         current.log.debug("Unzipping %s" % layerName)
         import zipfile
         myfile = zipfile.ZipFile(fp)
-        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+        for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
             fileName = "%s.%s" % (layerName, ext)
             file = myfile.read(fileName)
             f = open(fileName, "w")
@@ -3844,7 +3844,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         # Unzip it
         current.log.debug("Unzipping %s" % layerName)
         myfile = zipfile.ZipFile(fp)
-        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+        for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
             fileName = "%s.%s" % (layerName, ext)
             file = myfile.read(fileName)
             f = open(fileName, "w")
@@ -4177,7 +4177,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         current.log.debug("Unzipping %s" % layerName)
         import zipfile
         myfile = zipfile.ZipFile(fp)
-        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+        for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
             fileName = "%s.%s" % (layerName, ext)
             file = myfile.read(fileName)
             f = open(fileName, "w")

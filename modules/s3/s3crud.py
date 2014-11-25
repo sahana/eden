@@ -748,6 +748,12 @@ class S3CRUD(S3Method):
             exporter = S3Exporter().pdf
             return exporter(resource, request=r, **attr)
 
+        elif representation == "shp":
+            exporter = S3Exporter().shp
+            return exporter(resource,
+                            list_fields=list_fields,
+                            **attr)
+
         elif representation == "svg":
             exporter = S3Exporter().svg
             return exporter(resource,

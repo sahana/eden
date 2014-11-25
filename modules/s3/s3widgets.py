@@ -4770,7 +4770,7 @@ class S3LocationSelectorWidget2(FormWidget):
                                 collapsed = True,
                                 # @ToDo: Make this customisable (I find this way too small stll...perhaps a resizable window like we used to have might be better ;)
                                 height = 340,
-                                #height = 440,
+                                #height = 600,
                                 width = 480,
                                 add_feature = points,
                                 add_feature_active = add_points_active,
