@@ -4583,7 +4583,7 @@ class S3PoIModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     self.gis_marker_id(empty = False),
+                     self.gis_marker_id(),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -4809,11 +4809,13 @@ class S3PoIModel(S3Model):
         style = []
         sappend = style.append
         for row in rows:
-            cat = {"prop": "poi_type_id",
-                   "cat": row["gis_poi_type.name"],
-                   "externalGraphic": "img/markers/%s" % row["gis_marker.image"]
-                   }
-            sappend(cat)
+            marker = row["gis_marker.image"]
+            if marker:
+                cat = {"prop": "poi_type_id",
+                       "cat": row["gis_poi_type.name"],
+                       "externalGraphic": "img/markers/%s" % marker
+                       }
+                sappend(cat)
 
         #try:
         #    driver_auto_json = current.db._adapter.driver_auto_json
