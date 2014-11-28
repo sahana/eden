@@ -22,7 +22,7 @@
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
          WKT.....................gis_location.wkt
-         Comments................gis_poi.comments
+         Comments................gis_poi.comments (If this is a Style then it populates gis_style.style)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
