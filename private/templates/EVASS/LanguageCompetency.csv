@@ -1,0 +1,8 @@
+Type,Name,Priority
+Languages,"No",1
+Languages,"Cattivo",2
+Languages,"Povero",3
+Languages,"Nella media",4
+Languages,"Buono",5
+Languages,"Eccellente",6
+Languages,"Fluente",7
