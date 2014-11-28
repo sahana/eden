@@ -470,7 +470,7 @@ class S3Config(Storage):
         """
             Access levels for the Role Manager UI
         """
-		T = current.T
+        T = current.T
         return self.auth.get("access_levels", OrderedDict([
             ("reader", T("Reader")),
             ("data_entry", T("Data Entry")),
