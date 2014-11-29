@@ -5,7 +5,7 @@
 {{chat_pass = auth.user.password}}
 {{if s3.debug:}}
 {{main_css = "<link href='/%s/static/styles/plugins/converse.css' rel='stylesheet' type='text/css'/>" % appname}}
-{{s3.scripts.append(URL(c="static", f="scripts", args=["converse.min.js"]))}}
+{{s3.scripts.append(URL(c="static", f="scripts", args=["converse.nojquery.js"]))}}
 {{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.chat.js"]))}}
 {{else:}}
 {{main_css = "<link href='/%s/static/styles/plugins/converse.min.css' rel='stylesheet' type='text/css'/>" % appname}}
