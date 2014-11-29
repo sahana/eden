@@ -5902,13 +5902,13 @@ define("crypto.mode-ctr", ["crypto.cipher-core"], function(){});
     return HLP.packData(BigInt.bigInt2bits(BigInt.trim(mpi, 0)))
   }
 
-  HLP.packSHORT = function (short) {
-    return HLP.packBytes(short, DTS.SHORT)
+  HLP.packSHORT = function (shortv) {
+    return HLP.packBytes(shortv, DTS.SHORT)
   }
 
-  HLP.unpackSHORT = function (short) {
-    short = HLP.toByteArray(short)
-    return HLP.unpack(short)
+  HLP.unpackSHORT = function (shortv) {
+    shortv = HLP.toByteArray(shortv)
+    return HLP.unpack(shortv)
   }
 
   HLP.packTLV = function (type, value) {
@@ -36311,7 +36311,7 @@ define("converse-templates", [
             },
             'not': function (evt, handler) {
                 converse.off(evt, handler);
-            },
+            }
         },
         'plugins': {
             'add': function (name, callback) {

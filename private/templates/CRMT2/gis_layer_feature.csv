@@ -23,7 +23,7 @@ Postal,,org,organisation,post,Building,{name} (T('Organization')),name,service.n
 Private Industry,,org,organisation,industry,Building,{name} (T('Organization')),name,service.name__typeof=Private Industry,,,,Organizations,False,,30,,,
 Public Safety,,org,organisation,emergency,Building,{name} (T('Organization')),name,service.name__typeof=Public Safety,,,,Organizations,False,,30,,,
 Social Services,,org,organisation,people,Building,{name} (T('Organization')),name,service.name__typeof=Social Services,,,,Organizations,False,,30,,,
-Transportation,,gis,poi,transport,Building,{name} (T('Point')),name,poi_type.name=Transportation&poi_type.name__ne=Alternative Fuel,,,,Points,False,,30,,,
+Transportation,,gis,poi,transport,Building,{name} (T('Point')),name,poi_type.name=Transportation,,,,Points,False,,30,,,
 Transportation,,org,organisation,transport,Building,{name} (T('Organization')),name,service.name__typeof=Transportation,,,,Organizations,False,,30,,,
 People,,pr,person,trained,,{first_name} {last_name},"first_name,last_name",,True,,,People,False,,30,,,
 Fire Zones,,gis,poi,,,{name},name,poi_type.name=Fire Zone,,True,"{'fill':'FF0000','fillOpacity':0.5}",Hazards,False,,,0,,0.9
