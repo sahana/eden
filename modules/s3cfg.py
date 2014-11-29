@@ -457,25 +457,26 @@ class S3Config(Storage):
         """
         T = current.T
         return self.auth.get("role_modules", OrderedDict([
-            ("staff", "Staff"),
-            ("vol", "Volunteers"),
-            ("member", "Members"),
-            ("inv", "Warehouses"),
-            ("asset", "Assets"),
-            ("project", "Projects"),
-            ("survey", "Assessments"),
-            ("irs", "Incidents")
+            ("staff", T("Staff")),
+            ("vol", T("Volunteers")),
+            ("member", T("Members")),
+            ("inv", T("Warehouses")),
+            ("asset", T("Assets")),
+            ("project", T("Projects")),
+            ("survey", T("Assessments")),
+            ("irs", T("Incidents"))
         ]))
 
     def get_auth_access_levels(self):
         """
             Access levels for the Role Manager UI
         """
+        T = current.T
         return self.auth.get("access_levels", OrderedDict([
-            ("reader", "Reader"),
-            ("data_entry", "Data Entry"),
-            ("editor", "Editor"),
-            ("super", "Super Editor")
+            ("reader", T("Reader")),
+            ("data_entry", T("Data Entry")),
+            ("editor", T("Editor")),
+            ("super", T("Super Editor"))
         ]))
 
     def get_auth_set_presence_on_login(self):
