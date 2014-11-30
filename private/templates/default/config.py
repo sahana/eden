@@ -316,6 +316,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.msg.parser = "mytemplatefolder"
 # Uncomment to turn off enforcement of E.123 international phone number notation
 #settings.msg.require_international_phone_numbers = False
+# Uncomment to make basestation codes unique
+#settings.msg.basestation_code_unique = True
 
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False
@@ -650,6 +652,8 @@ settings.gis.geonames_username = "eden_test"
 #        3: T("Reject"),
 #        4: T("Surplus")
 #   }
+# Uncomment to make warehouse codes unique
+#settings.inv.warehouse_code_unique = True
 
 # -----------------------------------------------------------------------------
 # Requests Management

@@ -1687,6 +1687,9 @@ class S3Config(Storage):
         """
         return self.msg.get("max_send_retries", 9)
 
+    def get_msg_basestation_code_unique(self):
+        return self.msg.get("basestation_code_unique", False)
+
     # -------------------------------------------------------------------------
     # Mail settings
     def get_mail_server(self):
@@ -2473,6 +2476,9 @@ class S3Config(Storage):
 
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
+
+    def get_inv_warehouse_code_unique(self):
+        return self.inv.get("warehouse_code_unique", False)
 
     # -------------------------------------------------------------------------
     # IRS

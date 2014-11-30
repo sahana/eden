@@ -1426,6 +1426,7 @@ class S3SMSOutboundModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # SMS Outbound Gateway
@@ -1451,9 +1452,8 @@ class S3SMSOutboundModel(S3Model):
                      self.org_organisation_id(),
                      # @ToDo: Allow selection of different gateways based on destination Location
                      #self.gis_location_id(),
-                     # @ToDo: Allow addition of relevant country code (currently in deployment_settings)
-                     #Field("default_country_code", "integer",
-                     #      default = 44),
+                     Field("default_country_code", "integer",
+                           default = settings.get_L10n_default_country_code()),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -2208,6 +2208,7 @@ class S3BaseStationModel(S3Model):
         T = current.T
 
         define_table = self.define_table
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Base Stations (Cell Towers)
@@ -2224,7 +2225,7 @@ class S3BaseStationModel(S3Model):
                            # Deployments that don't wants site codes can hide them
                            #readable = False,
                            #writable = False,
-                           # @ToDo: Deployment Setting to add validator to make these unique
+                           unique = settings.get_msg_basestation_code_unique(),
                            ),
                      self.org_organisation_id(
                             label = T("Operator"),
