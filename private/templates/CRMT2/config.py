@@ -2352,6 +2352,7 @@ def customise_gis_poi_controller(**attr):
                            icon = icon,
                            update_next = r.url(method="summary", id=0),
                            )
+
         return True
     s3.prep = custom_prep
 

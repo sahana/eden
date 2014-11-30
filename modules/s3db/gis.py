@@ -4583,7 +4583,7 @@ class S3PoIModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     self.gis_marker_id(empty = False),
+                     self.gis_marker_id(),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -4670,6 +4670,10 @@ class S3PoIModel(S3Model):
                                  sortby = "name",
                                  )
 
+        self.configure(tablename,
+                       onaccept = self.gis_poi_onaccept,
+                       )
+
         # Components
         self.add_components(tablename,
                             # Organisation Groups (Coalitions/Networks)
@@ -4707,6 +4711,81 @@ class S3PoIModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def gis_poi_onaccept(form):
+        """
+            If the Comments are a Style then create a gis_style record for this
+            and blank the comment. Used for s3csv imports as we have no components & can't use an import_prep as we don't know the record_id
+        """
+
+        comments = form.vars.get("comments")
+        if not comments:
+            # Nothing to do
+            return
+
+        value = comments.replace("'", "\"")
+        try:
+            style = json.loads(value)
+        except:
+            # Not a style
+            return
+
+        form_vars = form.vars
+        db = current.db
+        s3db = current.s3db
+        try:
+            if "dumps" in db._adapter.driver_auto_json:
+                style = value
+            #else:
+            #    Use the JSON version
+        except:
+            # Use the JSON version
+            pass
+
+        # Lookup the PoI Type
+        table = s3db.gis_poi_type
+        poi_type = db(table.id == form_vars.poi_type_id).select(table.name,
+                                                                limitby=(0, 1)
+                                                                ).first()
+        try:
+            poi_type = poi_type.name
+        except:
+            # Bail
+            return
+
+        # Lookup the Layer
+        table = s3db.gis_layer_feature
+        query = (table.controller == "gis") & \
+                (table.function == "poi") & \
+                ((table.filter == None) | \
+                 (table.filter == "poi_type.name__typeof=%s" % poi_type))
+        postgres = current.deployment_settings.get_database_type() == "postgres"
+        if postgres:
+            # None is last
+            orderby = table.filter
+        else:
+            # None is 1st
+            orderby = ~table.filter
+        layer = db(query).select(table.layer_id,
+                                 table.filter,
+                                 limitby=(0, 1),
+                                 orderby = orderby
+                                 ).first()
+        try:
+            layer_id = layer.layer_id
+        except:
+            # No layer to style
+            current.log.warning("Couldn't find a layer to use for this PoI Style")
+            return
+
+        # Create a Style record
+        table = s3db.gis_style
+        table.insert(layer_id = layer_id,
+                     record_id = form_vars.id,
+                     style = style,
+                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def gis_poi_type_onaccept(form):
         """
             Update Style for the PoIs layer
@@ -4730,11 +4809,13 @@ class S3PoIModel(S3Model):
         style = []
         sappend = style.append
         for row in rows:
-            cat = {"prop": "poi_type_id",
-                   "cat": row["gis_poi_type.name"],
-                   "externalGraphic": "img/markers/%s" % row["gis_marker.image"]
-                   }
-            sappend(cat)
+            marker = row["gis_marker.image"]
+            if marker:
+                cat = {"prop": "poi_type_id",
+                       "cat": row["gis_poi_type.name"],
+                       "externalGraphic": "img/markers/%s" % marker
+                       }
+                sappend(cat)
 
         #try:
         #    driver_auto_json = current.db._adapter.driver_auto_json

@@ -204,6 +204,7 @@ settings.gis.geonames_username = "rms_dev"
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
+    #("fr", "Français"),
     ("km", "ភាសាខ្មែរ"),        # Khmer
     ("mn", "Монгол хэл"),   # Mongolian
     ("ne", "नेपाली"),          # Nepali

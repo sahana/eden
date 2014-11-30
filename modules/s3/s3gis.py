@@ -2535,7 +2535,7 @@ class GIS(object):
                 rows = db(query).select(stable.record_id,
                                         stable.style)
                 for row in rows:
-                    styles[row.record_id] = row.style
+                    styles[row.record_id] = json.dumps(row.style, separators=SEPARATORS)
 
                 styles[tablename] = styles
 
