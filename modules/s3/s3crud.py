@@ -58,7 +58,7 @@ from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
 from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
-from s3widgets import S3EmbedComponentWidget, ICON
+from s3widgets import S3EmbedComponentWidget, S3Selector, ICON
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -2097,18 +2097,27 @@ class S3CRUD(S3Method):
                     else:
                         value = None
 
-                # Validate and format the value
-                try:
-                    value, error = s3_validate(table, fname, value, original)
-                except AttributeError:
-                    error = "invalid field"
-
-                validated["value"] = field.formatter(value)
+                if isinstance(field.widget, S3Selector):
+                    widget_represent = True
+                    value, error = field.widget.validate(value)
+                    validated["value"] = field.widget.serialize(value)
+                else:
+                    widget_represent = None
+                    # Validate and format the value
+                    try:
+                        value, error = s3_validate(table, fname, value, original)
+                    except AttributeError:
+                        error = "invalid field"
+                    validated["value"] = field.formatter(value)
 
                 # Handle errors, update the validated item
                 if error:
                     has_errors = True
                     validated["_error"] = s3_unicode(error)
+                elif widget_represent:
+                    # @todo: call widget.represent
+                    text = s3_unicode(value)
+                    validated["text"] = text
                 else:
                     try:
                         text = s3_represent_value(field, value = value)

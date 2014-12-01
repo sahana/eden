@@ -151,12 +151,12 @@
         },
 
         // Layout -------------------------------------------------------------
-        
+
         /**
          * The default layout-dependend functions
          */
         _layout: {
-            
+
             /**
             * Render a read-row (default row layout)
             *
@@ -205,7 +205,7 @@
 
             /**
              * Append a new read-row to the inline component
-             * 
+             *
              * @param {string} formname - the formname
              * @param {jQuery} row - the row to append
              */
@@ -682,6 +682,8 @@
                             input.multiselect('refresh');
                         } else if (input.hasClass('groupedopts-widget') && input.groupedopts('instance')) {
                             input.groupedopts('refresh');
+                        } else if (input.hasClass('location-selector') && input.locationselector('instance')) {
+                            input.locationselector('refresh');
                         } else {
                             // Populate text in autocompletes
                             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
@@ -701,7 +703,7 @@
                     .removeClass('hide');
 
             // Trigger the dropdown change event
-            $('#edit-row-' + formname + ' select').change();
+            $('#edit-row-' + formname + ' select:not(".lx-select")').change();
 
             // Disable the add-row while editing
             this._disableAddRow();
@@ -849,6 +851,8 @@
                                 f.multiselect('refresh');
                             } else if (f.hasClass('groupedopts-widget') && f.groupedopts('instance')) {
                                 f.groupedopts('refresh');
+                            } else if (f.hasClass('location-selector') && f.locationselector('instance')) {
+                                f.locationselector('refresh');
                             }
                         }
                         default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();

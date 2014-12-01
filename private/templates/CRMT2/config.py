@@ -1218,6 +1218,7 @@ def customise_org_organisation_controller(**attr):
                                                 label = T("Location(s)"),
                                                 fields = [("", "location_id"),
                                                         ],
+                                                columns = (10,),
                                                 # @ToDo: Fix
                                                 multiple = False,
                                        ))

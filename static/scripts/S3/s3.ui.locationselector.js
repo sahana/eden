@@ -156,29 +156,31 @@
                 L4 = data.L4,
                 L5 = data.L5;
             if (L0) {
-                this._lxSelect(0, L0);
+                this._lxSelect(0, L0, true);
             }
             // || is to support Missing levels
             if (L1 || L2) {
-                this._lxSelect(1, L1 || L2);
+                this._lxSelect(1, L1 || L2, true);
             }
             if (L2 || L3) {
-                this._lxSelect(2, L2 || L3);
+                this._lxSelect(2, L2 || L3, true);
             }
             if (L3 || L4) {
-                this._lxSelect(3, L3 || L4);
+                this._lxSelect(3, L3 || L4, true);
             }
             if (L4 || L5) {
-                this._lxSelect(4, L4 || L5);
+                this._lxSelect(4, L4 || L5, true);
             }
             if (L5) {
-                this._lxSelect(5, L5);
+                this._lxSelect(5, L5, true);
             }
 
             // Show Address/Postcode Rows (__row1 = tuple themes)
+            $(selector + '_address').val(data.address);
             $(selector + '_address__row').removeClass('hide').show();
             $(selector + '_address__row1').removeClass('hide').show();
 
+            $(selector + '_postcode').val(data.postcode);
             $(selector + '_postcode__row').removeClass('hide').show();
             $(selector + '_postcode__row1').removeClass('hide').show();
 
@@ -253,6 +255,8 @@
                            .after(L0Row)
                            .after(errorWrapper);
                 }
+            } else if (formRow.parent().is('.inline-form')) {
+                formRow.show();
             } else {
                 // Other formstyle:
                 // Hide the main row & move out the Error
@@ -284,8 +288,10 @@
          *
          * @param {number} level - the Lx level (0..5)
          * @param {number} id - the record ID of the selected Lx location
+         * @param {bool} refresh - whether this called before user input
+         *                         (in which case we do want to prevent geocoding)
          */
-        _lxSelect: function(level, id) {
+        _lxSelect: function(level, id, refresh) {
 
             var selector = '#' + this.fieldname,
                 opts = this.options;
@@ -476,18 +482,18 @@
                         // Auto-select single option?
                         if (numLocations == 1 && locationID) {
                             // Only 1 option so select this one
-                            this._lxSelect(next, locationID);
+                            this._lxSelect(next, locationID, refresh);
                         }
                     }
                 } else {
                     // No next level - we're at the bottom of the hierarchy
-                    if (this.useGeocoder) {
+                    if (this.useGeocoder && !refresh) {
                         this._geocodeDecision();
                     }
                 }
             }
             // Update the data dict
-            this._collectData();
+            this._serialize();
 
             // Zoom the map to the appropriate bounds
             this._zoomMap();

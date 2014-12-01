@@ -4349,7 +4349,7 @@ class S3LocationSelector(S3Selector):
         if show_map and use_callback:
             callback = script
         elif not location_selector_loaded or \
-             not location_selector_loaded[fieldname]:
+             not location_selector_loaded.get(fieldname):
             s3.jquery_ready.append(script)
 
         # Inject LocationSelector JS
@@ -4386,7 +4386,7 @@ class S3LocationSelector(S3Selector):
             s3.gis.location_selector_loaded = {fieldname: True}
 
         # Real input
-        classes = ["location"]
+        classes = ["location-selector"]
         if fieldname.startswith("sub_"):
             classes.append("inline-locationselector-widget")
         real_input = self.inputfield(field, values, classes, **attributes)
