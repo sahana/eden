@@ -3358,6 +3358,7 @@ class S3MapModel(S3Model):
 
         configure(tablename,
                   create_next = URL(args=["[id]", "style"]),
+                  deduplicate = self.gis_layer_geojson_deduplicate,
                   onaccept = self.gis_layer_geojson_onaccept,
                   onvalidation = self.gis_layer_geojson_onvalidation,
                   super_entity = "gis_layer_entity",
@@ -4040,6 +4041,24 @@ class S3MapModel(S3Model):
 
         f = open(os.path.join(path, filename), "rb")
         return (filename, f)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_layer_geojson_deduplicate(item):
+
+        # Match if name is identical (URL may be empty at this stage)
+        data = item.data
+        name = data.get("name")
+        if not name:
+            return
+
+        table = item.table
+        duplicate = current.db(table.name == name).select(table.id,
+                                                          limitby=(0, 1)
+                                                          ).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
