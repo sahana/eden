@@ -435,6 +435,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.organisation_group = "post_organisation_group.group_id"
 # Uncomment to use person_id instead of created_by in Newsfeed
 #settings.cms.person = "person_id"
+# Uncomment to enable multiple Organisations per Posts
+#settings.cms.multiple_organisations = True
+# Uncomment to enable multiple Organisations Groups per Posts
+#settings.cms.multiple_organisation_groups = True
 
 # -----------------------------------------------------------------------------
 # Shelters

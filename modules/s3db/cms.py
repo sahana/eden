@@ -358,13 +358,11 @@ class S3ContentModel(S3Model):
                        cms_tag_post = "post_id",
 
                        cms_post_organisation = {"joinby": "post_id",
-                                                # @ToDo: deployment_setting
-                                                "multiple": False,
+                                                "multiple": settings.get_cms_multiple_organisations(),
                                                 },
 
                        cms_post_organisation_group = {"joinby": "post_id",
-                                                      # @ToDo: deployment_setting
-                                                      "multiple": False,
+                                                      "multiple": settings.get_cms_multiple_organisation_groups(),
                                                       },
 
                        # For InlineForm to tag Posts to Events/Incidents/Incident Types
