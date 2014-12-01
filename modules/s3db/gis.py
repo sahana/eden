@@ -2680,9 +2680,7 @@ class S3LayerEntityModel(S3Model):
         # Style is a JSON object with the following structure
         # (only the starred elements are currently parsed)
         # @ToDo: Support elements in a common section (such as prop, graphic)
-        # @ToDo: Popup style
         # @ToDo: Import/Export SLD
-        # @ToDo: Be able to reuse Styles across Layers/Configs
         #Style = [{
         #   prop: string,       //* Attribute used to activate this style rule (otherwise defaults to 'value')
         #   cat: string,        //* Absolute Value used to style the element
@@ -2693,6 +2691,8 @@ class S3LayerEntityModel(S3Model):
         #   fill: string,       //*
         #   fillOpacity: float, //*
         #   stroke: string,     //* (will default to fill, if not set)
+        #   strokeLinecap: string, Stroke cap type: "butt", "round", "square"
+        #   strokeDashstyle: string, //* Encodes a dash pattern as a series of numbers separated by spaces. Odd-indexed numbers (first, third, etc) determine the length in pxiels to draw the line, and even-indexed numbers (second, fourth, etc) determine the length in pixels to blank out the line.
         #   strokeOpacity: float,
         #   strokeWidth: float or int, //* OpenLayers wants int, SLD wants float
         #   label: string,      //* Attribute used to label the element
