@@ -2464,6 +2464,7 @@ class S3ImageCropWidget(FormWidget):
             @param value: value if any
             @param download_url: Download URL for saved Image
         """
+
         T = current.T
 
         script_dir = "/%s/static/scripts" % current.request.application
@@ -2502,10 +2503,9 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         if sheet not in stylesheets:
             stylesheets.append(sheet)
 
-        attr = self._attributes(field, {
-                "_type": "file",
-                "_class": "imagecrop-upload"
-            }, **attributes)
+        attr = self._attributes(field, {"_type": "file",
+                                        "_class": "imagecrop-upload"
+                                        }, **attributes)
 
         elements = [INPUT(_type="hidden", _name="imagecrop-points")]
         append = elements.append
@@ -2550,14 +2550,16 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
         parts = [LEGEND(T("Uploaded Image"))] + buttons + \
                 [HR(_style="display:none"),
                  IMG(_id="uploaded-image",
-                     _style="display:none;")]
+                     _style="display:none")
+                 ]
 
         display_div = FIELDSET(parts,
                                _class="image-container")
 
-        crop_data_attr = { "_type": "hidden",
-                           "_name": "imagecrop-data",
-                           "_class": "imagecrop-data" }
+        crop_data_attr = {"_type": "hidden",
+                          "_name": "imagecrop-data",
+                          "_class": "imagecrop-data"
+                          }
 
         if value and download_url:
             if callable(download_url):
@@ -2572,7 +2574,7 @@ i18n.upload_image='%s' ''' % (T("Please select a valid image!"),
                                 DIV(T("or Drop here"),
                                     _class="imagecrop-drag"),
                                 _id="upload-container",
-                                _style="display: none")))
+                                _style="display:none")))
         else:
             append(FIELDSET(LEGEND(T("Upload Image"),
                                    _id="upload-title"),

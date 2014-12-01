@@ -30,7 +30,7 @@
          Cluster Attribute....string..........Layer Cluster Attribute: The attribute to use for clustering
          Cluster Distance.....integer.........Style Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
          Cluster Threshold....integer.........Style Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
-         Refresh..............integer.........layer Refresh (Number of seconds between refreshes: 0 to disable)
+         Refresh..............integer.........Layer Refresh (Number of seconds between refreshes: 0 to disable)
 
     *********************************************************************** -->
     <xsl:import href="../commons.xsl"/>

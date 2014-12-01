@@ -389,7 +389,7 @@
 'Manager': 'Tagapangasiwa',
 'Mandatory. In GeoServer, this is the Layer Name. Within the WFS getCapabilities, this is the FeatureType Name part after the colon(:).': 'Kinakailangan. Sa GeoServer, ito ang Pangalan ng Layer. Sa loob ng WFS getCapabilities, ito ang bahaging Pangalan ng FeatureType pagkatapos ng tutuldok(:).',
 'Mandatory. The URL to access the service.': 'Kinakailangan. Ang URL upang ma-access ang serbisyo.',
-'Map Configuration': 'Configuration ng Mapa',
+'Map Profile': 'Configuration ng Mapa',
 'Map': 'Mapa',
 'Marker': 'Tagamarka',
 'Match To Catalog Item': 'Itugma Sa Item sa Catalog',

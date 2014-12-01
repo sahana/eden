@@ -313,16 +313,16 @@ class S3ScenarioMapModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Map Configuration"),
-            title_display = T("Map Configuration Details"),
-            title_list = T("Map Configurations"),
-            title_update = T("Edit Map Configuration"),
-            label_list_button = T("List Map Configurations"),
-            label_delete_button = T("Remove Map Configuration from this scenario"),
-            msg_record_created = T("Map Configuration added"),
-            msg_record_modified = T("Map Configuration updated"),
-            msg_record_deleted = T("Map Configuration removed"),
-            msg_list_empty = T("No Map Configurations currently registered in this scenario"))
+            label_create = T("Create Map Profile"),
+            title_display = T("Map Profile Details"),
+            title_list = T("Map Profiles"),
+            title_update = T("Edit Map Profile"),
+            label_list_button = T("List Map Profiles"),
+            label_delete_button = T("Remove Map Profile from this scenario"),
+            msg_record_created = T("Map Profile added"),
+            msg_record_modified = T("Map Profile updated"),
+            msg_record_deleted = T("Map Profile removed"),
+            msg_list_empty = T("No Map Profiles currently registered in this scenario"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

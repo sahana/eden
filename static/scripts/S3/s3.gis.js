@@ -6219,9 +6219,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // @ToDo: Allow customisation of the Select Style
         if (opacity != 1) {
             // Simply make ~opaque onSelect
+            var selectOpacity = Math.min(opacity * 2, 0.8);
             var selectStyle = {
-                fillOpacity: 0.8,
-                graphicOpacity: 0.8
+                fillOpacity: selectOpacity,
+                graphicOpacity: selectOpacity
             };
         } else {
             // Change colour onSelect

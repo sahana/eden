@@ -67,7 +67,7 @@ def scenario_rheader(r, tabs=[]):
             tabs.append((T("Facilities"), "site"))
             if settings.has_module("project"):
                 tabs.append((T("Tasks"), "task"))
-            tabs.append((T("Map Configuration"), "config"))
+            tabs.append((T("Map Profile"), "config"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
