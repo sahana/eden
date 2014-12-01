@@ -4375,7 +4375,7 @@ def req_customise_commit_fields():
     #field = table.location_id
     #field.represent = s3db.gis_LocationRepresent(sep=" | ")
     # Required
-    #field.requires = IS_LOCATION_SELECTOR2()
+    #field.requires = IS_LOCATION()
 
     field = table.comments
     field.label = T("Donation")

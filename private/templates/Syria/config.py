@@ -241,7 +241,7 @@ def render_contacts(list_id, item_id, resource, rfields, record):
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
     """
-    
+
     record_id = record["hrm_human_resource.id"]
     item_class = "thumbnail"
 
@@ -547,7 +547,7 @@ def customise_gis_location_controller(**attr):
                                )
 
             elif r.method == "profile":
-        
+
                 # Customise tables used by widgets
                 #customise_cms_post_fields()
                 #customise_project_project_fields()
@@ -718,12 +718,12 @@ def customise_hrm_job_title_controller(**attr):
     s3 = current.response.s3
 
     table = current.s3db.hrm_job_title
-    
+
     # Configure fields
     field = table.organisation_id
     field.readable = field.writable = False
     field.default = None
-    
+
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -900,7 +900,7 @@ def customise_org_organisation_controller(**attr):
                 #                            )
                 record = r.record
                 s3db.configure("org_organisation",
-                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list,
                                                             record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=URL(c="default", f="download",
@@ -955,7 +955,7 @@ def customise_org_organisation_controller(**attr):
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
-            
+
             # Return to List view after create/update/delete (unless done via Modal)
             #url_next = URL(c="org", f="organisation", args="datalist")
 
@@ -1085,7 +1085,7 @@ def customise_pr_person_controller(**attr):
                            (T("Job Title"), "human_resource.job_title_id"),
                            (T("Office"), "human_resource.site_id"),
                            ]
-            
+
             # Don't include Email/Phone for unauthenticated users
             if current.auth.is_logged_in():
                 list_fields += [(MOBILE, "phone.value"),
@@ -1261,10 +1261,10 @@ def customise_project_activity_controller(**attr):
         if r.method in ("create", "update"):
             editable = True
             # Custom Widgets/Validators
-            from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2#, S3MultiSelectWidget
+            from s3 import IS_LOCATION, S3LocationSelector #, S3MultiSelectWidget
             location_field.label = "" # Gets replaced by widget
-            location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            location_field.widget = S3LocationSelectorWidget2(levels=levels)
+            location_field.requires = IS_LOCATION()
+            location_field.widget = S3LocationSelector(levels=levels)
             # Doesn't work Inline yet
             #s3db.project_activity_organisation.organisation_id.widget = S3MultiSelectWidget(multiple=False)
         else:
@@ -1498,7 +1498,7 @@ def customise_project_project_controller(**attr):
                 if user:
                     organisation_id = user.organisation_id
 
-            # Configure fields 
+            # Configure fields
             table.objectives.readable = table.objectives.writable = True
             table.human_resource_id.label = T("Focal Person")
             s3db.hrm_human_resource.organisation_id.default = organisation_id
@@ -1728,11 +1728,11 @@ def customise_supply_distribution_controller(**attr):
                 return False
 
         if r.interactive:
-            from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+            from s3 import IS_LOCATION, S3LocationSelector
             location_field = r.table.location_id
             levels = ("L0", "L1", "L2", "L3")
-            location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-            location_field.widget = S3LocationSelectorWidget2(levels=levels)
+            location_field.requires = IS_LOCATION()
+            location_field.widget = S3LocationSelector(levels=levels)
 
         return True
     s3.prep = custom_prep
@@ -1744,7 +1744,7 @@ settings.customise_supply_distribution_controller = customise_supply_distributio
 # -----------------------------------------------------------------------------
 # Filter forms - style for Summary pages
 def filter_formstyle(row_id, label, widget, comment, hidden=False):
-    return DIV(label, widget, comment, 
+    return DIV(label, widget, comment,
                _id=row_id,
                _class="horiz_filter_form")
 

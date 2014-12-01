@@ -323,7 +323,7 @@ class S3DocumentLibrary(S3Model):
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if the module is disabled """
-        
+
         document_id = S3ReusableField("document_id", "integer",
                                       readable=False, writable=False)
 
@@ -460,11 +460,11 @@ class S3DocumentLibrary(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def document_onaccept(form):        
-        
+    def document_onaccept(form):
+
         form_vars = form.vars
         doc = form_vars.file
-       
+
         table = current.db.doc_document
 
         document = json.dumps(dict(filename=doc,
@@ -479,8 +479,8 @@ class S3DocumentLibrary(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def document_ondelete(row):        
-        
+    def document_ondelete(row):
+
         db = current.db
         table = db.doc_document
 
@@ -490,9 +490,9 @@ class S3DocumentLibrary(S3Model):
         document = json.dumps(dict(filename=record.file,
                                    id=row.id,
                                    ))
-        
+
         current.s3task.async("document_delete_index",
-                             args = [document])   
+                             args = [document])
 
         return
 
@@ -695,7 +695,7 @@ class S3DocSitRepModel(S3Model):
                                 ),
                           self.org_organisation_id(),
                           self.gis_location_id(
-                            widget = S3LocationSelectorWidget2(show_map = False),
+                            widget = S3LocationSelector(show_map = False),
                             ),
                           s3_date(default = "now",
                                   ),

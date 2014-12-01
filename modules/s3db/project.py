@@ -2099,11 +2099,10 @@ class S3ProjectCampaignModel(S3Model):
                      s3_comments("message",
                                  label = T("Message")),
                      location_id(
-                        widget = S3LocationSelectorWidget2(
-                           catalog_layers = True,
-                           points = False,
-                           polygons = True,
-                        )
+                        widget = S3LocationSelector(catalog_layers = True,
+                                                    points = False,
+                                                    polygons = True,
+                                                    )
                      ),
                      # @ToDo: Allow selection of which channel message should be sent out on
                      #self.msg_channel_id(),

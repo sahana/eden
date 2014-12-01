@@ -1259,11 +1259,11 @@ class S3OrganisationGroupModel(S3Model):
                            writable = False,
                            ),
                      self.gis_location_id(
-                         widget = S3LocationSelectorWidget2(
-                                     #catalog_layers = True,
-                                     points = False,
-                                     polygons = True,
-                         )),
+                         widget = S3LocationSelector(#catalog_layers = True,
+                                                     points = False,
+                                                     polygons = True,
+                                                     )
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 """
     GIS Controllers
@@ -575,7 +574,7 @@ def location():
 # -----------------------------------------------------------------------------
 def ldata():
     """
-        Return JSON of location hierarchy suitable for use by S3LocationSelectorWidget2
+        Return JSON of location hierarchy suitable for use by S3LocationSelector
         '/eden/gis/ldata/' + id
 
         n = {id : {'n' : name,
@@ -701,7 +700,7 @@ def ldata():
 # -----------------------------------------------------------------------------
 def hdata():
     """
-        Return JSON of hierarchy labels suitable for use by S3LocationSelectorWidget2
+        Return JSON of hierarchy labels suitable for use by S3LocationSelector
         '/eden/gis/hdata/' + l0_id
 
         n = {l0_id : {1 : l1_name,
@@ -3092,7 +3091,7 @@ def geocode():
     else:
         # Lx: Lookup Bounds in our own database
         # @ToDo
-        # Not needed by S3LocationSelectorWidget2 as it downloads bounds with options
+        # Not needed by S3LocationSelector as it downloads bounds with options
         results = "NotImplementedError"
 
     results = json.dumps(results, separators=SEPARATORS)

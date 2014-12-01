@@ -112,7 +112,7 @@ settings.gis.countries = ("AM",
                           "UZ",
                           )
 
-# Until we add support to LocationSelector2 to set dropdowns from LatLons
+# Until we add support to S3LocationSelector to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
 # Uncomment to hide Layer Properties tool
 #settings.gis.layer_properties = False
@@ -177,43 +177,43 @@ settings.search.filter_manager = False
 # Menu
 current.response.menu = (
     #{"name": T("Places"),
-    # "c": "gis", 
+    # "c": "gis",
     # "f": "location",
     # "icon": "globe",
     # },
     {"name": T("Demographics"),
-     "c": "stats", 
+     "c": "stats",
      "f": "demographic_data",
      "icon": "group",
      },
     {"name": T("Baseline"),
-     "c": "vulnerability", 
+     "c": "vulnerability",
      "f": "data",
      "icon": "signal",
      },
     #{"name": T("Stakeholders"),
-    # "c": "org", 
+    # "c": "org",
     # "f": "organisation",
     # "icon": "sitemap",
     # "count": 0
     # },
     {"name": T("Disasters"),
-     "c": "event", 
+     "c": "event",
      "f": "event",
      "icon": "bolt",
      },
     #{"name": T("Facilities"),
-    # "c": "org", 
+    # "c": "org",
     # "f": "facility",
     # "icon": "home",
     # },
     )
 for item in current.response.menu:
-    item["url"] = URL(item["c"], 
-                      item["f"], 
+    item["url"] = URL(item["c"],
+                      item["f"],
                       args = ["summary" if item["f"] not in ["organisation"]
                                         else "datalist"])
-    
+
 current.response.countries = (
     {"name": T("Armenia"),
      "code": "am"
@@ -324,10 +324,10 @@ def customise_gis_location_controller(**attr):
                                                      },
                                                     ),
                                 )
-        
+
             from s3 import S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineComponent
             table.parent.widget = S3MultiSelectWidget(multiple=False)
-            
+
             crud_form = S3SQLCustomForm("name",
                                         #"name_ru.name_l10n",
                                         S3SQLInlineComponent(
@@ -358,17 +358,17 @@ def customise_gis_location_controller(**attr):
                                         #"pcode.value",
                                         "parent",
                                         )
-        
+
             NONE = current.messages["NONE"]
             levels = current.gis.get_location_hierarchy()
             table.level.represent = lambda l: levels[l] if l else NONE
-        
+
             #field = table.inherited
             #field.label =  T("Mapped?")
             #field.represent =  lambda v: T("No") if v else T("Yes")
 
             filter_widgets = s3db.get_config("gis_location", "filter_widgets")
-            # Remove L2 & L3 filters 
+            # Remove L2 & L3 filters
             # NB Fragile: dependent on filters defined in gis/location controller
             filter_widgets.pop()
             filter_widgets.pop()
@@ -425,12 +425,12 @@ def customise_event_event_resource(r, tablename):
         - CRUD Strings
         - Form
         - Filter
-        - Report 
+        - Report
         Runs after controller customisation
         But runs before prep
     """
 
-    from s3 import S3SQLCustomForm, S3SQLInlineComponent, IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent, IS_LOCATION, S3LocationSelector
 
     db = current.db
     s3db = current.s3db
@@ -438,8 +438,8 @@ def customise_event_event_resource(r, tablename):
     table.name.label = T("Disaster Number")
 
     location_field = s3db.event_event_location.location_id
-    location_field.requires = IS_LOCATION_SELECTOR2(levels=gis_levels)
-    location_field.widget = S3LocationSelectorWidget2(levels=gis_levels)
+    location_field.requires = IS_LOCATION()
+    location_field.widget = S3LocationSelector(levels=gis_levels)
 
     impact_fields = OrderedDict(killed = "Killed",
                                 total_affected = "Total Affected",
@@ -559,7 +559,7 @@ def represent_year(date):
 def customise_stats_demographic_data_resource(r, tablename):
     """
         Customise event_event resource
-        - Configure fields 
+        - Configure fields
         Runs after controller customisation
         But runs before prep
     """
@@ -592,7 +592,7 @@ def customise_vulnerability_data_resource(r, tablename):
         - CRUD Strings
         - Form
         - Filter
-        - Report 
+        - Report
         Runs after controller customisation
         But runs before prep
     """
@@ -662,19 +662,20 @@ def customise_org_facility_resource(r, tablename):
         - List Fields
         - Form
         - Filter
-        - Report 
+        - Report
         Runs after controller customisation
         But runs before prep
     """
 
     s3db = current.s3db
 
-    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+    from s3 import IS_LOCATION, S3LocationSelector
     levels = ("L0", "L1", "L2")
     loc_field = r.table.location_id
-    loc_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    loc_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                 show_address = True)
+    loc_field.requires = IS_LOCATION()
+    loc_field.widget = S3LocationSelector(levels=levels,
+                                          show_address = True,
+                                          )
 
     list_fields = ["name",
                    (T("Type"),"facility_type.name"),

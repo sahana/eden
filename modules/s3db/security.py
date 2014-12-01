@@ -61,7 +61,7 @@ class S3SecurityModel(S3Model):
         # http://ictemergency.wfp.org/c/document_library/get_file?uuid=c025cb98-2297-4208-bcc6-76ba02719c02&groupId=10844
         # http://geonode.wfp.org/layers/geonode:wld_bnd_securitylevel_wfp
         #
-        
+
         level_opts = {1: T("Minimal"),
                       2: T("Low"),
                       3: T("Moderate"),
@@ -74,9 +74,7 @@ class S3SecurityModel(S3Model):
         define_table(tablename,
                      location_id(
                         #label = T("Security Level Area"),
-                        widget = S3LocationSelectorWidget2(
-                            show_map = False,
-                            ),
+                        widget = S3LocationSelector(show_map = False),
                         ),
                      # Overall Level
                      Field("level", "integer",
@@ -187,12 +185,11 @@ class S3SecurityModel(S3Model):
                                                        tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                            ),
                      location_id(
-                        widget = S3LocationSelectorWidget2(
-                            catalog_layers = True,
-                            points = False,
-                            polygons = True,
-                            ),
-                        ),
+                        widget = S3LocationSelector(catalog_layers = True,
+                                                    points = False,
+                                                    polygons = True,
+                                                    ),
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 

@@ -125,7 +125,7 @@ levels = ("L1", "L2", "L3")
 # Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
 #settings.gis.geocode_imported_addresses = "google"
 
-# Until we add support to LocationSelector2 to set dropdowns from LatLons
+# Until we add support to S3LocationSelector to set dropdowns from LatLons
 settings.gis.check_within_parent_boundaries = False
 # GeoNames username
 settings.gis.geonames_username = "mcop"
@@ -292,14 +292,14 @@ def customise_cms_post_resource(r, tablename):
         msg_list_empty = T("No Alerts currently registered"))
 
     # CRUD Form
-    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True,
-                                                         points = True,
-                                                         polygons = True,
-                                                         )
+    from s3 import IS_LOCATION, S3LocationSelector
+    table.location_id.requires = IS_LOCATION()
+    table.location_id.widget = S3LocationSelector(levels=levels,
+                                                  show_address=True,
+                                                  show_map=True,
+                                                  points = True,
+                                                  polygons = True,
+                                                  )
     # Don't add new Locations here
     table.location_id.comment = None
 
@@ -687,12 +687,13 @@ def customise_org_facility_resource(r, tablename):
         msg_record_deleted = T("Facility deleted"),
         msg_list_empty = T("No Facilities currently registered"))
 
-    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+    from s3 import IS_LOCATION, S3LocationSelector
     location_id_field = table.location_id
-    location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True)
+    location_id_field.requires = IS_LOCATION()
+    location_id_field.widget = S3LocationSelector(levels=levels,
+                                                  show_address=True,
+                                                  show_map=True,
+                                                  )
     # Don't add new Locations here
     location_id_field.comment = None
 
@@ -973,11 +974,12 @@ def customise_org_resource_resource(r, tablename):
             location_field.default = location_id
             # We still want to be able to specify a precise location
             #location_field.readable = location_field.writable = False
-        from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
-        location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-        location_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                          show_address=True,
-                                                          show_map=True)
+        from s3 import IS_LOCATION, S3LocationSelector
+        location_field.requires = IS_LOCATION()
+        location_field.widget = S3LocationSelector(levels=levels,
+                                                   show_address=True,
+                                                   show_map=True,
+                                                   )
 
         # Don't add new Locations here
         location_field.comment = None
