@@ -20,8 +20,8 @@ settings = current.deployment_settings
 
 #settings.base.system_name = T("Magnu")
 #settings.base.system_name_short = T("Magnu")
-settings.base.system_name = T("Central African Republic")
-settings.base.system_name_short = T("CAR")
+settings.base.system_name = T("Sahana")
+settings.base.system_name_short = T("Sahana")
 
 # PrePopulate data
 settings.base.prepopulate = ("Magnu", "default/users")
