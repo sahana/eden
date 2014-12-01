@@ -5830,6 +5830,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             fillColor: '${fill}',
             fillOpacity: '${fillOpacity}',
             strokeColor: '${stroke}',
+            strokeDashstyle: '${strokeDashstyle}',
+            // @ToDo:
+            //strokeLinecap: '${strokeLinecap}',
             strokeWidth: '${strokeWidth}',
             strokeOpacity: '${strokeOpacity}',
             graphicHeight: '${graphicHeight}',
@@ -6132,6 +6135,24 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     // default to layer's opacity
                     return strokeOpacity || opacity;
                 },
+                strokeDashstyle: function(feature) {
+                    var dashStyle;
+                    // if (feature.attributes.strokeDashstyle) {
+                    //    // Use strokeDashstyle from feature (e.g. FeatureQuery)
+                    //    width = feature.attributes.strokeDashstyle;
+                    //} else if (style) {
+                    if (style) {
+                        if (!style_array) {
+                            // Common Style for all features in layer
+                            dashStyle = style.strokeDashstyle;
+                        } else {
+                            // Lookup from rule
+                            // - done within OpenLayers.Rule
+                        }
+                    }
+                    // Defalt dashStyle is 'solid'
+                    return dashStyle || 'solid';
+                },
                 strokeWidth: function(feature) {
                     // default strokeWidth
                     var width = 2;
@@ -6362,6 +6383,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 symbolizer.zIndex = 5;
                 // Hint to the Legend
                 symbolizer.Line = symbolizer;
+                if (undefined != elem.strokeDashstyle) {
+                    symbolizer.strokeDashstyle = elem.strokeDashstyle;
+                }
+                // @ToDo:
+                //symbolizer.strokeLinecap
             } else {
                 // Polygon: default
                 //symbolizer.graphicZIndex = 0;
