@@ -139,7 +139,8 @@ class S3XLS(S3Codec):
         try:
             import xlwt
         except ImportError:
-            if current.auth.permission.format in request.INTERACTIVE_FORMATS:
+            from ..s3rest import S3Request
+            if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
                 current.session.error = self.ERROR.XLWT_ERROR
                 redirect(URL(extension=""))
             else:
@@ -151,7 +152,8 @@ class S3XLS(S3Codec):
                                     xldate_from_time_tuple, \
                                     xldate_from_datetime_tuple
         except ImportError:
-            if current.auth.permission.format in request.INTERACTIVE_FORMATS:
+            from ..s3rest import S3Request
+            if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
                 current.session.error = self.ERROR.XLRD_ERROR
                 redirect(URL(extension=""))
             else:
