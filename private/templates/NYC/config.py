@@ -329,18 +329,18 @@ def customise_org_facility_controller(**attr):
             table = s3db[tablename]
 
             if not r.component and r.method in (None, "create", "update"):
-                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION, S3LocationSelector, S3MultiSelectWidget
                 field = table.location_id
                 if r.method in ("create", "update"):
                     field.label = "" # Gets replaced by widget
                 levels = ("L2", "L3")
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
+                field.requires = IS_LOCATION()
+                field.widget = S3LocationSelector(levels=levels,
+                                                  hide_lx=False,
+                                                  reverse_lx=True,
+                                                  show_address=True,
+                                                  show_postcode=True,
+                                                  )
                 table.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
             if r.get_vars.get("format", None) == "popup":
@@ -637,19 +637,19 @@ def customise_org_organisation_controller(**attr):
         if r.interactive:
             if r.component_name == "facility":
                 if r.method in (None, "create", "update"):
-                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+                    from s3 import IS_LOCATION, S3LocationSelector
                     table = s3db.org_facility
                     field = table.location_id
                     if r.method in ("create", "update"):
                         field.label = "" # Gets replaced by widget
                     levels = ("L2", "L3")
-                    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                    field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                             hide_lx=False,
-                                                             reverse_lx=True,
-                                                             show_address=True,
-                                                             show_postcode=True,
-                                                             )
+                    field.requires = IS_LOCATION()
+                    field.widget = S3LocationSelector(levels=levels,
+                                                      hide_lx=False,
+                                                      reverse_lx=True,
+                                                      show_address=True,
+                                                      show_postcode=True,
+                                                      )
             elif r.component_name == "human_resource":
                 # Don't assume that user is from same org/site as Contacts they create
                 r.component.table.site_id.default = None
@@ -715,17 +715,15 @@ def customise_org_group_controller(**attr):
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 if r.method != "read":
                     from gluon.validators import IS_EMPTY_OR
-                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+                    from s3 import IS_LOCATION, S3LocationSelector
                     field = table.location_id
                     field.label = "" # Gets replaced by widget
-                    #field.requires = IS_LOCATION_SELECTOR2(levels = ("L2",))
-                    field.requires = IS_EMPTY_OR(
-                                        IS_LOCATION_SELECTOR2(levels = ("L2",))
-                                        )
-                    field.widget = S3LocationSelectorWidget2(levels = ("L2",),
-                                                             points = True,
-                                                             polygons = True,
-                                                             )
+                    #field.requires = IS_LOCATION()
+                    #field.requires = IS_EMPTY_OR(IS_LOCATION()) # That's the default!
+                    field.widget = S3LocationSelector(levels = ("L2",),
+                                                      points = True,
+                                                      polygons = True,
+                                                      )
                     # Default location to Manhattan
                     db = current.db
                     gtable = db.gis_location

@@ -851,7 +851,7 @@ def customise_project_activity_controller(**attr):
 
             if method in ("create", "update"):
                 # Custom Widgets/Validators
-                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION, S3LocationSelector, S3MultiSelectWidget
 
                 s3db.project_activity_activity_type.activity_type_id.widget = S3MultiSelectWidget(multiple=False)
                 field = s3db.project_activity_group.group_id
@@ -862,13 +862,13 @@ def customise_project_activity_controller(**attr):
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
+                field.requires = IS_LOCATION()
+                field.widget = S3LocationSelector(levels=levels,
+                                                  hide_lx=False,
+                                                  reverse_lx=True,
+                                                  show_address=True,
+                                                  show_postcode=True,
+                                                  )
 
         return True
     s3.prep = custom_prep
@@ -1227,15 +1227,15 @@ def customise_org_organisation_controller(**attr):
                     field = ftable.location_id
                     field.label = T("Address")
                     field.represent = s3db.gis_LocationRepresent(address_only=True)
-                    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+                    from s3 import IS_LOCATION, S3LocationSelector
                     levels = ("L3",)
-                    field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                    field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                             hide_lx=False,
-                                                             reverse_lx=True,
-                                                             show_address=True,
-                                                             show_postcode=True,
-                                                             )
+                    field.requires = IS_LOCATION()
+                    field.widget = S3LocationSelector(levels=levels,
+                                                      hide_lx=False,
+                                                      reverse_lx=True,
+                                                      show_address=True,
+                                                      show_postcode=True,
+                                                      )
 
                 # Human resource (currently only in read because S3AddPersonWidget
                 # not working inside inline component => consider HRAutoComplete
@@ -1489,17 +1489,17 @@ def customise_org_group_controller(**attr):
                 return False
 
         if r.interactive:
-            from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+            from s3 import IS_LOCATION, S3LocationSelector
             table = s3db.org_group
             table.name.label = T("Coalition Name")
             field = table.location_id
             field.label = "" # Gets replaced by widget
             levels = ("L2",)
-            field.requires = IS_LOCATION_SELECTOR2(levels = levels)
-            field.widget = S3LocationSelectorWidget2(levels = levels,
-                                                     points = False,
-                                                     polygons = True,
-                                                     )
+            field.requires = IS_LOCATION()
+            field.widget = S3LocationSelector(levels = levels,
+                                              points = False,
+                                              polygons = True,
+                                              )
 
         return True
     s3.prep = custom_prep
@@ -1674,7 +1674,7 @@ def customise_org_facility_controller(**attr):
             from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
             if method in ("create", "update", "summary", "import"):
                 # Custom Widgets/Validators
-                from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2, S3MultiSelectWidget
+                from s3 import IS_LOCATION, S3LocationSelector, S3MultiSelectWidget
 
                 # Allow free-text in Phone
                 table.phone1.requires = None
@@ -1682,13 +1682,13 @@ def customise_org_facility_controller(**attr):
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         )
+                field.requires = IS_LOCATION()
+                field.widget = S3LocationSelector(levels=levels,
+                                                  hide_lx=False,
+                                                  reverse_lx=True,
+                                                  show_address=True,
+                                                  show_postcode=True,
+                                                  )
 
                 table.organisation_id.widget = S3MultiSelectWidget(multiple=False)
                 s3db.org_site_org_group.group_id.widget = S3MultiSelectWidget(multiple=False)
@@ -2278,8 +2278,8 @@ def customise_gis_poi_controller(**attr):
                     msg_record_deleted = T("Area deleted"),
                     msg_list_empty = T("No Areas currently registered"))
 
-            from s3 import IS_ADD_PERSON_WIDGET2, IS_LOCATION_SELECTOR2, \
-                           S3AddPersonWidget2, S3LocationSelectorWidget2, S3MultiSelectWidget, S3StringWidget, \
+            from s3 import IS_ADD_PERSON_WIDGET2, IS_LOCATION, \
+                           S3AddPersonWidget2, S3LocationSelector, S3MultiSelectWidget, S3StringWidget, \
                            S3SQLCustomForm, S3SQLInlineComponent
             table.name.widget = S3StringWidget(placeholder=T("Text"))
             table.comments.widget = S3StringWidget(placeholder=T("Description"), textarea=True)
@@ -2300,19 +2300,19 @@ def customise_gis_poi_controller(**attr):
                 field = table.location_id
                 field.label = "" # Gets replaced by widget
                 levels = ("L3",)
-                field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         hide_lx=False,
-                                                         color_picker=color_picker,
-                                                         lines=lines,
-                                                         points=points,
-                                                         polygons=polygons,
-                                                         reverse_lx=True,
-                                                         show_address=True,
-                                                         show_postcode=True,
-                                                         # TEMP
-                                                         catalog_layers=True,
-                                                         )
+                field.requires = IS_LOCATION()
+                field.widget = S3LocationSelector(levels=levels,
+                                                  hide_lx=False,
+                                                  color_picker=color_picker,
+                                                  lines=lines,
+                                                  points=points,
+                                                  polygons=polygons,
+                                                  reverse_lx=True,
+                                                  show_address=True,
+                                                  show_postcode=True,
+                                                  # TEMP
+                                                  catalog_layers=True,
+                                                  )
             if r.method == "update":
                 # Normal Submit buttons
                 s3.crud.submit_button = T("Save & Close")

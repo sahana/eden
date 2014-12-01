@@ -257,8 +257,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var inset = 0.007;
         lon_min -= inset;
         lon_max += inset;
-        lat_min -= inset;
-        lat_max += inset;
+        // @todo: -90 > lat > 90 doesn't give valid bounds (returns NaN)
+        lat_min = Math.max(lat_min - inset, -90.0);
+        lat_max = Math.min(lat_max + inset, 90.0);
         bounds = new OpenLayers.Bounds(lon_min, lat_min, lon_max, lat_max);
         bounds.transform(proj4326, map.getProjectionObject());
         // Zoom to Bounds

@@ -411,6 +411,7 @@ class S3DocumentLibrary(S3Model):
             form.errors.file = msg
             form.errors.url = msg
 
+
         if hasattr(doc, "file"):
             name = form_vars.name
             if not name:
@@ -692,7 +693,7 @@ class S3DocSitRepModel(S3Model):
                                 ),
                           self.org_organisation_id(),
                           self.gis_location_id(
-                            widget = S3LocationSelectorWidget2(show_map = False),
+                            widget = S3LocationSelector(show_map = False),
                             ),
                           s3_date(default = "now",
                                   ),

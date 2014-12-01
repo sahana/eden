@@ -134,7 +134,7 @@ settings.L10n.translate_cms_series = True
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["TL"]
 
-# Until we add support to LocationSelector2 to set dropdowns from LatLons
+# Until we add support to S3LocationSelector to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
 # Uncomment to hide Layer Properties tool
 settings.gis.layer_properties = False
@@ -966,7 +966,7 @@ def render_organisations(list_id, item_id, resource, rfields, record):
             tally_activities += 1
         elif series == "Report":
             tally_reports += 1
-    
+
     # Render the item
     item = DIV(DIV(logo,
                    DIV(SPAN(A(name,
@@ -1157,7 +1157,7 @@ def render_posts(list_id, item_id, resource, rfields, record, type=None):
                              SPAN(" %s" % T(series),
                                   _class="card-title"))
         # Type cards
-        if series == "Alert": 
+        if series == "Alert":
             # Apply additional highlighting for Alerts
             item_class = "%s disaster" % item_class
     else:
@@ -1249,7 +1249,7 @@ def render_profile_posts(list_id, item_id, resource, rfields, record):
 
     record_id = record["cms_post.id"]
     item_class = "thumbnail"
-    
+
     raw = record._row
     series = record["cms_post.series_id"]
     date = record["cms_post.date"]
@@ -1812,16 +1812,13 @@ def customise_cms_post_fields():
 
     s3db = current.s3db
 
-    from s3.s3validators import IS_LOCATION_SELECTOR2
-    from s3.s3widgets import S3LocationSelectorWidget2
+    from s3 import IS_LOCATION, S3LocationSelector
     table = s3db.cms_post
     field = table.location_id
     field.label = ""
     field.represent = s3db.gis_LocationRepresent(sep=" | ")
-    field.requires = IS_EMPTY_OR(
-                        IS_LOCATION_SELECTOR2(levels=("L1", "L2", "L3"))
-                     )
-    field.widget = S3LocationSelectorWidget2(levels=("L1", "L2", "L3"))
+    #field.requires = IS_EMPTY_OR(IS_LOCATION()) # that's the default!
+    field.widget = S3LocationSelector(levels=("L1", "L2", "L3"))
 
     table.created_by.represent = s3_auth_user_represent_name
 
@@ -1843,7 +1840,7 @@ def customise_cms_post_fields():
                    )
 
     return table
-    
+
 # -----------------------------------------------------------------------------
 def cms_post_popup(r):
     """
@@ -1949,7 +1946,7 @@ def cms_post_popup(r):
     dtable = db.doc_document
     query = (table.doc_id == dtable.doc_id) & \
             (dtable.deleted == False)
-    documents = db(query).select(dtable.file) 
+    documents = db(query).select(dtable.file)
     if documents:
         doc_list = UL(_class="dropdown-menu",
                       _role="menu",
@@ -1988,7 +1985,7 @@ def cms_post_popup(r):
                          SPAN(" %s" % T(series),
                               _class="card-title"))
     # Type cards
-    if series == "Alert": 
+    if series == "Alert":
         # Apply additional highlighting for Alerts
         item_class = "%s disaster" % item_class
 
@@ -2027,7 +2024,7 @@ def cms_post_popup(r):
                )
 
     return item
-    
+
 # -----------------------------------------------------------------------------
 def cms_post_marker_fn(record):
     """
@@ -2144,22 +2141,22 @@ def customise_cms_post_controller(**attr):
 
             field = table.series_id
             field.label = T("Type")
-            
+
             if r.method == "read":
                 # Restore the label for the Location
                 table.location_id.label = T("Location")
             elif r.method == "create":
                 ADMIN = current.session.s3.system_roles.ADMIN
                 if (not current.auth.s3_has_role(ADMIN)):
-                    represent = S3Represent(lookup="cms_series", 
+                    represent = S3Represent(lookup="cms_series",
                                             translate=settings.get_L10n_translate_cms_series())
-                    field.requires = IS_ONE_OF(current.db, 
+                    field.requires = IS_ONE_OF(current.db,
                                                "cms_series.id",
                                                represent,
                                                not_filterby="name",
-                                               not_filter_opts = ("Alert",), 
+                                               not_filter_opts = ("Alert",),
                                                )
-            
+
             refresh = get_vars.get("refresh", None)
             if refresh == "datalist":
                 # We must be coming from the News Feed page so can change the type on-the-fly
@@ -2175,7 +2172,7 @@ def customise_cms_post_controller(**attr):
             field = table.replies
             field.default = False
             #field.readable = field.writable = False
-            
+
             field = table.body
             field.label = T("Description")
             # Plain text not Rich
@@ -2215,7 +2212,7 @@ def customise_cms_post_controller(**attr):
                                                    post_id=form.vars.id)
 
                 s3db.configure("cms_post",
-                               create_onaccept = create_onaccept, 
+                               create_onaccept = create_onaccept,
                                )
             else:
                 crud_form = S3SQLCustomForm(
@@ -2352,7 +2349,7 @@ def customise_event_event_controller(**attr):
                 msg_record_modified = T("Disaster updated"),
                 msg_record_deleted = T("Disaster deleted"),
                 msg_list_empty = T("No Disasters currently registered"))
-            
+
             db = current.db
             s3db = current.s3db
 
@@ -2478,7 +2475,7 @@ def customise_event_event_controller(**attr):
                                                                           limitby=(0, 1),
                                                                           ).first().name
                 s3db.configure("event_event",
-                               profile_title = "%s : %s" % (s3.crud_strings["event_event"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["event_event"].title_list,
                                                             record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=URL(c="static",
@@ -2537,7 +2534,7 @@ def customise_event_event_controller(**attr):
                     ),
                     "comments",
                 )
-            
+
             s3db.configure("event_event",
                            create_next = URL(c="event", f="event",
                                              args=["[id]", "profile"]),
@@ -2623,7 +2620,7 @@ def customise_gis_location_controller(**attr):
                                )
 
             elif r.method == "profile":
-        
+
                 # Customise tables used by widgets
                 customise_cms_post_fields()
                 s3db.org_customise_org_resource_fields("profile")
@@ -2731,7 +2728,7 @@ def customise_gis_location_controller(**attr):
                     image = s3_unicode(name)
                 s3db.configure("gis_location",
                                list_fields = list_fields,
-                               profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list,
                                                             name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src="%s/%s.png" % (URL(c="static",
@@ -2835,12 +2832,12 @@ def customise_hrm_job_title_controller(**attr):
     s3 = current.response.s3
 
     table = current.s3db.hrm_job_title
-    
+
     # Configure fields
     field = table.organisation_id
     field.readable = field.writable = False
     field.default = None
-    
+
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -2941,7 +2938,7 @@ def customise_org_office_controller(**attr):
     s3 = current.response.s3
     s3db = current.s3db
     table = s3db.org_office
-    
+
     # Custom PreP
     standard_prep = s3.prep
     def custom_prep(r):
@@ -2985,12 +2982,12 @@ def customise_org_office_controller(**attr):
                 # Don't add new Locations here
                 location_field.comment = None
                 # L1s only
-                from s3.s3validators import IS_LOCATION_SELECTOR2
-                from s3.s3widgets import S3LocationSelectorWidget2
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=("L1", "L2"))
-                location_field.widget = S3LocationSelectorWidget2(levels=("L1", "L2"),
-                                                                  show_address=True,
-                                                                  show_map=False)
+                from s3 import IS_LOCATION, S3LocationSelector
+                location_field.requires = IS_LOCATION()
+                location_field.widget = S3LocationSelector(levels=("L1", "L2"),
+                                                           show_address=True,
+                                                           show_map=False,
+                                                           )
             # This is awful in Popups & inconsistent in dataTable view (People/Documents don't have this & it breaks the styling of the main Save button)
             #s3.cancel = URL(c="org", f="office")
 
@@ -3201,7 +3198,7 @@ def customise_org_organisation_controller(**attr):
                 else:
                     logo = ""
                 s3db.configure("org_organisation",
-                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list,
                                                             record.name),
                                profile_header = DIV(A(IMG(_class="media-object",
                                                           _src=logo,
@@ -3257,7 +3254,7 @@ def customise_org_organisation_controller(**attr):
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
-            
+
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="org", f="organisation", args="datalist")
 
@@ -3319,7 +3316,7 @@ def customise_org_resource_controller(**attr):
 
         if r.interactive or r.representation == "aadata":
             s3db.org_customise_org_resource_fields(r.method)
-    
+
             # Configure fields
             #table.site_id.readable = table.site_id.readable = False
             location_field = table.location_id
@@ -3556,7 +3553,7 @@ def customise_pr_person_controller(**attr):
                            (T("Job Title"), "human_resource.job_title_id"),
                            (T("Office"), "human_resource.site_id"),
                            ]
-            
+
             # Don't include Email/Phone for unauthenticated users
             if current.auth.is_logged_in():
                 list_fields += [(MOBILE, "phone.value"),
@@ -3760,7 +3757,7 @@ def customise_project_project_controller(**attr):
                 if user:
                     organisation_id = user.organisation_id
 
-            # Configure fields 
+            # Configure fields
             table.objectives.readable = table.objectives.writable = True
             table.human_resource_id.label = T("Focal Person")
             s3db.hrm_human_resource.organisation_id.default = organisation_id

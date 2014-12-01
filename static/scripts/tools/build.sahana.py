@@ -329,7 +329,7 @@ def dojs(dogis = False, warnings = True):
                      "gis.loader",
                      "gis.pois",
                      "locationselector.widget",
-                     "locationselector.widget2",
+                     "ui.locationselector",
                      "msg",
                      "popup",
                      "register_validation",

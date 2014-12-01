@@ -507,7 +507,7 @@ class GIS(object):
     def geocode(address, postcode=None, Lx_ids=None, geocoder="google"):
         """
             Geocode an Address
-            - used by S3LocationSelectorWidget2
+            - used by S3LocationSelector
                       settings.get_gis_geocode_imported_addresses
 
             @param address: street address
@@ -689,7 +689,7 @@ class GIS(object):
     def geocode_r(lat, lon):
         """
             Geocode an Address
-            - used by S3LocationSelectorWidget2
+            - used by S3LocationSelector
                       settings.get_gis_geocode_imported_addresses
 
             @param address: street address
@@ -6101,7 +6101,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param area: Show the Area tool on the Toolbar
-            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelectorWidget2...pick up in postprocess)
+            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelector...pick up in postprocess)
                                  If a style is provided then this is used as the default style
             @param nav: Show the Navigation controls on the Toolbar
             @param save: Show the Save tool on the Toolbar
@@ -6489,7 +6489,7 @@ class MAP(DIV):
                     #i18n["gis_search_no_internet"] = T("Geonames.org search requires Internet connectivity!")
 
             # Show NAV controls?
-            # e.g. removed within S3LocationSelectorWidget[2]
+            # e.g. removed within S3LocationSelector[Widget]
             nav = opts.get("nav", None)
             if nav is None:
                 nav = settings.get_gis_nav_controls()
@@ -6537,7 +6537,7 @@ class MAP(DIV):
                 i18n["gis_print"] = T("Take a screenshot of the map which can be printed")
 
             # Show Save control?
-            # e.g. removed within S3LocationSelectorWidget[2]
+            # e.g. removed within S3LocationSelector[Widget]
             if opts.get("save") is True and auth.s3_logged_in():
                 options["save"] = True
                 i18n["gis_save"] = T("Save: Default Lat, Lon & Zoom for the Viewport")
@@ -6564,7 +6564,7 @@ class MAP(DIV):
                 opts["save"] = "float"
 
         # Show Save control?
-        # e.g. removed within S3LocationSelectorWidget[2]
+        # e.g. removed within S3LocationSelector[Widget]
         if opts.get("save") == "float" and auth.s3_logged_in():
             permit = auth.s3_has_permission
             if permit("create", ctable):
@@ -7223,7 +7223,7 @@ def addFeatureResources(feature_resources):
                                    ftable.trackable,
                                    ftable.use_site,
                                    # @ToDo: Deprecate Legacy
-                                   ftable.popup_fields, 
+                                   ftable.popup_fields,
                                    # @ToDo: Deprecate Legacy
                                    ftable.popup_label,
                                    ftable.cluster_attribute,
@@ -8844,7 +8844,7 @@ class Style(object):
     # -------------------------------------------------------------------------
     def as_dict(self):
         """
-            
+
         """
 
         # Not JSON-serializable
@@ -9321,7 +9321,7 @@ class S3ImportPOI(S3Method):
             resources_list = settings.get_gis_poi_export_resources()
             uploadpath = os.path.join(request.folder,"uploads/")
             from s3utils import s3_yes_no_represent
- 
+
             fields = [Field("text1", # Dummy Field to add text inside the Form
                             label = "",
                             default = T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
@@ -9353,7 +9353,7 @@ class S3ImportPOI(S3Method):
                             requires = IS_IN_SET(resources_list, multiple=True),
                             default = resources_list,
                             widget = SQLFORM.widgets.checkboxes.widget)
-                      ] 
+                      ]
 
             if not r.id:
                 from s3validators import IS_LOCATION
@@ -9375,11 +9375,11 @@ class S3ImportPOI(S3Method):
                                    separator = "",
                                    table_name = "import_poi" # Dummy table name
                                    )
- 
+
             response.view = "create.html"
             output = dict(title=title,
                           form=form)
-            
+
             if form.accepts(request.vars, current.session):
                 form_vars = form.vars
                 if form_vars.file != "":
