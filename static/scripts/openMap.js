@@ -1,5 +1,5 @@
 var opened = false;
-var dialog
+var dialog;
 function openMap(start, end){
     if(!opened){
         dialog = document.createElement("DIALOG");
