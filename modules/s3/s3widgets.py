@@ -3886,6 +3886,7 @@ class S3Selector(FormWidget):
 
         Subclasses must implement:
             - __call__().........widget renderer
+            - extract()..........extract the values dict from the database
             - validate().........validator for the JSON input
             - postprocess()......post-process to create/update records
 
@@ -3910,6 +3911,22 @@ class S3Selector(FormWidget):
         values = self.parse(value)
 
         return self.inputfield(field, values, "s3-selector", **attributes)
+
+    # -------------------------------------------------------------------------
+    def extract(self, record_id, values=None):
+        """
+            Extract the record from the database and update values.
+
+            To be implemented in subclass
+
+            @param values: the values dict
+        """
+
+        if values is None:
+            values = {}
+        values["id"] = record_id
+
+        return values
 
     # -------------------------------------------------------------------------
     def validate(self, value):
@@ -4097,7 +4114,9 @@ class S3LocationSelector(S3Selector):
             @param error_message: default error message for server-side validation
         """
 
-        self.levels = levels
+        self._levels = levels
+        self._load_levels = None
+
         self.hide_lx = hide_lx
         self.reverse_lx = reverse_lx
         self.show_address = show_address
@@ -4112,6 +4131,39 @@ class S3LocationSelector(S3Selector):
         self.catalog_layers = catalog_layers
 
         self.error_message = error_message
+
+    # -------------------------------------------------------------------------
+    @property
+    def levels(self):
+        """ Lx-levels to expose as dropdowns """
+
+        levels = self._levels
+        if not levels:
+            # Which levels of Hierarchy are we using?
+            self._levels = levels = current.gis.get_relevant_hierarchy_levels()
+
+        return levels
+
+    # -------------------------------------------------------------------------
+    @property
+    def load_levels(self):
+        """
+            Lx-levels to load from the database = all levels down to the
+            lowest exposed level (L0=highest, L5=lowest)
+        """
+
+        load_levels = self._load_levels
+
+        if load_levels is None:
+            load_levels = ("L0", "L1", "L2", "L3", "L4", "L5")
+            while load_levels:
+                if load_levels[-1] in self.levels:
+                    break
+                else:
+                    load_levels = load_levels[:-1]
+            self._load_levels = load_levels
+
+        return load_levels
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -4194,32 +4246,12 @@ class S3LocationSelector(S3Selector):
         if not location_id and values.keys() == ["id"]:
             location_id = values["id"] = default
 
-        # Lx-levels to expose as dropdowns
-        levels = self.levels
-        if not levels:
-            # Which levels of Hierarchy are we using?
-            levels = gis.get_relevant_hierarchy_levels()
-
-        # Lx-levels to load from the database
-        # = all levels down to the lowest exposed level (L0=highest, L5=lowest)
-        load_levels = ("L0", "L1", "L2", "L3", "L4", "L5")
-        while load_levels:
-            if load_levels[-1] in levels:
-                break
-            else:
-                load_levels = load_levels[:-1]
-
-        # Initialize the values dict
-        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific"):
-            if key not in values:
-                values[key] = None
-        values["parent"] = None
-
         # Update the values dict from the database
-        if location_id:
-            values = self._load(location_id, values, load_levels)
+        values = self.extract(location_id, values=values)
 
         # The lowest level we have a value for, but no selector exposed
+        levels = self.levels
+        load_levels = self.load_levels
         lowest_lx = None
         for level in load_levels[::-1]:
             if level not in levels and values.get(level):
@@ -4402,17 +4434,31 @@ class S3LocationSelector(S3Selector):
                        )
 
     # -------------------------------------------------------------------------
-    def _load(self, location_id, values, levels):
+    def extract(self, record_id, values=None):
         """
             Load record data from database and update the values dict
 
-            @param location_id: the location record ID
+            @param record_id: the location record ID
             @param values: the values dict
-            @param levels: the relevant hierarchy levels (in order)
         """
+
+        # Initialize the values dict
+        if values is None:
+            values = {}
+        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific"):
+            if key not in values:
+                values[key] = None
+
+        values["id"] = record_id
+        values["parent"] = None
+
+        if not record_id:
+            return values
 
         db = current.db
         table = current.s3db.gis_location
+
+        levels = self.load_levels
 
         lat = values.get("lat")
         lon = values.get("lon")
@@ -4421,18 +4467,18 @@ class S3LocationSelector(S3Selector):
         postcode = values.get("postcode")
 
         # Load the record
-        record = db(table.id == location_id).select(table.id,
-                                                    table.path,
-                                                    table.parent,
-                                                    table.level,
-                                                    table.gis_feature_type,
-                                                    table.inherited,
-                                                    table.lat,
-                                                    table.lon,
-                                                    table.wkt,
-                                                    table.addr_street,
-                                                    table.addr_postcode,
-                                                    limitby=(0, 1)).first()
+        record = db(table.id == record_id).select(table.id,
+                                                  table.path,
+                                                  table.parent,
+                                                  table.level,
+                                                  table.gis_feature_type,
+                                                  table.inherited,
+                                                  table.lat,
+                                                  table.lon,
+                                                  table.wkt,
+                                                  table.addr_street,
+                                                  table.addr_postcode,
+                                                  limitby=(0, 1)).first()
         if not record:
             raise ValueError
 
