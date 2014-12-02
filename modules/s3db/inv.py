@@ -3460,12 +3460,17 @@ def inv_send_rheader(r):
                                                                limitby=(0, 1)
                                                                ).first()
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
-                from_site = db(stable.site_id == site_id).select(stable.location_id,
-                                                               limitby=(0, 1)
-                                                               ).first()
-                from_address = s3db.gis_LocationRepresent(address_only=True)(from_site.location_id)
             else:
                 address = current.messages["NONE"]
+
+            from_site = db(stable.site_id == site_id).select(stable.location_id,
+                                                             limitby=(0, 1)
+                                                            ).first()
+            if from_site:
+                from_address = s3db.gis_LocationRepresent(address_only=True)(from_site.location_id)
+            else:
+                from_address = current.messages["NONE"]
+
             rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
@@ -3509,8 +3514,8 @@ def inv_send_rheader(r):
                           TR(TH("%s: " % table.comments.label),
                              TD(record.comments or "", _colspan=3)
                              ),
-                          TR(TH("%s: " % T("From Address")),
-                             TD(BUTTON(T(from_address),
+                          TR(TH("%s: " % T("Driving Directions")),
+                             TD(BUTTON(T("Show on Map"),
                                         _onclick = 'openMap("' + from_address + '" , "' + address + '")',
                                         _id = "open_map",
                                         _class = "action-btn"
