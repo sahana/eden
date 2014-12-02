@@ -493,7 +493,11 @@
                 }
             }
             // Update the data dict
-            this._collectData();
+            if (!refresh) {
+                this._collectData();
+            } else {
+                this._serialize();
+            }
 
             // Zoom the map to the appropriate bounds
             this._zoomMap();
@@ -952,8 +956,7 @@
                 $('html,body').animate({scrollTop: map_wrapper.offset().top}, 250);
             }
 
-            var realInput = this.input,
-                data = this.data;
+            var realInput = this.input;
 
             // Check if Maps JS is Loaded
             $.when(this._jsLoaded()).then(
@@ -961,96 +964,100 @@
                 function(status) {
                     // Maps JS is loaded
                     var gis = S3.gis,
-                        map_id = 'location_selector_' + fieldname;
+                        map_id = 'location_selector_' + fieldname,
+                        map;
 
                     if (!gis.maps[map_id]) {
-
                         // Instantiate the Map as we couldn't do it when DIV is hidden
-                        var map = gis.show_map(map_id);
-
-                        // Zoom to the appropriate bounds
-                        self._zoomMap();
-
-                        // Display the feature (if any)
-                        var lat = data.lat,
-                            lon = data.lon,
-                            wkt = data.wkt,
-                            feature,
-                            geometry;
-                        if (lat || lon || wkt) {
-                            if ((wkt != undefined) && wkt) {
-                                var in_options = {'internalProjection': map.getProjectionObject(),
-                                                  'externalProjection': gis.proj4326
-                                                  };
-                                feature = new OpenLayers.Format.WKT(in_options).read(wkt);
-                            } else {
-                                geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
-                                geometry.transform(gis.proj4326, map.getProjectionObject());
-                                feature = new OpenLayers.Feature.Vector(geometry);
-                            }
-                            map.s3.draftLayer.addFeatures([feature]);
-                        }
-
-                        // Does the map have controls to add new features?
-                        var controls = map.controls,
-                            control;
-                        for (var i=0, len=controls.length; i < len; i++) {
-                            if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
-                                control = controls[i];
-                                break;
-                            }
-                        }
-                        if (control) {
-                            // Watch for new features being selected, so that we can
-                            // store the Lat/Lon/WKT (callback function for the map)
-                            // @todo: make this callback specific for this map
-                            map.s3.pointPlaced = function(feature) {
-
-                                // Hide any Geocoder messages
-                                $(selector + '_geocode .geocode_fail').hide();
-                                $(selector + '_geocode .geocode_success').hide();
-
-                                // Update the Form fields
-                                var geometry = feature.geometry;
-
-                                if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
-                                    var centerPoint = geometry.getBounds().getCenterLonLat();
-                                    centerPoint.transform(map.getProjectionObject(), gis.proj4326);
-
-                                    // Store the data
-                                    data.wkt = null;
-                                    data.lat = centerPoint.lat;
-                                    data.lon = centerPoint.lon;
-
-                                    // Reverse Geocode the Point
-                                    if (!data.address && this.useGeocoder) {
-                                        self._geocodeReverse();
-                                    }
-                                } else {
-                                    // Polygon
-                                    var out_options = {
-                                        'internalProjection': map.getProjectionObject(),
-                                        'externalProjection': gis.proj4326
-                                        };
-                                    wkt = new OpenLayers.Format.WKT(out_options).write(feature);
-
-                                    // Store the data
-                                    data.wkt = wkt;
-                                    data.lat = null;
-                                    data.lon = null;
-                                }
-                                // Store the fact that we've now added Marker manually
-                                realInput.data('manually_geocoded', true);
-                                // Serialize the data dict
-                                self._collectData();
-                                // Remove all errors
-                                self._removeErrors();
-                            };
-                            //control.events.register('featureadded', null, pointPlaced);
-                        }
+                        map = gis.show_map(map_id);
                     } else {
-                        // Map already instantiated (@todo: remove this section?)
-                        //var map = gis.maps[map_id];
+                        // Map already instantiated
+                        map = gis.maps[map_id];
+
+                    }
+                    // Zoom to the appropriate bounds
+                    self._zoomMap();
+
+                    // Display the feature (if any)
+                    var data = self.data;
+                    var lat = data.lat,
+                        lon = data.lon,
+                        wkt = data.wkt,
+                        feature,
+                        geometry;
+                    if (lat || lon || wkt) {
+                        // Remove previous features
+                        map.s3.draftLayer.removeAllFeatures();
+                        if ((wkt != undefined) && wkt) {
+                            var in_options = {'internalProjection': map.getProjectionObject(),
+                                              'externalProjection': gis.proj4326
+                                              };
+                            feature = new OpenLayers.Format.WKT(in_options).read(wkt);
+                        } else {
+                            geometry = new OpenLayers.Geometry.Point(parseFloat(lon), parseFloat(lat));
+                            geometry.transform(gis.proj4326, map.getProjectionObject());
+                            feature = new OpenLayers.Feature.Vector(geometry);
+                        }
+                        // Display this feature
+                        map.s3.draftLayer.addFeatures([feature]);
+                    }
+
+                    // Does the map have controls to add new features?
+                    var controls = map.controls,
+                        control;
+                    for (var i=0, len=controls.length; i < len; i++) {
+                        if (controls[i].CLASS_NAME == 'OpenLayers.Control.DrawFeature') {
+                            control = controls[i];
+                            break;
+                        }
+                    }
+                    if (control) {
+                        // Watch for new features being selected, so that we can
+                        // store the Lat/Lon/WKT (callback function for the map)
+                        // @todo: make this callback specific for this map
+                        map.s3.pointPlaced = function(feature) {
+
+                            // Hide any Geocoder messages
+                            $(selector + '_geocode .geocode_fail').hide();
+                            $(selector + '_geocode .geocode_success').hide();
+
+                            // Update the Form fields
+                            var geometry = feature.geometry;
+
+                            if (geometry.CLASS_NAME == 'OpenLayers.Geometry.Point') {
+                                var centerPoint = geometry.getBounds().getCenterLonLat();
+                                centerPoint.transform(map.getProjectionObject(), gis.proj4326);
+
+                                // Store the data
+                                data.wkt = null;
+                                data.lat = centerPoint.lat;
+                                data.lon = centerPoint.lon;
+
+                                // Reverse Geocode the Point
+                                if (!data.address && this.useGeocoder) {
+                                    self._geocodeReverse();
+                                }
+                            } else {
+                                // Polygon
+                                var out_options = {
+                                    'internalProjection': map.getProjectionObject(),
+                                    'externalProjection': gis.proj4326
+                                    };
+                                wkt = new OpenLayers.Format.WKT(out_options).write(feature);
+
+                                // Store the data
+                                data.wkt = wkt;
+                                data.lat = null;
+                                data.lon = null;
+                            }
+                            // Store the fact that we've now added Marker manually
+                            realInput.data('manually_geocoded', true);
+                            // Serialize the data dict
+                            self._collectData();
+                            // Remove all errors
+                            self._removeErrors();
+                        };
+                        //control.events.register('featureadded', null, pointPlaced);
                     }
                 },
                 function(status) {
@@ -1365,7 +1372,7 @@
             $(selector + '_address,' +
               selector + '_postcode').bind('change' + ns, function() {
                 self._removeErrors(this);
-                if (this.useGeocoder) {
+                if (self.useGeocoder) {
                     // geocodeDecision includes collectData
                     //self._collectData();
                     self._geocodeDecision();

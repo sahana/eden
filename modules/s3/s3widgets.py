@@ -5010,46 +5010,47 @@ i18n.hide_map="%s"''' % (show_map_add, show_map_view, T("Hide Map")))
         icon_id = "%s_map_icon" % fieldname
         row_id = "%s_map_icon__row" % fieldname
         _formstyle = settings.ui.formstyle
-        if not _formstyle:
+        if not _formstyle or \
+           isinstance(_formstyle, basestring) and "foundation" in _formstyle:
             # Default: Foundation
             # Need to add custom classes to core HTML markup
-            map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
-                                        SPAN(label),
-                                        _type="button", # defaults to 'submit' otherwise!
-                                        _id=icon_id,
-                                        _class="btn gis_loc_select_btn",
-                                        ),
-                                _class="small-12 columns",
-                                ),
-                            _id = row_id,
-                            _class = "form-row row hide",
-                            )
+            map_icon = DIV(DIV(BUTTON(ICON("globe"),
+                                      SPAN(label),
+                                      _type="button", # defaults to 'submit' otherwise!
+                                      _id=icon_id,
+                                      _class="btn tiny button gis_loc_select_btn",
+                                      ),
+                               _class="small-12 columns",
+                               ),
+                           _id = row_id,
+                           _class = "form-row row hide",
+                           )
         elif _formstyle == "bootstrap":
             # Need to add custom classes to core HTML markup
-            map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
-                                        SPAN(label),
-                                        _type="button", # defaults to 'submit' otherwise!
-                                        _id=icon_id,
-                                        _class="btn gis_loc_select_btn",
-                                        ),
-                                _class="controls",
-                                ),
-                            _id = row_id,
-                            _class = "control-group hide",
-                            )
+            map_icon = DIV(DIV(BUTTON(ICON("icon-map"),
+                                      SPAN(label),
+                                      _type="button", # defaults to 'submit' otherwise!
+                                      _id=icon_id,
+                                      _class="btn gis_loc_select_btn",
+                                      ),
+                               _class="controls",
+                               ),
+                           _id = row_id,
+                           _class = "control-group hide",
+                           )
         else:
             # Old default
-            map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
-                                        SPAN(label),
-                                        _type="button", # defaults to 'submit' otherwise!
-                                        _id=icon_id,
-                                        _class="btn gis_loc_select_btn",
-                                        ),
-                                _class="w2p_fl",
-                                ),
-                            _id = row_id,
-                            _class = "hide",
-                            )
+            map_icon = DIV(DIV(BUTTON(ICON("globe"),
+                                      SPAN(label),
+                                      _type="button", # defaults to 'submit' otherwise!
+                                      _id=icon_id,
+                                      _class="btn gis_loc_select_btn",
+                                      ),
+                               _class="w2p_fl",
+                               ),
+                           _id = row_id,
+                           _class = "hide",
+                           )
 
         # Geocoder?
         if geocoder:
