@@ -5432,7 +5432,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                             postcode != lpostcode:
                             changed = True
                         else:
-                            if wkt and wkt != location.wkt:
+                            lwkt = location.wkt
+                            if (wkt or lwkt) and \
+                               wkt != lwkt:
                                 changed = True
                             else:
                                 # Float comparisons need care
@@ -5465,11 +5467,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                       addr_postcode=postcode,
                                       parent=parent,
                                       )
-                    if lat is not None and lon is not None:
+                    if any(detail is not None for detail in (lat, lon, wkt)):
                         feature.lat = lat
                         feature.lon = lon
-                        feature.inherited = False
-                    elif wkt is not None:
                         feature.wkt = wkt
                         feature.inherited = False
                     onvalidation = current.s3db.gis_location_onvalidation
@@ -5492,11 +5492,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   parent=parent,
                                   inherited=True,
                                   )
-                if lat is not None and lon is not None:
+                if any(detail is not None for detail in (lat, lon, wkt)):
                     feature.lat = lat
                     feature.lon = lon
-                    feature.inherited = False
-                elif wkt is not None:
                     feature.wkt = wkt
                     feature.inherited = False
                 onvalidation = current.s3db.gis_location_onvalidation
@@ -5632,11 +5630,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   addr_postcode=values.get("postcode"),
                                   parent=values.get("parent"),
                                   )
-                if lat is not None and lon is not None:
+                if any(detail is not None for detail in (lat, lon, wkt)):
                     feature.lat = lat
                     feature.lon = lon
-                    feature.inherited = False
-                elif wkt is not None:
                     feature.wkt = wkt
                     feature.inherited = False
 

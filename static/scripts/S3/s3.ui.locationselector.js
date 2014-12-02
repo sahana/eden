@@ -493,7 +493,7 @@
                 }
             }
             // Update the data dict
-            this._serialize();
+            this._collectData();
 
             // Zoom the map to the appropriate bounds
             this._zoomMap();
@@ -1042,7 +1042,7 @@
                                 // Store the fact that we've now added Marker manually
                                 realInput.data('manually_geocoded', true);
                                 // Serialize the data dict
-                                self._serialize();
+                                self._collectData();
                                 // Remove all errors
                                 self._removeErrors();
                             };
@@ -1133,11 +1133,16 @@
                     var data = this.data;
                     var lat = data.lat,
                         lon = data.lon,
+                        wkt = data.wkt,
                         bounds;
 
                     if (lat && lon) {
                         // Minimal bbox and padding will be added inside S3.gis.zoomBounds
                         bounds = [lon, lat, lon, lat];
+                    } else if (wkt) {
+                        // Experimental
+                        var vector = new OpenLayers.Feature.Vector(OpenLayers.Geometry.fromWKT(wkt));
+                        S3.gis.zoomBounds(map, vector.geometry.getBounds());
                     } else {
                         // Zoom to extent of the Lx, if we have it
                         if (!id) {
