@@ -5934,10 +5934,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             if (undefined != style.graphic) {
                                 graphic = style.graphic;
                             }
-                        } else {
+                        }// else {
                             // Lookup from rule
                             // - done within OpenLayers.Rule
-                        }
+                        //}
                     }
                     return graphic;
                 },
