@@ -2126,8 +2126,14 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         continue
 
                     colname = rfield.colname
-                    if hasattr(rfield.field, "formatter"):
-                        value = rfield.field.formatter(row[colname])
+                    field = rfield.field
+
+                    widget = field.widget
+                    if isinstance(widget, S3Selector):
+                        # Use the widget extraction/serialization method
+                        value = widget.serialize(widget.extract(row[colname]))
+                    elif hasattr(field, "formatter"):
+                        value = field.formatter(row[colname])
                     else:
                         # Virtual Field
                         value = row[colname]
@@ -2539,6 +2545,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     if f[0] != "_" and d and isinstance(d, dict):
 
                         field = table[f]
+                        widget = field.widget
                         if not hasattr(field, "type"):
                             # Virtual Field
                             continue
@@ -2549,9 +2556,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                 filename = self._store_file(table, f, rowindex)
                                 if filename:
                                     values[f] = filename
-                        elif isinstance(field.widget, S3Selector):
+                        elif isinstance(widget, S3Selector):
                             # Value must be processed by widget post-process
-                            value, error = field.widget.postprocess(d["value"])
+                            value, error = widget.postprocess(d["value"])
                             if not error:
                                 values[f] = value
                             else:
@@ -2794,7 +2801,13 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     data[idxname] = filename
                 else:
                     value = item[fname]["value"]
-                    value, error = s3_validate(table, fname, value)
+                    widget = formfield.widget
+                    if isinstance(widget, S3Selector):
+                        # Use the widget parser to get at the selected ID
+                        value, error = widget.parse(value).get("id"), None
+                    else:
+                        # Use the validator to get at the original value
+                        value, error = s3_validate(table, fname, value)
                     if error:
                         value = None
                     data[idxname] = value

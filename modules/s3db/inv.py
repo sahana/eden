@@ -3434,8 +3434,11 @@ def inv_send_rheader(r):
             if site_id:
                 site = db(stable.site_id == site_id).select(stable.organisation_id,
                                                             stable.instance_type,
+                                                            stable.location_id,
                                                             limitby=(0, 1)
                                                             ).first()
+                # Get the address from the starting point
+                from_address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
                 org_id = site.organisation_id
                 logo = s3db.org_organisation_logo(org_id) or ""
                 instance_table = s3db[site.instance_type]
@@ -3450,6 +3453,7 @@ def inv_send_rheader(r):
                     phone1 = None
                     phone2 = None
             else:
+                from_address = current.messages["NONE"]
                 org_id = None
                 logo = ""
                 phone1 = None
@@ -3462,14 +3466,6 @@ def inv_send_rheader(r):
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
             else:
                 address = current.messages["NONE"]
-
-            from_site = db(stable.site_id == site_id).select(stable.location_id,
-                                                             limitby=(0, 1)
-                                                            ).first()
-            if from_site:
-                from_address = s3db.gis_LocationRepresent(address_only=True)(from_site.location_id)
-            else:
-                from_address = current.messages["NONE"]
 
             rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
@@ -3516,7 +3512,7 @@ def inv_send_rheader(r):
                              ),
                           TR(TH("%s: " % T("Driving Directions")),
                              TD(A(T("Show on Map"),
-                                        _onclick = 'openMap("' + from_address + '" , "' + address + '")',
+                                        _onclick = 'DrivingDirections.openMap(["' + from_address + '" , "' + address + '"])',
                                         _id = "open_map",
                                         _class = "action-btn"
                                         ), _colspan=3),

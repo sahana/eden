@@ -7889,6 +7889,18 @@ class LayerGeoJSON(Layer):
             else:
                 self.marker.add_attributes_to_output(output)
 
+            popup_format = self.popup_format
+            if popup_format:
+                if "T(" in popup_format:
+                    # i18n
+                    T = current.T
+                    items = regex_translate.findall(popup_format)
+                    for item in items:
+                        titem = str(T(item[1:-1]))
+                        popup_format = popup_format.replace("T(%s)" % item,
+                                                            titem)
+                output["popup_format"] = popup_format
+
             return output
 
 # -----------------------------------------------------------------------------
