@@ -3511,7 +3511,7 @@ def inv_send_rheader(r):
                              ),
                           TR(TH("%s: " % T("From Address")),
                              TD(BUTTON(T(from_address),
-                                        _onclick = "window.open('http://www.w3schools.com')",
+                                        _onclick = 'openMap("' + from_address + '" , "' + address + '")',
                                         _id = "open_map",
                                         _class = "action-btn"
                                         ), _colspan=3),
