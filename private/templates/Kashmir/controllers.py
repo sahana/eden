@@ -265,9 +265,8 @@ class about(S3CustomController):
     """ Custom Page for rendering about"""
 
     def __call__(self):
-
-        #redirect('https://docs.google.com/a/iquasar.com/file/d/0B3_TmWrJ52YBRmNoVVBhZkI1ZG8/edit')
-        self._view(TEMPLATE, "about.html")
+        redirect('https://docs.google.com/a/iquasar.com/file/d/0B3_TmWrJ52YBRmNoVVBhZkI1ZG8/edit')
+        #self._view(TEMPLATE, "contact.html")
         return {}
 
 # =============================================================================
@@ -275,7 +274,7 @@ class contact(S3CustomController):
     """ Custom Page for rendering contact us """
 
     def __call__(self):
-
+        
         self._view(TEMPLATE, "contact.html")
         return {}
 
@@ -284,8 +283,8 @@ class userguide(S3CustomController):
      """ User Guide """
 
      def __call__(self):
-
-        self._view(TEMPLATE, "userguide.html")
+        redirect('https://docs.google.com/a/iquasar.com/file/d/0B2Oza2Pxxyw6Qi1qMV93Xy1kWU0/edit')
+        #self._view(TEMPLATE, "userguide.html")
         return {}
 
 # END =========================================================================
