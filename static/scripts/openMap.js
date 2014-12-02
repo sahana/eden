@@ -1,7 +1,8 @@
 var opened = false;
+var dialog
 function openMap(start, end){
     if(!opened){
-         var dialog = document.createElement("DIALOG");
+        dialog = document.createElement("DIALOG");
         $(dialog).width("800px");
         $(dialog).height("700px");
         $(dialog).html('<div id="map-canvas" style="width:400px; height:600px;"></div><div id="directions" style="width:200px; height:600px;"></div>');
