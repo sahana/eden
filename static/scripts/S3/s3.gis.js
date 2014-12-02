@@ -3624,7 +3624,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 }
             } else if (layer_type == 'gpx') {
                 // @ToDo: display as many attributes as we can: Description (Points), Date, Author?, Lat, Lon
-            } else if (layer_type == 'shapefile') {
+            } else if ((layer_type == 'shapefile') || (layer_type == 'geojson')) {
                 // We don't have control of attributes, so simply display all
                 // @ToDo: have an optional style.popup (like KML's balloonStyle)
                 var attributes = feature.attributes;
