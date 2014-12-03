@@ -924,6 +924,14 @@ class S3Config(Storage):
         " Display a Map-based tool to select Locations "
         return self.gis.get("map_selector", True)
 
+    def get_gis_map_selector_height(self):
+        """ Height of the map selector map """
+        return self.gis.get("map_selector_height", 340)
+
+    def get_gis_map_selector_width(self):
+        """ Width of the map selector map """
+        return self.gis.get("map_selector_width", 480)
+
     def get_gis_marker_max_height(self):
         return self.gis.get("marker_max_height", 35)
 

@@ -4967,10 +4967,8 @@ class S3LocationSelector(S3Selector):
         # Create the map
         _map = gis.show_map(id = "location_selector_%s" % fieldname,
                             collapsed = True,
-                            #@ToDo: Make this configurable
-                            height = 340,
-                            #height = 600,
-                            width = 480,
+                            height = settings.get_gis_map_selector_height(),
+                            width = settings.get_gis_map_selector_width(),
                             add_feature = points,
                             add_feature_active = add_points_active,
                             add_line = lines,
