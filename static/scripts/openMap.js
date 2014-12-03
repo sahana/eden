@@ -38,7 +38,7 @@ function printDiv() {
 
    //get directions from the div and append to new window
    var data = $('#map-dirs').html();
-   printWindow.document.write('<html><head><title>my div</title>');
+   printWindow.document.write('<html><head><title>Shipment Directions</title>');
    printWindow.document.write('</head><body >');
    printWindow.document.write(data);
    printWindow.document.write('</body></html>');
