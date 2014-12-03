@@ -3515,14 +3515,13 @@ def inv_send_rheader(r):
                              TD(record.comments or "", _colspan=3)
                              ),
                           TR(TH("%s: " % T("Driving Directions")),
-                             TD(BUTTON(T("Show on Map"),
+                             TD(A(T("Show on Map"),
                                         _onclick = 'openMap("' + from_address + '" , "' + address + '")',
                                         _id = "open_map",
                                         _class = "action-btn"
                                         ), _colspan=3),
                              ),
                           )
-
             # Find out how many inv_track_items we have for this send record
             tracktable = s3db.inv_track_item
             query = (tracktable.send_id == send_id) & \
