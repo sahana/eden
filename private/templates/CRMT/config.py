@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import s3_avatar_represent, S3DataListLayout
+from s3 import ICON, s3_avatar_represent, S3DataListLayout
 
 T = current.T
 settings = current.deployment_settings
@@ -2428,13 +2428,13 @@ class OrganisationProfileLayout(S3DataListLayout):
 
         tablename = resource.tablename
         if tablename == "org_facility":
-            icon_class = "icon-globe"
+            icon = ICON("globe")
             title = record["org_facility.location_id"]
         else:
-            icon_class = "icon"
+            icon = None
             title = ""
 
-        return DIV(I(_class=icon_class),
+        return DIV(icon,
                    SPAN(" %s" % title, _class="card-title"),
                    toolbox,
                    _class="card-header",
@@ -2489,21 +2489,21 @@ class OrganisationProfileLayout(S3DataListLayout):
         if update_url and \
            has_permission("update", table,
                           record_id=record_id, c="org", f="facility"):
-            btn = A(I(" ", _class="icon icon-edit"),
+            btn = A(ICON("edit"), #(" ", _class="icon icon-edit"),
                     _href=update_url,
                     _class="s3_modal",
                     _title=crud_string(tablename, "title_update"))
             toolbox.append(btn)
 
         elif open_url:
-            btn = A(I(" ", _class="icon icon-file-alt"),
+            btn = A(ICON("file-alt"), #(" ", _class="icon icon-file-alt"),
                     _href=open_url,
                     _title=crud_string(tablename, "title_display"))
             toolbox.append(btn)
 
         if has_permission("delete", table,
                           record_id=record_id, c="org", f="facility"):
-            btn = A(I(" ", _class="icon icon-trash"),
+            btn = A(ICON("delete"), #(" ", _class="icon icon-trash"),
                     _class="dl-item-delete",
                     _title=crud_string(tablename, "label_delete_button"))
             toolbox.append(btn)
