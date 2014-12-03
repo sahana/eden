@@ -4116,6 +4116,7 @@ class S3LocationSelector(S3Selector):
                  polygons = False,
                  color_picker = False,
                  catalog_layers = False,
+                 min_bbox = None,
                  error_message = None,
                  represent = None):
         """
@@ -4136,6 +4137,8 @@ class S3LocationSelector(S3Selector):
             @param color_picker: display a color-picker to set per-feature styling
                                  (also need to enable in the feature layer to show on map)
             @param catalog_layers: display catalogue layers or just the default base layer
+            @param min_bbox: minimum BBOX in map selector, used to determine automatic
+                             zoom level for single-point locations
             @param error_message: default error message for server-side validation
             @param represent: an S3Represent instance that can represent non-DB rows
         """
@@ -4155,6 +4158,8 @@ class S3LocationSelector(S3Selector):
 
         self.color_picker = color_picker
         self.catalog_layers = catalog_layers
+
+        self.min_bbox = min_bbox
 
         self.error_message = error_message
         self._represent = represent
@@ -4400,6 +4405,8 @@ class S3LocationSelector(S3Selector):
                    "locations": location_dict,
                    "labels": labels_compact,
                    }
+        if self.min_bbox:
+            options["minBBOX"] = self.min_bbox
         script = '''$('#%s').locationselector(%s)''' % \
                  (fieldname, json.dumps(options, separators=SEPARATORS))
 
