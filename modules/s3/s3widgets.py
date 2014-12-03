@@ -4790,7 +4790,8 @@ class S3LocationSelector(S3Selector):
             @param multiselect: Use multiselect-dropdowns (specify "search" to
                                 make the dropdowns searchable)
 
-            @return: a DIV of form rows
+            @return: a dict of components
+                     {name: (label, widget, id, hidden)}
         """
 
         # Use multiselect widget?
@@ -4853,10 +4854,18 @@ class S3LocationSelector(S3Selector):
                name,
                value,
                label,
-               hidden=False,
-               #formstyle=None,
-               #tuple_rows=False
-               ):
+               hidden=False):
+        """
+            Render a text input (e.g. address or postcode field)
+
+            @param fieldname: the field name (for ID construction)
+            @param name: the name for the input field
+            @param value: the initial value for the input
+            @param label: the label for the input
+            @param hidden: render hidden
+
+            @return: a tuple (label, widget, id, hidden)
+        """
 
         input_id = "%s_%s" % (fieldname, name)
 
@@ -4876,17 +4885,6 @@ class S3LocationSelector(S3Selector):
                        )
 
         return (_label, widget, input_id, hidden)
-
-        #formrow = formstyle("%s__row" % input_id,
-                            #_label,
-                            #widget,
-                            #"",
-                            #hidden=hidden,
-                            #)
-        #if tuple_rows:
-            #return formrow[0], formrow[1]
-        #else:
-            #return "", formrow
 
     # -------------------------------------------------------------------------
     def _map(self,
