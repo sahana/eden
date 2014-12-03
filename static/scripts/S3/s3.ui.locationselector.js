@@ -31,13 +31,18 @@
          *                          address fields
          * @prop {object} locations - initial location hierarchy data
          * @prop {object} labels - initial hierarchy labels per L0
+         * @prop {object} minBBOX - minimum size of the boundary box (in degrees),
+         *                          used to determine automatic zoom level for
+         *                          single-point locations
          */
         options: {
             hideLx: true,
             reverseLx: false,
 
             locations: null,
-            labels: null
+            labels: null,
+
+            minBBOX: 0.05
         },
 
         /**
@@ -1149,7 +1154,7 @@
                     } else if (wkt) {
                         // Experimental
                         var vector = new OpenLayers.Feature.Vector(OpenLayers.Geometry.fromWKT(wkt));
-                        S3.gis.zoomBounds(map, vector.geometry.getBounds());
+                        bounds = vector.geometry.getBounds();
                     } else {
                         // Zoom to extent of the Lx, if we have it
                         if (!id) {
@@ -1176,7 +1181,7 @@
                     }
                     if (bounds) {
                         bounds = OpenLayers.Bounds.fromArray(bounds);
-                        S3.gis.zoomBounds(map, bounds);
+                        S3.gis.zoomBounds(map, bounds, this.options.minBBOX);
                     }
                 }
             }
