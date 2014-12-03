@@ -26,8 +26,8 @@ class index(S3CustomController):
     def __call__(self):
 
         # Calculate summary data (this should be moved - perhaps done async)
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
 
         levels = ("L0", "L1", "L2", "L3", "L4")
         data = {}
@@ -93,7 +93,12 @@ class index(S3CustomController):
                 data[code]["event_event"] = count
                 data["total"]["event_event"] += count
 
-        current.response.data = json.dumps(data, separators=SEPARATORS)
+        s3 = current.response.s3
+        script = '''homepage_data=%s''' % json.dumps(data, separators=SEPARATORS)
+        s3.js_global.append(script)
+        script = "/%s/static/themes/%s/js/homepage.js" % \
+            (current.request.application, THEME)
+        s3.scripts.append(script)
 
         output = {}
         self._view(THEME, "index.html")

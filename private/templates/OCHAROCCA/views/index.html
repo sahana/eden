@@ -14,36 +14,6 @@
         <li data-target='#ocharocca-carousel' data-slide-to='1'></li>
         <li data-target='#ocharocca-carousel' data-slide-to='2'></li>
       </ol>
-
-        <!-- 
- This platform is used to manage a range of humanitarian data in order to:
- <ul>
-  <li>Maintain the different datasets</li>
-  <li>Increase situational awareness</li>
-  <li>Provide input to vulnerability analysis and early warning</li>
-  <li>Provide the basis for needs assessment and response planning</li>
-  <li>Support advocacy and reporting</li>
- </ul>
-          <div class='container'>
-            <div class='carousel-caption'>
-              <h1>Example headline.</h1>
-              <p>Note: If you're viewing this page via a <code>file://</code> URL, the 'next' and 'previous' Glyphicon buttons on the left and right might not load/display properly due to web browser security rules.</p>
-              <p><a class='btn btn-lg btn-primary' href='#' role='button'>Sign up today</a></p>
-            </div>
-          </div>
-        </div>
-        <div class='item'>
-          <img src='/{{=appname}}/static/themes/OCHAROCCA/img/map.png' alt='{{=T("Maps")}}'>
-          <div class='container'>
-            <div class='carousel-caption'>
-              <h1>Another example headline.</h1>
-              <p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.</p>
-              <p><a class='btn btn-lg btn-primary' href='#' role='button'>Learn more</a></p>
-            </div>
-          </div>
-        </div>
-        <div class='item'>
-         -->
       <div class='carousel-inner'>
         <div class='item active'>
           <div class='carousel-caption'>
@@ -108,9 +78,11 @@
   <div class='menu'>
    <a href='/{{=appname}}/stats/demographic_data/summary'>
      <h3>Demographic Data</h3>
-     <p><span class='badge stats_demographic_data_L0 throbber'></span> Countries</p>
+     <p><span class='badge stats_demographic_data_L0 throbber'></span> Country</p>
      <p><span class='badge stats_demographic_data_L1 throbber'></span> Admin 1</p>
      <p><span class='badge stats_demographic_data_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge stats_demographic_data_L3 throbber'></span> Admin 3</p>
+     <p><span class='badge stats_demographic_data_L4 throbber'></span> Admin 4</p>
    </a>
   </div>
   <div class='menu'>
@@ -119,6 +91,8 @@
      <p><span class='badge vulnerability_data_L0 throbber'></span> Country</p>
      <p><span class='badge vulnerability_data_L1 throbber'></span> Admin 1</p>
      <p><span class='badge vulnerability_data_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge vulnerability_data_L3 throbber'></span> Admin 3</p>
+     <p><span class='badge vulnerability_data_L4 throbber'></span> Admin 4</p>
    </a>
   </div>
   <div class='menu'>
@@ -126,85 +100,4 @@
      <h3><span class='badge event_event throbber'></span>Disasters</h3>
    </a>
   </div>
-
 </div>
-
-<!-- @ToDo: Move to Static -->
-<script type='text/javascript'>//<![CDATA[
-$(document).ready(function(){
-
-    var data = {{=XML(current.response.data)}};
-    var stickyCountry = false;
-
-    var _handlerClickCountry = function() {
-        var country = $(this).attr('class');
-        var stickyCountryPrev = stickyCountry;
-        //Country Is Selected
-        if (stickyCountry) {
-            // Deselect current country
-            stickyCountry = false;
-            _handlerOutCountry();
-        }
-        // A new country is selected 
-        if (country != stickyCountryPrev) {
-            //Select this country
-            stickyCountry = country;
-            $( '.menus' ).css('background-color', '#99CCFF');
-            $(this).css('background-color', '#99CCFF');
-            $(this).css('height', '70px');
-            _updateStats(stickyCountry.substring(8));
-        }
-    }
-
-    var _handlerInCountry = function() {
-        if (!stickyCountry) {
-            $( '.menus' ).css('background-color', '#99CCFF');
-            $(this).css('background-color', '#99CCFF');
-            $(this).css('height', '70px');
-            // Get data for country 
-            _updateStats($(this).attr('class').substring(8));
-        }
-    }
-
-    var _handlerOutCountry = function() {
-        if (!stickyCountry) {
-            $( '.menus, .country' ).css('background-color', '#66B2FF');
-            $( '.country' ).css('height', '55px');
-            // Get global data
-            _updateStats('total');
-        }
-    }
-
-    var _updateStats = function(code) {
-        var resources = ['location',
-                         'gis_location_L0',
-                         'gis_location_L1',
-                         'gis_location_L2',
-                         'gis_location_L3',
-                         'gis_location_L4',
-                         'stats_demographic_data_L0',
-                         'stats_demographic_data_L1',
-                         'stats_demographic_data_L2',
-                         'vulnerability_data_L0',
-                         'vulnerability_data_L1',
-                         'vulnerability_data_L2',
-                         'event_event'
-                         ];
-        var resource,
-            value;
-        for (var i=0; i < 8; i++) {
-            resource = resources[i];
-            value = data[code][resource];
-            if (value == undefined) {
-                value = 0;
-            }
-            $('.badge.' + resource).html(value);
-            $('.badge.' + resource).removeClass('throbber');
-        }
-    }
-
-    _updateStats('total');
-    $( '.country' ).click(_handlerClickCountry);
-    $( '.country' ).hover( _handlerInCountry, _handlerOutCountry);
-})
-//]]></script>

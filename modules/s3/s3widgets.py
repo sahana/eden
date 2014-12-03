@@ -3886,6 +3886,9 @@ class S3Selector(FormWidget):
 
         Subclasses must implement:
             - __call__().........widget renderer
+            - extract()..........extract the values dict from the database
+            - represent()........representation method for new/updated value
+                                 dicts (before DB commit)
             - validate().........validator for the JSON input
             - postprocess()......post-process to create/update records
 
@@ -3910,6 +3913,44 @@ class S3Selector(FormWidget):
         values = self.parse(value)
 
         return self.inputfield(field, values, "s3-selector", **attributes)
+
+    # -------------------------------------------------------------------------
+    def extract(self, record_id, values=None):
+        """
+            Extract the record from the database and update values.
+
+            To be implemented in subclass.
+
+            @param record_id: the record ID
+            @param values: the values dict
+
+            @return: the (updated) values dict
+        """
+
+        if values is None:
+            values = {}
+        values["id"] = record_id
+
+        return values
+
+    # -------------------------------------------------------------------------
+    def represent(self, value):
+        """
+            Representation method for new or updated value dicts.
+
+            IMPORTANT: This method *must not* change DB status because it
+                       is called from inline forms before the the row is
+                       committed to the DB, so any DB status change would
+                       be invalid at this point.
+
+            To be implemented in subclass.
+
+            @param values: the values dict
+
+            @return: string representation for the values dict
+        """
+
+        return s3_unicode(value)
 
     # -------------------------------------------------------------------------
     def validate(self, value):
@@ -4075,7 +4116,8 @@ class S3LocationSelector(S3Selector):
                  polygons = False,
                  color_picker = False,
                  catalog_layers = False,
-                 error_message = None):
+                 error_message = None,
+                 represent = None):
         """
             Constructor
 
@@ -4095,9 +4137,12 @@ class S3LocationSelector(S3Selector):
                                  (also need to enable in the feature layer to show on map)
             @param catalog_layers: display catalogue layers or just the default base layer
             @param error_message: default error message for server-side validation
+            @param represent: an S3Represent instance that can represent non-DB rows
         """
 
-        self.levels = levels
+        self._levels = levels
+        self._load_levels = None
+
         self.hide_lx = hide_lx
         self.reverse_lx = reverse_lx
         self.show_address = show_address
@@ -4112,6 +4157,40 @@ class S3LocationSelector(S3Selector):
         self.catalog_layers = catalog_layers
 
         self.error_message = error_message
+        self._represent = represent
+
+    # -------------------------------------------------------------------------
+    @property
+    def levels(self):
+        """ Lx-levels to expose as dropdowns """
+
+        levels = self._levels
+        if not levels:
+            # Which levels of Hierarchy are we using?
+            self._levels = levels = current.gis.get_relevant_hierarchy_levels()
+
+        return levels
+
+    # -------------------------------------------------------------------------
+    @property
+    def load_levels(self):
+        """
+            Lx-levels to load from the database = all levels down to the
+            lowest exposed level (L0=highest, L5=lowest)
+        """
+
+        load_levels = self._load_levels
+
+        if load_levels is None:
+            load_levels = ("L0", "L1", "L2", "L3", "L4", "L5")
+            while load_levels:
+                if load_levels[-1] in self.levels:
+                    break
+                else:
+                    load_levels = load_levels[:-1]
+            self._load_levels = load_levels
+
+        return load_levels
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -4194,32 +4273,12 @@ class S3LocationSelector(S3Selector):
         if not location_id and values.keys() == ["id"]:
             location_id = values["id"] = default
 
-        # Lx-levels to expose as dropdowns
-        levels = self.levels
-        if not levels:
-            # Which levels of Hierarchy are we using?
-            levels = gis.get_relevant_hierarchy_levels()
-
-        # Lx-levels to load from the database
-        # = all levels down to the lowest exposed level (L0=highest, L5=lowest)
-        load_levels = ("L0", "L1", "L2", "L3", "L4", "L5")
-        while load_levels:
-            if load_levels[-1] in levels:
-                break
-            else:
-                load_levels = load_levels[:-1]
-
-        # Initialize the values dict
-        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific"):
-            if key not in values:
-                values[key] = None
-        values["parent"] = None
-
         # Update the values dict from the database
-        if location_id:
-            values = self._load(location_id, values, load_levels)
+        values = self.extract(location_id, values=values)
 
         # The lowest level we have a value for, but no selector exposed
+        levels = self.levels
+        load_levels = self.load_levels
         lowest_lx = None
         for level in load_levels[::-1]:
             if level not in levels and values.get(level):
@@ -4400,133 +4459,6 @@ class S3LocationSelector(S3Selector):
                        postcode_row,
                        map_icon,
                        )
-
-    # -------------------------------------------------------------------------
-    def _load(self, location_id, values, levels):
-        """
-            Load record data from database and update the values dict
-
-            @param location_id: the location record ID
-            @param values: the values dict
-            @param levels: the relevant hierarchy levels (in order)
-        """
-
-        db = current.db
-        table = current.s3db.gis_location
-
-        lat = values.get("lat")
-        lon = values.get("lon")
-        wkt = values.get("wkt")
-        address = values.get("address")
-        postcode = values.get("postcode")
-
-        # Load the record
-        record = db(table.id == location_id).select(table.id,
-                                                    table.path,
-                                                    table.parent,
-                                                    table.level,
-                                                    table.gis_feature_type,
-                                                    table.inherited,
-                                                    table.lat,
-                                                    table.lon,
-                                                    table.wkt,
-                                                    table.addr_street,
-                                                    table.addr_postcode,
-                                                    limitby=(0, 1)).first()
-        if not record:
-            raise ValueError
-
-        level = record.level
-
-        # Parse the path
-        path = record.path
-        if path is None:
-            # Not updated yet? => do it now
-            try:
-                path = gis.update_location_tree({"id": value})
-            except ValueError:
-                pass
-        path = [] if path is None else path.split("/")
-
-        path_ok = True
-        if level:
-            # Lx location
-            specific = None
-
-            if len(path) != (int(level[1:]) + 1):
-                # We don't have a full path
-                path_ok = False
-
-        else:
-            # Specific location
-            specific = record.id
-
-            if len(path) < (len(levels) + 1):
-                # We don't have a full path
-                path_ok = False
-
-            # Only use a specific Lat/Lon when they are not inherited
-            if not record.inherited:
-                if self.points:
-                    if lat is None or lat == "":
-                        if record.gis_feature_type == 1:
-                            # Only use Lat for Points
-                            lat = record.lat
-                        else:
-                            lat = None
-                    if lon is None or lon == "":
-                        if record.gis_feature_type == 1:
-                            # Only use Lat for Points
-                            lon = record.lon
-                        else:
-                            lon = None
-                else:
-                    lat = None
-                    lon = None
-                if self.lines or self.polygons:
-                    if not wkt:
-                        if record.gis_feature_type != 1:
-                            # Only use WKT for non-Points
-                            wkt = record.wkt
-                        else:
-                            wkt = None
-                else:
-                    wkt = None
-            if address is None:
-                address = record.addr_street
-            if postcode is None:
-                postcode = record.addr_postcode
-
-        # Parent/Level
-        values["level"] = level
-        values["parent"] = record.parent
-
-        # Specific location
-        values["specific"] = specific
-
-        # Path
-        if path_ok:
-            for level in levels:
-                idx = int(level[1:])
-                if len(path) > idx:
-                    values[level] = int(path[idx])
-        else:
-            # Retrieve all records in the path to match them up to their Lx
-            rows = db(table.id.belongs(path)).select(table.id, table.level)
-            for row in rows:
-                if row.level:
-                    values[row.level] = row.id
-
-        # Address data
-        values["address"] = address
-        values["postcode"] = postcode
-
-        # Lat/Lon/WKT
-        values["lat"] = lat
-        values["lon"] = lon
-        values["wkt"] = wkt
-
-        return values
 
     # -------------------------------------------------------------------------
     def _labels(self, levels, country=None):
@@ -5078,46 +5010,47 @@ i18n.hide_map="%s"''' % (show_map_add, show_map_view, T("Hide Map")))
         icon_id = "%s_map_icon" % fieldname
         row_id = "%s_map_icon__row" % fieldname
         _formstyle = settings.ui.formstyle
-        if not _formstyle:
+        if not _formstyle or \
+           isinstance(_formstyle, basestring) and "foundation" in _formstyle:
             # Default: Foundation
             # Need to add custom classes to core HTML markup
-            map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
-                                        SPAN(label),
-                                        _type="button", # defaults to 'submit' otherwise!
-                                        _id=icon_id,
-                                        _class="btn gis_loc_select_btn",
-                                        ),
-                                _class="small-12 columns",
-                                ),
-                            _id = row_id,
-                            _class = "form-row row hide",
-                            )
+            map_icon = DIV(DIV(BUTTON(ICON("globe"),
+                                      SPAN(label),
+                                      _type="button", # defaults to 'submit' otherwise!
+                                      _id=icon_id,
+                                      _class="btn tiny button gis_loc_select_btn",
+                                      ),
+                               _class="small-12 columns",
+                               ),
+                           _id = row_id,
+                           _class = "form-row row hide",
+                           )
         elif _formstyle == "bootstrap":
             # Need to add custom classes to core HTML markup
-            map_icon = DIV(DIV(BUTTON(I(_class="icon-map"),
-                                        SPAN(label),
-                                        _type="button", # defaults to 'submit' otherwise!
-                                        _id=icon_id,
-                                        _class="btn gis_loc_select_btn",
-                                        ),
-                                _class="controls",
-                                ),
-                            _id = row_id,
-                            _class = "control-group hide",
-                            )
+            map_icon = DIV(DIV(BUTTON(ICON("icon-map"),
+                                      SPAN(label),
+                                      _type="button", # defaults to 'submit' otherwise!
+                                      _id=icon_id,
+                                      _class="btn gis_loc_select_btn",
+                                      ),
+                               _class="controls",
+                               ),
+                           _id = row_id,
+                           _class = "control-group hide",
+                           )
         else:
             # Old default
-            map_icon = DIV(DIV(BUTTON(I(_class="icon-globe"),
-                                        SPAN(label),
-                                        _type="button", # defaults to 'submit' otherwise!
-                                        _id=icon_id,
-                                        _class="btn gis_loc_select_btn",
-                                        ),
-                                _class="w2p_fl",
-                                ),
-                            _id = row_id,
-                            _class = "hide",
-                            )
+            map_icon = DIV(DIV(BUTTON(ICON("globe"),
+                                      SPAN(label),
+                                      _type="button", # defaults to 'submit' otherwise!
+                                      _id=icon_id,
+                                      _class="btn gis_loc_select_btn",
+                                      ),
+                               _class="w2p_fl",
+                               ),
+                           _id = row_id,
+                           _class = "hide",
+                           )
 
         # Geocoder?
         if geocoder:
@@ -5147,6 +5080,244 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         map_icon.append(_map)
 
         return map_icon
+
+    # -------------------------------------------------------------------------
+    def extract(self, record_id, values=None):
+        """
+            Load record data from database and update the values dict
+
+            @param record_id: the location record ID
+            @param values: the values dict
+        """
+
+        # Initialize the values dict
+        if values is None:
+            values = {}
+        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific"):
+            if key not in values:
+                values[key] = None
+
+        values["id"] = record_id
+        values["parent"] = None
+
+        if not record_id:
+            return values
+
+        db = current.db
+        table = current.s3db.gis_location
+
+        levels = self.load_levels
+
+        lat = values.get("lat")
+        lon = values.get("lon")
+        wkt = values.get("wkt")
+        address = values.get("address")
+        postcode = values.get("postcode")
+
+        # Load the record
+        record = db(table.id == record_id).select(table.id,
+                                                  table.path,
+                                                  table.parent,
+                                                  table.level,
+                                                  table.gis_feature_type,
+                                                  table.inherited,
+                                                  table.lat,
+                                                  table.lon,
+                                                  table.wkt,
+                                                  table.addr_street,
+                                                  table.addr_postcode,
+                                                  limitby=(0, 1)).first()
+        if not record:
+            raise ValueError
+
+        level = record.level
+
+        # Parse the path
+        path = record.path
+        if path is None:
+            # Not updated yet? => do it now
+            try:
+                path = gis.update_location_tree({"id": value})
+            except ValueError:
+                pass
+        path = [] if path is None else path.split("/")
+
+        path_ok = True
+        if level:
+            # Lx location
+            specific = None
+
+            if len(path) != (int(level[1:]) + 1):
+                # We don't have a full path
+                path_ok = False
+
+        else:
+            # Specific location
+            specific = record.id
+
+            if len(path) < (len(levels) + 1):
+                # We don't have a full path
+                path_ok = False
+
+            # Only use a specific Lat/Lon when they are not inherited
+            if not record.inherited:
+                if self.points:
+                    if lat is None or lat == "":
+                        if record.gis_feature_type == 1:
+                            # Only use Lat for Points
+                            lat = record.lat
+                        else:
+                            lat = None
+                    if lon is None or lon == "":
+                        if record.gis_feature_type == 1:
+                            # Only use Lat for Points
+                            lon = record.lon
+                        else:
+                            lon = None
+                else:
+                    lat = None
+                    lon = None
+                if self.lines or self.polygons:
+                    if not wkt:
+                        if record.gis_feature_type != 1:
+                            # Only use WKT for non-Points
+                            wkt = record.wkt
+                        else:
+                            wkt = None
+                else:
+                    wkt = None
+            if address is None:
+                address = record.addr_street
+            if postcode is None:
+                postcode = record.addr_postcode
+
+        # Parent/Level
+        values["level"] = level
+        values["parent"] = record.parent
+
+        # Specific location
+        values["specific"] = specific
+
+        # Path
+        if path_ok:
+            for level in levels:
+                idx = int(level[1:])
+                if len(path) > idx:
+                    values[level] = int(path[idx])
+        else:
+            # Retrieve all records in the path to match them up to their Lx
+            rows = db(table.id.belongs(path)).select(table.id, table.level)
+            for row in rows:
+                if row.level:
+                    values[row.level] = row.id
+
+        # Address data
+        values["address"] = address
+        values["postcode"] = postcode
+
+        # Lat/Lon/WKT
+        values["lat"] = lat
+        values["lon"] = lon
+        values["wkt"] = wkt
+
+        return values
+
+    # -------------------------------------------------------------------------
+    def represent(self, value):
+        """
+            Representation of a new/updated location row (before DB commit).
+
+            NB: Using a fake path here in order to prevent
+                gis_LocationRepresent.represent_row() from running
+                update_location_tree as that would change DB status which
+                is an invalid action at this point (row not committed yet).
+
+            This method is called during S3CRUD.validate for inline components
+
+            @param values: the values dict
+
+            @return: string representation for the values dict
+        """
+
+        lat = value.get("lat")
+        lon = value.get("lon")
+        wkt = value.get("wkt")
+        address = value.get("address")
+        postcode = value.get("postcode")
+
+        record = Storage(name = value.get("name"),
+                         lat = lat,
+                         lon = lon,
+                         addr_street = address,
+                         addr_postcode = postcode,
+                         parent = value.get("parent"),
+                         )
+
+        # Is this a specific location?
+        specific = value.get("specific")
+        if specific:
+            record_id = specific
+        elif address or postcode or lat or lon or wkt:
+            specific = True
+            record_id = value.get("id")
+        if not record_id:
+            record_id = 0
+        record.id = record_id
+
+        lx_ids = {}
+
+        # Construct the path (must have a path to prevent update_location_tree)
+        path = [str(record_id)]
+        level = 0
+        append = None
+        for l in xrange(5, -1, -1):
+            lx = value.get("L%s" % l)
+            if lx:
+                if not specific and l < 5:
+                    level = l + 1
+                lx_ids[l] = lx
+                if append is None:
+                    append = path.append
+            if append:
+                append(str(lx))
+        path.reverse()
+        record.path = "/".join(path)
+
+        # Determine the Lx level
+        if specific:
+            record.level = None
+        else:
+            record.level = "L%s" % level
+
+        # Get the Lx names
+        s3db = current.s3db
+        ltable = s3db.gis_location
+
+        if lx_ids:
+            query = ltable.id.belongs(lx_ids.values())
+            limitby = (0, len(lx_ids))
+            lx_names = current.db(query).select(ltable.id,
+                                                ltable.name,
+                                                limitby=limitby).as_dict()
+            for l in xrange(0, 6):
+                if l in lx_ids:
+                    lx_name = lx_names.get(lx_ids[l])["name"]
+                else:
+                    lx_name = None
+                record["L%s" % l] = lx_name if lx_name else ""
+
+        # Call standard location represent
+        represent = self._represent
+        if represent is None:
+            # Fall back to default
+            represent = s3db.gis_location_id().represent
+
+        if hasattr(represent, "represent_row"):
+            text = represent.represent_row(record)
+        else:
+            text = represent(record)
+
+        return s3_unicode(text)
 
     # -------------------------------------------------------------------------
     def validate(self, value):
@@ -5262,7 +5433,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                             postcode != lpostcode:
                             changed = True
                         else:
-                            if wkt and wkt != location.wkt:
+                            lwkt = location.wkt
+                            if (wkt or lwkt) and \
+                               wkt != lwkt:
                                 changed = True
                             else:
                                 # Float comparisons need care
@@ -5295,11 +5468,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                       addr_postcode=postcode,
                                       parent=parent,
                                       )
-                    if lat is not None and lon is not None:
+                    if any(detail is not None for detail in (lat, lon, wkt)):
                         feature.lat = lat
                         feature.lon = lon
-                        feature.inherited = False
-                    elif wkt is not None:
                         feature.wkt = wkt
                         feature.inherited = False
                     onvalidation = current.s3db.gis_location_onvalidation
@@ -5322,11 +5493,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   parent=parent,
                                   inherited=True,
                                   )
-                if lat is not None and lon is not None:
+                if any(detail is not None for detail in (lat, lon, wkt)):
                     feature.lat = lat
                     feature.lon = lon
-                    feature.inherited = False
-                elif wkt is not None:
                     feature.wkt = wkt
                     feature.inherited = False
                 onvalidation = current.s3db.gis_location_onvalidation
@@ -5462,11 +5631,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   addr_postcode=values.get("postcode"),
                                   parent=values.get("parent"),
                                   )
-                if lat is not None and lon is not None:
+                if any(detail is not None for detail in (lat, lon, wkt)):
                     feature.lat = lat
                     feature.lon = lon
-                    feature.inherited = False
-                elif wkt is not None:
                     feature.wkt = wkt
                     feature.inherited = False
 

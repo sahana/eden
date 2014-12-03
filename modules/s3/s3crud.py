@@ -2097,26 +2097,31 @@ class S3CRUD(S3Method):
                     else:
                         value = None
 
-                if isinstance(field.widget, S3Selector):
-                    widget_represent = True
-                    value, error = field.widget.validate(value)
-                    validated["value"] = field.widget.serialize(value)
+                widget = field.widget
+                if isinstance(widget, S3Selector):
+                    # Use widget-validator instead of field-validator
+                    value, error = widget.validate(value)
+                    validated["value"] = widget.serialize(value)
+                    # Use widget-represent instead of standard represent
+                    widget_represent = widget.represent
                 else:
-                    widget_represent = None
                     # Validate and format the value
                     try:
                         value, error = s3_validate(table, fname, value, original)
                     except AttributeError:
                         error = "invalid field"
                     validated["value"] = field.formatter(value)
+                    widget_represent = None
 
                 # Handle errors, update the validated item
                 if error:
                     has_errors = True
                     validated["_error"] = s3_unicode(error)
                 elif widget_represent:
-                    # @todo: call widget.represent
-                    text = s3_unicode(value)
+                    try:
+                        text = widget_represent(value)
+                    except:
+                        text = s3_unicode(value)
                     validated["text"] = text
                 else:
                     try:
