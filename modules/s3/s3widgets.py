@@ -4111,6 +4111,8 @@ class S3LocationSelector(S3Selector):
                  show_address = False,
                  show_postcode = False,
                  show_map = True,
+                 labels = True,
+                 placeholders = False,
                  lines = False,
                  points = True,
                  polygons = False,
@@ -4131,6 +4133,8 @@ class S3LocationSelector(S3Selector):
             @param show_address: show a field for street address
             @param show_postcode: show a field for postcode
             @param show_map: show a map to select specific points
+            @param labels: show labels on inputs
+            @param placeholders: show placeholder text in inputs
             @param lines: use a line draw tool
             @param points: use a point draw tool
             @param polygons: use a polygon draw tool
@@ -4151,6 +4155,8 @@ class S3LocationSelector(S3Selector):
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.show_map = show_map
+        self.labels = labels
+        self.placeholders = placeholders
 
         self.lines = lines
         self.points = points
@@ -4293,69 +4299,6 @@ class S3LocationSelector(S3Selector):
         # Field name for ID construction
         fieldname = str(field).replace(".", "_")
 
-        # Test the formstyle
-        formstyle = s3.crud.formstyle
-        row = formstyle("test", "test", "test", "test")
-        if isinstance(row, tuple):
-            # Formstyle with separate row for label
-            # (e.g. old default Eden formstyle)
-            tuple_rows = True
-        else:
-            # Formstyle with just a single row
-            # (e.g. Bootstrap, Foundation or DRRPP)
-            tuple_rows = False
-
-        # Street Address INPUT
-        show_address = self.show_address
-        if show_address:
-            address = values.get("address")
-            # Street Address
-            _id = "%s_address" % fieldname
-            label = T("Street Address")
-            label = LABEL("%s:" % label, _for=_id)
-            widget = INPUT(_name="address",
-                           _id=_id,
-                           _class="string",
-                           value=address,
-                           )
-            # @ToDo: Option to Flag this as required
-            #widget.add_class("required")
-            hidden = not address
-            comment = ""
-            address_row = formstyle("%s__row" % _id, label, widget, comment, hidden=hidden)
-            if tuple_rows:
-                address_label = address_row[0]
-                address_row = address_row[1]
-            else:
-                address_label = ""
-        else:
-            address_row = ""
-            address_label = ""
-
-        # Postcode INPUT
-        show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
-        if show_postcode:
-            postcode = values.get("postcode")
-            # Postcode
-            _id = "%s_postcode" % fieldname
-            label = settings.get_ui_label_postcode()
-            label = LABEL("%s:" % label, _for=_id)
-            widget = INPUT(_name="postcode",
-                           _id=_id,
-                           value=postcode,
-                           )
-            hidden = not postcode
-            comment = ""
-            postcode_row = formstyle("%s__row" % _id, label, widget, comment, hidden=hidden)
-            if tuple_rows:
-                postcode_label = postcode_row[0]
-                postcode_row = postcode_row[1]
-            else:
-                postcode_label = ""
-        else:
-            postcode_row = ""
-            postcode_label = ""
-
         # Load initial Hierarchy Labels (for Lx dropdowns)
         labels, labels_compact = self._labels(levels,
                                               country=values.get("L0"),
@@ -4369,14 +4312,39 @@ class S3LocationSelector(S3Selector):
                                         config = config,
                                         )
 
+        # Render visual components
+        components = {}
+
+        # Street Address INPUT
+        show_address = self.show_address
+        if show_address:
+            address = values.get("address")
+            components["address"] = self._input(fieldname,
+                                                "address",
+                                                address,
+                                                T("Street Address"),
+                                                hidden = not address,
+                                                )
+
+        # Postcode INPUT
+        show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
+        if show_postcode:
+            postcode = values.get("postcode")
+            components["postcode"] = self._input(fieldname,
+                                                 "postcode",
+                                                 postcode,
+                                                 settings.get_ui_label_postcode(),
+                                                 hidden = not postcode,
+                                                 )
         # Lx Dropdowns
         multiselect = settings.get_ui_multiselect_widget()
-        lx_rows = self.lx_selectors(fieldname,
-                                    levels,
-                                    labels,
-                                    required=required,
-                                    multiselect=multiselect,
-                                    )
+        lx_rows = self._lx_selectors(fieldname,
+                                     levels,
+                                     labels,
+                                     required=required,
+                                     multiselect=multiselect,
+                                     )
+        components.update(lx_rows)
 
         # Already loaded? (to prevent duplicate JS injection)
         location_selector_loaded = s3.gis.location_selector_loaded
@@ -4404,6 +4372,7 @@ class S3LocationSelector(S3Selector):
                    "reverseLx": self.reverse_lx,
                    "locations": location_dict,
                    "labels": labels_compact,
+                   "showLabels": self.labels,
                    }
         if self.min_bbox:
             options["minBBOX"] = self.min_bbox
@@ -4458,14 +4427,9 @@ class S3LocationSelector(S3Selector):
         real_input = self.inputfield(field, values, classes, **attributes)
 
         # The overall layout of the components
-        return TAG[""](real_input,
-                       lx_rows,
-                       address_label,
-                       address_row,
-                       postcode_label,
-                       postcode_row,
-                       map_icon,
-                       )
+        visible_components = self._layout(components, map_icon=map_icon)
+
+        return TAG[""](real_input, visible_components)
 
     # -------------------------------------------------------------------------
     def _labels(self, levels, country=None):
@@ -4477,7 +4441,7 @@ class S3LocationSelector(S3Selector):
                             to read the hierarchy labels
 
             @return: tuple (labels, compact) where labels is for
-                     internal use with lx_selectors, and compact
+                     internal use with _lx_selectors, and compact
                      the version ready for JSON output
 
             @ToDo: Country-specific Translations of Labels
@@ -4745,12 +4709,77 @@ class S3LocationSelector(S3Selector):
         return location_dict
 
     # -------------------------------------------------------------------------
-    def lx_selectors(self,
-                     fieldname,
-                     levels,
-                     labels,
-                     required=False,
-                     multiselect=False):
+    def _layout(self,
+                components,
+                map_icon=None,
+                formstyle=None):
+        """
+            Overall layout for visible components
+
+            @param components: the components as dict
+                               {name: (label, widget, id, hidden)}
+            @param map icon: the map icon
+            @param formstyle: the formstyle (falls back to CRUD formstyle)
+        """
+
+        if formstyle is None:
+            formstyle = current.response.s3.crud.formstyle
+
+        # Test the formstyle
+        row = formstyle("test", "test", "test", "test")
+        if isinstance(row, tuple):
+            # Formstyle with separate row for label
+            # (e.g. old default Eden formstyle)
+            tuple_rows = True
+        else:
+            # Formstyle with just a single row
+            # (e.g. Bootstrap, Foundation or DRRPP)
+            tuple_rows = False
+
+        selectors = DIV()
+        for name in ("L0", "L1", "L2", "L3", "L4", "L5"):
+            if name in components:
+                label, widget, input_id, hidden = components[name]
+                formrow = formstyle("%s__row" % input_id,
+                                    label,
+                                    widget,
+                                    "",
+                                    hidden=hidden,
+                                    )
+                if tuple_rows:
+                    selectors.append(formrow[0])
+                    selectors.append(formrow[1])
+                else:
+                    selectors.append(formrow)
+
+        inputs = TAG[""]()
+        for name in ("address", "postcode"):
+            if name in components:
+                label, widget, input_id, hidden = components[name]
+                formrow = formstyle("%s__row" % input_id,
+                                    label,
+                                    widget,
+                                    "",
+                                    hidden=hidden,
+                                    )
+                if tuple_rows:
+                    inputs.append(formrow[0])
+                    inputs.append(formrow[1])
+                else:
+                    inputs.append(formrow)
+
+        output = TAG[""](selectors, inputs)
+        if map_icon:
+            output.append(map_icon)
+        return output
+
+    # -------------------------------------------------------------------------
+    def _lx_selectors(self,
+                      fieldname,
+                      levels,
+                      labels,
+                      required=False,
+                      multiselect=False):
         """
             Render the Lx-dropdowns
 
@@ -4773,15 +4802,12 @@ class S3LocationSelector(S3Selector):
             _class = None
 
         # Initialize output
-        output = DIV()
-        append_row = output.append
+        selectors = {}
 
         # 1st level is always hidden until populated
         hidden = True
 
-        tuple_rows = False
         T = current.T
-        formstyle = current.response.s3.crud.formstyle
         for level in levels:
 
             _id = "%s_%s" % (fieldname, level)
@@ -4809,27 +4835,58 @@ class S3LocationSelector(S3Selector):
                            _class="throbber hide",
                            )
 
-            # Render the form row
-            formrow = formstyle("%s__row" % _id,
-                                LABEL(label, _for=_id),
-                                TAG[""](widget, throbber),
-                                "",
-                                hidden=hidden,
-                                )
-
-            # Append to output
-            if tuple_rows or isinstance(formrow, tuple):
-                tuple_rows = True
-                append_row(formrow[0])
-                append_row(formrow[1])
+            if self.labels:
+                label = LABEL(label, _for=_id)
             else:
-                append_row(formrow)
+                label = ""
+            selectors[level] = (label, TAG[""](widget, throbber), _id, hidden)
 
             # Follow hide-setting for all subsequent levels (default: True),
             # client-side JS will open when-needed
             hidden = self.hide_lx
 
-        return output
+        return selectors
+
+    # -------------------------------------------------------------------------
+    def _input(self,
+               fieldname,
+               name,
+               value,
+               label,
+               hidden=False,
+               #formstyle=None,
+               #tuple_rows=False
+               ):
+
+        input_id = "%s_%s" % (fieldname, name)
+
+        if self.labels:
+            _label = LABEL("%s:" % label, _for=input_id)
+        else:
+            _label = ""
+        if self.placeholders:
+            _placeholder = label
+        else:
+            _placeholder = None
+        widget = INPUT(_name=name,
+                       _id=input_id,
+                       _class="string",
+                       _placeholder=_placeholder,
+                       value=value,
+                       )
+
+        return (_label, widget, input_id, hidden)
+
+        #formrow = formstyle("%s__row" % input_id,
+                            #_label,
+                            #widget,
+                            #"",
+                            #hidden=hidden,
+                            #)
+        #if tuple_rows:
+            #return formrow[0], formrow[1]
+        #else:
+            #return "", formrow
 
     # -------------------------------------------------------------------------
     def _map(self,

@@ -31,9 +31,10 @@
          *                          address fields
          * @prop {object} locations - initial location hierarchy data
          * @prop {object} labels - initial hierarchy labels per L0
-         * @prop {object} minBBOX - minimum size of the boundary box (in degrees),
+         * @prop {number} minBBOX - minimum size of the boundary box (in degrees),
          *                          used to determine automatic zoom level for
          *                          single-point locations
+         * @prop {bool} showLabels - show labels on inputs
          */
         options: {
             hideLx: true,
@@ -42,7 +43,8 @@
             locations: null,
             labels: null,
 
-            minBBOX: 0.05
+            minBBOX: 0.05,
+            showLabels: true
         },
 
         /**
@@ -340,10 +342,14 @@
 
                     // Mark required?
                     // @ToDo: Client-side s3_mark_required function
-                    if (dropdown.hasClass('required')) {
-                        labelHTML = '<div>' + label + ':<span class="req"> *</span></div>';
+                    if (opts.showLabels) {
+                        if (dropdown.hasClass('required')) {
+                            labelHTML = '<div>' + label + ':<span class="req"> *</span></div>';
+                        } else {
+                            labelHTML = label + ':';
+                        }
                     } else {
-                        labelHTML = label + ':';
+                        labelHTML = '';
                     }
 
                     // Update the label
