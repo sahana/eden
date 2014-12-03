@@ -3,7 +3,7 @@ function openMap(start, end){
   if( !opened )
   {
     var dialog = document.createElement('div');
-    $(dialog).html('<div id="map-canvas" style="width:95%;height:400px;"></div> <div id="map-dirs" style="width:95%;height:40%;"></div>');
+    $(dialog).html('<div id="map-canvas" style="width:95%;height:400px;"></div> <div id="map-dirs" style="width:95%;height:40%;"></div><input type="button" value="Print This Only" onclick="printDiv()"/>');
     $(dialog).width('500px');
     $(dialog).height('800px');
     dialog.id = 'map-dialog';
@@ -13,6 +13,14 @@ function openMap(start, end){
   }
   $('#map-dialog').dialog({title: 'Directions',maxHeight: 800});
 }
+
+function printDiv() {
+   var printContents = $('#map-dirs').html();
+   var originalContents = document.body.innerHTML;
+   document.body.innerHTML = printContents;
+   window.print();
+   document.body.innerHTML = originalContents;
+ }
 
 function setmap(st, en) {
   var map;
