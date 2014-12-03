@@ -436,6 +436,9 @@ settings.gis.geonames_username = "eden_test"
 # Uncomment to use person_id instead of created_by in Newsfeed
 #settings.cms.person = "person_id"
 
+
+# Uncomment to use member_label as "Member"
+settings.get_deploy_member_label = "member_label"
 # -----------------------------------------------------------------------------
 # Shelters
 # Uncomment to use a dynamic population estimation by calculations based on registrations

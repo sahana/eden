@@ -1874,7 +1874,8 @@ def deploy_response_select_mission(r, **attr):
     if mission_id:
         hr_id = get_vars.get("hr_id", None)
         if not hr_id:
-            # @ToDo: deployment_setting for 'Member' label
+            member_label= settings.get_deploy_member_label()
+            MEMBER_LABEL = T(member_label)
             current.session.warning = T("No Member Selected!")
             # Can still link to the mission, member can be set
             # manually in the mission profile

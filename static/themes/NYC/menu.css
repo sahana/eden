@@ -1,32 +1,5 @@
 @charset "UTF-8";
 
-/* Main Navigation (S3MainMenu or modules menu) */
-/* @ToDo: Move to bootstrap/menu.css */
-
-.navbar .nav > li > a.brand > img {
-    width: 29px;
-    height: 30px;
-}
-.navbar .nav > li > a.brand  {
-    padding: 8px 5px;
-    /* Override Bootstrap */
-    margin: 0;
-}
-.navbar .nav > li > a  {
-    padding: 12px;
-    font-size: 18px;
-    height: 22px;
-}
-
-.navbar .nav.pull-right > li > a {
-    font-family: 'Open Sans','Lucida Grande','Lucida Sans',sans-serif;
-    font-size: 13px;
-    font-style: normal;
-    font-weight: normal;
-    letter-spacing: 0;
-    text-transform: lowercase;
-}
-
 /* Side Menu (S3OptionsMenu) */
 
 #subnav div a {
