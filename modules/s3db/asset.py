@@ -1047,7 +1047,7 @@ def asset_rheader(r):
                         (T("Assign %(staff)s") % dict(staff=STAFF), "assign"),
                         (T("Check-In"), "check-in"),
                         (T("Check-Out"), "check-out"),
-                        (T("GPS Data"), "gps"),
+                        (T("GPS Data"), "presence"),
                         ]
             else:
                 tabs = [(T("Edit Details"), None)]

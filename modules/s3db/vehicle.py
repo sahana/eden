@@ -44,7 +44,6 @@ class S3VehicleModel(S3Model):
 
     names = ("vehicle_vehicle_type",
              "vehicle_vehicle",
-             "vehicle_gps",
              "vehicle_vehicle_id",
              )
 
@@ -176,44 +175,6 @@ class S3VehicleModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        # GPS records
-        # - designed to be pulled in automatically, not entered manually
-        #
-        # @ToDo: Move these to gis.py - nothing here is vehicle-specific
-        #
-        tablename = "vehicle_gps"
-        define_table(tablename,
-                     asset_id(),
-                     Field("lat",
-                           label = T("Latitude"),
-                           requires = IS_LAT(),
-                           ),
-                     Field("lon",
-                           label = T("Longitude"),
-                           requires = IS_LON(),
-                           ),
-                     Field("direction",
-                           label = T("Direction"),
-                           ),
-                     Field("speed",
-                           label = T("Speed"),
-                           ),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add GPS data"),
-            title_display = T("GPS data"),
-            title_list = T("GPS data"),
-            title_update = T("Edit GPS data"),
-            label_list_button = T("List GPS data"),
-            label_delete_button = T("Delete GPS data"),
-            msg_record_created = T("GPS data added"),
-            msg_record_modified = T("GPS data updated"),
-            msg_record_deleted = T("GPS data deleted"),
-            msg_list_empty = T("No GPS data currently registered"))
-
-        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(vehicle_vehicle_id = vehicle_id,
@@ -230,33 +191,5 @@ class S3VehicleModel(S3Model):
 
         return dict(vehicle_vehicle_id = lambda **attr: dummy("vehicle_id"),
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def vehicle_gps_onaccept(form):
-        """
-            Set the current location from the latest GPS record
-        """
-
-        form_vars = form.vars
-        lat = form_vars.lat
-        lon = form_vars.lon
-        if lat is not None and lon is not None:
-            # Lookup the Asset Code
-            db = current.db
-            table = db.asset_asset
-            vehicle = db(table.id == form_vars.id).select(table.number,
-                                                          limitby=(0, 1)
-                                                          ).first()
-            if vehicle:
-                name = vehicle.number
-            else:
-                name = "vehicle_%i" % form_vars.id
-            # Insert a record into the locations table
-            ltable = db.gis_location
-            location = ltable.insert(name=name, lat=lat, lon=lon)
-            # Set the Current Location of the Asset to this Location
-            # @ToDo: Currently we set the Base Location as Mapping doesn't support S3Track!
-            db(table.id == form_vars.id).update(location_id=location)
 
 # END =========================================================================
