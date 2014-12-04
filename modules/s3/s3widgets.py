@@ -6696,7 +6696,6 @@ class S3StringWidget(StringWidget):
     def __call__(self, field, value, **attributes):
 
         default = dict(
-            _type = "text",
             value = (value != None and str(value)) or "",
             )
 

@@ -195,10 +195,10 @@ def formstyle_foundation_2col(form, fields, *args, **kwargs):
                 widget.append(hints)
 
         if columns:
-            # Don't wrap again
-            controls = widget
+            # Don't wrap again (but add an invisible parent to wrap form errors)
+            controls = TAG[""](widget)
             # Ensure we fill-out empty space
-            controls.add_class("end")
+            widget.add_class("end")
         else:
             controls = DIV(widget,
                            hints,
