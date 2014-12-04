@@ -3512,7 +3512,7 @@ def inv_send_rheader(r):
                              ),
                           TR(TH("%s: " % T("Driving Directions")),
                              TD(A(T("Show on Map"),
-                                        _onclick = 'DrivingDirections.openMap("' + from_address + '" , "' + address + '")',
+                                        _onclick = 'DrivingDirections.openMap(["' + from_address + '" , "' + address + '"])',
                                         _id = "open_map",
                                         _class = "action-btn"
                                         ), _colspan=3),

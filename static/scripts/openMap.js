@@ -9,7 +9,9 @@ var DrivingDirections = new function() {
    * @param start The starting street address
    * @param end The destination street address
    */
-  this.openMap = function(start, end) {
+  this.openMap = function(arr) {
+    start = "" +arr[0];
+    end = ""+arr[1];
     // First instance
     if( !prevOpened )
     {
