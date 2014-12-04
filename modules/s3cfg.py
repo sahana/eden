@@ -3077,6 +3077,8 @@ class S3Config(Storage):
         """
         return self.req.get("req_restrict_on_complete", False)
 
+    def get_deploy_response_member_label(self):
+        return current.T(self.deploy_response.get("member_label", "Member"))
     # -------------------------------------------------------------------------
     # Supply
     #
