@@ -3473,11 +3473,6 @@ def inv_send_rheader(r):
                 address = current.messages["NONE"]
 
             data = [from_address, address]
-=======
-            else:
-                address = current.messages["NONE"]
-
->>>>>>> df217ec93472c59a22376c7a6148d246587157df
             rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
