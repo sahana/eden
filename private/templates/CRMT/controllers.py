@@ -14,7 +14,7 @@ from gluon import current, URL
 from gluon.html import *
 #from gluon.storage import Storage
 
-from s3 import S3FilterForm, S3FilterString, S3OptionsFilter, FS, S3URLQuery, S3Summary, s3_auth_user_represent_name, S3CustomController
+from s3 import ICON, S3FilterForm, S3FilterString, S3OptionsFilter, FS, S3URLQuery, S3Summary, s3_auth_user_represent_name, S3CustomController
 
 THEME = "CRMT"
 
@@ -301,15 +301,15 @@ class filters(S3CustomController):
         actions = []
         if links:
             if "map" in links:
-                actions.append(A(I(" ", _class="icon icon-globe"),
+                actions.append(A(ICON("globe"),
                                  _title=T("Open Map"),
                                  _href=links["map"]))
             if "table" in links:
-                actions.append(A(I(" ", _class="icon icon-list"),
+                actions.append(A(ICON("list"),
                                  _title=T("Open Table"),
                                  _href=links["table"]))
             if "chart" in links:
-                actions.append(A(I(" ", _class="icon icon-list"),
+                actions.append(A(ICON("list"),
                                  _title=T("Open Chart"),
                                  _href=links["chart"]))
 
@@ -319,7 +319,7 @@ class filters(S3CustomController):
                        SPAN(T("%(resource)s Filter") % \
                             dict(resource=resource_name),
                             _class="card-title"),
-                        DIV(A(I(" ", _class="icon icon-remove-sign"),
+                        DIV(A(ICON("delete"),
                               _title=T("Delete this Filter"),
                               _class="dl-item-delete"),
                             _class="edit-bar fright"),
