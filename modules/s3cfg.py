@@ -2067,6 +2067,10 @@ class S3Config(Storage):
             e.g. 'Staff', 'Volunteer' (CERT), 'Member' (RDRT)
         """
         return self.deploy.get("hr_label", "Staff")
+    
+    def get_deploy_member_label(self):
+
+        return self.deploy.get("member_label", "Member")
 
     # -------------------------------------------------------------------------
     # Events
@@ -3077,8 +3081,6 @@ class S3Config(Storage):
         """
         return self.req.get("req_restrict_on_complete", False)
 
-    def get_deploy_response_member_label(self):
-        return current.T(self.deploy_response.get("member_label", "Member"))
     # -------------------------------------------------------------------------
     # Supply
     #

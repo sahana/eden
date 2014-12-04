@@ -438,7 +438,7 @@ settings.gis.geonames_username = "eden_test"
 
 
 # Uncomment to use member_label as "Member"
-settings.get_deploy_response_member_label = "member_label"
+settings.get_deploy_member_label = "member_label"
 # -----------------------------------------------------------------------------
 # Shelters
 # Uncomment to use a dynamic population estimation by calculations based on registrations
@@ -1021,12 +1021,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 10
     )),
-    ("deploy", Storage(
-        name_nice = T("Deployments"),
-        #description = "Manage Deployments",
-        restricted = True,
-        module_type = 10,
-    )),
+    #("deploy", Storage(
+    #    name_nice = T("Deployments"),
+    #    #description = "Manage Deployments",
+    #    restricted = True,
+    #    module_type = 10,
+    #)),
     # Deprecated: Replaced by event
     #("irs", Storage(
     #    name_nice = T("Incidents"),
