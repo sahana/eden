@@ -3464,9 +3464,14 @@ def inv_send_rheader(r):
                                                                limitby=(0, 1)
                                                                ).first()
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
+                from_site = db(stable.site_id == site_id).select(stable.location_id,
+                                                               limitby=(0, 1)
+                                                               ).first()
+                from_address = s3db.gis_LocationRepresent(address_only=True)(from_site.location_id)
             else:
                 address = current.messages["NONE"]
 
+            data = [from_address, address]
             rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
@@ -3512,7 +3517,7 @@ def inv_send_rheader(r):
                              ),
                           TR(TH("%s: " % T("Driving Directions")),
                              TD(A(T("Show on Map"),
-                                        _onclick = 'DrivingDirections.openMap(["' + from_address + '" , "' + address + '"])',
+                                        _onclick = 'DrivingDirections.openMap(["' + data[0] + '" , "' + data[1] + '"])',
                                         _id = "open_map",
                                         _class = "action-btn"
                                         ), _colspan=3),
