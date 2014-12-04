@@ -1,4 +1,4 @@
-//maintains the dialog state so content is not regenerated
+// Maintains the dialog state so content is not regenerated
 var prevOpened = false;
 
 /*
@@ -8,7 +8,7 @@ var prevOpened = false;
  * @param end The destination street address
  */
 function openMap(start, end){
-   //first instance
+   // First instance
    if( !prevOpened )
    {
       var dialog = document.createElement('div');
@@ -18,13 +18,13 @@ function openMap(start, end){
        dialog.id = 'map-dialog';
        document.body.appendChild(dialog);
 
-       //set the created map and directions div
+       // Set the created map and directions div
        setEndpoints(start,end);
-       //set state to open
+       // Set state to open
        prevOpened = true;
    }
 
-   //map dialog is already instantiated, popup the div
+   // Map dialog is already instantiated, popup the div
    $('#map-dialog').dialog({title: 'Directions',maxHeight: 800});
 }
 
@@ -33,21 +33,21 @@ function openMap(start, end){
  * @return true
  */
 function printDiv() {
-   //open a new window
+   // Open a new window
    var printWindow = window.open();
 
-   //get directions from the div and append to new window
+   // Get directions from the div and append to new window
    var data = $('#map-dirs').html();
    printWindow.document.write('<html><head><title>Shipment Directions</title>');
    printWindow.document.write('</head><body >');
    printWindow.document.write(data);
    printWindow.document.write('</body></html>');
 
-   //close new window and grant focus
+   // Close new window and grant focus
    printWindow.document.close();
    printWindow.focus();
 
-   //print the direction window and
+   // Print the direction window and
    printWindow.print();
    printWindow.close();
 
@@ -61,22 +61,22 @@ function printDiv() {
  */
 function setEndpoints(start, end) {
    var map;
-   //initialize the directions service
+   // Initialize the directions service
    var directionsService = new google.maps.DirectionsService();
    var directionsDisplay = new google.maps.DirectionsRenderer();
 
-   //set map options
+   // Set map options
    var mapOptions = {
      zoom: 8
    }
-   //assign the map to the map-canvas div
+   // Assign the map to the map-canvas div
    map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
 
-   //link the directions display to the map and assign it to the map-dirs div
+   // Link the directions display to the map and assign it to the map-dirs div
    directionsDisplay.setMap(map);
    directionsDisplay.setPanel(document.getElementById("map-dirs"));
 
-   //set parameters for the directions request, set travel mode to driving
+   // Set parameters for the directions request, set travel mode to driving
    var request = {
       origin:start,
       destination:end,
@@ -84,7 +84,7 @@ function setEndpoints(start, end) {
       unitSystem: google.maps.UnitSystem.IMPERIAL
    };
 
-   //request the route to populate the directions display
+   // Request the route to populate the directions display
    directionsService.route(request, function(response, status) {
       if (status == google.maps.DirectionsStatus.OK) {
          directionsDisplay.setDirections(response);
