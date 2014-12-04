@@ -3464,7 +3464,6 @@ def inv_send_rheader(r):
                                                                limitby=(0, 1)
                                                                ).first()
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
-<<<<<<< HEAD
                 from_site = db(stable.site_id == site_id).select(stable.location_id,
                                                                limitby=(0, 1)
                                                                ).first()
