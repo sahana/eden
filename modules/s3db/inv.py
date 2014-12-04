@@ -3464,6 +3464,7 @@ def inv_send_rheader(r):
                                                                limitby=(0, 1)
                                                                ).first()
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
+<<<<<<< HEAD
                 from_site = db(stable.site_id == site_id).select(stable.location_id,
                                                                limitby=(0, 1)
                                                                ).first()
@@ -3472,6 +3473,11 @@ def inv_send_rheader(r):
                 address = current.messages["NONE"]
 
             data = [from_address, address]
+=======
+            else:
+                address = current.messages["NONE"]
+
+>>>>>>> df217ec93472c59a22376c7a6148d246587157df
             rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
