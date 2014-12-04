@@ -4429,7 +4429,10 @@ class S3LocationSelector(S3Selector):
         # The overall layout of the components
         visible_components = self._layout(components, map_icon=map_icon)
 
-        return TAG[""](real_input, visible_components)
+        return TAG[""](DIV(_class="throbber"),
+                       real_input,
+                       visible_components,
+                       )
 
     # -------------------------------------------------------------------------
     def _labels(self, levels, country=None):

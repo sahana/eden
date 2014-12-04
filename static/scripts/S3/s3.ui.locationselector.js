@@ -201,6 +201,9 @@
                 this._hideMap();
             }
 
+            // Remove startup throbber
+            this.input.prevAll('.throbber').remove();
+
             // Bind event handlers
             this._bindEvents();
         },
