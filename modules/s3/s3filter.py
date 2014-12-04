@@ -325,7 +325,7 @@ class S3FilterWidget(object):
                                   "when rendered without resource." % \
                                   self.__class__.__name__)
             flist = self.field
-            if type(flist) is not list:
+            if not isinstance(flist, (list, tuple)):
                 flist = [flist]
             colnames = []
             for f in flist:

@@ -2202,6 +2202,37 @@ def customise_gis_poi_controller(**attr):
             if not result:
                 return False
 
+        resource = r.resource
+        if r.interactive or r.representation == "aadata":
+
+            from s3 import S3TextFilter, S3OptionsFilter
+            filter_widgets = [S3TextFilter(("name", "comments"),
+                                           label = T("Search"),
+                                           ),
+                              S3OptionsFilter("poi_group.group_id",
+                                             ),
+                              S3OptionsFilter("organisation_id",
+                                             ),
+                              S3OptionsFilter("location_id$L3",
+                                             ),
+                              ]
+
+            list_fields = ["name",
+                           "comments",
+                           "poi_group.group_id",
+                           "organisation_id",
+                           "person_id",
+                           ]
+
+            resource.configure(list_fields = list_fields,
+                               filter_widgets = filter_widgets,
+                               )
+            if r.method == "summary":
+                # Hide Open & Delete dataTable action buttons
+                resource.configure(deletable = False,
+                                   editable = False,
+                                   )
+
         if r.interactive:
             s3db = current.s3db
             tablename = "gis_poi"
@@ -2356,6 +2387,12 @@ def customise_gis_poi_controller(**attr):
 
         return True
     s3.prep = custom_prep
+
+    # Override standard postp (...which would otherwise alter s3.actions)
+    s3.postp = None
+
+    # Remove bulk actions added in standard controller
+    del attr["dtargs"]
 
     return attr
 
