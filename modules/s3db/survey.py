@@ -451,38 +451,44 @@ class S3SurveyTemplateModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_template_duplicate(job):
+    def survey_template_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with a similar name, ignoring case
+            Rules for finding a duplicate:
+                - Look for a record with a similar name, ignoring case
         """
 
-        if job.tablename == "survey_template":
-            table = job.table
-            data = job.data
-            name = data.get("name")
-            query =  table.name.lower().like('%%%s%%' % name.lower())
-            return duplicator(job, query)
+        name = item.data.get("name")
+        table = item.table
+        query =  table.name.lower().like('%%%s%%' % name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_section_duplicate(job):
+    def survey_section_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with the same name
-           - the same template
-           - and the same position within the template
-           - however if their is a record with position of zero then that record should be updated
+            Rules for finding a duplicate:
+                - Look for a record with the same name
+                - the same template
+                - and the same position within the template
+                - however if their is a record with position of zero then
+                  that record should be updated
         """
 
-        if job.tablename == "survey_section":
-            table = job.table
-            data = job.data
-            name = "name" in data and data.name
-            template = "template_id" in data and data.template_id
-            query = (table.name == name) & \
-                    (table.template_id == template)
-            return duplicator(job, query)
+        data = item.data
+        name = data.get("name")
+        template = data.get("template_id")
+        table = item.table
+        query = (table.name == name) & \
+                (table.template_id == template)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def survey_template_represent(id, row=None):
@@ -1062,35 +1068,40 @@ class S3SurveyQuestionModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_question_duplicate(job):
+    def survey_question_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for the question code
+            Rules for finding a duplicate:
+                - Look for the question code
         """
 
-        if job.tablename == "survey_question":
-            table = job.table
-            data = job.data
-            code = data.get("code")
-            query = (table.code == code)
-            return duplicator(job, query)
+        code = item.data.get("code")
+        table = item.table
+        query = (table.code == code)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_question_metadata_duplicate(job):
+    def survey_question_metadata_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for the question_id and descriptor
+            Rules for finding a duplicate:
+                - Look for the question_id and descriptor
         """
 
-        if job.tablename == "survey_question_metadata":
-            table = job.table
-            data = job.data
-            question = data.get("question_id")
-            descriptor  = data.get("descriptor")
-            query = (table.descriptor == descriptor) & \
-                    (table.question_id == question)
-            return duplicator(job, query)
+        data = item.data
+        question = data.get("question_id")
+        descriptor  = data.get("descriptor")
+        table = item.table
+        query = (table.descriptor == descriptor) & \
+                (table.question_id == question)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1132,22 +1143,25 @@ class S3SurveyQuestionModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_question_list_duplicate(job):
+    def survey_question_list_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - The template_id, question_id and section_id are the same
+            Rules for finding a duplicate:
+                - The template_id, question_id and section_id are the same
         """
 
-        if job.tablename == "survey_question_list":
-            table = job.table
-            data = job.data
-            tid = data.get("template_id")
-            qid = data.get("question_id")
-            sid = data.get("section_id")
-            query = (table.template_id == tid) & \
-                    (table.question_id == qid) & \
-                    (table.section_id == sid)
-            return duplicator(job, query)
+        data = item.data
+        tid = data.get("template_id")
+        qid = data.get("question_id")
+        sid = data.get("section_id")
+        table = item.table
+        query = (table.template_id == tid) & \
+                (table.question_id == qid) & \
+                (table.section_id == sid)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def survey_getQuestionFromCode(code, series_id=None):
@@ -1469,20 +1483,23 @@ class S3SurveyFormatterModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_formatter_duplicate(job):
+    def survey_formatter_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with the same template_id and section_id
+            Rules for finding a duplicate:
+                - Look for a record with the same template_id and section_id
         """
 
-        if job.tablename == "survey_formatter":
-            table = job.table
-            data = job.data
-            tid = data.get("template_id")
-            sid = data.get("section_id")
-            query = (table.template_id == tid) & \
-                    (table.section_id == sid)
-            return duplicator(job, query)
+        data = item.data
+        tid = data.get("template_id")
+        sid = data.get("section_id")
+        table = item.table
+        query = (table.template_id == tid) & \
+                (table.section_id == sid)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def survey_getQstnLayoutRules(template_id,
@@ -1698,18 +1715,20 @@ class S3SurveySeriesModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_series_duplicate(job):
+    def survey_series_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with a similar name, ignoring case
+            Rules for finding a duplicate:
+                - Look for a record with a similar name, ignoring case
         """
 
-        if job.tablename == "survey_series":
-            table = job.table
-            data = job.data
-            name = data.get("name")
-            query =  table.name.lower().like('%%%s%%' % name.lower())
-            return duplicator(job, query)
+        name = item.data.get("name")
+        table = item.table
+        query =  table.name.lower().like('%%%s%%' % name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2863,24 +2882,26 @@ class S3SurveyCompleteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_complete_duplicate(job):
+    def survey_complete_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with the same name, answer_list
+            Rules for finding a duplicate:
+                - Look for a record with the same name, answer_list
         """
 
-        if job.tablename == "survey_complete":
-            table = job.table
-            data = job.data
-            answers = data.get("answer_list")
-            query = (table.answer_list == answers)
-            try:
-                return duplicator(job, query)
-            except:
-                # if this is part of an import then the select will throw an error
-                # if the question code doesn't exist.
-                # This can happen during an import if the wrong file is used.
-                return
+        answers = item.data.get("answer_list")
+        table = item.table
+        query = (table.answer_list == answers)
+        try:
+            duplicate = current.db(query).select(table.id,
+                                                limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        except:
+            # if this is part of an import then the select will throw an error
+            # if the question code doesn't exist.
+            # This can happen during an import if the wrong file is used.
+            return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2889,12 +2910,12 @@ class S3SurveyCompleteModel(S3Model):
             Some question types may require additional processing
         """
 
-        vars = form.vars
-        if vars.complete_id and vars.question_id:
+        form_vars = form.vars
+        if form_vars.complete_id and form_vars.question_id:
             atable = current.s3db.survey_answer
-            complete_id = vars.complete_id
-            question_id = vars.question_id
-            value = vars.value
+            complete_id = form_vars.complete_id
+            question_id = form_vars.question_id
+            value = form_vars.value
             widgetObj = survey_getWidgetFromQuestion(question_id)
             newValue = widgetObj.onaccept(value)
             if newValue != value:
@@ -2904,20 +2925,23 @@ class S3SurveyCompleteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def survey_answer_duplicate(job):
+    def survey_answer_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with the same complete_id and question_id
+            Rules for finding a duplicate:
+                - Look for a record with the same complete_id and question_id
         """
 
-        if job.tablename == "survey_answer":
-            table = job.table
-            data = job.data
-            qid = data.get("question_id")
-            rid = data.get("complete_id")
-            query = (table.question_id == qid) & \
-                    (table.complete_id == rid)
-            return duplicator(job, query)
+        data = item.data
+        qid = data.get("question_id")
+        rid = data.get("complete_id")
+        table = item.table
+        query = (table.question_id == qid) & \
+                (table.complete_id == rid)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def survey_answerlist_dataTable_pre():
@@ -3362,27 +3386,5 @@ def survey_getAllTranslationsForSeries(series_id):
                                                    limitby=(0, 1)).first()
     template_id = row.template_id
     return survey_getAllTranslationsForTemplate(template_id)
-
-# =============================================================================
-# Generic function called by the duplicator methods to determine if the
-# record already exists on the database.
-def duplicator(job, query):
-    """
-      This callback will be called when importing records it will look
-      to see if the record being imported is a duplicate.
-
-      @param job: An S3ImportJob object which includes all the details
-                  of the record being imported
-
-      If the record is a duplicate then it will set the job method to update
-    """
-
-    table = job.table
-    _duplicate = current.db(query).select(table.id,
-                                          limitby=(0, 1)).first()
-    if _duplicate:
-        job.id = _duplicate.id
-        job.data.id = _duplicate.id
-        job.method = job.METHOD.UPDATE
 
 # END =========================================================================

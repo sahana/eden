@@ -106,12 +106,11 @@ class S3FireModel(S3Model):
                                                        tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                            label=T("Type")),
                      self.gis_location_id(
-                       widget = S3LocationSelectorWidget2(
-                           catalog_layers = True,
-                           points = False,
-                           polygons = True,
-                           )
-                       ),
+                       widget = S3LocationSelector(catalog_layers = True,
+                                                   points = False,
+                                                   polygons = True,
+                                                   )
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -143,14 +142,13 @@ class S3FireModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "fire_zone_type":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == item.data.name)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3FireStationModel(S3Model):

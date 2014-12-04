@@ -1872,25 +1872,39 @@ class S3Method(object):
             @param default: name of the default view template
         """
 
-        request = r
-        folder = request.folder
-        prefix = request.controller
+        folder = r.folder
+        prefix = r.controller
 
         exists = os.path.exists
         join = os.path.join
 
-        views = current.response.s3.views
         theme = current.deployment_settings.get_theme()
         if theme != "default":
-            if "/" in default:
-                subfolder, _default = default.split("/", 1)
+            # See if there is a Custom View for this Theme
+            view = join(folder, "private", "templates", theme, "views",
+                        "%s_%s_%s" % (prefix, r.name, default))
+            if exists(view):
+                # There is a view specific to this page
+                # NB This should normally include {{extend layout.html}}
+                # Pass view as file not str to work in compiled mode
+                return open(view, "rb")
             else:
-                subfolder = ""
-                _default = default
-            if exists(join(folder, "private", "templates", theme, "views", subfolder, "_%s" % _default)):
-                if subfolder:
-                    subfolder = "%s/" % subfolder
-                views[default] = "../private/templates/%s/views/%s_%s" % (theme, subfolder, _default)
+                if "/" in default:
+                    subfolder, _default = default.split("/", 1)
+                else:
+                    subfolder = ""
+                    _default = default
+                if exists(join(folder, "private", "templates", theme, "views",
+                               subfolder, "_%s" % _default)):
+                    # There is a general view for this page type
+                    # NB This should not include {{extend layout.html}}
+                    if subfolder:
+                        subfolder = "%s/" % subfolder
+                    # Pass this mapping to the View
+                    current.response.s3.views[default] = \
+                        "../private/templates/%s/views/%s_%s" % (theme,
+                                                                 subfolder,
+                                                                 _default)
 
         if r.component:
             view = "%s_%s_%s" % (r.name, r.component_name, default)

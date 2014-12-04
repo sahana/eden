@@ -1,10 +1,10 @@
 *** Settings ***
 Documentation     Test cases for hrm/staff
+...               Run using "python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A hrm"
 Resource          ../../resources/main.txt
 
 *** Variables ***
 ${STAFF URL}            http://${BASEURL}/hrm/staff
-
 ${OrganizationFilter}   human_resource-hrm_human_resource_organisation_id-options-filter
 ${FacilityFilter}       human_resource-hrm_human_resource_site_id-options-filter
 
@@ -27,3 +27,10 @@ Find Staff By Facility
     Wait For Filter Result
     Should Give X Results  1
     DataTable Row Should Contain  1  Facility  Ainaro Branch Office
+
+Create Staff Member
+    @{Name Value}=  Set Variable  hrm_human_resource_organisation_id  Ainaro  hrm_human_resource_person_id_full_name  name  hrm_human_resource_person_id_email  nam@exale.com
+    @{SUB URL}=  Set Variable  hrm  staff  summary
+    Login To Eden If Not Logged In  ${VALID USER}  ${VALID PASSWORD}
+    Create A New Entry  ${Name Value}  ${SUB URL}
+    Should Show Confirmation

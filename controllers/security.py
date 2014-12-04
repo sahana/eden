@@ -5,7 +5,7 @@
 """
 
 module = request.controller
-resourcename = request.function
+#resourcename = request.function
 
 if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
@@ -15,6 +15,10 @@ def index():
     """ Module's Home Page """
 
     return s3db.cms_index(module)
+
+# -----------------------------------------------------------------------------
+def level():
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def zone():
@@ -34,8 +38,13 @@ def staff_type():
 
 # -----------------------------------------------------------------------------
 def essential():
+    """
+        Filtered Staff controller
+    """
+
     table = s3db.hrm_human_resource
     s3.filter = (table.essential == True)
+
     return s3_rest_controller("hrm", "human_resource")
 
 # END =========================================================================

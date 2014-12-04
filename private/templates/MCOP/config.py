@@ -66,6 +66,8 @@ settings.ui.formstyle_row = "bootstrap"
 settings.ui.formstyle = "bootstrap"
 settings.ui.filter_formstyle = "bootstrap"
 settings.ui.hide_report_options = False
+# Uncomment to use S3MultiSelectWidget on all dropdowns (currently the Auth Registration page & LocationSelectorWidget2 listen to this)
+settings.ui.multiselect_widget = "search"
 
 # @ToDo: Investigate
 settings.ui.use_button_icons = True
@@ -123,8 +125,8 @@ levels = ("L1", "L2", "L3")
 # Uncomment to pass Addresses imported from CSV to a Geocoder to try and automate Lat/Lon
 #settings.gis.geocode_imported_addresses = "google"
 
-# Until we add support to LocationSelector2 to set dropdowns from LatLons
-#settings.gis.check_within_parent_boundaries = False
+# Until we add support to S3LocationSelector to set dropdowns from LatLons
+settings.gis.check_within_parent_boundaries = False
 # GeoNames username
 settings.gis.geonames_username = "mcop"
 # Uncomment to hide Layer Properties tool
@@ -181,7 +183,6 @@ def customise_no_rheader_controller(**attr):
     attr["rheader"] = None
     return attr
 
-settings.customise_cms_post_controller = customise_no_rheader_controller
 settings.customise_org_facility_controller = customise_no_rheader_controller
 settings.customise_org_organisation_controller = customise_no_rheader_controller
 settings.customise_org_resource_controller = customise_no_rheader_controller
@@ -242,10 +243,21 @@ def cms_post_age(row):
         return 3
 
 # -----------------------------------------------------------------------------
+def customise_cms_post_controller(**attr):
+
+    # Make GeoJSON output smaller
+    current.s3db.gis_location.gis_feature_type.represent = None
+
+    # Remove rheader
+    attr["rheader"] = None
+    return attr
+
+settings.customise_cms_post_controller = customise_cms_post_controller
+
 def customise_cms_post_resource(r, tablename):
     """
         Customise cms_post resource
-        - CRD Strings
+        - CRUD Strings
         - Datatable
         - Fields
         - Form
@@ -280,11 +292,14 @@ def customise_cms_post_resource(r, tablename):
         msg_list_empty = T("No Alerts currently registered"))
 
     # CRUD Form
-    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
-    table.location_id.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    table.location_id.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True)
+    from s3 import IS_LOCATION, S3LocationSelector
+    table.location_id.requires = IS_LOCATION()
+    table.location_id.widget = S3LocationSelector(levels=levels,
+                                                  show_address=True,
+                                                  show_map=True,
+                                                  points = True,
+                                                  polygons = True,
+                                                  )
     # Don't add new Locations here
     table.location_id.comment = None
 
@@ -393,6 +408,9 @@ def customise_event_incident_controller(**attr):
                               open_incident_filter,
                               tablename = "event_incident")
 
+    # Make GeoJSON output smaller
+    current.s3db.gis_location.gis_feature_type.represent = None
+
     s3 = current.response.s3
 
     # Custom postp
@@ -449,6 +467,7 @@ def customise_event_incident_resource(r, tablename):
                    "location_id",
                    "comments",
                    "organisation_id",
+                   "closed",
                    ]
 
     # Custom Form
@@ -458,12 +477,20 @@ def customise_event_incident_resource(r, tablename):
 
     #from gluon.validators import IS_EMPTY_OR
     #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
-    from s3 import S3SQLCustomForm
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
     crud_fields = ["zero_hour",
                    "name",
                    "location_id",
                    "comments",
                    "organisation_id",
+                   S3SQLInlineComponent(
+                       "document",
+                       name = "file",
+                       label = T("Documents"),
+                       fields = [("", "file"),
+                                 #"comments",
+                                 ],
+                       ),
                    ]
     if r.method != "create":
         crud_fields.append("closed")
@@ -528,6 +555,7 @@ def customise_event_incident_resource(r, tablename):
                              filter = FS("expired") == False,
                              icon = "icon-alert",
                              colspan = 1,
+                             layer = "Alerts",
                              #list_layout = s3db.cms_post_list_layout,
                              )
         resources_widget = dict(label = "Resources",
@@ -554,7 +582,7 @@ def customise_event_incident_resource(r, tablename):
         record = r.record
         record_id = record.id
         record_name = record.name
-        title = "%s : %s" % (crud_strings["event_incident"].title_list, record_name)
+        title = "%s: %s" % (T("Incident"), record_name)
         marker = current.gis.get_marker(controller = "event",
                                         function = "incident")
         layer = dict(name = record_name,
@@ -575,18 +603,55 @@ def customise_event_incident_resource(r, tablename):
                          )
         else:
             edit_btn = ""
+        # Dropdown of available documents
+        # @ToDo: Use resource.components instead of DAL for security (not required here but good practise)
+        dtable = s3db.doc_document
+        rows = current.db(dtable.doc_id == r.record.doc_id).select(dtable.file)
+        documents = [row.file for row in rows]
+        if documents:
+            doc_list = UL(_class="dropdown-menu",
+                          _role="menu",
+                          )
+            retrieve = dtable.file.retrieve
+            for doc in documents:
+                try:
+                    doc_name = retrieve(doc)[0]
+                except (IOError, TypeError):
+                    doc_name = current.messages["NONE"]
+                doc_url = URL(c="default", f="download",
+                              args=[doc])
+                doc_item = LI(A(I(_class="icon-file"),
+                                " ",
+                                doc_name,
+                                _href=doc_url,
+                                ),
+                              _role="menuitem",
+                              )
+                doc_list.append(doc_item)
+            docs = DIV(A(I(_class="icon-paper-clip"),
+                         SPAN(_class="caret"),
+                         _class="btn dropdown-toggle",
+                         _href="#",
+                         **{"_data-toggle": "dropdown"}
+                         ),
+                       doc_list,
+                       _class="btn-group attachments dropdown pull-right",
+                       )
+        else:
+            docs = ""
         s3db.configure("event_incident",
                        profile_title = title,
                        profile_header = DIV(edit_btn,
                                             H2(title),
+                                            docs,
                                             _class="profile-header",
                                             ),
-                       profile_layers = [layer],
-                       profile_widgets = [alerts_widget,
+                       profile_layers = (layer,),
+                       profile_widgets = (alerts_widget,
                                           resources_widget,
                                           tasks_widget,
                                           map_widget,
-                                          ],
+                                          ),
                        profile_cols = 4
                        )
 
@@ -622,12 +687,13 @@ def customise_org_facility_resource(r, tablename):
         msg_record_deleted = T("Facility deleted"),
         msg_list_empty = T("No Facilities currently registered"))
 
-    from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
+    from s3 import IS_LOCATION, S3LocationSelector
     location_id_field = table.location_id
-    location_id_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-    location_id_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                         show_address=True,
-                                                         show_map=True)
+    location_id_field.requires = IS_LOCATION()
+    location_id_field.widget = S3LocationSelector(levels=levels,
+                                                  show_address=True,
+                                                  show_map=True,
+                                                  )
     # Don't add new Locations here
     location_id_field.comment = None
 
@@ -818,42 +884,6 @@ def customise_org_organisation_resource(r, tablename):
                                    show_on_map = False, # No Marker yet & only show at L1-level anyway
                                    #list_layout = s3db.event_incident_list_layout,
                                    )
-            #activities_widget = dict(label = "Activities",
-            #                         label_create = "Create Activity",
-            #                         type = "datalist",
-            #                         tablename = "cms_post",
-            #                         context = "organisation",
-            #                         filter = FS("series_id$name") == "Activity",
-            #                         icon = "icon-activity",
-            #                         layer = "Activities",
-            #                         # provided by Catalogue Layer
-            #                         #marker = "activity",
-            #                         list_layout = render_profile_posts,
-            #                         )
-            #reports_widget = dict(label = "Reports",
-            #                      label_create = "Create Report",
-            #                      type = "datalist",
-            #                      tablename = "cms_post",
-            #                      context = "organisation",
-            #                      filter = FS("series_id$name") == "Report",
-            #                      icon = "icon-report",
-            #                      layer = "Reports",
-            #                      # provided by Catalogue Layer
-            #                      #marker = "report",
-            #                      list_layout = render_profile_posts,
-            #                      )
-            #assessments_widget = dict(label = "Assessments",
-            #                          label_create = "Create Assessment",
-            #                          type = "datalist",
-            #                          tablename = "cms_post",
-            #                          context = "organisation",
-            #                          filter = FS("series_id$name") == "Assessment",
-            #                          icon = "icon-assessment",
-            #                          layer = "Assessments",
-            #                          # provided by Catalogue Layer
-            #                          #marker = "assessment",
-            #                          list_layout = render_profile_posts,
-            #                          )
             record = r.record
             title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, record.name)
             if record.logo:
@@ -909,7 +939,11 @@ def customise_org_resource_resource(r, tablename):
         But runs before prep
     """
 
-    if r.interactive:
+    if r.representation == "geojson":
+        # Make GeoJSON output smaller
+        current.s3db.gis_location.gis_feature_type.represent = None
+
+    elif r.interactive:
         s3 = current.response.s3
         s3db = current.s3db
         table = s3db.org_resource
@@ -940,11 +974,12 @@ def customise_org_resource_resource(r, tablename):
             location_field.default = location_id
             # We still want to be able to specify a precise location
             #location_field.readable = location_field.writable = False
-        from s3 import IS_LOCATION_SELECTOR2, S3LocationSelectorWidget2
-        location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-        location_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                          show_address=True,
-                                                          show_map=True)
+        from s3 import IS_LOCATION, S3LocationSelector
+        location_field.requires = IS_LOCATION()
+        location_field.widget = S3LocationSelector(levels=levels,
+                                                   show_address=True,
+                                                   show_map=True,
+                                                   )
 
         # Don't add new Locations here
         location_field.comment = None
@@ -984,7 +1019,11 @@ def customise_event_resource_resource(r, tablename):
         But runs before prep
     """
 
-    if r.interactive:
+    if r.representation == "geojson":
+        # Make GeoJSON output smaller
+        current.s3db.gis_location.gis_feature_type.represent = None
+
+    elif r.interactive:
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Add"),
             title_display = T("Resource Responding"),
@@ -1022,6 +1061,9 @@ def customise_project_task_controller(**attr):
         s3_set_default_filter("~.status",
                               active_status_filter,
                               tablename = "project_task")
+
+    # Make GeoJSON output smaller
+    current.s3db.gis_location.gis_feature_type.represent = None
 
     # Remove rheader
     attr["rheader"] = None

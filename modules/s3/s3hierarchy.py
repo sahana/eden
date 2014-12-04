@@ -231,7 +231,7 @@ class S3HierarchyCRUD(S3Method):
             script = "%s/jstree.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
-            script = "%s/S3/s3.jquery.ui.hierarchicalcrud.js" % script_dir
+            script = "%s/S3/s3.ui.hierarchicalcrud.js" % script_dir
             if script not in scripts:
                 scripts.append(script)
             style = "%s/jstree.css" % theme.get("css", "plugins")

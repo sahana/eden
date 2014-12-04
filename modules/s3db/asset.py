@@ -380,7 +380,7 @@ $.filterOptionsS3({
                                  "ajax_init": True}],
                     },
                    ]
-                   
+
         # Resource Configuration
         configure(tablename,
                   # Open Tabs after creation
@@ -627,10 +627,7 @@ $.filterOptionsS3({
             Deduplication of Assets
         """
 
-        if item.tablename != "asset_asset":
-            return
         table = item.table
-
         data = item.data
         number = data.get("number", None)
         query = (table.number == number)
@@ -643,11 +640,10 @@ $.filterOptionsS3({
         if site_id:
             query &= (table.site_id == site_id)
 
-        _duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
-        if _duplicate:
-            item.id = _duplicate.id
-            item.data.id = _duplicate.id
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
@@ -1154,10 +1150,8 @@ def asset_rheader(r):
                                    ltable.site_id.represent(current_log.site_id),
                                    ),
                                 ),
-                          DIV(_style = "margin-top:5px", # @ToDo: Move to CSS
-                              *asset_action_btns
-                              ),
                           rheader_tabs)
+            s3.rfooter = TAG[""](*asset_action_btns)
             return rheader
     return None
 

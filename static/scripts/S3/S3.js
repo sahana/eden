@@ -1169,11 +1169,6 @@ var s3_showMap = function(feature_id) {
                     if (!userChange) {
                         S3ClearNavigateAwayConfirm();
                     }
-
-                    // Restore event handlers (@todo: deprecate)
-                    if (S3.inline_checkbox_events) {
-                        S3.inline_checkbox_events();
-                    }
                 }
             });
         }

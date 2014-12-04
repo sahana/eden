@@ -8,7 +8,7 @@
 
 /**
  * @include widgets/form/ComparisonComboBox.js
- * requires GeoExt/data/AttributeStore.js
+ * @require GeoExt/data/AttributeStore.js
  */
 
 /** api: (define)
@@ -35,6 +35,12 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
      */
     upperBoundaryTip: "upper boundary",
      
+    /** api: config[caseInsensitiveMatch]
+     *  ``Boolean``
+     *  Should Comparison Filters for Strings do case insensitive matching?  Default is ``"false"``.
+     */
+    caseInsensitiveMatch: false,
+
     /**
      * Property: filter
      * {OpenLayers.Filter} Optional non-logical filter provided in the initial
@@ -95,6 +101,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
             forceSelection: true,
             mode: mode,
             triggerAction: "all",
+            ref: "property",
             allowBlank: this.allowBlank,
             displayField: "name",
             valueField: "name",
@@ -161,10 +168,10 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
      * May be overridden to change the default filter.
      *
      * Returns:
-     * {OpenLayers.Filter} By default, returns a comarison filter.
+     * {OpenLayers.Filter} By default, returns a comparison filter.
      */
     createDefaultFilter: function() {
-        return new OpenLayers.Filter.Comparison();
+        return new OpenLayers.Filter.Comparison({matchCase: !this.caseInsensitiveMatch});
     },
     
     /**
@@ -176,6 +183,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
         return [
             this.attributesComboConfig, Ext.applyIf({
                 xtype: "gxp_comparisoncombo",
+                ref: "type",
                 disabled: this.filter.property == null,
                 allowBlank: this.allowBlank,
                 value: this.filter.type,
@@ -193,6 +201,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
                 xtype: "textfield",
                 disabled: this.filter.type == null,
                 hidden: isBetween,
+                ref: "value",
                 value: this.filter.value,
                 width: 50,
                 grow: true,
@@ -214,6 +223,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
                 tooltip: this.lowerBoundaryTip,
                 grow: true,
                 growMin: 30,
+                ref: "lowerBoundary",
                 anchor: "100%",
                 allowBlank: this.allowBlank,
                 listeners: {
@@ -239,6 +249,7 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
                 hidden: !isBetween,
                 grow: true,
                 growMin: 30,
+                ref: "upperBoundary",
                 value: this.filter.upperBoundary,
                 allowBlank: this.allowBlank,
                 listeners: {
@@ -270,6 +281,27 @@ gxp.form.FilterField = Ext.extend(Ext.form.CompositeField, {
             this.items.get(4).hide();
         }
         this.doLayout();
+    },
+
+    /** api: method[setFilter]
+     *  :arg filter: ``OpenLayers.Filter``` Change the filter object to be
+     *  used.
+     */
+    setFilter: function(filter) {
+        var previousType = this.filter.type;
+        this.filter = filter;
+        if (previousType !== filter.type) {
+            this.setFilterType(filter.type);
+        }
+        this['property'].setValue(filter.property);
+        this['type'].setValue(filter.type);
+        if (filter.type === OpenLayers.Filter.Comparison.BETWEEN) {
+            this['lowerBoundary'].setValue(filter.lowerBoundary);
+            this['upperBoundary'].setValue(filter.upperBoundary);
+        } else {
+            this['value'].setValue(filter.value);
+        }
+        this.fireEvent("change", this.filter, this);
     }
 
 });

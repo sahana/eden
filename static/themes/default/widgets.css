@@ -731,7 +731,7 @@ button.close {
 #rheader td {
     text-align: left;
     padding: 1px 5px 1px 5px;
-    white-space: pre;
+    white-space: pre-line;
 }
 #rheader th {
     font-weight: bold;
@@ -1067,7 +1067,7 @@ li input + a {
     padding: 0;
 }
 #comments div.comment-body {
-    white-space: normal;
+    white-space: pre-line;
 }
 #comments div.comment-body p {
     margin-left: 25px;
@@ -1118,7 +1118,7 @@ li input + a {
     float: left;
 }
 .comment-text div {
-    white-space: pre;
+    white-space: pre-line;
 }
 .comment-header {
     margin: 0 0 10px 0;
@@ -1159,6 +1159,27 @@ li.ui-draggable-dragging {
     padding: 3px;
     border: solid 1px #bbb;
     background: none repeat scroll 0 0 #cfdde7;
+}
+
+.imagecrop-drag {
+    font-weight: bold;
+    text-align: center;
+    padding: 3em 0;
+    margin: 1em 0;
+    color: #555;
+    border: 2px dashed #555;
+    border-radius: 7px;
+    cursor: default;
+}
+
+.imagecrop-drag.hover {
+    border-style: solid;
+    background-color: #F7F8F9;
+}
+
+.imagecrop-btn {
+    display: none;
+    cursor: pointer;
 }
 
 /* Ext button (e.g. on Bulk Upload form */
@@ -1393,7 +1414,7 @@ td .icon {
     margin-top: 0;
 }
 
-/* S3LocationSelectorWidget2 */
+/* S3LocationSelector */
 option.missing {
     background-color: yellow;
 }

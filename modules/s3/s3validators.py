@@ -49,7 +49,6 @@ __all__ = ("single_phone_number_pattern",
            "IS_LAT_LON",
            "IS_LOCATION",
            "IS_LOCATION_SELECTOR",
-           "IS_LOCATION_SELECTOR2",
            "IS_ONE_OF",
            "IS_ONE_OF_EMPTY",
            "IS_ONE_OF_EMPTY_SELECT",
@@ -1147,10 +1146,7 @@ class IS_LOCATION(Validator):
             table = db.gis_location
             query = (table.id == value) & (table.deleted == False)
             if level:
-                if not hasattr(level, "strip") and \
-                       (hasattr(level, "__getitem__") or \
-                        hasattr(level, "__iter__")):
-                    # List or Tuple
+                if isinstance(level, (tuple, list)):
                     if None in level:
                         # None needs special handling
                         level = [l for l in level if l is not None]
@@ -1160,7 +1156,7 @@ class IS_LOCATION(Validator):
                         query &= (table.level.belongs(level))
                 else:
                     query &= (table.level == level)
-            ok = db(query).select(table.id, limitby=(0, 1))
+            ok = db(query).select(table.id, limitby=(0, 1)).first()
         if ok:
             return (value, None)
         else:
@@ -1734,253 +1730,6 @@ class IS_LOCATION_SELECTOR(Validator):
                            )
 
         return location
-
-# =============================================================================
-class IS_LOCATION_SELECTOR2(Validator):
-    """
-        Designed for use with the S3LocationSelectorWidget2
-
-        For Create forms, this will create a new location if there is a Lat/Lon
-                          submitted
-        For Update forms, this will check that we have a valid location_id FK
-                          and update any changes
-
-        @ToDo: Audit
-        @ToDo: Allow multiple in a single page
-    """
-
-    def __init__(self,
-                 levels = None,
-                 error_message = None,
-                 ):
-
-        self.levels = levels
-        self.error_message = error_message
-        # Tell s3_mark_required that this validator doesn't accept NULL values
-        self.mark_required = True
-
-    # -------------------------------------------------------------------------
-    def __call__(self, value):
-
-        if not value:
-            return (None, self.error_message or current.T("Location Required!"))
-
-        s3 = current.response.s3
-        if s3.bulk:
-            # Pointless in imports/sync
-            return (value, None)
-
-        post_vars = current.request.post_vars
-        address = post_vars.get("address", None)
-        postcode = post_vars.get("postcode", None)
-        lat = post_vars.get("lat", None)
-        if lat == "":
-            lat = None
-        lon = post_vars.get("lon", None)
-        if lon == "":
-            lon = None
-        wkt = post_vars.get("wkt", None)
-        if wkt == "":
-            wkt = None
-        parent = post_vars.get("parent", None)
-        # Rough check for valid Lat/Lon
-        errors = Storage()
-        if lat:
-            try:
-                lat = float(lat)
-            except ValueError:
-                errors["lat"] = current.T("Latitude is Invalid!")
-        if lon:
-            try:
-                lon = float(lon)
-            except ValueError:
-                errors["lon"] = current.T("Longitude is Invalid!")
-        if wkt:
-            try:
-                from shapely.wkt import loads as wkt_loads
-                wkt_loads(wkt)
-            except:
-                errors["wkt"] = current.T("WKT is Invalid!")
-        if errors:
-            return (value, errors)
-
-        if parent or address or postcode or wkt is not None or \
-           (lat is not None and lon is not None):
-            # Specific Location
-            db = current.db
-            table = db.gis_location
-            if value == "dummy":
-                # Create a new point
-                if not current.auth.s3_has_permission("create", table):
-                    return (None, current.auth.messages.access_denied)
-                if wkt is not None or \
-                   (lat is not None and lon is not None):
-                    inherited = False
-                else:
-                    inherited = True
-                feature = Storage(lat=lat,
-                                  lon=lon,
-                                  wkt=wkt,
-                                  inherited=inherited,
-                                  addr_street=address,
-                                  addr_postcode=postcode,
-                                  parent=parent,
-                                  )
-                # onvalidation
-                # - includes detailed bounds check if deployment_setting doesn't disable it
-                form = Storage()
-                form.errors = errors
-                form.vars = feature
-                current.s3db.gis_location_onvalidation(form)
-                if form.errors:
-                    errors = form.errors
-                    error = ""
-                    for e in errors:
-                        error = "%s\n%s" % (error, errors[e]) if error else \
-                                errors[e]
-                    return (parent, error)
-                _id = table.insert(**feature)
-                feature.id = _id
-                # onaccept
-                current.gis.update_location_tree(feature)
-                return (_id, None)
-            else:
-                # Update existing Point
-                # Check that this is a valid location_id
-                query = (table.id == value) & \
-                        (table.deleted == False) & \
-                        (table.level == None) # NB Specific Locations only
-                location = db(query).select(table.lat,
-                                            table.lon,
-                                            table.wkt,
-                                            table.addr_street,
-                                            table.addr_postcode,
-                                            table.parent,
-                                            limitby=(0, 1)).first()
-                if location:
-                    changed = False
-                    lparent = location.parent
-                    if parent and lparent:
-                        if int(parent) != int(lparent):
-                            changed = True
-                    elif parent or lparent:
-                        changed = True
-                    if not changed:
-                        addr_street = location.addr_street
-                        if address and addr_street:
-                            if address != addr_street:
-                                changed = True
-                        elif address or addr_street:
-                            changed = True
-                        if not changed:
-                            addr_postcode = location.addr_postcode
-                            if postcode and addr_postcode:
-                                if postcode != addr_postcode:
-                                    changed = True
-                            elif postcode or addr_postcode:
-                                changed = True
-                            if not changed:
-                                if wkt and wkt != location.wkt:
-                                    changed = True
-                                else:
-                                    # Float comparisons need care
-                                    # - just check the 1st 5 decimal points, as
-                                    #   that's all we care about
-                                    llat = location.lat
-                                    if lat is not None and llat is not None:
-                                        if round(lat, 5) != round(llat, 5):
-                                            changed = True
-                                    elif lat is not None or llat is not None:
-                                        changed = True
-                                    if not changed:
-                                        llon = location.lon
-                                        if lon is not None and llon is not None:
-                                            if round(lon, 5) != round(llon, 5):
-                                                changed = True
-                                        elif lon is not None or llon is not None:
-                                            changed = True
-
-                    if changed:
-                        # Update the record
-                        if not current.auth.s3_has_permission("update", table,
-                                                              record_id=value):
-                            return (value, current.auth.messages.access_denied)
-                        feature = Storage(addr_street=address,
-                                          addr_postcode=postcode,
-                                          parent=parent,
-                                          )
-                        if lat is not None and lon is not None:
-                            feature.lat = lat
-                            feature.lon = lon
-                            feature.inherited = False
-                        elif wkt is not None:
-                            feature.wkt = wkt
-                            feature.inherited = False
-                        # onvalidation
-                        # - includes detailed bounds check if deployment_setting
-                        #   doesn't disable it
-                        form = Storage()
-                        form.errors = errors
-                        form.vars = feature
-                        current.s3db.gis_location_onvalidation(form)
-                        if form.errors:
-                            errors = form.errors
-                            error = ""
-                            for e in errors:
-                                error = "%s\n%s" % (error, errors[e]) if error \
-                                   else errors[e]
-                            return (value, error)
-                        # Update the record
-                        db(table.id == value).update(**feature)
-                        # Update location tree in case parent has changed
-                        feature.id = value
-                        # onaccept
-                        current.gis.update_location_tree(feature)
-                    return (value, None)
-                else:
-                    return (value,
-                            self.error_message or current.T("Invalid Location!"))
-        else:
-            # Lx or a specific location with blank Parent/Address/Lat/Lon
-            db = current.db
-            table = db.gis_location
-            query = (table.id == value) & \
-                    (table.deleted == False)
-            location = db(query).select(table.level,
-                                        table.lat,
-                                        table.lon,
-                                        table.addr_street,
-                                        table.addr_postcode,
-                                        table.parent,
-                                        limitby=(0, 1)).first()
-            if not location:
-                return (value,
-                        self.error_message or current.T("Invalid Location!"))
-            level = location.level
-            if level:
-                # Which levels of Hierarchy are we using?
-                levels = self.levels or \
-                         current.gis.get_relevant_hierarchy_levels()
-
-                if level in levels:
-                    # OK
-                    return (value, None)
-                else:
-                    return (value, self.error_message or \
-                            current.T("Location is of incorrect level!"))
-            else:
-                # Clear the Parent/Lat/Lon/Address
-                feature = Storage(lat = None,
-                                  lon = None,
-                                  addr_street = None,
-                                  addr_postcode = None,
-                                  parent = None)
-                db(table.id == value).update(**feature)
-                # Update location tree in case parent has changed
-                feature.id = value
-                # onaccept
-                current.gis.update_location_tree(feature)
-                return (value, None)
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
@@ -3262,7 +3011,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                                                 zero = zero,
                                                 sort = sort,
                                                 )
-                                                
+
         if select is DEFAULT:
             self._select = current.deployment_settings.get_L10n_languages()
         else:
@@ -3288,7 +3037,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         if zero and not self.zero is None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
-    
+
     # -------------------------------------------------------------------------
     @staticmethod
     def language_codes():

@@ -649,6 +649,7 @@ $.filterOptionsS3({
         item_pack_represent = self.item_pack_represent
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
                     label = T("Pack"),
+                    ondelete = "RESTRICT",
                     represent = item_pack_represent,
                     # Do not display any packs initially
                     # will be populated by filterOptionsS3
@@ -661,12 +662,6 @@ $.filterOptionsS3({
                                          # filterby = "item_id",
                                          # filter_opts = (....),
                                          ),
-                    sortby = "name",
-                    #comment=S3AddResourceLink(c="supply",
-                    #                          f="item_pack",
-                    #                          label=ADD_ITEM_PACK,
-                    #                          title=T("Item Packs"),
-                    #                          tooltip=T("The way in which an item is normally distributed")),
                     script = '''
 $.filterOptionsS3({
  'trigger':'item_id',
@@ -677,10 +672,17 @@ $.filterOptionsS3({
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem
 })''',
-                    ondelete = "RESTRICT")
+                    sortby = "name",
+                    #comment=S3AddResourceLink(c="supply",
+                    #                          f="item_pack",
+                    #                          label=ADD_ITEM_PACK,
+                    #                          title=T("Item Packs"),
+                    #                          tooltip=T("The way in which an item is normally distributed")),
+                    )
 
         configure(tablename,
-                  deduplicate = self.supply_item_pack_duplicate)
+                  deduplicate = self.supply_item_pack_duplicate,
+                  )
 
         # Components
         add_components(tablename,
@@ -697,13 +699,15 @@ $.filterOptionsS3({
         define_table(tablename,
                      supply_item_id("parent_item_id",
                                     label = T("Parent Item"),
-                                    comment = None),
+                                    comment = None,
+                                    ),
                      supply_item_id("item_id",
-                                    label = T("Kit Item")),
+                                    label = T("Kit Item"),
+                                    ),
                      Field("quantity", "double",
                            label = T("Quantity"),
                            represent = lambda v: \
-                           float_represent(v, precision=2)
+                            float_represent(v, precision=2)
                            ),
                      item_pack_id(),
                      s3_comments(),
@@ -718,27 +722,25 @@ $.filterOptionsS3({
         tablename = "supply_item_alt"
         define_table(tablename,
                      supply_item_id(notnull=True),
-                     Field("quantity", "double",
+                     Field("quantity", "double", notnull=True,
+                           default = 1,
                            label = T("Quantity"),
+                           represent = lambda v: \
+                            float_represent(v, precision=2),
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" %
                                                   (T("Quantity"),
                                                    T("The number of Units of Measure of the Alternative Items which is equal to One Unit of Measure of the Item")
                                                   )
                                          ),
-                           default = 1,
-                           notnull=True,
-                           represent = lambda v: \
-                           float_represent(v, precision=2)
                            ),
                      supply_item_id("alt_item_id", notnull=True),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ALT_ITEM = T("Create Alternative Item")
         crud_strings[tablename] = Storage(
-            label_create = ADD_ALT_ITEM,
+            label_create = T("Create Alternative Item"),
             title_display = T("Alternative Item Details"),
             title_list = T("Alternative Items"),
             title_update = T("Edit Alternative Item"),
@@ -770,8 +772,8 @@ $.filterOptionsS3({
                           supply_item_id(),
                           item_pack_id(),
                           Field("quantity", "double", notnull=True,
-                                label = T("Quantity"),
                                 default = 1.0,
+                                label = T("Quantity"),
                                 ),
                           *s3_ownerstamp())
 
@@ -790,15 +792,14 @@ $.filterOptionsS3({
 
         # Filter Widgets
         filter_widgets = [
-            S3TextFilter(
-                        name="item_entity_search_text",
-                        label=T("Search"),
-                        comment=T("Search for an item by text."),
-                        field=[ "item_id$name",
+            S3TextFilter(name="item_entity_search_text",
+                         label=T("Search"),
+                         comment=T("Search for an item by text."),
+                         field=["item_id$name",
                                 #"item_id$item_category_id$name",
                                 #"site_id$name"
                                 ]
-                      ),
+                         ),
             S3OptionsFilter("item_id$item_category_id",
                             label=T("Code Share"),
                             comment=T("If none are selected, then all are searched."),
@@ -816,7 +817,7 @@ $.filterOptionsS3({
         # Configuration
         configure(tablename,
                   filter_widgets = filter_widgets,
-                 )
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -972,43 +973,43 @@ $.filterOptionsS3({
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "supply_item":
-            db = current.db
-            data = item.data
+        data = item.data
+        code = data.get("code")
+        if code:
+            # Same Code => definitely duplicate
             table = item.table
             query = (table.deleted != True)
-            code = data.get("code", None)
-            if code:
-                # Same Code => definitely duplicate
-                query = query & (table.code.lower() == code.lower())
-                row = db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-                if row:
-                    item.id = row.id
-                    item.method = item.METHOD.UPDATE
-                    return
-            else:
-                name = data.get("name", None)
-                if not name:
-                    # No way to match
-                    return
-                um = data.get("um", None)
-                if not um:
-                    # Try to extract UM from Name
-                    name, um = item_um_from_name(name)
-                if name:
-                    query = query & (table.name.lower() == name.lower())
-                if um:
-                    query = query & (table.um.lower() == um.lower())
-                catalog_id = data.get("catalog_id", None)
-                if catalog_id:
-                    query = query & (table.catalog_id == catalog_id)
+            query = query & (table.code.lower() == code.lower())
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+                return
+        else:
+            name = data.get("name")
+            if not name:
+                # No way to match
+                return
+            um = data.get("um")
+            if not um:
+                # Try to extract UM from Name
+                name, um = item_um_from_name(name)
+            table = item.table
+            query = (table.deleted != True)
+            if name:
+                query = query & (table.name.lower() == name.lower())
+            if um:
+                query = query & (table.um.lower() == um.lower())
+            catalog_id = data.get("catalog_id")
+            if catalog_id:
+                query = query & (table.catalog_id == catalog_id)
 
-                row = db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-                if row:
-                    item.id = row.id
-                    item.method = item.METHOD.UPDATE
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1020,27 +1021,26 @@ $.filterOptionsS3({
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "supply_item_category":
-            data = item.data
-            table = item.table
-            query = (table.deleted != True)
-            name = data.get("name", None)
-            if name:
-                query = query & (table.name.lower() == name.lower())
-            code = data.get("code", None)
-            if code:
-                query = query & (table.code.lower() == code.lower())
-            catalog_id = data.get("catalog_id", None)
-            if catalog_id:
-                query = query & (table.catalog_id == catalog_id)
-            parent_category_id = data.get("parent_category_id", None)
-            if parent_category_id:
-                query = query & (table.parent_category_id == parent_category_id)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        data = item.data
+        table = item.table
+        query = (table.deleted != True)
+        name = data.get("name")
+        if name:
+            query = query & (table.name.lower() == name.lower())
+        code = data.get("code")
+        if code:
+            query = query & (table.code.lower() == code.lower())
+        catalog_id = data.get("catalog_id")
+        if catalog_id:
+            query = query & (table.catalog_id == catalog_id)
+        parent_category_id = data.get("parent_category_id")
+        if parent_category_id:
+            query = query & (table.parent_category_id == parent_category_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1052,24 +1052,23 @@ $.filterOptionsS3({
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "supply_catalog_item":
-            data = item.data
-            table = item.table
-            query = (table.deleted != True)
-            item_id = data.get("item_id", None)
-            if item_id:
-                query = query & (table.item_id == item_id)
-            catalog_id = data.get("catalog_id", None)
-            if catalog_id:
-                query = query & (table.catalog_id == catalog_id)
-            item_category_id = data.get("item_category_id", None)
-            if item_category_id:
-                query = query & (table.item_category_id == item_category_id)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        data = item.data
+        table = item.table
+        query = (table.deleted != True)
+        item_id = data.get("item_id")
+        if item_id:
+            query = query & (table.item_id == item_id)
+        catalog_id = data.get("catalog_id")
+        if catalog_id:
+            query = query & (table.catalog_id == catalog_id)
+        item_category_id = data.get("item_category_id")
+        if item_category_id:
+            query = query & (table.item_category_id == item_category_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1081,24 +1080,23 @@ $.filterOptionsS3({
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "supply_item_pack":
-            data = item.data
-            table = item.table
-            query = (table.deleted != True)
-            name = data.get("name", None)
-            if name:
-                query = query & (table.name.lower() == name.lower())
-            item_id = data.get("item_id", None)
-            if item_id:
-                query = query & (table.item_id == item_id)
-            quantity = data.get("quantity", None)
-            if quantity:
-                query = query & (table.quantity == quantity)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        data = item.data
+        table = item.table
+        query = (table.deleted != True)
+        name = data.get("name")
+        if name:
+            query = query & (table.name.lower() == name.lower())
+        item_id = data.get("item_id")
+        if item_id:
+            query = query & (table.item_id == item_id)
+        quantity = data.get("quantity")
+        if quantity:
+            query = query & (table.quantity == quantity)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1489,13 +1487,10 @@ class S3SupplyDistributionModel(S3Model):
     def supply_distribution_deduplicate(item):
         """ Import item de-duplication """
 
-        if item.tablename != "supply_distribution":
-            return
-
         data = item.data
-        activity_id = data.get("activity_id", None)
-        location_id = data.get("location_id", None)
-        parameter_id = data.get("parameter_id", None)
+        activity_id = data.get("activity_id")
+        location_id = data.get("location_id")
+        parameter_id = data.get("parameter_id")
 
         if activity_id and location_id and parameter_id:
             # Match distribution by activity, item and location
@@ -1508,7 +1503,6 @@ class S3SupplyDistributionModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
-        return
 
     # ---------------------------------------------------------------------
     @staticmethod

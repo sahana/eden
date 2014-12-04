@@ -33,6 +33,7 @@ __all__ = ("FS",
            "S3ResourceField",
            "S3ResourceQuery",
            "S3URLQuery",
+           "S3URLQueryParser",
            )
 
 import datetime
@@ -1100,9 +1101,10 @@ class S3ResourceQuery(object):
     ANYOF = "anyof"
     TYPEOF = "typeof"
 
-    OPERATORS = [NOT, AND, OR,
-                 LT, LE, EQ, NE, GE, GT,
-                 LIKE, BELONGS, CONTAINS, ANYOF, TYPEOF]
+    COMPARISON = [LT, LE, EQ, NE, GE, GT,
+                  LIKE, BELONGS, CONTAINS, ANYOF, TYPEOF]
+
+    OPERATORS = [NOT, AND, OR] + COMPARISON
 
     # -------------------------------------------------------------------------
     def __init__(self, op, left=None, right=None):
@@ -2022,9 +2024,38 @@ class S3URLQuery(object):
 
         for key, value in vars.iteritems():
 
-            if not("." in key or key[0] == "(" and ")" in key):
+            if key == "$filter":
+                # Instantiate the advanced filter parser
+                parser = S3URLQueryParser()
+                if parser.parser is None:
+                    # not available
+                    continue
+
+                # Multiple $filter expressions?
+                expressions = value if type(value) is list else [value]
+
+                # Default alias (=master)
+                default_alias = resource.alias
+
+                # Parse all expressions
+                for expression in expressions:
+                    parsed = parser.parse(expression)
+                    for alias in parsed:
+                        q = parsed[alias]
+                        qalias = alias if alias is not None else default_alias
+                        if qalias not in query:
+                            query[qalias] = [q]
+                        else:
+                            query[qalias].append(q)
+
+                # Stop here
                 continue
 
+            elif not("." in key or key[0] == "(" and ")" in key):
+                # Not a filter expression
+                continue
+
+            # Process old-style filters
             selectors, op, invert = cls.parse_expression(key)
 
             if type(value) is list:
@@ -2212,5 +2243,265 @@ class S3URLQuery(object):
                 q |= rquery
 
         return q
+
+# =============================================================================
+# Helper to combine multiple queries using AND
+#
+combine = lambda x, y: x & y if x is not None else y
+
+# =============================================================================
+class S3URLQueryParser(object):
+    """ New-style URL Filter Parser """
+
+    def __init__(self):
+        """ Constructor """
+
+        self.parser = None
+        self.ParseResults = None
+        self.ParseException = None
+
+        self._parser()
+
+    # -------------------------------------------------------------------------
+    def _parser(self):
+        """ Import PyParsing and define the syntax for filter expressions """
+
+        # PyParsing available?
+        try:
+            import pyparsing as pp
+        except ImportError:
+            current.log.error("Advanced filter syntax requires pyparsing, $filter ignored")
+            return False
+
+        # Selector Syntax
+        context = lambda s, l, t: t[0].replace("[", "(").replace("]", ")")
+        selector = pp.Word(pp.alphas + "[]~", pp.alphanums + "_.$:[]")
+        selector.setParseAction(context)
+
+        keyword = lambda x, y: x | pp.Keyword(y) if x else pp.Keyword(y)
+
+        # Expression Syntax
+        function = reduce(keyword, S3FieldSelector.OPERATORS)
+        expression = function + \
+                     pp.Literal("(").suppress() + \
+                     selector + \
+                     pp.Literal(")").suppress()
+
+        # Comparison Syntax
+        comparison = reduce(keyword, S3ResourceQuery.COMPARISON)
+
+        # Value Syntax
+        number = pp.Regex(r"[+-]?\d+(:?\.\d*)?(:?[eE][+-]?\d+)?")
+        value = number | \
+                pp.Keyword("NONE") | \
+                pp.quotedString | \
+                pp.Word(pp.alphanums + pp.printables)
+        qe = pp.Group(pp.Group(expression | selector) + comparison + value)
+
+        parser = pp.operatorPrecedence(qe, [("not", 1, pp.opAssoc.RIGHT, ),
+                                            ("and", 2, pp.opAssoc.LEFT, ),
+                                            ("or", 2, pp.opAssoc.LEFT, ),
+                                            ])
+
+        self.parser = parser
+        self.ParseResults = pp.ParseResults
+        self.ParseException = pp.ParseException
+
+        return True
+
+    # -------------------------------------------------------------------------
+    def parse(self, expression):
+        """
+            Parse a string expression and convert it into a dict
+            of filters (S3ResourceQueries).
+
+            @parameter expression: the filter expression as string
+            @return: a dict of {component_alias: filter_query}
+        """
+
+        query = {}
+
+        parser = self.parser
+        if not expression or parser is None:
+            return query
+
+        try:
+            parsed = parser.parseString(expression)
+        except self.ParseException:
+            current.log.error("Invalid URL Filter Expression: '%s'" %
+                              expression)
+        else:
+            if parsed:
+                query = self.convert_expression(parsed[0])
+        return query
+
+    # -------------------------------------------------------------------------
+    def convert_expression(self, expression):
+        """
+            Convert a parsed filter expression into a dict of
+            filters (S3ResourceQueries)
+
+            @param expression: the parsed filter expression (ParseResults)
+            @returns: a dict of {component_alias: filter_query}
+        """
+
+        ParseResults = self.ParseResults
+        convert = self.convert_expression
+
+        if isinstance(expression, ParseResults):
+            first, op, second = ([None, None, None] + list(expression))[-3:]
+
+            if isinstance(first, ParseResults):
+                first = convert(first)
+            if isinstance(second, ParseResults):
+                second = convert(second)
+
+            if op == "not":
+                return self._not(second)
+            elif op == "and":
+                return self._and(first, second)
+            elif op == "or":
+                return self._or(first, second)
+            elif op in S3ResourceQuery.COMPARISON:
+                return self._query(op, first, second)
+            elif op in S3FieldSelector.OPERATORS and second:
+                selector = S3FieldSelector(second)
+                selector.op = op
+                return selector
+            elif op is None and second:
+                return S3FieldSelector(second)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _and(self, first, second):
+        """
+            Conjunction of two query {component_alias: filter_query} (AND)
+
+            @param first: the first dict
+            @param second: the second dict
+            @return: the combined dict
+        """
+
+        if not first:
+            return second
+        if not second:
+            return first
+
+        result = dict(first)
+
+        for alias, subquery in second.items():
+            if alias not in result:
+                result[alias] = subquery
+            else:
+                result[alias] &= subquery
+        return result
+
+    # -------------------------------------------------------------------------
+    def _or(self, first, second):
+        """
+            Disjunction of two query dicts {component_alias: filter_query} (OR)
+
+            @param first: the first query dict
+            @param second: the second query dict
+            @return: the combined dict
+        """
+
+        if not first:
+            return second
+        if not second:
+            return first
+
+        if len(first) > 1:
+            first = {None: reduce(combine, first.values())}
+        if len(second) > 1:
+            second = {None: reduce(combine, second.values())}
+
+        falias = first.keys()[0]
+        salias = second.keys()[0]
+
+        alias = falias if falias == salias else None
+        return {alias: first[falias] | second[salias]}
+
+    # -------------------------------------------------------------------------
+    def _not(self, query):
+        """
+            Negation of a query dict
+
+            @param query: the query dict {component_alias: filter_query}
+        """
+
+        if query is None:
+            return None
+
+        if len(query) == 1:
+
+            alias, sub = query.items()[0]
+
+            if sub.op == S3ResourceQuery.OR and alias is None:
+
+                l = sub.left
+                r = sub.right
+
+                lalias = self._alias(sub.left.left)
+                ralias = self._alias(sub.right.left)
+
+                if lalias == ralias:
+                    return {alias: ~sub}
+                else:
+                    # not(A or B) => not(A) and not(B)
+                    return {lalias: ~sub.left, ralias: ~sub.right}
+            else:
+                if sub.op == S3ResourceQuery.NOT:
+                    return {alias: sub.left}
+                else:
+                    return {alias: ~sub}
+        else:
+            return {None: ~reduce(combine, query.values())}
+
+    # -------------------------------------------------------------------------
+    def _query(self, op, first, second):
+        """
+            Create an S3ResourceQuery
+
+            @param op: the operator
+            @param first: the first operand (=S3FieldSelector)
+            @param second: the second operand (=value)
+        """
+
+        if not isinstance(first, S3FieldSelector):
+            return {}
+
+        selector = first
+
+        alias = self._alias(selector)
+
+        value = S3URLQuery.parse_value(second)
+        if op == S3ResourceQuery.LIKE:
+            if isinstance(value, basestring):
+                value = value.replace("*", "%").lower()
+            elif isinstance(value, list):
+                value = [x.replace("*", "%").lower() for x in value if x is not None]
+
+        return {alias: S3ResourceQuery(op, selector, value)}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _alias(selector):
+        """
+            Get the component alias from an S3FieldSelector (DRY Helper)
+
+            @param selector: the S3FieldSelector
+            @return: the alias as string or None for the master resource
+        """
+
+        alias = None
+        if selector and isinstance(selector, S3FieldSelector):
+            prefix = selector.name.split("$", 1)[0]
+            if "." in prefix:
+                alias = prefix.split(".", 1)[0]
+            if alias in ("~", ""):
+                alias = None
+        return alias
 
 # END =========================================================================

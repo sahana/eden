@@ -28,7 +28,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3RL_PDF"]
+__all__ = ("S3RL_PDF",)
 
 try:
     from cStringIO import StringIO    # Faster, where available

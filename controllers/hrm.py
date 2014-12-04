@@ -76,7 +76,7 @@ def staff():
                            "department_id",
                            "site_id",
                            #"site_contact",
-                          ]
+                           ]
         else:
             # Adapt list_fields
             list_fields = ["person_id",
@@ -221,12 +221,14 @@ def profile():
 
     # Custom Method for Contacts
     s3db.set_method("pr", resourcename,
-                    method="contacts",
-                    action=s3db.pr_contacts)
+                    method = "contacts",
+                    action = s3db.pr_contacts)
 
     if settings.has_module("asset"):
         # Assets as component of people
-        s3db.add_components("pr_person", asset_asset="assigned_to_id")
+        s3db.add_components("pr_person",
+                            asset_asset = "assigned_to_id",
+                            )
 
     group = get_vars.get("group", "staff")
 
@@ -239,7 +241,8 @@ def profile():
     tablename = "pr_person"
     table = s3db[tablename]
     s3db.configure(tablename,
-                   deletable=False)
+                   deletable = False,
+                   )
 
     # Configure for personal mode
     s3.crud_strings[tablename].update(
@@ -290,7 +293,7 @@ def profile():
     s3.postp = postp
 
     output = s3_rest_controller("pr", "person",
-                                rheader=s3db.hrm_rheader,
+                                rheader = s3db.hrm_rheader,
                                 )
     return output
 

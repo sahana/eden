@@ -46,6 +46,8 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 #settings.gis.countries = ("US",)
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -81,6 +83,11 @@ settings.mail.approver = "ADMIN"
 #settings.L10n.display_toolbar = False
 # Default timezone for users
 #settings.L10n.utc_offset = "UTC +0100"
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+settings.L10n.thousands_separator = ","
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -96,22 +103,23 @@ settings.mail.approver = "ADMIN"
 #settings.security.policy = 7 # Organisation-ACLs
 
 # RSS feeds
-settings.frontpage.rss = [
-    {"title": "Eden",
-     # Trac timeline
-     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
-    },
-    {"title": "Twitter",
-     # @SahanaFOSS
-     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
-     # Hashtag
-     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
-     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
-    }
-]
+#settings.frontpage.rss = [
+#    {"title": "Eden",
+#     # Trac timeline
+#     "url": "http://eden.sahanafoundation.org/timeline?ticket=on&changeset=on&milestone=on&wiki=on&max=50&daysback=90&format=rss"
+#    },
+#    {"title": "Twitter",
+#     # @SahanaFOSS
+#     #"url": "https://search.twitter.com/search.rss?q=from%3ASahanaFOSS" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     "url": "http://www.rssitfor.me/getrss?name=@SahanaFOSS"
+#     # Hashtag
+#     #url: "http://search.twitter.com/search.atom?q=%23eqnz" # API v1 deprecated, so doesn't work, need to use 3rd-party service, like:
+#     #url: "http://api2.socialmention.com/search?q=%23eqnz&t=all&f=rss"
+#    }
+#]
 
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([

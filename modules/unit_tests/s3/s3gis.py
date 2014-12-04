@@ -140,6 +140,218 @@ class S3LocationTreeTests(unittest.TestCase):
         self._testL3_L1_parent(with_level=False)
 
     # -------------------------------------------------------------------------
+    def testULT1_update_location_tree_disabled(self):
+        """ Test inserting a location during prepop with location tree updates disabled """
+
+        from s3.s3gis import GIS
+
+        table = self.table
+        db = current.db
+        gis = current.gis
+        #GIS = s3base.GIS
+
+        # Insert a country
+        L0_lat = 10.0
+        L0_lon = -10.0
+        L0_id = table.insert(level = "L0",
+                             name = "s3gis.testULT1.L0",
+                             lat = L0_lat,
+                             lon = L0_lon,
+                             )
+        # Insert a child location
+        L1_id = table.insert(level = "L1",
+                             name = "s3gis.testULT1.L1",
+                             parent = L0_id,
+                             )
+
+        # When disable_update_location_tree is set to True, update_location_tree
+        # should just return without making changes.
+        GIS.disable_update_location_tree = True
+        L1_feature = dict(id = L1_id)
+        gis.update_location_tree(L1_feature)
+
+        # Verify that the path, lat, lon are unset and inherited is False.
+        L1_record = db(table.id == L1_id).select(*self.fields,
+                                                 limitby=(0, 1)
+                                                 ).first()
+        self.assertEqual(L1_record.inherited, False)
+        self.assertEqual(L1_record.path, None)
+        self.assertEqual(L1_record.lat, None)
+        self.assertEqual(L1_record.lon, None)
+
+        # Update again, this time in the normal case with location tree
+        # updates active.
+        GIS.disable_update_location_tree = False
+        gis.update_location_tree(L1_feature)
+
+        # Verify that the path, lat, lon, inherited are properly set.
+        L1_record = db(table.id == L1_id).select(*self.fields,
+                                                 limitby=(0, 1)
+                                                 ).first()
+        self.assertEqual(L1_record.inherited, True)
+        self.assertEqual(L1_record.path, "%s/%s" %(L0_id, L1_id))
+        self.assertEqual(L1_record.lat, L0_lat)
+        self.assertEqual(L1_record.lon, L0_lon)
+
+    # -------------------------------------------------------------------------
+    def testULT2_update_location_tree_all_locations(self):
+        """ Test that the all locations update updates locations """
+
+        from s3.s3gis import GIS
+
+        table = self.table
+        db = current.db
+        gis = current.gis
+
+        # Mimic doing prepopulate by turning off location tree updates.
+        # Has no effect here as we're not doing validation, but leave this in
+        # in case someone modifies this test so it does call validation.
+        GIS.disable_update_location_tree = True
+
+        # Insert a country
+        L0_lat = 10.0
+        L0_lon = -10.0
+        L0_id = table.insert(level = "L0",
+                             name = "s3gis.testULT2.L0",
+                             lat = L0_lat,
+                             lon = L0_lon,
+                             )
+        # Insert a child location
+        L1_id = table.insert(level = "L1",
+                             name = "s3gis.testULT2.L1",
+                             parent = L0_id,
+                             )
+        # And a child of that child
+        L2_id = table.insert(level = "L2",
+                             name = "s3gis.testULT2.L2",
+                             parent = L1_id,
+                             )
+        # And a specific location at the end
+        specific_id = table.insert(
+                             name = "s3gis.testULT2.specific",
+                             parent = L2_id,
+                             )
+
+        # After prepop data is loaded, an update of all locations is run.
+        GIS.disable_update_location_tree = False
+        gis.update_location_tree()
+
+        # Verify that the path, lat, lon, and inherited are set for the
+        # descendent locations. (Note we are verifying *that* update was run
+        # on the descendents, rather than checking in detail what the update
+        # did to each field.)
+        L1_record = db(table.id == L1_id).select(*self.fields,
+                                                 limitby=(0, 1)
+                                                 ).first()
+        self.assertEqual(L1_record.inherited, True)
+        self.assertEqual(L1_record.path, "%s/%s" % (L0_id, L1_id))
+        self.assertEqual(L1_record.lat, L0_lat)
+        self.assertEqual(L1_record.lon, L0_lon)
+        L2_record = db(table.id == L2_id).select(*self.fields,
+                                                 limitby=(0, 1)
+                                                 ).first()
+        self.assertEqual(L2_record.inherited, True)
+        self.assertEqual(L2_record.path, "%s/%s/%s" % (L0_id, L1_id, L2_id))
+        self.assertEqual(L2_record.lat, L0_lat)
+        self.assertEqual(L2_record.lon, L0_lon)
+        specific_record = db(table.id == specific_id).select(*self.fields,
+                                                             limitby=(0, 1)
+                                                             ).first()
+        self.assertEqual(specific_record.inherited, True)
+        self.assertEqual(specific_record.path, "%s/%s/%s/%s" % (L0_id, L1_id, L2_id, specific_id))
+        self.assertEqual(specific_record.lat, L0_lat)
+        self.assertEqual(specific_record.lon, L0_lon)
+
+    # -------------------------------------------------------------------------
+    def testULT3_update_location_tree_all_locations_no_infinite_recursion(self):
+        """ Test that the all locations update does not get a "too much recursion" error. """
+
+        # NB: This was found to happen if there was a hierarchy location that
+        # pointed to a parent that is not the immediate next level.
+
+        table = self.table
+
+        # Set up a pattern of locations known to have provoked this error.
+        # Insert a country
+        L0_id = table.insert(level = "L0",
+                             name = "s3gis.testULT3.L0",
+                             lat = 10.0,
+                             lon = -10.0,
+                             )
+        # Insert an L1 child location
+        L1_id = table.insert(level = "L1",
+                             name = "s3gis.testULT3.L1",
+                             parent = L0_id,
+                             )
+        # And a child of that child, but skipping over L2 to L3
+        L3_id = table.insert(level = "L3",
+                             name = "s3gis.testULT3.L3",
+                             parent = L1_id,
+                             )
+        # And a specific location at the end
+        specific_id = table.insert(
+                             name = "s3gis.testULT3.specific",
+                             parent = L3_id,
+                             )
+
+        # Capture log messages.
+        log_recorder = current.log.recorder()
+
+        # Run an update.
+        current.gis.update_location_tree()
+
+        # Retrieve the log messages.
+        log_messages = log_recorder.stop()
+
+        # Did we get the recursion error?
+        self.assertNotIn("too much recursion", log_messages)
+
+    # -------------------------------------------------------------------------
+    def testULT4_get_parents(self):
+        """ Test get_parents in a case that causes it to call update_location_tree. """
+
+        table = self.table
+        gis = current.gis
+
+        # Add locations with parents, but don't include a path. Skip one level.
+        # (This is a test of get_parents itself. as update_location_tree was not
+        # known to cause a problem when run on one location.)
+
+        # Insert a country
+        L0_id = table.insert(level = "L0",
+                             name = "s3gis.testULT4.L0",
+                             lat = 10.0,
+                             lon = -10.0,
+                             )
+        # Insert an L1 child location
+        L1_id = table.insert(level = "L1",
+                             name = "s3gis.testULT4.L1",
+                             parent = L0_id,
+                             )
+        # And a child of that child, but skipping over L2 to L3
+        L3_id = table.insert(level = "L3",
+                             name = "s3gis.testULT4.L3",
+                             parent = L1_id,
+                             )
+        # And a specific location at the end
+        specific_id = table.insert(
+                             name = "s3gis.testULT4.specific",
+                             parent = L3_id,
+                             )
+
+        # Ask for the parents of the specific location -- this has the side
+        # effect of calling update_location_tree and filling in the paths.
+        parents = gis.get_parents(specific_id)
+        # Expected parents.
+        expected_parents = [L0_id, L1_id, L3_id]
+        for parent in parents:
+            parent_id = parent.id
+            self.assertIn(parent_id, expected_parents)
+            expected_parents.remove(parent_id)
+        # We should have seen all the expected parents.
+        self.assertEqual(len(expected_parents), 0)
+
+    # -------------------------------------------------------------------------
     def _testL0(self, with_level):
         """ Test updating a Country with Polygon """
 

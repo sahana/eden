@@ -13,7 +13,7 @@
          Contact Last Name....................person_id.first_name
          Contact Phone........................person_id -> pr_contact.value
          Contact Email........................person_id -> pr_contact.value
-         Organisation Group...................stats_people_group.group_id  
+         Organisation Group...................stats_people_group.group_id
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -67,13 +67,13 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Type -->
+            <!-- Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
                                                                        col[@field='Type'])[1])]">
                 <xsl:call-template name="Type"/>
             </xsl:for-each>
 
-            <!-- Organisation Group -->
+            <!-- Organisation Groups -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
                                                                        col[@field='Organisation Group'])[1])]">
                 <xsl:call-template name="OrganisationGroup"/>

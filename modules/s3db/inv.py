@@ -312,15 +312,14 @@ class S3WarehouseModel(S3Model):
     #def inv_warehouse_type_duplicate(item):
     #    """ Import item de-duplication """
 
-    #    if item.tablename == "inv_warehouse_type":
-    #        table = item.table
-    #        name = item.data.get("name", None)
-    #        query = (table.name.lower() == name.lower())
-    #        duplicate = current.db(query).select(table.id,
-    #                                             limitby=(0, 1)).first()
-    #        if duplicate:
-    #            item.id = duplicate.id
-    #            item.method = item.METHOD.UPDATE
+    #    name = item.data.get("name")
+    #    table = item.table
+    #    query = (table.name.lower() == name.lower())
+    #    duplicate = current.db(query).select(table.id,
+    #                                         limitby=(0, 1)).first()
+    #    if duplicate:
+    #        item.id = duplicate.id
+    #        item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -341,15 +340,14 @@ class S3WarehouseModel(S3Model):
             @param item: the S3ImportItem instance
         """
 
-        if item.tablename == "inv_warehouse":
-            table = item.table
-            name = "name" in item.data and item.data.name
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        name = item.data.get("name")
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3InventoryModel(S3Model):
@@ -804,44 +802,46 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_item_duplicate(job):
+    def inv_item_duplicate(item):
         """
-          Rules for finding a duplicate:
-           - Look for a record with the same site,
-                                             bin,
-                                             supply item and,
-                                             pack item
+            Update detection for inv_inv_item
 
-            If a item is added as part of an inv_track_item import then the
-            quantity will be set to zero. This will overwrite any existing
-            total, if we have a duplicate. If the total was None then
-            validation would fail (it's a not null field). So if a duplicate
-            is found then the quantity needs to be removed.
+            @param item: the S3ImportItem
         """
 
-        if job.tablename == "inv_inv_item":
-            table = job.table
-            data = job.data
-            site_id = "site_id" in data and data.site_id
-            item_id = "item_id" in data and data.item_id
-            pack_id = "item_pack_id" in data and data.item_pack_id
-            owner_org_id = "owner_org_id" in data and data.owner_org_id
-            supply_org_id = "supply_org_id" in data and data.supply_org_id
-            pack_value = "pack_value" in data and data.pack_value
-            currency = "currency" in data and data.currency
-            bin = "bin" in data and data.bin
-            query = (table.site_id == site_id) & \
-                    (table.item_id == item_id) & \
-                    (table.item_pack_id == pack_id) & \
-                    (table.owner_org_id == owner_org_id) & \
-                    (table.supply_org_id == supply_org_id) & \
-                    (table.pack_value == pack_value) & \
-                    (table.currency == currency) & \
-                    (table.bin == bin)
-            id = duplicator(job, query)
-            if id:
-                if "quantity" in data and data.quantity == 0:
-                    job.data.quantity = table[id].quantity
+        table = item.table
+        data = item.data
+
+        site_id = data.get("site_id")
+        item_id = data.get("item_id")
+        pack_id = data.get("item_pack_id")
+        owner_org_id = data.get("owner_org_id")
+        supply_org_id = data.get("supply_org_id")
+        pack_value = data.get("pack_value")
+        currency = data.get("currency")
+        bin = data.get("bin")
+
+        # Must match all of these exactly
+        query = (table.site_id == site_id) & \
+                (table.item_id == item_id) & \
+                (table.item_pack_id == pack_id) & \
+                (table.owner_org_id == owner_org_id) & \
+                (table.supply_org_id == supply_org_id) & \
+                (table.pack_value == pack_value) & \
+                (table.currency == currency) & \
+                (table.bin == bin)
+
+        duplicate = current.db(query).select(table.id,
+                                             table.quantity,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
+
+            # If the import item has a quantity of 0 (e.g. when imported
+            # implicitly through inv_track_item), retain the stock quantity
+            if "quantity" in data and data.quantity == 0:
+                item.data.quantity = duplicate.quantity
 
 # =============================================================================
 class S3InventoryTrackingLabels(S3Model):
@@ -3462,7 +3462,7 @@ def inv_send_rheader(r):
                 address = s3db.gis_LocationRepresent(address_only=True)(site.location_id)
             else:
                 address = current.messages["NONE"]
-            rData = TABLE(TR(TD(T(settings.get_inv_send_form_name().upper()),
+            rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_send_form_name().upper()),
                                 _colspan=2, _class="pdf_title"),
                              TD(logo, _colspan=2),
                              ),
@@ -4281,30 +4281,6 @@ def inv_adj_rheader(r):
 
             return rheader
     return None
-
-# =============================================================================
-# Generic function called by the duplicator methods to determine if the
-# record already exists on the database.
-def duplicator(job, query):
-    """
-      This callback will be called when importing records it will look
-      to see if the record being imported is a duplicate.
-
-      @param job: An S3ImportJob object which includes all the details
-                  of the record being imported
-
-      If the record is a duplicate then it will set the job method to update
-    """
-
-    table = job.table
-    _duplicate = current.db(query).select(table.id,
-                                          limitby=(0, 1)).first()
-    if _duplicate:
-        job.id = _duplicate.id
-        job.data.id = _duplicate.id
-        job.method = job.METHOD.UPDATE
-        return _duplicate.id
-    return False
 
 # =============================================================================
 class inv_InvItemRepresent(S3Represent):

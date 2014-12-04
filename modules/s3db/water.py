@@ -111,12 +111,11 @@ class S3WaterModel(S3Model):
                                                        tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                            ),
                      location_id(
-                        widget = S3LocationSelectorWidget2(
-                           catalog_layers = True,
-                           points = False,
-                           polygons = True,
-                           )
-                        ),
+                        widget = S3LocationSelector(catalog_layers = True,
+                                                    points = False,
+                                                    polygons = True,
+                                                    ),
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -145,12 +144,11 @@ class S3WaterModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      location_id(
-                        widget = S3LocationSelectorWidget2(
-                           catalog_layers = True,
-                           points = False,
-                           polygons = True,
-                           )
-                        ),
+                        widget = S3LocationSelector(catalog_layers = True,
+                                                    points = False,
+                                                    polygons = True,
+                                                    )
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 

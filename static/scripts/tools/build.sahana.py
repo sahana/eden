@@ -237,6 +237,22 @@ def dojs(dogis = False, warnings = True):
         pass
     shutil.move(outputFilename, "../S3")
 
+    # timeplot
+    print "Compressing timeplot"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.timeplot.cfg"
+    outputFilename = "s3.timeplot.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # ImageCrop
     print "Compressing ImageCrop"
     sourceDirectory = ".."
@@ -313,7 +329,7 @@ def dojs(dogis = False, warnings = True):
                      "gis.loader",
                      "gis.pois",
                      "locationselector.widget",
-                     "locationselector.widget2",
+                     "ui.locationselector",
                      "msg",
                      "popup",
                      "register_validation",
@@ -377,7 +393,6 @@ def dojs(dogis = False, warnings = True):
 
     if dogis:
         sourceDirectoryOpenLayers = "../gis/openlayers/lib"
-        sourceDirectoryOpenLayersExten = "../gis"
         sourceDirectoryMGRS = "../gis"
         sourceDirectoryGeoExt = "../gis/GeoExt/lib"
         sourceDirectoryGxp = "../gis/gxp"
@@ -433,8 +448,7 @@ def dojs(dogis = False, warnings = True):
             #                                           mergedOpenLayersExten))
 
         # OpenLayers extensions
-        for filename in ["cdauth",
-                         "OWM.OpenLayers",
+        for filename in ["OWM.OpenLayers",
                          ]:
             inputFilename = os.path.join("..", "gis", "%s.js" % filename)
             outputFilename = "%s.min.js" % filename
@@ -722,17 +736,17 @@ def docss():
         shutil.move(outputFilenameCSS, "../../themes/IFRC")
 
 def main(argv):
-    try:
+    if len(argv) > 0:
         parameter1 = argv[0]
-    except:
+    else:
         parameter1 = "ALL"
 
-    try:
+    if len(argv) > 1:
         if(argv[1] == "DOGIS"):
             parameter2 = True
         else:
             parameter2 = False
-    except:
+    else:
         parameter2 = True
 
     closure_warnings = True

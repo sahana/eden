@@ -125,6 +125,7 @@ select {
   padding: 0.25rem;
   margin: 0;
   display: inline-block;
+  font-weight: normal;
 }
 
 input[type="text"],
@@ -562,25 +563,9 @@ table.dataTable .selected-action {
 }
 
 /* Empty-sections */
-.empty,
-.pt-empty,
-.pt-no-data {
+.empty {
   font-style: italic;
   font-size: 0.8em;
-}
-
-/* Charts */
-.pt-chart-opts {
-  height: 1.0em;
-}
-
-.pt-chart-label {
-  font-size: 0.7em;
-}
-
-.pt-chart-title h4 {
-  font-size: 1.0em;
-  font-weight: normal;
 }
 
 /* jQuery UI widgets */
@@ -667,6 +652,13 @@ input.date.hasDatepicker {
   font-size: 0.85em;
   padding: 0.325em;
   margin-top: 0.5em;
+}
+
+/* ImageCropWidget */
+.imagecrop-btn {
+  font-size: 1em;
+  margin-left: 0.2em;
+  padding: 0.3em;
 }
 
 /* Miscellaneous */

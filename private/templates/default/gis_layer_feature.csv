@@ -1,9 +1,10 @@
 Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
 Airports,All Active Airports,transport,airport,airport,Airport,"{name} (T('Airport'))",name,~.obsolete=False,,,,,,False,,,
-Demographics,,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,False,,0,0
+Demographics,For summary page,stats,demographic_data,,,{location_id}: {value},"location_id,value",,,,"[{'prop':'value','fillOpacity':0.5}]",0.5,,False,False,0,0
 Heliports,All Active Heliports,transport,heliport,helicopter,Heliport,"{name} (T('Heliport'))",name,~.obsolete=False,,,,,,False,,,
 Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,"{name} (T('Hospital'))",name,~.obsolete=False,,,,,,False,,,
 Incident Reports,,event,incident_report,incident,Danger Area,"{name} (T('Incident'))<br />{incident_type_id}","name,incident_type_id",,,,,,,False,,,
+Locations,Used by Location Details,gis,location,,,"{name}","name,gis_feature_type",~.level__ne=None&~.end_date=None,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,,0,0
 Offices,All Active Offices,org,office,office,Building,"{name} (T('Office'))<br />{organisation_id}","name,organisation_id",~.obsolete=False,,,,,,False,,,
 PoIs,,gis,poi,,,"{name} ({poi_type_id})","name,poi_type_id",,,,,,,,False,,
 Projects,,project,location,project,,"{name} (T('Project'))<br />{location_id}<br />{multi_activity_type_id}","name,location_id,multi_activity_type_id",,,,,,,False,,,

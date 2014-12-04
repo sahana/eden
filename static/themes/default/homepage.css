@@ -3,13 +3,15 @@
 /* Home page specific */
 
 .menu_box {
-	border: 1px solid #006699;
-	padding: 10px;
-	margin-top: 10px;
-	width: auto;
+    border: 1px solid #006699;
+    padding: 10px;
+    margin-top: 10px;
+    width: intrinsic;           /* Safari/WebKit uses a non-standard name */
+    width: -moz-max-content;    /* Firefox/Gecko */
+    width: -webkit-max-content; /* Chrome */
 }
 #menu_box_center {
-	margin: 0 auto;
+    margin: 0 auto;
     width: 640px;
 }
 #menu_box_center .menu_box h3  {
@@ -18,46 +20,46 @@
     text-align: center;
 }
 #menu_box_1 {
-	width: auto;
-	float: left;
+    width: auto;
+    float: left;
 }
 
 #login_box {
-	width: 450px;
-	float: left;
+    width: 450px;
+    float: left;
     clear: left;
 }
 #menu_box_center #login_box div {
-	padding: 0;
+    padding: 0;
 }
 #menu_box_center #login_box input[size="62"] {
-	width: 300px;
+    width: 300px;
 }
 
 .menu_div,
 .div_arrow {
-	float: left;
-	width: auto;
+    float: left;
+    width: auto;
 }
 
 #facility_box {
-	width: auto;
-	float: right;
+    width: auto;
+    float: right;
     clear: left;
     margin-right: 9px;
 }
 #facility_box img {
-	margin: 0;
+    margin: 0;
 }
 #manage_facility_box {
-	width: 450px;
+    width: 450px;
 }
 #manage_facility_box a {
-	margin-left: 10px;
+    margin-left: 10px;
 }
 
 #org_box {
-	width: 450px;
+    width: 450px;
     clear: left;
 }
 #org_box #org_dt_wrapper {

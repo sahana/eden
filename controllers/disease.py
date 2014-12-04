@@ -45,6 +45,11 @@ def case():
            r.component_name == "exposure":
             field = r.component.table.tracing_id
             field.readable = field.writable = False
+            
+        if r.interactive:
+            field = r.table.person_id
+            field.requires = IS_ADD_PERSON_WIDGET2()
+            field.widget = S3AddPersonWidget2(controller="pr")
 
         return True
     s3.prep = prep
@@ -80,5 +85,23 @@ def tracing():
     s3.prep = prep
 
     return s3_rest_controller(rheader = s3db.disease_rheader)
+
+# -----------------------------------------------------------------------------
+def statistic():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def stats_data():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def stats_aggregate():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller()
 
 # END =========================================================================

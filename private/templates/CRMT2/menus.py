@@ -81,8 +81,8 @@ class S3MainMenu(default.S3MainMenu):
                    always_display=True),
             ),
             MM("Share", link=False)(
-                MM("Maps", c="gis", f="config", always_display=True),
-                MM("Stories", c="cms", f="blog", always_display=True),
+                MM("Maps", c="gis", f="config", args="datalist", always_display=True),
+                MM("Stories", c="cms", f="post", args="datalist", always_display=True),
             ),
             MM("Map", c="gis", f="index", always_display=True),
         ]
@@ -93,11 +93,10 @@ class S3MainMenu(default.S3MainMenu):
         """ Auth Menu """
 
         auth = current.auth
-        logged_in = auth.is_logged_in()
 
-        if not logged_in:
+        if not auth.is_logged_in():
             request = current.request
-            login_next = URL(args=request.args, vars=request.vars)
+            login_next = URL(args=request.args, vars=request.get_vars)
             if request.controller == "default" and \
                request.function == "user" and \
                "_next" in request.get_vars:
@@ -108,16 +107,33 @@ class S3MainMenu(default.S3MainMenu):
                            vars=dict(_next=login_next), **attr)
         else:
             # Logged-in
-            menu_auth = MM("Welcome, %s!" % auth.user.first_name, c="default", f="user",
-                           translate=False, link=False, _id="auth_menu_email",
-                           **attr)(
-                            MM("Your Maps", c="gis", f="config",
-                               vars={"~.pe_id": auth.user.pe_id}),
-                            MM("Admin Users", c="admin", f="user"),
-                            MM("Edit Profile", m="profile"),
-                            MM("Change Password", m="change_password"),
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
-                        )
+            user = auth.user
+
+            greeting = "Welcome, %s!" % user.first_name
+            if user.org_group_id:
+                menu_auth = MM(greeting, c="org", f="group",
+                               args=[user.org_group_id, "dashboard"], 
+                               # Remove the following line to activate the dashboard-link:
+                               link=False,
+                               translate=False, 
+                               _id="auth_menu_email",
+                               **attr)
+            else:
+                # User is not associated with a coalition
+                menu_auth = MM(greeting,
+                               link=False,
+                               translate=False, 
+                               _id="auth_menu_email",
+                               **attr)
+
+            menu_auth(MM("Your Maps", c="gis", f="config",
+                          args="datalist",
+                          vars={"~.pe_id__belongs": user.pe_id}),
+                      MM("Admin Users", c="admin", f="user"),
+                      MM("Edit Profile", c="default", f="user", m="profile"),
+                      MM("Change Password", c="default", f="user", m="change_password"),
+                      MM("Logout", c="default", f="user", m="logout", _id="auth_menu_logout"),
+                      )
 
         return menu_auth
 

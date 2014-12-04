@@ -780,12 +780,12 @@ class S3CheckInMethod(S3Method):
                 _id = "location_id"
                 label = LABEL("%s:" % T("Location"))
 
-                from s3.s3widgets import S3LocationSelectorWidget2
+                from s3.s3widgets import S3LocationSelector
                 field = table.location_id
                 #value = tracker.get_location(_fields=["id"],
                 #                             as_rows=True).first().id
                 value = None # We always want to create a new Location, not update the existing one
-                widget = S3LocationSelectorWidget2()(field, value)
+                widget = S3LocationSelector()(field, value)
 
                 row = formstyle("%s__row" % _id, label, widget, comment)
                 if tuple_rows:

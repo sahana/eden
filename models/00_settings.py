@@ -96,7 +96,7 @@ s3.jquery_ready = []
 s3.l10n_languages = settings.get_L10n_languages()
 
 # Default strings are in US English
-T.current_languages = ["en", "en-us"]
+T.current_languages = ("en", "en-us")
 # Check if user has selected a specific language
 if get_vars._language:
     language = get_vars._language
@@ -288,7 +288,7 @@ s3.csv_formats = ["hrf", "s3csv"]
 s3.ROWSPERPAGE = 20
 
 # Valid Extensions for Image Upload fields
-s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
+s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG"]
 
 # Default CRUD strings
 ADD_RECORD = T("Add Record")

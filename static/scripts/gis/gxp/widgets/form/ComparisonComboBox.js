@@ -7,7 +7,7 @@
  */
 
 /**
- * requires OpenLayers/Filter/Comparison.js
+ * @require OpenLayers/Filter/Comparison.js
  */
 
 /** api: (define)

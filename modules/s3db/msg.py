@@ -1327,15 +1327,14 @@ class S3RSSModel(S3ChannelModel):
             @param item: the S3ImportItem instance
         """
 
-        if item.tablename == "msg_rss":
-            table = item.table
-            from_address = item.data.get("from_address")
-            query = (table.from_address == from_address)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        from_address = item.data.get("from_address")
+        table = item.table
+        query = (table.from_address == from_address)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SMSModel(S3Model):
@@ -1511,6 +1510,8 @@ class S3SMSOutboundModel(S3Model):
         # @ToDo: Simplified dropdown of services which prepopulates entries & provides nice prompts for the config options
         #        + Advanced mode for raw access to real fields
         #
+        # https://www.twilio.com/docs/api/rest/sending-messages
+        #
         tablename = "msg_sms_webapi_channel"
         define_table(tablename,
                      self.super_link("channel_id", "msg_channel"),
@@ -1519,20 +1520,24 @@ class S3SMSOutboundModel(S3Model):
                      Field("url",
                            default = "https://api.clickatell.com/http/sendmsg", # Clickatell
                            #default = "https://secure.mcommons.com/api/send_message", # Mobile Commons
+                           #default = "https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages", # Twilio (Untested)
                            requires = IS_URL(),
                            ),
                      Field("parameters",
                            default = "user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
                            #default = "campaign_id=yourid", # Mobile Commons
+                           #default = "From={RegisteredTelNumber}", # Twilio (Untested)
                            ),
                      Field("message_variable", "string",
                            default = "text", # Clickatell
                            #default = "body", # Mobile Commons
+                           #default = "Body", # Twilio (Untested)
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("to_variable", "string",
                            default = "to", # Clickatell
                            #default = "phone_number", # Mobile Commons
+                           #default = "To", # Twilio (Untested)
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("max_length", "integer",
@@ -1624,6 +1629,7 @@ class S3TropoModel(S3Model):
 class S3TwilioModel(S3ChannelModel):
     """
         Twilio Inbound SMS channel
+        - for Outbound, use Web API
     """
 
     names = ("msg_twilio_channel",
@@ -2266,30 +2272,29 @@ class S3BaseStationModel(S3Model):
             @param item: the S3ImportItem instance
         """
 
-        if item.tablename == "msg_basestation":
-            table = item.table
-            name = "name" in item.data and item.data.name
-            query = (table.name.lower() == name.lower())
-            #location_id = None
-            # if "location_id" in item.data:
-                # location_id = item.data.location_id
-                ## This doesn't find deleted records:
-                # query = query & (table.location_id == location_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            # if duplicate is None and location_id:
-                ## Search for deleted basestations with this name
-                # query = (table.name.lower() == name.lower()) & \
-                        # (table.deleted == True)
-                # row = db(query).select(table.id, table.deleted_fk,
-                                       # limitby=(0, 1)).first()
-                # if row:
-                    # fkeys = json.loads(row.deleted_fk)
-                    # if "location_id" in fkeys and \
-                       # str(fkeys["location_id"]) == str(location_id):
-                        # duplicate = row
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
+        name = item.data.get("name")
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        #location_id = None
+        # if "location_id" in item.data:
+            # location_id = item.data.location_id
+            ## This doesn't find deleted records:
+            # query = query & (table.location_id == location_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        # if duplicate is None and location_id:
+            ## Search for deleted basestations with this name
+            # query = (table.name.lower() == name.lower()) & \
+                    # (table.deleted == True)
+            # row = db(query).select(table.id, table.deleted_fk,
+                                   # limitby=(0, 1)).first()
+            # if row:
+                # fkeys = json.loads(row.deleted_fk)
+                # if "location_id" in fkeys and \
+                   # str(fkeys["location_id"]) == str(location_id):
+                    # duplicate = row
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # END =========================================================================

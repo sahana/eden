@@ -721,7 +721,7 @@ class S3DataTable(object):
                           _id="%s_configurations" % id,
                           _name="config",
                           _value=jsons(config)))
-                          
+
         # If we have a cache set up then pass it in
         if cache:
             form.append(INPUT(_type="hidden",
@@ -978,11 +978,16 @@ class S3DataList(object):
             if hasattr(render, "prep"):
                 render.prep(resource, records)
 
-            items = [
-                DIV(T("Total Records: %(numrows)s") % {"numrows": self.total},
-                    _class="dl-header",
-                    _id="%s-header" % list_id)
-            ]
+            if current.response.s3.dl_no_header:
+                items = []
+            else:
+                items = [DIV(T("Total Records: %(numrows)s") % \
+                                {"numrows": self.total},
+                             _class="dl-header",
+                             _id="%s-header" % list_id,
+                             )
+                         ]
+
             if empty is None:
                 empty = resource.crud.crud_string(resource.tablename,
                                                   "msg_no_match")
@@ -2059,7 +2064,8 @@ class S3PivotTable(object):
     # -------------------------------------------------------------------------
     # Internal methods
     # -------------------------------------------------------------------------
-    def _pivot(self, items, pkey_colname, rows_colname, cols_colname):
+    @staticmethod
+    def _pivot(items, pkey_colname, rows_colname, cols_colname):
         """
             2-dimensional pivoting of a list of unique items
 
@@ -2286,7 +2292,7 @@ class S3PivotTable(object):
             except (TypeError, ValueError):
                 return None
 
-        elif method in ("avg"):
+        elif method == "avg":
             try:
                 if len(values):
                     return sum(values) / float(len(values))

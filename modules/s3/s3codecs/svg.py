@@ -28,7 +28,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SVG"]
+__all__ = ("S3SVG",)
 
 import os
 

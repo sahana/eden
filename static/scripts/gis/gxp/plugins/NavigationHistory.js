@@ -8,7 +8,7 @@
 
 /**
  * @requires plugins/Tool.js
- * requires OpenLayers/Control/NavigationHistory.js
+ * @require OpenLayers/Control/NavigationHistory.js
  */
 
 /** api: (define)

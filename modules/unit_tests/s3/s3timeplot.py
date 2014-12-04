@@ -17,125 +17,203 @@ from s3.s3query import FS
 
 # =============================================================================
 class EventTests(unittest.TestCase):
+    """ Tests for S3TimeSeriesEvent class """
+
+    def testSeries(self):
+        """ Test series-method """
+
+        series = S3TimeSeriesEvent.series
+
+        assertEqual = self.assertEqual
+
+        # Explicit None should give {None}
+        assertEqual(series(None), set([None]))
+
+        # Single value should give {value}
+        assertEqual(series(0), set([0]))
+        assertEqual(series("A"), set(["A"]))
+
+        # Empty list should give {None}
+        assertEqual(series([]), set())
+        assertEqual(series([[], []]), set())
+
+        # List should give equivalent set
+        assertEqual(series(["A", "B"]), set(["A", "B"]))
+        assertEqual(series(["A", None]), set(["A", None]))
+        assertEqual(series(["A", []]), set(["A"]))
+
+        # Nested lists should be flattened
+        assertEqual(series(["A", ["B", "C"]]), set(["A", "B", "C"]))
+        assertEqual(series(["A", ["B", "A"]]), set(["A", "B"]))
 
     # -------------------------------------------------------------------------
     def testConstruction(self):
         """ Test event construction """
 
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
         start = tp_datetime(2004, 1, 1)
         end = tp_datetime(2004, 3, 21)
 
         event_id = 1
-        event_type = "test"
         values = {"test": 2}
 
-        event = S3TimePlotEvent(event_id,
-                                start=start,
-                                end=end)
+        # Test construction without values
+        event = S3TimeSeriesEvent(event_id,
+                                  start=start,
+                                  end=end,
+                                  )
+
+        assertEqual(event.event_id, event_id)
+        assertTrue(isinstance(event.values, dict))
+        assertEqual(event["test"], None)
+
+        # Test construction with values
+        event = S3TimeSeriesEvent(event_id,
+                                  start=start,
+                                  end=end,
+                                  values=values,
+                                  )
+
+        assertEqual(event.event_id, event_id)
+        assertEqual(event.values, values)
+        assertEqual(event["test"], values["test"])
+
+        # Test construction with values and row
+        event = S3TimeSeriesEvent(event_id,
+                                  start=start,
+                                  end=end,
+                                  values=values,
+                                  row = "A",
+                                  )
 
         self.assertEqual(event.event_id, event_id)
-        self.assertEqual(event.event_type, None)
-        self.assertTrue(isinstance(event.values, dict))
-        self.assertEqual(event["test"], None)
-
-        event = S3TimePlotEvent(event_id,
-                                start=start,
-                                end=end,
-                                values=values)
-
-        self.assertEqual(event.event_id, event_id)
-        self.assertEqual(event.event_type, None)
         self.assertEqual(event.values, values)
-        self.assertEqual(event["test"], 2)
+        self.assertEqual(event["test"], values["test"])
+        self.assertEqual(event.rows, set(["A"]))
+        self.assertEqual(event.cols, set())
 
-        event = S3TimePlotEvent(event_id,
-                                start=start,
-                                end=end,
-                                values=values,
-                                event_type=event_type)
+        # Test construction with values and row/col
+        event = S3TimeSeriesEvent(event_id,
+                                  start=start,
+                                  end=end,
+                                  values=values,
+                                  row = "B",
+                                  col = [1, 4, 7],
+                                  )
 
         self.assertEqual(event.event_id, event_id)
-        self.assertEqual(event.event_type, event_type)
         self.assertEqual(event.values, values)
-        self.assertEqual(event["test"], 2)
+        self.assertEqual(event["test"], values["test"])
+        self.assertEqual(event.rows, set(["B"]))
+        self.assertEqual(event.cols, set([1, 4, 7]))
 
+    # -------------------------------------------------------------------------
+    def testComparison(self):
+        """ Test comparison method __lt__ for events (by sorting them) """
+
+        data = [
+            (8, (2012,1,12), (2013,9,19)),
+            (2, None, (2013,4,21)),
+            (6, (2013,4,14), (2013,5,7)),
+            (3, (2012,4,21), (2013,6,3)),
+            (4, (2013,4,18), (2013,5,27)),
+        ]
+        
+        events = []
+        for event_id, start, end in data:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      )
+            events.append(event)
+            
+        order = [event.event_id for event in sorted(events)]
+        self.assertEqual(order, [2, 8, 3, 6, 4])
 
 # =============================================================================
 class PeriodTests(unittest.TestCase):
-    """ Tests for S3TimePlotPeriod """
+    """ Tests for S3TimeSeriesPeriod """
 
     def setUp(self):
 
         # Period
         start = tp_datetime(2013,4,1)
         end = tp_datetime(2013,7,1)
-        period = S3TimePlotPeriod(start=start, end=end)
+
+        period = S3TimeSeriesPeriod(start=start, end=end)
 
         # Add current events
         events = [
-            (2, (2013,4,1), (2013,4,21), {"test3": 6.2, "test4": [31]}, "B"),
-            (6, (2013,4,14), (2013,5,7), {"test3": 8.1, "test4": [37, 91]}, "B"),
-            (8, (2013,1,12), (2013,9,19), None, "B"),
-            (1, (2013,4,1), (2013,4,21), {"test1": 2, "test2": [13]}, "A"),
-            (2, (2013,4,14), (2013,5,7), {"test1": 3, "test2": [17, 21]}, "A"),
-            (3, (2013,4,21), (2013,6,3), {"test1": 1, "test2": [14, None, 11]}, "A"),
-            (4, (2013,4,18), (2013,5,27), {"test1": 9}, "A"),
+            # 7 days
+            (1,  (2013,4,1), (2013,4,7),  {"base": 10, "slope": 2}, "A", 1),
+            (2,  (2013,4,3), (2013,4,9),  {"base": 20, "slope": 5}, "A", 2),
+            (3,  (2013,4,5), (2013,4,11), {"base": 30, "slope": 2}, "B", 2),
+            (4,  (2013,4,7), (2013,4,13), {"base": 40, "slope": 5}, "B", 3),
+            # 10 days
+            (5,  (2013,5,1), (2013,5,10), {"base": 50, "slope": 5}, "C", 1),
+            (6,  (2013,5,3), (2013,5,12), {"base": 60, "slope": 2}, "C", 2),
+            (7,  (2013,5,5), (2013,5,14), {"base": 70, "slope": 5}, "A", 1),
+            (8,  (2013,5,7), (2013,5,16), {"base": 80, "slope": 2}, "A", 2),
+            # 20 days
+            (9,  (2013,6,1), (2013,6,20), {"base": 100, "slope": 4}, "B", 2),
+            (10, (2013,6,3), (2013,6,22), {"base": 200, "slope": 7}, "B", 3),
+            (11, (2013,6,5), (2013,6,24), {"base": 300, "slope": 4}, "C", 1),
+            (12, (2013,6,12), None, {"base": 400, "slope": 7}, "C", 3),
         ]
-        for event_id, start, end, values, event_type in events:
-            event = S3TimePlotEvent(event_id,
-                                    start=tp_datetime(*start),
-                                    end=tp_datetime(*end),
-                                    values=values,
-                                    event_type=event_type)
+        for event_id, start, end, values, row, col in events:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      values = values,
+                                      row = row,
+                                      col = col,
+                                      )
             period.add_current(event)
+        self.current_events = events
 
         # Add previous events
         events = [
-            (1, (2012,4,1), (2012,4,21), {"test3": 1.7, "test4": [31]}, "B"),
-            (5, (2012,4,14), (2012,5,7), {"test1": 4, "test2": [17, 21]}, "A"),
+            # 10 days
+            (13,  (2012,8,1), (2012,8,10), {"base": 20, "slope": 5}, "A", 3),
+            (14,  (2012,8,3), (2012,8,12), {"base": 20, "slope": 5}, "B", 2),
+            (15,  None, (2012,8,14), {"base": 20, "slope": 5}, "C", 1),
+            (16,  (2012,8,7), (2012,8,16), {"base": 20, "slope": 5}, "C", 3),
         ]
-        for event_id, start, end, values, event_type in events:
-            event = S3TimePlotEvent(event_id,
-                                    start=tp_datetime(*start),
-                                    end=tp_datetime(*end),
-                                    values=values,
-                                    event_type=event_type)
+        for event_id, start, end, values, row, col in events:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      values = values,
+                                      row = row,
+                                      col = col,
+                                      )
             period.add_previous(event)
+        self.previous_events = events
 
         # Store period
         self.period = period
 
     # -------------------------------------------------------------------------
-    def testCurrent(self):
-        """ Verify current events in period """
+    def testEvents(self):
+        """ Verify events in test period """
 
-        period = self.period
-        sets = period.csets
+        assertTrue = self.assertTrue
 
-        self.assertTrue("A" in sets)
-        self.assertTrue("B" in sets)
-        self.assertEqual(len(sets), 2)
+        cevents = self.period.cevents
+        for item in self.current_events:
+            assertTrue(item[0] in cevents)
 
-        set_A = sets["A"]
-        self.assertEqual(len(set_A), 4)
-        set_B = sets["B"]
-        self.assertEqual(len(set_B), 3)
-
-    # -------------------------------------------------------------------------
-    def testPrevious(self):
-        """ Verify previous events in period """
-
-        period = self.period
-        sets = period.psets
-
-        self.assertTrue("A" in sets)
-        self.assertTrue("B" in sets)
-        self.assertEqual(len(sets), 2)
-
-        set_A = sets["A"]
-        self.assertEqual(len(set_A), 1)
-        set_B = sets["B"]
-        self.assertEqual(len(set_B), 1)
+        pevents = self.period.pevents
+        for item in self.previous_events:
+            assertTrue(item[0] in pevents)
 
     # -------------------------------------------------------------------------
     def testDuration(self):
@@ -150,292 +228,858 @@ class PeriodTests(unittest.TestCase):
             ((2013, 8, 5, 0, 0, 0), (2013, 9, 16, 0, 0, 0), 0),
         )
         period = self.period
-        
+
         for index, event in enumerate(events):
-            start, end, duration = event
-            tp_event = S3TimePlotEvent(index,
-                                       start=tp_datetime(*start),
-                                       end=tp_datetime(*end),
-                                       event_type="TEST")
-            d = period._duration(tp_event, "days")
-            self.assertEqual(d, duration,
-                             msg="Incorrect result for "
-                                 "duration of event %s." % (index + 1))
-        
-    # -------------------------------------------------------------------------
-    def testAggregateCount(self):
-        """ Test count aggregation method """
-
-        aggregate = self.period.aggregate
-        assertEqual = self.assertEqual
-
-        # Test set A
-        value = aggregate(method="count", event_type="A")
-        assertEqual(value, 4)
-        value = aggregate(method="count", event_type="A", fields=["test1"])
-        assertEqual(value, 4)
-        value = aggregate(method="count", event_type="A", fields=["test2"])
-        assertEqual(value, 5)
-
-        # Test set B
-        value = aggregate(method="count", event_type="B", fields=["test1"])
-        assertEqual(value, 0)
-        value = aggregate(method="count", event_type="B", fields=["test3"])
-        assertEqual(value, 2)
-        value = aggregate(method="count", event_type="B", fields=["test4"])
-        assertEqual(value, 3)
-
-        # Test with nonexistent set
-        value = aggregate(method="count",
-                          event_type="nonexistent", fields=["test1"])
-        assertEqual(value, 0)
-
-        # Test without specifying a set
-        value = aggregate(method="count", fields=["test1"])
-        assertEqual(value, 0)
+            start, end, expected_duration = event
+            tp_event = S3TimeSeriesEvent(index,
+                                         start=tp_datetime(*start),
+                                         end=tp_datetime(*end),
+                                         )
+            duration = period._duration(tp_event, "days")
+            self.assertEqual(duration, expected_duration,
+                             msg = "Incorrect result for duration of event %s: %s != %s." % 
+                                   (index + 1, duration, expected_duration))
 
     # -------------------------------------------------------------------------
-    def testAggregateSum(self):
-        """ Test sum aggregation method """
-        
-        aggregate = self.period.aggregate
-        assertEqual = self.assertEqual
-
-        # Test set A
-        value = aggregate(method="sum", event_type="A")
-        assertEqual(value, None)
-        value = aggregate(method="sum", event_type="A", fields=["test1"])
-        assertEqual(value, 15)
-        value = aggregate(method="sum", event_type="A", fields=["test2"])
-        assertEqual(value, 76)
-
-        # Test set B
-        value = aggregate(method="sum", event_type="B", fields=["test1"])
-        assertEqual(value, 0)
-        value = aggregate(method="sum", event_type="B", fields=["test3"])
-        assertEqual(value, 14.3)
-        value = aggregate(method="sum", event_type="B", fields=["test4"])
-        assertEqual(value, 159)
-
-        # Test with nonexistent set
-        value = aggregate(method="sum",
-                          event_type="nonexistent", fields=["test1"])
-        assertEqual(value, 0)
-
-        # Test without specifying a set
-        value = aggregate(method="sum", fields=["test1"])
-        assertEqual(value, 0)
-
-    # -------------------------------------------------------------------------
-    def testAggregateAvg(self):
-        """ Test avg aggregation method """
-
-        aggregate = self.period.aggregate
-        assertEqual = self.assertEqual
-
-        # Test set A
-        value = aggregate(method="avg", event_type="A")
-        assertEqual(value, None)
-        value = aggregate(method="avg", event_type="A", fields=["test1"])
-        assertEqual(value, 3.75)
-        value = aggregate(method="avg", event_type="A", fields=["test2"])
-        assertEqual(value, 15.2)
-
-        # Test set B
-        value = aggregate(method="avg", event_type="B", fields=["test1"])
-        assertEqual(value, None)
-        value = aggregate(method="avg", event_type="B", fields=["test3"])
-        assertEqual(value, 7.15)
-        value = aggregate(method="avg", event_type="B", fields=["test4"])
-        assertEqual(value, 53.0)
-
-        # Test with nonexistent set
-        value = aggregate(method="avg",
-                          event_type="nonexistent", fields=["test1"])
-        assertEqual(value, None)
-
-        # Test without specifying a set
-        value = aggregate(method="avg", fields=["test1"])
-        assertEqual(value, None)
-
-    # -------------------------------------------------------------------------
-    def testAggregateMin(self):
-        """ Test min aggregation method """
-
-        aggregate = self.period.aggregate
-        assertEqual = self.assertEqual
-
-        # Test set A
-        value = aggregate(method="min", event_type="A")
-        assertEqual(value, None)
-        value = aggregate(method="min", event_type="A", fields=["test1"])
-        assertEqual(value, 1)
-        value = aggregate(method="min", event_type="A", fields=["test2"])
-        assertEqual(value, 11)
-
-        # Test set B
-        value = aggregate(method="min", event_type="B", fields=["test1"])
-        assertEqual(value, None)
-        value = aggregate(method="min", event_type="B", fields=["test3"])
-        assertEqual(value, 6.2)
-        value = aggregate(method="min", event_type="B", fields=["test4"])
-        assertEqual(value, 31)
-
-        # Test with nonexistent set
-        value = aggregate(method="min",
-                          event_type="nonexistent", fields=["test1"])
-        assertEqual(value, None)
-
-        # Test without specifying a set
-        value = aggregate(method="min", fields=["test1"])
-        assertEqual(value, None)
-
-    # -------------------------------------------------------------------------
-    def testAggregateMax(self):
-        """ Test max aggregation method """
-
-        aggregate = self.period.aggregate
-        assertEqual = self.assertEqual
-
-        # Test set A
-        value = aggregate(method="max", event_type="A")
-        assertEqual(value, None)
-        value = aggregate(method="max", event_type="A", fields=["test1"])
-        assertEqual(value, 9)
-        value = aggregate(method="max", event_type="A", fields=["test2"])
-        assertEqual(value, 21)
-
-        # Test set B
-        value = aggregate(method="max", event_type="B", fields=["test1"])
-        assertEqual(value, None)
-        value = aggregate(method="max", event_type="B", fields=["test3"])
-        assertEqual(value, 8.1)
-        value = aggregate(method="max", event_type="B", fields=["test4"])
-        assertEqual(value, 91)
-
-        # Test with nonexistent set
-        value = aggregate(method="max",
-                          event_type="nonexistent", fields=["test1"])
-        assertEqual(value, None)
-        
-        # Test without specifying a set
-        value = aggregate(method="max", fields=["test1"])
-        assertEqual(value, None)
-        
-    # -------------------------------------------------------------------------
-    def testEvents(self):
-        """ Test access to events in a period """
+    def testGrouping(self):
+        """ Test grouping of period events """
 
         period = self.period
+        period.group()
+
         assertTrue = self.assertTrue
         assertEqual = self.assertEqual
 
-        # Test set A, current events
-        events = period.current_events(event_type="A")
-        assertTrue(isinstance(events, list))
-        assertEqual(len(events), 4)
-        event_ids = set([1, 2, 3, 4])
-        for event in events:
-            assertEqual(event.event_type, "A")
-            assertTrue(event.event_id in event_ids)
-            event_ids.discard(event.event_id)
-        assertEqual(len(event_ids), 0,
-                    msg="Current events not present: %s" % event_ids)
+        # Check rows
+        expected_rows = {"A": (1, 2, 7, 8),
+                         "B": (3, 4, 9, 10),
+                         "C": (5, 6, 11, 12),
+                         }
+        rows = period._rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, set(expected_rows.get(k)),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, set(expected_rows.get(k))))
 
-        # Test set B, all events
-        events = period.events(event_type="B")
-        assertTrue(isinstance(events, list))
-        assertEqual(len(events), 4)
-        event_ids = set([1, 2, 6, 8])
-        for event in events:
-            assertEqual(event.event_type, "B")
-            assertTrue(event.event_id in event_ids)
-            event_ids.discard(event.event_id)
-        assertEqual(len(event_ids), 0,
-                    msg="Events not present: %s" % event_ids)
+        # Check columns
+        expected_cols = {1: (1, 5, 7, 11),
+                         2: (2, 3, 6, 8, 9),
+                         3: (4, 10, 12),
+                         }
+        cols = period._cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, set(expected_cols.get(k)),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, set(expected_cols.get(k))))
 
-        # Test set B, previous events
-        events = period.previous_events(event_type="B")
-        assertTrue(isinstance(events, list))
-        assertEqual(len(events), 1)
-        event_ids = set([1])
-        for event in events:
-            assertEqual(event.event_type, "B")
-            assertTrue(event.event_id in event_ids)
-            event_ids.discard(event.event_id)
-        assertEqual(len(event_ids), 0,
-                    msg="Previous events not present: %s" % event_ids)
-
-        # Test with nonexistent set
-        events = period.events("nonexistent")
-        assertEqual(events, [])
-
-        # Test without specifying a set
-        events = period.events()
-        assertEqual(events, [])
+        # Check matrix
+        expected_matrix = {("A", 1): (1, 7),
+                           ("A", 2): (2, 8),
+                           #("A", 3): (empty),
+                           #("B", 1): (empty),
+                           ("B", 2): (3, 9),
+                           ("B", 3): (4, 10),
+                           ("C", 1): (5, 11),
+                           ("C", 2): (6,),
+                           ("C", 3): (12,),
+                           }
+        matrix = period._matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, set(expected_matrix.get(k)),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, set(expected_matrix.get(k))))
 
     # -------------------------------------------------------------------------
-    def testCount(self):
-        """ Test counting of events in a period """
-        
-        count = self.period.count
+    def testGroupingCumulative(self):
+        """ Test grouping of period events including previous events """
+
+        period = self.period
+        period.group(cumulative=True)
+
+        assertTrue = self.assertTrue
         assertEqual = self.assertEqual
 
-        # Test set A
-        assertEqual(count("A"), 4)
+        # Check rows
+        expected_rows = {"A": (1, 2, 7, 8, 13),
+                         "B": (3, 4, 9, 10, 14),
+                         "C": (5, 6, 11, 12, 15, 16),
+                         }
+        rows = period._rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, set(expected_rows.get(k)),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, set(expected_rows.get(k))))
 
-        # Test set B
-        assertEqual(count("B"), 3)
+        # Check columns
+        expected_cols = {1: (1, 5, 7, 11, 15),
+                         2: (2, 3, 6, 8, 9, 14),
+                         3: (4, 10, 12, 13, 16),
+                         }
+        cols = period._cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, set(expected_cols.get(k)),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, set(expected_cols.get(k))))
 
-        # Test nonexistent set
-        assertEqual(count("nonexistent"), 0)
+        # Check matrix
+        expected_matrix = {("A", 1): (1, 7),
+                           ("A", 2): (2, 8),
+                           ("A", 3): (13,),
+                           #("B", 1): (empty),
+                           ("B", 2): (3, 9, 14),
+                           ("B", 3): (4, 10),
+                           ("C", 1): (5, 11, 15),
+                           ("C", 2): (6,),
+                           ("C", 3): (12, 16),
+                           }
+        matrix = period._matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, set(expected_matrix.get(k)),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, set(expected_matrix.get(k))))
+            
+    # -------------------------------------------------------------------------
+    def testAggregateCount(self):
+        """ Test aggregation: count """
 
-        # Test without specifying a set
-        assertEqual(count(), 0)
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("count", "base")
+
+        # Check rows
+        expected_rows = {"A": 4,
+                         "B": 4,
+                         "C": 4,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        expected_cols = {1: 4,
+                         2: 5,
+                         3: 3,
+                         }
+        cols = period.cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, expected_cols.get(k),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, expected_cols.get(k)))
+
+        # Check matrix
+        expected_matrix = {("A", 1): 2,
+                           ("A", 2): 2,
+                           ("B", 2): 2,
+                           ("B", 3): 2,
+                           ("C", 1): 2,
+                           ("C", 2): 1,
+                           ("C", 3): 1,
+                           }
+        matrix = period.matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, expected_matrix.get(k),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, expected_matrix.get(k)))
+
+        # Check total
+        expected_total = 12
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateSum(self):
+        """ Test aggregation: sum """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("sum", "base")
+
+        # Check rows
+        expected_rows = {"A": 180,
+                         "B": 370,
+                         "C": 810,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        expected_cols = {1: 430,
+                         2: 290,
+                         3: 640,
+                         }
+        cols = period.cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, expected_cols.get(k),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, expected_cols.get(k)))
+
+        # Check matrix
+        expected_matrix = {("A", 1): 80,
+                           ("A", 2): 100,
+                           ("B", 2): 130,
+                           ("B", 3): 240,
+                           ("C", 1): 350,
+                           ("C", 2): 60,
+                           ("C", 3): 400,
+                           }
+        matrix = period.matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, expected_matrix.get(k),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, expected_matrix.get(k)))
+
+        # Check total
+        expected_total = 1360
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateAvg(self):
+        """ Test aggregation: avg """
+
+        period = self.period
+        assertEqual = self.assertEqual
+        assertAlmostEqual = self.assertAlmostEqual
+
+        # Aggregate
+        total = period.aggregate("avg", "base")
+
+        # Check rows
+        expected_rows = {"A": 45,
+                         "B": 92.5,
+                         "C": 202.5,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertAlmostEqual(v, expected_rows.get(k),
+                              msg = "Row %s: %s != %s" % 
+                                    (k, v, expected_rows.get(k)))
+
+        # Check columns
+        expected_cols = {1: 107.5,
+                         2: 58,
+                         3: 213.3333333,
+                         }
+        cols = period.cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertAlmostEqual(v, expected_cols.get(k),
+                              msg = "Column %s: %s != %s" % 
+                                    (k, v, expected_cols.get(k)))
+
+        # Check matrix
+        expected_matrix = {("A", 1): 40,
+                           ("A", 2): 50,
+                           ("B", 2): 65,
+                           ("B", 3): 120,
+                           ("C", 1): 175,
+                           ("C", 2): 60,
+                           ("C", 3): 400,
+                           }
+        matrix = period.matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertAlmostEqual(v, expected_matrix.get(k),
+                              msg = "Cell %s: %s != %s" % 
+                                    (k, v, expected_matrix.get(k)))
+
+        # Check total
+        expected_total = 113.3333333
+        assertAlmostEqual(period.total, expected_total)
+        assertAlmostEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateMin(self):
+        """ Test aggregation: min """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("min", "base")
+
+        # Check rows
+        expected_rows = {"A": 10,
+                         "B": 30,
+                         "C": 50,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        expected_cols = {1: 10,
+                         2: 20,
+                         3: 40,
+                         }
+        cols = period.cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, expected_cols.get(k),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, expected_cols.get(k)))
+
+        # Check matrix
+        expected_matrix = {("A", 1): 10,
+                           ("A", 2): 20,
+                           ("B", 2): 30,
+                           ("B", 3): 40,
+                           ("C", 1): 50,
+                           ("C", 2): 60,
+                           ("C", 3): 400,
+                           }
+        matrix = period.matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, expected_matrix.get(k),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, expected_matrix.get(k)))
+
+        # Check total
+        expected_total = 10
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateMax(self):
+        """ Test aggregation: max """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("max", "base")
+
+        # Check rows
+        expected_rows = {"A": 80,
+                         "B": 200,
+                         "C": 400,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        expected_cols = {1: 300,
+                         2: 100,
+                         3: 400,
+                         }
+        cols = period.cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, expected_cols.get(k),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, expected_cols.get(k)))
+
+        # Check matrix
+        expected_matrix = {("A", 1): 70,
+                           ("A", 2): 80,
+                           ("B", 2): 100,
+                           ("B", 3): 200,
+                           ("C", 1): 300,
+                           ("C", 2): 60,
+                           ("C", 3): 400,
+                           }
+        matrix = period.matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, expected_matrix.get(k),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, expected_matrix.get(k)))
+
+        # Check total
+        expected_total = 400
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateCumulate(self):
+        """ Test aggregation: cumulate """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("cumulate", "base", slope="slope", interval="days")
+
+        # Check rows
+        expected_rows = {"A": 369,
+                         "B": 709,
+                         "C": 1170,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        expected_cols = {1: 624,
+                         2: 529,
+                         3: 1095,
+                         }
+        cols = period.cols
+        assertEqual(set(cols.keys()), set(expected_cols.keys()))
+        for k, v in cols.items():
+            assertEqual(v, expected_cols.get(k),
+                        msg = "Column %s: %s != %s" % 
+                              (k, v, expected_cols.get(k)))
+
+        # Check matrix
+        expected_matrix = {("A", 1): 144,
+                           ("A", 2): 155,
+                           ("A", 3): 70,
+                           ("B", 2): 294,
+                           ("B", 3): 415,
+                           ("C", 1): 480,
+                           ("C", 2): 80,
+                           ("C", 3): 610,
+                           }
+        matrix = period.matrix
+        assertEqual(set(matrix.keys()), set(expected_matrix.keys()))
+        for k, v in matrix.items():
+            assertEqual(v, expected_matrix.get(k),
+                        msg = "Cell %s: %s != %s" % 
+                              (k, v, expected_matrix.get(k)))
+
+        # Check total
+        expected_total = 2248
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+# =============================================================================
+class PeriodTestsSingleAxis(unittest.TestCase):
+    """ Tests for S3TimeSeriesPeriod with single pivot axis """
+
+    def setUp(self):
+
+        # Period
+        start = tp_datetime(2013,4,1)
+        end = tp_datetime(2013,7,1)
+
+        period = S3TimeSeriesPeriod(start=start, end=end)
+
+        # Add current events
+        events = [
+            # 7 days
+            (1,  (2013,4,1), (2013,4,7),  {"base": 10, "slope": 2}, "A"),
+            (2,  (2013,4,3), (2013,4,9),  {"base": 20, "slope": 5}, "A"),
+            (3,  (2013,4,5), (2013,4,11), {"base": 30, "slope": 2}, "B"),
+            (4,  (2013,4,7), (2013,4,13), {"base": 40, "slope": 5}, "B"),
+            # 10 days
+            (5,  (2013,5,1), (2013,5,10), {"base": 50, "slope": 5}, "C"),
+            (6,  (2013,5,3), (2013,5,12), {"base": 60, "slope": 2}, "C"),
+            (7,  (2013,5,5), (2013,5,14), {"base": 70, "slope": 5}, "A"),
+            (8,  (2013,5,7), (2013,5,16), {"base": 80, "slope": 2}, "A"),
+            # 20 days
+            (9,  (2013,6,1), (2013,6,20), {"base": 100, "slope": 4}, "B"),
+            (10, (2013,6,3), (2013,6,22), {"base": 200, "slope": 7}, "B"),
+            (11, (2013,6,5), (2013,6,24), {"base": 300, "slope": 4}, "C"),
+            (12, (2013,6,12), None, {"base": 400, "slope": 7}, "C"),
+        ]
+        for event_id, start, end, values, row in events:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      values = values,
+                                      row = row,
+                                      )
+            period.add_current(event)
+        self.current_events = events
+
+        # Add previous events
+        events = [
+            # 10 days
+            (13,  (2012,8,1), (2012,8,10), {"base": 20, "slope": 5}, "A"),
+            (14,  (2012,8,3), (2012,8,12), {"base": 20, "slope": 5}, "B"),
+            (15,  None, (2012,8,14), {"base": 20, "slope": 5}, "C"),
+            (16,  (2012,8,7), (2012,8,16), {"base": 20, "slope": 5}, "C"),
+        ]
+        for event_id, start, end, values, row in events:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      values = values,
+                                      row = row,
+                                      )
+            period.add_previous(event)
+        self.previous_events = events
+
+        # Store period
+        self.period = period
+
+    # -------------------------------------------------------------------------
+    def testGrouping(self):
+        """ Test grouping of period events (single axis) """
+
+        period = self.period
+        period.group()
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Check rows
+        expected_rows = {"A": (1, 2, 7, 8),
+                         "B": (3, 4, 9, 10),
+                         "C": (5, 6, 11, 12),
+                         }
+        rows = period._rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, set(expected_rows.get(k)),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, set(expected_rows.get(k))))
+
+        # Check columns
+        assertEqual(period._cols, {})
+
+        # Check matrix
+        assertEqual(period._matrix, {})
+
+    # -------------------------------------------------------------------------
+    def testGroupingCumulative(self):
+        """ Test grouping of period events including previous events (single axis) """
+
+        period = self.period
+        period.group(cumulative=True)
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Check rows
+        expected_rows = {"A": (1, 2, 7, 8, 13),
+                         "B": (3, 4, 9, 10, 14),
+                         "C": (5, 6, 11, 12, 15, 16),
+                         }
+        rows = period._rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, set(expected_rows.get(k)),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, set(expected_rows.get(k))))
+
+        # Check columns
+        assertEqual(period._cols, {})
+
+        # Check matrix
+        assertEqual(period._matrix, {})
+            
+    # -------------------------------------------------------------------------
+    def testAggregateCount(self):
+        """ Test aggregation: count (single axis)  """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("count", "base")
+
+        # Check rows
+        expected_rows = {"A": 4,
+                         "B": 4,
+                         "C": 4,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        assertEqual(period.cols, {})
+
+        # Check matrix
+        assertEqual(period.matrix, {})
+
+        # Check total
+        expected_total = 12
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateSum(self):
+        """ Test aggregation: sum (single axis) """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("sum", "base")
+
+        # Check rows
+        expected_rows = {"A": 180,
+                         "B": 370,
+                         "C": 810,
+                         }
+        rows = period.rows
+        assertEqual(set(rows.keys()), set(expected_rows.keys()))
+        for k, v in rows.items():
+            assertEqual(v, expected_rows.get(k),
+                        msg = "Row %s: %s != %s" % 
+                              (k, v, expected_rows.get(k)))
+
+        # Check columns
+        assertEqual(period.cols, {})
+
+        # Check matrix
+        assertEqual(period.matrix, {})
+
+        # Check total
+        expected_total = 1360
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+# =============================================================================
+class PeriodTestsNoGroups(unittest.TestCase):
+    """ Tests for S3TimeSeriesPeriod without grouping """
+
+    def setUp(self):
+
+        # Period
+        start = tp_datetime(2013,4,1)
+        end = tp_datetime(2013,7,1)
+
+        period = S3TimeSeriesPeriod(start=start, end=end)
+
+        # Add current events
+        events = [
+            # 7 days
+            (1,  (2013,4,1), (2013,4,7),  {"base": 10, "slope": 2}),
+            (2,  (2013,4,3), (2013,4,9),  {"base": 20, "slope": 5}),
+            (3,  (2013,4,5), (2013,4,11), {"base": 30, "slope": 2}),
+            (4,  (2013,4,7), (2013,4,13), {"base": 40, "slope": 5}),
+            # 10 days
+            (5,  (2013,5,1), (2013,5,10), {"base": 50, "slope": 5}),
+            (6,  (2013,5,3), (2013,5,12), {"base": 60, "slope": 2}),
+            (7,  (2013,5,5), (2013,5,14), {"base": 70, "slope": 5}),
+            (8,  (2013,5,7), (2013,5,16), {"base": 80, "slope": 2}),
+            # 20 days
+            (9,  (2013,6,1), (2013,6,20), {"base": 100, "slope": 4}),
+            (10, (2013,6,3), (2013,6,22), {"base": 200, "slope": 7}),
+            (11, (2013,6,5), (2013,6,24), {"base": 300, "slope": 4}),
+            (12, (2013,6,12), None, {"base": 400, "slope": 7}),
+        ]
+        for event_id, start, end, values in events:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      values = values,
+                                      )
+            period.add_current(event)
+        self.current_events = events
+
+        # Add previous events
+        events = [
+            # 10 days
+            (13,  (2012,8,1), (2012,8,10), {"base": 20, "slope": 5}),
+            (14,  (2012,8,3), (2012,8,12), {"base": 20, "slope": 5}),
+            (15,  None, (2012,8,14), {"base": 20, "slope": 5}),
+            (16,  (2012,8,7), (2012,8,16), {"base": 20, "slope": 5}),
+        ]
+        for event_id, start, end, values in events:
+            event_start = tp_datetime(*start) if start else None
+            event_end = tp_datetime(*end) if end else None
+            event = S3TimeSeriesEvent(event_id,
+                                      start = event_start,
+                                      end = event_end,
+                                      values = values,
+                                      )
+            period.add_previous(event)
+        self.previous_events = events
+
+        # Store period
+        self.period = period
+
+    # -------------------------------------------------------------------------
+    def testGrouping(self):
+        """ Test grouping of period events (no grouping) """
+
+        period = self.period
+        period.group()
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Check rows
+        assertEqual(period._rows, {})
+
+        # Check columns
+        assertEqual(period._cols, {})
+
+        # Check matrix
+        assertEqual(period._matrix, {})
+
+    # -------------------------------------------------------------------------
+    def testGroupingCumulative(self):
+        """ Test grouping of period events including previous events (no grouping) """
+
+        period = self.period
+        period.group(cumulative=True)
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Check rows
+        assertEqual(period._rows, {})
+
+        # Check columns
+        assertEqual(period._cols, {})
+
+        # Check matrix
+        assertEqual(period._matrix, {})
+
+    # -------------------------------------------------------------------------
+    def testAggregateCount(self):
+        """ Test aggregation: count (no grouping) """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("count", "base")
+
+        # Check rows
+        assertEqual(period.rows, {})
+
+        # Check columns
+        assertEqual(period.cols, {})
+
+        # Check matrix
+        assertEqual(period.matrix, {})
+
+        # Check total
+        expected_total = 12
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateSum(self):
+        """ Test aggregation: sum (no grouping) """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("sum", "base")
+
+        # Check rows
+        assertEqual(period.rows, {})
+
+        # Check columns
+        assertEqual(period.cols, {})
+
+        # Check matrix
+        assertEqual(period.matrix, {})
+
+        # Check total
+        expected_total = 1360
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
+
+    # -------------------------------------------------------------------------
+    def testAggregateCumulate(self):
+        """ Test aggregation: cumulate (no grouping) """
+
+        period = self.period
+        assertEqual = self.assertEqual
+
+        # Aggregate
+        total = period.aggregate("cumulate", "base", slope="slope", interval="days")
+
+        # Check rows
+        assertEqual(period.rows, {})
+
+        # Check columns
+        assertEqual(period.cols, {})
+
+        # Check matrix
+        assertEqual(period.matrix, {})
+
+        # Check total
+        expected_total = 2248
+        assertEqual(period.total, expected_total)
+        assertEqual(total, expected_total)
 
 # =============================================================================
 class EventFrameTests(unittest.TestCase):
+    """ Tests for S3TimeSeriesEventFrame class """
 
     def setUp(self):
 
         data = [
             # Always
-            (1, None, None, {"test": 2}, "A"),
+            (1, None, None, {"test": 2}),
             # First two quarters
-            (2, None, (2012,6,19), {"test": 5}, "A"),
+            (2, None, (2012,6,19), {"test": 5}),
             # Last three quarters
-            (3, (2012,5,1), None, {"test": 8}, "A"),
+            (3, (2012,5,1), None, {"test": 8}),
             # First and Second Quarter
-            (4, (2012,1,14), (2012,5,7), {"test": 3}, "A"),
+            (4, (2012,1,14), (2012,5,7), {"test": 3}),
             # Second and Third Quarter
-            (5, (2012,5,1), (2012,7,21), {"test": 2}, "A"),
+            (5, (2012,5,1), (2012,7,21), {"test": 2}),
             # Third and Fourth Quarter
-            (6, (2012,8,8), (2012,11,3), {"test": 1}, "A"),
+            (6, (2012,8,8), (2012,11,3), {"test": 1}),
             # Only Fourth Quarter
-            (7, (2012,10,18), (2013,5,27), {"test": 9}, "A"),
+            (7, (2012,10,18), (2013,5,27), {"test": 9}),
             # Ended before Event Frame
-            (8, (2011,1,1), (2011,12,6), {"test": 9}, "A"),
+            (8, (2011,1,1), (2011,12,6), {"test": 9}),
             # Starting after Event Frame
-            (9, (2013,1,18), (2013,5,27), {"test": 3}, "A"),
+            (9, (2013,1,18), (2013,5,27), {"test": 3}),
         ]
         
         events = []
-        for event_id, start, end, values, event_type in data:
-            events.append(S3TimePlotEvent(event_id,
-                                          start=tp_datetime(*start) if start else None,
-                                          end=tp_datetime(*end) if end else None,
-                                          values=values,
-                                          event_type=event_type))
+        for event_id, start, end, values in data:
+            events.append(S3TimeSeriesEvent(event_id,
+                                            start=tp_datetime(*start) if start else None,
+                                            end=tp_datetime(*end) if end else None,
+                                            values=values,
+                                            ))
         self.events = events
 
     # -------------------------------------------------------------------------
     def testExtend(self):
-        """ Test correct grouping of events into intervals """
+        """ Test correct grouping of events into periods """
 
         # Create event frame and add events
-        ef = S3TimePlotEventFrame(tp_datetime(2012,1,1),
-                                  tp_datetime(2012,12,15),
-                                  slots="3 months")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2012,1,1),
+                                    tp_datetime(2012,12,15),
+                                    slots="3 months")
         ef.extend(self.events)
 
         # Expected result (start, end, previous, current, results)
@@ -456,28 +1100,25 @@ class EventFrameTests(unittest.TestCase):
             assertEqual(period.end, tp_datetime(*end))
 
             # Check current events in period
-            event_ids = [event.event_id for event in period.current_events("A")]
+            event_ids = period.cevents.keys()
             assertEqual(set(event_ids), set(current))
 
             # Check previous events in period
-            event_ids = [event.event_id for event in period.previous_events("A")]
+            event_ids = period.pevents.keys()
             assertEqual(set(event_ids), set(previous))
 
             # Check aggregation
-            result = period.aggregate("sum",
-                                      fields=["test"],
-                                      event_type="A")
+            result = period.aggregate("sum", "test")
             assertEqual(result, expected_result[0])
             
-            result = period.aggregate("max",
-                                      fields=["test"],
-                                      event_type="A")
+            result = period.aggregate("max", "test")
             assertEqual(result, expected_result[1])
             
             result = period.aggregate("cumulate",
-                                      fields=["test"],
-                                      arguments=["months"],
-                                      event_type="A")
+                                      None,
+                                      slope="test",
+                                      interval="months",
+                                      )
             assertEqual(result, expected_result[2])
 
     # -------------------------------------------------------------------------
@@ -486,9 +1127,9 @@ class EventFrameTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
         
-        ef = S3TimePlotEventFrame(tp_datetime(2011, 1, 5),
-                                  tp_datetime(2011, 1, 8),
-                                  slots="days")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2011, 1, 5),
+                                    tp_datetime(2011, 1, 8),
+                                    slots="days")
         expected = [(tp_datetime(2011, 1, 5), tp_datetime(2011, 1, 6)),
                     (tp_datetime(2011, 1, 6), tp_datetime(2011, 1, 7)),
                     (tp_datetime(2011, 1, 7), tp_datetime(2011, 1, 8))]
@@ -497,9 +1138,9 @@ class EventFrameTests(unittest.TestCase):
             assertEqual(period.start, expected[i][0])
             assertEqual(period.end, expected[i][1])
 
-        ef = S3TimePlotEventFrame(tp_datetime(2011, 1, 5),
-                                  tp_datetime(2011, 1, 16),
-                                  slots="4 days")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2011, 1, 5),
+                                    tp_datetime(2011, 1, 16),
+                                    slots="4 days")
         expected = [(tp_datetime(2011, 1, 5), tp_datetime(2011, 1, 9)),
                     (tp_datetime(2011, 1, 9), tp_datetime(2011, 1, 13)),
                     (tp_datetime(2011, 1, 13), tp_datetime(2011, 1, 16))]
@@ -513,9 +1154,9 @@ class EventFrameTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
 
-        ef = S3TimePlotEventFrame(tp_datetime(2011, 1, 5),
-                                  tp_datetime(2011, 1, 28),
-                                  slots="weeks")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2011, 1, 5),
+                                    tp_datetime(2011, 1, 28),
+                                    slots="weeks")
         expected = [(tp_datetime(2011, 1, 5), tp_datetime(2011, 1, 12)),
                     (tp_datetime(2011, 1, 12), tp_datetime(2011, 1, 19)),
                     (tp_datetime(2011, 1, 19), tp_datetime(2011, 1, 26)),
@@ -524,9 +1165,9 @@ class EventFrameTests(unittest.TestCase):
             assertEqual(period.start, expected[i][0])
             assertEqual(period.end, expected[i][1])
 
-        ef = S3TimePlotEventFrame(tp_datetime(2011, 1, 5),
-                                  tp_datetime(2011, 2, 16),
-                                  slots="2 weeks")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2011, 1, 5),
+                                    tp_datetime(2011, 2, 16),
+                                    slots="2 weeks")
         expected = [(tp_datetime(2011, 1, 5), tp_datetime(2011, 1, 19)),
                     (tp_datetime(2011, 1, 19), tp_datetime(2011, 2, 2)),
                     (tp_datetime(2011, 2, 2), tp_datetime(2011, 2, 16))]
@@ -540,9 +1181,9 @@ class EventFrameTests(unittest.TestCase):
 
         assertEqual = self.assertEqual
 
-        ef = S3TimePlotEventFrame(tp_datetime(2011, 1, 5),
-                                  tp_datetime(2011, 4, 28),
-                                  slots="months")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2011, 1, 5),
+                                    tp_datetime(2011, 4, 28),
+                                    slots="months")
         expected = [(tp_datetime(2011, 1, 5), tp_datetime(2011, 2, 5)),
                     (tp_datetime(2011, 2, 5), tp_datetime(2011, 3, 5)),
                     (tp_datetime(2011, 3, 5), tp_datetime(2011, 4, 5)),
@@ -551,9 +1192,9 @@ class EventFrameTests(unittest.TestCase):
             assertEqual(period.start, expected[i][0])
             assertEqual(period.end, expected[i][1])
 
-        ef = S3TimePlotEventFrame(tp_datetime(2011, 1, 5),
-                                  tp_datetime(2011, 8, 16),
-                                  slots="3 months")
+        ef = S3TimeSeriesEventFrame(tp_datetime(2011, 1, 5),
+                                    tp_datetime(2011, 8, 16),
+                                    slots="3 months")
         expected = [(tp_datetime(2011, 1, 5), tp_datetime(2011, 4, 5)),
                     (tp_datetime(2011, 4, 5), tp_datetime(2011, 7, 5)),
                     (tp_datetime(2011, 7, 5), tp_datetime(2011, 8, 16))]
@@ -573,31 +1214,31 @@ class DtParseTests(unittest.TestCase):
         assertRaises = self.assertRaises
         assertEqual = self.assertEqual
 
-        tp = S3TimePlot()
+        ts = S3TimeSeries
 
-        result = tp.dtparse("5/2001")
+        result = ts.dtparse("5/2001")
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, tp_datetime(2001, 5, 1, 0, 0, 0))
         
-        result = tp.dtparse("2007-03")
+        result = ts.dtparse("2007-03")
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, tp_datetime(2007, 3, 1, 0, 0, 0))
         
-        result = tp.dtparse("1996")
+        result = ts.dtparse("1996")
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, tp_datetime(1996, 1, 1, 0, 0, 0))
         
-        result = tp.dtparse("2008-02-12")
+        result = ts.dtparse("2008-02-12")
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, tp_datetime(2008, 2, 12, 0, 0, 0))
         
-        result = tp.dtparse("2008-02-31")
+        result = ts.dtparse("2008-02-31")
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, tp_datetime(2008, 3, 2, 0, 0, 0))
 
         # Empty string defaults to now
         now = datetime.datetime.utcnow()
-        result = tp.dtparse("")
+        result = ts.dtparse("")
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result.year, now.year)
         assertEqual(result.month, now.month)
@@ -607,7 +1248,7 @@ class DtParseTests(unittest.TestCase):
 
         # None defaults to now
         now = datetime.datetime.utcnow()
-        result = tp.dtparse(None)
+        result = ts.dtparse(None)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result.year, now.year)
         assertEqual(result.month, now.month)
@@ -615,9 +1256,9 @@ class DtParseTests(unittest.TestCase):
         assertEqual(result.hour, now.hour)
         assertEqual(result.minute, now.minute)
 
-        assertRaises(ValueError, tp.dtparse, "1985-13")
-        assertRaises(ValueError, tp.dtparse, "68532")
-        assertRaises(ValueError, tp.dtparse, "invalid")
+        assertRaises(ValueError, ts.dtparse, "1985-13")
+        assertRaises(ValueError, ts.dtparse, "68532")
+        assertRaises(ValueError, ts.dtparse, "invalid")
         
     # -------------------------------------------------------------------------
     def testDtParseRelative(self):
@@ -627,31 +1268,31 @@ class DtParseTests(unittest.TestCase):
         assertRaises = self.assertRaises
         assertEqual = self.assertEqual
 
-        tp = S3TimePlot()
+        ts = S3TimeSeries
         start = datetime.datetime(2014, 1, 3, 11, 30)
 
-        result = tp.dtparse("+1 year", start=start)
+        result = ts.dtparse("+1 year", start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, datetime.datetime(2015, 1, 3, 11, 30, 0))
         
-        result = tp.dtparse("-3 days", start=start)
+        result = ts.dtparse("-3 days", start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, datetime.datetime(2013, 12, 31, 11, 30, 0))
         
-        result = tp.dtparse("+5 hours", start=start)
+        result = ts.dtparse("+5 hours", start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, datetime.datetime(2014, 1, 3, 16, 30, 0))
         
-        result = tp.dtparse("-6 months", start=start)
+        result = ts.dtparse("-6 months", start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, datetime.datetime(2013, 7, 3, 11, 30, 0))
         
-        result = tp.dtparse("+12 weeks", start=start)
+        result = ts.dtparse("+12 weeks", start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result, datetime.datetime(2014, 3, 28, 11, 30, 0))
         
         # Empty string defaults to start
-        result = tp.dtparse("", start=start)
+        result = ts.dtparse("", start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result.year, start.year)
         assertEqual(result.month, start.month)
@@ -660,7 +1301,7 @@ class DtParseTests(unittest.TestCase):
         assertEqual(result.minute, start.minute)
 
         # None defaults to start
-        result = tp.dtparse(None, start=start)
+        result = ts.dtparse(None, start=start)
         assertTrue(isinstance(result, datetime.datetime))
         assertEqual(result.year, start.year)
         assertEqual(result.month, start.month)
@@ -668,11 +1309,11 @@ class DtParseTests(unittest.TestCase):
         assertEqual(result.hour, start.hour)
         assertEqual(result.minute, start.minute)
 
-        assertRaises(ValueError, tp.dtparse, "invalid")
+        assertRaises(ValueError, ts.dtparse, "invalid")
 
 # =============================================================================
-class TimePlotTests(unittest.TestCase):
-    """ Test S3TimePlot Methods """
+class TimeSeriesTests(unittest.TestCase):
+    """ Tests for S3TimeSeries class """
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -768,36 +1409,46 @@ class TimePlotTests(unittest.TestCase):
         is_now = self.is_now
 
         s3db = current.s3db
-        resource = s3db.resource("tp_test_events")
-        
-        event_start = resource.resolve_selector("event_start")
-        event_end =  resource.resolve_selector("event_end")
-
-        tp = S3TimePlot()
 
         query = FS("event_type") == "STARTEND"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertTrue(is_now(ef.end))
 
         query = FS("event_type") == "NOSTART"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          )
+        ef = ts.event_frame
         # falls back to first end date minus 1 day
         assertEqual(ef.start, tp_datetime(2012, 2, 12, 0, 0, 0))
         assertTrue(is_now(ef.end))
 
         query = FS("event_type") == "NOEND"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2012, 7, 21, 0, 0, 0))
         assertTrue(is_now(ef.end))
 
-        tp.resource = s3db.resource("tp_test_events")
-        ef = tp.create_event_frame(tp.resource, event_start, event_end)
+        resource = s3db.resource("tp_test_events")
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertTrue(is_now(ef.end))
@@ -809,46 +1460,56 @@ class TimePlotTests(unittest.TestCase):
         assertEqual = self.assertEqual
         
         s3db = current.s3db
-        resource = s3db.resource("tp_test_events")
 
-        event_start = resource.resolve_selector("event_start")
-        event_end =  resource.resolve_selector("event_end")
-
-        tp = S3TimePlot()
-
-        end = "2011-03-01"
         query = FS("event_type") == "STARTEND"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          end = "2011-03-01",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2011, 3, 1, 0, 0, 0))
         # ~8 weeks => reasonable intervall length: weeks
         assertEqual(ef.slots, "weeks")
 
-        end = "2013-01-01"
         query = FS("event_type") == "NOSTART"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          end = "2013-01-01",
+                          )
+        ef = ts.event_frame
         # falls back to first end date minus 1 day
         assertEqual(ef.start, tp_datetime(2012, 2, 12, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2013, 1, 1, 0, 0))
         # ~11 months => reasonable intervall length: months
         assertEqual(ef.slots, "months")
 
-        end = "2016-06-01"
         query = FS("event_type") == "NOEND"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          end = "2016-06-01",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2012, 7, 21, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2016, 6, 1, 0, 0))
         # ~4 years => reasonable intervall length: 3 months
         assertEqual(ef.slots, "3 months")
 
-        end = "2011-01-15"
-        tp.resource = s3db.resource("tp_test_events")
-        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end)
+        resource = s3db.resource("tp_test_events")
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          end = "2011-01-15",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 1, 3, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2011, 1, 15, 0, 0))
@@ -856,21 +1517,30 @@ class TimePlotTests(unittest.TestCase):
         assertEqual(ef.slots, "days")
 
         # Check with manual slot length
-        end = "2016-06-01"
         query = FS("event_type") == "NOEND"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end, end=end, slots="years")
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          end = "2016-06-01",
+                          slots = "years",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2012, 7, 21, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2016, 6, 1, 0, 0))
         assertEqual(ef.slots, "years")
 
         # Check with manual start date
-        start = "2011-02-15"
-        end = "2011-03-01"
         query = FS("event_type") == "STARTEND"
-        tp.resource = s3db.resource("tp_test_events", filter = query)
-        ef = tp.create_event_frame(tp.resource, event_start, event_end, start=start, end=end)
+        resource = s3db.resource("tp_test_events", filter = query)
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          start = "2011-02-15",
+                          end = "2011-03-01",
+                          )
+        ef = ts.event_frame
         # falls back to first start date
         assertEqual(ef.start, tp_datetime(2011, 2, 15, 0, 0, 0))
         assertEqual(ef.end, tp_datetime(2011, 3, 1, 0, 0, 0))
@@ -882,24 +1552,27 @@ class TimePlotTests(unittest.TestCase):
         """ Test aggregation of event data """
         
         s3db = current.s3db
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        
+        PERIODS = "p"
+        TIMES = "t"
+        VALUE = "v"
+
         resource = s3db.resource("tp_test_events")
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          end = "2013-01-01",
+                          slots = "months",
+                          method = "sum",
+                          base = "parameter1",
+                          )
 
-        tp = S3TimePlot()
-        tp.resource = resource
-        
-        event_start = resource.resolve_selector("event_start")
-        event_end =  resource.resolve_selector("event_end")
-        fact1 = resource.resolve_selector("parameter1")
-        fact2 = resource.resolve_selector("parameter2")
-        
-        end = "2013-01-01"
-        ef = tp.create_event_frame(tp.resource, 
-                                   event_start,
-                                   event_end,
-                                   end=end,
-                                   slots="months")
-        tp.add_event_data(ef, resource, event_start, event_end, [fact1, fact2])
-
+        # Verify correct slot length
+        assertEqual(ts.event_frame.slots, "months")
+                          
         expected = [
             ((2011,1,3), (2011,2,3), 15),        # 00 P NS1 NS2 NS3 SE1
             ((2011,2,3), (2011,3,3), 15),        # 01 P NS1 NS2 NS3 SE1
@@ -927,116 +1600,100 @@ class TimePlotTests(unittest.TestCase):
             ((2012,12,3), (2013,1,1), 9),        # 23 P NE1 NE2
         ]
         
-        assertEqual = self.assertEqual
-
-        assertEqual(ef.slots, "months")
-        for i, period in enumerate(ef):
+        result = ts.as_dict()
+        periods = result[PERIODS]
+        
+        for i, period in enumerate(periods):
+            
             expected_start, expected_end, expected_value = expected[i]
-            expected_start = tp_datetime(*expected_start)
-            expected_end = tp_datetime(*expected_end)
+            expected_start = tp_datetime(*expected_start).isoformat()
+            expected_end = tp_datetime(*expected_end).isoformat()
 
-            assertEqual(period.start, expected_start,
+            dates = period.get(TIMES)
+            assertTrue(isinstance(dates, tuple))
+            
+            start, end = dates
+
+            assertEqual(start, expected_start,
                         msg="Period %s start should be %s, but is %s" %
-                        (i, expected_start, period.start))
-            assertEqual(period.end, expected_end,
+                        (i, expected_start, start))
+            assertEqual(end, expected_end,
                         msg="Period %s end should be %s, but is %s" %
-                        (i, expected_end, period.end))
-            value1 = period.aggregate(method="sum",
-                                      fields=[fact1.colname],
-                                      event_type=resource.tablename)
-            assertEqual(value1, expected_value,
+                        (i, expected_end, end))
+                        
+            value = period.get(VALUE)
+            assertEqual(value, expected_value,
                         msg="Period %s sum should be %s, but is %s" %
-                        (i, expected_value, value1))
-
-            # Indirect count-check: average should be constant
-            value2 = period.aggregate(method="avg",
-                                      fields=[fact2.colname],
-                                      event_type=resource.tablename)
-            assertEqual(value2, 0.5)
+                        (i, expected_value, value))
 
     # -------------------------------------------------------------------------
     def testEventDataCumulativeAggregation(self):
         """ Test aggregation of event data, cumulative """
 
         s3db = current.s3db
-        resource = s3db.resource("tp_test_events")
-
-        tp = S3TimePlot()
-        tp.resource = resource
-
-        event_start = resource.resolve_selector("event_start")
-        event_end =  resource.resolve_selector("event_end")
-        fact1 = resource.resolve_selector("parameter1")
-        fact2 = resource.resolve_selector("parameter2")
-
-        start = "2012-01-01"
-        end = "2013-01-01"
-        ef = tp.create_event_frame(tp.resource,
-                                   event_start,
-                                   event_end,
-                                   start=start,
-                                   end=end,
-                                   slots="months")
-        tp.add_event_data(ef,
-                          resource,
-                          event_start,
-                          event_end,
-                          [fact1, fact2],
-                          cumulative=True,
-                          )
-
-        expected = [
-            ((2012,1,1), (2012,2,1), 45, 12),       # 01 P NS1 NS2 NS3 (SE1 SE2 SE3)
-            ((2012,2,1), (2012,3,1), 45, 12),       # 02 P NS1 NS2 NS3 (SE1 SE2 SE3)
-            ((2012,3,1), (2012,4,1), 45, 9),        # 03 P NS2 NS3 (SE1 SE2 SE3)
-            ((2012,4,1), (2012,5,1), 45, 9),        # 04 P NS2 NS3 (SE1 SE2 SE3)
-            ((2012,5,1), (2012,6,1), 45, 9),        # 05 P NS2 NS3 (SE1 SE2 SE3)
-            ((2012,6,1), (2012,7,1), 45, 6),        # 06 P NS3 (SE1 SE2 SE3)
-            ((2012,7,1), (2012,8,1), 48, 9),        # 07 P NS3 (SE1 SE2 SE3) NE1
-            ((2012,8,1), (2012,9,1), 51, 9),        # 08 P NS3 (SE1 SE2 SE3) NE1
-            ((2012,9,1), (2012,10,1), 54, 6),       # 09 P (SE1 SE2 SE3) NE1
-            ((2012,10,1), (2012,11,1), 60, 9),      # 10 P (SE1 SE2 SE3) NE1 NE2
-            ((2012,11,1), (2012,12,1), 66, 9),      # 11 P (SE1 SE2 SE3) NE1 NE2
-            ((2012,12,1), (2013,1,1), 72, 9),       # 12 P (SE1 SE2 SE3) NE1 NE2
-        ]
 
         assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        
+        PERIODS = "p"
+        TIMES = "t"
+        VALUE = "v"
 
-        assertEqual(ef.slots, "months")
-        for i, period in enumerate(ef):
-            expected_start, expected_end, expected_cumulative, expected_sum = expected[i]
-            expected_start = tp_datetime(*expected_start)
-            expected_end = tp_datetime(*expected_end)
+        resource = s3db.resource("tp_test_events")
+        ts = S3TimeSeries(resource,
+                          event_start = "event_start",
+                          event_end = "event_end",
+                          start = "2012-01-01",
+                          end = "2013-01-01",
+                          slots = "months",
+                          method = "cumulate",
+                          slope = "parameter1",
+                          interval = "months",
+                          )
 
-            # Verify period start and end
-            assertEqual(period.start, expected_start,
+        # Verify correct slot length
+        assertEqual(ts.event_frame.slots, "months")
+                          
+        expected = [
+            ((2012,1,1), (2012,2,1), 45),       # 01 P NS1 NS2 NS3 (SE1 SE2 SE3)
+            ((2012,2,1), (2012,3,1), 45),       # 02 P NS1 NS2 NS3 (SE1 SE2 SE3)
+            ((2012,3,1), (2012,4,1), 45),       # 03 P NS2 NS3 (SE1 SE2 SE3)
+            ((2012,4,1), (2012,5,1), 45),       # 04 P NS2 NS3 (SE1 SE2 SE3)
+            ((2012,5,1), (2012,6,1), 45),       # 05 P NS2 NS3 (SE1 SE2 SE3)
+            ((2012,6,1), (2012,7,1), 45),       # 06 P NS3 (SE1 SE2 SE3)
+            ((2012,7,1), (2012,8,1), 48),       # 07 P NS3 (SE1 SE2 SE3) NE1
+            ((2012,8,1), (2012,9,1), 51),       # 08 P NS3 (SE1 SE2 SE3) NE1
+            ((2012,9,1), (2012,10,1), 54),      # 09 P (SE1 SE2 SE3) NE1
+            ((2012,10,1), (2012,11,1), 60),     # 10 P (SE1 SE2 SE3) NE1 NE2
+            ((2012,11,1), (2012,12,1), 66),     # 11 P (SE1 SE2 SE3) NE1 NE2
+            ((2012,12,1), (2013,1,1), 72),      # 12 P (SE1 SE2 SE3) NE1 NE2
+        ]
+
+        result = ts.as_dict()
+        periods = result[PERIODS]
+        
+        for i, period in enumerate(periods):
+            
+            expected_start, expected_end, expected_value = expected[i]
+            expected_start = tp_datetime(*expected_start).isoformat()
+            expected_end = tp_datetime(*expected_end).isoformat()
+
+            dates = period.get(TIMES)
+            assertTrue(isinstance(dates, tuple))
+            
+            start, end = dates
+
+            assertEqual(start, expected_start,
                         msg="Period %s start should be %s, but is %s" %
-                        (i, expected_start, period.start))
-            assertEqual(period.end, expected_end,
+                        (i, expected_start, start))
+            assertEqual(end, expected_end,
                         msg="Period %s end should be %s, but is %s" %
-                        (i, expected_end, period.end))
-
-            # Verify cumulative value
-            value1 = period.aggregate(method="cumulate",
-                                      fields=[fact1.colname],
-                                      arguments=["months"],
-                                      event_type=resource.tablename)
-            assertEqual(value1, expected_cumulative,
-                        msg="Period %s cumulative sum should be %s, but is %s" %
-                        (i, expected_cumulative, value1))
-
-            value1 = period.aggregate(method="sum",
-                                      fields=[fact1.colname],
-                                      event_type=resource.tablename)
-            assertEqual(value1, expected_sum,
-                        msg="Period %s sum should be %s, but is %s" %
-                        (i, expected_sum, value1))
+                        (i, expected_end, end))
                         
-            # Indirect count-check: average should be constant
-            value2 = period.aggregate(method="avg",
-                                      fields=[fact2.colname],
-                                      event_type=resource.tablename)
-            assertEqual(value2, 0.5)
+            value = period.get(VALUE)
+            assertEqual(value, expected_value,
+                        msg="Period %s cumulative sum should be %s, but is %s" %
+                        (i, expected_value, value))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1070,9 +1727,11 @@ if __name__ == "__main__":
     run_suite(
         EventTests,
         PeriodTests,
+        PeriodTestsSingleAxis,
+        PeriodTestsNoGroups,
         EventFrameTests,
         DtParseTests,
-        TimePlotTests,
+        TimeSeriesTests,
     )
 
 # END ========================================================================

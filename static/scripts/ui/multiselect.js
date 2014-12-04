@@ -269,7 +269,7 @@
             if (!this.element[0].value) {
                 value = o.noneSelectedText;
             } else {
-                value = this.element[0].selectedOptions[0].innerHTML;
+                value = this.element[0].selectedOptions && this.element[0].selectedOptions[0].innerHTML;
             }
         }
 

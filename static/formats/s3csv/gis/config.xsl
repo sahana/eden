@@ -10,7 +10,7 @@
          UID..................string..........gis_config.uuid (needed for SITE_DEFAULT)
          Name.................string..........gis_config.name
          OU...................string..........gis_config.pe_id
-         OU Type..............string..........gis_config.pe_type (currently only Orgs supported, but easy to extend)
+         OU Type..............string..........gis_config.pe_type (currently only Orgs/OrgGroups supported, but easy to extend)
          Region Country.......string..........gis_config.region_location_id.L0
          Region L1............string..........gis_config.region_location_id.L1
          Region L2............string..........gis_config.region_location_id.L2
@@ -32,7 +32,7 @@
          Geocoder.............boolean.........gis_config.geocoder
          Marker...............string..........gis_style.marker_id
          WMS Browser..........float...........gis_config.wmsbrowser_url
-         
+         Image................string..........gis_config.image URL
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -215,6 +215,13 @@
             <xsl:if test="$WMSBrowser!=''">
                 <data field="wmsbrowser_url"><xsl:value-of select="$WMSBrowser"/></data>
             </xsl:if>
+            <xsl:if test="col[@field='Image']!=''">
+                <data field="image">
+                    <xsl:attribute name="url">
+                        <xsl:value-of select="col[@field='Image']"/>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
 
             <reference field="projection_id" resource="gis_projection">
                 <xsl:attribute name="tuid">
@@ -234,6 +241,14 @@
                     <xsl:when test="$ou_type='organisation' or 
                                     $ou_type='organization'">
                         <reference field="pe_id" resource="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($ou_type, $ou)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$ou_type='org_group' or 
+                                    $ou_type='coalition'">
+                        <reference field="pe_id" resource="org_group">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="concat($ou_type, $ou)"/>
                             </xsl:attribute>
@@ -293,6 +308,15 @@
             <xsl:when test="$ou_type='organisation' or 
                             $ou_type='organization'">
                 <resource name="org_organisation">
+                    <xsl:attribute name="tuid">
+                         <xsl:value-of select="concat($ou_type, $ou)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$ou"/></data>
+                </resource>
+            </xsl:when>
+             <xsl:when test="$ou_type='org_group' or 
+                            $ou_type='coalition'">
+                <resource name="org_group">
                     <xsl:attribute name="tuid">
                          <xsl:value-of select="concat($ou_type, $ou)"/>
                     </xsl:attribute>

@@ -719,7 +719,7 @@ class S3Merge(S3Method):
                 #inp = widgets.upload.widget(field, value,
                                             #download_url=download_url, **attr)
         elif field.widget:
-            if isinstance(field.widget, (S3LocationSelectorWidget, S3LocationSelectorWidget2)):
+            if isinstance(field.widget, (S3LocationSelector, S3LocationSelectorWidget)):
                 # Workaround - location selector does not support
                 # renaming of the fields => switch to dropdown
                 level = None
@@ -921,6 +921,10 @@ class S3RecordMerger(object):
         s3db = current.s3db
         if main:
             s3db.load_all_models()
+        if db._lazy_tables:
+            # Must roll out all lazy tables to detect dependencies
+            for tn in db._LAZY_TABLES.keys():
+                db[tn]
 
         # Get the records
         original = None

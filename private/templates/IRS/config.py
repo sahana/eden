@@ -44,14 +44,16 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ("SL",)
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
-#settings.L10n.languages = OrderedDict([
+settings.L10n.languages = OrderedDict([
 #    ("ar", "العربية"),
 #    ("bs", "Bosanski"),
-#    ("en", "English"),
+    ("en_gb", "English"),
 #    ("fr", "Français"),
 #    ("de", "Deutsch"),
 #    ("el", "ελληνικά"),
@@ -72,13 +74,18 @@ settings.gis.countries = ("SL",)
 #    ("vi", "Tiếng Việt"),
 #    ("zh-cn", "中文 (简体)"),
 #    ("zh-tw", "中文 (繁體)"),
-#])
+])
 # Default language for Language Toolbar (& GIS Locations in future)
-#settings.L10n.default_language = "en"
+settings.L10n.default_language = "en_gb"
 # Uncomment to Hide the language toolbar
 settings.L10n.display_toolbar = False
 # Default timezone for users
 #settings.L10n.utc_offset = "UTC +0100"
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+settings.L10n.thousands_separator = ","
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -179,61 +186,78 @@ def customise_hms_hospital_resource(r, tablename):
 settings.customise_hms_hospital_resource = customise_hms_hospital_resource
 
 # -----------------------------------------------------------------------------
+def customise_disease_stats_data_resource(r, tablename):
+
+    s3db = current.s3db
+    # Load model & set defaults
+    table = s3db.disease_stats_data
+
+    # Add a TimePlot tab to summary page
+    summary = settings.get_ui_summary()
+    settings.ui.summary = list(summary) + [{"name": "timeplot",
+                                            "label": "Progression",
+                                            "widgets": [{"method": "timeplot",
+                                                         "ajax_init": True,
+                                                         }
+                                                        ],
+                                            }]
+
+    # Default parameter filter
+    def default_parameter_filter(selector, tablename=None):
+        ptable = s3db.stats_parameter
+        query = (ptable.deleted == False) & \
+                (ptable.name == "Cases")
+        row = current.db(query).select(ptable.parameter_id,
+                                       limitby = (0, 1)).first()
+        if row:
+            return row.parameter_id
+        else:
+            return None
+
+    # Set filter defaults
+    resource = r.resource
+    filter_widgets = resource.get_config("filter_widgets", [])
+    for filter_widget in filter_widgets:
+        if filter_widget.field == "parameter_id":
+            filter_widget.opts.default = default_parameter_filter
+        elif filter_widget.field == "location_id$level":
+            filter_widget.opts.default = "L2"
+
+settings.customise_disease_stats_data_resource = customise_disease_stats_data_resource
+
+# -----------------------------------------------------------------------------
 def customise_stats_demographic_data_resource(r, tablename):
 
     s3db = current.s3db
+    # Load model & set defaults
     table = s3db.stats_demographic_data
 
-    # @ToDo: 'Month' VF
-    #from s3 import S3OptionsFilter
-    #filter_widgets = [S3OptionsFilter("parameter_id",
-    #                                  label = T("Type"),
-    #                                  multiple = False,
-    #                                  # Not translateable
-    #                                  #represent = "%(name)s",
-    #                                  ),
-    #                  S3OptionsFilter("month",
-    #                                  #multiple = False,
-    #                                  operator = "anyof",
-    #                                  options = lambda: \
-    #                                    stats_month_options("stats_demographic_data"),
-    #                                  ),
-    #                  S3OptionsFilter("location_id$level",
-    #                                  label = T("Level"),
-    #                                  multiple = False,
-    #                                  # Not translateable
-    #                                  #represent = "%(name)s",
-    #                                  ),
-    #                  S3LocationFilter("location_id",
-    #                                   levels = levels,
-    #                                   ),
-    #                  ]
+    # Default parameter filter
+    def default_parameter_filter(selector, tablename=None):
+        ptable = s3db.stats_parameter
+        query = (ptable.deleted == False) & \
+                (ptable.name == "Population Total")
+        row = current.db(query).select(ptable.parameter_id,
+                                       limitby = (0, 1)).first()
+        if row:
+            return row.parameter_id
+        else:
+            return None
 
-    # Sum doesn't make sense for this data as it's already cumulative
-    report_options = s3db.get_config(tablename, "report_options")
-    report_options.fact = [(T("Value"), "max(value)")]
-    report_options.defaults.fact = "max(value)"
-
-    #report_options = Storage(rows = location_fields + ["month"],
-    #                         cols = ["parameter_id"],
-    #                         fact = [(T("Value"), "max(value)"),
-    #                                 ],
-    #                         defaults = Storage(rows = "location_id",
-    #                                            cols = "parameter_id",
-    #                                            fact = "max(value)",
-    #                                            totals = True,
-    #                                            chart = "breakdown:rows",
-    #                                            table = "collapse",
-    #                                            )
-    #                         )
-
-    #s3db.configure(tablename,
-    #               filter_widgets = filter_widgets,
-    #               report_options = report_options,
-    #               )
+    # Set filter defaults
+    resource = r.resource
+    filter_widgets = resource.get_config("filter_widgets", [])
+    for filter_widget in filter_widgets:
+        if filter_widget.field == "parameter_id":
+            filter_widget.opts.default = default_parameter_filter
+        elif filter_widget.field == "location_id$level":
+            filter_widget.opts.default = "L1"
+        elif filter_widget.field == "year":
+            filter_widget.opts.default = 2004
 
 settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 
+# -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py
 settings.modules = OrderedDict([
@@ -344,6 +368,11 @@ settings.modules = OrderedDict([
     ("hms", Storage(
         name_nice = T("Hospitals"),
         #description = "Helps to monitor status of hospitals",
+        restricted = True,
+        module_type = 10
+    )),
+    ("dvi", Storage(
+        name_nice = T("Burials"),
         restricted = True,
         module_type = 10
     )),

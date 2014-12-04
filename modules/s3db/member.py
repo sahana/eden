@@ -495,22 +495,20 @@ class S3MembersModel(S3Model):
             Member record duplicate detection, used for the deduplicate hook
         """
 
-        if item.tablename == "member_membership":
+        data = item.data
+        person_id = data.get("person_id")
+        organisation_id = data.get("organisation_id")
 
-            data = item.data
-            person_id = "person_id" in data and data.person_id or None
-            organisation_id = "organisation_id" in data and data.organisation_id or None
-
-            table = item.table
-            # 1 Membership record per Person<>Organisation
-            query = (table.deleted != True) & \
-                    (table.person_id == person_id) & \
-                    (table.organisation_id == organisation_id)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        # 1 Membership record per Person<>Organisation
+        query = (table.deleted != True) & \
+                (table.person_id == person_id) & \
+                (table.organisation_id == organisation_id)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -519,22 +517,20 @@ class S3MembersModel(S3Model):
             Membership Type duplicate detection, used for the deduplicate hook
         """
 
-        if item.tablename == "member_membership_type":
+        data = item.data
+        name = data.get("name")
+        organisation_id = data.get("organisation_id")
 
-            data = item.data
-            name = "name" in data and data.name or None
-            organisation_id = "organisation_id" in data and data.organisation_id or None
-
-            table = item.table
-            # 1 Membership Type per Name<>Organisation
-            query = (table.deleted != True) & \
-                    (table.name == name) & \
-                    (table.organisation_id == organisation_id)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        # 1 Membership Type per Name<>Organisation
+        query = (table.deleted != True) & \
+                (table.name == name) & \
+                (table.organisation_id == organisation_id)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def member_rheader(r, tabs=[]):

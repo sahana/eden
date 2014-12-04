@@ -967,22 +967,21 @@ class HospitalDataModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "hms_hospital":
-            data = item.data
-            #org = "organisation_id" in data and data.organisation_id
-            address = "address" in data and data.address
+        data = item.data
+        #org = data.get("organisation_id")
+        address = data.get("address")
 
-            table = item.table
-            query = (table.name == data.name)
-            #if org:
-            #    query = query & (table.organisation_id == org)
-            if address:
-                query = query & (table.address == address)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == data.name)
+        #if org:
+        #    query = query & (table.organisation_id == org)
+        if address:
+            query = query & (table.address == address)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -995,28 +994,27 @@ class HospitalDataModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hms_hospital_tag_deduplicate(job):
+    def hms_hospital_tag_deduplicate(item):
         """
-           If the record is a duplicate then it will set the job method to update
+           If the record is a duplicate then it will set the item method to update
         """
 
-        if job.tablename == "hms_hospital_tag":
-            table = job.table
-            data = job.data
-            tag = data.get("tag", None)
-            hospital_id = data.get("hospital_id", None)
+        data = item.data
+        tag = data.get("tag", None)
+        hospital_id = data.get("hospital_id", None)
 
-            if not tag or not hospital_id:
-                return
+        if not tag or not hospital_id:
+            return
 
-            query = (table.tag.lower() == tag.lower()) & \
-                    (table.hospital_id == hospital_id)
+        table = item.table
+        query = (table.tag.lower() == tag.lower()) & \
+                (table.hospital_id == hospital_id)
 
-            _duplicate = current.db(query).select(table.id,
-                                                  limitby=(0, 1)).first()
-            if _duplicate:
-                job.id = _duplicate.id
-                job.method = job.METHOD.UPDATE
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1357,7 +1355,7 @@ def hms_hospital_rheader(r, tabs=[]):
                 if settings.has_module("hrm"):
                     STAFF = settings.get_hrm_staff_label()
                     tabs.append((STAFF, "human_resource"))
-                    permit = current.auth.s3_has_permission 
+                    permit = current.auth.s3_has_permission
                     if permit("update", tablename, r.id) and \
                        permit("create", "hrm_human_resource_site"):
                         tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))

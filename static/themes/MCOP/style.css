@@ -289,15 +289,23 @@ h2 {
     padding: 2px 3px;
 }
 
-.media-body {
-    clear: left;
-}
-
 .edit-bar {
     position: static;
 }
+
+.dl-row {
+    padding-right: 12px;
+}
+
 .dl-1-cols {
-    width: 96%;
+    width: 100%;
+}
+
+
+
+.card-holder {
+    display: block;
+    width: auto;
 }
 
 .s3_add_resource_link,
@@ -350,4 +358,9 @@ h2 {
      -moz-transition: background-position 0.1s linear;
        -o-transition: background-position 0.1s linear;
           transition: background-position 0.1s linear;
+}
+
+/* Incidents profile Header */
+.profile-header .attachments {
+    margin-top: -20px;
 }

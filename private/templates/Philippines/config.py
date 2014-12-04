@@ -15,8 +15,8 @@ from gluon.validators import IS_NOT_EMPTY
 from s3.s3fields import S3Represent
 from s3.s3query import FS
 from s3.s3utils import S3DateTime, s3_auth_user_represent_name, s3_avatar_represent
-from s3.s3validators import IS_LOCATION_SELECTOR2, IS_ONE_OF
-from s3.s3widgets import S3LocationSelectorWidget2
+from s3.s3validators import IS_LOCATION, IS_ONE_OF
+from s3.s3widgets import S3LocationSelector
 from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
 T = current.T
@@ -119,7 +119,7 @@ settings.L10n.thousands_separator = ","
 # Restrict the Location Selector to just certain countries
 settings.gis.countries = ["PH"]
 
-# Until we add support to LocationSelector2 to set dropdowns from LatLons
+# Until we add support to S3LocationSelector to set dropdowns from LatLons
 #settings.gis.check_within_parent_boundaries = False
 # Uncomment to hide Layer Properties tool
 #settings.gis.layer_properties = False
@@ -173,7 +173,7 @@ settings.search.filter_manager = False
 
 # Filter forms - style for Summary pages
 #def filter_formstyle(row_id, label, widget, comment, hidden=False):
-#    return DIV(label, widget, comment, 
+#    return DIV(label, widget, comment,
 #               _id=row_id,
 #               _class="horiz_filter_form")
 
@@ -431,7 +431,7 @@ def render_locations(list_id, item_id, resource, rfields, record):
         @param rfields: the S3ResourceFields to render
         @param record: the record as dict
     """
-    
+
     record_id = record["gis_location.id"]
     item_class = "thumbnail"
 
@@ -1512,7 +1512,7 @@ def customise_gis_location_controller(**attr):
                 name = location.name
                 s3db.configure("gis_location",
                                list_fields = list_fields,
-                               profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["gis_location"].title_list,
                                                             name),
                                profile_header = DIV(edit_btn,
                                                     A(IMG(_class="media-object",
@@ -1611,12 +1611,12 @@ def customise_hrm_job_title_controller(**attr):
     s3 = current.response.s3
 
     table = current.s3db.hrm_job_title
-    
+
     # Configure fields
     field = table.organisation_id
     field.readable = field.writable = False
     field.default = None
-    
+
     # Custom postp
     standard_postp = s3.postp
     def custom_postp(r, output):
@@ -1817,10 +1817,11 @@ def customise_org_facility_controller(**attr):
             else:
                 # Don't add new Locations here
                 location_field.comment = None
-                location_field.requires = IS_LOCATION_SELECTOR2(levels=levels)
-                location_field.widget = S3LocationSelectorWidget2(levels=levels,
-                                                                  show_address=True,
-                                                                  show_map=True)
+                location_field.requires = IS_LOCATION()
+                location_field.widget = S3LocationSelector(levels=levels,
+                                                           show_address=True,
+                                                           show_map=True,
+                                                           )
 
             # @ToDo: Proper button if we want this & amend functionality for Bootstrap)
             #s3.cancel = True
@@ -1853,7 +1854,7 @@ def customise_org_facility_controller(**attr):
                                     hidden = True,
                                     ),
                     ]
-                    
+
                 #get_vars = current.request.get_vars
                 #goods = get_vars.get("needs.goods", None)
                 #vol = get_vars.get("needs.vol", None)
@@ -2022,7 +2023,7 @@ def customise_org_facility_controller(**attr):
 
                 s3db.configure(tablename,
                                list_fields = list_fields,
-                               profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["org_facility"].title_list,
                                                             name),
                                profile_header = DIV(edit_btn,
                                                     IMG(_class="media-object",
@@ -2337,7 +2338,7 @@ def customise_org_organisation_controller(**attr):
                 else:
                     edit_btn = ""
                 s3db.configure("org_organisation",
-                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list, 
+                               profile_title = "%s : %s" % (s3.crud_strings["org_organisation"].title_list,
                                                             record.name),
                                profile_header = DIV(edit_btn,
                                                     IMG(_class="media-object",
@@ -2420,7 +2421,7 @@ def customise_org_organisation_controller(**attr):
             table.region_id.readable = table.region_id.writable = False
             table.country.readable = table.country.writable = False
             table.year.readable = table.year.writable = False
-            
+
             # Return to List view after create/update/delete (unless done via Modal)
             url_next = URL(c="org", f="organisation", args="datalist")
 
@@ -2886,7 +2887,7 @@ def customise_req_req_controller(**attr):
             else:
                 # @ToDo: Placeholder
                 logo = "#"
-                
+
             s3db.configure("req_req",
                            profile_title = s3.crud_strings["req_req"].title_list,
                            profile_header = DIV(edit_btn,

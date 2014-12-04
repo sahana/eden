@@ -172,8 +172,6 @@ class S3Report(S3Method):
 
             tablename = resource.tablename
 
-            output["title"] = self.crud_string(tablename, "title_report")
-
             # Filter widgets
             if show_filter_form:
                 advanced = False
@@ -209,13 +207,18 @@ class S3Report(S3Method):
                                                 representation="json",
                                                 vars=ajax_vars))
 
-            output["form"] = S3ReportForm(resource) \
-                                    .html(pivotdata,
-                                          get_vars = get_vars,
-                                          filter_widgets = filter_widgets,
-                                          ajaxurl = ajaxurl,
-                                          filter_url = filter_url,
-                                          widget_id = widget_id)
+            output = S3ReportForm(resource).html(pivotdata,
+                                                 get_vars = get_vars,
+                                                 filter_widgets = filter_widgets,
+                                                 ajaxurl = ajaxurl,
+                                                 filter_url = filter_url,
+                                                 widget_id = widget_id)
+
+            output["title"] = self.crud_string(tablename, "title_report")
+            output["report_type"] = "pivottable"
+
+            # Detect and store theme-specific inner layout
+            self._view(r, "pivottable.html")
 
             # View
             response.view = self._view(r, "report.html")
@@ -534,6 +537,13 @@ class S3Report(S3Method):
                                                  filter_tab = filter_tab,
                                                  widget_id = widget_id)
 
+            # Detect and store theme-specific inner layout
+            view = self._view(r, "pivottable.html")
+
+            # Render inner layout (outer page layout is set by S3Summary)
+            output["title"] = None
+            output = XML(current.response.render(view, output))
+
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
 
@@ -608,47 +618,26 @@ class S3ReportForm(object):
         else:
             submit = ""
 
-        # General layout (@todo: make configurable)
-        form = DIV(DIV(FORM(filter_options,
-                            report_options,
-                            submit,
-                            hidden = hidden,
-                            _class = "pt-form",
-                            _id = "%s-pt-form" % widget_id,
-                            ),
-                       _class="pt-form-container form-container",
-                       ),
-                   DIV(IMG(_src=throbber,
-                           _alt=current.T("Processing"),
-                           _class="pt-throbber"),
-                       DIV(DIV(_class="pt-chart-controls"),
-                           DIV(DIV(_class="pt-hide-chart"),
-                               DIV(_class="pt-chart-title"),
-                               DIV(_class="pt-chart"),
-                               _class="pt-chart-contents"
-                           ),
-                           _class="pt-chart-container"
-                       ),
-                       DIV(hide,
-                           _class="pt-toggle-table pt-hide-table"),
-                       DIV(show,
-                           _class="pt-toggle-table pt-show-table"),
-                       DIV(DIV(_class="pt-table-controls"),
-                           DIV(DIV(_class="pt-table"),
-                               _class="pt-table-contents"
-                           ),
-                           _class="pt-table-container"
-                       ),
-                       DIV(empty, _class="pt-empty"),
-                   ),
-                   _class="pt-container",
-                   _id=widget_id
-               )
+        # Form
+        form = FORM(filter_options,
+                    report_options,
+                    submit,
+                    hidden = hidden,
+                    _class = "pt-form",
+                    _id = "%s-pt-form" % widget_id,
+                    )
 
-        # Settings
+        # View variables
+        output = {"form": form,
+                  "throbber": throbber,
+                  "hide": hide,
+                  "show": show,
+                  "empty": empty,
+                  "widget_id": widget_id,
+                  }
+
+        # Script options
         settings = current.deployment_settings
-
-        # Default options
         opts = {
             #"renderFilter": True,
             #"collapseFilter": False,
@@ -677,7 +666,6 @@ class S3ReportForm(object):
             "thousandGrouping": settings.get_L10n_thousands_grouping(),
             "textAll": str(T("All")),
         }
-
         chart_opt = get_vars["chart"]
         if chart_opt is not None:
             if str(chart_opt).lower() in ("0", "off", "false"):
@@ -706,7 +694,7 @@ class S3ReportForm(object):
             script = "/%s/static/scripts/d3/nv.d3.js" % appname
             if script not in scripts:
                 scripts.append(script)
-            script = "/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.pivottable.js" % appname
             if script not in scripts:
                 scripts.append(script)
         else:
@@ -722,7 +710,7 @@ class S3ReportForm(object):
 
         s3.jquery_ready.append(script)
 
-        return form
+        return output
 
     # -------------------------------------------------------------------------
     def report_options(self, get_vars=None, widget_id="pivottable"):
@@ -743,73 +731,85 @@ class S3ReportForm(object):
         resource = self.resource
         get_config = resource.get_config
         options = get_config("report_options")
-        report_formstyle = get_config("report_formstyle", None)
 
+        # Specific formstyle?
+        settings = current.deployment_settings
+        formstyle = settings.get_ui_report_formstyle()
+        # Fall back to inline-variant of current formstyle
+        if formstyle is None:
+            formstyle = settings.get_ui_inline_formstyle()
+
+        # Helper for labels
         label = lambda s, **attr: LABEL("%s:" % s, **attr)
 
-        if report_formstyle:
-            # @ToDo: Full formstyle support
-            selectors = DIV()
-        else:
-            selectors = TABLE()
+        formfields = []
 
         # Layer selector
         layer_id = "%s-fact" % widget_id
-        layer, single = self.layer_options(options=options,
-                                           get_vars=get_vars,
-                                           widget_id=layer_id)
-        single_opt = {"_class": "pt-fact-single-option"} if single else {}
-        if layer:
-            selectors.append(TR(TD(label(FACT, _for=layer_id)),
-                                TD(layer),
-                                **single_opt
-                               )
-                             )
+        layer_widget = self.layer_options(options=options,
+                                          get_vars=get_vars,
+                                          widget_id=layer_id)
+        formfields.append((layer_id + "-row",
+                           label(FACT, _for=layer_id),
+                           layer_widget,
+                           "",
+                           ))
 
         # Rows/Columns selectors
         axis_options = self.axis_options
         rows_id = "%s-rows" % widget_id
         cols_id = "%s-cols" % widget_id
-        select_rows = axis_options("rows",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=rows_id)
-        select_cols = axis_options("cols",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=cols_id)
-
-        selectors.append(TR(TD(label(ROWS, _for=rows_id)),
-                            TD(select_rows),
-                            TD(label(COLS, _for=cols_id)),
-                            TD(select_cols)
-                           )
-                        )
+        rows_options = axis_options("rows",
+                                    options=options,
+                                    get_vars=get_vars,
+                                    widget_id=rows_id)
+        cols_options = axis_options("cols",
+                                    options=options,
+                                    get_vars=get_vars,
+                                    widget_id=cols_id)
+        axis_widget = DIV(rows_options,
+                          label(COLS, _for=cols_id),
+                          cols_options,
+                          _class="pt-axis-options",
+                          )
+        formfields.append(("%s-axis-row" % widget_id,
+                           label(ROWS, _for=rows_id),
+                           axis_widget,
+                           "",
+                           ))
 
         # Show Totals switch
-        show_totals_id = "%s-totals" % widget_id
         show_totals = True
         if get_vars and "totals" in get_vars and \
            str(get_vars["totals"]).lower() in ("0", "false", "off"):
             show_totals = False
         self.show_totals = show_totals
 
-        selectors.append(TR(TD(label(SHOW_TOTALS, _for=show_totals_id)),
-                            TD(INPUT(_type="checkbox",
-                                     _id=show_totals_id,
-                                     _name="totals",
-                                     _class="pt-totals",
-                                     value=show_totals
-                                    )
-                              ),
-                            _class = "pt-show-totals-option"
-                           )
-                         )
+        show_totals_id = "%s-totals" % widget_id
+        totals_widget = INPUT(_type="checkbox",
+                              _id=show_totals_id,
+                              _name="totals",
+                              _class="pt-totals",
+                              value=show_totals
+                              )
 
-        # Render field set
+        formfields.append(("%s-show-totals-row" % widget_id,
+                           label(SHOW_TOTALS, _for=show_totals_id),
+                           totals_widget,
+                           "",
+                           ))
+
+        try:
+            widgets = formstyle(FIELDSET(), formfields)
+        except:
+            # Old style (should be avoided)
+            widgets = TAG[""]([formstyle(*formfield) for formfield in formfields])
+
+        # Render fieldset
         fieldset = self._fieldset(T("Report Options"),
-                                  selectors,
+                                  widgets,
                                   _id="%s-options" % widget_id)
+
         return fieldset
 
     # -------------------------------------------------------------------------
@@ -1001,8 +1001,8 @@ class S3ReportForm(object):
                              INPUT(_type="hidden",
                                    _id=widget_id,
                                    _name=widget_id,
-                                   _value=default[0]))
-            single = True
+                                   _value=default[0],
+                                   _class="pt-fact-single-option"))
         else:
             # Render Selector
             dummy_field = Storage(name="fact",
@@ -1012,9 +1012,8 @@ class S3ReportForm(object):
                                           _id=widget_id,
                                           _name="fact",
                                           _class="pt-fact")
-            single = False
 
-        return widget, single
+        return widget
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -1,4 +1,7 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='table-container'>
-{{try:}}{{=form}}{{except:}}{{pass}}
-</div>
+{{try:}}{{if title:}}{{=H2(title)}}{{pass}}{{except:}}{{pass}}
+{{try:}}{{report_type}}{{except:}}{{report_type="pivottable"}}{{pass}}
+{{if report_type == "pivottable":}}
+{{include response.s3.views.get("pivottable.html", "_pivottable.html")}}
+{{elif report_type == "timeplot":}}
+{{include response.s3.views.get("timeplot.html", "_timeplot.html")}}
+{{pass}}

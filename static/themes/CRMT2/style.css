@@ -13,17 +13,20 @@ header.row {
   padding-bottom: 0; }
 
 /* Added Manually */
+
+/* Fix the bad style on Filter Search */
+.button.postfix {
+    margin-top: 2px;
+}
+.button.postfix i {
+    margin: 0;
+}
+
 /* Not considered in Theme */
 .row.alert-space {
     padding: 0;
 }
 
-.map_home {
-    margin: 0;
-}
-.gis_fullscreen_map-btn {
-    display: none;
-}
 .x-btn button {
     background-color: #f0f0f0;
 }
@@ -85,14 +88,23 @@ table.dataTable tr.odd {
     margin: 0 0 1rem;
     padding: 0.5625rem 0;
 }
-.dataTables_length { /* Mimic subheader */
+.dataTables_length {
     float: left !important;
+}
+.dataTables_length label { /* Mimic subheader */
     color: #6f6f6f;
     font-weight: normal;
     line-height: 1.4;
     margin-bottom: 0.5rem;
     margin-top: 0.2rem;
 }
+.form-container form .dataTables_length label select {
+    font-family: Lato,"Helvetica Neue",Helvetica,Roboto,Arial,sans-serif;
+    font-size: 0.875rem;
+    margin: 0 0 1rem;
+    padding: 0.5rem;
+}
+
 div.dataTables_length {
     padding-top: 0;
 }
@@ -191,6 +203,214 @@ table.dataTable .action-btn.read:before {
     height: 40px;
     width: 42px;
 } */
+
+/* Share Maps page */
+.no-overflow {
+    overflow: visible;
+}
+.dl {
+    background: none repeat scroll 0 0 #fff;
+    padding: 24px;
+}
+div.dl {
+    border-bottom: 0;
+}
+.dl-row {
+    border-top: 0;
+}
+.dl-row.even,
+.dl-row.even .dl-item,
+.dl-row.odd,
+.dl-row.odd .dl-item {
+    background-color: inherit;
+}
+.form-container form {
+    background-color: inherit;
+    border: 0;
+    padding: 0;
+}
+.form-container form tr td {
+    padding: 0;
+}
+#config-gis_config_pe_id-options-filter__row {
+    padding-left: 0;
+}
+#config-gis_config_pe_id-options-filter__row table.s3-groupedopts-widget {
+    background-color: #efefef;
+    margin-bottom: 0;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget td:first-child {
+    border-right: 0;
+    padding: 0;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget label {
+    background-color: #fff;
+    font-size: 1rem;
+    margin: 0;
+    padding: 1rem 2rem;
+    white-space: nowrap;
+}
+#config-gis_config_pe_id-options-filter__row .s3-groupedopts-widget label.inactive {
+    background-color: #efefef;
+}
+
+/* Share Stories page */
+.blog .dl {
+    background-color: inherit;
+    padding: 0;
+}
+aside .form-container {
+    overflow: visible;
+}
+aside .form-container form {
+    background-color: inherit;
+    border: 0;
+    padding: 0;
+}
+aside .form-container .medium-offset-2 {
+    margin-left: 0 !important;
+    width: 100%;
+}
+aside .form-container .inline-tooltip {
+    width: 0;
+}
+aside .form-container table {
+    background-color: inherit;
+}
+aside .form-container table label {
+    color: #04a4a4;
+    font-size: 1rem;
+}
+aside .form-container table label:hover,
+aside .form-container table label:focus {
+    color: #038d8d;
+}
+aside .form-container input[type="radio"] {
+    display: none;
+}
+aside .form-container input[type=radio] + label:before {
+    content: "";
+    display: inline-block;
+    width: 6px; 
+    height: 6px;
+    vertical-align: middle;
+    margin-right: 8px;
+    background-color: #444;
+    box-shadow: inset 0px 2px 2px rgba(0, 0, 0, .3);
+    border-radius: 5px;
+}
+
+/* Inline Components */
+.inline-actions > div {
+    float: left;
+    margin-left: 6px;
+}
+.inline-form button.ui-multiselect {
+    margin-bottom: 0;
+}
+.embeddedComponent {
+    margin-bottom: 1.25rem;
+}
+
+/* DatePicker */
+.date.string.hasDatepicker {
+    display: inline;
+    max-width: 12rem;
+}
+.ui-datepicker-trigger {
+    padding: 0;
+}
+
+/* Override widget.css .expanded-selector for top bar */
+.top-bar .expanded {
+    float: none;
+    width: auto;
+}
+
+/* Apply theme styles for multiselect to the right selector */
+.ui-multiselect {
+    -webkit-appearance: none !important;
+    -webkit-border-radius: 0px;
+    background-color: #FAFAFA;
+    background-position: 100% center;
+    background-repeat: no-repeat;
+    border: 1px solid #cccccc;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: normal;
+    border-radius: 0;
+    height: 2.3125rem;
+    display: block;
+    text-align: left;
+}
+/* Force multiselect button to adapt to grid */
+.columns > .ui-multiselect {
+    width: 100% !important;
+}
+/* Restore textarea resizability in forms (override ext-all-notheme.css) */
+.form-row textarea {
+    resize: both;
+}
+/* Add some spacing between submit buttons */
+.form-row .button {
+    margin-right: 0.175rem;
+}
+
+/* Style adjustments for slick slider */
+.slick-prev,
+.slick-next {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+.slick-prev {
+    left: -25%;
+}
+.slick-next {
+    right: -25%;
+}
+.slick-prev:before,
+.slick-next:before {
+    font-family: "foundation-icons";
+    font-size: 2.5rem;
+    padding-right: 5px;
+    padding-left: 5px;
+    background-color: #04A4A4;
+    color: white;
+    border-radius: 100%;
+    opacity:1;
+}
+.slick-prev:hover:before,
+.slick-next:hover:before {
+    background-color: #37518B;
+}
+.slick-prev:before { 
+    content: "\f10a"; 
+}
+.slick-next:before { 
+    content: "\f10b"; 
+}
+.slick-dots {
+    position:static;
+    margin-top:20px;
+    margin-left:0;
+}
+.slick-dots li button:before {
+    font-size: 0.7rem;
+    opacity: 1;
+    color: #37518B;
+}
+.slick-slide,
+.slick-dots li.slick-active button:before {
+    color: #EEEEEE;
+}
+.slick-slide {
+    color: #EEEEEE;
+}
+.slick-slide img {
+    border: 5px solid white;
+}
 
 /* END */
 

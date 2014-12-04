@@ -32,7 +32,7 @@
             </div>
             {{else:}}
             <div class='span2'>
-              <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/pr/person/{{=auth.user.id}}'>
+              <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/pr/person/{{=s3_logged_in_person()}}'>
                 <i class='icon-user icon-white'></i> {{=T("Profile")}}
               </a>
             </div>

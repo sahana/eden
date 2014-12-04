@@ -69,6 +69,7 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
      *  Initializes the catalogue search panel.
      */
     initComponent: function() {
+        var me = this;
         this.addEvents(
             /** api: event[addlayer]
              *  Fires when a layer needs to be added to the map.
@@ -86,13 +87,23 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
         for (var key in this.sources) {
             sourceComboData.push([key, this.sources[key].title]);
         }
-        if (sourceComboData.length === 1) {
+        if (sourceComboData.length >= 1) {
             this.selectedSource = sourceComboData[0][0];
         }
         var filterOptions = [['datatype', 'data type'], ['extent', 'spatial extent'], ['category', 'category']];
         if (sourceComboData.length > 1) {
             filterOptions.push(['csw', 'data source']);
         }
+        this.sources[this.selectedSource].store.on('loadexception', function(proxy, o, response, e) {
+            if (response.success()) {
+                Ext.Msg.show({
+                    title: e.message,
+                    msg: gxp.util.getOGCExceptionText(e.arg.exceptionReport),
+                    icon: Ext.MessageBox.ERROR,
+                    buttons: Ext.MessageBox.OK
+                });
+            }
+        });
         this.items = [{
             xtype: 'form',
             border: false,
@@ -107,7 +118,15 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
                     emptyText: this.searchFieldEmptyText,
                     ref: "../../search",
                     name: "search",
-                    width: 300
+                    listeners: {
+                         specialkey: function(field, e) {
+                             if (e.getKey() == e.ENTER) {
+                                 this.performQuery();
+                             }
+                         },
+                         scope: this
+                    },
+                    width: 250
                 }, {
                     xtype: "button",
                     text: this.searchButtonText,
@@ -119,6 +138,7 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
                 collapsible: true,
                 collapsed: true,
                 hideLabels: false,
+                hidden: true,
                 title: this.advancedTitle,
                 items: [{
                     xtype: 'gxp_cswfilterfield',
@@ -227,50 +247,89 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
                             btn.ownerCt.items.each(function(item) {
                                 if (item.getXType() === "combo") {
                                     var id = item.getValue();
-                                    this.form.getForm().findField(id).show();
+                                    item.clearValue();
+                                    var field = this.form.getForm().findField(id);
+                                    if (field) {
+                                        field.show();
+                                    }
                                 }
                             }, this);
                         },
                         scope: this
                     }]
                 }]
-            }]
-        }, {
-            xtype: "grid",
-            border: false,
-            ref: "grid",
-            bbar: new Ext.PagingToolbar({
-                paramNames: {
-                    start: 'startPosition', 
-                    limit: 'maxRecords'
-                },
-                store: this.sources[this.selectedSource].store,
-                pageSize: this.maxRecords
-            }),
-            loadMask: true,
-            hideHeaders: true,
-            store: this.sources[this.selectedSource].store,
-            columns: [{
-                id: 'title', 
-                xtype: "templatecolumn", 
-                tpl: new Ext.XTemplate('<b>{title}</b><br/>{abstract}'), 
-                sortable: true
             }, {
-                xtype: "actioncolumn",
-                width: 30,
-                items: [{
-                    iconCls: "gxp-icon-addlayers",
-                    tooltip: this.addMapTooltip,
-                    handler: function(grid, rowIndex, colIndex) {
-                        var rec = this.grid.store.getAt(rowIndex);
-                        this.addLayer(rec);
+                xtype: "grid",
+                width: '100%', 
+                anchor: '99%',
+                viewConfig: {
+                    scrollOffset: 0,
+                    forceFit: true
+                },
+                border: false,
+                ref: "../grid",
+                bbar: new Ext.PagingToolbar({
+                    listeners: {
+                        'beforechange': function(tb, params) {
+                            var delta = me.sources[me.selectedSource].getPagingStart();
+                            if (params.startPosition) {
+                                params.startPosition += delta;
+                            }
+                        }
                     },
-                    scope: this
-                }]
-            }],
-            autoExpandColumn: 'title',
-            width: 400,
-            height: 300
+                    /* override to support having a different value than 0 for the start */
+                    onLoad : function(store, r, o) {
+                        var delta = me.sources[me.selectedSource].getPagingStart();
+                        if(!this.rendered){
+                            this.dsLoaded = [store, r, o];
+                            return;
+                        }
+                        var p = this.getParams();
+                        this.cursor = (o.params && o.params[p.start]) ? o.params[p.start]-delta : 0;
+                        var d = this.getPageData(), ap = d.activePage, ps = d.pages;
+                        this.afterTextItem.setText(String.format(this.afterPageText, d.pages));
+                        this.inputItem.setValue(ap);
+                        this.first.setDisabled(ap == 1);
+                        this.prev.setDisabled(ap == 1);
+                        this.next.setDisabled(ap == ps);
+                        this.last.setDisabled(ap == ps);
+                        this.refresh.enable();
+                        this.updateInfo();
+                        this.fireEvent('change', this, d);
+                    },
+                    paramNames: this.sources[this.selectedSource].getPagingParamNames(),
+                    store: this.sources[this.selectedSource].store,
+                    pageSize: this.maxRecords
+                }),
+                loadMask: true,
+                hideHeaders: true,
+                store: this.sources[this.selectedSource].store,
+                columns: [{
+                    id: 'title',
+                    xtype: "templatecolumn", 
+                    tpl: new Ext.XTemplate('<b>{title}</b><br/>{abstract}'), 
+                    sortable: true
+                }, {
+                    xtype: "actioncolumn",
+                    width: 30,
+                    items: [{
+                        getClass: function(v, meta, rec) {
+                            if (this.findWMS(rec.get("URI")) !== false || 
+                                this.findWMS(rec.get("references")) !== false) {
+                                    return "gxp-icon-addlayers";
+                            }
+                        },
+                        tooltip: this.addMapTooltip,
+                        handler: function(grid, rowIndex, colIndex) {
+                            var rec = this.grid.store.getAt(rowIndex);
+                            this.addLayer(rec);
+                        },
+                        scope: this
+                    }]
+                }],
+                autoExpandColumn: 'title',
+                autoHeight: true
+            }] 
         }];
         gxp.CatalogueSearchPanel.superclass.initComponent.apply(this, arguments);
     },
@@ -297,64 +356,15 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
     },
 
     /** private: method[performQuery]
-     *  Query the CS-W and show the results.
+     *  Query the Catalogue and show the results.
      */
     performQuery: function() {
-        var store = this.grid.store;
-        var searchValue = this.search.getValue();
-        var filter = undefined;
-        if (searchValue !== "") {
-            filter = new OpenLayers.Filter.Comparison({
-                type: OpenLayers.Filter.Comparison.LIKE,
-                property: 'csw:AnyText',
-                value: '*' + searchValue + '*'
-            });
-        }
-        var data = {
-            "resultType": "results",
-            "maxRecords": this.maxRecords,
-            "Query": {
-                "typeNames": "gmd:MD_Metadata",
-                "ElementSetName": {
-                    "value": "full"
-                }
-            }
-        };
-        var fullFilter = this.getFullFilter(filter);
-        if (fullFilter !== undefined) {
-            Ext.apply(data.Query, {
-                "Constraint": {
-                    version: "1.1.0",
-                    Filter: fullFilter
-                }
-            });
-        }
-        // use baseParams so paging takes them into account
-        store.baseParams = data;
-        store.load();
-    },
-
-    /** private: method[getFullFilter]
-     *  :arg filter: ``OpenLayers.Filter`` The filter to add to the other existing 
-     *  filters. This is normally the free text search filter.
-     *  :returns: ``OpenLayers.Filter`` The combined filter.
-     *
-     *  Get the filter to use in the CS-W query.
-     */
-    getFullFilter: function(filter) {
-        var filters = [];
-        if (filter !== undefined) {
-            filters.push(filter);
-        }
-        filters = filters.concat(this.filters);
-        if (filters.length <= 1) {
-            return filters[0];
-        } else {
-            return new OpenLayers.Filter.Logical({
-                type: OpenLayers.Filter.Logical.AND,
-                filters: filters
-            });
-        }
+        var plugin = this.sources[this.selectedSource];
+        plugin.filter({
+            queryString: this.search.getValue(),
+            limit: this.maxRecords,
+            filters: this.filters
+        });
     },
 
     /** private: method[addFilter]
@@ -384,14 +394,31 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
      *  preferably.
      */
     findWMS: function(links) {
-        var url = null, name = null;
-        for (var i=0, ii=links.length; i<ii; ++i) {
-            var link = links[i];
-            if (link && link.toLowerCase().indexOf('service=wms') > 0) {
-                var obj = OpenLayers.Util.createUrlObject(link);
-                url = obj.protocol + "//" + obj.host + ":" + obj.port + obj.pathname;
-                name = obj.args.layers;
+        var protocols = [
+            'OGC:WMS-1.1.1-HTTP-GET-MAP',
+            'OGC:WMS'
+        ];
+        var url = null, name = null, i, ii, link;
+        // search for a protocol that matches WMS
+        for (i=0, ii=links.length; i<ii; ++i) {
+            link = links[i];
+            if (link.protocol && protocols.indexOf(link.protocol.toUpperCase()) !== -1 && link.value && link.name) {
+                url = link.value;
+                name = link.name;
                 break;
+            }
+        }
+        // if not found by protocol, try by inspecting the url
+        if (url === null) {
+            for (i=0, ii=links.length; i<ii; ++i) {
+                link = links[i];
+                var value = link.value ? link.value : link;
+                if (value.toLowerCase().indexOf('service=wms') > 0) {
+                    var obj = OpenLayers.Util.createUrlObject(value);
+                    url = obj.protocol + "//" + obj.host + ":" + obj.port + obj.pathname;
+                    name = obj.args.layers;
+                    break;
+                }
             }
         }
         if (url !== null && name !== null) {
@@ -412,6 +439,14 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
     addLayer: function(record) {
         var uri = record.get("URI");
         var bounds = record.get("bounds");
+        var bLeft = bounds.left,
+            bRight = bounds.right,
+            bBottom = bounds.bottom,
+            bTop = bounds.top;
+        var left = Math.min(bLeft, bRight),
+            right = Math.max(bLeft, bRight),
+            bottom = Math.min(bBottom, bTop),
+            top = Math.max(bBottom, bTop);
         var wmsInfo = this.findWMS(uri);
         if (wmsInfo === false) {
             // fallback to dct:references
@@ -421,8 +456,9 @@ gxp.CatalogueSearchPanel = Ext.extend(Ext.Panel, {
         if (wmsInfo !== false) {
             this.fireEvent("addlayer", this, this.selectedSource, Ext.apply({
                 title: record.get('title')[0],
-                bbox: bounds.toArray(),
-                srs: "EPSG:4326"
+                bbox: [left, bottom, right, top],
+                srs: "EPSG:4326",
+                projection: record.get('projection')
             }, wmsInfo));
         }
     }

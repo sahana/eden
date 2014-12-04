@@ -1,0 +1,26 @@
+{{extend "layout.html"}}
+<header class='row'>
+ <a href='{{=URL(c="gis", f="index")}}' class='button alert right'>{{=T("Make a Map")}}</a>
+ <h2 class='row-title'>{{=T("Maps")}}</h2>
+</header>
+<div class='row'>
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div class='small-8 columns'>
+    {{try:}}{{if list_filter_form:}}
+    <div id='list-filter' class='form-container no-overflow'>
+     {{=list_filter_form}}
+    </div>
+    {{pass}}
+    {{except:}}{{pass}}
+   </div>
+   <div class='small-4 columns'></div>
+  </div>
+  <div class='row'>
+   <div id='dl-container' class='small-12 columns'>
+    {{=items}}
+   </div>
+  </div>
+ </div>
+</div>
+{{include "dataLists.html"}}

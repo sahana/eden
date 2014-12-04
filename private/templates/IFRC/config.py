@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+
 try:
     # Python 2.7
     from collections import OrderedDict
 except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
-
-from datetime import timedelta
 
 from gluon import current
 from gluon.storage import Storage
@@ -204,11 +204,13 @@ settings.gis.geonames_username = "rms_dev"
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
+    #("fr", "Français"),
     ("km", "ភាសាខ្មែរ"),        # Khmer
     ("mn", "Монгол хэл"),   # Mongolian
     ("ne", "नेपाली"),          # Nepali
     ("prs", "دری"),         # Dari
     ("ps", "پښتو"),         # Pashto
+    #("th", "ภาษาไทย"),        # Thai
     ("vi", "Tiếng Việt"),   # Vietnamese
     ("zh-cn", "中文 (简体)"),
 ])
@@ -1017,12 +1019,21 @@ def customise_hrm_experience_controller(**attr):
 
     s3 = current.response.s3
 
+    root_org = current.auth.root_org_name()
+    vnrc = False
+    if root_org == VNRC:
+        vnrc = True
+
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep
         if callable(standard_prep):
             if not standard_prep(r):
                 return False
+
+        if vnrc:
+            department_id = r.table.department_id
+            department_id.readable = department_id.writable = True
 
         if r.controller == "deploy":
             # Popups in RDRT Member Profile
@@ -1359,9 +1370,47 @@ def customise_inv_warehouse_resource(r, tablename):
 settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
 # -----------------------------------------------------------------------------
+def member_membership_paid(row):
+    """
+        Simplified variant of the original function in s3db/member.py,
+        with just "paid" and "unpaid" as possible values
+    """
+
+    if hasattr(row, "member_membership"):
+        row = row.member_membership
+    try:
+        start_date = row.start_date
+    except AttributeError:
+        start_date = None
+    try:
+        paid_date = row.membership_paid
+    except AttributeError:
+        paid_date = None
+    if start_date:
+        T = current.T
+        PAID = T("paid")
+        UNPAID = T("unpaid")
+        now = current.request.utcnow.date()
+        if not paid_date:
+            due = datetime.date(start_date.year + 1, start_date.month, start_date.day)
+        else:
+            due = datetime.date(paid_date.year, start_date.month, start_date.day)
+            if due < paid_date:
+                due = datetime.date(paid_date.year + 1, due.month, due.day)
+        result = PAID if now < due else UNPAID
+    else:
+        result = current.messages["NONE"]
+    return result
+
+# -----------------------------------------------------------------------------
 def customise_member_membership_controller(**attr):
 
     tablename = "member_membership"
+
+    root_org = current.auth.root_org_name()
+    vnrc = False
+    if root_org == VNRC:
+        vnrc = True
 
     # Default Filter
     from s3 import s3_set_default_filter
@@ -1405,6 +1454,20 @@ def customise_member_membership_controller(**attr):
             if widget.field == "organisation_id":
                 widget.opts.hidden = False
                 break
+
+        if vnrc:
+            table = r.table
+            from gluon import Field
+            table["paid"] = Field.Method("paid", member_membership_paid)
+            filter_options = {T("paid"): T("paid"),
+                              T("unpaid"): T("unpaid"),
+                              }
+            filter_widgets = r.resource.get_config("filter_widgets")
+            if filter_widgets:
+                for filter_widget in filter_widgets:
+                    if filter_widget.field == "paid":
+                        filter_widget.opts.options = filter_options
+                        break
 
         return result
     s3.prep = custom_prep
@@ -1636,9 +1699,9 @@ def vol_active(person_id):
                                           orderby=htable.date)
     if programmes:
         # Ignore up to 3 months of records
-        three_months_prior = (now - timedelta(days=92))
+        three_months_prior = (now - datetime.timedelta(days=92))
         end = max(programmes.last().date, three_months_prior.date())
-        last_year = end - timedelta(days=365)
+        last_year = end - datetime.timedelta(days=365)
         # Is this the Volunteer's first year?
         if programmes.first().date > last_year:
             # Only start counting from their first month
@@ -1664,6 +1727,48 @@ def vol_active(person_id):
             return False
     else:
         return False
+
+# -----------------------------------------------------------------------------
+def vnrc_cv_form(r):
+
+    T = current.T
+    from s3 import S3FixedOptionsWidget
+    
+    ptewidget = S3FixedOptionsWidget(("Primary",
+                                      "Intermediate",
+                                      "Advanced",
+                                      "Bachelor",
+                                      ),
+                                     translate = True,
+                                     sort = False,
+                                     )
+
+    smewidget = S3FixedOptionsWidget(("Officer",
+                                      "Principal Officer",
+                                      "Senior Officer",
+                                      ),
+                                     translate = True,
+                                     sort = False,
+                                     )
+
+    from s3 import S3SQLCustomForm
+    crud_form = S3SQLCustomForm((T("Political Theory Education"),
+                                 "pte.value",
+                                 ptewidget,
+                                 ),
+                                 (T("State Management Education"),
+                                  "sme.value",
+                                  smewidget,
+                                 )
+                                )
+
+    current.s3db.configure("pr_person", crud_form=crud_form)
+
+    return dict(label = T("Other Education"),
+                type = "form",
+                tablename = "pr_person",
+                context = ("id", "id"),
+                )
 
 # -----------------------------------------------------------------------------
 def customise_pr_person_controller(**attr):
@@ -1694,19 +1799,47 @@ def customise_pr_person_controller(**attr):
         if root_org == CVTL:
             settings.member.cv_tab = True
     elif root_org == VNRC:
-
-        s3db.add_components("hrm_human_resource",
-                            hrm_insurance = ({"name": "social_insurance",
-                                              "joinby": "human_resource_id",
-                                              "filterby": "type",
-                                              "filterfor": "SOCIAL",
-                                              },
-                                             {"name": "health_insurance",
-                                              "joinby": "human_resource_id",
-                                              "filterby": "type",
-                                              "filterfor": "HEALTH",
-                                              }))
-
+        # Custom components
+        add_components = s3db.add_components
+        PTE_TAG = "PoliticalTheoryEducation"
+        SME_TAG = "StateManagementEducation"
+        add_components("pr_person",
+                       pr_identity = {"name": "idcard",
+                                      "joinby": "person_id",
+                                      "filterby": "type",
+                                      "filterfor": (2,),
+                                      "multiple": False,
+                                      },
+                       pr_person_tag = ({"name": "pte",
+                                         "joinby": "person_id",
+                                         "filterby": "tag",
+                                         "filterfor": (PTE_TAG,),
+                                         "multiple": False,
+                                         "defaults": {"tag": PTE_TAG,
+                                                      },
+                                         },
+                                        {"name": "sme",
+                                         "joinby": "person_id",
+                                         "filterby": "tag",
+                                         "filterfor": (SME_TAG,),
+                                         "multiple": False,
+                                         "defaults": {"tag": SME_TAG,
+                                                      },
+                                         },
+                                        ),
+                       )
+        add_components("hrm_human_resource",
+                       hrm_insurance = ({"name": "social_insurance",
+                                         "joinby": "human_resource_id",
+                                         "filterby": "type",
+                                         "filterfor": "SOCIAL",
+                                         },
+                                        {"name": "health_insurance",
+                                         "joinby": "human_resource_id",
+                                         "filterby": "type",
+                                         "filterfor": "HEALTH",
+                                         }),
+                       )
         vnrc = True
         # Remove 'Commune' level for Addresses
         #gis = current.gis
@@ -1720,11 +1853,7 @@ def customise_pr_person_controller(**attr):
         settings.hrm.use_skills = True
         settings.hrm.vol_experience = "both"
         settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-        try:
-            settings.modules.pop("asset")
-        except:
-            # Must be already removed
-            pass
+        settings.modules.pop("asset", None)
 
     if current.request.controller == "deploy":
         # Replace default title in imports:
@@ -1762,12 +1891,36 @@ def customise_pr_person_controller(**attr):
                                        filterby = "type",
                                        filter_opts = (4,),
                                        )
+        elif component_name == "physical_description":
+            from gluon import DIV
+            dtable = r.component.table
+            dtable.medical_conditions.comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Medical Conditions"),
+                                                                      T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
         elif r.method == "cv" or component_name == "education":
             if vnrc:
+                etable = s3db.pr_education
                 # Don't enable Legacy Freetext field
                 # Hide the 'Name of Award' field
-                field = s3db.pr_education.award
+                field = etable.award
                 field.readable = field.writable = False
+                # Limit education-level dropdown to specific options
+                field = s3db.pr_education.level_id
+                levels = ("Vocational School/ College",
+                          "Graduate",
+                          "Post graduate (Master's)",
+                          "Post graduate (Doctor's)",
+                          )
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(current.db, "pr_education_level.id",
+                                              field.represent,
+                                              filterby = "name",
+                                              filter_opts = levels,
+                                              ))
+                # Disallow adding of new education levels
+                field.comment = None
             elif arcs:
                 # Don't enable Legacy Freetext field
                 pass
@@ -1793,33 +1946,117 @@ def customise_pr_person_controller(**attr):
                 s3db.pr_person_details.father_name.label = T("Name of Grandfather")
 
         elif vnrc:
+            controller = r.controller
             if not r.component:
-                # Use a free-text version of religion field
-                field = s3db.pr_person_details.religion_other
-                field.label = T("Religion")
-                field.readable = field.writable = True
+                crud_fields = ["first_name",
+                               "middle_name",
+                               "last_name",
+                               "date_of_birth",
+                               "gender",
+                               "person_details.marital_status",
+                               "person_details.nationality",
+                               ]
+
+                from gluon import IS_EMPTY_OR, IS_IN_SET
+                from s3 import IS_ONE_OF
+                db = current.db
+                dtable = s3db.pr_person_details
+
+                # Context-dependend form fields
+                if controller in ("pr", "hrm", "vol"):
+                    # Provinces of Viet Nam
+                    ltable = s3db.gis_location
+                    ptable = ltable.with_alias("gis_parent_location")
+                    dbset = db((ltable.level == "L1") & \
+                            (ptable.name == "Viet Nam"))
+                    left = ptable.on(ltable.parent == ptable.id)
+                    vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
+                                                        "%(name)s",
+                                                        left=left,
+                                                        ))
+                    # Place Of Birth
+                    field = dtable.place_of_birth
+                    field.readable = field.writable = True
+                    field.requires = vn_provinces
+
+                    # Home Town
+                    field = dtable.hometown
+                    field.readable = field.writable = True
+                    field.requires = vn_provinces
+
+                    # Use a free-text version of religion field
+                    # @todo: make religion a drop-down list of options
+                    field = dtable.religion_other
+                    field.label = T("Religion")
+                    field.readable = field.writable = True
+
+                    crud_fields.extend(["person_details.place_of_birth",
+                                        "person_details.hometown",
+                                        "person_details.religion_other",
+                                        "person_details.mother_name",
+                                        "person_details.father_name",
+                                        "person_details.affiliations",
+                                        ])
+                else:
+                    # ID Card Number inline
+                    from s3 import S3SQLInlineComponent
+                    idcard_number = S3SQLInlineComponent("idcard",
+                                                         label = T("ID Card Number"),
+                                                         fields = (("", "value"),),
+                                                         default = {"type": 2,
+                                                                    },
+                                                         multiple = False,
+                                                         )
+                    # @todo: make ethnicity a drop-down list of options
+                    crud_fields.extend(["physical_description.ethnicity",
+                                        idcard_number,
+                                        ])
+
+                # Standard option for nationality
+                field = dtable.nationality
+                VN = "VN"
+                field.default = VN
+                vnrc_only = False
+                try:
+                    options = dict(field.requires.options())
+                except AttributeError:
+                    pass
+                else:
+                    opts = [VN]
+                    if r.record:
+                        # Get the nationality from the current record
+                        query = (r.table.id == r.id)
+                        left = dtable.on(dtable.person_id == r.id)
+                        row = db(query).select(dtable.nationality,
+                                               left = left,
+                                               limitby = (0, 1)).first()
+                        if row and row.nationality:
+                            opts.append(row.nationality)
+                        # Check wether this person is only VNRC-associated
+                        htable = s3db.hrm_human_resource
+                        otable = s3db.org_organisation
+                        query = (htable.person_id == r.id) & \
+                                (htable.deleted != True) & \
+                                (otable.id == htable.organisation_id) & \
+                                (otable.name != VNRC)
+                        row = db(query).select(htable.id, limitby=(0, 1)).first()
+                        if not row:
+                            vnrc_only = True
+                    opts = dict((k, options[k]) for k in opts if k in options)
+                    if vnrc_only:
+                        # Person is only associated with VNRC => enforce update,
+                        # and limit options to either current value or VN
+                        field.requires = IS_IN_SET(opts, zero=None)
+                    else:
+                        # Person is (also) associated with another org
+                        # => can't enforce update, so just limit options
+                        field.requires = IS_EMPTY_OR(IS_IN_SET(opts))
+
                 # Also hide some other fields
+                crud_fields.append("comments")
                 from s3 import S3SQLCustomForm
-                crud_form = S3SQLCustomForm("first_name",
-                                            "middle_name",
-                                            "last_name",
-                                            "date_of_birth",
-                                            #"initials",
-                                            #"preferred_name",
-                                            #"local_name",
-                                            "gender",
-                                            "person_details.marital_status",
-                                            "person_details.nationality",
-                                            "person_details.religion_other",
-                                            "person_details.mother_name",
-                                            "person_details.father_name",
-                                            #"person_details.occupation",
-                                            #"person_details.company",
-                                            "person_details.affiliations",
-                                            "comments",
-                                            )
                 s3db.configure("pr_person",
-                               crud_form = crud_form,
+                               crud_form = S3SQLCustomForm(*crud_fields),
                                )
             if r.method == "record" or component_name == "human_resource":
                 # Hide job_title_id in programme hours
@@ -1837,17 +2074,24 @@ def customise_pr_person_controller(**attr):
                     field = htable[fname]
                     field.readable = field.writable = False
 
-                if r.method == "record" and r.controller == "hrm":
+                if r.method == "record" and controller == "hrm":
                     # Custom config for method handler
 
                     from s3 import FS
-                    
+
                     # RC employment history
                     org_type_name = "organisation_id$organisation_organisation_type.organisation_type_id$name"
                     widget_filter = (FS(org_type_name) == "Red Cross / Red Crescent") & \
                                     (FS("organisation") == None)
                     org_experience = {"label": T("Red Cross Employment History"),
                                       "label_create": T("Add Employment"),
+                                      "list_fields": ["start_date",
+                                                      "end_date",
+                                                      "organisation",
+                                                      "department_id",
+                                                      "job_title",
+                                                      "employment_type",
+                                                      ],
                                       "filter": widget_filter,
                                       }
 
@@ -1859,14 +2103,13 @@ def customise_pr_person_controller(**attr):
                                                         "end_date",
                                                         "organisation",
                                                         "job_title",
-                                                        "comments",
                                                         ],
                                         "filter": widget_filter,
                                         }
 
-                    s3db.set_method("pr", "person",     
+                    s3db.set_method("pr", "person",
                                     method = "record",
-                                    action = s3db.hrm_Record(salary=True, 
+                                    action = s3db.hrm_Record(salary=True,
                                                              awards=True,
                                                              disciplinary_record=True,
                                                              org_experience=org_experience,
@@ -2009,11 +2252,22 @@ def customise_pr_person_controller(**attr):
                                               "end_date",
                                               ],
                                )
+                if r.method == "cv":
+                    # Customize CV
+                    s3db.set_method("pr", "person",
+                                    method = "cv",
+                                    action = s3db.hrm_CV(form=vnrc_cv_form))
+
             elif component_name == "salary":
                 stable = s3db.hrm_salary
                 stable.salary_grade_id.label = T("Grade Code")
                 field = stable.monthly_amount
                 field.readable = field.writable = False
+
+            elif component_name == "competency":
+                ctable = s3db.hrm_competency
+                # Hide confirming organisation (defaults to VNRC)
+                ctable.organisation_id.readable = False
 
         return True
     s3.prep = custom_prep

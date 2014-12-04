@@ -20,7 +20,9 @@ GeoExt.Lang.add("ca", {
         panelTitleText: "Títol",
         layerSelectionText: "Veure dades disponibles de:",
         doneText: "Fet",
-        uploadText: "Puja dades"
+        uploadText: "Puja dades",
+        addFeedActionMenuText: "Add feeds",
+        searchText: "Search for layers"
     },
     
     "gxp.plugins.BingSource.prototype": {
@@ -31,8 +33,13 @@ GeoExt.Lang.add("ca", {
     },    
 
     "gxp.plugins.FeatureEditor.prototype": {
+        splitButtonText: "Edit",
+        createFeatureActionText: "Create",
+        editFeatureActionText: "Modify",
         createFeatureActionTip: "Crea nou element",
-        editFeatureActionTip: "Edita element existent"
+        editFeatureActionTip: "Edita element existent",
+        commitTitle: "Commit message",
+        commitText: "Please enter a commit message for this edit:"
     },
     
     "gxp.plugins.FeatureGrid.prototype": {
@@ -41,8 +48,8 @@ GeoExt.Lang.add("ca", {
         previousPageTip: "Pàgina anterior",
         zoomPageExtentTip: "Ajusta vista a l'extensió de la pàgina",
         nextPageTip: "Pàgina següent",
-        nextPageTip: "Pàgina anterior",
-        totalMsg: "Total: {0} records"
+        lastPageTip: "Pàgina anterior",
+        totalMsg: "Features {1} to {2} of {0}"
     },
 
     "gxp.plugins.GoogleEarth.prototype": { 
@@ -67,6 +74,10 @@ GeoExt.Lang.add("ca", {
         shortTitle: "Capes",
         rootNodeText: "Capes",
         overlayNodeText: "Capes addicionals",
+        baseNodeText: "Capa base"
+    },
+
+    "gxp.plugins.LayerManager.prototype": {
         baseNodeText: "Capa base"
     },
 
@@ -97,6 +108,7 @@ GeoExt.Lang.add("ca", {
     },
 
     "gxp.plugins.Measure.prototype": {
+        buttonText: "Mesura",
         lengthMenuText: "Longitud",
         areaMenuText: "Àrea",
         lengthTooltip: "Mesura Longitud",
@@ -118,11 +130,12 @@ GeoExt.Lang.add("ca", {
 
     "gxp.plugins.OSMSource.prototype": {
         title: "Capes OpenStreetMap",
-        mapnikAttribution: "Dades CC-By-SA de <a href='http://openstreetmap.org/'>OpenStreetMap</a>",
+        mapnikAttribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
         osmarenderAttribution: "Daded CC-By-SA de <a href='http://openstreetmap.org/'>OpenStreetMap</a>"
     },
 
     "gxp.plugins.Print.prototype": {
+        buttonText:"Imprimeix",
         menuText: "Imprimeix mapa",
         tooltip: "Imprimeix mapa",
         previewText: "Vista prèvia",
@@ -142,8 +155,7 @@ GeoExt.Lang.add("ca", {
         queryActionText: "Consulta",
         queryMenuText: "Consulta layer",
         queryActionTip: "Consulta la capa sel·leccionada",
-        queryByLocationText: "Consulta per lloc",
-        currentTextText: "Extensió de la vista actual",
+        queryByLocationText: "Query by current map extent",
         queryByAttributesText: "Consulta per atributs",
         queryMsg: "Consultant...",
         cancelButtonText: "Cancel·la",
@@ -162,13 +174,16 @@ GeoExt.Lang.add("ca", {
     },
 
     "gxp.plugins.WMSGetFeatureInfo.prototype": {
+        buttonText:"Identify",
         infoActionTip: "Consulta elements",
         popupTitle: "Informació dels elements"
     },
 
     "gxp.plugins.Zoom.prototype": {
+        zoomMenuText: "Zoom Box",
         zoomInMenuText: "Apropa",
         zoomOutMenuText: "Allunya",
+        zoomTooltip: "Zoom by dragging a box",
         zoomInTooltip: "Apropa",
         zoomOutTooltip: "Allunya"
     },
@@ -297,6 +312,7 @@ GeoExt.Lang.add("ca", {
     },
     
     "gxp.WMSLayerPanel.prototype": {
+        attributionText: "Attribution",
         aboutText: "Quant a",
         titleText: "Títol",
         nameText: "Nom",
@@ -307,9 +323,19 @@ GeoExt.Lang.add("ca", {
         transparentText: "Transparent",
         cacheText: "Caché",
         cacheFieldText: "Utiliza la versió en caché",
-        stylesText: "Estils",
+        stylesText: "Estils disponibles",
         infoFormatText: "Info format",
-        infoFormatEmptyText: "Select a format"
+        infoFormatEmptyText: "Select a format",
+        displayOptionsText: "Display options",
+        queryText: "Limit with filters",
+        scaleText: "Limit by scale",
+        minScaleText: "Min scale",
+        maxScaleText: "Max scale",
+        switchToFilterBuilderText: "Switch back to filter builder",
+        cqlPrefixText: "or ",
+        cqlText: "use CQL filter instead",
+        singleTileText: "Single tile",
+        singleTileFieldText: "Use a single tile"
     },
 
     "gxp.EmbedMapDialog.prototype": {
@@ -358,13 +384,16 @@ GeoExt.Lang.add("ca", {
         fileLabel: "Dades",
         fieldEmptyText: "Navegueu per les dades...",
         uploadText: "Puja",
+        uploadFailedText: "Upload failed",
+        processingUploadText: "Processing upload...",
         waitMsgText: "Pugeu les vostres dades...",
         invalidFileExtensionText: "L'extensió del fitxer ha de ser alguna d'aquestes: ",
         optionsText: "Opcions",
         workspaceLabel: "Espai de treball",
         workspaceEmptyText: "Espai de treball per defecte",
         dataStoreLabel: "Magatzem",
-        dataStoreEmptyText: "Magatzem de dades per defecte"
+        dataStoreEmptyText: "Create new store",
+        defaultDataStoreEmptyText: "Magatzem de dades per defecte"
     },
     
     "gxp.NewSourceDialog.prototype": {
@@ -377,6 +406,23 @@ GeoExt.Lang.add("ca", {
 
     "gxp.ScaleOverlay.prototype": {
         zoomLevelText: "Escala"
+    },
+
+    "gxp.Viewer.prototype": {
+        saveErrorText: "Problemes desant: "
+    },
+
+    "gxp.FeedSourceDialog.prototype": {
+        feedTypeText: "Font",
+        addPicasaText: "Picasa fotos",
+        addYouTubeText: "YouTube Videos",
+        addRSSText: "Feed GeoRSS Un altre",
+        addFeedText: "Afegeix a Mapa",
+        addTitleText: "Títol",
+        keywordText: "Paraula clau",
+        doneText: "Fet",
+        titleText: "Afegir Feeds",
+        maxResultsText: "Productes Max"
     }
 
 });

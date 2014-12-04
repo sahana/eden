@@ -85,7 +85,7 @@
        <li><a href='/{{=appname}}/admin/user'><i class='icon-cogs'></i> {{=T("Admin")}}</a></li>
        <li class='divider'></li>
        {{pass}}
-       <li><a href='/{{=appname}}/pr/person/{{=auth.user.id}}'><i class='icon-edit'></i> Edit Profile</a></li>
+       <li><a href='/{{=appname}}/pr/person/{{=s3_logged_in_person()}}'><i class='icon-edit'></i> Edit Profile</a></li>
        <li><a href='/{{=appname}}/default/user/profile'><i class='icon-user'></i> {{=auth.user.email}}</a></li>
        <li><a href='/{{=appname}}/default/index/subscriptions'><i class='icon-envelope'></i> {{=T("Notification Settings")}}</a></li>
        <li><a href='/{{=appname}}/default/user/change_password'><i class='icon-lock'></i> {{=T("Change Password")}}</a></li>
@@ -96,7 +96,12 @@
       {{if request.controller == "default" and request.function == "user" or "login" in request.args:}} {{else:}}
        <li class='dropdown'><a href='#' class='dropdown-toggle' data-toggle='dropdown'><i class='icon-signin'></i><b class='caret'></b></a>
         <ul class='dropdown-menu'>
-         {{=auth.login(inline=True, lost_pw_link=False)}}
+         {{=auth.login(inline=True,
+                       lost_pw_link=False,
+                       next=URL(c=request.controller,
+                                f=request.function,
+                                args=request.args,
+                                vars=request.get_vars))}}
         </ul>
        </li>
       {{pass}}
