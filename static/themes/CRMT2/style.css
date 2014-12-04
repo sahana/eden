@@ -346,7 +346,8 @@ aside .form-container input[type=radio] + label:before {
     text-align: left;
 }
 /* Force multiselect button to adapt to grid */
-.columns > .ui-multiselect {
+.columns > .ui-multiselect,
+.inline-link > .s3-hierarchy-button {
     width: 100% !important;
 }
 /* Restore textarea resizability in forms (override ext-all-notheme.css) */

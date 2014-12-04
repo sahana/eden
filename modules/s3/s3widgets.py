@@ -5786,12 +5786,13 @@ class S3MultiSelectWidget(MultipleOptionsWidget):
                 # Base widget requires single value, so enforce that
                 # if necessary, and convert to string to match options
                 value = str(value[0] if type(value) is list else value)
+
+        # Set explicit columns width for the formstyle
+        if self.columns:
+            attr["s3cols"] = self.columns
+
         widget = w.widget(field, value, **attr)
         options_len = len(widget)
-        if self.columns:
-            widget = DIV(widget,
-                         _class = "small-%s columns" % self.columns,
-                         )
 
         # Filter and header for multiselect options list
         filter_opt = self.filter
@@ -6022,6 +6023,10 @@ class S3HierarchyWidget(FormWidget):
         if not h.config:
             raise AttributeError("No hierarchy configured for %s" % lookup)
 
+        # Set explicit columns width for the formstyle
+        if self.columns:
+            attr["s3cols"] = self.columns
+
         # Generate the widget
         widget = DIV(INPUT(_type = "hidden",
                            _multiple = "multiple",
@@ -6033,8 +6038,6 @@ class S3HierarchyWidget(FormWidget):
                          _class = "s3-hierarchy-tree"),
                      **attr)
         widget.add_class("s3-hierarchy-widget")
-        if self.columns:
-            widget.add_class("small-%s columns" % self.columns)
 
         s3 = current.response.s3
         scripts = s3.scripts
@@ -6724,11 +6727,11 @@ class S3StringWidget(StringWidget):
                              ),
                          _class="row collapse",
                         )
+
+        # Set explicit columns width for the formstyle
         columns = self.columns
         if columns:
-            widget = DIV(widget,
-                         _class="small-%s columns" % columns,
-                         )
+            widget["s3cols"] = columns
 
         return widget
 

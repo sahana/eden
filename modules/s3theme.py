@@ -73,7 +73,7 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
                 element["_class"] = "btn btn-primary"
             elif element["_type"] == "file":
                 element["_class"] = "input-file"
-                    
+
         # For password fields, which are wrapped in a CAT object.
         if isinstance(controls, CAT) and isinstance(controls[0], INPUT):
             controls[0].add_class("span4")
@@ -91,7 +91,7 @@ def formstyle_bootstrap(form, fields, *args, **kwargs):
 
         if _submit:
             # submit button has unwrapped label and controls, different class
-            return DIV(label, controls, _class="%sform-actions" % _class, _id=id) 
+            return DIV(label, controls, _class="%sform-actions" % _class, _id=id)
             # unflag submit (possible side effect)
             _submit = False
         else:
@@ -157,54 +157,39 @@ def formstyle_foundation_2col(form, fields, *args, **kwargs):
 
     def render_row(row_id, label, widget, comment, hidden=False):
 
+        # Inspect widget
+        columns = None
         if hasattr(widget, "element"):
-            widget_attr = widget.element().attributes
-            widget_classes = widget_attr.get("_class", "")
-            collapse = "collapse" in widget_classes
-            if collapse:
-                widget.element().attributes["_class"] = widget_classes.replace("collapse", "")
-            columns = "columns" in widget_classes
+            # Check for widget columns width override
+            attr = widget.element().attributes
+            if "s3cols" in attr:
+                columns = attr["s3cols"] or columns
+            # Set additional CSS classes for submit button
             submit = widget.element("input", _type="submit")
             if submit:
                 submit.add_class("small primary button")
-        else:
-            collapse = False
-            columns = False
 
-        _class = "form-row row"
-        if collapse:
-            _class = "%s collapse" % _class
-        if hidden:
-            _class = "%s hide" % _class
+        # Render tooltip
         hints = render_tooltip(label, comment)
+
+        # Wrap the label
         if isinstance(label, LABEL):
             label.add_class("right inline")
         else:
             label = LABEL(label, _class="right inline")
+        label = DIV(label, _class="small-2 columns")
 
-        label = DIV(label,
-                    _class="small-2 columns",
-                    )
-
-        if hints:
-            hints = DIV(hints,
-                        _class="inline-tooltip",
-                        )
-            if columns:
-                # Don't wrap again
-                widget.append(hints)
-
-        if columns:
-            # Don't wrap again (but add an invisible parent to wrap form errors)
-            controls = TAG[""](widget)
-            # Ensure we fill-out empty space
-            widget.add_class("end")
+        # Wrap the controls
+        if columns is None:
+            _columns = "small-10 columns"
         else:
-            controls = DIV(widget,
-                           hints,
-                           _class="small-10 columns",
-                           )
+            _columns = "small-%s columns end" % columns
+        controls = DIV(widget, hints, _class=_columns)
 
+        # Render the row
+        _class = "form-row row"
+        if hidden:
+            _class = "%s hide" % _class
         return DIV(label, controls, _class=_class, _id=row_id)
 
     if args:
@@ -226,7 +211,7 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
-        
+
         if hasattr(widget, "element"):
             submit = widget.element("input", _type="submit")
             if submit:
@@ -270,22 +255,22 @@ def formstyle_table(form, fields, *args, **kwargs):
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
-        
+
         row = []
         _class = "hide" if hidden else None
-            
+
         # Label on the 1st row
         row.append(TR(TD(label, _class="w2p_fl"),
                       TD(""),
                       _id = row_id + "1",
                       _class=_class))
-                      
+
         # Widget & Comment on the 2nd Row
         row.append(TR(widget,
                       TD(comment, _class="w2p_fc"),
                       _id=row_id,
                       _class=_class))
-                      
+
         return tuple(row)
 
     if args:
@@ -349,5 +334,5 @@ def render_tooltip(label, comment):
     else:
         tooltip = comment
     return tooltip
-    
+
 # END =========================================================================
