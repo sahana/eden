@@ -29,7 +29,7 @@ var DrivingDirections = new function() {
     }
 
     // Map dialog is already instantiated, popup the div
-    $('#map-dialog').dialog({title: 'Directions',maxHeight: 800, modal: true});
+    $('#map-dialog').dialog({title: 'Directions',maxHeight: 800});
   }
 
   /*
