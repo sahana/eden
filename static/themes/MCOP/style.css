@@ -270,25 +270,6 @@ h2 {
     text-decoration: none;
 }
 
-/* @ToDo: Move to default/tasks.css ? */
-.task_priority,
-.task_name,
-.task_status {
-    float: left;
-    clear: right;
-}
-
-.task_priority {
-    margin-right: 3px;
-    margin-top: 3px;
-}
-
-.task_status {
-    float: right;
-    margin-left: 5px;
-    padding: 2px 3px;
-}
-
 .edit-bar {
     position: static;
 }
