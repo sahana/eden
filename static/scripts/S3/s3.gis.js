@@ -48,7 +48,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     /**
      * Main Start Function
      * - called by yepnope callback in s3.gis.loader
-     * 
+     *
      * Parameters:
      * map_id - {String} A unique ID for this map
      * options - {Array} An array of options for this map
@@ -235,14 +235,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
      * Zoom a map to the specified OpenLayers.Bounds (in WGS84: Lat/Lon)
      * - ensuring a minimal bbox & a little padding
      */
-    var zoomBounds = function(map, bounds) {
+    var zoomBounds = function(map, bounds, minBBOX) {
         var bbox = bounds.toArray();
         var lon_min = bbox[0],
             lat_min = bbox[1],
             lon_max = bbox[2],
             lat_max = bbox[3];
         // Ensure a minimal BBOX in case we just have a single data point
-        var min_size = 0.05;
+        var min_size = minBBOX || 0.05;
         var delta = (min_size - (lon_max - lon_min)) / 2;
         if (delta > 0) {
             lon_min -= delta;
@@ -254,7 +254,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             lat_max += delta;
         }
         // Add an Inset in order to not have points right at the edges of the map
-        var inset = 0.007;
+        var inset = min_size / 7;
         lon_min -= inset;
         lon_max += inset;
         // @todo: -90 > lat > 90 doesn't give valid bounds (returns NaN)
@@ -311,7 +311,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     /**
      * Refresh the given layer on all maps
      * - called by s3.filter.js
-     * 
+     *
      * Parameters:
      * layer_id - {String} ID of the layer to be refreshed
      * queries - {Array} Optional list of Queries to be applied to the Layer
@@ -493,7 +493,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         if (options.legend) {
             if (options.legend == 'float') {
                 // Floating
-                var legendPanel = addLegendPanel(map); 
+                var legendPanel = addLegendPanel(map);
             } else {
                 // Integrated in West Panel
                 var legendPanel = new GeoExt.LegendPanel({
@@ -637,7 +637,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
 
         mapWin.on('move', function(mw) {
-            map.events.clearMouseCache(); 
+            map.events.clearMouseCache();
         });
 
         // Set Options
@@ -1548,7 +1548,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
      * {null}
      */
     var addLayers = function(map) {
-        
+
         var s3 = map.s3;
         var options = s3.options;
 
@@ -2079,7 +2079,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             //'featureunselected': onFeatureUnselect,
             'loadstart': layer_loadstart,
             'loadend': layer_loadend,
-            'visibilitychanged': layer_visibilitychanged  
+            'visibilitychanged': layer_visibilitychanged
         });
         map.addLayer(geojsonLayer);
         // Ensure marker layers are rendered over other layers
@@ -3471,7 +3471,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             //layer.options.onSelect(event);
             var html = layer.options.getPopupHtml(feature.attributes.station);
             var popup = new OpenLayers.Popup('Popup',
-                                             feature.geometry.getBounds().getCenterLonLat(), 
+                                             feature.geometry.getBounds().getCenterLonLat(),
                                              new OpenLayers.Size(layer.options.popupX, layer.options.popupY),
                                              html,
                                              'Station',
@@ -3614,7 +3614,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         } else {
                             // How would we get here?
                             row = '';
-                        }                    
+                        }
                         contents += row;
                     }
                 }
@@ -3840,8 +3840,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         OpenLayers.Control.ZoomToMaxExtentS3 = OpenLayers.Class(OpenLayers.Control.Button, {
             /**
              * Method: trigger
-             * 
-             * Called whenever this control is being rendered inside of a panel and a 
+             *
+             * Called whenever this control is being rendered inside of a panel and a
              *     click occurs on this controls element. Actually zooms to the maximum
              *     extent of this controls map.
              */
@@ -4146,7 +4146,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 addGoogleEarthControl(toolbar);
             }
         } catch(e) {}
-        
+
         // Search box
         if (options.geonames) {
             if (false === options.nav) {
@@ -4171,7 +4171,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             toolbar.addSeparator();
             toolbar.add(mapSearch);
         }
-        
+
         // Throbber
         var throbber = new Ext.BoxComponent({
             cls: 'layer_throbber hide'
@@ -4518,7 +4518,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var el = Ext.get(jquery_obj[0]);
         legendPanel.render(el);
 
-        // Show/Hide Legend when clicking on Tab 
+        // Show/Hide Legend when clicking on Tab
         $('#' + map_id + ' .map_legend_tab').click(function() {
             if ($(this).hasClass('right')) {
                 hideLegend(map);
@@ -4566,12 +4566,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         toolbar.addButton(navPreviousButton);
         toolbar.addButton(navNextButton);
     };
-    
+
     // Add button for placing popup on map and selecting a resource
     /* - currently unused (@ToDo: Integrate this into the main control)
     var resourcePopup;
     var urlArray = new Array(), counter = 0;
-    var addResourcePopupButton = function(map, toolbar, active, resource_array) {        
+    var addResourcePopupButton = function(map, toolbar, active, resource_array) {
         OpenLayers.Handler.PointS3 = OpenLayers.Class(OpenLayers.Handler.Point, {
             // Ensure that we propagate Double Clicks (so we can still Zoom)
             dblclick: function(evt) {
@@ -4592,31 +4592,31 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     draftLayer.features[0].destroy();
                 }
                 // Destroy previously created popups
-                while (map.popups.length > 0) { 
-                    map.removePopup(map.popups[0]); 
-                } 
+                while (map.popups.length > 0) {
+                    map.removePopup(map.popups[0]);
+                }
                 //Generating HTML buttons for adding to the popup
                 var HTML_inside_popup = '<div id="addResourcepopup" style="height: 100%; width: 100%;"> ';
                 for (var i=0; i < resource_array.length ; i++){
                     resource = resource_array[i];
-                    if (resource['location'] == 'popup'){     
+                    if (resource['location'] == 'popup'){
                         var url = map.s3.urlForPopup(feature, resource);
                         urlArray[counter] = url;
                         urlArray[counter].feature = feature;
                         HTML_inside_popup +=  '<input onClick="S3.gis.changePopupContent('+ counter +');" type="radio" name="selectResource" value='+url+' /> '+resource["label"]+'<br/>';
-                        counter++; 
+                        counter++;
                     }
-                 } 
+                 }
                 HTML_inside_popup += '</div>';
                 // Create A popup with buttons of generated HTML
-                resourcePopup = addPopup(feature, undefined, HTML_inside_popup , undefined);      
+                resourcePopup = addPopup(feature, undefined, HTML_inside_popup , undefined);
                 // Prepare in case user selects a new point
                 map.s3.lastDraftFeature = feature;
             }
         });
-        
+
         if (toolbar) {
-            // Toolbar Button 
+            // Toolbar Button
             var resourcePopupButton = new GeoExt.Action({
             control: control,
             handler: function() {
@@ -4635,10 +4635,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             });
             toolbar.add(resourcePopupButton);
             // Pass to Global scope for LocationSelectorWidget
-            map.s3.resourcePopupButton = resourcePopupButton;  
-          } 
+            map.s3.resourcePopupButton = resourcePopupButton;
+          }
     };
-   
+
     var changePopupContent = function (c) {
     $('input:radio[name="selectResource"]').change(
         function () {
@@ -4651,7 +4651,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     }
     S3.gis.changePopupContent = changePopupContent;
     */
-    
+
     // Add custom point controls to add new markers for different resources to the map
     /* - currently unused (@ToDo: Integrate this into the main control)
     var addCustomPointControl = function (map, toolbar, active, resource, menu_items) {
@@ -4675,8 +4675,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     draftLayer.features[0].destroy();
                 }
                 // Destroy previously created popups
-                while (map.popups.length > 0) { 
-                    map.removePopup(map.popups[0]); 
+                while (map.popups.length > 0) {
+                    map.removePopup(map.popups[0]);
                 }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
@@ -4688,7 +4688,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         });
 
         if (toolbar) {
-            // Toolbar Button 
+            // Toolbar Button
             if (resource['location'] == 'toolbar') {
                 var pointButton = new GeoExt.Action({
                     control: control,
@@ -4755,8 +4755,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     draftLayer.features[0].destroy();
                 }
                 // Destroy all popups
-                while (map.popups.length > 0) { 
-                    map.removePopup(map.popups[0]); 
+                while (map.popups.length > 0) {
+                    map.removePopup(map.popups[0]);
                 }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
@@ -4830,8 +4830,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     draftLayer.features[0].destroy();
                 }
                 // Destroy all popups
-                while (map.popups.length > 0) { 
-                    map.removePopup(map.popups[0]); 
+                while (map.popups.length > 0) {
+                    map.removePopup(map.popups[0]);
                 }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
@@ -4926,8 +4926,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     }
                 }
                 // Destroy all popups
-                while (map.popups.length > 0) { 
-                    map.removePopup(map.popups[0]); 
+                while (map.popups.length > 0) {
+                    map.removePopup(map.popups[0]);
                 }
                 if (undefined != map.s3.pointPlaced) {
                     // Call Custom Call-back
@@ -5140,7 +5140,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     //dataType : 'json',
                     success: function(data, status) {
                         // Open the screenshot in a new tab
-                        
+
                     }
                 });*/
             }
@@ -5207,7 +5207,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var map_id = s3.id;
         var options = s3.options;
         var config_id = options.config_id;
-        
+
         if (options.config_name) {
             var name = options.config_name;
         } else {
@@ -5447,7 +5447,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         div += '"></div>';
         $('#' + map_id).append(div);
     };
-    
+
     // MGRS Grid PDF Control
     // select an area on the map to download the grid's PDF to print off
     var addPdfControl = function(toolbar) {
@@ -5763,7 +5763,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     /**
      * Create a StyleMap
      * - called by addGeoJSONLayer, addKMLLayer & addWFSLayer
-     * 
+     *
      * Parameters:
      * map - {OpenLayers.Map}
      * layer - {Array} (not an OpenLayers.Layer!)
@@ -6264,7 +6264,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
 
     /**
      * Create a set of Style Rules
-     * 
+     *
      * Parameters:
      * layer - {Array} (not an OpenLayers.Layer!)
      *
