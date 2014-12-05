@@ -260,7 +260,6 @@ $.filterOptionsS3({
             title_update = T("Edit Asset"),
             title_upload = T("Import Assets"),
             label_list_button =  T("List Assets"),
-            label_delete_button = T("Delete Asset"),
             msg_record_created = T("Asset added"),
             msg_record_modified = T("Asset updated"),
             msg_record_deleted = T("Asset deleted"),
@@ -396,6 +395,7 @@ $.filterOptionsS3({
                   summary = summary,
                   super_entity = ("supply_item_entity", "sit_trackable"),
                   update_realm = True,
+                  deletable = False,
                   )
 
         # Components
