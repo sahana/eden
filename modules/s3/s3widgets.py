@@ -5200,7 +5200,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         if path is None:
             # Not updated yet? => do it now
             try:
-                path = current.gis.update_location_tree({"id": value})
+                path = current.gis.update_location_tree({"id": record_id})
             except ValueError:
                 pass
         path = [] if path is None else path.split("/")
