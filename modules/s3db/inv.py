@@ -112,6 +112,7 @@ class S3WarehouseModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_link = self.super_link
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Warehouse Types
@@ -185,7 +186,7 @@ class S3WarehouseModel(S3Model):
                            # Deployments that don't wants warehouse codes can hide them
                            #readable=False,
                            #writable=False,
-                           # @ToDo: Deployment Setting to add validator to make these unique
+                           unique = settings.get_inv_warehouse_code_unique(),
                            ),
                      self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
