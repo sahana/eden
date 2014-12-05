@@ -2130,6 +2130,8 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         self.avgrat = {}
         self.deployed = set()
         self.appraisals = {}
+        
+        self.use_regions = current.deployment_settings.get_org_regions()
 
     # -------------------------------------------------------------------------
     def prep(self, resource, records):
@@ -2146,28 +2148,34 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         tablename = resource.tablename
         if tablename == "deploy_alert":
 
-            # Recipients, aggregated by region
-            record_ids = set(record["_row"]["deploy_alert.id"]
-                             for record in records)
+            # Recipients, aggregated by alert
+            record_ids = set(record["_row"]["deploy_alert.id"] for record in records)
 
-            rtable = s3db.deploy_alert_recipient
             htable = s3db.hrm_human_resource
-            otable = s3db.org_organisation
-
-            left = [htable.on(htable.id==rtable.human_resource_id),
-                    otable.on(otable.id==htable.organisation_id)]
-
+            number_of_recipients = htable.id.count()
+            
+            rtable = s3db.deploy_alert_recipient
             alert_id = rtable.alert_id
+
+            use_regions = self.use_regions
+            if use_regions:
+                otable = s3db.org_organisation
+                region_id = otable.region_id
+                fields = [alert_id, region_id, number_of_recipients]
+                left = [htable.on(htable.id==rtable.human_resource_id),
+                        otable.on(otable.id==htable.organisation_id),
+                        ]
+                groupby = [alert_id, region_id]
+            else:
+                fields = [alert_id, number_of_recipients]
+                left = [htable.on(htable.id==rtable.human_resource_id)]
+                groupby = [alert_id]
+                
             query = (alert_id.belongs(record_ids)) & \
                     (rtable.deleted != True)
-
-            region_id = otable.region_id
-            number_of_recipients = htable.id.count()
-            rows = current.db(query).select(alert_id,
-                                            region_id,
-                                            number_of_recipients,
-                                            left=left,
-                                            groupby=[alert_id, region_id])
+            rows = current.db(query).select(left=left,
+                                            groupby=groupby,
+                                            *fields)
 
             recipient_numbers = {}
             for row in rows:
@@ -2179,10 +2187,14 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             self.recipient_numbers = recipient_numbers
 
             # Representations of the region_ids
-            represent = otable.region_id.represent
-            represent.none = current.T("No Region")
-            region_ids = [row[region_id] for row in rows]
-            self.region_names = represent.bulk(region_ids)
+            if use_regions:
+                # not needed with regions = False
+                represent = otable.region_id.represent
+                represent.none = current.T("No Region")
+                region_ids = [row[region_id] for row in rows]
+                self.region_names = represent.bulk(region_ids)
+            else:
+                self.region_names = {}
 
         elif tablename == "deploy_response":
 
@@ -2313,8 +2325,9 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             # Message subject as title
             subject = record["deploy_alert.subject"]
 
-            rows = self.recipient_numbers.get(record_id)
             total_recipients = 0
+
+            rows = self.recipient_numbers.get(record_id)
             if rows:
 
                 # Labels
@@ -2328,48 +2341,58 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                     HRS_LABEL = T("Volunteers")
 
                 htable = s3db.hrm_human_resource
-                otable = s3db.org_organisation
-                region = otable.region_id
                 rcount = htable.id.count()
-                represent = region.represent
 
-                region_names = self.region_names
+                if not self.use_regions:
+                    total_recipients = rows[0][rcount]
+                    label = HR_LABEL if total_recipients == 1 else HRS_LABEL
+                    link = URL(f = "alert", args = [record_id, "recipient"])
+                    recipients = SPAN(A("%s %s" % (total_recipients, label),
+                                        _href=link,
+                                        ),
+                                      )
+                else:
+                    region = s3db.org_organisation.region_id
+                    region_names = self.region_names
+                    UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
-                no_region = None
-                recipients = []
-                for row in rows:
-                    # Region
-                    region_id = row[region]
-                    region_name = represent(region_id)
-                    region_filter = {
-                        "recipient.human_resource_id$" \
-                        "organisation_id$region_id__belongs": region_id
-                    }
-                    # Number of recipients
-                    num = row[rcount]
-                    total_recipients += num
-                    label = HR_LABEL if num == 1 else HRS_LABEL
-                    # Link
-                    link = URL(f = "alert",
-                               args = [record_id, "recipient"],
-                               vars = region_filter)
-                    # Recipient list item
-                    recipient = SPAN("%s (" % region_name,
-                                     A("%s %s" % (num, label),
-                                       _href=URL(f = "alert",
-                                                 args = [record_id, "recipient"],
-                                                 vars = region_filter),
-                                       ),
-                                     ")"
-                                )
-                    if region_id:
-                        recipients.extend([recipient, ", "])
-                    else:
-                        no_region = [recipient, ", "]
-                # Append "no region" at the end of the list
-                if no_region:
-                    recipients.extend(no_region)
-                recipients = TAG[""](recipients[:-1])
+                    recipients = []
+                    no_region = None
+                    for row in rows:
+                        # Region
+                        region_id = row[region]
+                        region_name = region_names.get(region_id, UNKNOWN_OPT)
+                        region_filter = {
+                            "recipient.human_resource_id$" \
+                            "organisation_id$region_id__belongs": region_id
+                        }
+
+                        # Number of recipients
+                        num = row[rcount]
+                        total_recipients += num
+                        label = HR_LABEL if num == 1 else HRS_LABEL
+
+                        # Link
+                        link = URL(f = "alert",
+                                   args = [record_id, "recipient"],
+                                   vars = region_filter)
+
+                        # Recipient list item
+                        recipient = SPAN("%s (" % region_name,
+                                         A("%s %s" % (num, label),
+                                           _href=link,
+                                           ),
+                                         ")",
+                                         )
+                        if region_id:
+                            recipients.extend([recipient, ", "])
+                        else:
+                            no_region = [recipient, ", "]
+
+                    # Append "no region" at the end of the list
+                    if no_region:
+                        recipients.extend(no_region)
+                    recipients = TAG[""](recipients[:-1])
             else:
                 recipients = T("No Recipients Selected")
 
