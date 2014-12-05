@@ -31,6 +31,7 @@
 from datetime import datetime, timedelta
 
 from gluon import current
+from gluon.storage import Storage
 try:
     from gluon.dal.objects import Table, Rows, Row
 except ImportError:
