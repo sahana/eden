@@ -1952,14 +1952,6 @@ $.filterOptionsS3({
         # Configuration
         js_global = []
         js_append = js_global.append
-        if request.cookies.has_key("registered"):
-            # If we have already registered on this site from this PC then the login form is default
-            # .password:last
-            js_append('''S3.password_position=2''')
-        else:
-            # If we haven't already registered on this site from this PC then the registration form is default
-            # .password:first
-            js_append('''S3.password_position=1''')
 
         if settings.get_auth_registration_mobile_phone_mandatory():
             js_append('''S3.auth_registration_mobile_phone_mandatory=1''')
@@ -7129,7 +7121,7 @@ class S3RoleManager(S3Method):
                 # Pointless attempt
                 r.error(400, T("ADMIN Permissions can not be changed."),
                         next = r.url(method="", id=0))
-            
+
             # Form helpers ----------------------------------------------------
             mandatory = lambda l: DIV(l, XML("&nbsp;"),
                                       SPAN("*", _class="req"))
@@ -7149,7 +7141,7 @@ class S3RoleManager(S3Method):
                                                    vars=dict(_next=r.url())),
                                        _class = "delete-btn") or using_default
             new_acl = SPAN(T("new ACL"), _class="new-acl")
-            
+
             form = FORM()
 
             # Role form -------------------------------------------------------
@@ -7421,8 +7413,8 @@ class S3RoleManager(S3Method):
             else:
                 cancel = URL(c="admin", f="role",
                              vars=request.get_vars)
-            action_row = DIV(INPUT(_type="submit", 
-                                   _value=T("Save"), 
+            action_row = DIV(INPUT(_type="submit",
+                                   _value=T("Save"),
                                    _class="small primary button",
                                    ),
                              A(CANCEL,
@@ -8230,9 +8222,9 @@ class S3EntityRoleManager(S3Method):
     # -------------------------------------------------------------------------
     @classmethod
     def set_method(cls, r, entity=None, record_id=None):
-        """ 
-            Plug-in OrgAdmin Role Managers when appropriate 
-            
+        """
+            Plug-in OrgAdmin Role Managers when appropriate
+
             @param r: the S3Request
             @param entity: override target entity (default: r.tablename)
             @param record_id: specify target record ID (only for OU's)
