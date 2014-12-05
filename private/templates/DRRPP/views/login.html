@@ -12,10 +12,12 @@
     <div class='form-row grid_6 form-required'>
      <label for='auth_user_email'>E-mail:</label>
      <input type='text' id='auth_user_email' class='form-text' name='email' />
+     {{if form.errors.email:}}<div class="error">{{=form.errors.email}}</div>{{pass}}
     </div>
     <div class='form-row grid_6 form-required'>
      <label for='auth_user_password'>Password:</label>
      <input type='password' id='auth_user_password' class='form-text' name='password' />
+     {{if form.errors.password:}}<div class="error">{{=form.errors.password}}</div>{{pass}}
     </div>
    </div>
   <div class='form-controller grid_2 prefix_5 suffix_5'>

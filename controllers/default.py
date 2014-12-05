@@ -287,6 +287,13 @@ return false}})''' % (T("Please Select a Facility")))
             # This browser has logged-in before
             registered = True
 
+        # Provide a login box on front page
+        auth.messages.submit_button = T("Login")
+        login_form = auth.login(inline=True)
+        login_div = DIV(H3(T("Login")),
+                        P(XML(T("Registered users can %(login)s to access the system") % \
+                              dict(login=B(T("login"))))))
+
         if self_registration:
             # Provide a Registration box on front page
             register_form = auth.register()
@@ -295,9 +302,13 @@ return false}})''' % (T("Please Select a Facility")))
                                         dict(sign_up_now=B(T("sign-up now"))))))
 
             if request.env.request_method == "POST":
+                if login_form.errors:
+                    hide, show = "#register_form", "#login_form"
+                else:
+                    hide, show = "#login_form", "#register_form"
                 post_script = \
-'''$('#register_form').removeClass('hide')
-$('#login_form').addClass('hide')'''
+'''$('%s').addClass('hide')
+$('%s').removeClass('hide')''' % (hide, show)
             else:
                 post_script = ""
             register_script = \
@@ -313,13 +324,6 @@ $('#login-btn').click(function(){
  $('#login_form').removeClass('hide')
 })''' % post_script
             s3.jquery_ready.append(register_script)
-
-        # Provide a login box on front page
-        auth.messages.submit_button = T("Login")
-        login_form = auth.login(inline=True)
-        login_div = DIV(H3(T("Login")),
-                        P(XML(T("Registered users can %(login)s to access the system") % \
-                              dict(login=B(T("login"))))))
 
     if settings.frontpage.rss:
         s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
@@ -396,7 +400,7 @@ def organisation():
             orderby = default_orderby
         if query:
             resource.add_filter(query)
-    
+
     data = resource.select(list_fields,
                            start=display_start,
                            limit=limit,

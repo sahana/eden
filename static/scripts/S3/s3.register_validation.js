@@ -10,12 +10,6 @@ var s3_register_validation = function() {
     });
 
     // Read options
-    if (S3.password_position == 1) {
-        var password_position = 'first';
-    } else {
-        var password_position = 'last';
-    }
-
     if (S3.auth_registration_mobile_phone_mandatory) {
         var mobile_phone_mandatory = true;
     } else {
@@ -80,7 +74,7 @@ var s3_register_validation = function() {
             },
             password_two: {
                 required: true,
-                equalTo: '.password:' + password_position
+                equalTo: '.auth_register .password:first'
             },
             tos: {
                 required: terms_of_service_required
@@ -119,7 +113,7 @@ var s3_register_validation = function() {
     });
 
     // Password Strength indicator
-    $('.password:' + password_position).pstrength({
+    $('.auth_register .password:first').pstrength({
         'minChar': S3.password_min_length,
         'minCharText': i18n.password_min_chars,
 		'verdicts':	[i18n.weak, i18n.normal, i18n.medium, i18n.strong, i18n.very_strong]

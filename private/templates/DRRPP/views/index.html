@@ -37,10 +37,12 @@
    <div class='form-row'>
     <label for='auth_user_email'>E-mail:</label>
     <input type='text' id='auth_user_email' class='form-text front-login-text' name='email' />
+    {{if form.errors.email:}}<div class="error">{{=form.errors.email}}</div>{{pass}}
    </div>
    <div class='form-row'>
    <label for='auth_user_password'>Password:</label>
     <input type='password' id='auth_user_password' class='form-text front-login-text' name='password' />
+    {{if form.errors.password:}}<div class="error">{{=form.errors.password}}</div>{{pass}}
    </div>
    <div class='form-controller grid_4 alpha omega'>
     <div class='grid_1 prefix_1'><input class='front-login-submit login-button small' type='submit' name='submit' value='' /></div>
