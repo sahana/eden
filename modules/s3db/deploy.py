@@ -2180,9 +2180,12 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             # Representations of the region_ids
             represent = otable.region_id.represent
-            represent.none = current.T("No Region")
-            region_ids = [row[region_id] for row in rows]
-            self.region_names = represent.bulk(region_ids)
+            if represent:
+                represent.none = current.T("No Region")
+                region_ids = [row[region_id] for row in rows]
+                self.region_names = represent.bulk(region_ids)
+            else:
+                self.region_names = {}
 
         elif tablename == "deploy_response":
 
