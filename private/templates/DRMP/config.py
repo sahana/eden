@@ -166,6 +166,18 @@ settings.ui.export_formats = ["xls"]
 
 settings.ui.update_label = "Edit"
 
+# Custom icon classes
+settings.ui.custom_icons = {
+    "alert": "icon-alert",
+    "activity": "icon-activity",
+    "assessment": "icon-assessment",
+    "contact": "icon-contact",
+    "incident": "icon-incident",
+    "project": "icon-project",
+    "report": "icon-report",
+    "resource": "icon-resource",
+}
+
 # Uncomment to disable responsive behavior of datatables
 # - Disabled until tested
 settings.ui.datatables_responsive = False
@@ -2406,7 +2418,7 @@ def customise_event_event_controller(**attr):
                                      context = "event",
                                      default = default,
                                      filter = FS("series_id$name") == "Alert",
-                                     icon = "icon-alert",
+                                     icon = "alert",
                                      layer = "Alerts",
                                      # provided by Catalogue Layer
                                      #marker = "alert",
@@ -2419,7 +2431,7 @@ def customise_event_event_controller(**attr):
                                         context = "event",
                                         default = default,
                                         filter = FS("series_id$name") == "Incident",
-                                        icon = "icon-incident",
+                                        icon = "incident",
                                         layer = "Incidents",
                                         # provided by Catalogue Layer
                                         #marker = "incident",
@@ -2432,7 +2444,7 @@ def customise_event_event_controller(**attr):
                                           context = "event",
                                           default = default,
                                           filter = FS("series_id$name") == "Assessment",
-                                          icon = "icon-assessment",
+                                          icon = "assessment",
                                           layer = "Assessments",
                                           # provided by Catalogue Layer
                                           #marker = "assessment",
@@ -2445,7 +2457,7 @@ def customise_event_event_controller(**attr):
                                          context = "event",
                                          default = default,
                                          filter = FS("series_id$name") == "Activity",
-                                         icon = "icon-activity",
+                                         icon = "activity",
                                          layer = "Activities",
                                          # provided by Catalogue Layer
                                          #marker = "activity",
@@ -2458,7 +2470,7 @@ def customise_event_event_controller(**attr):
                                       context = "event",
                                       default = default,
                                       filter = FS("series_id$name") == "Report",
-                                      icon = "icon-report",
+                                      icon = "report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
                                       #marker = "report",
@@ -2664,7 +2676,7 @@ def customise_gis_location_controller(**attr):
                                         tablename = "org_resource",
                                         context = "location",
                                         default = default,
-                                        icon = "icon-resource",
+                                        icon = "resource",
                                         show_on_map = False, # No Marker yet & only show at L1-level anyway
                                         list_layout = render_resources,
                                         )
@@ -2675,7 +2687,7 @@ def customise_gis_location_controller(**attr):
                                         context = "location",
                                         default = default,
                                         filter = (FS("series_id$name") == "Incident") & (FS("expired") == False),
-                                        icon = "icon-incident",
+                                        icon = "incident",
                                         layer = "Incidents",
                                         # provided by Catalogue Layer
                                         #marker = "incident",
@@ -2688,7 +2700,7 @@ def customise_gis_location_controller(**attr):
                                       context = "location",
                                       default = default,
                                       filter = FS("series_id$name") == "Report",
-                                      icon = "icon-report",
+                                      icon = "report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
                                       #marker = "report",
@@ -2700,7 +2712,7 @@ def customise_gis_location_controller(**attr):
                                        tablename = "project_project",
                                        context = "location",
                                        default = default,
-                                       icon = "icon-project",
+                                       icon = "project",
                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
                                        list_layout = render_projects,
                                        )
@@ -2711,7 +2723,7 @@ def customise_gis_location_controller(**attr):
                                          context = "location",
                                          default = default,
                                          filter = FS("series_id$name") == "Activity",
-                                         icon = "icon-activity",
+                                         icon = "activity",
                                          layer = "Activities",
                                          # provided by Catalogue Layer
                                          #marker = "activity",
@@ -3116,7 +3128,7 @@ def customise_org_organisation_controller(**attr):
                                        context = "organisation",
                                        create_controller = "pr",
                                        create_function = "person",
-                                       icon = "icon-contact",
+                                       icon = "contact",
                                        show_on_map = False, # Since they will show within Offices
                                        list_layout = render_contacts,
                                        )
@@ -3143,7 +3155,7 @@ def customise_org_organisation_controller(**attr):
                                         type = "datalist",
                                         tablename = "org_resource",
                                         context = "organisation",
-                                        icon = "icon-resource",
+                                        icon = "resource",
                                         show_on_map = False, # No Marker yet & only show at L1-level anyway
                                         list_layout = render_resources,
                                         )
@@ -3152,7 +3164,7 @@ def customise_org_organisation_controller(**attr):
                                        type = "datalist",
                                        tablename = "project_project",
                                        context = "organisation",
-                                       icon = "icon-project",
+                                       icon = "project",
                                        show_on_map = False, # No Marker yet & only show at L1-level anyway
                                        list_layout = render_projects,
                                        )
@@ -3162,7 +3174,7 @@ def customise_org_organisation_controller(**attr):
                                          tablename = "cms_post",
                                          context = "organisation",
                                          filter = FS("series_id$name") == "Activity",
-                                         icon = "icon-activity",
+                                         icon = "activity",
                                          layer = "Activities",
                                          # provided by Catalogue Layer
                                          #marker = "activity",
@@ -3174,7 +3186,7 @@ def customise_org_organisation_controller(**attr):
                                       tablename = "cms_post",
                                       context = "organisation",
                                       filter = FS("series_id$name") == "Report",
-                                      icon = "icon-report",
+                                      icon = "report",
                                       layer = "Reports",
                                       # provided by Catalogue Layer
                                       #marker = "report",
@@ -3186,7 +3198,7 @@ def customise_org_organisation_controller(**attr):
                                           tablename = "cms_post",
                                           context = "organisation",
                                           filter = FS("series_id$name") == "Assessment",
-                                          icon = "icon-assessment",
+                                          icon = "assessment",
                                           layer = "Assessments",
                                           # provided by Catalogue Layer
                                           #marker = "assessment",
