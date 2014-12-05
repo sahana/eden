@@ -1331,6 +1331,7 @@ ul.x-tree-root-ct {
     clear: none;
 }
 
+.ui-selectmenu-button,
 .ui-multiselect-menu {
     min-width: 220px;
 }
