@@ -1417,7 +1417,7 @@ def customise_gis_location_controller(**attr):
                 #                        type = "datalist",
                 #                        tablename = "gis_location",
                 #                        context = "location",
-                #                        icon = "icon-globe",
+                #                        icon = "globe",
                 #                        # @ToDo: Show as Polygons?
                 #                        show_on_map = False,
                 #                        list_layout = render_locations_profile,
@@ -1440,7 +1440,7 @@ def customise_gis_location_controller(**attr):
                                    context = "location",
                                    default = default,
                                    filter = FS("req_status").belongs([0, 1]),
-                                   icon = "icon-flag",
+                                   icon = "request",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
                                    #marker = "request",
@@ -1453,7 +1453,7 @@ def customise_gis_location_controller(**attr):
                                       context = "location",
                                       default = default,
                                       filter = FS("cancel") == False,
-                                      icon = "icon-truck",
+                                      icon = "truck",
                                       show_on_map = False,
                                       #layer = "Donations",
                                       # provided by Catalogue Layer
@@ -1467,7 +1467,7 @@ def customise_gis_location_controller(**attr):
                 #                        context = "location",
                 #                        default = default,
                 #                        #filter = FS("req_status").belongs([0, 1]),
-                #                        icon = "icon-wrench",
+                #                        icon = "wrench",
                 #                        layer = "Resources",
                 #                        # provided by Catalogue Layer
                 #                        #marker = "resource",
@@ -1480,7 +1480,7 @@ def customise_gis_location_controller(**attr):
                                     context = "location",
                                     default = default,
                                     filter = FS("obsolete") == False,
-                                    icon = "icon-home",
+                                    icon = "home",
                                     layer = "Facilities",
                                     # provided by Catalogue Layer
                                     #marker = "office",
@@ -1932,7 +1932,7 @@ def customise_org_facility_controller(**attr):
                                    tablename = "req_req",
                                    context = "site",
                                    filter = FS("req_status").belongs([0, 1]),
-                                   icon = "icon-flag",
+                                   icon = "request",
                                    show_on_map = False, # Since they will show within Sites
                                    list_layout = s3db.req_req_list_layout,
                                    )
@@ -1942,7 +1942,7 @@ def customise_org_facility_controller(**attr):
                                       tablename = "req_commit",
                                       context = "site",
                                       filter = FS("cancel") == False,
-                                      icon = "icon-truck",
+                                      icon = "truck",
                                       show_on_map = False,
                                       #layer = "Donations",
                                       # provided by Catalogue Layer
@@ -2282,7 +2282,7 @@ def customise_org_organisation_controller(**attr):
                                    tablename = "req_req",
                                    context = "organisation",
                                    filter = FS("req_status").belongs([0, 1]),
-                                   icon = "icon-flag",
+                                   icon = "request",
                                    layer = "Requests",
                                    # provided by Catalogue Layer
                                    #marker = "request",
@@ -2294,7 +2294,7 @@ def customise_org_organisation_controller(**attr):
                 #                        tablename = "org_resource",
                 #                        context = "organisation",
                 #                        #filter = FS("req_status").belongs([0, 1]),
-                #                        icon = "icon-wrench",
+                #                        icon = "wrench",
                 #                        layer = "Resources",
                 #                        # provided by Catalogue Layer
                 #                        #marker = "resource",
@@ -2306,7 +2306,7 @@ def customise_org_organisation_controller(**attr):
                                       tablename = "req_commit",
                                       context = "organisation",
                                       filter = FS("cancel") == False,
-                                      icon = "icon-truck",
+                                      icon = "truck",
                                       show_on_map = False,
                                       #layer = "Donations",
                                       # provided by Catalogue Layer
@@ -2319,7 +2319,7 @@ def customise_org_organisation_controller(**attr):
                                     tablename = "org_facility",
                                     context = "organisation",
                                     filter = FS("obsolete") == False,
-                                    icon = "icon-home",
+                                    icon = "home",
                                     layer = "Facilities",
                                     # provided by Catalogue Layer
                                     #marker = "office",
@@ -2837,7 +2837,7 @@ def customise_req_req_controller(**attr):
                                   context = "request",
                                   default = "req_id=%s" % record_id,
                                   filter = FS("cancel") == False,
-                                  icon = "icon-truck",
+                                  icon = "truck",
                                   show_on_map = False,
                                   #layer = "Donations",
                                   # provided by Catalogue Layer
@@ -2852,7 +2852,7 @@ def customise_req_req_controller(**attr):
                                 multiple = False,
                                 context = "request",
                                 filter = filter,
-                                icon = "icon-home",
+                                icon = "home",
                                 layer = "Facilities",
                                 # provided by Catalogue Layer
                                 #marker = "office",

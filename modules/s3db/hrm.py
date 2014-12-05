@@ -6417,7 +6417,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                    tablename = "pr_contact",
                                    type = "datalist",
                                    filter = FS("pe_id") == pe_id,
-                                   icon = "icon-phone",
+                                   icon = "phone",
                                    # Default renderer:
                                    #list_layout = s3db.pr_render_contact,
                                    orderby = "priority asc",
@@ -6427,7 +6427,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                   type = "datalist",
                                   tablename = "pr_address",
                                   filter = FS("pe_id") == pe_id,
-                                  icon = "icon-home",
+                                  icon = "home",
                                   # Default renderer:
                                   #list_layout = s3db.pr_render_address,
                                   )
@@ -6437,7 +6437,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       type = "datalist",
                                       tablename = "hrm_credential",
                                       filter = FS("person_id") == person_id,
-                                      icon = "icon-tags",
+                                      icon = "tags",
                                       # Default renderer:
                                       #list_layout = hrm_credential_list_layout,
                                       )
@@ -6446,7 +6446,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  type = "datalist",
                                  tablename = "hrm_competency",
                                  filter = FS("person_id") == person_id,
-                                 icon = "icon-comment-alt",
+                                 icon = "comment-alt",
                                  # Default renderer:
                                  #list_layout = hrm_competency_list_layout,
                                  )
@@ -6455,7 +6455,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     type = "datalist",
                                     tablename = "hrm_training",
                                     filter = FS("person_id") == person_id,
-                                    icon = "icon-wrench",
+                                    icon = "wrench",
                                     # Default renderer:
                                     #list_layout = hrm_training_list_layout,
                                     )
@@ -6464,7 +6464,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                      type = "datalist",
                                      tablename = "hrm_experience",
                                      filter = FS("person_id") == person_id,
-                                     icon = "icon-truck",
+                                     icon = "truck",
                                      # Default renderer:
                                      #list_layout = hrm_experience_list_layout,
                                      )
@@ -6473,7 +6473,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                type = "datalist",
                                tablename = "doc_document",
                                filter = FS("doc_id") == record.doc_id,
-                               icon = "icon-paperclip",
+                               icon = "paper-clip",
                                # Default renderer:
                                #list_layout = s3db.doc_document_list_layout,
                                )
@@ -6482,7 +6482,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     type = "datalist",
                                     tablename = "pr_education",
                                     filter = FS("person_id") == person_id,
-                                    icon = "icon-book",
+                                    icon = "book",
                                     )
             profile_widgets = [contacts_widget,
                                address_widget,

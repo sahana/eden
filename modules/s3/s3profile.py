@@ -321,7 +321,7 @@ class S3Profile(S3CRUD):
             label = current.T(label)
         icon = widget.get("icon", "")
         if icon:
-            icon = TAG[""](I(_class=icon), " ")
+            icon = ICON(icon)
 
         _class = self._lookup_class(r, widget)
 
@@ -417,7 +417,7 @@ class S3Profile(S3CRUD):
                         representation="dl")
         data = datalist.html(ajaxurl=ajaxurl,
                              pagesize=pagesize,
-                             empty = P(I(_class="icon-folder-open-alt"),
+                             empty = P(ICON("folder-open-alt"),
                                        BR(),
                                        S3CRUD.crud_string(tablename,
                                                           "msg_no_match"),
@@ -436,7 +436,7 @@ class S3Profile(S3CRUD):
             label = T(label)
         icon = widget.get("icon", "")
         if icon:
-            icon = TAG[""](I(_class=icon), " ")
+            icon = ICON(icon)
 
         if pagesize and numrows > pagesize:
             # Button to display the rest of the records in a Modal
@@ -637,7 +637,7 @@ class S3Profile(S3CRUD):
                 label = current.T(label)
             icon = widget.get("icon", "")
             if icon:
-                icon = TAG[""](I(_class=icon), " ")
+                icon = ICON(icon)
 
             _class = self._lookup_class(r, widget)
 
@@ -724,7 +724,7 @@ class S3Profile(S3CRUD):
             label = current.T(label)
         icon = widget.get("icon", "")
         if icon:
-            icon = TAG[""](I(_class=icon), " ")
+            icon = ICON(icon)
 
         context = widget.get("context", None)
         tablename = widget.get("tablename", None)
@@ -801,7 +801,7 @@ class S3Profile(S3CRUD):
             label = T(label)
         icon = widget.get("icon", "")
         if icon:
-            icon = TAG[""](I(_class=icon), " ")
+            icon = ICON(icon)
 
         context = widget.get("context", None)
         # Map widgets have no separate tablename
@@ -917,7 +917,7 @@ class S3Profile(S3CRUD):
                                    )
 
         # Button to go full-screen
-        fullscreen = A(I(_class="icon icon-fullscreen"),
+        fullscreen = A(ICON("fullscreen"),
                        _href=URL(c="gis", f="map_viewing_client"),
                        _class="gis_fullscreen_map-btn",
                        # If we need to support multiple maps on a page
@@ -982,7 +982,7 @@ class S3Profile(S3CRUD):
             label = current.T(label)
         icon = widget.get("icon", "")
         if icon:
-            icon = TAG[""](I(_class=icon), " ")
+            icon = ICON(icon)
 
         _class = self._lookup_class(r, widget)
 
@@ -1088,7 +1088,7 @@ class S3Profile(S3CRUD):
 
             elif current.deployment_settings.ui.formstyle == "bootstrap":
                 # Bootstrap-style action icon
-                create = A(I(_class="icon icon-plus-sign small-add"),
+                create = A(ICON("plus-sign", _class="small-add"),
                            _href=add_url,
                            _class="s3_modal",
                            _title=label_create,

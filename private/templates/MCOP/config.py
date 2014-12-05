@@ -564,7 +564,7 @@ def customise_event_incident_resource(r, tablename):
                                 tablename = "event_resource",
                                 context = "incident",
                                 #filter = FS("status").belongs(event_resource_active_statuses),
-                                icon = "icon-wrench",
+                                icon = "wrench",
                                 colspan = 1,
                                 #list_layout = s3db.event_resource_list_layout,
                                 )

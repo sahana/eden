@@ -580,7 +580,7 @@ def customise_gis_location_controller(**attr):
                 #                        type = "datalist",
                 #                        tablename = "gis_location",
                 #                        context = "location",
-                #                        icon = "icon-globe",
+                #                        icon = "globe",
                 #                        # @ToDo: Show as Polygons?
                 #                        show_on_map = False,
                 #                        list_layout = render_locations_profile,
@@ -608,7 +608,7 @@ def customise_gis_location_controller(**attr):
                                                           ),
                                             context = "location",
                                             default = default,
-                                            icon = "icon-truck",
+                                            icon = "truck",
                                             layer = "Distributions",
                                             )
 
@@ -849,7 +849,7 @@ def customise_org_organisation_controller(**attr):
                 #                      type = "datalist",
                 #                      tablename = "org_office",
                 #                      context = "organisation",
-                #                      icon = "icon-home",
+                #                      icon = "home",
                 #                      layer = "Offices",
                 #                      # provided by Catalogue Layer
                 #                      #marker = "office",
