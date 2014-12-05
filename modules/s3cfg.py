@@ -2034,6 +2034,18 @@ class S3Config(Storage):
         """
         return self.cms.get("show_titles", False)
 
+    def get_cms_multiple_organisations(self):
+        """
+            Whether there should exist mulitple Org components per Posts
+        """
+        return self.cms.get("multiple_organisations", False)
+
+    def get_cms_multiple_organisation_groups(self):
+        """
+            Whether there should exist mulitple Org group components per Posts
+        """
+        return self.cms.get("multiple_organisation_groups", False)
+
     # -------------------------------------------------------------------------
     # Shelters
     #
