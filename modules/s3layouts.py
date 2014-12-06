@@ -390,10 +390,9 @@ class S3AddResourceLink(S3NavigationItem):
         if not item.authorized:
             return None
 
-
         if current.deployment_settings.get_ui_use_button_icons():
-            label = (I(" ", _class="icon-plus"),
-                      item.label)
+            from s3.s3widgets import ICON
+            label = (ICON("add"), item.label)
         else:
             label = item.label
 
