@@ -646,7 +646,7 @@ $.filterOptionsS3({
 
         # ---------------------------------------------------------------------
         # Reusable Field
-        item_pack_represent = self.item_pack_represent
+        item_pack_represent = supply_ItemPackRepresent(lookup="supply_item_pack")
         item_pack_id = S3ReusableField("item_pack_id", "reference %s" % tablename,
                     label = T("Pack"),
                     ondelete = "RESTRICT",
@@ -930,38 +930,6 @@ $.filterOptionsS3({
             return current.messages.UNKNOWN_OPT
 
         return item_str
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def item_pack_represent(id, row=None):
-        """
-            Represent an Item Pack
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            # @ToDo: Optimised query where we don't need to do the join
-            id = row.id
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.supply_item_pack
-        query = (table.id == id) & \
-                (table.item_id == db.supply_item.id)
-        record = db(query).select(table.name,
-                                  table.quantity,
-                                  db.supply_item.um,
-                                  limitby = (0, 1)).first()
-        try:
-            if record.supply_item_pack.quantity == 1:
-                return record.supply_item_pack.name
-            else:
-                return "%s (%s x %s)" % (record.supply_item_pack.name,
-                                         record.supply_item_pack.quantity,
-                                         record.supply_item.um)
-        except:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1631,7 +1599,7 @@ class supply_ItemRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatibility reasons.
 
-            @param values: the organisation IDs
+            @param values: the supply_item IDs
         """
 
         db = current.db
@@ -1682,6 +1650,66 @@ class supply_ItemRepresent(S3Represent):
         return s3_unicode(name)
 
 # =============================================================================
+class supply_ItemPackRepresent(S3Represent):
+    """ 
+        Representation of Supply Item Packs
+        @ToDo: Optimised query where we don't need to do the join ?
+    """
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for item_pack rows, does a
+            left join with the item. Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+
+            @param values: the supply_item_pack IDs
+        """
+
+        db = current.db
+        table = db.supply_item_pack
+        itable = db.supply_item
+
+        fields = ["supply_item_pack.id",
+                  "supply_item_pack.name",
+                  "supply_item_pack.quantity",
+                  "supply_item.um"]
+
+        qty = len(values)
+        if qty == 1:
+            query = (table.id == values[0])
+            limitby = (0, 1)
+        else:
+            query = (table.id.belongs(values))
+            limitby = (0, qty)
+        
+        left = [itable.on(table.item_id == itable.id)]
+        rows = db(query).select(*fields,
+                                left = left,
+                                limitby = limitby)
+        self.queries += 1
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the supply_item_pack Row
+        """
+        try:
+            if row.supply_item_pack.quantity == 1:
+                return row.supply_item_pack.name
+            else:
+                return "%s (%s x %s)" % (row.supply_item_pack.name,
+                                         row.supply_item_pack.quantity,
+                                         row.supply_item.um)
+        except:
+            return current.messages.UNKNOWN_OPT
+
+# =============================================================================
 class supply_ItemCategoryRepresent(S3Represent):
     """ Representation of Supply Item Categories """
 
@@ -1720,7 +1748,7 @@ class supply_ItemCategoryRepresent(S3Represent):
             key and fields are not used, but are kept for API
             compatibility reasons.
 
-            @param values: the organisation IDs
+            @param values: the supply_item_category IDs
         """
 
         db = current.db
