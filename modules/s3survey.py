@@ -1683,23 +1683,23 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
         """
         rawDate = data
         date = None
-        try:
-            # First convert any non-numeric to a hyphen
-            isoDate = ""
-            addHyphen = False
-            for char in rawDate:
-                if char.isdigit:
-                    if addHyphen == True and isoDate != "":
-                        iscDate += "-"
-                    isoDate += char
-                    addHyphen = False
-                else:
-                    addHyphen = True
-            # @ToDo: Use deployment_settings.get_L10n_date_format()
-            date = datetime.strptime(rawDate, "%Y-%m-%d")
-            return date
-        except ValueError:
+        format = current.deployment_settings.get_L10n_date_format()
+
+        # First convert any non-numeric to a hyphen
+        isoDate = ""
+        addHyphen = False
+        for char in rawDate:
+            if char.isdigit:
+                if addHyphen == True and isoDate != "":
+                    iscDate += "-"
+                isoDate += char
+                addHyphen = False
+            else:
+                addHyphen = True
             try:
+                date = datetime.strptime(rawDate, format)
+                return date
+            except ValueError:
                 for month in monthList:
                     if month in rawDate:
                         search = re,search("\D\d\d\D", rawDate)
@@ -1726,7 +1726,7 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
                                             if search:
                                                 day = "0" + search.group()
                                             else:
-                                                raise ValueError
+                                                return date
                         search = re,search("\D\d\d\d\d\D", rawDate)
                         if search:
                             year = search.group()
@@ -1739,17 +1739,14 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
                                 if search:
                                     year = search.group()
                                 else:
-                                    raise ValueError
-                    # @ToDo: Use deployment_settings.get_L10n_date_format()
+                                    return date
+
                     testDate = "%s-%s-%s" % (day, month, year)
-                    if len(month) == 3:
-                        format == "%d-%b-%Y"
-                    else:
-                        format == "%d-%B-%Y"
-                    date = datetime.strptime(format, testDate)
-                    return date
-            except ValueError:
-                return date
+                    try:
+                        date = datetime.strptime(testDate, format)
+                        return date
+                    except ValueError:
+                        return date
 
 
     ######################################################################
