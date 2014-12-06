@@ -2770,6 +2770,16 @@ class GIS(object):
                 Selenium https://pypi.python.org/pypi/selenium
 
             @ToDo: print.css
+
+            OpenLayers.DOTS_PER_INCH = 72
+            Pixels at 72 dpi:
+            Letter = 612 x 792
+            A4 = 595 x 842
+            A3 = 842 x 1191
+            A2 = 1191 x 1684
+            A1 = 1684 x 2384
+            A0 = 2384 x 3375
+            @ToDo: Allow a 1cm border?
         """
 
         # @ToDo: allow selection of map_id
@@ -6207,14 +6217,17 @@ class MAP(DIV):
         for c in components:
             self._setnode(c)
 
-        # Other DIV settings
-        self.attributes = {"_class": "map_wrapper",
+        # Adapt CSS to size of Map
+        _class = "map_wrapper"
+        if opts.get("window"):
+            _class = "%s fullscreen" % _class
+        self.attributes = {"_class": _class,
                            "_id": map_id,
                            }
         self.parent = None
 
         # Show Color Picker?
-        if opts.get("color_picker", False):
+        if opts.get("color_picker"):
             # Can't be done in _setup() as usually run from xml() and hence we've already passed this part of the layout.html
             s3 = current.response.s3
             if s3.debug:

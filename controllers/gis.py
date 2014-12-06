@@ -86,13 +86,15 @@ def map_viewing_client():
     print_mode = get_vars.get("print", None)
     if print_mode:
         collapsed = True
-        toolbar = False
+        mouse_position = False
         save = False
+        toolbar = False
         zoomcontrol = False
     else:
         collapsed = False
-        toolbar = True
+        mouse_position = None # Use deployment_settings
         save = settings.get_gis_save()
+        toolbar = True
         zoomcontrol = None
 
     map = define_map(window = True,
@@ -100,6 +102,7 @@ def map_viewing_client():
                      collapsed = collapsed,
                      closable = False,
                      maximizable = False,
+                     mouse_position = mouse_position,
                      save = save,
                      zoomcontrol = zoomcontrol,
                      )
@@ -115,6 +118,7 @@ def define_map(height = None,
                closable = True,
                collapsed = False,
                maximizable = True,
+               mouse_position = None,
                save = False,
                zoomcontrol = None,
                ):
@@ -250,6 +254,7 @@ def define_map(height = None,
                        catalogue_layers = True,
                        feature_resources = feature_resources,
                        legend = legend,
+                       mouse_position = mouse_position,
                        save = save,
                        search = search,
                        toolbar = toolbar,

@@ -640,6 +640,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             map.events.clearMouseCache();
         });
 
+        mapWin.on('resize', function(mw, width, height) {
+            // Tweak the CSS for Legend & Save Panels based on browser height
+            //var height = $('.gis-map-window .x-window-bwrap').height();
+            if (height < 842) {
+                $('#' + s3.id).removeClass('a0 a1 a2 a3')
+                              .addClass('a4');
+            } else if (height < 1191) {
+                $('#' + s3.id).removeClass('a0 a1 a2 a4')
+                              .addClass('a3');
+            } else if (height < 1684) {
+                $('#' + s3.id).removeClass('a0 a1 a3 a4')
+                              .addClass('a2');
+            } else if (height < 2384) {
+                $('#' + s3.id).removeClass('a0 a2 a3 a4')
+                              .addClass('a1');
+            } else {
+                $('#' + s3.id).removeClass('a1 a2 a3 a4')
+                              .addClass('a0');
+            }
+        });
+
         // Set Options
         if (!options.windowHide) {
             // If the window is meant to be displayed immediately then display it now that it is ready

@@ -26,10 +26,9 @@
         } else if (document.body.mozRequestFullScreen) {
             document.body.mozRequestFullScreen();
         }
-        // Modify the Legend Panel & Save Panel
+        // Modify the CSS for the Legend Panel & Save Panel
         var map_id = s3.id;
-        $('#' + map_id + ' .map_legend_div').addClass('fullscreen');
-        $('#' + map_id + ' .map_save_panel').addClass('fullscreen');
+        $('#' + map_id).addClass('fullscreen');
     }
 
     function disable_fullscreen(map) {
@@ -43,10 +42,9 @@
         mapWin.destroy();
         // Add embedded Panel
         S3.gis.addMapPanel(map);
-        // Modify the Legend Panel & Save Panel
+        // Modify the CSS for the Legend Panel & Save Panel
         var map_id = s3.id;
-        $('#' + map_id + ' .map_legend_panel').removeClass('fullscreen');
-        $('#' + map_id + ' .map_save_panel').removeClass('fullscreen');
+        $('#' + map_id).removeClass('fullscreen');
     }
 
     $('.gis_fullscreen_map-btn').click(function(evt) {
