@@ -1683,6 +1683,7 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
         """
         rawDate = data
         date = None
+        format = current.deployment_settings.get_L10n_date_format()
         try:
             # First convert any non-numeric to a hyphen
             isoDate = ""
@@ -1695,8 +1696,8 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
                     addHyphen = False
                 else:
                     addHyphen = True
-            # @ToDo: Use deployment_settings.get_L10n_date_format()
-            date = datetime.strptime(rawDate, "%Y-%m-%d")
+
+            date = datetime.strptime(rawDate, format)
             return date
         except ValueError:
             try:
@@ -1740,13 +1741,9 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
                                     year = search.group()
                                 else:
                                     raise ValueError
-                    # @ToDo: Use deployment_settings.get_L10n_date_format()
+
                     testDate = "%s-%s-%s" % (day, month, year)
-                    if len(month) == 3:
-                        format == "%d-%b-%Y"
-                    else:
-                        format == "%d-%B-%Y"
-                    date = datetime.strptime(format, testDate)
+                    date = datetime.strptime(testDate, format)
                     return date
             except ValueError:
                 return date
