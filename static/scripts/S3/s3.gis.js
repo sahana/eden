@@ -5188,9 +5188,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         text: i18n.gis_print,
                         handler: function() {
                             // Save the configuration to a temporary config
-                            var config_id = saveConfig(toolbar.map, true);
-                            // Take the screenshot
                             var size = $('#x-form-el-' + map_id + '_paper_size input[name="size"]').val();
+                            // @ToDo: Modify the zoom so that the viewport covers the same area
+                            //var area
+                            var zoom;
+                            var config_id = saveConfig(toolbar.map, true, zoom);
+                            // Take the screenshot
                             var url = S3.Ap.concat('/gis/screenshot/' + config_id + '?size=' + size);
                             window.open(url);
                         }
@@ -5332,7 +5335,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Save the Config (used by both Toolbar & Floating DIV)
-    var saveConfig = function(map, temp) {
+    var saveConfig = function(map, temp, zoom) {
         var s3 = map.s3;
         var map_id = s3.id;
         // Show Throbber
@@ -5347,7 +5350,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var json_data = {
             lat: state.lat,
             lon: state.lon,
-            zoom: state.zoom,
+            zoom: zoom || state.zoom,
             layers: layersStr,
             plugins: pluginsStr
         }

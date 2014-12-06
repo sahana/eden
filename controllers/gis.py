@@ -87,22 +87,24 @@ def map_viewing_client():
     if print_mode:
         collapsed = True
         mouse_position = False
-        save = False
+        print_mode = True
         toolbar = False
         zoomcontrol = False
     else:
         collapsed = False
         mouse_position = None # Use deployment_settings
-        save = settings.get_gis_save()
+        print_mode = False
         toolbar = True
         zoomcontrol = None
 
+    save = settings.get_gis_save()
     map = define_map(window = True,
                      toolbar = toolbar,
                      collapsed = collapsed,
                      closable = False,
                      maximizable = False,
                      mouse_position = mouse_position,
+                     print_mode = print_mode,
                      save = save,
                      zoomcontrol = zoomcontrol,
                      )
@@ -119,6 +121,7 @@ def define_map(height = None,
                collapsed = False,
                maximizable = True,
                mouse_position = None,
+               print_mode = False,
                save = False,
                zoomcontrol = None,
                ):
@@ -255,6 +258,7 @@ def define_map(height = None,
                        feature_resources = feature_resources,
                        legend = legend,
                        mouse_position = mouse_position,
+                       print_mode = print_mode,
                        save = save,
                        search = search,
                        toolbar = toolbar,
@@ -3730,7 +3734,10 @@ def screenshot():
         width = get_vars.get("width")
 
     filename = gis.get_screenshot(config_id, height=height, width=width)
-    redirect(URL(c="static", f="cache",
-                 args=["jpg", filename]))
+    if filename:
+        redirect(URL(c="static", f="cache",
+                     args=["jpg", filename]))
+    else:
+        raise HTTP(500, "Screenshot not taken")
 
 # END =========================================================================

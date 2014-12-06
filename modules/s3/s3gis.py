@@ -6026,6 +6026,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
                  clear_layers = None,
                  nav = None,
                  print_control = None,
+                 print_mode = False,
                  save = False,
                  search = False,
                  mouse_position = None,
@@ -6162,6 +6163,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
                    clear_layers = clear_layers,
                    nav = nav,
                    print_control = print_control,
+                   print_mode = print_mode,
                    save = save,
                    search = search,
                    mouse_position = mouse_position,
@@ -6218,6 +6220,8 @@ class MAP(DIV):
         _class = "map_wrapper"
         if opts.get("window"):
             _class = "%s fullscreen" % _class
+        if opts.get("print_mode"):
+            _class = "%s print" % _class
         self.attributes = {"_class": _class,
                            "_id": map_id,
                            }
