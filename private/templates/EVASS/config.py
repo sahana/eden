@@ -61,7 +61,7 @@ def evass_realm_entity(table, row):
     tablename = table._tablename
 
     realm_entity = None
-    # Realm is the organization assigned during the record registration/update    
+    # Realm is the organization assigned during the record registration/update
     if tablename in ("event_event",
                      "evr_case",
                      "cr_shelter",
@@ -71,19 +71,19 @@ def evass_realm_entity(table, row):
                      ):
         otable = s3db.org_organisation
         organisation_id = row.organisation_id
-        if organisation_id:  
+        if organisation_id:
             org = db(otable.id == organisation_id).select(otable.realm_entity,
                                                           limitby=(0, 1)).first()
             realm_entity = org.realm_entity
 
     elif tablename == "event_incident":
-        # Incident realm is the related event realm 
-        # (assigned during incident registration/update    
+        # Incident realm is the related event realm
+        # (assigned during incident registration/update
         etable = db.event_event
         try:
             incident_id = row.id
             query = (table.id == incident_id) & \
-                    (etable.id == table.event_id) 
+                    (etable.id == table.event_id)
             event = db(query).select(etable.realm_entity,
                                      limitby=(0, 1)).first()
             realm_entity = event.realm_entity
@@ -91,11 +91,11 @@ def evass_realm_entity(table, row):
             return
 
     elif tablename == "pr_group":
-    # Group realm is the user's organisation    
+    # Group realm is the user's organisation
         user = current.auth.user
         if user:
             realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                             user.organisation_id)  
+                                             user.organisation_id)
     elif tablename == "org_organisation":
         realm_entity = row.pe_id
 
@@ -220,7 +220,7 @@ def customise_pr_person_resource(r, tablename):
 
         # Last name and date of birth mandatory in EVR module
         table.last_name.requires = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
-        
+
         dob_requires = s3_date("dob",
                                future = 0,
                                past = 1320,
@@ -230,14 +230,14 @@ def customise_pr_person_resource(r, tablename):
 
         # Enable Location_id
         from gluon import DIV
-        from s3.s3widgets import S3LocationSelectorWidget2
-        levels = ("L1","L2","L3",)
+        from s3 import S3LocationSelector
         location_id = table.location_id
         location_id.readable = location_id.writable = True
         location_id.label = T("Place of Birth")
-        location_id.widget = S3LocationSelectorWidget2(levels=levels,
-                                                       lines=True,
-                                                       )
+        levels = ("L1","L2","L3",)
+        location_id.widget = S3LocationSelector(levels=levels,
+                                                lines=True,
+                                                )
         location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
         # Enable place of birth
         place_of_birth = s3db.pr_person_details.place_of_birth
@@ -246,7 +246,7 @@ def customise_pr_person_resource(r, tablename):
                                     _title="%s|%s" % (T("Different Place of Birth"),
                                                       T("Specify a different place of birth (foreign country, village, hamlet)")))
         place_of_birth.readable = place_of_birth.writable = True
-            
+
         # Disable religion selection
         s3db.pr_person_details.religion.readable = False
         s3db.pr_person_details.religion.writable = False
@@ -299,7 +299,7 @@ def customise_cr_shelter_resource(r, tablename):
 
     s3db = current.s3db
     from s3 import S3HierarchyWidget
-    s3db.cr_shelter.capacity_day.writable = s3db.cr_shelter.capacity_night.writable = False 
+    s3db.cr_shelter.capacity_day.writable = s3db.cr_shelter.capacity_night.writable = False
     s3db.cr_shelter.cr_shelter_environment_id.readable = s3db.cr_shelter.cr_shelter_environment_id.writable = True
     organisation_represent = current.s3db.org_OrganisationRepresent
     node_represent = organisation_represent(parent=False)

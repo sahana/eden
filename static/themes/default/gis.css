@@ -7,6 +7,10 @@
     overflow: hidden;
     clear: right;
 }
+.map_wrapper.fullscreen {
+    /* Allow legendPanel to be visible */
+    overflow: visible;
+}
 /* Allow LayerTree to Scroll */
 .gis_west .x-panel-body {
     overflow-y: auto;
@@ -58,6 +62,10 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 }
 .notitle .ui-dialog-titlebar-close {
     margin-top: -10px;
+}
+
+.gis-map-window.x-resizable-pinned .x-window-tl {
+    height: 0;
 }
 
 /* Location Selector Widget */
@@ -130,9 +138,32 @@ svg[id^=OpenLayers] {
     right: 0;
 }
 
-.map_legend_div.fullscreen {
+.map_wrapper.fullscreen .map_legend_div {
     z-index: 9100;
-    margin-bottom: -600px;
+}
+/* A4 is 595 x 842 at 72 dpi */
+.map_wrapper.a4 .map_legend_div {
+    margin-bottom: -440px;
+}
+/* A3 is 842 x 1191 at 72 dpi */
+.map_wrapper.a3 .map_legend_div {
+    margin-bottom: -687px;
+    right: -140px;
+}
+/* A2 is 1191 x 1684 at 72 dpi */
+.map_wrapper.a2 .map_legend_div {
+    margin-bottom: -1036px;
+    right: -530px;
+}
+/* A1 is 1684 x 2384 at 72 dpi */
+.map_wrapper.a1 .map_legend_div {
+    margin-bottom: -1529px;
+    right: -2130px;
+}
+/* A0 is 2384 x 3375 at 72 dpi */
+.map_wrapper.a0 .map_legend_div {
+    margin-bottom: -2229px;
+    right: -3125px;
 }
 .map_legend_panel {
     background-color: #fbfbfb;
@@ -181,6 +212,13 @@ svg[id^=OpenLayers] {
     /* http://fortawesome.github.io/Font-Awesome/icon/double-angle-right/ */
     content: "\f101";
 }
+.map_wrapper.fullscreen .map_legend_tab {
+    height: 0;
+}
+.map_wrapper.fullscreen .map_legend_tab.right:before,
+.map_wrapper.fullscreen .map_legend_tab.left:before {
+    content:  normal;
+}
 .gis_legend_title {
     font-weight: bold;
     margin-top: 10px;
@@ -213,9 +251,9 @@ svg[id^=OpenLayers] {
     /*width: 210px;*/
     width: auto;
 }
-.map_save_panel.fullscreen {
+.map_wrapper.fullscreen .map_save_panel {
     z-index: 9100;
-    margin-top: -50px;
+    margin-top: -100px;
 }
 .map_save_panel.off {
     visibility: hidden;

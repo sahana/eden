@@ -1881,15 +1881,13 @@ class S3Method(object):
         theme = current.deployment_settings.get_theme()
         if theme != "default":
             # See if there is a Custom View for this Theme
-            if exists(join(folder, "private", "templates", theme, "views",
-                           "%s_%s_%s" % (prefix, r.name, default))):
+            view = join(folder, "private", "templates", theme, "views",
+                        "%s_%s_%s" % (prefix, r.name, default))
+            if exists(view):
                 # There is a view specific to this page
-                # Pass this mapping to the View
-                current.response.s3.views[default] = \
-                    "../private/templates/%s/views/%s_%s_%s" % (theme,
-                                                                prefix,
-                                                                r.name,
-                                                                default)
+                # NB This should normally include {{extend layout.html}}
+                # Pass view as file not str to work in compiled mode
+                return open(view, "rb")
             else:
                 if "/" in default:
                     subfolder, _default = default.split("/", 1)
@@ -1899,6 +1897,7 @@ class S3Method(object):
                 if exists(join(folder, "private", "templates", theme, "views",
                                subfolder, "_%s" % _default)):
                     # There is a general view for this page type
+                    # NB This should not include {{extend layout.html}}
                     if subfolder:
                         subfolder = "%s/" % subfolder
                     # Pass this mapping to the View

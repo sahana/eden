@@ -1,0 +1,94 @@
+{{extend "layout.html"}}{{theme=response.s3.theme}}
+<div class='row dashboard-maps'>
+ <h2 class='row-title'>{{try:}}{{=title}}{{except:}}{{pass}}</h2>
+ <h6 class='maps-title'>
+  <a href='/{{=appname}}/gis/config/datalist?~.pe_id__belongs={{=auth.user and auth.user.pe_id}}'>{{=T("View as Grid")}}</a> {{=T("Your Maps")}} <a href='/{{=appname}}/gis/config/datalist'>{{=T("View All Maps")}}</a>
+ </h6>
+ <div class='large-8 large-offset-2 columns'>
+  <div class='slick-slider'>
+  {{for m in maps:}}
+   <div><img src='/{{=appname}}/static/cache/jpg/{{=m.image}}' alt='{{=m.name}}' width='820', height='410'/></div>
+  {{pass}}
+  </div>
+  <a href='/{{=appname}}/gis/index' class='button alert make-map'>{{=T("Make a Map")}}</a>
+ </div>
+</div>
+<div class='row dashboard-lists'>
+ <div class='medium-12 large-4 columns dashboard-contacts'>
+  <div class='inner'>
+   <h6>{{=T("Recent Contacts")}}</h6>
+   <ul class='lined ellipsis'>
+   {{for p in recent_contacts:}}
+    <li><a href='/{{=appname}}/pr/person/{{=p.id}}/read'>{{=p.name}} <small class='location'>{{=p.org}}</small></a></li>
+   {{pass}}
+   </ul>        
+   <a href='/{{=appname}}/pr/person/summary' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_contacts)}}</a>
+  </div>
+</div>
+<div class='medium-12 large-4 columns dashboard-organizations'>
+ <div class='inner'>
+  <h6>{{=T("Partner Organizations")}}</h6>
+  <ul class='lined ellipsis'>
+  {{for o in partner_orgs:}}
+   <li><a href='/{{=appname}}/org/organisation/{{=o.id}}/read'>{{=o.name}}</a></li>
+  {{pass}}
+  </ul>        
+  <a href='/{{=appname}}/org/organisation/summary?&group_membership.group_id__belongs={{=coalition_id}}' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_orgs)}}</a>
+ </div>
+</div>
+<div class='medium-12 large-4 columns dashboard-activities'>
+ <div class='inner'>
+  <h6>{{=T("Latest Activities")}}</h6>
+  <ul class='lined ellipsis'>
+  {{for a in latest_activities:}}
+   <li><a href='/{{=appname}}/project/activity/{{=a.id}}/read'>{{=a.name}} <small class='location'>{{=a.location}}, <time datetime='{{=a.date_iso}}'>{{=a.date}}</time></small></a></li>
+  {{pass}}
+  </ul>        
+  <a href='/{{=appname}}/project/activity/summary?activity_group.group_id__belongs={{=coalition_id}}' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_activities)}}</a>
+ </div>
+</div>
+</div>
+<div class='row dashboard-stats'>
+ <div class='medium-4 large-2 columns'>
+  <h6 class='stat-title' data-tooltip  aria-haspopup='true' class='has-tip' title='{{=T("Track contacts and resources like medics")}}'>{{=T("People")}}</h6>
+  <p class='stat-number'>{{=total_contacts}}</p>
+  <a href='/{{=appname}}/pr/person/create' class='button tiny alert has-icon'>
+   <img width='20' height='20' alt='person' src='/{{=appname}}/static/themes/{{=theme}}/img/icons/person.png'>{{=T("Add")}}
+  </a>
+ </div>
+ <div class='medium-4 large-2 columns'>
+  <h6 class='stat-title' data-tooltip  aria-haspopup='true' class='has-tip' title='{{=T("Map groups and places for partnership")}}'>{{=T("Organizations")}}</h6>
+  <p class='stat-number'>{{=total_orgs}}</p>
+  <a href='/{{=appname}}/org/organisation/create' class='button tiny alert has-icon'>
+   <img width='20' height='20' alt='organization' src='/{{=appname}}/static/themes/{{=theme}}/img/icons/organization.png'>{{=T("Add")}}
+  </a>
+ </div>
+ <div class='medium-4 large-2 columns'>
+  <h6 class='stat-title' data-tooltip  aria-haspopup='true' class='has-tip' title='{{=T("Post relevant trainings and gatherings")}}'>{{=T("Activities")}}</h6>
+  <p class='stat-number'>{{=total_activities}}</p>
+  <a href='/{{=appname}}/project/activity/create' class='button tiny alert has-icon'>
+   <img width='20' height='20' alt='activity' src='/{{=appname}}/static/themes/{{=theme}}/img/icons/activity.png'>{{=T("Add")}}
+  </a>
+ </div>
+ <div class='medium-4 large-2 columns'>
+  <h6 class='stat-title' data-tooltip  aria-haspopup='true' class='has-tip' title='{{=T("Mark important risks or resources like water")}}'>{{=T("Points")}}</h6>
+  <p class='stat-number'>{{=total_points}}</p>
+  <a href='/{{=appname}}/gis/poi/create?~.location_id$gis_feature_type=1' class='button tiny alert has-icon'>
+   <img width='20' height='20' alt='point' src='/{{=appname}}/static/themes/{{=theme}}/img/icons/point.png'>{{=T("Add")}}
+  </a>
+ </div>
+ <div class='medium-4 large-2 columns'>
+  <h6 class='stat-title' data-tooltip  aria-haspopup='true' class='has-tip' title='{{=T("Draw paths of critical evacuation routes")}}'>{{=T("Routes")}}</h6>
+  <p class='stat-number'>{{=total_routes}}</p>
+  <a href='/{{=appname}}/gis/poi/create?~.location_id$gis_feature_type=2' class='button tiny alert has-icon'>
+   <img width='20' height='20' alt='route' src='/{{=appname}}/static/themes/{{=theme}}/img/icons/route.png'>{{=T("Add")}}
+  </a>
+ </div>
+ <div class='medium-4 large-2 columns'>
+  <h6 class='stat-title' data-tooltip  aria-haspopup='true' class='has-tip' title='{{=T("Outline major zones or communities")}}'>{{=T("Areas")}}</h6>
+  <p class='stat-number'>{{=total_areas}}</p>
+  <a href='/{{=appname}}/gis/poi/create?~.location_id$gis_feature_type=3' class='button tiny alert has-icon'>
+   <img width='20' height='20' alt='area' src='/{{=appname}}/static/themes/{{=theme}}/img/icons/area.png'>{{=T("Add")}}
+  </a>
+ </div>
+</div>

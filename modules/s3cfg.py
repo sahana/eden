@@ -84,6 +84,7 @@ class S3Config(Storage):
                     "sv": "%Y-%m-%d",
                     "ta": "%d/%m/%Y",
                     #"tet": "",
+                    "th": "%d/%m/%Y",
                     #"tl": "",
                     #"ur": "",
                     "vi": "%d/%m/%Y",
@@ -456,25 +457,26 @@ class S3Config(Storage):
         """
         T = current.T
         return self.auth.get("role_modules", OrderedDict([
-            ("staff", "Staff"),
-            ("vol", "Volunteers"),
-            ("member", "Members"),
-            ("inv", "Warehouses"),
-            ("asset", "Assets"),
-            ("project", "Projects"),
-            ("survey", "Assessments"),
-            ("irs", "Incidents")
+            ("staff", T("Staff")),
+            ("vol", T("Volunteers")),
+            ("member", T("Members")),
+            ("inv", T("Warehouses")),
+            ("asset", T("Assets")),
+            ("project", T("Projects")),
+            ("survey", T("Assessments")),
+            ("irs", T("Incidents"))
         ]))
 
     def get_auth_access_levels(self):
         """
             Access levels for the Role Manager UI
         """
+        T = current.T
         return self.auth.get("access_levels", OrderedDict([
-            ("reader", "Reader"),
-            ("data_entry", "Data Entry"),
-            ("editor", "Editor"),
-            ("super", "Super Editor")
+            ("reader", T("Reader")),
+            ("data_entry", T("Data Entry")),
+            ("editor", T("Editor")),
+            ("super", T("Super Editor"))
         ]))
 
     def get_auth_set_presence_on_login(self):
@@ -581,7 +583,7 @@ class S3Config(Storage):
     def get_chatdb_string(self):
         chat_server = self.base.get("chat_server", False)
         db_get = self.database.get
-        
+
         if (chat_server["server_db_type"] == "mysql"):
             db_string = "mysql://%s:%s@%s:%s/%s" % \
             (chat_server["server_db_username"] if chat_server["server_db_username"] else db_get("username", "sahana"),
@@ -922,6 +924,14 @@ class S3Config(Storage):
         " Display a Map-based tool to select Locations "
         return self.gis.get("map_selector", True)
 
+    def get_gis_map_selector_height(self):
+        """ Height of the map selector map """
+        return self.gis.get("map_selector_height", 340)
+
+    def get_gis_map_selector_width(self):
+        """ Width of the map selector map """
+        return self.gis.get("map_selector_width", 480)
+
     def get_gis_marker_max_height(self):
         return self.gis.get("marker_max_height", 35)
 
@@ -1147,6 +1157,7 @@ class S3Config(Storage):
                                                        ("ru", "русский"),
                                                        #("si", "සිංහල"),                # Sinhala
                                                        #("ta", "தமிழ்"),               # Tamil
+                                                       #("th", "ภาษาไทย"),        # Thai
                                                        ("tl", "Tagalog"),
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),
@@ -1319,6 +1330,18 @@ class S3Config(Storage):
         else:
             return setting
 
+    def get_ui_report_formstyle(self):
+        """ Get the current report form style """
+
+        setting = self.ui.get("report_formstyle", None)
+        formstyles = self.FORMSTYLE
+        if callable(setting):
+            return setting
+        elif setting in formstyles:
+            return formstyles[setting]
+        else:
+            return setting
+
     def get_ui_inline_formstyle(self):
         """ Get the _inline formstyle for the current formstyle """
 
@@ -1369,7 +1392,7 @@ class S3Config(Storage):
             create/update forms
         """
         return self.ui.get("default_cancel_button", False)
-        
+
     def get_ui_filter_clear(self):
         """
             Whether to show a clear button in default FilterForms
@@ -1384,14 +1407,14 @@ class S3Config(Storage):
             - "foundation"
         """
         return self.ui.get("icons", "font-awesome")
-        
+
     def get_ui_custom_icons(self):
         """
             Custom icon CSS classes, a dict {abstract name: CSS class},
             can be used to partially override standard icons
         """
         return self.ui.get("custom_icons", None)
-        
+
     def get_ui_icon_layout(self):
         """
             Callable to render icon HTML, which takes an ICON instance
@@ -1461,6 +1484,34 @@ class S3Config(Storage):
         """ UN-style deployment? """
         return self.ui.get("cluster", False)
 
+    def get_ui_label_locationselector_map_point_add(self):
+        """
+            Label for the Location Selector button to add a Point to the Map
+            e.g. 'Place on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_point_add", "Place on Map"))
+
+    def get_ui_label_locationselector_map_point_view(self):
+        """
+            Label for the Location Selector button to view a Point on the Map
+            e.g. 'View on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_point_view", "View on Map"))
+
+    def get_ui_label_locationselector_map_polygon_add(self):
+        """
+            Label for the Location Selector button to draw a Polygon on the Map
+            e.g. 'Draw on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_polygon_add", "Draw on Map"))
+
+    def get_ui_label_locationselector_map_polygon_view(self):
+        """
+            Label for the Location Selector button to view a Polygon on the Map
+            e.g. 'View on Map'
+        """
+        return current.T(self.ui.get("label_locationselector_map_polygon_view", "View on Map"))
+
     def get_ui_label_mobile_phone(self):
         """
             Label for the Mobile Phone field
@@ -1496,7 +1547,12 @@ class S3Config(Storage):
     def get_ui_multiselect_widget(self):
         """
             Whether all dropdowns should use the S3MultiSelectWidget
-            - currently respected by Auth Registration & S3LocationSelectorWidget2
+            - currently respected by Auth Registration & S3LocationSelector
+
+            Options:
+                False (default): No widget
+                True: Widget, with no header
+                "search": Widget with the search header
         """
         return self.ui.get("multiselect_widget", False)
 
@@ -1608,6 +1664,26 @@ class S3Config(Storage):
                                                    icons = False,
                                                    stripes = True,
                                                    ))
+
+    def get_ui_inline_component_layout(self):
+        """
+            Layout for S3SQLInlineComponent
+        """
+        # Use this to also catch old-style classes (not recommended):
+        #import types
+        #elif isinstance(layout, (type, types.ClassType)):
+
+        layout = self.ui.get("inline_component_layout")
+        if not layout:
+            from s3 import S3SQLSubFormLayout
+            layout = S3SQLSubFormLayout()
+        elif isinstance(layout, type):
+            # Instantiate only now when it's actually requested
+            # (because it may inject JS which is not needed if unused)
+            layout = layout()
+        # Replace so it doesn't get instantiated twice
+        self.ui.inline_component_layout = layout
+        return layout
 
     # =========================================================================
     # Messaging
@@ -1976,7 +2052,7 @@ class S3Config(Storage):
         if not self.get_cr_shelter_people_registration():
             return False
         return self.cr.get("shelter_population_dynamic", False)
-    
+
     def get_cr_shelter_people_registration(self):
         """
             Disable functionality to track individuals in shelters
@@ -2149,6 +2225,13 @@ class S3Config(Storage):
         """
         return self.hrm.get("show_staff", True)
 
+    def get_hrm_site_contact_unique(self):
+        """
+            Whether there can be multiple site contacts per site
+            - disable this if needing a separate contact per sector
+        """
+        return self.hrm.get("site_contact_unique", True)
+
     def get_hrm_skill_types(self):
         """
             If set to True then Skill Types are exposed to the UI
@@ -2164,7 +2247,7 @@ class S3Config(Storage):
             - options are: False, "experience"
         """
         return self.hrm.get("staff_experience", "experience")
-        
+
     def get_hrm_salary(self):
         """
             Whether to track salaries of staff
@@ -3045,7 +3128,7 @@ class S3Config(Storage):
         """
             Template-specific frontpage configuration options
         """
-        
+
         if key:
             return self.frontpage.get(key, default)
         else:

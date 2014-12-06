@@ -204,11 +204,13 @@ settings.gis.geonames_username = "rms_dev"
 settings.L10n.languages = OrderedDict([
     ("en-gb", "English"),
     ("es", "Español"),
+    #("fr", "Français"),
     ("km", "ភាសាខ្មែរ"),        # Khmer
     ("mn", "Монгол хэл"),   # Mongolian
     ("ne", "नेपाली"),          # Nepali
     ("prs", "دری"),         # Dari
     ("ps", "پښتو"),         # Pashto
+    #("th", "ภาษาไทย"),        # Thai
     ("vi", "Tiếng Việt"),   # Vietnamese
     ("zh-cn", "中文 (简体)"),
 ])
@@ -1727,6 +1729,48 @@ def vol_active(person_id):
         return False
 
 # -----------------------------------------------------------------------------
+def vnrc_cv_form(r):
+
+    T = current.T
+    from s3 import S3FixedOptionsWidget
+    
+    ptewidget = S3FixedOptionsWidget(("Primary",
+                                      "Intermediate",
+                                      "Advanced",
+                                      "Bachelor",
+                                      ),
+                                     translate = True,
+                                     sort = False,
+                                     )
+
+    smewidget = S3FixedOptionsWidget(("Officer",
+                                      "Principal Officer",
+                                      "Senior Officer",
+                                      ),
+                                     translate = True,
+                                     sort = False,
+                                     )
+
+    from s3 import S3SQLCustomForm
+    crud_form = S3SQLCustomForm((T("Political Theory Education"),
+                                 "pte.value",
+                                 ptewidget,
+                                 ),
+                                 (T("State Management Education"),
+                                  "sme.value",
+                                  smewidget,
+                                 )
+                                )
+
+    current.s3db.configure("pr_person", crud_form=crud_form)
+
+    return dict(label = T("Other Education"),
+                type = "form",
+                tablename = "pr_person",
+                context = ("id", "id"),
+                )
+
+# -----------------------------------------------------------------------------
 def customise_pr_person_controller(**attr):
 
     s3db = current.s3db
@@ -1757,6 +1801,8 @@ def customise_pr_person_controller(**attr):
     elif root_org == VNRC:
         # Custom components
         add_components = s3db.add_components
+        PTE_TAG = "PoliticalTheoryEducation"
+        SME_TAG = "StateManagementEducation"
         add_components("pr_person",
                        pr_identity = {"name": "idcard",
                                       "joinby": "person_id",
@@ -1764,6 +1810,23 @@ def customise_pr_person_controller(**attr):
                                       "filterfor": (2,),
                                       "multiple": False,
                                       },
+                       pr_person_tag = ({"name": "pte",
+                                         "joinby": "person_id",
+                                         "filterby": "tag",
+                                         "filterfor": (PTE_TAG,),
+                                         "multiple": False,
+                                         "defaults": {"tag": PTE_TAG,
+                                                      },
+                                         },
+                                        {"name": "sme",
+                                         "joinby": "person_id",
+                                         "filterby": "tag",
+                                         "filterfor": (SME_TAG,),
+                                         "multiple": False,
+                                         "defaults": {"tag": SME_TAG,
+                                                      },
+                                         },
+                                        ),
                        )
         add_components("hrm_human_resource",
                        hrm_insurance = ({"name": "social_insurance",
@@ -2189,6 +2252,12 @@ def customise_pr_person_controller(**attr):
                                               "end_date",
                                               ],
                                )
+                if r.method == "cv":
+                    # Customize CV
+                    s3db.set_method("pr", "person",
+                                    method = "cv",
+                                    action = s3db.hrm_CV(form=vnrc_cv_form))
+
             elif component_name == "salary":
                 stable = s3db.hrm_salary
                 stable.salary_grade_id.label = T("Grade Code")

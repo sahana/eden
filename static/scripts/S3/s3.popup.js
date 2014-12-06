@@ -308,7 +308,8 @@ function s3_popup_refresh_main_form() {
             // Ensure Input not disabled
             selector.prop('disabled', false);
             // Refresh MultiSelect if present
-            if (selector.hasClass('multiselect-widget')) {
+            if (selector.hasClass('multiselect-widget') &&
+                selector.multiselect('instance')) {
                 try {
                     selector.multiselect('refresh');
                 } catch(e) {

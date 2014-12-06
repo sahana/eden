@@ -366,6 +366,9 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.iframe_opens_full = True
 # Enable this to change the label for 'Attachments' tabs
 #settings.ui.label_attachments = "Attachments"
+# Uncomment to configure the LocationSelector labels for the Map button with Points
+#settings.label_locationselector_map_point_add = "Find on Map"
+#settings.label_locationselector_map_point_view = "Find on Map"
 # Enable this to change the label for 'Mobile Phone'
 #settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
@@ -558,6 +561,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.location_staff = ("site_id", "person_id")
 # Uncomment to have Volunteers use their Site Address as fallback if they have no Home Address defined
 #settings.hrm.location_vol = ("person_id", "site_id")
+# Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
+#settings.hrm.site_contact_unique = False
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
 # Uncomment to disable Staff experience

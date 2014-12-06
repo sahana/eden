@@ -12,15 +12,15 @@ import shutil
 import gzip
 
 
-# set fonts to be downloaded
+# Set fonts to be downloaded
 downloadfonts = [
-    "arabic",    # urdu language support
-    "unifont",   # unifont
-    "japanese",  # japanese language support
+    "arabic",    # Urdu language support
+    "unifont",   # Unifont
+    "japanese",  # Japanese language support
     ]
 
 
-## set up
+#Set up
 print "Setting Up Environment"
 script_directory = os.path.dirname(os.path.abspath(__file__))
 temp_downloads_dir = os.path.join(script_directory, "temp")
@@ -51,7 +51,7 @@ SFMIRROR = "downloads"      # Automatic
 SOURCEFORGE = "%s.sourceforge.net/sourceforge" % SFMIRROR
 
 
-## arabic fonts
+## Arabic fonts
 fontcategory = "arabic"
 if fontcategory in downloadfonts:
     if not os.path.exists(os.path.join(script_directory, fontcategory)):
@@ -90,7 +90,9 @@ if fontcategory in downloadfonts:
         print "Download Failed, Network Error!! Proceeding forward!!"
 
 
-## unifont fonts
+## Unifont fonts
+# This version: http://www.lgm.cl/trabajos/unifont/index.en.html
+# Newer version: http://unifoundry.com/unifont.html
 fontcategory = "unifont"
 if fontcategory in downloadfonts:
     if not os.path.exists(os.path.join(script_directory, fontcategory)):
@@ -124,7 +126,7 @@ if fontcategory in downloadfonts:
         print "Download Failed, Network Error!! Proceeding forward!!"
 
 
-## japanese fonts
+## Japanese fonts
 fontcategory = "japanese"
 if fontcategory in downloadfonts:
     if not os.path.exists(os.path.join(script_directory, fontcategory)):
@@ -163,7 +165,7 @@ if fontcategory in downloadfonts:
         print "Download Failed, Network Error!! Proceeding forward!!"
 
 
-## script exit
+# exit
 os.chdir(script_directory)
 shutil.rmtree(temp_downloads_dir)
 print "Deleted the script environment."

@@ -1026,14 +1026,13 @@
             'headerCallback': function (nHead, aasData, iStart, iEnd, aiDisplay) {
                 $('#modeSelectionAll').unbind('click.selectAll')
                                       .on('click.selectAll', function(event) {
+                    selectedRows[t] = [];
                     if ($(this).prop('checked')) {
                         selectionMode[t] = 'Exclusive';
-                        selectedRows[t] = [];
-                        dt.draw(false);
+                        dt.api().draw(false);
                     } else {
                         selectionMode[t] = 'Inclusive';
-                        selectedRows[t] = [];
-                        dt.draw(false);
+                        dt.api().draw(false);
                     }
                 });
                 $('.ui-icon-zoomin, .ui-icon-zoomout').unbind('click.dtToggleCell');

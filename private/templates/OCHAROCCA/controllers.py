@@ -26,14 +26,15 @@ class index(S3CustomController):
     def __call__(self):
 
         # Calculate summary data (this should be moved - perhaps done async)
-        s3db = current.s3db
         db = current.db
+        s3db = current.s3db
 
-        levels = ("L0", "L1", "L2")
+        levels = ("L0", "L1", "L2", "L3", "L4")
         data = {}
         data["total"] = {"location": 0}
         data["total"]["event_event"] = 0
         for level in levels:
+            data["total"]["gis_location_%s" % level] = 0
             data["total"]["stats_demographic_data_%s" % level] = 0
             data["total"]["vulnerability_data_%s" % level] = 0
 
@@ -50,19 +51,24 @@ class index(S3CustomController):
             name = country["name"]
 
             data[code] = {}
+            base_query = (ltable.L0 == name)
 
             # Places
-            base_query = (ltable.L0 == name)
             count = db(base_query).count()
             data[code]["location"] = count
             data["total"]["location"] += count
 
-            # Demographic Data 
-            for table, tablename in ((ddtable, "stats_demographic_data"), (vdtable, "vulnerability_data")):
+            # Administrative Areas, Demographic Data, Baseline 
+            for table, tablename in ((ltable, "gis_location"),
+                                     (ddtable, "stats_demographic_data"), 
+                                     (vdtable, "vulnerability_data")):
 
                 count_field = table._id.count()
+                
                 query = base_query & \
-                        (level_field.belongs(levels)) & \
+                        (level_field.belongs(levels))
+                if tablename != "gis_location":
+                    query = (query) & \
                         (ltable.id == table.location_id)
                 rows = db(query).select(level_field,
                                         count_field,
@@ -87,7 +93,12 @@ class index(S3CustomController):
                 data[code]["event_event"] = count
                 data["total"]["event_event"] += count
 
-        current.response.data = json.dumps(data, separators=SEPARATORS)
+        s3 = current.response.s3
+        script = '''homepage_data=%s''' % json.dumps(data, separators=SEPARATORS)
+        s3.js_global.append(script)
+        script = "/%s/static/themes/%s/js/homepage.js" % \
+            (current.request.application, THEME)
+        s3.scripts.append(script)
 
         output = {}
         self._view(THEME, "index.html")

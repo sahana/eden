@@ -10,13 +10,19 @@
          Name.................string..........Layer Name
          Description..........string..........Layer Description
          URL..................string..........Layer URL
+         File.................string..........Layer File (URL to download File)
          Projection...........string..........Projection EPSG (required)
-         Marker...............string..........Layer Symbology Marker Name
-         Style................string..........Layer Config Style
+         Marker...............string..........Style Marker Name
+         Style................string..........Style Style
+         Opacity..............string..........Style Opacity (set here to make selectStyle just remove Opacity rather than change colour)
+         Popup Format.........string..........Style Popup Format
          Folder...............string..........Layer Folder
          Config...............string..........Configuration Name
          Enabled..............boolean.........Layer Enabled in config? (SITE_DEFAULT if not-specified)
          Visible..............boolean.........Layer Visible in config? (SITE_DEFAULT if not-specified)
+         Cluster Distance.....integer.........Style Cluster Distance: The number of pixels apart that features need to be before they are clustered (default=20)
+         Cluster Threshold....integer.........Style Cluster Threshold: The minimum number of features to form a cluster (default=2, 0 to disable)
+         Refresh..............integer.........Layer Refresh (Number of seconds between refreshes: 0 to disable)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -83,12 +89,28 @@
         <resource name="gis_layer_geojson">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
+            <xsl:choose>
+                <xsl:when test="col[@field='File']!=''">
+                    <data field="file">
+                        <xsl:attribute name="url">
+                            <xsl:value-of select="col[@field='File']"/>
+                        </xsl:attribute>
+                    </data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="url">
+                        <xsl:value-of select="col[@field='URL']"/>
+                    </data>
+                </xsl:otherwise>
+            </xsl:choose>
             <reference field="projection_id" resource="gis_projection">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Projection']"/>
                 </xsl:attribute>
             </reference>
+            <xsl:if test="col[@field='Refresh']!=''">
+                <data field="refresh"><xsl:value-of select="col[@field='Refresh']"/></data>
+            </xsl:if>
 
             <resource name="gis_layer_config">
                 <reference field="config_id" resource="gis_config">

@@ -1510,6 +1510,8 @@ class S3SMSOutboundModel(S3Model):
         # @ToDo: Simplified dropdown of services which prepopulates entries & provides nice prompts for the config options
         #        + Advanced mode for raw access to real fields
         #
+        # https://www.twilio.com/docs/api/rest/sending-messages
+        #
         tablename = "msg_sms_webapi_channel"
         define_table(tablename,
                      self.super_link("channel_id", "msg_channel"),
@@ -1518,20 +1520,24 @@ class S3SMSOutboundModel(S3Model):
                      Field("url",
                            default = "https://api.clickatell.com/http/sendmsg", # Clickatell
                            #default = "https://secure.mcommons.com/api/send_message", # Mobile Commons
+                           #default = "https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages", # Twilio (Untested)
                            requires = IS_URL(),
                            ),
                      Field("parameters",
                            default = "user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
                            #default = "campaign_id=yourid", # Mobile Commons
+                           #default = "From={RegisteredTelNumber}", # Twilio (Untested)
                            ),
                      Field("message_variable", "string",
                            default = "text", # Clickatell
                            #default = "body", # Mobile Commons
+                           #default = "Body", # Twilio (Untested)
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("to_variable", "string",
                            default = "to", # Clickatell
                            #default = "phone_number", # Mobile Commons
+                           #default = "To", # Twilio (Untested)
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("max_length", "integer",
@@ -1623,6 +1629,7 @@ class S3TropoModel(S3Model):
 class S3TwilioModel(S3ChannelModel):
     """
         Twilio Inbound SMS channel
+        - for Outbound, use Web API
     """
 
     names = ("msg_twilio_channel",

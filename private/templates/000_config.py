@@ -123,6 +123,9 @@ settings.frontpage.rss = [
     }
 ]
 
+# Uncomment to restrict to specific country/countries
+#settings.gis.countries= ("LK",)
+
 # Uncomment to enable a guided tour
 #settings.base.guided_tour = True
 

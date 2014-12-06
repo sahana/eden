@@ -76,6 +76,13 @@ class S3Migration(object):
         prefix = hashlib.md5(db_string).hexdigest()
         filename = "%s_%s.table" % (prefix, tablename)
 
+        FYI: To view all constraints on a table in MySQL:
+        SHOW CREATE TABLE tablename;
+        or
+        select COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_COLUMN_NAME, REFERENCED_TABLE_NAME
+        from information_schema.KEY_COLUMN_USAGE
+        where TABLE_NAME = 'module_resourcename';
+
         @ToDo: Function to ensure that roles match those in prepop
         @ToDo: Function to dos elective additional prepop
     """
@@ -584,8 +591,13 @@ class S3Migration(object):
                 raise NotImplementedError
 
             elif db_engine == "mysql":
-                # @ToDo: http://dev.mysql.com/doc/refman/5.1/en/alter-table.html
-                raise NotImplementedError
+                # http://dev.mysql.com/doc/refman/5.1/en/alter-table.html
+                create = executesql("SHOW CREATE TABLE `%s`;" % tablename)[0][1]
+                fk = create.split("` FOREIGN KEY (`%s" % fieldname)[0].split("CONSTRAINT `").pop()
+                if "`" in fk:
+                    fk = fk.split("`")[0]
+                sql = "ALTER TABLE `%(tablename)s` DROP FOREIGN KEY `%(fk)s`, ALTER TABLE %(tablename)s ADD CONSTRAINT %(fk)s FOREIGN KEY (%(fieldname)s) REFERENCES %(reftable)s(id) ON DELETE %(ondelete)s;" % \
+                    dict(tablename=tablename, fk=fk, fieldname=fieldname, reftable=reftable, ondelete=ondelete)
 
             elif db_engine == "postgres":
                 # http://www.postgresql.org/docs/9.3/static/sql-altertable.html

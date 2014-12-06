@@ -1,5 +1,7 @@
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<a href='{{=URL(args="import")}}' id='show-add-btn' class='btn btn-primary summary-import' type='button'><i class='icon-plus'></i> {{=T("Import")}}</a>
+{{if current.auth.s3_has_permission("update", table = "%s_%s" % (current.request.controller, current.request.function) ):}}
+ <a href='{{=URL(args="import")}}' id='show-add-btn' class='btn btn-primary summary-import' type='button'><i class='icon-plus'></i> {{=T("Import")}}</a>
+{{pass}}
 <div id='summary-common'>
  {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
  <div id='filter-form' class='form-container'>

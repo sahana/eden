@@ -284,7 +284,8 @@ class S3EventModel(S3Model):
                                                 levels = levels,
                                                 label = T("Location"),
                                                 ),
-                               S3DateFilter("date",
+                               # @ToDo: Filter for any event which starts or ends within a date range
+                               S3DateFilter("start_date",
                                             label = None,
                                             hide_time = True,
                                             input_labels = {"ge": "From", "le": "To"}
@@ -695,12 +696,20 @@ class S3IncidentModel(S3Model):
                                            "autodelete": False,
                                            },
                             event_human_resource = "incident_id",
-                            hrm_human_resource = {"link": "event_human_resource",
-                                                  "joinby": "incident_id",
-                                                  "key": "human_resource_id",
-                                                  "actuate": "hide",
-                                                  "autodelete": False,
-                                                  },
+                            hrm_human_resource = ({"link": "event_human_resource",
+                                                   "joinby": "incident_id",
+                                                   "key": "human_resource_id",
+                                                   "actuate": "hide",
+                                                   "autodelete": False,
+                                                   },
+                                                  {"name": "assign",
+                                                   "link": "event_human_resource",
+                                                   "joinby": "incident_id",
+                                                   "key": "human_resource_id",
+                                                   "actuate": "hide",
+                                                   "autodelete": False,
+                                                   },
+                                                  ),
                             event_organisation = "incident_id",
                             org_organisation = {"link": "event_organisation",
                                                 "joinby": "incident_id",
@@ -957,6 +966,11 @@ class S3IncidentReportModel(S3Model):
                           self.gis_location_id(),
                           self.pr_person_id(label = T("Reported By"),
                                             ),
+                          Field("closed", "boolean",
+                                default = False,
+                                label = T("Closed"),
+                                represent = s3_yes_no_represent,
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1862,16 +1876,16 @@ class S3EventMapModel(S3Model):
                           *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create Map Configuration"),
-            title_display = T("Map Configuration Details"),
-            title_list = T("Map Configurations"),
-            title_update = T("Edit Map Configuration"),
-            label_list_button = T("List Map Configurations"),
-            label_delete_button = T("Remove Map Configuration from this incident"),
-            msg_record_created = T("Map Configuration added"),
-            msg_record_modified = T("Map Configuration updated"),
-            msg_record_deleted = T("Map Configuration removed"),
-            msg_list_empty = T("No Map Configurations currently registered in this incident"))
+            label_create = T("Create Map Profile"),
+            title_display = T("Map Profile Details"),
+            title_list = T("Map Profiles"),
+            title_update = T("Edit Map Profile"),
+            label_list_button = T("List Map Profiles"),
+            label_delete_button = T("Remove Map Profile from this incident"),
+            msg_record_created = T("Map Profile added"),
+            msg_record_modified = T("Map Profile updated"),
+            msg_record_deleted = T("Map Profile removed"),
+            msg_list_empty = T("No Map Profiles currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
         return dict()
@@ -2655,7 +2669,7 @@ def event_rheader(r):
             tabs.extend(((T("Facilities"), "site"), # Inc Shelters
                          (T("Organizations"), "organisation"),
                          (T("SitReps"), "sitrep"),
-                         (T("Map Configuration"), "config"),
+                         (T("Map Profile"), "config"),
                          ))
             if settings.has_module("msg"):
                 append((T("Send Notification"), "dispatch"))

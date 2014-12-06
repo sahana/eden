@@ -59,9 +59,13 @@ class index(S3CustomController):
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
                 if request.env.request_method == "POST":
+                    if login_form.errors:
+                        hide, show = "#register_form", "#login_form"
+                    else:
+                        hide, show = "#login_form", "#register_form"
                     post_script = \
-'''$('#register_form').removeClass('hide')
-$('#login_form').addClass('hide')'''
+'''$('%s').addClass('hide')
+$('%s').removeClass('hide')''' % (hide, show)
                 else:
                     post_script = ""
                 register_script = \
@@ -77,7 +81,7 @@ $('#login-btn').click(function(){
  $('#login_form').removeClass('hide')
 })''' % post_script
                 s3.jquery_ready.append(register_script)
-                
+
 #                s3.js_global.append(feed_control)
 
             # Provide a login box on front page
@@ -191,7 +195,7 @@ $(document).ready(function(){
             # @todo: check permission and provide an "Add Shelter" button
             #        if not shelters are yet registered
             return ""
-            
+
     # -------------------------------------------------------------------------
     def event_list(self):
         """ Provide a dropdown of links to events """
@@ -240,7 +244,7 @@ $(document).ready(function(){
                     _class="button button-home",
                     _id="incident-report-btn")
                   )
-        
+
     # -------------------------------------------------------------------------
     def staff_btn(self):
         T = current.T
@@ -264,7 +268,7 @@ $(document).ready(function(){
                     _href=URL(c="evr", f="person"),
                     _class="button button-home")
                   )
-        
+
     # -------------------------------------------------------------------------
     def shelters_btn(self):
         T = current.T
@@ -272,5 +276,5 @@ $(document).ready(function(){
                     _href=URL(c="cr", f="shelter"),
                     _class="button button-home")
                   )
-        
+
 # END =========================================================================

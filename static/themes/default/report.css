@@ -5,6 +5,18 @@
   display: none;
 }
 
+.pt-form .pt-rows {
+  margin-right: 0.5rem;
+}
+.pt-form .pt-cols {
+  margin-left: 0.5rem;
+}
+.pt-form .pt-axis-options select,
+.pt-form .pt-axis-options label {
+  display: inline-block;
+  width: auto;
+}
+
 /* Chart options */
 .tp-chart-tops,
 .pt-chart-opts {

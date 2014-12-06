@@ -266,7 +266,7 @@ class GIS(object):
         messages.lat_empty = "Invalid: Latitude can't be empty if Longitude specified!"
         messages.unknown_parent = "Invalid: %(parent_id)s is not a known Location"
         self.DEFAULT_SYMBOL = "White Dot"
-        self.hierarchy_level_keys = ["L0", "L1", "L2", "L3", "L4", "L5"]
+        self.hierarchy_level_keys = ("L0", "L1", "L2", "L3", "L4", "L5")
         self.hierarchy_levels = {}
         self.max_allowed_level_num = 4
 
@@ -507,7 +507,7 @@ class GIS(object):
     def geocode(address, postcode=None, Lx_ids=None, geocoder="google"):
         """
             Geocode an Address
-            - used by S3LocationSelectorWidget2
+            - used by S3LocationSelector
                       settings.get_gis_geocode_imported_addresses
 
             @param address: street address
@@ -689,7 +689,7 @@ class GIS(object):
     def geocode_r(lat, lon):
         """
             Geocode an Address
-            - used by S3LocationSelectorWidget2
+            - used by S3LocationSelector
                       settings.get_gis_geocode_imported_addresses
 
             @param address: street address
@@ -749,6 +749,7 @@ class GIS(object):
                         shape = wkt_loads(row.wkt)
                         ok = test.intersects(shape)
                         if ok:
+                            #print "Level: %s, id: %s" % (row.level, row.id)
                             results[row.level] = row.id
         return results
 
@@ -1345,29 +1346,44 @@ class GIS(object):
 
         # If no id supplied, extend the site config with any personal or OU configs
         if not rows and not row:
-            # Read personalised config, if available.
             auth = current.auth
             if auth.is_logged_in():
+                # Read personalised config, if available.
                 user = auth.user
                 pe_id = user.pe_id
-                # OU configs
-                # List of roles to check (in order)
-                roles = ("Staff", "Volunteer")
-                role_paths = s3db.pr_get_role_paths(pe_id, roles=roles)
-                # Unordered list of PEs
-                pes = ()
-                for role in roles:
-                    if role in role_paths:
-                        # @ToDo: Allow selection of which OU a person's config should inherit from for disambiguation
-                        # - store in s3db.gis_config?
-                        # - needs a method in gis_config_form_setup() to populate the dropdown from the OUs (in this person's Path for this person's,  would have to be a dynamic lookup for Admins)
-                        pes = role_paths[role].nodes()
-                        # Staff don't check Volunteer's OUs
-                        break
-                if current.deployment_settings.get_auth_registration_requests_organisation_group() and \
-                   user.org_group_id:
-                    # Add the user account's Org Group the list
-                    # (Will take lower-priority than Site/Org)
+                # Also look for OU configs
+                pes = []
+                if user.organisation_id:
+                    # Add the user account's Org to the list
+                    # (Will take lower-priority than Personal)
+                    otable = s3db.org_organisation
+                    org = db(otable.id == user.organisation_id).select(otable.pe_id,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                    try:
+                        pes.append(org.pe_id)
+                    except:
+                        current.log.warning("Unable to find Org %s" % user.organisation_id)
+                    if current.deployment_settings.get_org_branches():
+                        # Also look for Parent Orgs
+                        ancestors = s3db.pr_get_ancestors(org.pe_id)
+                        pes += ancestors
+
+                if user.site_id:
+                    # Add the user account's Site to the list
+                    # (Will take lower-priority than Org/Personal)
+                    stable = s3db.org_site
+                    site = db(stable.site_id == user.site_id).select(stable.pe_id,
+                                                                     limitby=(0, 1)
+                                                                     ).first()
+                    try:
+                        pes.append(site.pe_id)
+                    except:
+                        current.log.warning("Unable to find Site %s" % user.site_id)
+
+                if user.org_group_id:
+                    # Add the user account's Org Group to the list
+                    # (Will take lower-priority than Site/Org/Personal)
                     ogtable = s3db.org_group
                     ogroup = db(ogtable.id == user.org_group_id).select(ogtable.pe_id,
                                                                         limitby=(0, 1)
@@ -1381,19 +1397,19 @@ class GIS(object):
                 query = (ctable.uuid == "SITE_DEFAULT") | \
                         ((ctable.pe_id == pe_id) & \
                          (ctable.pe_default != False))
-                len_pes = len(pes)
-                if len_pes == 1:
+                if len(pes) == 1:
                     query |= (ctable.pe_id == pes[0])
-                elif len_pes:
+                else:
                     query |= (ctable.pe_id.belongs(pes))
-                # Personal may well not be complete, so Left Join
+                # Personal/OU may well not be complete, so Left Join
                 left = (ptable.on(ptable.id == ctable.projection_id),
                         stable.on((stable.config_id == ctable.id) & \
                                   (stable.layer_id == None)),
                         mtable.on(mtable.id == stable.marker_id),
                         )
                 # Order by pe_type (defined in gis_config)
-                # @ToDo: Do this purely from the hierarchy
+                # @ToDo: Sort orgs from the hierarchy?
+                # (Currently we just have branch > non-branch in pe_type)
                 rows = db(query).select(*fields,
                                         left=left,
                                         orderby=ctable.pe_type)
@@ -2519,7 +2535,7 @@ class GIS(object):
                 rows = db(query).select(stable.record_id,
                                         stable.style)
                 for row in rows:
-                    styles[row.record_id] = row.style
+                    styles[row.record_id] = json.dumps(row.style, separators=SEPARATORS)
 
                 styles[tablename] = styles
 
@@ -2754,6 +2770,16 @@ class GIS(object):
                 Selenium https://pypi.python.org/pypi/selenium
 
             @ToDo: print.css
+
+            OpenLayers.DOTS_PER_INCH = 72
+            Pixels at 72 dpi:
+            Letter = 612 x 792
+            A4 = 595 x 842
+            A3 = 842 x 1191
+            A2 = 1191 x 1684
+            A1 = 1684 x 2384
+            A0 = 2384 x 3375
+            @ToDo: Allow a 1cm border?
         """
 
         # @ToDo: allow selection of map_id
@@ -3623,7 +3649,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         current.log.debug("Unzipping %s" % layerName)
         import zipfile
         myfile = zipfile.ZipFile(fp)
-        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+        for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
             fileName = "%s.%s" % (layerName, ext)
             file = myfile.read(fileName)
             f = open(fileName, "w")
@@ -3828,7 +3854,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         # Unzip it
         current.log.debug("Unzipping %s" % layerName)
         myfile = zipfile.ZipFile(fp)
-        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+        for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
             fileName = "%s.%s" % (layerName, ext)
             file = myfile.read(fileName)
             f = open(fileName, "w")
@@ -4161,7 +4187,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
         current.log.debug("Unzipping %s" % layerName)
         import zipfile
         myfile = zipfile.ZipFile(fp)
-        for ext in ["dbf", "prj", "sbn", "sbx", "shp", "shx"]:
+        for ext in ("dbf", "prj", "sbn", "sbx", "shp", "shx"):
             fileName = "%s.%s" % (layerName, ext)
             file = myfile.read(fileName)
             f = open(fileName, "w")
@@ -6085,7 +6111,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
             @param toolbar: Show the Icon Toolbar of Controls
             @param area: Show the Area tool on the Toolbar
-            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelectorWidget2...pick up in postprocess)
+            @param color_picker: Show the Color Picker tool on the Toolbar (used for S3LocationSelector...pick up in postprocess)
                                  If a style is provided then this is used as the default style
             @param nav: Show the Navigation controls on the Toolbar
             @param save: Show the Save tool on the Toolbar
@@ -6191,14 +6217,17 @@ class MAP(DIV):
         for c in components:
             self._setnode(c)
 
-        # Other DIV settings
-        self.attributes = {"_class": "map_wrapper",
+        # Adapt CSS to size of Map
+        _class = "map_wrapper"
+        if opts.get("window"):
+            _class = "%s fullscreen" % _class
+        self.attributes = {"_class": _class,
                            "_id": map_id,
                            }
         self.parent = None
 
         # Show Color Picker?
-        if opts.get("color_picker", False):
+        if opts.get("color_picker"):
             # Can't be done in _setup() as usually run from xml() and hence we've already passed this part of the layout.html
             s3 = current.response.s3
             if s3.debug:
@@ -6473,7 +6502,7 @@ class MAP(DIV):
                     #i18n["gis_search_no_internet"] = T("Geonames.org search requires Internet connectivity!")
 
             # Show NAV controls?
-            # e.g. removed within S3LocationSelectorWidget[2]
+            # e.g. removed within S3LocationSelector[Widget]
             nav = opts.get("nav", None)
             if nav is None:
                 nav = settings.get_gis_nav_controls()
@@ -6521,7 +6550,7 @@ class MAP(DIV):
                 i18n["gis_print"] = T("Take a screenshot of the map which can be printed")
 
             # Show Save control?
-            # e.g. removed within S3LocationSelectorWidget[2]
+            # e.g. removed within S3LocationSelector[Widget]
             if opts.get("save") is True and auth.s3_logged_in():
                 options["save"] = True
                 i18n["gis_save"] = T("Save: Default Lat, Lon & Zoom for the Viewport")
@@ -6548,7 +6577,7 @@ class MAP(DIV):
                 opts["save"] = "float"
 
         # Show Save control?
-        # e.g. removed within S3LocationSelectorWidget[2]
+        # e.g. removed within S3LocationSelector[Widget]
         if opts.get("save") == "float" and auth.s3_logged_in():
             permit = auth.s3_has_permission
             if permit("create", ctable):
@@ -7207,7 +7236,7 @@ def addFeatureResources(feature_resources):
                                    ftable.trackable,
                                    ftable.use_site,
                                    # @ToDo: Deprecate Legacy
-                                   ftable.popup_fields, 
+                                   ftable.popup_fields,
                                    # @ToDo: Deprecate Legacy
                                    ftable.popup_label,
                                    ftable.cluster_attribute,
@@ -7690,10 +7719,6 @@ class LayerCoordinate(Layer):
     def as_dict(self, options=None):
         sublayers = self.sublayers
         if sublayers:
-            if current.response.s3.debug:
-                self.scripts.append("gis/cdauth.js")
-            else:
-                self.scripts.append("gis/cdauth.min.js")
             sublayer = sublayers[0]
             name_safe = re.sub("'", "", sublayer.name)
             ldict = dict(name = name_safe,
@@ -7877,6 +7902,18 @@ class LayerGeoJSON(Layer):
             else:
                 self.marker.add_attributes_to_output(output)
 
+            popup_format = self.popup_format
+            if popup_format:
+                if "T(" in popup_format:
+                    # i18n
+                    T = current.T
+                    items = regex_translate.findall(popup_format)
+                    for item in items:
+                        titem = str(T(item[1:-1]))
+                        popup_format = popup_format.replace("T(%s)" % item,
+                                                            titem)
+                output["popup_format"] = popup_format
+
             return output
 
 # -----------------------------------------------------------------------------
@@ -8006,7 +8043,7 @@ class LayerGoogle(Layer):
                 if sublayer.type == "earth":
                     ldict["Earth"] = str(T("Switch to 3D"))
                     #{"modules":[{"name":"earth","version":"1"}]}
-                    script = "http://www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
+                    script = "//www.google.com/jsapi?key=" + apikey + "&autoload=%7B%22modules%22%3A%5B%7B%22name%22%3A%22earth%22%2C%22version%22%3A%221%22%7D%5D%7D"
                     if script not in s3_scripts:
                         s3_scripts.append(script)
                     # Dynamic Loading not supported: https://developers.google.com/loader/#Dynamic
@@ -8047,12 +8084,12 @@ class LayerGoogle(Layer):
                 # Need to use v2 API
                 # This should be able to be fixed in OpenLayers now since Google have fixed in v3 API:
                 # http://code.google.com/p/gmaps-api-issues/issues/detail?id=2349#c47
-                script = "http://maps.google.com/maps?file=api&v=2&key=%s" % apikey
+                script = "//maps.google.com/maps?file=api&v=2&key=%s" % apikey
                 if script not in s3_scripts:
                     s3_scripts.append(script)
             else:
                 # v3 API (3.16 is frozen, 3.17 release & 3.18 is nightly)
-                script = "http://maps.google.com/maps/api/js?v=3.17&sensor=false"
+                script = "//maps.google.com/maps/api/js?v=3.17&sensor=false"
                 if script not in s3_scripts:
                     s3_scripts.append(script)
                 if "StreetviewButton" in ldict:
@@ -8832,7 +8869,7 @@ class Style(object):
     # -------------------------------------------------------------------------
     def as_dict(self):
         """
-            
+
         """
 
         # Not JSON-serializable
@@ -9309,7 +9346,7 @@ class S3ImportPOI(S3Method):
             resources_list = settings.get_gis_poi_export_resources()
             uploadpath = os.path.join(request.folder,"uploads/")
             from s3utils import s3_yes_no_represent
- 
+
             fields = [Field("text1", # Dummy Field to add text inside the Form
                             label = "",
                             default = T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
@@ -9341,7 +9378,7 @@ class S3ImportPOI(S3Method):
                             requires = IS_IN_SET(resources_list, multiple=True),
                             default = resources_list,
                             widget = SQLFORM.widgets.checkboxes.widget)
-                      ] 
+                      ]
 
             if not r.id:
                 from s3validators import IS_LOCATION
@@ -9363,11 +9400,11 @@ class S3ImportPOI(S3Method):
                                    separator = "",
                                    table_name = "import_poi" # Dummy table name
                                    )
- 
+
             response.view = "create.html"
             output = dict(title=title,
                           form=form)
-            
+
             if form.accepts(request.vars, current.session):
                 form_vars = form.vars
                 if form_vars.file != "":

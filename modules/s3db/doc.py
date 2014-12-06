@@ -123,16 +123,15 @@ class S3DocumentLibrary(S3Model):
                      # @ToDo: Remove since Site Instances are doc entities?
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
+                           autodelete = True,
+                           represent = self.doc_file_represent,
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
                                                        "uploads"),
-                           autodelete = True,
-                           represent = lambda file, tn=tablename: \
-                                       self.doc_file_represent(file, tn),
                            ),
                      Field("mime_type",
-                           readable=False,
-                           writable=False,
+                           readable = False,
+                           writable = False,
                            ),
                      Field("name", length=128,
                            # Allow Name to be added onvalidation
@@ -141,9 +140,9 @@ class S3DocumentLibrary(S3Model):
                            ),
                      Field("url",
                            label = T("URL"),
-                           requires = IS_EMPTY_OR(IS_URL()),
                            represent = lambda url: \
-                           url and A(url, _href=url) or NONE
+                            url and A(url, _href=url) or NONE,
+                           requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("has_been_indexed", "boolean",
                            default = False,
@@ -250,7 +249,9 @@ class S3DocumentLibrary(S3Model):
                      Field("file", "upload", autodelete=True,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS))
+                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                        # Distingish from prepop
+                                        null = "",
                                       ),
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
@@ -267,7 +268,8 @@ class S3DocumentLibrary(S3Model):
                            # Allow Name to be added onvalidation
                            requires = IS_EMPTY_OR(IS_LENGTH(128)),
                            ),
-                     Field("url", label=T("URL"),
+                     Field("url",
+                           label = T("URL"),
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("type", "integer",
@@ -305,8 +307,6 @@ class S3DocumentLibrary(S3Model):
             msg_record_deleted = T("Photo deleted"),
             msg_list_empty = T("No Photos found"))
 
-        # Search Method
-
         # Resource Configuration
         configure(tablename,
                   deduplicate = self.document_duplicate,
@@ -332,14 +332,13 @@ class S3DocumentLibrary(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def doc_file_represent(file, tablename):
+    def doc_file_represent(file):
         """ File representation """
 
-        table = current.db[tablename]
         if file:
             try:
                 # Read the filename from the file
-                filename = table.file.retrieve(file)[0]
+                filename = current.db.doc_document.file.retrieve(file)[0]
             except IOError:
                 return current.T("File not found")
             else:
@@ -355,12 +354,12 @@ class S3DocumentLibrary(S3Model):
 
         data = item.data
         query = None
-        file = data.get("file", None)
+        file = data.get("file")
         if file:
             table = item.table
             query = (table.file == file)
         else:
-            url = data.get("url", None)
+            url = data.get("url")
             if url:
                 table = item.table
                 query = (table.url == url)
@@ -383,9 +382,15 @@ class S3DocumentLibrary(S3Model):
         form_vars = form.vars
         doc = form_vars.file
 
+        if doc is None:
+            # If this is a prepop, then file not in form
+            # Interactive forms with empty doc has this as "" not None
+            return
+
         if not document:
             encoded_file = form_vars.get("imagecrop-data", None)
             if encoded_file:
+                # S3ImageCropWidget
                 import base64
                 import uuid
                 metadata, encoded_file = encoded_file.split(",")
@@ -398,19 +403,15 @@ class S3DocumentLibrary(S3Model):
                 if not form_vars.name:
                     form_vars.name = filename
 
-        if doc is None:
-            # This is a prepop, so file not in form
-            return
+        if not hasattr(doc, "file") and not doc and not form_vars.url:
+            if document:
+                msg = current.T("Either file upload or document URL required.")
+            else:
+                msg = current.T("Either file upload or image URL required.")
+            form.errors.file = msg
+            form.errors.url = msg
 
-        if document:
-            tablename = "doc_document"
-        else:
-            tablename = "doc_image"
 
-        db = current.db
-        table = db[tablename]
-
-        url = form_vars.url
         if hasattr(doc, "file"):
             name = form_vars.name
             if not name:
@@ -419,22 +420,20 @@ class S3DocumentLibrary(S3Model):
         else:
             id = current.request.post_vars.id
             if id:
+                if document:
+                    tablename = "doc_document"
+                else:
+                    tablename = "doc_image"
+
+                db = current.db
+                table = db[tablename]
                 record = db(table.id == id).select(table.file,
                                                    limitby=(0, 1)).first()
                 if record:
-                    doc = record.file
                     name = form_vars.name
                     if not name:
                         # Use the filename
-                        form_vars.name = table.file.retrieve(doc)[0]
-
-        if not hasattr(doc, "file") and not doc and not url:
-            if document:
-                msg = current.T("Either file upload or document URL required.")
-            else:
-                msg = current.T("Either file upload or image URL required.")
-            form.errors.file = msg
-            form.errors.url = msg
+                        form_vars.name = table.file.retrieve(record.file)[0]
 
         # Do a checksum on the file to see if it's a duplicate
         #import cgi
@@ -456,11 +455,12 @@ class S3DocumentLibrary(S3Model):
         #        form.errors["file"] = "%s %s" % \
         #                              (T("This file already exists on the server as"), doc_name)
 
-        return
-
     # -------------------------------------------------------------------------
     @staticmethod
-    def document_onaccept(form):        
+    def document_onaccept(form):
+        """
+            Build a full-text index
+        """
         
         form_vars = form.vars
         doc = form_vars.file
@@ -475,15 +475,15 @@ class S3DocumentLibrary(S3Model):
         current.s3task.async("document_create_index",
                              args = [document])
 
-        return
-
     # -------------------------------------------------------------------------
     @staticmethod
-    def document_ondelete(row):        
+    def document_ondelete(row):
+        """
+            Remove the full-text index
+        """
         
         db = current.db
         table = db.doc_document
-
         record = db(table.id == row.id).select(table.file,
                                                limitby=(0, 1)).first()
 
@@ -492,9 +492,7 @@ class S3DocumentLibrary(S3Model):
                                    ))
         
         current.s3task.async("document_delete_index",
-                             args = [document])   
-
-        return
+                             args = [document])
 
 # =============================================================================
 def doc_image_represent(filename):
@@ -695,7 +693,7 @@ class S3DocSitRepModel(S3Model):
                                 ),
                           self.org_organisation_id(),
                           self.gis_location_id(
-                            widget = S3LocationSelectorWidget2(show_map = False),
+                            widget = S3LocationSelector(show_map = False),
                             ),
                           s3_date(default = "now",
                                   ),

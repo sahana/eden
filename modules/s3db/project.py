@@ -62,6 +62,7 @@ __all__ = ("S3ProjectModel",
            "project_project_filters",
            "project_project_list_layout",
            "project_task_list_layout",
+           "project_ckeditor",
            )
 
 import datetime
@@ -2098,11 +2099,10 @@ class S3ProjectCampaignModel(S3Model):
                      s3_comments("message",
                                  label = T("Message")),
                      location_id(
-                        widget = S3LocationSelectorWidget2(
-                           catalog_layers = True,
-                           points = False,
-                           polygons = True,
-                        )
+                        widget = S3LocationSelector(catalog_layers = True,
+                                                    points = False,
+                                                    polygons = True,
+                                                    )
                      ),
                      # @ToDo: Allow selection of which channel message should be sent out on
                      #self.msg_channel_id(),
@@ -4039,6 +4039,8 @@ class S3ProjectTaskModel(S3Model):
              "project_tag",
              "project_task",
              "project_task_id",
+             "project_role",
+             "project_member",
              "project_time",
              "project_comment",
              "project_task_project",
@@ -4181,6 +4183,8 @@ class S3ProjectTaskModel(S3Model):
         project_task_status_opts = settings.get_project_task_status_opts()
         # Which options for the Status for a Task count as the task being 'Active'
         project_task_active_statuses = [2, 3, 4, 11]
+        assignee_represent = self.pr_PersonEntityRepresent(show_label = False,
+                                                           show_type = False)
 
         #staff = auth.s3_has_role("STAFF")
         staff = auth.is_logged_in()
@@ -4234,7 +4238,7 @@ class S3ProjectTaskModel(S3Model):
                                 label = T("Assigned to"),
                                 filterby = "instance_type",
                                 filter_opts = ("pr_person", "pr_group", "org_organisation"),
-                                represent = self.project_assignee_represent,
+                                represent = assignee_represent,
                                 # @ToDo: Widget
                                 #widget = S3PentityWidget(),
                                 #comment = DIV(_class="tooltip",
@@ -4562,6 +4566,8 @@ class S3ProjectTaskModel(S3Model):
                                             },
                        # Format for S3SQLInlineComponent
                        project_task_milestone = "task_id",
+                       # Members
+                       project_member = "task_id",
                        # Tags
                        project_tag = {"link": "project_task_tag",
                                       "joinby": "task_id",
@@ -4695,6 +4701,60 @@ class S3ProjectTaskModel(S3Model):
                                  "modified_on"
                                  ],
                   )
+
+        # ---------------------------------------------------------------------
+        # Project Task Roles
+        # - Users can assign themselves roles while working on tasks
+        #
+        tablename = "project_role"
+        define_table(tablename,
+                     Field("role", length=128, notnull=True, unique=True,
+                           label=T("Role"),
+                           requires = IS_NOT_ONE_OF(db,
+                                                    "project_role.role"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Role"),
+            title_display = T("Task Role"),
+            title_list = T("Task Roles"),
+            title_update = T("Edit Role"),
+            label_list_button = T("List Roles"),
+            label_delete_button = T("Delete Role"),
+            msg_record_created = T("Role added"),
+            msg_record_modified = T("Role updated"),
+            msg_record_deleted = T("Role deleted"),
+            msg_list_empty = T("No such Role exists"))
+
+        represent = S3Represent(lookup=tablename,
+                                fields=["role"])
+
+        role_id = S3ReusableField("role_id", "reference %s" % tablename,
+                                  ondelete = "CASCADE",
+                                  requires = IS_ONE_OF(db,
+                                                       "project_role.id",
+                                                       represent),
+                                  represent = represent,
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Project Members
+        # - Members for tasks in Project
+        #
+        person_id = self.pr_person_id
+        tablename = "project_member"
+
+        define_table(tablename,
+                     person_id(label = T("Member"),
+                               default = auth.s3_logged_in_person(),
+                               widget = SQLFORM.widgets.options.widget),
+                     role_id(label=T("Role"),
+                             empty = False),
+                     task_id(empty = False,
+                             ondelete = "CASCADE"),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Project Time
@@ -4897,50 +4957,6 @@ class S3ProjectTaskModel(S3Model):
                 (ltable.milestone_id == mtable.id)
         rows = db(query).select(mtable.id, mtable.name)
         return dict((row.id, row.name) for row in rows)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_assignee_represent(id, row=None):
-        """
-            FK representation
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            id = row.pe_id
-            instance_type = row.instance_type
-        elif id:
-            if isinstance(id, Row):
-                instance_type = id.instance_type
-                id = id.pe_id
-            else:
-                instance_type = None
-        else:
-            return current.messages["NONE"]
-
-        db = current.db
-        s3db = current.s3db
-        if not instance_type:
-            table = s3db.pr_pentity
-            r = db(table._id == id).select(table.instance_type,
-                                           limitby=(0, 1)).first()
-            instance_type = r.instance_type
-
-        if instance_type == "pr_person":
-            # initials?
-            return s3_fullname(pe_id=id) or current.messages.UNKNOWN_OPT
-        elif instance_type in ("pr_group", "org_organisation"):
-            # Team or Organisation
-            table = s3db[instance_type]
-            r = db(table.pe_id == id).select(table.name,
-                                             limitby=(0, 1)).first()
-            try:
-                return r.name
-            except:
-                return current.messages.UNKNOWN_OPT
-        else:
-            return current.messages.UNKNOWN_OPT
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -57,9 +57,13 @@ class index(S3CustomController):
                                             dict(sign_up_now=B(T("sign-up now"))))))
 
                 if request.env.request_method == "POST":
+                    if login_form.errors:
+                        hide, show = "#register_form", "#login_form"
+                    else:
+                        hide, show = "#login_form", "#register_form"
                     post_script = \
-'''$('#register_form').removeClass('hide')
-$('#login_form').addClass('hide')'''
+'''$('%s').addClass('hide')
+$('%s').removeClass('hide')''' % (hide, show)
                 else:
                     post_script = ""
                 register_script = \
@@ -298,7 +302,7 @@ class subscriptions(S3CustomController):
         auth = current.auth
         if not auth.s3_logged_in():
             auth.permission.fail()
-            
+
         # Available resources
         resources = [dict(resource="cms_post",
                           url="default/index/newsfeed",
@@ -337,9 +341,9 @@ class subscriptions(S3CustomController):
 
         # Form
         form = self._manage_subscriptions(resources, filters)
-        
+
         return dict(title=title, form=form)
-        
+
     # -------------------------------------------------------------------------
     def _manage_subscriptions(self, resources, filters):
         """
@@ -363,7 +367,7 @@ class subscriptions(S3CustomController):
             ERROR = T("Error: could not update notification settings"),
             SUCCESS = T("Notification settings updated"),
         )
-        
+
         # Get current subscription settings resp. form defaults
         subscription = self._get_subscription()
 
@@ -510,7 +514,7 @@ $('#subscription-form').submit(function() {
 
         db = current.db
         s3db = current.s3db
-        
+
         pe_id = current.auth.user.pe_id
 
         stable = s3db.pr_subscription
@@ -528,7 +532,7 @@ $('#subscription-form').submit(function() {
                                limitby=(0, 1)).first()
 
         output = {"pe_id": pe_id}
-                            
+
         get_vars = {}
         if row:
             # Existing settings
@@ -565,7 +569,7 @@ $('#subscription-form').submit(function() {
                            "frequency": s.frequency,
                            "method": ["EMAIL"] #s.method,
                            })
-            
+
         else:
             # Form defaults
             output.update({"id": None,
@@ -593,7 +597,7 @@ $('#subscription-form').submit(function() {
         filters = subscription.get("filters")
         if filters:
             ftable = s3db.pr_filter
-            
+
             if not filter_id:
                 success = ftable.insert(pe_id=pe_id, query=filters)
                 filter_id = success
@@ -638,10 +642,10 @@ $('#subscription-form').submit(function() {
                     subscribed[(r.resource, r.url)] = r.id
                     timestamps[r.id] = (r.last_check_time,
                                         r.next_check_time)
-                                    
+
             intervals = s3db.pr_subscription_check_intervals
             interval = timedelta(minutes=intervals.get(frequency, 0))
-                
+
             keep = set()
             fk = '''{"subscription_id": %s}''' % subscription_id
             for new in subscribe:
@@ -678,7 +682,7 @@ $('#subscription-form').submit(function() {
                     if data:
                         db(rtable.id == record_id).update(**data)
                     keep.add(record_id)
-                    
+
             # Unsubscribe all others
             unsubscribe = set(subscribed.values()) - keep
             db(rtable.id.belongs(unsubscribe)).update(deleted=True,
@@ -689,7 +693,7 @@ $('#subscription-form').submit(function() {
         subscription["id"] = subscription_id
         subscription["filter_id"] = filter_id
         return subscription
-        
+
 # =============================================================================
 class contact(S3CustomController):
     """ Contact Form """

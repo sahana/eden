@@ -44,6 +44,8 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ("SL",)
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -79,6 +81,11 @@ settings.L10n.default_language = "en_gb"
 settings.L10n.display_toolbar = False
 # Default timezone for users
 #settings.L10n.utc_offset = "UTC +0100"
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+settings.L10n.thousands_separator = ","
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -198,8 +205,10 @@ def customise_disease_stats_data_resource(r, tablename):
     # Default parameter filter
     def default_parameter_filter(selector, tablename=None):
         ptable = s3db.stats_parameter
-        row = current.db(ptable.name == "Cases").select(ptable.parameter_id,
-                                                        limitby = (0, 1)).first()
+        query = (ptable.deleted == False) & \
+                (ptable.name == "Cases")
+        row = current.db(query).select(ptable.parameter_id,
+                                       limitby = (0, 1)).first()
         if row:
             return row.parameter_id
         else:
@@ -215,6 +224,38 @@ def customise_disease_stats_data_resource(r, tablename):
             filter_widget.opts.default = "L2"
 
 settings.customise_disease_stats_data_resource = customise_disease_stats_data_resource
+
+# -----------------------------------------------------------------------------
+def customise_stats_demographic_data_resource(r, tablename):
+
+    s3db = current.s3db
+    # Load model & set defaults
+    table = s3db.stats_demographic_data
+
+    # Default parameter filter
+    def default_parameter_filter(selector, tablename=None):
+        ptable = s3db.stats_parameter
+        query = (ptable.deleted == False) & \
+                (ptable.name == "Population Total")
+        row = current.db(query).select(ptable.parameter_id,
+                                       limitby = (0, 1)).first()
+        if row:
+            return row.parameter_id
+        else:
+            return None
+
+    # Set filter defaults
+    resource = r.resource
+    filter_widgets = resource.get_config("filter_widgets", [])
+    for filter_widget in filter_widgets:
+        if filter_widget.field == "parameter_id":
+            filter_widget.opts.default = default_parameter_filter
+        elif filter_widget.field == "location_id$level":
+            filter_widget.opts.default = "L1"
+        elif filter_widget.field == "year":
+            filter_widget.opts.default = 2004
+
+settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

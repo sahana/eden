@@ -61,6 +61,17 @@
             this.formname = el.attr('id').split('-').pop();
             this.input = $('#' + el.attr('field'));
 
+            // Configure layout-dependend functions
+            var layout = this._layout;
+            if ($.inlineComponentLayout) {
+                // Use custom script
+                layout = $.inlineComponentLayout;
+            }
+            this._renderReadRow = layout.renderReadRow;
+            this._appendReadRow = layout.appendReadRow;
+            this._appendError = layout.appendError;
+            this._updateColumn = layout.updateColumn;
+
             this.refresh();
         },
 
@@ -134,9 +145,117 @@
             // Check for required subforms
             el.find('.inline-form.add-row.required').each(function() {
                 // Ensure these get validated whether or not they are changed
-                self.markChanged(this);
-                self.catchSubmit(this);
+                self._markChanged(this);
+                self._catchSubmit(this);
             });
+        },
+
+        // Layout -------------------------------------------------------------
+
+        /**
+         * The default layout-dependend functions
+         */
+        _layout: {
+
+            /**
+            * Render a read-row (default row layout)
+            *
+            * @param {string} formname - the form name
+            * @param {string|number} rowindex - the row index
+            * @param {array} items - the data items
+            *
+            * @return {jQuery} the row
+            */
+            renderReadRow: function(formname, rowindex, items) {
+
+                var columns = '';
+
+                // Render the items
+                for (var i=0, len=items.length; i<len; i++) {
+                    columns += '<td>' + items[i] + '</td>';
+                }
+
+                // Append edit-button
+                if ($('#edt-' + formname + '-none').length !== 0) {
+                    columns += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
+                } else {
+                    columns += '<td></td>';
+                }
+
+                // Append remove-button
+                if ($('#rmv-' + formname + '-none').length !== 0) {
+                    columns += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
+                } else {
+                    columns += '<td></td>';
+                }
+
+                // Get the row
+                var rowID = 'read-row-' + formname + '-' + rowindex;
+                var row = $('#' + rowID);
+                if (!row.length) {
+                    // New row
+                    row = $('<tr id="' + rowID + '" class="read-row">');
+                }
+
+                // Add the columns to the row
+                row.empty().html(columns);
+
+                return row;
+            },
+
+            /**
+             * Append a new read-row to the inline component
+             *
+             * @param {string} formname - the formname
+             * @param {jQuery} row - the row to append
+             */
+            appendReadRow: function(formname, row) {
+
+                $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(row);
+            },
+
+            /**
+            * Append an error to a form field or row
+            *
+            * @param {string} formname - the form name
+            * @param {string|number} rowindex - the input row index ('none' for add, '0' for edit)
+            * @param {string} fieldname - the field name
+            * @param {string} message - the error message
+            */
+            appendError: function(formname, rowindex, fieldname, message) {
+
+                var errorClass = formname + '_error',
+                    target,
+                    msg = '<div class="error">' + message + '</div>';
+
+                if (null === fieldname) {
+                    // Append error message to the whole subform
+                    if ('none' == rowindex) {
+                        target = '#add-row-' + formname;
+                    } else {
+                        target = '#edit-row-' + formname;
+                    }
+                    msg = $('<tr><td colspan="' + $(target + '> td').length + '">' + msg + '</td></tr>');
+                } else {
+                    // Append error message to subform field
+                    target = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
+                    msg = $(msg);
+                }
+                msg.addClass(errorClass).hide().insertAfter(target);
+            },
+
+            /**
+            * Update (replace) the content of a column, needed to write
+            * read-only field data into an edit row
+            *
+            * @param {jQuery} row - the row
+            * @param {number} colIndex - the column index
+            * @param {string|HTML} contents - the column contents
+            */
+            updateColumn: function(row, colIndex, contents) {
+
+                $(row).find('td').eq(colIndex).html(contents);
+            }
         },
 
         // Utilities ----------------------------------------------------------
@@ -184,44 +303,6 @@
         },
 
         /**
-         * Append an error to a form field or row
-         *
-         * @param {string|number} rowindex - the row index
-         * @param {string} fieldname - the field name
-         * @param {string} message - the error message
-         *
-         * @todo: make formstyle-dependend
-         */
-        _appendError: function(rowindex, fieldname, message) {
-
-            var formname = this.formname;
-
-            var field_id, msg;
-            if (null === fieldname) {
-                if ('none' == rowindex) {
-                    field_id = '#add-row-' + formname;
-                } else {
-                    field_id = '#edit-row-' + formname;
-                }
-                var l = $(field_id + '> td').length;
-                msg = '<tr class="' + formname + '_error">' +
-                        '<td colspan="' + l + '">' +
-                        '<div class="error">' +
-                            message +
-                        '</div></td></tr>';
-            } else {
-                field_id = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
-                msg = '<div class="' + formname + '_error error">' + message + '</div>';
-            }
-            $(field_id).after(msg);
-            $('.' + formname + '_error').hide();
-            $('.error').click(function() {
-                $(this).fadeOut('slow');
-                return false;
-            });
-        },
-
-        /**
          * Display all errors
          */
         _displayErrors: function() {
@@ -239,18 +320,20 @@
          * Disable the add-row
          */
         _disableAddRow: function() {
-            var add_tds = $('#add-row-' + this.formname + ' > td');
-            add_tds.find('input, select, textarea').prop('disabled', true);
-            add_tds.find('.inline-add, .action-lnk').addClass('hide');
+
+            var addRow = $('#add-row-' + this.formname);
+            addRow.find('input, select, textarea').prop('disabled', true);
+            addRow.find('.inline-add, .action-lnk').addClass('hide');
         },
 
         /**
          * Enable the add-row
          */
         _enableAddRow: function() {
-            var add_tds = $('#add-row-' + this.formname + ' > td');
-            add_tds.find('input, select, textarea').prop('disabled', false);
-            add_tds.find('.inline-add, .action-lnk').removeClass('hide');
+
+            var addRow = $('#add-row-' + this.formname);
+            addRow.find('input, select, textarea').prop('disabled', false);
+            addRow.find('.inline-add, .action-lnk').removeClass('hide');
         },
 
         /**
@@ -297,12 +380,11 @@
                 value,
                 cssclass,
                 intvalue,
-                fields = data['fields'];
+                fields = data['fields'],
+                upload_index;
             for (var i=0; i < fields.length; i++) {
                 fieldname = fields[i]['name'];
-                selector = '#sub_' +
-                        formname + '_' + formname + '_i_' +
-                        fieldname + '_edit_' + rowindex;
+                selector = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
                 input = $(selector);
                 if (input.length) {
                     // Field is Writable
@@ -367,77 +449,63 @@
             var single = $('#read-row-' + formname + '-' + rowindex).hasClass('single');
             if (single) {
                 // A multiple=False subform being edited
-                // setting all fields to '' => delete
-                var del = true;
+                // => setting all fields to '' indicates delete
+                var deleteRow = true;
                 for (fieldname in row) {
                     if ((fieldname != '_id') && (row[fieldname] !== '')) {
-                        del = false;
+                        deleteRow = false;
+                        break;
                     }
                 }
-                if (del) {
+                if (deleteRow) {
+                    // Check whether subform is required
                     var required = $('#edit-row-' + formname).hasClass('required');
                     if (required) {
-                        // Cannot delete
-                        this._append_error(rowindex, fieldname, i18n.enter_value);
+                        // Subform is required => cannot delete
+                        this._appendError(formname, '0', fieldname, i18n.enter_value);
                         row['_error'] = true;
                     } else {
-                        // Delete
+                        // Delete it
                         row['_delete'] = true;
                     }
                 } else {
                     delete row['_error'];
                 }
             } else {
-                // Check if subform is required
-                var add_required = $('#add-row-' + formname).hasClass('required'),
-                    empty;
-                if (add_required) {
+                // Check whether subform is required
+                var subformRequired = false;
+                if ($('#add-row-' + formname).hasClass('required') ||
+                    $('#edit-row-' + formname).hasClass('required')) {
+                    subformRequired = true;
+                }
+                // Make sure there is at least one row
+                if (subformRequired) {
+                    // Check if empty
                     delete row['_error'];
-                    empty = true;
+                    var empty = true;
                     for (fieldname in row) {
                         if ((fieldname != '_id') && (row[fieldname] !== '')) {
                             empty = false;
                         }
                     }
                     if (empty) {
-                        // Check if we have other rows
+                        var errorIndex = 'none';
+                        if (rowindex != 'none') {
+                            // This is the edit-row, so the index is always '0'
+                            errorIndex = '0';
+                        }
+                        // Check whether rows can be added (=whether there is an add-button)
                         if ($('#add-' + formname + '-' + rowindex).length) {
-                            // multiple=true, can have other rows
+                            // Multiple=true, rows can be added
                             if (!$('#read-row-' + formname + '-0').length) {
-                                // No rows present
-                                this._append_error(rowindex, fieldname, i18n.enter_value);
+                                // No rows present => error
+                                this._appendError(formname, errorIndex, fieldname, i18n.enter_value);
                                 row['_error'] = true;
                             }
                         } else {
-                            // multiple=false, no other rows
-                            this._append_error(rowindex, fieldname, i18n.enter_value);
+                            // Multiple=false, no other rows can exist => error
+                            this._appendError(formname, errorIndex, fieldname, i18n.enter_value);
                             row['_error'] = true;
-                        }
-                    }
-                } else {
-                    var edit_required = $('#edit-row-' + formname).hasClass('required');
-                    if (edit_required) {
-                        delete row['_error'];
-                        empty = true;
-                        for (fieldname in row) {
-                            if ((fieldname != '_id') && (row[fieldname] !== '')) {
-                                empty = false;
-                            }
-                        }
-                        if (empty) {
-                            // Check if we have other rows
-                            if ($('#add-' + formname + '-' + rowindex).length) {
-                                // multiple=true, can have other rows
-                                if (!$('#read-row-' + formname + '-0').length) {
-                                    // No rows present
-                                    this._append_error(rowindex, fieldname, i18n.enter_value);
-                                    row['_error'] = true;
-                                }
-                            } else {
-                                // multiple=false, no other rows
-                                this._append_error(rowindex, fieldname, i18n.enter_value);
-                                row['_error'] = true;
-                            }
                         }
                     }
                 }
@@ -459,7 +527,7 @@
         /**
          * Validate a new/updated row
          *
-         * @param {string|number} rowindex - the row index
+         * @param {string|number} rowindex - the input row index ('none' for add, '0' for edit)
          * @param {object} data - the de-serialized JSON data
          * @param {object} row - the new row data
          */
@@ -469,7 +537,7 @@
 
             if (row._error) {
                 // Required row which has already been validated as bad
-                this._display_errors();
+                this._displayErrors();
                 return null;
             }
 
@@ -513,7 +581,7 @@
                 has_errors = true;
             } else if (response.hasOwnProperty('_error')) {
                 has_errors = true;
-                this._appendError(rowindex, null, response._error);
+                this._appendError(formname, rowindex, null, response._error);
             }
             var item,
                 error,
@@ -526,7 +594,7 @@
                         // Virtual Field - not a real error
                         item.text = item.value;
                     } else {
-                        this._appendError(rowindex, field, error);
+                        this._appendError(formname, rowindex, field, error);
                         has_errors = true;
                     }
                 }
@@ -593,9 +661,7 @@
                 input = $(element);
                 if (!input.length) {
                     // Read-only field
-                    text = row[fieldname]['text'];
-                    var td = $('#edit-row-' + formname + ' td')[i];
-                    td.innerHTML = text;
+                    this._updateColumn($('#edit-row-' + formname), i, row[fieldname]['text']);
                 } else {
                     if (input.attr('type') == 'file') {
                         // Update the existing upload item, if there is one
@@ -612,8 +678,12 @@
                         input.prop('checked', value);
                     } else {
                         input.val(value);
-                        if (input.hasClass('multiselect-widget')) {
+                        if (input.hasClass('multiselect-widget') && input.multiselect('instance')) {
                             input.multiselect('refresh');
+                        } else if (input.hasClass('groupedopts-widget') && input.groupedopts('instance')) {
+                            input.groupedopts('refresh');
+                        } else if (input.hasClass('location-selector') && input.locationselector('instance')) {
+                            input.locationselector('refresh');
                         } else {
                             // Populate text in autocompletes
                             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';
@@ -633,7 +703,7 @@
                     .removeClass('hide');
 
             // Trigger the dropdown change event
-            $('#edit-row-' + formname + ' select').change();
+            $('#edit-row-' + formname + ' select:not(".lx-select")').change();
 
             // Disable the add-row while editing
             this._disableAddRow();
@@ -700,7 +770,8 @@
 
             // If this is an empty required=true row in a multiple=true with existing rows, then don't validate
             var add_required = $('#add-row-' + formname).hasClass('required'),
-                empty;
+                empty,
+                fieldname;
             if (add_required) {
                 empty = true;
                 for (fieldname in row_data) {
@@ -737,13 +808,13 @@
 
                 if (multiple) {
                     // Create a new read-row, clear add-row
-                    var read_row = '<tr id="read-row-' + formname + '-' + newindex + '" class="read-row">';
-                    var fields = data['fields'];
-                    var i, 
-                        field, 
-                        upload, 
-                        d, 
-                        f, 
+                    var items = [],
+                        fields = data['fields'],
+                        i,
+                        field,
+                        upload,
+                        d,
+                        f,
                         default_value;
                     for (i=0; i < fields.length; i++) {
                         field = fields[i]['name'];
@@ -755,7 +826,7 @@
                             upload.attr('id', upload_id)
                                 .attr('name', upload_id);
                         }
-                        read_row += '<td>' + new_row[field]['text'] + '</td>';
+                        items.push(new_row[field]['text']);
                         // Reset add-field to default value
                         d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
                         f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_none');
@@ -773,8 +844,15 @@
                         } else {
                             default_value = d.val();
                             f.val(default_value);
+                            // Update widgets
                             if (f.attr('type') == 'checkbox') {
                                 f.prop('checked', d.prop('checked'));
+                            } else if (f.hasClass('multiselect-widget') && f.multiselect('instance')) {
+                                f.multiselect('refresh');
+                            } else if (f.hasClass('groupedopts-widget') && f.groupedopts('instance')) {
+                                f.groupedopts('refresh');
+                            } else if (f.hasClass('location-selector') && f.locationselector('instance')) {
+                                f.locationselector('refresh');
                             }
                         }
                         default_value = $('#dummy_sub_' + formname + '_' + formname + '_i_' + field + '_edit_default').val();
@@ -783,22 +861,11 @@
                     // Unmark changed
                     $('#add-row-' + formname).removeClass('changed');
 
-                    // Add edit-button
-                    if ($('#edt-' + formname + '-none').length !== 0) {
-                        read_row += '<td><div><div id="edt-' + formname + '-' + newindex + '" class="inline-edt"></div></div></td>';
-                    } else {
-                        read_row += '<td></td>';
-                    }
-                    // Add remove-button
-                    if ($('#rmv-' + formname + '-none').length !== 0) {
-                        read_row += '<td><div><div id="rmv-' + formname + '-' + newindex + '" class="inline-rmv"></div></div></td>';
-                    } else {
-                        read_row += '<td></td>';
-                    }
-                    read_row += '</tr>';
-                    // Append the new read-row to the table
-                    $('#sub-' + formname + ' > table.embeddedComponent > tbody').append(read_row);
-                    this._buttonEvents();
+                    // Render new read row and append to container
+                    var read_row = this._renderReadRow(formname, newindex, items);
+
+                    // Append read-row
+                    this._appendReadRow(formname, read_row);
                 }
             }
 
@@ -856,7 +923,7 @@
 
             } else {
                 // Validate the form data
-                var new_row = this._validate(data, rowindex, row_data);
+                var new_row = this._validate(data, '0', row_data);
 
                 var success = false;
                 if (null !== new_row) {
@@ -871,13 +938,13 @@
 
                     if (multiple) {
                         // Update read-row in the table, clear edit-row
-                        var read_row = '',
+                        var items = [],
                             fields = data['fields'],
                             default_value,
                             i;
                         for (i=0; i < fields.length; i++) {
                             var field = fields[i]['name'];
-                            read_row += '<td>' + new_row[field]['text'] + '</td>';
+                            items.push(new_row[field]['text']);
                             // Reset edit-field to default value
                             var d = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_default');
                             var f = $('#sub_' + formname + '_' + formname + '_i_' + field + '_edit_0');
@@ -903,22 +970,8 @@
                         var edit_row = $('#edit-row-' + formname);
                         edit_row.removeClass('changed');
 
-                        // Add edit-button
-                        if ($('#edt-' + formname + '-none').length !== 0) {
-                            read_row += '<td><div><div id="edt-' + formname + '-' + rowindex + '" class="inline-edt"></div></div></td>';
-                        } else {
-                            read_row += '<td></td>';
-                        }
-                        // Add remove-button
-                        if ($('#rmv-' + formname + '-none').length !== 0) {
-                            read_row += '<td><div><div id="rmv-' + formname + '-' + rowindex + '" class="inline-rmv"></div></div></td>';
-                        } else {
-                            read_row += '<td></td>';
-                        }
-
-                        $('#read-row-' + formname + '-' + rowindex + ' > td').remove();
-                        $('#read-row-' + formname + '-' + rowindex).html(read_row);
-                        this._buttonEvents();
+                        // Update the read row
+                        var read_row = this._renderReadRow(formname, rowindex, items);
 
                         // Hide and reset the edit row
                         edit_row.addClass('hide')
@@ -926,7 +979,7 @@
                                 .data('rowindex', null);
 
                         // Show the read row
-                        $('#read-row-' + rowname).removeClass('hide');
+                        read_row.removeClass('hide');
 
                         // Re-enable add-row
                         this._enableAddRow();
@@ -981,11 +1034,6 @@
             }
 
             return true;
-        },
-
-        _renderReadRow: function() {
-            // @todo: implement
-            return false;
         },
 
         // Event Handlers -----------------------------------------------------
@@ -1261,162 +1309,120 @@
         // Event Management ---------------------------------------------------
 
         /**
-         * Bind event handlers to form widget events
+         * Bind event handlers (after refresh)
          */
-        _formEvents: function() {
+        _bindEvents: function() {
 
-            var widgetID = '#' + $(this.element).attr('id');
-            var self = this,
-                ns = this.namespace;
+            var el = $(this.element),
+                ns = this.namespace,
+                self = this;
 
-            $(widgetID).undelegate(ns)
-                       .delegate('.read-row', 'click' + ns, function() {
-                        var names = $(this).attr('id').split('-');
-                        var rowindex = names.pop();
-                        self._editRow(rowindex);
-                        return false;
-                    });
-
-            // Change-events
-            $(widgetID + ' .edit-row input[type="text"],' +
-              widgetID + ' .edit-row textarea').bind('input', function() {
-                self._markChanged(this);
-                self._catchSubmit(this);
-            });
-            $(widgetID + ' .edit-row input[type!="text"],' +
-              widgetID + ' .edit-row select').bind('focusin', function() {
-                $(this).one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                }).one('focusout', function() {
-                    $(this).unbind('change.inline');
-                });
-            });
-            $(widgetID + ' .edit-row select.multiselect-widget').bind('multiselectopen', function() {
-                $(this).unbind('change.inline')
-                    .one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                });
-            });
-            $(widgetID + ' .add-row input[type="text"],' +
-              widgetID + ' .add-row textarea').bind('input', function() {
-                self._markChanged(this);
-                self._catchSubmit(this);
-            });
-            $(widgetID + ' .add-row input[type!="text"],' +
-              widgetID + ' .add-row select').bind('focusin', function() {
-                $(this).one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                }).one('focusout', function() {
-                    $(this).unbind('change.inline');
-                });
-            });
-            $(widgetID + ' .add-row select.multiselect-widget').bind('multiselectopen', function() {
-                $(this).unbind('change.inline')
-                    .one('change.inline', function() {
-                    self._markChanged(this);
-                    self._catchSubmit(this);
-                });
-            });
-            // Chrome doesn't mark row as changed when just file input added
-            $(widgetID + ' .add-row input[type="file"]').change(function() {
-                self._markChanged(this);
-                self._catchSubmit(this);
-            });
-
-            // Submit the inline-row instead of the main form if pressing Enter
-            $(widgetID + ' .edit-row input').keypress(function(e) {
-                if (e.which == 13) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            }).keyup(function(e) {
-                if (e.which == 13) {
-                    var subform = $(this).parent().parent();
-                    var names = subform.attr('id').split('-');
-                    self._updateRow(subform.data('rowindex'));
-                }
-            });
-            $(widgetID + ' .add-row input').keypress(function(e) {
-                if (e.which == 13) {
-                    e.preventDefault();
-                    return false;
-                }
-                return true;
-            }).keyup(function(e) {
-                if (e.which == 13) {
-                    var subform = $(this).parent().parent();
-                    var names = subform.attr('id').split('-');
-                    self._addRow();
-                }
-            });
-        },
-
-        /**
-         * Bind event handlers to form button events
-         */
-        _buttonEvents: function() {
-
-            var widgetID = '#' + $(this.element).attr('id');
-            var self = this;
-
-            $(widgetID + ' .inline-add').unbind('click')
-                            .click(function() {
+            // Button events
+            el.delegate('.read-row', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var rowindex = names.pop();
-                var formname = names.pop();
+                self._editRow(rowindex);
+                return false;
+            }).delegate('.inline-add', 'click' + ns, function() {
                 self._addRow();
                 return false;
-            });
-            $(widgetID + ' .inline-cnc').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-cnc', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var zero = names.pop();
                 var formname = names.pop();
                 var rowindex = $('#edit-row-' + formname).data('rowindex');
                 self._cancelEdit(rowindex);
                 return false;
-            });
-            $(widgetID + ' .inline-rdy').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-rdy', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var zero = names.pop();
                 var formname = names.pop();
                 var rowindex = $('#edit-row-' + formname).data('rowindex');
                 self._updateRow(rowindex);
                 return false;
-            });
-            $(widgetID + ' .inline-edt').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-edt', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var rowindex = names.pop();
-                var formname = names.pop();
                 self._editRow(rowindex);
                 return false;
-            });
-            $(widgetID + ' .inline-rmv').unbind('click')
-                            .click(function() {
+            }).delegate('.inline-rmv', 'click' + ns, function() {
                 var names = $(this).attr('id').split('-');
                 var rowindex = names.pop();
-                var formname = names.pop();
                 self._removeRow(rowindex);
                 return false;
+            }).delegate('.error', 'click' + ns, function() {
+                $(this).fadeOut('medium', function() { $(this).remove(); });
+                return false;
             });
-        },
 
-        /**
-         * Bind event handlers (after refresh)
-         */
-        _bindEvents: function() {
+            // Form events
+            var inputs = 'input',
+                textInputs = 'input[type="text"],input[type="file"],textarea',
+                fileInputs = 'input[type="file"]',
+                otherInputs = 'input[type!="text"][type!="file"],select',
+                multiSelects = 'select.multiselect-widget';
 
-            var el = $(this.element),
-                ns = this.namespace;
+            el.find('.add-row,.edit-row').each(function() {
+                var $this = $(this);
+                $this.find(textInputs).bind('input' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+                $this.find(fileInputs).bind('change' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+                $this.find(otherInputs).bind('focusin' + ns, function() {
+                    $(this).one('change' + ns, function() {
+                        self._markChanged(this);
+                        self._catchSubmit(this);
+                    }).one('focusout', function() {
+                        $(this).unbind('change' + ns);
+                    });
+                });
+                $this.find(multiSelects).bind('multiselectopen' + ns, function() {
+                    $(this).unbind('change' + ns)
+                           .one('change' + ns, function() {
+                        self._markChanged(this);
+                        self._catchSubmit(this);
+                    });
+                });
+                $this.find(inputs).bind('keypress' + ns, function(e) {
+                    if (e.which == 13) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    return true;
+                });
+            });
 
-            this._buttonEvents();
-            this._formEvents();
+            el.find('.add-row').each(function() {
+                $(this).find(inputs).bind('keyup' + ns, function(e) {
+                    switch (e.which) {
+                        case 13: // Enter
+                            self._addRow();
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
+
+            el.find('.edit-row').each(function() {
+                $(this).find(inputs).bind('keyup' + ns, function(e) {
+                    var rowIndex = $(this).closest('.edit-row').data('rowindex');
+                    switch (e.which) {
+                        case 13: // Enter
+                            self._updateRow(rowIndex);
+                            break;
+                        case 27: // Escape
+                            self._cancelEdit(rowIndex);
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            });
 
             // Event Management for S3SQLInlineComponentCheckbox
             if (el.hasClass('inline-checkbox')) {
@@ -1460,6 +1466,11 @@
             // Remove inline-locationselector-widget event handlers
             el.find('.inline-locationselector-widget')
               .unbind(ns);
+
+            // Remove all form event handlers
+            el.find('.add-row,.edit-row').each(function() {
+                $(this).find('input,textarea,select').unbind(ns);
+            });
 
             // Remove all delegations
             el.undelegate(ns);

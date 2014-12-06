@@ -8,6 +8,13 @@
 
          CSV fields:
          Name....................transport_airport.name
+         ICAO....................transport_airport.icao
+         IATA....................transport_airport.iata
+         Runway Length...........transport_airport.runway_length (m)
+         Runway Width............transport_airport.runway_width (m)
+         Surface.................transport_airport.surface
+         Max Aircraft............transport_airport.aircraft_max_size
+         Humanitarian Use........transport_airport.humanitarian_use
          Organisation............org_organisation.name
          Country.................gis_location.L0 Name or ISO2
          Building................gis_location.name
@@ -18,6 +25,7 @@
          L3......................gis_location.L3
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
+         Altitude................gis_location.elevation (m)
          Comments................transport_airport.comments
 
     *********************************************************************** -->
@@ -45,16 +53,17 @@
 
         <!-- Create the variables -->
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="AirportName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="HumanitarianUse" select="col[@field='Humanitarian Use']/text()"/>
 
         <resource name="transport_airport">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
+                <xsl:value-of select="$AirportName"/>
             </xsl:attribute>
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OfficeName"/>
+                    <xsl:value-of select="$AirportName"/>
                 </xsl:attribute>
             </reference>
             <!-- Link to Organisation -->
@@ -64,9 +73,41 @@
                 </xsl:attribute>
             </reference>
 
-            <!-- Facility data -->
-            <data field="name"><xsl:value-of select="$OfficeName"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <!-- Airport data -->
+            <data field="name"><xsl:value-of select="$AirportName"/></data>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='ICAO']!=''">
+                <data field="icao"><xsl:value-of select="col[@field='ICAO']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='IATA']!=''">
+                <data field="iata"><xsl:value-of select="col[@field='IATA']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Runway Length']!=''">
+                <data field="runway_length"><xsl:value-of select="col[@field='Runway Length']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Runway Width']!=''">
+                <data field="runway_width"><xsl:value-of select="col[@field='Runway Width']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Surface']!=''">
+                <data field="surface"><xsl:value-of select="col[@field='Surface']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Max Aircraft']!=''">
+                <data field="aircraft_max_size"><xsl:value-of select="col[@field='Max Aircraft']"/></data>
+            </xsl:if>
+            <xsl:if test="$HumanitarianUse!=''">
+                <data field="humanitarian_use">
+                    <xsl:choose>
+                        <xsl:when test="$HumanitarianUse='No'">1</xsl:when>
+                        <xsl:when test="$HumanitarianUse='Upon request'">2</xsl:when>
+                        <xsl:when test="$HumanitarianUse='Connection'">3</xsl:when>
+                        <xsl:when test="$HumanitarianUse='Hub'">4</xsl:when>
+                        <xsl:when test="$HumanitarianUse='Closed'">9</xsl:when>
+                    </xsl:choose>
+                </data>
+            </xsl:if>
+
         </resource>
 
         <xsl:call-template name="Locations"/>
@@ -90,7 +131,7 @@
 
     <xsl:template name="Locations">
 
-        <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="AirportName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Building" select="col[@field='Building']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
@@ -199,7 +240,7 @@
         <!-- Office Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
+                <xsl:value-of select="$AirportName"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l3!=''">
@@ -236,7 +277,7 @@
                     <data field="name"><xsl:value-of select="$Building"/></data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                    <data field="name"><xsl:value-of select="$AirportName"/></data>
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>

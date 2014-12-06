@@ -203,16 +203,16 @@
             height = parseInt($jcropHolder.css('height').split('px')[0]);
         var scaleX = image.width / width,
             scaleY = image.height / height;
-        var coords = $points.val().split(",");
+        var coords = $points.val().split(',');
         var x1 = coords[0],
             y1 = coords[1],
             x2 = coords[2],
             y2 = coords[3];
 
         // calculate Canvas width
-        width = Math.round((x2-x1)*scaleX);
+        width = Math.round((x2 - x1) * scaleX);
         // calculate Canvas Height
-        height = Math.round((y2-y1)*scaleY);
+        height = Math.round((y2 - y1) * scaleY);
 
         jCropAPI.destroy();
         disableCrop(userEvent);
@@ -222,7 +222,7 @@
             height: height
         });
         canvas.getContext('2d')
-              .drawImage(image, Math.round(x1*scaleX), Math.round(y1*scaleX), width, height, 0, 0, width, height);
+              .drawImage(image, Math.round(x1 * scaleX), Math.round(y1 * scaleX), width, height, 0, 0, width, height);
         var data = canvas.toDataURL('image/' + extension);
         loadImage(data);    
     };
@@ -248,8 +248,8 @@
     $cancel.bind('click', disableCrop);
 
     var UpdateCropPoints = function(coords) {
-         var points = coords.x + ',' + coords.y + ',' + coords.x2 + ',' + coords.y2;
-         $points.val(points); 
+        var points = coords.x + ',' + coords.y + ',' + coords.x2 + ',' + coords.y2;
+        $points.val(points); 
     };
 
     var bounds;
@@ -265,18 +265,18 @@
 
         // $preview.css({ display: 'block' });
 
-        $this.Jcrop({ 
-                    onChange: UpdateCropPoints,
-                    opacity: 0.2,
-                    bgFade: true,
-                    bgColor: 'black',
-                    addClass: 'jcrop-light'}, 
-                    function() {
+        $this.Jcrop({onChange: UpdateCropPoints,
+                     opacity: 0.2,
+                     bgFade: true,
+                     bgColor: 'black',
+                     addClass: 'jcrop-light'
+                     }, 
+                     function() {
                         jCropAPI = this;
                         bounds = jCropAPI.getBounds();
                         jCropAPI.ui.selection.addClass('jcrop-selection');
                         jCropAPI.disable();
-                    });
+                     });
     };
 
     $('#uploaded-image').bind('load', EnableCrop);
@@ -297,10 +297,10 @@
             });
             canvas.getContext('2d')
                   .drawImage(img, 0, 0, img.width, img.height);
-            var t = imgData.split(".");
-            extension = t[t.length-1];
+            var t = imgData.split('.');
+            extension = t[t.length - 1];
             if (extension == 'jpg') {
-                    extension = 'jpeg';
+                extension = 'jpeg';
             }
             fileName = 'upload.' + extension;
             var data = canvas.toDataURL('image/' + extension);

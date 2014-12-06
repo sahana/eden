@@ -17,7 +17,7 @@ from time import gmtime, strftime
 todays_date = strftime("%Y-%m-%d", gmtime())
 
 # Options which changed for other data sources
-SOURCE_URL = "http://data.hdx.rwlabs.org/storage/f/2014-11-07T23%3A06%3A43.079Z/data-ebola-public.xlsx" # Linked from https://data.hdx.rwlabs.org/dataset/rowca-ebola-cases Note timestamp changes daily so no auto-update possible :/
+SOURCE_URL = "http://data.hdx.rwlabs.org/storage/f/2014-11-14T13%3A55%3A58.796Z/data-ebola-public.xlsx" # Linked from https://data.hdx.rwlabs.org/dataset/rowca-ebola-cases Note timestamp changes daily so no auto-update possible :/
 #SOURCE_URL = "http://eden.sahanafoundation.org/downloads/Data%20Ebola%20(Public).xlsx" # For use when site is down (gives a 404 at times, perhaps when file is being updated)
 SOURCE_SHEET = "ROWCA Ebola All Sec Review"
 OUTPUT_CSV = "ebola_cases_%s.csv" % todays_date
@@ -82,7 +82,7 @@ def lookup_loc(location, country):
     # LR
     if location[-6:] == "County":
         # If the location ends with "County", then strip it out and try again
-        return get_loc_from_db(location[:-6].strip(), country)
+        return get_loc_from_db(location[:-6].strip(), "Liberia") # reset the country as there is a bug in the data (Lofa County is in Liebria, not Guinea)
     # SL
     if location.startswith("Western Area"):
         return get_loc_from_db(location[12:].strip(), country)

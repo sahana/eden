@@ -1,3 +1,3 @@
 UUID,Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker
-SITE_DEFAULT,Default,,,2,22.593723263,5.28516253,900913,-90,90,-180,180,marker_red
+SITE_DEFAULT,Default,,,6,6.0264,20.033,900913,-1,10,14,28,marker_red
 ,Central African Republic,CF,CF,6,6.0264,20.033,900913,-1,10,14,28,

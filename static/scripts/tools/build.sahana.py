@@ -329,7 +329,7 @@ def dojs(dogis = False, warnings = True):
                      "gis.loader",
                      "gis.pois",
                      "locationselector.widget",
-                     "locationselector.widget2",
+                     "ui.locationselector",
                      "msg",
                      "popup",
                      "register_validation",
@@ -448,8 +448,7 @@ def dojs(dogis = False, warnings = True):
             #                                           mergedOpenLayersExten))
 
         # OpenLayers extensions
-        for filename in ["cdauth",
-                         "OWM.OpenLayers",
+        for filename in ["OWM.OpenLayers",
                          ]:
             inputFilename = os.path.join("..", "gis", "%s.js" % filename)
             outputFilename = "%s.min.js" % filename
@@ -737,17 +736,17 @@ def docss():
         shutil.move(outputFilenameCSS, "../../themes/IFRC")
 
 def main(argv):
-    try:
+    if len(argv) > 0:
         parameter1 = argv[0]
-    except:
+    else:
         parameter1 = "ALL"
 
-    try:
+    if len(argv) > 1:
         if(argv[1] == "DOGIS"):
             parameter2 = True
         else:
             parameter2 = False
-    except:
+    else:
         parameter2 = True
 
     closure_warnings = True

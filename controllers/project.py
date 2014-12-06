@@ -257,6 +257,13 @@ def project():
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
 
+            if r.component_name == "task" and r.component_id:
+                # Put Comments in rfooter
+                s3db.project_ckeditor()
+                s3.rfooter = LOAD("project", "comments.load",
+                                  args=[r.component_id],
+                                  ajax=True)
+
         return output
     s3.postp = postp
 
@@ -771,6 +778,20 @@ def task_tag():
             return False
         return True
     s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
+def role():
+    """ RESTful CRUD controller """
+    
+    return s3_rest_controller()
+
+# =============================================================================
+def member():
+    """ RESTful CRUD Controller """
+    
+    s3.prep = lambda r: r.representation == "s3json"
 
     return s3_rest_controller()
 

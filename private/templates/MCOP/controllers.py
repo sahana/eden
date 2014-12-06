@@ -45,8 +45,8 @@ for(var i=0,len=layers.length;i<len;i++){
         #resource.add_filter(FS("post.series_id") != None)
         # Only show Open Alerts
         resource.add_filter(FS("expired") == False)
-        # Only show Alerts which are linked to Open Incidents
-        resource.add_filter(FS("incident.closed") == False)
+        # Only show Alerts which are linked to Open Incidents or not linked to any Incident
+        resource.add_filter((FS("incident.closed") == False) | (FS("incident.id") == None))
         list_id = "cms_post_datalist"
         list_fields = [#"series_id",
                        "location_id",
@@ -103,8 +103,8 @@ for(var i=0,len=layers.length;i<len;i++){
         # Only show Active Tasks
         active_statuses = s3db.project_task_active_statuses
         resource.add_filter(FS("status").belongs(active_statuses))
-        # Only show Tasks which are linked to Open Incidents
-        resource.add_filter(FS("incident.incident_id$closed") == False)
+        # Only show Tasks which are linked to Open Incidents or not linked to any Incident
+        resource.add_filter((FS("incident.incident_id$closed") == False) | (FS("incident.id") == None))
         list_id = "project_task_datalist"
         list_fields = ["name",
                        "description",
@@ -134,9 +134,9 @@ for(var i=0,len=layers.length;i<len;i++){
                                         )
 
         # MCOP RSS News Feed
-        #s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
-        s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
-        s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
+        #s3.external_stylesheets.append("//www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
+        s3.scripts.append("//www.google.com/jsapi?key=notsupplied-wizard")
+        s3.scripts.append("//www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
         # feedCycleTime: milliseconds before feed is reloaded (5 minutes)
         s3.js_global.append(
 """

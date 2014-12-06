@@ -1,3 +1,4 @@
+{{extend "layout.html"}}
 <div class='row'>
  {{if s3.has_required:}}<label class='req-key right'>{{=T("* Required Fields")}}</label>{{pass}}
  {{try:}}{{=H1(title, _class="row-title")}}{{except:}}{{pass}}

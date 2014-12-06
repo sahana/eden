@@ -20,8 +20,8 @@ settings = current.deployment_settings
 
 #settings.base.system_name = T("Magnu")
 #settings.base.system_name_short = T("Magnu")
-settings.base.system_name = T("Central African Republic")
-settings.base.system_name_short = T("CAR")
+settings.base.system_name = T("Sahana")
+settings.base.system_name_short = T("Sahana")
 
 # PrePopulate data
 settings.base.prepopulate = ("Magnu", "default/users")
@@ -47,15 +47,17 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ("CF",) # Initially, will change
+# Uncomment to display the Map Legend as a floating DIV
+settings.gis.legend = "float"
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
-#settings.L10n.languages = OrderedDict([
+settings.L10n.languages = OrderedDict([
 #    ("ar", "العربية"),
 #    ("bs", "Bosanski"),
-#    ("en", "English"),
-#    ("fr", "Français"),
+    ("en", "English"),
+    ("fr", "Français"),
 #    ("de", "Deutsch"),
 #    ("el", "ελληνικά"),
 #    ("es", "Español"),
@@ -75,13 +77,19 @@ settings.gis.countries = ("CF",) # Initially, will change
 #    ("vi", "Tiếng Việt"),
 #    ("zh-cn", "中文 (简体)"),
 #    ("zh-tw", "中文 (繁體)"),
-#])
+])
 # Default language for Language Toolbar (& GIS Locations in future)
 #settings.L10n.default_language = "en"
 # Uncomment to Hide the language toolbar
 #settings.L10n.display_toolbar = False
+# @ToDO:These should be modified per-country
 # Default timezone for users
 settings.L10n.utc_offset = "UTC +0100"
+# Number formats (defaults to ISO 31-0)
+# Decimal separator for numbers (defaults to ,)
+#settings.L10n.decimal_separator = "."
+# Thousands separator for numbers (defaults to space)
+#settings.L10n.thousands_separator = ","
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -137,6 +145,15 @@ settings.gis.poi_create_resources = \
 #    }
 #]
 
+settings.org.groups = "Coalition / Consortium"
+# @ToDo: Once we go global
+# Enable the use of Organisation Branches
+#settings.org.branches = True
+# Show branches as tree rather than as table
+#settings.org.branches_tree_view = True
+
+# Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
+settings.hrm.site_contact_unique = False
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
