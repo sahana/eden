@@ -5146,7 +5146,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Print button on Toolbar to save a screenshot
     var addPrintButton = function(toolbar) {
         // Toolbar Button
-        var map_id = toolbar.map.s3.id;
+        var map = toolbar.map;
+        var map_id = map.s3.id;
         var printButton = new Ext.Button({
             iconCls: 'print',
             tooltip: i18n.gis_print_tip,
@@ -5176,7 +5177,14 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                                 'label'
                             ],
                             // @ToDo: Make configurable
-                            data: [['Letter', 'Letter (612 x 792)'], ['A4', 'A4 (595 x 842)'], ['A3', 'A3 (842 x 1191)'], ['A2', 'A2 (1191 x 1684)'], ['A1', 'A1 (1684 x 2384)'], ['A0', 'A0 (2384 x 3375)']]
+                            data: [
+                                   ['Letter', 'Letter (612 x 792)'],
+                                   ['A4', 'A4 (595 x 842)'],
+                                   ['A3', 'A3 (842 x 1191)'],
+                                   ['A2', 'A2 (1191 x 1684)'],
+                                   ['A1', 'A1 (1684 x 2384)'],
+                                   ['A0', 'A0 (2384 x 3375)']
+                                   ]
                         }),
                         triggerAction: 'all',
                         typeAhead: true,
@@ -5188,11 +5196,33 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         text: i18n.gis_print,
                         handler: function() {
                             // Save the configuration to a temporary config
+                            // Modify the zoom so that the viewport covers the same area
                             var size = $('#x-form-el-' + map_id + '_paper_size input[name="size"]').val();
-                            // @ToDo: Modify the zoom so that the viewport covers the same area
-                            //var area
-                            var zoom;
-                            var config_id = saveConfig(toolbar.map, true, zoom);
+                            if (size == 'Letter') {
+                                var height = 612;
+                                var width = 792;
+                            } else if (size == 'A4') {
+                                var height = 595;
+                                var width = 842;
+                            } else if (size == 'A3') {
+                                var height = 842;
+                                var width = 1191;
+                            } else if (size == 'A2') {
+                                var height = 1191;
+                                var width = 1684;
+                            } else if (size == 'A1') {
+                                var height = 1684;
+                                var width = 2384;
+                            } else if (size == 'A0') {
+                                var height = 2384;
+                                var width = 3375;
+                            }
+                            var extent = map.getExtent();
+                            var viewSize = new OpenLayers.Size(width, height);
+                            var idealResolution = Math.max( extent.getWidth()  / viewSize.w,
+                                                            extent.getHeight() / viewSize.h );
+                            var zoom = map.baseLayer.getZoomForResolution(idealResolution);
+                            var config_id = saveConfig(map, true, zoom);
                             // Take the screenshot
                             var url = S3.Ap.concat('/gis/screenshot/' + config_id + '?size=' + size);
                             window.open(url);
