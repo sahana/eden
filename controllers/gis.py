@@ -3706,7 +3706,30 @@ def screenshot():
 
     config_id = request.args(0) or 1
 
-    filename = gis.get_screenshot(config_id)
+    size = get_vars.get("size")
+    if size == "Letter":
+        height = 612
+        width = 792
+    elif size == "A4":
+        height = 595
+        width = 842
+    elif size == "A3":
+        height = 842
+        width = 1191
+    elif size == "A2":
+        height = 1191
+        width = 1684
+    elif size == "A1":
+        height = 1684
+        width = 2384
+    elif size == "A0":
+        height = 2384
+        width = 3375
+    else:
+        height = get_vars.get("height")
+        width = get_vars.get("width")
+
+    filename = gis.get_screenshot(config_id, height=height, width=width)
     redirect(URL(c="static", f="cache",
                  args=["jpg", filename]))
 

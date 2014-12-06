@@ -5146,25 +5146,58 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Print button on Toolbar to save a screenshot
     var addPrintButton = function(toolbar) {
         // Toolbar Button
+        var map_id = toolbar.map.s3.id;
         var printButton = new Ext.Button({
             iconCls: 'print',
-            tooltip: i18n.gis_print,
-            handler: function() {
-                // Save the configuration to a temporary config
-                var config_id = saveConfig(toolbar.map, true);
-                // Take the screenshot
-                var url = S3.Ap.concat('/gis/screenshot/') + config_id;
-                window.open(url);
-                /*$.ajaxS3({
-                    //async: false,
-                    url: url,
-                    //dataType : 'json',
-                    success: function(data, status) {
-                        // Open the screenshot in a new tab
-
-                    }
-                });*/
+            tooltip: i18n.gis_print_tip,
+            menu: {
+                xtype: 'menu',
+                plain: true,
+                items: [{
+                    xtype: 'form',
+                    bodyPadding: 5,
+                    items: [{
+                        xtype: 'combo',
+                        allowBlank: false,
+                        displayField: 'label',
+                        fieldLabel: i18n.gis_paper_size,
+                        getListParent: function() {
+                            return this.el.up('.x-menu');
+                        },
+                        hiddenName: 'size',
+                        id: map_id + '_paper_size',
+                        lazyInit: false,
+                        mode: 'local',
+                        selectOnFocus: true,
+                        store: new Ext.data.ArrayStore({
+                            id: 0,
+                            fields: [
+                                'size',
+                                'label'
+                            ],
+                            // @ToDo: Make configurable
+                            data: [['Letter', 'Letter (612 x 792)'], ['A4', 'A4 (595 x 842)'], ['A3', 'A3 (842 x 1191)'], ['A2', 'A2 (1191 x 1684)'], ['A1', 'A1 (1684 x 2384)'], ['A0', 'A0 (2384 x 3375)']]
+                        }),
+                        triggerAction: 'all',
+                        typeAhead: true,
+                        // @ToDo: Make configurable
+                        value: 'Letter',
+                        valueField: 'size'
+                    }, {
+                        xtype: 'button',
+                        text: i18n.gis_print,
+                        handler: function() {
+                            // Save the configuration to a temporary config
+                            var config_id = saveConfig(toolbar.map, true);
+                            // Take the screenshot
+                            var size = $('#x-form-el-' + map_id + '_paper_size input[name="size"]').val();
+                            var url = S3.Ap.concat('/gis/screenshot/' + config_id + '?size=' + size);
+                            window.open(url);
+                        }
+                    }]
+                }]
             }
+            
         });
         toolbar.addButton(printButton);
     };

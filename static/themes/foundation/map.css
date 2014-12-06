@@ -18,6 +18,12 @@
     margin: 0;
     padding: 0;
 }
+.x-form-element input[type="text"] {
+    display: inline;
+    font-size: inherit;
+    margin: 0;
+    padding: 0;
+}
 
 .map_legend_tab.right{
     float: left !important;

@@ -45,3 +45,9 @@
     color: #656665;
     font: 14px/18px "Open Sans",sans-serif;
 }
+
+/* Toolbar tweak
+.map_wrapper table tr td.x-btn-ml,
+.map_wrapper table tr td.x-btn-mr {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+} */

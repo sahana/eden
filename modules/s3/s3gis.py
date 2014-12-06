@@ -2769,8 +2769,6 @@ class GIS(object):
                 PhantomJS http://phantomjs.org
                 Selenium https://pypi.python.org/pypi/selenium
 
-            @ToDo: print.css
-
             OpenLayers.DOTS_PER_INCH = 72
             Pixels at 72 dpi:
             Letter = 612 x 792
@@ -2779,7 +2777,6 @@ class GIS(object):
             A2 = 1191 x 1684
             A1 = 1684 x 2384
             A0 = 2384 x 3375
-            @ToDo: Allow a 1cm border?
         """
 
         # @ToDo: allow selection of map_id
@@ -6547,7 +6544,9 @@ class MAP(DIV):
                 #                  "subTitle": string        # subTitle for the Printed Map (optional)
                 #                  }
                 options["print"] = True
-                i18n["gis_print"] = T("Take a screenshot of the map which can be printed")
+                i18n["gis_print"] = T("Print")
+                i18n["gis_paper_size"] = T("Paper Size")
+                i18n["gis_print_tip"] = T("Take a screenshot of the map which can be printed")
 
             # Show Save control?
             # e.g. removed within S3LocationSelector[Widget]
