@@ -66,6 +66,7 @@ class S3RequestModel(S3Model):
     names = ("req_req",
              "req_req_id",
              "req_req_ref",
+             "req_req_event",
              "req_hide_quantities",
              "req_inline_form",
              "req_create_form_mods",
@@ -178,13 +179,6 @@ class S3RequestModel(S3Model):
         tablename = "req_req"
         self.define_table(tablename,
                           super_link("doc_id", "doc_entity"),
-                          # @ToDo: Replace with Link Table
-                          self.event_event_id(
-                               default = session.s3.event,
-                               ondelete = "SET NULL",
-                               readable = False,
-                               writable = False,
-                               ),
                           Field("type", "integer",
                                 label = T("Request Type"),
                                 represent = lambda opt: \
@@ -545,7 +539,21 @@ class S3RequestModel(S3Model):
                    method="form",
                    action=self.req_form)
 
+        # ---------------------------------------------------------------------
+        # Link Table: Request <> Events
+        tablename = "req_req_event"
+        self.define_table(tablename,
+                          req_id(empty=False),
+                          self.event_event_id(
+                               default = session.s3.event,
+                               ondelete = "SET NULL",
+                               readable = False,
+                               writable = False,
+                               ),
+                          *s3_meta_fields())
+
         # Components
+        tablename = "req_req"
         add_components(tablename,
                        # Documents
                        req_document = "req_id",
@@ -564,6 +572,11 @@ class S3RequestModel(S3Model):
                                                "joinby": "req_id",
                                                "key": "item_category_id",
                                                },
+                       # Request Event
+                       req_req_event = {"joinby": "req_id",
+                                        "link": "req_req_event",
+                                        "key": "event_id",
+                                        },
 
                        **{# Scheduler Jobs (for recurring requests)
                           S3Task.TASK_TABLENAME: {"name": "job",
@@ -735,7 +748,12 @@ $.filterOptionsS3({
                                   "item_pack_id",
                                   "quantity",
                                   "comments"
-                                  ]
+                                  ],
+                        ),
+                      S3SQLInlineLink(
+                        "req_event",
+                        label="",
+                        field = "event_id"
                       ),
                       "comments",
                       ]
@@ -804,6 +822,11 @@ $.filterOptionsS3({
                                   "skill_id",
                                   "comments"
                                   ]
+                      ),
+                      S3SQLInlineLink(
+                        "req_event",
+                        label="",
+                        field = "event_id"
                       ),
                       "comments",
                       ]
