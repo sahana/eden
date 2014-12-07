@@ -678,7 +678,8 @@ input.date.hasDatepicker {
 }
 
 .button-home {
-  width: 135px;
+  width: 205px;
+  height:45px;
   padding-left: 1rem;
   padding-right: 1rem;
 }
