@@ -4110,6 +4110,7 @@ class S3LocationSelector(S3Selector):
                  reverse_lx = False,
                  show_address = False,
                  show_postcode = False,
+                 show_latlon = False,
                  show_map = True,
                  labels = True,
                  placeholders = False,
@@ -4132,6 +4133,7 @@ class S3LocationSelector(S3Selector):
                                address line
             @param show_address: show a field for street address
             @param show_postcode: show a field for postcode
+            @param show_latlon: show fields for manual Lat/Lon input
             @param show_map: show a map to select specific points
             @param labels: show labels on inputs
             @param placeholders: show placeholder text in inputs
@@ -4154,6 +4156,7 @@ class S3LocationSelector(S3Selector):
         self.reverse_lx = reverse_lx
         self.show_address = show_address
         self.show_postcode = show_postcode
+        self.show_latlon = show_latlon
         self.show_map = show_map
         self.labels = labels
         self.placeholders = placeholders
@@ -4314,28 +4317,50 @@ class S3LocationSelector(S3Selector):
 
         # Render visual components
         components = {}
+        manual_input = self._input
 
         # Street Address INPUT
         show_address = self.show_address
         if show_address:
             address = values.get("address")
-            components["address"] = self._input(fieldname,
-                                                "address",
-                                                address,
-                                                T("Street Address"),
-                                                hidden = not address,
-                                                )
+            components["address"] = manual_input(fieldname,
+                                                 "address",
+                                                 address,
+                                                 T("Street Address"),
+                                                 hidden = not address,
+                                                 )
 
         # Postcode INPUT
         show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
         if show_postcode:
             postcode = values.get("postcode")
-            components["postcode"] = self._input(fieldname,
-                                                 "postcode",
-                                                 postcode,
-                                                 settings.get_ui_label_postcode(),
-                                                 hidden = not postcode,
-                                                 )
+            components["postcode"] = manual_input(fieldname,
+                                                  "postcode",
+                                                  postcode,
+                                                  settings.get_ui_label_postcode(),
+                                                  hidden = not postcode,
+                                                  )
+
+        # Lat/Lon INPUTs
+        lat = values.get("lat")
+        lon = values.get("lon")
+        if self.show_latlon:
+            hidden = not lat and not lon
+            components["lat"] = manual_input(fieldname,
+                                             "lat",
+                                             lat,
+                                             T("Latitude"),
+                                             hidden = hidden,
+                                             _class = "double",
+                                             )
+            components["lon"] = manual_input(fieldname,
+                                             "lon",
+                                             lon,
+                                             T("Longitude"),
+                                             hidden = hidden,
+                                             _class = "double",
+                                             )
+
         # Lx Dropdowns
         multiselect = settings.get_ui_multiselect_widget()
         lx_rows = self._lx_selectors(fieldname,
@@ -4359,8 +4384,6 @@ class S3LocationSelector(S3Selector):
         # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the
         # MapJS loader
-        lat = values.get("lat")
-        lon = values.get("lon")
         wkt = values.get("wkt")
         if lat is not None or lon is not None or wkt is not None:
             use_callback = True
@@ -4756,7 +4779,7 @@ class S3LocationSelector(S3Selector):
                     selectors.append(formrow)
 
         inputs = TAG[""]()
-        for name in ("address", "postcode"):
+        for name in ("address", "postcode", "lat", "lon"):
             if name in components:
                 label, widget, input_id, hidden = components[name]
                 formrow = formstyle("%s__row" % input_id,
@@ -4857,7 +4880,8 @@ class S3LocationSelector(S3Selector):
                name,
                value,
                label,
-               hidden=False):
+               hidden=False,
+               _class="string"):
         """
             Render a text input (e.g. address or postcode field)
 
@@ -4882,7 +4906,7 @@ class S3LocationSelector(S3Selector):
             _placeholder = None
         widget = INPUT(_name=name,
                        _id=input_id,
-                       _class="string",
+                       _class=_class,
                        _placeholder=_placeholder,
                        value=value,
                        )

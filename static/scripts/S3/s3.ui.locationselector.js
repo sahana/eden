@@ -191,6 +191,15 @@
             $(selector + '_postcode__row').removeClass('hide').show();
             $(selector + '_postcode__row1').removeClass('hide').show();
 
+            // Show Lat/Lon Rows (__row1 = tuple themes)
+            $(selector + '_lat').val(data.lat);
+            $(selector + '_lat__row').removeClass('hide').show();
+            $(selector + '_lat__row1').removeClass('hide').show();
+
+            $(selector + '_lon').val(data.lon);
+            $(selector + '_lon__row').removeClass('hide').show();
+            $(selector + '_lon__row1').removeClass('hide').show();
+
             // Show Map icon
             $(selector + '_map_icon__row').removeClass('hide').show();
             if (data.lat || data.lon || data.wkt) {
@@ -232,16 +241,20 @@
             if (formRow.is('.control-group, .form-row')) {
                 // Bootstrap/Foundation formstyle:
                 // Move the visible rows underneath the real (hidden) one
-                var L1Row = $(selector + '_L1__row');
-                var L2Row = $(selector + '_L2__row');
-                var L3Row = $(selector + '_L3__row');
-                var L4Row = $(selector + '_L4__row');
-                var L5Row = $(selector + '_L5__row');
-                var addressRow = $(selector + '_address__row');
+                var L1Row = $(selector + '_L1__row'),
+                    L2Row = $(selector + '_L2__row'),
+                    L3Row = $(selector + '_L3__row'),
+                    L4Row = $(selector + '_L4__row'),
+                    L5Row = $(selector + '_L5__row'),
+                    addressRow = $(selector + '_address__row'),
+                    latRow = $(selector + '_lat__row'),
+                    lonRow = $(selector + '_lon__row');
                 if (reverseLx) {
                     formRow.hide()
                            .after(mapWrapper)
                            .after(mapIconRow)
+                           .after(lonRow)
+                           .after(latRow)
                            .after(L0Row)
                            .after(L1Row)
                            .after(L2Row)
@@ -255,6 +268,8 @@
                     formRow.hide()
                            .after(mapWrapper)
                            .after(mapIconRow)
+                           .after(lonRow)
+                           .after(latRow)
                            .after(postcodeRow)
                            .after(addressRow)
                            .after(L5Row)
@@ -553,6 +568,10 @@
             }
             // Write data dict back to real input
             this._serialize();
+
+            // Update lat/lon inputs
+            $(selector + '_lat').val(data.lat);
+            $(selector + '_lon').val(data.lon);
 
             if (this.fieldname.slice(0, 4) == 'sub_') {
                 // This is an S3SQLInlineComponent => trigger change event
@@ -940,6 +959,64 @@
         },
 
         /**
+         * Response to direct (manual) Lat/Lon input
+         */
+        _latlonInput: function() {
+
+            var fieldname = this.fieldname,
+                data = this.data;
+
+            var selector = '#' + fieldname;
+
+            // Read the input data
+            var lat = $(selector + '_lat').val(),
+                lon = $(selector + '_lon').val();
+
+            if (!lat && !lon) {
+                // Data removed => reset
+                data.lat = null;
+                data.lon = null;
+                if (!data.wkt) {
+                    this.input.data('manually_geocoded', false);
+                }
+            } else {
+                if (!lat) {
+                    lat = 0;
+                } else {
+                    lat = parseFloat(lat);
+                }
+                if (!lon) {
+                    lon = 0;
+                } else {
+                    lon = parseFloat(lon);
+                }
+                data.lat = lat;
+                data.lon = lon;
+                data.wkt = null;
+                this.input.data('manually_geocoded', true);
+            }
+            this._serialize();
+
+            // Remove all map features, add the new point + recenter/zoom map
+            var gis = S3.gis;
+            if (gis.maps) {
+                var map = gis.maps['location_selector_' + fieldname];
+                if (map) {
+                    var draftLayer = map.s3.draftLayer;
+                    draftLayer.removeAllFeatures();
+                    if (data.lat !== null && data.lon !== null) {
+                        var geometry = new OpenLayers.Geometry.Point(data.lon, data.lat);
+                        geometry.transform(gis.proj4326, map.getProjectionObject());
+                        var feature = new OpenLayers.Feature.Vector(geometry);
+                        draftLayer.addFeatures([feature]);
+                        map.s3.lastDraftFeature = feature;
+                    }
+                    this._zoomMap();
+                }
+            }
+        },
+
+        /**
          * Show the Map
          * - this doesn't imply that a specific location is to be created
          * - that only happens if a Point is created on the Map
@@ -1014,6 +1091,7 @@
                         }
                         // Display this feature
                         map.s3.draftLayer.addFeatures([feature]);
+                        map.s3.lastDraftFeature = feature;
                     }
 
                     // Does the map have controls to add new features?
@@ -1028,7 +1106,6 @@
                     if (control) {
                         // Watch for new features being selected, so that we can
                         // store the Lat/Lon/WKT (callback function for the map)
-                        // @todo: make this callback specific for this map
                         map.s3.pointPlaced = function(feature) {
 
                             // Hide any Geocoder messages
@@ -1119,10 +1196,12 @@
                         map.s3.draftLayer.removeAllFeatures();
 
                         // Reset Lat/Lon/WKT
+                        // @todo: reset lat/lon only if we do not have Lat/Lon inputs
                         data.lat = null;
                         data.lon = null;
                         data.wkt = null;
 
+                        // @todo: reset lat/lon only if both is null
                         this.input.data('manually_geocoded', false);
 
                         // Write back to real input
@@ -1392,6 +1471,10 @@
                 } else {
                     self._collectData();
                 }
+            });
+            $(selector + '_lat,' +
+              selector + '_lon').bind('change' + ns, function() {
+                self._latlonInput();
             });
 
             // @todo: must use a different trigger in inline-forms
