@@ -65,6 +65,8 @@ settings.auth.registration_requests_site = False
 settings.auth.registration_requests_home_phone = True
 # Uncomment this to request the Mobile Phone when a user registers
 settings.auth.registration_requests_mobile_phone = True
+# Uncomment to hide the UTC Offset in Registration/Profile
+settings.auth.show_utc_offset = False
 
 settings.auth.registration_link_user_to = {"staff": T("Staff")}
 settings.auth.registration_link_user_to_default = "staff"
@@ -1349,7 +1351,9 @@ def org_group_dashboard(r, **attr):
     auth = current.auth
     ctable = s3db.gis_config
     query = (ctable.pe_id.belongs((org_group_id, auth.s3_user_pe_id(auth.user.id)))) & \
-            (ctable.deleted == False)
+            (ctable.deleted == False) & \
+            (ctable.temp == False) & \
+            (ctable.image != None)
     rows = db(query).select(ctable.id,
                             ctable.name,
                             ctable.image,
@@ -1383,14 +1387,16 @@ $(document).ready(function(){
 
     htable = s3db.hrm_human_resource
     otable = s3db.org_organisation
-    query &= (htable.person_id == ptable.id) & \
-             (htable.organisation_id == otable.id)
+    left = [htable.on(htable.person_id == ptable.id),
+            otable.on(htable.organisation_id == otable.id),
+            ]
     rows = db(query).select(ptable.id,
                             ptable.first_name,
                             ptable.middle_name,
                             ptable.last_name,
                             ptable.created_on,
                             otable.name,
+                            left = left,
                             limitby = (0, 5),
                             orderby = ~ptable.created_on
                             )
@@ -1407,6 +1413,7 @@ $(document).ready(function(){
     atable = s3db.project_activity
     ltable = s3db.project_activity_group
     query = (atable.deleted == False) & \
+            (ltable.activity_id == atable.id) & \
             (ltable.group_id == org_group_id)
     output["total_activities"] = db(query).count()
 
@@ -2238,6 +2245,7 @@ def customise_gis_poi_controller(**attr):
             tablename = "gis_poi"
             table = s3db.gis_poi
 
+            table.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
             if r.record:
                 gtable = s3db.gis_location
                 row = current.db(gtable.id == r.record.location_id).select(gtable.gis_feature_type,

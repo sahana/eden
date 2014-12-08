@@ -39,7 +39,7 @@
   <h6>{{=T("Latest Activities")}}</h6>
   <ul class='lined ellipsis'>
   {{for a in latest_activities:}}
-   <li><a href='/{{=appname}}/project/activity/{{=a.id}}/read'>{{=a.name}} <small class='location'>{{=a.location}}, <time datetime='{{=a.date_iso}}'>{{=a.date}}</time></small></a></li>
+   <li><a href='/{{=appname}}/project/activity/{{=a.id}}/read'>{{=a.name}} <small class='location'>{{=a.org_group}}, <time datetime='{{=a.date_iso}}'>{{=a.date}}</time></small></a></li>
   {{pass}}
   </ul>        
   <a class='button tiny' href='/{{=appname}}/project/activity/summary'>{{=T("See all %(total)s") % dict(total=total_activities)}}</a>

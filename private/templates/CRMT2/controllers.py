@@ -23,12 +23,17 @@ class index(S3CustomController):
         query = (atable.deleted == False)
         output["total_activities"] = db(query).count()
 
-        gtable = s3db.gis_location
-        query &= (atable.location_id == gtable.id)
+        #gtable = s3db.gis_location
+        #query &= (atable.location_id == gtable.id)
+        ogtable = s3db.org_group
+        ltable = s3db.project_activity_group
+        query &= (atable.id == ltable.activity_id) & \
+                 (ogtable.id == ltable.group_id)
         rows = db(query).select(atable.id,
                                 atable.name,
                                 atable.date,
-                                gtable.L3,
+                                #gtable.L3,
+                                ogtable.name,
                                 limitby = (0, 3),
                                 orderby = ~atable.date
                                 )
@@ -46,7 +51,8 @@ class index(S3CustomController):
                                              name = row["project_activity.name"],
                                              date = nice_date,
                                              date_iso = date or "",
-                                             location = row["gis_location.L3"],
+                                             org_group = row["org_group.name"],
+                                             #location = row["gis_location.L3"],
                                              ))
         output["latest_activities"] = latest_activities
 

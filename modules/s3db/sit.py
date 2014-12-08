@@ -122,8 +122,9 @@ class S3SituationModel(S3Model):
                                       label = T("Date/Time"),
                                       ),
                           location_id(
-                            widget = S3LocationSelector(show_address=False,
-                                                        show_postcode=False,
+                            widget = S3LocationSelector(show_address = False,
+                                                        show_postcode = False,
+                                                        show_latlon = True,
                                                         ),
                             ),
                           Field("direction",

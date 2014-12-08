@@ -26,5 +26,6 @@ Social Services,,org,organisation,people,Building,{name} (T('Organization')),nam
 Transportation,,gis,poi,transport,Building,{name} (T('Point')),name,~.poi_type_id$name=Transportation,,,,Points,False,,30,,,
 Transportation,,org,organisation,transport,Building,{name} (T('Organization')),name,service.name__typeof=Transportation,,,,Organizations,False,,30,,,
 People,,pr,person,trained,,{first_name} {last_name},"first_name,last_name",,True,,,People,False,,30,,,
-Fire Zones,,gis,poi,,,{name},name,~.poi_type_id$name=Fire Zone,,True,"{'fill':'FF0000','fillOpacity':0.5}",Hazards,False,,,0,,0.9
-Team Zones,,gis,poi,,,{name},name,~.poi_type_id$name=Team Zone,,True,"{'fill':'00FF00','fillOpacity':0.5}",People,False,,,0,,0.9
+Fire Zones,,gis,poi,,,{name},name,~.poi_type_id$name=Fire Zone,,True,"{'fill':'FF0000','fillOpacity':0.5}",Areas,False,,,0,,0.9
+Team Zones,,gis,poi,,,{name},name,~.poi_type_id$name=Team Zone,,True,"{'fill':'00FF00','fillOpacity':0.5}",Areas,False,,,0,,0.9
+Points,For Summary Page,gis,poi,empty,Building,{name} (T('Point')),name,,,,,Points,False,False,30,,,
