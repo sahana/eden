@@ -9,7 +9,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,BD,Division,District,"Thana / Upazil","Village / Union / Area",,
 ,BI,Province,Commune,Colline,Sous Colline,
 ,CF,Prefecture,Sub-Prefecture,Commune,,
-,CM,Region,Division,Sub-Division,District,
+,CM,Region,Division,Sub-Division,Village,
 ,FI,"Regional State Administrative Agency",Region,Sub-region,Municipality,,
 ,GE,"Region / Republic",District,,,,
 ,GN,Region,Prefecture,Sub-prefecture,,,

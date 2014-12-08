@@ -3710,25 +3710,26 @@ def screenshot():
 
     config_id = request.args(0) or 1
 
+    # If passed a size, set the Pixels for 300ppi
     size = get_vars.get("size")
     if size == "Letter":
-        height = 612
-        width = 792
+        height = 2550 # 612 for 72ppi
+        width = 3300  # 792 for 72ppi
     elif size == "A4":
-        height = 595
-        width = 842
+        height = 2480 # 595 for 72ppi
+        width = 3508  # 842 for 72ppi
     elif size == "A3":
-        height = 842
-        width = 1191
+        height = 3508 # 842 for 72ppi
+        width = 4962  # 1191 for 72ppi
     elif size == "A2":
-        height = 1191
-        width = 1684
+        height = 4962 # 1191 for 72ppi
+        width = 7017  # 1684 for 72ppi
     elif size == "A1":
-        height = 1684
-        width = 2384
+        height = 7017 # 1684 for 72ppi
+        width =  9933 # 2384 for 72ppi
     elif size == "A0":
-        height = 2384
-        width = 3375
+        height = 9933 # 2384 for 72ppi
+        width =  14061 # 3375 for 72ppi
     else:
         height = get_vars.get("height")
         width = get_vars.get("width")

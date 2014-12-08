@@ -143,15 +143,19 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         $.when(layersLoaded(map_id)).then(
             function(status) {
                 // Success:
+                s3_debug(status);
                 // - check that Tiles are Loaded
                 $.when(tilesLoaded(S3.gis.maps[map_id].baseLayer)).then(
                     function(status) {
                         // Success
+                        s3_debug(status);
                         // Hide Throbber
                         hideThrobber(null, map);
                         // Set a flag to show that we've completed loading
                         // - used by gis.get_screenshot()
-                        map.s3.loaded = true;
+                        // PhantomJS isn't waiting for the callbacks, so currently adding a manual delay
+                        //map.s3.loaded = true;
+                        setTimeout(function(){ map.s3.loaded = true; }, 50000);
                     },
                     function(status) {
                         // Failed
@@ -188,7 +192,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Test every half-second
         setTimeout(function working() {
             if (layers_loading.length == 0) {
-                dfd.resolve('loaded');
+                dfd.resolve('Layers loaded');
             } else if (dfd.state() === 'pending') {
                 // Notify progress
                 dfd.notify('waiting for Layers to load...');
@@ -216,7 +220,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Test every half-second
         setTimeout(function working() {
             if (layer.numLoadingTiles == 0) {
-                dfd.resolve('loaded');
+                dfd.resolve('Tiles loaded');
             } else if (dfd.state() === 'pending') {
                 // Notify progress
                 dfd.notify('waiting for Tiles to load...');
@@ -5178,12 +5182,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             ],
                             // @ToDo: Make configurable
                             data: [
-                                   ['Letter', 'Letter (612 x 792)'],
-                                   ['A4', 'A4 (595 x 842)'],
-                                   ['A3', 'A3 (842 x 1191)'],
-                                   ['A2', 'A2 (1191 x 1684)'],
-                                   ['A1', 'A1 (1684 x 2384)'],
-                                   ['A0', 'A0 (2384 x 3375)']
+                                   ['Letter', 'Letter (2550 x 3300)'], // 612 x 792 @ 72ppi
+                                   ['A4', 'A4 (2480 x 3508)'],         // 595 x 842 @ 72ppi
+                                   ['A3', 'A3 (3508 x 4962)'],         // 842 x 1191 @ 72ppi
+                                   ['A2', 'A2 (4962 x 7017)'],         // 1191 x 1684 @ 72ppi
+                                   ['A1', 'A1 (7017 x 9933)'],         // 1684 x 2384 @ 72ppi
+                                   ['A0', 'A0 (9933 x 14061)']         // 2384 x 3375 @ 72ppi
                                    ]
                         }),
                         triggerAction: 'all',
@@ -5199,23 +5203,23 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             // Modify the zoom so that the viewport covers the same area
                             var size = $('#x-form-el-' + map_id + '_paper_size input[name="size"]').val();
                             if (size == 'Letter') {
-                                var height = 612;
-                                var width = 792;
+                                var height = 2550; // 612 for 72ppi
+                                var width = 3300;  // 792 for 72ppi
                             } else if (size == 'A4') {
-                                var height = 595;
-                                var width = 842;
+                                var height = 2480; // 595 for 72ppi
+                                var width = 3508;  // 842 for 72ppi
                             } else if (size == 'A3') {
-                                var height = 842;
-                                var width = 1191;
+                                var height = 3508; // 842 for 72ppi
+                                var width = 4962;  // 1191 for 72ppi
                             } else if (size == 'A2') {
-                                var height = 1191;
-                                var width = 1684;
+                                var height = 4962; // 1191 for 72ppi
+                                var width = 7017;  // 1684 for 72ppi
                             } else if (size == 'A1') {
-                                var height = 1684;
-                                var width = 2384;
+                                var height = 7017; // 1684 for 72ppi
+                                var width = 9933;  // 2384 for 72ppi
                             } else if (size == 'A0') {
-                                var height = 2384;
-                                var width = 3375;
+                                var height = 9933; // 2384 for 72ppi
+                                var width = 14061; // 3375 for 72ppi
                             }
                             var extent = map.getExtent();
                             var viewSize = new OpenLayers.Size(width, height);

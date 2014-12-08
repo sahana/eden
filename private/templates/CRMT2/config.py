@@ -2262,6 +2262,7 @@ def customise_gis_poi_controller(**attr):
                 points = True
                 lines = False
                 polygons = False
+                table.name.label = T("Point Name")
                 s3.crud_strings[tablename] = Storage(
                     label_create = T("Add Point"),
                     title_display = T("Point Details"),
@@ -2280,6 +2281,7 @@ def customise_gis_poi_controller(**attr):
                 points = False
                 lines = True
                 polygons = False
+                table.name.label = T("Route Name")
                 s3.crud_strings[tablename] = Storage(
                     label_create = T("Add Route"),
                     title_display = T("Route Details"),
@@ -2298,6 +2300,7 @@ def customise_gis_poi_controller(**attr):
                 points = False
                 lines = False
                 polygons = True
+                table.name.label = T("Area Name")
                 s3.crud_strings[tablename] = Storage(
                     label_create = T("Add Area"),
                     title_display = T("Area Details"),
