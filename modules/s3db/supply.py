@@ -120,7 +120,7 @@ class S3SupplyModel(S3Model):
                     }
             s3.js_global.append('''i18n.in_inv="%s"''' % i18n["in_inv"])
             s3.js_global.append('''i18n.no_packs="%s"''' % i18n["no_packs"])
-            
+
         # =====================================================================
         # Brand
         #
@@ -567,7 +567,7 @@ $.filterOptionsS3({
         filter_widgets = [
             S3TextFilter([#These lines are causing issues...very slow - perhaps broken
                           #"comments",
-                          #"item_category_id$code", 
+                          #"item_category_id$code",
                           #"item_category_id$name",
                           #"item_id$brand_id$name",
                           #"item_category_id$parent_item_category_id$code"
@@ -813,7 +813,7 @@ $.filterOptionsS3({
             #                cols = 2,
             #               ),
         ]
-        
+
         # Configuration
         configure(tablename,
                   filter_widgets = filter_widgets,
@@ -1304,7 +1304,7 @@ class S3SupplyDistributionModel(S3Model):
         filter_widgets = [
             #S3TextFilter([#"item_id$name",
             #          if settings.get_project_projects():
-            #              "activity_id$project_id$name", 
+            #              "activity_id$project_id$name",
             #              "activity_id$project_id$code",
             #              "location_id",
             #              "comments"
@@ -1651,43 +1651,39 @@ class supply_ItemRepresent(S3Represent):
 
 # =============================================================================
 class supply_ItemPackRepresent(S3Represent):
-    """ 
-        Representation of Supply Item Packs
-        @ToDo: Optimised query where we don't need to do the join ?
-    """
+    """ Representation of Supply Item Packs """
 
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=[]):
         """
-            Custom lookup method for item_pack rows, does a
-            left join with the item. Parameters
-            key and fields are not used, but are kept for API
-            compatibility reasons.
+            Custom lookup method for item_pack rows, does a left join with
+            the item.
 
+            @param key: the primary key of the lookup table
             @param values: the supply_item_pack IDs
+            @param fields: the fields to lookup (unused in this class,
+                           retained for API compatibility)
         """
 
         db = current.db
-        table = db.supply_item_pack
-        itable = db.supply_item
 
-        fields = ["supply_item_pack.id",
-                  "supply_item_pack.name",
-                  "supply_item_pack.quantity",
-                  "supply_item.um"]
+        table = self.table
+        itable = db.supply_item
 
         qty = len(values)
         if qty == 1:
-            query = (table.id == values[0])
-            limitby = (0, 1)
+            query = (key == values[0])
         else:
-            query = (table.id.belongs(values))
-            limitby = (0, qty)
-        
-        left = [itable.on(table.item_id == itable.id)]
-        rows = db(query).select(*fields,
-                                left = left,
-                                limitby = limitby)
+            query = (key.belongs(values))
+
+        left = itable.on(table.item_id == itable.id)
+        rows = db(query).select(table.id,
+                                table.name,
+                                table.quantity,
+                                itable.um,
+                                left=left,
+                                limitby=(0, qty),
+                                )
         self.queries += 1
 
         return rows
@@ -1697,17 +1693,29 @@ class supply_ItemPackRepresent(S3Represent):
         """
             Represent a single Row
 
-            @param row: the supply_item_pack Row
+            @param row: the Row (usually joined supply_item_pack/supply_item)
+
+            @todo: implement translate option
         """
+
         try:
-            if row.supply_item_pack.quantity == 1:
-                return row.supply_item_pack.name
-            else:
-                return "%s (%s x %s)" % (row.supply_item_pack.name,
-                                         row.supply_item_pack.quantity,
-                                         row.supply_item.um)
-        except:
+            item = row.supply_item
+            pack = row.supply_item_pack
+        except AttributeError:
+            # Missing join (external query?)
+            item = {"um": "Piece"}
+            pack = row
+
+        name = pack.get("name")
+        if not name:
             return current.messages.UNKNOWN_OPT
+
+        quantity = pack.get("quantity")
+        if quantity == 1 or quantity is None:
+            return name
+        else:
+            # Include pack description (quantity x units of measurement)
+            return "%s (%s x %s)" % (name, quantity, item.get("um"))
 
 # =============================================================================
 class supply_ItemCategoryRepresent(S3Represent):
@@ -1953,7 +1961,7 @@ class SupplyItemPackQuantity(object):
             item_pack_id = row.item_pack_id
         except AttributeError:
             return default
-            
+
         if item_pack_id:
             return item_pack_id.quantity
         else:
@@ -1974,7 +1982,7 @@ def supply_item_entity_category(row):
 
     table = current.s3db.supply_item
     query = (table.id == item_id)
-    
+
     record = current.db(query).select(table.item_category_id,
                                       limitby=(0, 1)).first()
     if record:
@@ -1985,17 +1993,17 @@ def supply_item_entity_category(row):
 # -------------------------------------------------------------------------
 def supply_item_entity_country(row):
     """ Virtual field: country """
-    
+
     if hasattr(row, "supply_item_entity"):
         row = row.supply_item_entity
     else:
         return None
-        
+
     s3db = current.s3db
     etable = s3db.supply_item_entity
 
     ekey = etable._id.name
-    
+
     try:
         instance_type = row.instance_type
     except AttributeError:
@@ -2004,21 +2012,21 @@ def supply_item_entity_country(row):
         entity_id = row[ekey]
     except AttributeError:
         return None
-    
+
     itable = s3db[instance_type]
     ltable = s3db.gis_location
-    
+
     if instance_type == "inv_inv_item":
-        
+
         stable = s3db.org_site
         query = (itable[ekey] == entity_id) & \
                 (stable.site_id == itable.site_id) & \
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
                                           limitby=(0, 1)).first()
-            
+
     elif instance_type == "inv_track_item":
-        
+
         rtable = s3db.inv_recv
         stable = s3db.org_site
         query = (itable[ekey] == entity_id) & \
@@ -2027,9 +2035,9 @@ def supply_item_entity_country(row):
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
                                           limitby=(0, 1)).first()
-            
+
     elif instance_type == "proc_plan_item":
-        
+
         ptable = s3db.proc_plan
         stable = s3db.org_site
         query = (itable[ekey] == entity_id) & \
@@ -2038,7 +2046,7 @@ def supply_item_entity_country(row):
                 (ltable.id == stable.location_id)
         record = current.db(query).select(ltable.L0,
                                           limitby=(0, 1)).first()
-           
+
     else:
         # @ToDo: Assets and req_items
         record = None
@@ -2073,7 +2081,7 @@ def supply_item_entity_organisation(row):
 
     organisation_represent = s3db.org_OrganisationRepresent(acronym=False)
     itable = s3db[instance_type]
-    
+
     if instance_type == "inv_inv_item":
 
         stable = s3db.org_site
@@ -2081,9 +2089,9 @@ def supply_item_entity_organisation(row):
                 (stable.site_id == itable.site_id)
         record = current.db(query).select(stable.organisation_id,
                                           limitby=(0, 1)).first()
-                                          
+
     elif instance_type == "proc_plan_item":
-        
+
         rtable = s3db.proc_plan
         stable = s3db.org_site
         query = (itable[ekey] == entity_id) & \
@@ -2091,9 +2099,9 @@ def supply_item_entity_organisation(row):
                 (stable.site_id == rtable.site_id)
         record = current.db(query).select(stable.organisation_id,
                                           limitby=(0, 1)).first()
-                                          
+
     elif instance_type == "inv_track_item":
-        
+
         rtable = s3db.inv_recv
         stable = s3db.org_site
         query = (itable[ekey] == entity_id) & \
@@ -2101,7 +2109,7 @@ def supply_item_entity_organisation(row):
                 (stable.site_id == rtable.site_id)
         record = current.db(query).select(stable.organisation_id,
                                           limitby=(0, 1)).first()
-                                          
+
     else:
         # @ToDo: Assets and req_items
         record = None
@@ -2114,7 +2122,7 @@ def supply_item_entity_organisation(row):
 # -------------------------------------------------------------------------
 def supply_item_entity_contacts(row):
     """ Virtual field: contacts (site_id) """
-    
+
     if hasattr(row, "supply_item_entity"):
         row = row.supply_item_entity
     else:
@@ -2142,17 +2150,17 @@ def supply_item_entity_contacts(row):
         query = (itable[ekey] == entity_id)
         record = db(query).select(itable.site_id,
                                   limitby=(0, 1)).first()
-                                          
+
     elif instance_type == "inv_track_item":
-        
+
         rtable = s3db.inv_recv
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.recv_id)
         record = db(query).select(rtable.site_id,
                                   limitby=(0, 1)).first()
-                                  
+
     elif instance_type == "proc_plan_item":
-        
+
         ptable = s3db.proc_plan
         query = (itable[ekey] == entity_id) & \
                 (ptable.id == itable.plan_id)
@@ -2180,24 +2188,24 @@ def supply_item_entity_contacts(row):
                 return office.comments
             else:
                 return default
-                
+
         elif office.comments:
             comments = s3_comments_represent(office.comments,
                                              show_link=False)
         else:
             comments = default
-            
+
         return A(comments,
                  _href = URL(f="office", args = [office.id]))
-                 
+
     else:
         return default
-                                      
+
 
 # -------------------------------------------------------------------------
 def supply_item_entity_status(row):
     """ Virtual field: status """
-    
+
     if hasattr(row, "supply_item_entity"):
         row = row.supply_item_entity
     else:
@@ -2221,9 +2229,9 @@ def supply_item_entity_status(row):
     itable = s3db[instance_type]
 
     status = None
-    
+
     if instance_type == "inv_inv_item":
-        
+
         query = (itable[ekey] == entity_id)
         record = current.db(query).select(itable.expiry_date,
                                           limitby=(0, 1)).first()
@@ -2234,7 +2242,7 @@ def supply_item_entity_status(row):
                           dict(date=record.expiry_date)
             else:
                 status = T("In Stock")
-                
+
     elif instance_type == "proc_plan_item":
 
 
@@ -2249,9 +2257,9 @@ def supply_item_entity_status(row):
                 status = T("Planned %(date)s") % dict(date=record.eta)
             else:
                 status = T("Planned Procurement")
-                
+
     elif instance_type == "inv_track_item":
-        
+
         rtable = s3db.inv_recv
         query = (itable[ekey] == entity_id) & \
                 (rtable.id == itable.send_inv_item_id)
@@ -2263,7 +2271,7 @@ def supply_item_entity_status(row):
                 status = T("Order Due %(date)s") % dict(date=record.eta)
             else:
                 status = T("On Order")
-                
+
     else:
         # @ToDo: Assets and req_items
         return current.messages["NONE"]
