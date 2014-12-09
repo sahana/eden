@@ -4784,7 +4784,8 @@ class S3PoIModel(S3Model):
             and blank the comment. Used for s3csv imports as we have no components & can't use an import_prep as we don't know the record_id
         """
 
-        comments = form.vars.get("comments")
+        form_vars = form.vars
+        comments = form_vars.get("comments")
         if not comments:
             # Nothing to do
             return
@@ -4796,7 +4797,6 @@ class S3PoIModel(S3Model):
             # Not a style
             return
 
-        form_vars = form.vars
         db = current.db
         s3db = current.s3db
         try:
@@ -4845,11 +4845,15 @@ class S3PoIModel(S3Model):
             return
 
         # Create a Style record
+        record_id = form_vars.id
         table = s3db.gis_style
         table.insert(layer_id = layer_id,
-                     record_id = form_vars.id,
+                     record_id = record_id,
                      style = style,
                      )
+
+        # Cleanup the Comments
+        db(db.gis_poi.id == record_id).update(comments = None)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -2216,15 +2216,18 @@ def customise_gis_poi_controller(**attr):
             filter_widgets = [S3TextFilter(("name", "comments"),
                                            label = T("Search"),
                                            ),
+                              S3OptionsFilter("poi_type_id",
+                                              ),
                               S3OptionsFilter("poi_group.group_id",
-                                             ),
+                                              ),
                               S3OptionsFilter("organisation_id",
-                                             ),
+                                              ),
                               S3OptionsFilter("location_id$L3",
-                                             ),
+                                              ),
                               ]
 
             list_fields = ["name",
+                           "poi_type_id",
                            "comments",
                            "poi_group.group_id",
                            "organisation_id",
@@ -2374,6 +2377,7 @@ def customise_gis_poi_controller(**attr):
                           )
 
             crud_form = S3SQLCustomForm("name",
+                                        "poi_type_id",
                                         "comments",
                                         "organisation_id",
                                         S3SQLInlineComponent(
