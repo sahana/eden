@@ -51,6 +51,9 @@ settings.gis.countries = ("CF",) # Initially, will change
 settings.gis.legend = "float"
 # Uncomment to Disable the Postcode selector in the LocationSelector
 settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
+# Uncomment to show the Print control:
+# http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
+settings.gis.print_button = True
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
