@@ -1283,7 +1283,7 @@
          * @todo: skip if widget is invisible
          * @todo: needs a different trigger in inline-forms (see _bindEvents)
          */
-        _submitForm: function() {
+        _validate: function() {
 
             var fieldname = this.fieldname;
 
@@ -1432,9 +1432,11 @@
          */
         _bindEvents: function() {
 
-            var selector = '#' + this.fieldname,
+            var fieldname = this.fieldname,
                 ns = this.namespace,
                 self = this;
+
+            var selector = '#' + fieldname;
 
             $(selector + '_L0').bind('change' + ns, function() {
                 self._removeErrors(this);
@@ -1477,13 +1479,25 @@
                 self._latlonInput();
             });
 
-            // @todo: must use a different trigger in inline-forms
-            this.input.closest('form').bind('submit' + ns + this.id, function(e) {
-                e.preventDefault();
-                if (self._submitForm()) {
-                    self.input.closest('form').unbind(ns + self.id).submit();
-                }
-            });
+            if (fieldname.substring(0, 4) == 'sub_') {
+                // Inline form
+                var inlineForm = this.input.closest('.inline-form');
+                inlineForm.bind('validate' + ns + this.id, function(e) {
+                    if (!self._validate()) {
+                        e.preventDefault();
+                    }
+                });
+            } else {
+                // Regular form field
+                var form = this.input.closest('form');
+                form.bind('submit' + ns + this.id, function(e) {
+                    e.preventDefault();
+                    if (self._validate()) {
+                        form.unbind(ns + self.id).submit();
+                    }
+                });
+            }
+
             return true;
         },
 
