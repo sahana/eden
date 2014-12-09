@@ -1304,15 +1304,15 @@ class S3OrganisationGroupModel(S3Model):
                   super_entity = ("doc_entity", "pr_pentity"),
                   )
 
-        represent = S3Represent(lookup=tablename)
+        group_represent = S3Represent(lookup=tablename)
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    label = T(label),
                                    # Always links via Link Tables
                                    ondelete = "CASCADE",
-                                   represent = represent,
+                                   represent = group_represent,
                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "org_group.id",
-                                                          represent,
+                                                          group_represent,
                                                           sort=True,
                                                           )),
                                    sortby = "name",
@@ -1400,7 +1400,7 @@ class S3OrganisationGroupModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict(org_group_id = group_id,
-                    org_group_represent = represent,
+                    org_group_represent = group_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -1500,7 +1500,8 @@ class S3OrganisationGroupPersonModel(S3Model):
         #
         tablename = "org_group_person"
         define_table(tablename,
-                     self.org_group_id(empty = False,
+                     self.org_group_id("org_group_id",
+                                       empty = False,
                                        ondelete = "CASCADE",
                                        ),
                      self.pr_person_id(empty = False,
