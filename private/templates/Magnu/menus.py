@@ -27,7 +27,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Contacts", c="pr", f="person", args="summary"),
                 MM("Demographics", c="stats", f="demographic_data", args="summary"),
                 MM("Health", c="hms", f="hospital", args="summary"),
-                MM("Incidents", c="event", f="ireport", args="summary"),
+                MM("Incidents", c="event", f="incident_report", args="summary"),
                 MM("Offices", c="org", f="office", args="summary"),
                 MM("Organisations", c="org", f="organisation", args="summary"),
                 MM("Projects", c="project", f="project", args="summary"),

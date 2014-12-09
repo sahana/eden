@@ -42,7 +42,7 @@
 
     <xsl:variable name="OfficeName">
         <xsl:call-template name="ResolveColumnHeader">
-            <xsl:with-param name="colname">Name</xsl:with-param>
+            <xsl:with-param name="colname">OfficeName</xsl:with-param>
         </xsl:call-template>
     </xsl:variable>
 
@@ -218,18 +218,20 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="ContactFirstName" select="col[@field='Contact First Name']/text()"/>
+        <xsl:variable name="officename">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$OfficeName"/>
+            </xsl:call-template>
+        </xsl:variable>
 
         <resource name="org_office">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
-            </xsl:attribute>
 
             <!-- Link to Location -->
             <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
                  S3LocationSelectorWidget2 doesn't have this limitation -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$OfficeName"/>
+                    <xsl:value-of select="concat($OrgName, $officename)"/>
                 </xsl:attribute>
             </reference>
 
@@ -256,7 +258,7 @@
             </xsl:if>
 
             <!-- Office data -->
-            <data field="name"><xsl:value-of select="$OfficeName"/></data>
+            <data field="name"><xsl:value-of select="$officename"/></data>
             <data field="phone1"><xsl:value-of select="col[@field='Phone1']"/></data>
             <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
             <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
@@ -757,7 +759,6 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Locations">
 
-        <xsl:variable name="OfficeName" select="col[@field='Name']/text()"/>
         <xsl:variable name="Building" select="col[@field='Building']/text()"/>
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
@@ -778,6 +779,12 @@
         <xsl:variable name="postcode">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$Postcode"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="officename">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$OfficeName"/>
             </xsl:call-template>
         </xsl:variable>
 
@@ -813,7 +820,7 @@
         <!-- Office Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$OfficeName"/>
+                <xsl:value-of select="concat($OrgName, $officename)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l5!=''">
@@ -864,7 +871,7 @@
                     <data field="name"><xsl:value-of select="$Building"/></data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                    <data field="name"><xsl:value-of select="$officename"/></data>
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>

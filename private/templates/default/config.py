@@ -359,6 +359,8 @@ settings.gis.geonames_username = "eden_test"
 # restricted to MapAdmins.
 # Uncomment to disable that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False
+# Uncomment to Disable the Postcode selector in the LocationSelector
+#settings.gis.postcode_selector = False
 
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
