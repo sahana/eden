@@ -1396,6 +1396,7 @@ class S3HRSalaryModel(S3Model):
 
     names = ("hrm_staff_level",
              "hrm_salary_grade",
+             "hrm_salary_coefficient",
              "hrm_salary",
              )
 
@@ -1422,11 +1423,25 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Staff Level"),
+            title_display = T("Staff Level"),
+            title_list = T("Staff Levels"),
+            title_update = T("Edit Staff Level"),
+            label_list_button = T("List Staff Levels"),
+            label_delete_button = T("Delete Staff Level"),
+            msg_record_created = T("Staff Level added"),
+            msg_record_modified = T("Staff Level updated"),
+            msg_record_deleted = T("Staff Level removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no staff level registered"),
+        )
+
         configure(tablename,
                   deduplicate = self.staff_level_duplicate,
                   )
 
-        ADD_STAFF_LEVEL = T("Add Staff Level")
+        ADD_STAFF_LEVEL = T("Create Staff Level")
         staff_level_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_staff_level")
 
         # =====================================================================
@@ -1442,11 +1457,25 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Salary Grade"),
+            title_display = T("Salary Grade"),
+            title_list = T("Salary Grades"),
+            title_update = T("Edit Salary Grade"),
+            label_list_button = T("List Salary Grades"),
+            label_delete_button = T("Delete Salary Grade"),
+            msg_record_created = T("Salary Grade added"),
+            msg_record_modified = T("Salary Grade updated"),
+            msg_record_deleted = T("Salary Grade removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no salary grade registered"),
+        )
+
         configure(tablename,
                   deduplicate = self.salary_grade_duplicate,
                   )
 
-        ADD_SALARY_GRADE = T("Add Salary Grade")
+        ADD_SALARY_GRADE = T("Create Salary Grade")
         salary_grade_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_salary_grade")
 
         # =====================================================================
@@ -1468,8 +1497,9 @@ class S3HRSalaryModel(S3Model):
                                                           "hrm_staff_level.id",
                                                           staff_level_represent,
                                                           )),
-                                   comment = S3AddResourceLink(f = "staff_level",
-                                                               label = ADD_STAFF_LEVEL),
+                                   comment = S3AddResourceLink(c = "hrm",
+                                                               f = "staff_level",
+                                                               title = ADD_STAFF_LEVEL),
                                    ),
                              Field("salary_grade_id", "reference hrm_salary_grade",
                                    label = T("Salary Grade"),
@@ -1479,8 +1509,9 @@ class S3HRSalaryModel(S3Model):
                                                           "hrm_salary_grade.id",
                                                           salary_grade_represent,
                                                           )),
-                                   comment = S3AddResourceLink(f = "salary_grade",
-                                                               label = ADD_SALARY_GRADE),
+                                   comment = S3AddResourceLink(c = "hrm",
+                                                               f = "salary_grade",
+                                                               title = ADD_SALARY_GRADE),
                                    ),
                              s3_date("start_date",
                                      default = "now",
@@ -1523,7 +1554,55 @@ class S3HRSalaryModel(S3Model):
         # =====================================================================
         # Salary Coefficient
         #
-        # @todo: implement
+        tablename = "hrm_salary_coefficient"
+
+        def coefficient_field(field_name, label_name):
+          field = Field(field_name, "double",
+                        label = T(label_name),
+                        requires = IS_FLOAT_IN_RANGE(minimum=0.0),
+                        default = 0.0,
+                        notnull = True,
+                  )
+          return field
+
+        table = define_table(tablename,
+                             Field("hours", "integer",
+                                   label = T("Hours"),
+                                   notnull = True,
+                             ),
+                             coefficient_field("even","Even"),
+                             coefficient_field("quarter","00.25"),
+                             coefficient_field("half","00.50"),
+                             coefficient_field("three_quarter","00.75"),
+                             coefficient_field("one_tenth","00.10"),
+                             coefficient_field("two_tenth","00.20"),
+                             coefficient_field("three_tenth","00.30"),
+                             coefficient_field("four_tenth","00.40"),
+                             coefficient_field("six_tenth","00.60"),
+                             coefficient_field("seven_tenth","00.70"),
+                             coefficient_field("eight_tenth","00.80"),
+                             coefficient_field("nine_tenth","00.90"),
+                             *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Salary Coefficient"),
+            title_display = T("Salary Coefficient"),
+            title_list = T("Salary Coefficients"),
+            title_update = T("Edit Salary Coefficient"),
+            label_list_button = T("List Salary Coefficients"),
+            label_delete_button = T("Delete Salary Coefficient"),
+            msg_record_created = T("Salary Coefficient added"),
+            msg_record_modified = T("Salary Coefficient updated"),
+            msg_record_deleted = T("Salary Coefficient removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no salary coefficient registered"),
+        )
+
+        configure(tablename,
+                  deduplicate = self.salary_coefficient_duplicate,
+                  onvalidation = self.hrm_salary_coefficient_onvalidation,
+                  orderby = "%s.hours" % tablename,
+                  )
 
         # =====================================================================
         # Allowance Level
@@ -1550,6 +1629,55 @@ class S3HRSalaryModel(S3Model):
 
         if start_date and end_date and start_date > end_date:
             form.errors["end_date"] = current.T("End date must be after start date.")
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_salary_coefficient_onvalidation(form):
+
+        try:
+            form_vars = form.vars
+            T = current.T
+            var = form_vars.get
+            error = form.errors
+            even = var("even")
+            quarter = var("quarter")
+            half = var("half")
+            three_quarter = var("three_quarter")
+            one_tenth = var("one_tenth")
+            two_tenth = var("two_tenth")
+            three_tenth = var("three_tenth")
+            four_tenth = var("four_tenth")
+            six_tenth = var("six_tenth")
+            seven_tenth = var("seven_tenth")
+            eight_tenth = var("eight_tenth")
+            nine_tenth = var("nine_tenth")
+        except AttributeError:
+            return
+
+        if even > one_tenth:
+            error["one_tenth"] = T("0.10 should be greater than even")
+        elif one_tenth > two_tenth:
+            error["two_tenth"] = T("0.20 should be greater than 0.10")
+        elif two_tenth > quarter:
+            error["quarter"] = T("0.25 should be greater than 0.20")
+        elif quarter > three_tenth:
+            error["three_tenth"] = T("0.30 should be greater than 0.25")
+        elif three_tenth > four_tenth:
+            error["four_tenth"] = T("0.40 should be greater than 0.30")
+        elif four_tenth > half:
+            error["half"] = T("0.50 should be greater than 0.40")
+        elif half > six_tenth:
+            error["six_tenth"] = T("0.60 should be greater than 0.50")
+        elif six_tenth > seven_tenth:
+            error["seven_tenth"] = T("0.70 should be greater than 0.60")
+        elif seven_tenth > three_quarter:
+            error["three_quarter"] = T("0.75 should be greater than 0.70")
+        elif three_quarter > eight_tenth:
+            error["eight_tenth"] = T("0.80 should be greater than 0.75")
+        elif eight_tenth > nine_tenth:
+            error["nine_tenth"] = T("0.90 should be greater than 0.80")
+
         return
 
     # -------------------------------------------------------------------------
@@ -1587,6 +1715,25 @@ class S3HRSalaryModel(S3Model):
             table = item.table
             query = (table.organisation_id == organisation_id) & \
                     (table.name == name)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def salary_coefficient_duplicate(item):
+        """ Callback to identify the original of an update import item """
+
+        data = item.data
+        hours = data.hours
+
+        if hours:
+
+            table = item.table
+            query = (table.hours == hours)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -2065,7 +2212,8 @@ class S3HRSkillModel(S3Model):
                                   represent
                                   )),
             sortby = "name",
-            comment=S3AddResourceLink(f="skill_type",
+            comment=S3AddResourceLink(c="hrm",
+                                      f="skill_type",
                                       label=label_create,
                                       title=label_create,
                                       tooltip=T("Add a new skill type to the catalog.")),
@@ -2112,8 +2260,10 @@ class S3HRSkillModel(S3Model):
             widget = None
             tooltip = None
 
-        skill_help = S3AddResourceLink(f="skill",
+        skill_help = S3AddResourceLink(c="hrm",
+                                       f="skill",
                                        label=label_create,
+                                       title=label_create,
                                        tooltip=tooltip)
 
         represent = S3Represent(lookup=tablename)
