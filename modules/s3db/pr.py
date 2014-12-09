@@ -1030,6 +1030,8 @@ class S3PersonModel(S3Model):
                        hrm_salary = "person_id",
                        # Organisation Memberships
                        member_membership = "person_id",
+                       # Organisation Group Association
+                       org_group_person = "person_id",
                        # Education history
                        pr_education = "person_id",
                        # Group Memberships
