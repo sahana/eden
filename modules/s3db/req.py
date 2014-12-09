@@ -4061,8 +4061,8 @@ function(status){s3_debug(status)})''' % site_id
         #             hidden = True,
         #             ),
         ]
-    # @ToDo: deployment_setting
-    if current.auth.s3_has_role("EDITOR"):
+
+    if settings.get_auth_editor_role():
         filter_widgets.insert(-1, S3OptionsFilter("created_by",
                                                   label = T("Logged By"),
                                                   hidden = True,
@@ -4358,8 +4358,7 @@ def req_customise_commit_fields():
 
     auth = current.auth
 
-    # @ToDo: deployment_setting
-    if auth.s3_has_role("EDITOR"):
+    if settings.get_auth_editor_role():
         editor = True
     else:
         editor = False

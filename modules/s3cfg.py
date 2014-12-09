@@ -407,6 +407,12 @@ class S3Config(Storage):
         """
         return self.auth.get("registration_roles", [])
 
+    def get_auth_editor_role(self):
+        """
+            Check if logged user has role EDITOR
+        """
+        return current.auth.s3_has_role("EDITOR")
+
     def get_auth_terms_of_service(self):
         """
             Force users to accept Terms of Servcie before Registering an account
