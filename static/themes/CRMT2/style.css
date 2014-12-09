@@ -317,6 +317,7 @@ aside .form-container input[type=radio] + label:before {
     display: inline;
     max-width: 12rem;
 }
+.form-container form button.ui-datepicker-trigger,
 .ui-datepicker-trigger {
     padding: 0;
 }

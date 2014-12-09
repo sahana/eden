@@ -992,7 +992,7 @@ def customise_org_organisation_controller(**attr):
             list_fields = ["id",
                            "name",
                            (T("Coalition"), "group_membership.group_id"),
-                           (T("Location(s)"), "facility.location_id"),
+                           (T("Organization's Addresses"), "facility.location_id"),
                            #"facility.location_id$addr_postcode",
                            (T("Sectors"), "sector_organisation.sector_id"),
                            (T("Services"), "service_organisation.service_id"),
@@ -1216,8 +1216,7 @@ def customise_org_organisation_controller(**attr):
                     form_fields.insert(-1,
                                        # Not fully ready yet
                                        S3SQLInlineComponent("facility",
-                                                #label = T("Address"),
-                                                label = T("Location(s)"),
+                                                label = T("Organization's Addresses"),
                                                 fields = [("", "location_id"),
                                                         ],
                                                 columns = (10,),
