@@ -1446,25 +1446,70 @@ class S3OrganisationGroupPersonModel(S3Model):
         Link table between Organisation Groups & Persons
     """
 
-    names = ("org_group_person",)
+    names = ("org_group_person_status",
+             "org_group_person",
+             )
 
     def model(self):
 
         T = current.T
+        db = current.db
+
+        define_table = self.define_table
+        crud_strings = current.response.s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Person<=>Organisation Group membership status
+        #
+        tablename = "org_group_person_status"
+        define_table(tablename,
+                     Field("name", notnull=True, unique=True, length=128,
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        crud_strings[tablename] = Storage(
+                label_create = T("Create Status"),
+                title_display = T("Status Details"),
+                title_list = T("Statuses"),
+                title_update = T("Edit Status"),
+                label_list_button = T("List Statuses"),
+                label_delete_button = T("Delete Status"),
+                msg_record_created = T("Status added"),
+                msg_record_modified = T("Status updated"),
+                msg_record_deleted = T("Status removed"),
+                msg_list_empty = T("No Statuses currently defined"))
+
+        represent = S3Represent(lookup=tablename)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Status"),
+                                    ondelete = "SET NULL",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "org_group_person_status.id",
+                                                          represent,
+                                                          sort=True,
+                                                          )),
+                                    sortby = "name",
+                                    )
 
         # ---------------------------------------------------------------------
         # Link table between Organisation Groups & Persons
         #
         tablename = "org_group_person"
-        self.define_table(tablename,
-                          self.org_group_id(empty = False,
-                                            ondelete = "CASCADE",
-                                            ),
-                          self.pr_person_id(empty = False,
-                                            ondelete = "CASCADE",
-                                            ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     self.org_group_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     status_id(),
+                     *s3_meta_fields())
 
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return dict()
 
