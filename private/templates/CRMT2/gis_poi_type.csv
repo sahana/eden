@@ -7,5 +7,7 @@ Environment,environment
 Evacuation Route,
 Fire Zone,
 "Flood Channel / Street Intersection",manhole
+Physical Features,mountain
 Team Zone,
+Transport,transport
 Water Storage Tank,water_tank
