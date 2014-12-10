@@ -169,12 +169,7 @@ class HospitalDataModel(S3Model):
                      self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
                         ),
-                     self.gis_location_id(
-                        widget = S3LocationSelectorWidget2(
-                           levels = ("L1", "L2", "L3"),                                
-                           hide_lx = False,
-                           )                  
-                        ),
+                     self.gis_location_id(),
 
                      # Address fields:
                      # @todo: Deprecate these & use location_id in HAVE export
