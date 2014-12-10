@@ -2339,6 +2339,7 @@ def customise_gis_poi_controller(**attr):
                                                   lines=lines,
                                                   points=points,
                                                   polygons=polygons,
+                                                  feature_required=True,
                                                   reverse_lx=True,
                                                   show_address=True,
                                                   show_postcode=True,

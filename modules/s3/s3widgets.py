@@ -4112,6 +4112,7 @@ class S3LocationSelector(S3Selector):
                  show_postcode = False,
                  show_latlon = False,
                  show_map = True,
+                 feature_required = False,
                  labels = True,
                  placeholders = False,
                  lines = False,
@@ -4135,6 +4136,7 @@ class S3LocationSelector(S3Selector):
             @param show_postcode: show a field for postcode
             @param show_latlon: show fields for manual Lat/Lon input
             @param show_map: show a map to select specific points
+            @param feature_required: map feature is required
             @param labels: show labels on inputs
             @param placeholders: show placeholder text in inputs
             @param lines: use a line draw tool
@@ -4157,10 +4159,23 @@ class S3LocationSelector(S3Selector):
         self.show_address = show_address
         self.show_postcode = show_postcode
         self.show_latlon = show_latlon
-        self.show_map = show_map
         self.labels = labels
         self.placeholders = placeholders
 
+        if feature_required:
+            show_map = True
+            if not any((points,lines, polygons)):
+                points = True
+            if lines or polygons:
+                required = "wkt" if not points else "any"
+            else:
+                required = "latlon"
+            self.feature_required = required
+        else:
+            self.feature_required = None
+
+        self.show_map = show_map
+        
         self.lines = lines
         self.points = points
         self.polygons = polygons
@@ -4396,6 +4411,7 @@ class S3LocationSelector(S3Selector):
                    "locations": location_dict,
                    "labels": labels_compact,
                    "showLabels": self.labels,
+                   "featureRequired": self.feature_required,
                    }
         if self.min_bbox:
             options["minBBOX"] = self.min_bbox
@@ -5091,7 +5107,12 @@ class S3LocationSelector(S3Selector):
         if not location_selector_loaded:
             global_append('''i18n.show_map_add="%s"
 i18n.show_map_view="%s"
-i18n.hide_map="%s"''' % (show_map_add, show_map_view, T("Hide Map")))
+i18n.hide_map="%s"
+i18n.map_feature_required="%s"''' % (show_map_add, 
+                                     show_map_view, 
+                                     T("Hide Map"),
+                                     T("Map Input Required"),
+                                     ))
 
         # Generate map icon
         icon_id = "%s_map_icon" % fieldname

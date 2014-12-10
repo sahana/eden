@@ -35,16 +35,19 @@
          *                          used to determine automatic zoom level for
          *                          single-point locations
          * @prop {bool} showLabels - show labels on inputs
+         * @prop {string} featureRequired - type of map feature that is required,
+         *                                  'latlon'|'wkt'|'any'
          */
         options: {
             hideLx: true,
             reverseLx: false,
-
+             
             locations: null,
             labels: null,
 
             minBBOX: 0.05,
-            showLabels: true
+            showLabels: true,
+            featureRequired: null
         },
 
         /**
@@ -205,6 +208,8 @@
             if (data.lat || data.lon || data.wkt) {
                 // Don't do a Geocode when reading the data
                 this.input.data('manually_geocoded', true);
+                this._showMap();
+            } else if (this.options.featureRequired) {
                 this._showMap();
             } else {
                 this._hideMap();
@@ -1281,7 +1286,6 @@
          * @returns {bool} - whether widget input is valid or not
          *
          * @todo: skip if widget is invisible
-         * @todo: needs a different trigger in inline-forms (see _bindEvents)
          */
         _validate: function() {
 
@@ -1292,7 +1296,31 @@
 
             // Do we have a value to submit?
             var selector = '#' + fieldname,
-                current_value = this.data.id,
+                data = this.data,
+                featureRequired = this.options.featureRequired;
+                
+            if (featureRequired) {
+                // Must have latlon or wkt
+                var valid = false;
+                switch (featureRequired) {
+                    case 'latlon':
+                        valid = data.lat || data.lon;
+                        break;
+                    case 'wkt':
+                        valid = data.wkt;
+                        break;
+                    default:
+                        // Any map feature is valid
+                        valid = data.lat || data.lon || data.wkt;
+                        break;
+                }
+                if (!valid) {
+                    S3.fieldError(selector + '_map_icon', i18n.map_feature_required);
+                    return false;
+                }
+            }
+
+            var current_value = data.id,
                 suffix = ['address', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
                 i,
                 s,
@@ -1315,7 +1343,6 @@
                 }
                 return true;
             } else {
-                var data = this.data;
                 if (data.lat || data.lon || data.wkt || data.address || data.postcode) {
                     // Specific location => ok
                     return true;
@@ -1422,7 +1449,8 @@
                           selector + '_L4,' +
                           selector + '_L5,' +
                           selector + '_address,' +
-                          selector + '_postcode';
+                          selector + '_postcode,' +
+                          selector + '_map_icon';
             }
             $(element).siblings('.error').remove();
         },
