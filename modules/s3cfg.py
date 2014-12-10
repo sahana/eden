@@ -1269,6 +1269,13 @@ class S3Config(Storage):
             Whether to use Alternate Location names
         """
         return self.L10n.get("name_alt_gis_location", False)
+
+    def get_L10n_translate_org_organisation(self):
+        """
+            Whether to translate Organisation names/acronyms
+        """
+        return self.L10n.get("translate_org_organisation", False)
+
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")

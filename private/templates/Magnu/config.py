@@ -95,6 +95,8 @@ settings.L10n.utc_offset = "UTC +0100"
 #settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 #settings.L10n.thousands_separator = ","
+# Uncomment this to Translate Organisation Names/Acronyms
+settings.L10n.translate_org_organisation = True
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -159,6 +161,17 @@ settings.org.groups = "Coalition / Consortium"
 
 # Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
 settings.hrm.site_contact_unique = False
+
+# -----------------------------------------------------------------------------
+def customise_org_organisation_resource(r, tablename):
+
+    s3db = current.s3db
+    table = s3db[tablename]
+    list_fields = s3db.get_config(tablename, "list_fields")
+    list_fields.insert(2, (T("French Name"), "name.name_l10n"))
+    list_fields.insert(4, (T("French Acronym"), "name.acronym_l10n"))
+
+settings.customise_org_organisation_resource = customise_org_organisation_resource
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

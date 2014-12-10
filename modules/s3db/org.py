@@ -412,7 +412,7 @@ class S3OrganisationModel(S3Model):
         # CRUD strings
         ADD_ORGANIZATION = T("Create Organization")
         crud_strings[tablename] = Storage(
-            label_create = T("Create Organization"),
+            label_create = ADD_ORGANIZATION,
             title_display = T("Organization Details"),
             title_list = T("Organizations"),
             title_update = T("Edit Organization"),
@@ -441,6 +441,11 @@ class S3OrganisationModel(S3Model):
                        "acronym",
                        "comments",
                        ]
+
+        if settings.get_L10n_translate_org_organisation():
+            text_fields.extend(("name.name_l10n",
+                                "name.acronym_l10n"
+                                ))
 
         if settings.get_org_branches():
 
@@ -551,6 +556,10 @@ class S3OrganisationModel(S3Model):
                                     },
                        # Format for InlineComponent/filter_widget
                        org_group_membership = "organisation_id",
+                       # Names
+                       org_organisation_name = {"name": "name",
+                                                "joinby": "organisation_id",
+                                                },
                        # Sites
                        org_site = "organisation_id",
                        # Facilities
@@ -4394,7 +4403,6 @@ class org_OrganisationRepresent(S3Represent):
     """ Representation of Organisations """
 
     def __init__(self,
-                 translate=False,
                  show_link=False,
                  parent=True,
                  acronym=True,
@@ -4404,11 +4412,15 @@ class org_OrganisationRepresent(S3Represent):
 
         self.acronym = acronym
 
+        settings = current.deployment_settings
+        # Translation uses gis_location_name & not T()
+        translate = settings.get_L10n_translate_org_organisation()
+
         if skip_dt_orderby:
             # org/branch component which doesn't like the left join
             self.skip_dt_orderby = True
 
-        if parent and current.deployment_settings.get_org_branches():
+        if parent and settings.get_org_branches():
             # Need a custom lookup
             self.parent = True
             self.lookup_rows = self.custom_lookup_rows
@@ -4416,10 +4428,16 @@ class org_OrganisationRepresent(S3Represent):
                       "org_organisation.acronym",
                       "org_parent_organisation.name",
                       ]
+            if translate:
+                fields += ["org_organisation.id",
+                           "org_parent_organisation.id",
+                           ]
         else:
             # Can use standard lookup of fields
             self.parent = False
             fields = ["name", "acronym"]
+            if translate:
+                fields.append("id")
 
         super(org_OrganisationRepresent,
               self).__init__(lookup="org_organisation",
@@ -4459,6 +4477,7 @@ class org_OrganisationRepresent(S3Represent):
         rows = db(query).select(otable.id,
                                 otable.name,
                                 otable.acronym,
+                                ptable.id,
                                 ptable.name,
                                 left=left,
                                 limitby=limitby)
@@ -4473,15 +4492,57 @@ class org_OrganisationRepresent(S3Represent):
             @param row: the org_organisation Row
         """
 
-        if self.parent:
-            # Custom Row (with the parent left-joined)
-            name = row["org_organisation.name"]
-            acronym = row["org_organisation.acronym"]
-            parent = row["org_parent_organisation.name"]
+        if self.translate:
+            language = current.session.s3.language
+            if language != current.deployment_settings.get_L10n_default_language():
+                table = current.s3db.org_organisation_name
+                query = (table.deleted == False) & \
+                        (table.language == language)
+                if self.parent:
+                    query &= (table.organisation_id.belongs((row["org_organisation.id"],
+                                                             row["org_parent_organisation.id"])))
+                    limitby = (0, 2)
+                else:
+                    query &= (table.organisation_id == row.id)
+                    limitby = (0, 1)
+                l10n = current.db(query).select(table.organisation_id,
+                                                table.name_l10n,
+                                                table.acronym_l10n,
+                                                limitby = limitby,
+                                                ).as_dict(key="organisation_id")
+            if self.parent:
+                # Custom Row (with the parent left-joined)
+                org = l10n.get(row["org_organisation.id"])
+                if org:
+                    name = org.get("name_l10n") or row["org_organisation.name"] or ""
+                    acronym = org.get("acronym_l10n") or row["org_organisation.acronym"]
+                else:
+                    name = row["org_organisation.name"] or ""
+                    acronym = row["org_organisation.acronym"]
+                porg = l10n.get(row["org_parent_organisation.id"])
+                if porg:
+                    parent = porg.get("name_l10n") or row["org_parent_organisation.name"]
+                else:
+                    parent = row["org_parent_organisation.name"]
+            else:
+                # Standard row (from fields)
+                org = l10n.get(row.id)
+                if org:
+                    name = org.get("name_l10n") or row["org_organisation.name"] or ""
+                    acronym = org.get("acronym_l10n") or row["org_organisation.acronym"]
+                else:
+                    name = row["org_organisation.name"] or ""
+                    acronym = row["org_organisation.acronym"]
         else:
-            # Standard row (from fields)
-            name = row["name"]
-            acronym = row["acronym"]
+            if self.parent:
+                # Custom Row (with the parent left-joined)
+                name = row["org_organisation.name"]
+                acronym = row["org_organisation.acronym"]
+                parent = row["org_parent_organisation.name"]
+            else:
+                # Standard row (from fields)
+                name = row["name"]
+                acronym = row["acronym"]
 
         if not name:
             return self.default
@@ -4489,6 +4550,7 @@ class org_OrganisationRepresent(S3Represent):
             name = "%s (%s)" % (name, acronym)
         if self.parent and parent:
             name = "%s > %s" % (parent, name)
+
         return s3_unicode(name)
 
     # -------------------------------------------------------------------------
@@ -4868,6 +4930,9 @@ def org_rheader(r, tabs=[]):
                         ]
                 if settings.get_org_resources_tab():
                     tabs.insert(-1, (T("Resources"), "resource"))
+
+            if settings.get_L10n_translate_org_organisation():
+                    tabs.insert(1, (T("Local Names"), "name"))
 
             # Use branches?
             if settings.get_org_branches() and not skip_branches:
