@@ -50,10 +50,6 @@ settings.gis.countries = ("CF",) # Initially, will change
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
 
-#These settings can be used to show/hide corresponding fields in the hospital screens
-#This was implemented to hide complexity from the user
-settings.hms.show_operational_data = True
-settings.hms.show_code_related_data = True
 def hospital_marker_fn(record):
     """
         Function to show different markers based on hospital status
@@ -98,15 +94,19 @@ def hospital_marker_fn(record):
 def customise_hms_hospital_resource(r, tablename):
     s3db = current.s3db
     s3db.configure("hms_hospital", marker_fn=hospital_marker_fn)
+    #Set these to True/False to show/hide corresponding fields in the hospital screens
+    #This was implemented to hide complexity from the user
+    show_code_related_data = True
+    show_operational_data = True
     table = current.s3db.hms_hospital
-    if not settings.hms.show_code_related_data:
+    if not show_code_related_data:
         table.code.readable  = False
         table.code.writable  = False
         table.aka1.readable  = False
         table.aka1.writable  = False
         table.aka2.readable  = False
         table.aka2.writable  = False
-    if not settings.hms.show_operational_data:
+    if not show_operational_data:
         table.total_beds.readable  = False
         table.total_beds.writable  = False
         table.available_beds.readable  = False
@@ -117,8 +117,11 @@ def customise_hms_hospital_resource(r, tablename):
         table.nurses.writable  = False
         table.non_medical_staff.readable  = False
         table.non_medical_staff.writable  = False
-        
-settings.customise_hms_hospital_resource = customise_hms_hospital_resource
+    from s3.s3widgets import S3LocationSelectorWidget2
+    levels = ("L1","L2","L3",)    
+    s3db.hms_hospital.location_id.widget = S3LocationSelectorWidget2(levels=levels,
+                                                                     hide_lx = False,
+                                                                     )    
 
 
 # L10n settings
