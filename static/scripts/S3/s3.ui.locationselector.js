@@ -1243,7 +1243,7 @@
 
                     if (lat && lon) {
                         // Minimal bbox and padding will be added inside S3.gis.zoomBounds
-                        bounds = [lon, lat, lon, lat];
+                        bounds = OpenLayers.Bounds.fromArray([lon, lat, lon, lat]);
                     } else if (wkt) {
                         var vector = new OpenLayers.Feature.Vector(OpenLayers.Geometry.fromWKT(wkt));
                         bounds = vector.geometry.getBounds();
