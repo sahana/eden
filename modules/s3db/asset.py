@@ -1219,7 +1219,7 @@ def asset_controller():
         if r.interactive and r.method != "import":
             script = "/%s/static/scripts/S3/s3.asset.js" % r.application
             s3.scripts.append(script)
-            S3CRUD.action_buttons(r, deletable=False)
+            S3CRUD.action_buttons(r)
             #if not r.component:
                 #s3.actions.append({"url" : URL(c="asset", f="asset",
                 #                               args = ["[id]", "log", "create"],

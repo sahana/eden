@@ -1422,11 +1422,24 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Staff Level"),
+            title_display = T("Staff Level Details"),
+            title_list = T("Staff Levels"),
+            title_update = T("Edit Staff Level"),
+            label_list_button = T("List Staff Levels"),
+            label_delete_button = T("Delete Staff Level"),
+            msg_record_created = T("Staff Level added"),
+            msg_record_modified = T("Staff Level updated"),
+            msg_record_deleted = T("Staff Level removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no Staff Level registered"))
+
         configure(tablename,
                   deduplicate = self.staff_level_duplicate,
                   )
 
-        ADD_STAFF_LEVEL = T("Add Staff Level")
+        ADD_STAFF_LEVEL = T("Create Staff Level")
         staff_level_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_staff_level")
 
         # =====================================================================
@@ -1442,11 +1455,24 @@ class S3HRSalaryModel(S3Model):
                              ),
                              *s3_meta_fields())
 
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Salary Grade"),
+            title_display = T("Salary Grade Details"),
+            title_list = T("Salary Grades"),
+            title_update = T("Edit Salary Grade"),
+            label_list_button = T("List Salary Grades"),
+            label_delete_button = T("Delete Salary Grade"),
+            msg_record_created = T("Salary Grade added"),
+            msg_record_modified = T("Salary Grade updated"),
+            msg_record_deleted = T("Salary Grade removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no salary grade registered"))
+
         configure(tablename,
                   deduplicate = self.salary_grade_duplicate,
                   )
 
-        ADD_SALARY_GRADE = T("Add Salary Grade")
+        ADD_SALARY_GRADE = T("Create Salary Grade")
         salary_grade_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_salary_grade")
 
         # =====================================================================
@@ -1699,6 +1725,19 @@ class S3HRInsuranceModel(S3Model):
                                         ),
                                   s3_comments(),
                                   *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Insurance"),
+            title_display = T("Insurance Details"),
+            title_list = T("Insurances"),
+            title_update = T("Edit Insurance"),
+            label_list_button = T("List Insurances"),
+            label_delete_button = T("Delete Insurance"),
+            msg_record_created = T("Insurance added"),
+            msg_record_modified = T("Insurance updated"),
+            msg_record_deleted = T("Insurance removed"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no Insurance registered"))
 
         self.configure(tablename,
                        deduplicate = self.insurance_duplicate,
