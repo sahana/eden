@@ -3595,6 +3595,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     contents += '<li>' + name + '</li>';
                 }
             }
+            popup_url = null;
             contents += '</ul>';
             contents += "<div align='center'><a href='javascript:S3.gis.zoomToSelectedFeature(" + "\"" + map_id + "\", " + centerPoint.lon + "," + centerPoint.lat + ", 3)'>" + i18n.gis_zoomin + '</a></div>';
         } else {
