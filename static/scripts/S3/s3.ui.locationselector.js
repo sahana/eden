@@ -1270,9 +1270,11 @@
                                 }
                             }
                         }
+                        if (bounds) {
+                            bounds = OpenLayers.Bounds.fromArray(bounds);
+                        }
                     }
                     if (bounds) {
-                        bounds = OpenLayers.Bounds.fromArray(bounds);
                         S3.gis.zoomBounds(map, bounds, this.options.minBBOX);
                     }
                 }
