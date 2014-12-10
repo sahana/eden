@@ -350,30 +350,6 @@ settings.project.sectors = False
 # -----------------------------------------------------------------------------
 # People
 #
-def user_coalition(row):
-    """
-        The Coalition of the user
-        - required since Inline Component uses the link table
-    """
-
-    if hasattr(row, "pr_person_user"):
-        row = row.pr_person_user
-    try:
-        user_id = row.user_id
-    except:
-        # not available
-        return current.messages["NONE"]
-
-    db = current.db
-    table = db.auth_user
-    row = db(table.id == user_id).select(table.org_group_id,
-                                         limitby=(0, 1)
-                                         ).first()
-    if row:
-        return current.s3db.org_group_represent(row.org_group_id)
-    else:
-        return current.messages["NONE"]
-
 def customise_pr_person_controller(**attr):
 
     s3 = current.response.s3
@@ -390,28 +366,26 @@ def customise_pr_person_controller(**attr):
         s3db = current.s3db
         tablename = "pr_person"
 
-        if r.method == "validate":
+        method = r.method
+        if method == "validate":
             # Can't validate image without the file
             image_field = s3db.pr_image.image
             image_field.requires = None
 
         elif r.interactive or r.representation == "aadata":
             # Modify list_fields
-            db = current.db
-            field = db.auth_user.org_group_id
-            field.readable = True
-            field.represent = s3db.org_group_represent
+
             list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
-                           (T("Coalition"), "user.org_group_id"),
+                           (T("Coalition"), "group_person.org_group_id"),
                            "first_name",
                            #"middle_name",
                            "last_name",
                            #(T("Job Title"), "human_resource.job_title_id"),
                            (T("Place"), "human_resource.site_id"),
                            ]
-            is_logged_in = current.auth.is_logged_in()
+
             # Don't include Email/Phone for unauthenticated users
-            if is_logged_in:
+            if current.auth.is_logged_in():
                 # Custom filtered component for list_fields/CRUD form
                 s3db.add_components("pr_pentity",
                                     pr_contact = ({"name": "home",
@@ -424,6 +398,7 @@ def customise_pr_person_controller(**attr):
                                     (settings.get_ui_label_mobile_phone(), "phone.value"),
                                     (T("Home Phone"), "home.value"),
                                     ))
+
             s3db.configure(tablename,
                            list_fields = list_fields,
                            )
@@ -445,7 +420,8 @@ def customise_pr_person_controller(**attr):
 
             # Custom Form (Read/Create/Update)
             from s3 import S3Represent, S3SQLCustomForm, S3SQLInlineComponent, S3StringWidget
-            if r.method in ("create", "update"):
+
+            if method in ("create", "update") or not method and r.record:
                 # Custom Widgets/Validators
                 widgets = True
             else:
@@ -453,14 +429,18 @@ def customise_pr_person_controller(**attr):
 
             htable = s3db.hrm_human_resource
             htable.organisation_id.widget = None
+
             #site_field = htable.site_id
             #site_field.label = T("Place")
             #represent = S3Represent(lookup="org_site")
             #site_field.represent = represent
+
             if widgets:
                 from s3 import IS_ONE_OF, S3MultiSelectWidget
                 from s3layouts import S3AddResourceLink
+
                 htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
+
                 #site_field.widget = S3MultiSelectWidget(multiple=False)
                 #site_field.requires = IS_ONE_OF(db, "org_site.site_id",
                 #                                represent,
@@ -470,10 +450,12 @@ def customise_pr_person_controller(**attr):
                 #                                       label=T("Add New Place"),
                 #                                       title=T("Place"),
                 #                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
+
                 table = s3db[tablename]
                 table.first_name.widget = S3StringWidget(placeholder=T("Text"))
                 table.last_name.widget = S3StringWidget(placeholder=T("Text"))
-                if r.method == "update":
+
+                if method == "update":
                     # Normal Submit buttons
                     s3.crud.submit_button = T("Save & Close")
                     create_next = r.url(method="summary", id=0)
@@ -515,11 +497,6 @@ def customise_pr_person_controller(**attr):
             #        field.readable = field.writable = False
             #        hr_fields.remove("organisation_id")
 
-            # S3SQLInlineComponent uses the link table, so cannot access org_group_id
-            # => use a readonly virtual field instead
-            from gluon import Field
-            s3db.pr_person_user.org_group_id = Field.Method("org_group_id", user_coalition)
-
             s3_sql_custom_fields = [
                     "first_name",
                     #"middle_name",
@@ -532,17 +509,14 @@ def customise_pr_person_controller(**attr):
                         multiple = False,
                         fields = hr_fields,
                     ),
-                    # Not working currently
-                    #S3SQLInlineComponent(
-                    #    "user",
-                    #    name = "user",
-                    #    label = T("Coalition"),
-                    #    multiple = False,
-                    #    fields = [],
-                    #    # Fields needed to load for Virtual Fields
-                    #    extra_fields = ["user_id"],
-                    #    virtual_fields = [("", "org_group_id")],
-                    #),
+                    S3SQLInlineComponent(
+                        "group_person",
+                        columns = (4, 3),
+                        label = T("Coalition"),
+                        fields = [("", "org_group_id"),
+                                  ("", "status_id"),
+                                  ],
+                    ),
                     S3SQLInlineComponent(
                         "image",
                         name = "image",
@@ -559,7 +533,6 @@ def customise_pr_person_controller(**attr):
                         columns = (4,),
                         label = T("Email"),
                         multiple = False,
-                        #fields = [("", "value")],
                         fields = [("", "value", S3StringWidget(columns=0,
                                                                placeholder=T("username@domain")))],
                         filterby = dict(field = "contact_method",
@@ -570,7 +543,6 @@ def customise_pr_person_controller(**attr):
                         columns = (4,),
                         label = settings.get_ui_label_mobile_phone(),
                         multiple = False,
-                        #fields = [("", "value")],
                         fields = [("", "value", S3StringWidget(columns=0,
                                                                placeholder=T("+1 800-555-1212")))],
                         filterby = dict(field = "contact_method",
@@ -581,7 +553,6 @@ def customise_pr_person_controller(**attr):
                         columns = (4,),
                         label = T("Home Phone"),
                         multiple = False,
-                        #fields = [("", "value")],
                         fields = [("", "value", S3StringWidget(columns=0,
                                                                placeholder=T("+1 800-555-1212")))],
                         filterby = dict(field = "contact_method",
@@ -591,17 +562,33 @@ def customise_pr_person_controller(**attr):
 
             crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
 
+            if not r.record:
+                # Hide Open & Delete dataTable action buttons
+                deletable = editable = False
+
+                # Add filter widget for Coalition
+                from s3 import S3OptionsFilter
+                resource = r.resource
+                filter_widgets = resource.get_config("filter_widgets")
+                if not filter_widgets:
+                    filter_widgets = []
+                filter_widgets.append(
+                    S3OptionsFilter("group_person.org_group_id"))
+                resource.configure(filter_widgets=filter_widgets)
+            else:
+                # ...but allow edit/delete from single-record views
+                deletable = editable = True
+
             s3db.configure(tablename,
                            create_next = create_next,
                            create_next_close = create_next_close,
                            crud_form = crud_form,
                            delete_next = r.url(method="summary", id=0),
-                           # Hide Open & Delete dataTable action buttons
-                           deletable = False,
-                           editable = False,
+                           deletable = deletable,
+                           editable = editable,
                            icon = "person", # Used for Create Icon in Summary View
                            # Don't include a Create form in 'More' popups
-                           #listadd = False if r.method=="datalist" else True,
+                           #listadd = False if method=="datalist" else True,
                            update_next = r.url(method="summary", id=0),
                            )
 
