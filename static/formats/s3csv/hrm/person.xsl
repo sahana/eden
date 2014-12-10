@@ -12,6 +12,7 @@
          Branch.........................optional.....branch organisation name
          Type...........................optional.....HR type (staff|volunteer|member)
          Office.........................optional.....Facility name
+         OrgGroup.......................optional.....OrgGroup name
          Facility Type..................optional.....Office, Facility, Hospital, Shelter, Warehouse
          Office Lat.....................optional.....office latitude
          Office Lon.....................optional.....office longitude
@@ -119,6 +120,7 @@
     <xsl:import href="disciplinary.xsl"/>
     <xsl:import href="insurance.xsl"/>
     <xsl:import href="salary.xsl"/>
+    <xsl:import href="org_group_person.xsl"/>
 
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
@@ -153,6 +155,12 @@
         </xsl:call-template>
     </xsl:variable>
 
+    <xsl:variable name="OrgGroupHeaders">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">OrgGroup</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
     <xsl:variable name="PersonGender">
         <xsl:call-template name="ResolveColumnHeader">
             <xsl:with-param name="colname">PersonGender</xsl:with-param>
@@ -175,6 +183,10 @@
 
     <xsl:key name="offices" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'], '/', col[@field='Office'])"/>
+
+    <xsl:key name="orggroups" match="row"
+             use="col[contains(document('../labels.xml')/labels/column[@name='OrgGroup']/match/text(), 
+                               concat('|', @field, '|'))]"/>
 
     <xsl:key name="departments" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Department'])"/>
@@ -241,6 +253,16 @@
                                                                col[@field='Branch'], '/',
                                                                col[@field='Office']))[1])]">
                 <xsl:call-template name="Office"/>
+            </xsl:for-each>
+
+            <!-- Org Groups -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('orggroups',
+                                            col[contains(document('../labels.xml')/labels/column[@name='OrgGroup']/match/text(),
+                                                         concat('|', @field, '|'))])[1])]">
+                <xsl:call-template name="OrgGroup">
+                    <xsl:with-param name="Field" select="$OrgGroupHeaders"/>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Departments -->
@@ -710,6 +732,11 @@
                     </xsl:call-template>
                 </xsl:otherwise>
             </xsl:choose>
+            
+            <!-- Link to OrgGroup -->
+            <xsl:call-template name="OrgGroupPerson">
+                <xsl:with-param name="Field" select="$OrgGroupHeaders"/>
+            </xsl:call-template>
 
             <!-- Education -->
             <xsl:call-template name="Education">
