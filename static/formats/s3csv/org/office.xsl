@@ -4,33 +4,33 @@
     xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Office - CSV Import Stylesheet
+        Office - CSV Import Stylesheet
 
-         CSV fields:
-         Name....................org_office
-         Organisation............org_organisation
-         Branch..................org_organisation[_branch]
-         Type....................org_office_type
-         Country.................gis_location.L0 Name or ISO2
-         Building................gis_location.name (Name used if not-provided)
-         Address.................gis_location.addr_street
-         Postcode................gis_location.addr_postcode
-         L1......................gis_location.L1
-         L2......................gis_location.L2
-         L3......................gis_location.L3
-         L4......................gis_location.L4
-         L5......................gis_location.L5
-         Lat.....................gis_location.lat
-         Lon.....................gis_location.lon
-         Phone1..................org_office
-         Phone2..................org_office
-         Email...................org_office
-         Fax.....................org_office
-         Contact First Name......pr_person.first_name
-         Contact Middle Name.....pr_person.middle_name
-         Contact Last Name.......pr_person.last_name
-         Contact Sector..........hrm_human_resource_site.sector_id (Optionally limit to a single sector)
-         Comments................org_office
+        CSV fields:
+        Name....................org_office
+        Organisation............org_organisation
+        Branch..................org_organisation[_branch]
+        Type....................org_office_type
+        Country.................gis_location.L0 Name or ISO2
+        Building................gis_location.name (Name used if not-provided)
+        Address.................gis_location.addr_street
+        Postcode................gis_location.addr_postcode
+        L1......................gis_location.L1
+        L2......................gis_location.L2
+        L3......................gis_location.L3
+        L4......................gis_location.L4
+        L5......................gis_location.L5
+        Lat.....................gis_location.lat
+        Lon.....................gis_location.lon
+        Phone1..................org_office
+        Phone2..................org_office
+        Email...................org_office
+        Fax.....................org_office
+        Contact First Name......pr_person.first_name
+        Contact Middle Name.....pr_person.middle_name
+        Contact Last Name.......pr_person.last_name
+        Contact Sector..........hrm_human_resource_site.sector_id (Optionally limit to a single sector)
+        Comments................org_office
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

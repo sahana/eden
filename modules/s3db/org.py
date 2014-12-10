@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3OrganisationModel",
+           "S3OrganisationNameModel",
            "S3OrganisationBranchModel",
            "S3OrganisationGroupModel",
            "S3OrganisationGroupPersonModel",
@@ -990,6 +991,74 @@ class S3OrganisationModel(S3Model):
 
         response.headers["Content-Type"] = "application/json"
         return output
+
+# =============================================================================
+class S3OrganisationNameModel(S3Model):
+    """
+        Location Names model
+        - local names/acronyms for Organisations
+    """
+
+    names = ("org_organisation_name",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Local Names
+        #
+        tablename = "org_organisation_name"
+        self.define_table(tablename,
+                          self.org_organisation_id(empty = False,
+                                                   ondelete = "CASCADE",
+                                                   ),
+                          Field("language",
+                                label = T("Language"),
+                                represent = lambda opt: l10n_languages.get(opt,
+                                                current.messages.UNKNOWN_OPT),
+                                requires = IS_ISO639_2_LANGUAGE_CODE(),
+                                ),
+                          Field("name_l10n",
+                                label = T("Local Name"),
+                                ),
+                          Field("acronym_l10n",
+                                label = T("Local Acronym"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.org_organisation_name_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_name_deduplicate(item):
+        """
+           If the record is a duplicate then it will set the item method to update
+        """
+
+        data = item.data
+        language = data.get("language", None)
+        org = data.get("organisation_id", None)
+
+        if not language or not org:
+            return
+
+        table = item.table
+        query = (table.language == language) & \
+                (table.organisation_id == org)
+
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OrganisationBranchModel(S3Model):

@@ -1221,7 +1221,7 @@ class S3LocationNameModel(S3Model):
 
         data = item.data
         language = data.get("language", None)
-        location = data.get("location", None)
+        location = data.get("location_id", None)
 
         if not language or not location:
             return
@@ -1244,7 +1244,7 @@ class S3LocationNameModel(S3Model):
         """
 
         data = item.data
-        location = data.get("location", None)
+        location = data.get("location_id", None)
         name_alt = data.get("name_alt", None)
 
         if not name_alt or not location:
