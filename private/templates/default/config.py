@@ -446,6 +446,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cr.shelter_population_dynamic = True
 # Uncomment to disable people registration in shelters
 #settings.cr.people_registration = False
+# Uncomment to change the notification subject
+#settings.cr.shelter_notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Events
@@ -453,6 +455,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.event.types_hierarchical = True
 # Make Incident Types Hierarchical
 #settings.event.incident_types_hierarchical = True
+# Uncomment to change the Event notification subject
+#settings.event.notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Members

@@ -1524,8 +1524,7 @@ def cr_notification_dispatcher(r, **attr):
 
         # Create the form
         opts = dict(type="SMS",
-                    # @ToDo: deployment_setting
-                    subject = T("Deployment Request"),
+                    subject = settings.get_cr_shelter_notification_subject(),
                     message = message + text,
                     url = url,
                     )
