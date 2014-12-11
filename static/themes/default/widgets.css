@@ -1419,6 +1419,13 @@ td .icon {
 option.missing {
     background-color: yellow;
 }
+.dms-label {
+    padding: 4px;
+    font-weight: bold;
+}
+.dms-input.invalidinput {
+    border: solid thin red;
+}
 
 .resizable-textarea .grippie {
     /*-moz-border-bottom-colors: none;

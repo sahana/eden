@@ -4111,16 +4111,18 @@ class S3LocationSelector(S3Selector):
                  show_address = False,
                  show_postcode = False,
                  show_latlon = False,
+                 latlon_mode = "decimal",
+                 latlon_mode_toggle = True,
                  show_map = True,
                  feature_required = False,
-                 labels = True,
-                 placeholders = False,
                  lines = False,
                  points = True,
                  polygons = False,
                  color_picker = False,
                  catalog_layers = False,
                  min_bbox = None,
+                 labels = True,
+                 placeholders = False,
                  error_message = None,
                  represent = None):
         """
@@ -4135,10 +4137,10 @@ class S3LocationSelector(S3Selector):
             @param show_address: show a field for street address
             @param show_postcode: show a field for postcode
             @param show_latlon: show fields for manual Lat/Lon input
+            @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
+            @param latlon_mode_toggle: allow user to toggle lat/lon input mode
             @param show_map: show a map to select specific points
             @param feature_required: map feature is required
-            @param labels: show labels on inputs
-            @param placeholders: show placeholder text in inputs
             @param lines: use a line draw tool
             @param points: use a point draw tool
             @param polygons: use a polygon draw tool
@@ -4147,6 +4149,8 @@ class S3LocationSelector(S3Selector):
             @param catalog_layers: display catalogue layers or just the default base layer
             @param min_bbox: minimum BBOX in map selector, used to determine automatic
                              zoom level for single-point locations
+            @param labels: show labels on inputs
+            @param placeholders: show placeholder text in inputs
             @param error_message: default error message for server-side validation
             @param represent: an S3Represent instance that can represent non-DB rows
         """
@@ -4156,11 +4160,17 @@ class S3LocationSelector(S3Selector):
 
         self.hide_lx = hide_lx
         self.reverse_lx = reverse_lx
+
         self.show_address = show_address
         self.show_postcode = show_postcode
+
+        # @todo: latlon_toggle_mode should default to a deployment setting
         self.show_latlon = show_latlon
-        self.labels = labels
-        self.placeholders = placeholders
+        self.latlon_mode = latlon_mode
+        if show_latlon:
+            self.latlon_mode_toggle = latlon_mode_toggle
+        else:
+            self.latlon_mode_toggle = False
 
         if feature_required:
             show_map = True
@@ -4173,7 +4183,6 @@ class S3LocationSelector(S3Selector):
             self.feature_required = required
         else:
             self.feature_required = None
-
         self.show_map = show_map
         
         self.lines = lines
@@ -4184,6 +4193,9 @@ class S3LocationSelector(S3Selector):
         self.catalog_layers = catalog_layers
 
         self.min_bbox = min_bbox
+
+        self.labels = labels
+        self.placeholders = placeholders
 
         self.error_message = error_message
         self._represent = represent
@@ -4386,6 +4398,27 @@ class S3LocationSelector(S3Selector):
                                      )
         components.update(lx_rows)
 
+        # Lat/Lon Input Mode Toggle
+        if self.latlon_mode_toggle:
+            latlon_labels = {"decimal": T("Use decimal"),
+                             "dms": T("Use deg, min, sec"),
+                             }
+            if self.latlon_mode == "dms":
+                latlon_label = latlon_labels["decimal"]
+            else:
+                latlon_label = latlon_labels["dms"]
+            toggle_id = fieldname + "_latlon_toggle"
+            components["latlon_toggle"] = ("",
+                                           A(latlon_label,
+                                             _id=toggle_id,
+                                             _class="action-lnk",
+                                             ),
+                                           toggle_id,
+                                           False,
+                                           )
+        else:
+            latlon_labels = None
+
         # Already loaded? (to prevent duplicate JS injection)
         location_selector_loaded = s3.gis.location_selector_loaded
 
@@ -4395,6 +4428,17 @@ class S3LocationSelector(S3Selector):
             global_append('''i18n.select="%s"''' % T("Select"))
             if multiselect == "search":
                 global_append('''i18n.search="%s"''' % T("Search"))
+            if latlon_labels:
+                global_append('''i18n.latlon_mode='''
+                              '''{decimal:"%(decimal)s",dms:"%(dms)s"}''' % 
+                              latlon_labels)
+                global_append('''i18n.latlon_error='''
+                              '''{lat:"%s",lon:"%s",min:"%s",sec:"%s"}''' % 
+                              (T("Latitude must be -90..90"),
+                               T("Longitude must be -180..180"),
+                               T("Minutes must be 0..59"),
+                               T("Seconds must be 0..59"),
+                               ))
 
         # If we need to show the map since we have an existing lat/lon/wkt
         # then we need to launch the client-side JS as a callback to the
@@ -4412,6 +4456,8 @@ class S3LocationSelector(S3Selector):
                    "labels": labels_compact,
                    "showLabels": self.labels,
                    "featureRequired": self.feature_required,
+                   "latlonMode": self.latlon_mode,
+                   "latlonModeToggle": self.latlon_mode_toggle,
                    }
         if self.min_bbox:
             options["minBBOX"] = self.min_bbox
@@ -4795,7 +4841,7 @@ class S3LocationSelector(S3Selector):
                     selectors.append(formrow)
 
         inputs = TAG[""]()
-        for name in ("address", "postcode", "lat", "lon"):
+        for name in ("address", "postcode", "lat", "lon", "latlon_toggle"):
             if name in components:
                 label, widget, input_id, hidden = components[name]
                 formrow = formstyle("%s__row" % input_id,
