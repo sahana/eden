@@ -459,7 +459,7 @@ def alert_fields_comments():
               T("The group listing identifying earlier message(s) referenced by the alert message"),
               T("The extended message identifier(s) (in the form sender,identifier,sent) of an earlier CAP message or messages referenced by this one.")))
 
-    table.incidents.comment = DIV(
+    table.incident_type_id.comment = DIV(
           _class="tooltip",
           _title="%s|%s" % (
               T("A list of incident(s) referenced by the alert message"),
