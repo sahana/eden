@@ -356,7 +356,7 @@
                 }
             } else {
                 // Read the selected value from the dropdown
-                id = parseInt(dropdown.val());
+                id = parseInt(dropdown.val(), 10);
             }
 
             // Update hierarchy labels
@@ -619,7 +619,7 @@
                 if (dropdown.length) {
                     value = dropdown.val();
                     if (value) {
-                        data['L' + level] = parseInt(value);
+                        data['L' + level] = parseInt(value, 10);
                     } else {
                         data['L' + level] = null;
                     }
@@ -1648,7 +1648,10 @@
         },
 
         /**
-         * @todo: docstring
+         * Update a widget option
+         * 
+         * @param {string} key: the option key
+         * @param {mixed} value: the new value for the option
          */
         _setOption: function(key, value) {
 
@@ -1668,7 +1671,7 @@
             var el = $(this.element),
                 opts = this.options;
                 
-            this.default = el.val();
+            this.defaultValue = el.val();
 
             if (!this.input) {
                 var input = $('<div>').hide().insertAfter(el);
@@ -1727,7 +1730,7 @@
         /**
          * Convert the current value of the real input to DMS
          * 
-         * @returns {object} - properties: d=degrees, m=minutes, s=seconds
+         * @return {object} - properties: d=degrees, m=minutes, s=seconds
          */
         _getDMS: function() {
 
@@ -1744,8 +1747,9 @@
             } else {
                 var s = (m - parseInt(m, 10)) * 60;
                 // Stop integer values of s from being approximated
-                if (Math.abs(s - Math.round(s)) < 1e-10)
+                if (Math.abs(s - Math.round(s)) < 1e-10) {
                     s = Math.round(s);
+                }
             }
             return {d: parseInt(value, 10),
                     m: parseInt(m, 10),
@@ -1754,7 +1758,12 @@
         },
         
         /**
-         * @todo: docstring
+         * Mark input fields as invalid, and render an error message
+         * 
+         * @param {jQuery} field - the input field to mark as invalid,
+         *                         use 'all' for all input fields
+         * @param {string} message - the error message to show, leave
+         *                           empty to only mark fields
          */
         _showError: function(field, message) {
             
@@ -1770,7 +1779,7 @@
         },
         
         /**
-         * @todo: docstring
+         * Remove all error classes and messages
          */
         _removeErrors: function() {
             
@@ -1779,7 +1788,9 @@
         },
         
         /**
-         * @todo: docstring
+         * Parse and validate the DMS input
+         * 
+         * @return {string|number} - the value for the real input (decimal)
          */
         _validateDMS: function() {
             
@@ -1801,12 +1812,12 @@
                 sec = this.secInput.val(),
                 errors = [];
                 
-            if (deg == '' && min == '' && sec == '') {
+            if (deg === '' && min === '' && sec === '') {
                 // Removed
                 return '';
             }
-            deg = parseInt(deg) || 0;
-            min = parseInt(min) || 0;
+            deg = parseInt(deg, 10) || 0;
+            min = parseInt(min, 10) || 0;
             sec = parseFloat(sec) || 0;
 
             if (Math.abs(min) >= 60) {
@@ -1817,7 +1828,7 @@
                 this._showError(this.secInput);
                 errors.push(i18n.latlon_error.sec);
             }
-            var total = Math.abs(deg) + min / 60 + sec / 3600
+            var total = Math.abs(deg) + min / 60 + sec / 3600;
             if (!errors.length && total > range || deg > range) {
                 this._showError('all');
                 errors.push(rangeError);
@@ -1830,7 +1841,9 @@
         },
         
         /**
-         * @todo: docstring
+         * Parse and validate the decimal input
+         * 
+         * @return {string|number} - the value for the real input (decimal)
          */
         _validateDecimal: function() {
             
@@ -1849,7 +1862,7 @@
             }
             
             var decimal = this.decimalInput.val();
-            if (decimal == '') {
+            if (decimal === '') {
                 // Removed
                 return '';
             }
@@ -1874,7 +1887,7 @@
                 if (value !== null) {
                     $(self.element).val(value).change();
                 } else {
-                    $(self.element).val(self.default).change();
+                    $(self.element).val(self.defaultValue).change();
                 }
             });
             
@@ -1883,7 +1896,7 @@
                 if (value !== null) {
                     $(self.element).val(value).change();
                 } else {
-                    $(self.element).val(self.default).change();
+                    $(self.element).val(self.defaultValue).change();
                 }
             });
             
