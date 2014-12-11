@@ -1205,7 +1205,9 @@ def cms_customise_post_fields():
     if org_group_field:
         lappend(org_group_field)
 
-    lappend("document.file")
+    if settings.get_cms_show_attachments():
+        lappend("document.file")
+
     if settings.get_cms_show_links():
         lappend("document.url")
 

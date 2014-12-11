@@ -1696,6 +1696,12 @@ class S3Config(Storage):
         """
         return self.msg.get("max_send_retries", 9)
 
+    def get_msg_basestation_code_unique(self):
+        """
+            Validate for Unique Basestations Codes
+        """
+        return self.msg.get("basestation_code_unique", False)
+
     # -------------------------------------------------------------------------
     # Mail settings
     def get_mail_server(self):
@@ -2015,6 +2021,12 @@ class S3Config(Storage):
             Whether to show Events in News Feed
         """
         return self.cms.get("show_events", False)
+
+    def get_cms_show_attachments(self):
+        """
+            Whether to show Attachments (such as Sources) in News Feed
+        """
+        return self.cms.get("show_attachments", True)
 
     def get_cms_show_links(self):
         """
@@ -2483,6 +2495,12 @@ class S3Config(Storage):
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
 
+    def get_inv_warehouse_code_unique(self):
+        """
+            Validate for Unique Warehouse Codes
+        """
+        return self.inv.get("warehouse_code_unique", False)
+
     # -------------------------------------------------------------------------
     # IRS
     #
@@ -2804,6 +2822,12 @@ class S3Config(Storage):
             Use Activity Types in Activities & Projects
         """
         return self.project.get("activity_types", False)
+
+    def get_project_activity_filter_year(self):
+        """
+            Filter according to Year in Activities
+        """
+        return self.project.get("activity_filter_year", False)
 
     def get_project_codes(self):
         """
