@@ -2296,7 +2296,9 @@ class S3URLQueryParser(object):
                 pp.Keyword("NONE") | \
                 pp.quotedString | \
                 pp.Word(pp.alphanums + pp.printables)
-        qe = pp.Group(pp.Group(expression | selector) + comparison + value)
+        qe = pp.Group(pp.Group(expression | selector) + 
+                      comparison + 
+                      pp.originalTextFor(pp.delimitedList(value, combine=True)))
 
         parser = pp.operatorPrecedence(qe, [("not", 1, pp.opAssoc.RIGHT, ),
                                             ("and", 2, pp.opAssoc.LEFT, ),
@@ -2476,7 +2478,7 @@ class S3URLQueryParser(object):
 
         alias = self._alias(selector)
 
-        value = S3URLQuery.parse_value(second)
+        value = S3URLQuery.parse_value(second.strip())
         if op == S3ResourceQuery.LIKE:
             if isinstance(value, basestring):
                 value = value.replace("*", "%").lower()
