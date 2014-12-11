@@ -4495,6 +4495,10 @@ class org_OrganisationRepresent(S3Represent):
         if self.translate:
             language = current.session.s3.language
             if language != current.deployment_settings.get_L10n_default_language():
+                # @ToDo: there shouldn't be any queries in represent_row because
+                #        it is called per-row (not bulk) => better to move the
+                #        l10n name lookup into lookup_rows and store the result
+                # @ToDo: translate = True also needs adaption of dt_orderby
                 table = current.s3db.org_organisation_name
                 query = (table.deleted == False) & \
                         (table.language == language)
