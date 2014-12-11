@@ -498,36 +498,42 @@ def customise_project_task_controller(**attr):
         data = resource.select(fields,
                                getids=True,
                                represent=True)
-        row = data.rows[0]
-        _data = get_member_data(r.id, row["project_task.uuid"])
-        interest = task_member_option(_data)
+        _record = True
+        try:
+            row = data.rows[0]
+        except:
+            rheader = ""
+            _record = False
 
-        project = TR(TH("%s: " % T("Project")),
-                     row["project_task_project.project_id"])
+        if _record:
+            _data = get_member_data(r.id, row["project_task.uuid"])
+            interest = task_member_option(_data)
 
-        tags = TR(TH("%s: " % T("Tags")),
-                  row["project_task_tag.tag_id"])
+            project = TR(TH("%s: " % T("Project")),
+                         row["project_task_project.project_id"])
 
-        created_by = TR(TH("%s: " % T("Created By")),
-                        row["project_task.created_by"])
+            tags = TR(TH("%s: " % T("Tags")),
+                      row["project_task_tag.tag_id"])
 
-        milestone = TR(TH("%s: " % T("Milestone")),
-                       row["project_task_milestone.milestone_id"])
+            created_by = TR(TH("%s: " % T("Created By")),
+                            row["project_task.created_by"])
 
-        status = TR(TH("%s: " % T("Status")),
-                    row["project_task.status"])
+            milestone = TR(TH("%s: " % T("Milestone")),
+                           row["project_task_milestone.milestone_id"])
 
-        rheader = DIV(TABLE(project,
-                            TR(TH("%s: " % table.name.label),
-                               record.name,
-                               ),
-                            milestone,
-                            tags,
-                            status,
-                            created_by,
-                            interest,
-                            ), rheader_tabs)
+            status = TR(TH("%s: " % T("Status")),
+                        row["project_task.status"])
 
+            rheader = DIV(TABLE(project,
+                                TR(TH("%s: " % table.name.label),
+                                   record.name,
+                                ),
+                                milestone,
+                                tags,
+                                status,
+                                created_by,
+                                interest,
+                                ), rheader_tabs)
         return rheader
 
     attr["rheader"] = task_rheader
