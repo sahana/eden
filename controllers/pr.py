@@ -147,7 +147,7 @@ def person():
                     s3db.gis_config_form_setup()
                     # Name will be generated from person's name.
                     field = ctable.name
-                    field.readable = _config.name.writable = False
+                    field.readable = field.writable = False
                     # Hide Location
                     field = ctable.region_location_id
                     field.readable = field.writable = False
