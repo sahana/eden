@@ -4413,8 +4413,12 @@ class org_OrganisationRepresent(S3Represent):
         self.acronym = acronym
 
         settings = current.deployment_settings
-        # Translation uses gis_location_name & not T()
+        # Translation uses org_organisation_name & not T()
         translate = settings.get_L10n_translate_org_organisation()
+        if translate:
+            language = current.session.s3.language
+            if language == current.deployment_settings.get_L10n_default_language():
+                translate = False
 
         if skip_dt_orderby:
             # org/branch component which doesn't like the left join
@@ -4422,22 +4426,36 @@ class org_OrganisationRepresent(S3Represent):
 
         if parent and settings.get_org_branches():
             # Need a custom lookup
-            self.parent = True
             self.lookup_rows = self.custom_lookup_rows
+            self.parent = True
+            if translate:
+                fields = ["org_organisation.name",
+                          "org_organisation.acronym",
+                          "org_parent_organisation.name",
+                          "org_organisation_name.name_l10n",
+                          "org_organisation_name.acronym_l10n",
+                          "org_parent_organisation_name.name_l10n",
+                          ]
+            else:
+                fields = ["org_organisation.name",
+                          "org_organisation.acronym",
+                          "org_parent_organisation.name",
+                          ]
+        elif translate:
+            # Need a custom lookup
+            self.lookup_rows = self.custom_lookup_rows
+            self.parent = False
             fields = ["org_organisation.name",
                       "org_organisation.acronym",
-                      "org_parent_organisation.name",
+                      "org_organisation_name.name_l10n",
+                      "org_organisation_name.acronym_l10n",
                       ]
-            if translate:
-                fields += ["org_organisation.id",
-                           "org_parent_organisation.id",
-                           ]
         else:
             # Can use standard lookup of fields
             self.parent = False
-            fields = ["name", "acronym"]
-            if translate:
-                fields.append("id")
+            fields = ["name",
+                      "acronym",
+                      ]
 
         super(org_OrganisationRepresent,
               self).__init__(lookup="org_organisation",
@@ -4460,12 +4478,37 @@ class org_OrganisationRepresent(S3Represent):
         db = current.db
         s3db = current.s3db
         otable = s3db.org_organisation
-        btable = s3db.org_organisation_branch
-        ptable = db.org_organisation.with_alias("org_parent_organisation")
 
-        left = [btable.on(btable.branch_id == otable.id),
-                ptable.on(ptable.id == btable.organisation_id)]
+        fields = [otable.id,
+                  otable.name,
+                  otable.acronym,
+                  ]
 
+        if self.parent:
+            btable = s3db.org_organisation_branch
+            ptable = db.org_organisation.with_alias("org_parent_organisation")
+
+            fields.append(ptable.name)
+
+            left = [btable.on(btable.branch_id == otable.id),
+                    ptable.on(ptable.id == btable.organisation_id),
+                    ]
+
+        if self.translate:
+            ltable = s3db.org_organisation_name
+            fields += [ltable.name_l10n,
+                       ltable.acronym_l10n,
+                       ]
+            if self.parent:
+                lptable = db.org_organisation_name.with_alias("org_parent_organisation_name")
+                fields.append(lptable.name_l10n)
+                left += [ltable.on(ltable.organisation_id == otable.id),
+                         lptable.on(lptable.organisation_id == btable.organisation_id),
+                         ]
+            else:
+                left = [ltable.on(ltable.organisation_id == otable.id),
+                        ]
+        
         qty = len(values)
         if qty == 1:
             query = (otable.id == values[0])
@@ -4474,13 +4517,9 @@ class org_OrganisationRepresent(S3Represent):
             query = (otable.id.belongs(values))
             limitby = (0, qty)
 
-        rows = db(query).select(otable.id,
-                                otable.name,
-                                otable.acronym,
-                                ptable.id,
-                                ptable.name,
-                                left=left,
-                                limitby=limitby)
+        rows = db(query).select(left=left,
+                                limitby=limitby,
+                                *fields)
         self.queries += 1
         return rows
 
@@ -4493,46 +4532,11 @@ class org_OrganisationRepresent(S3Represent):
         """
 
         if self.translate:
-            language = current.session.s3.language
-            if language != current.deployment_settings.get_L10n_default_language():
-                table = current.s3db.org_organisation_name
-                query = (table.deleted == False) & \
-                        (table.language == language)
-                if self.parent:
-                    query &= (table.organisation_id.belongs((row["org_organisation.id"],
-                                                             row["org_parent_organisation.id"])))
-                    limitby = (0, 2)
-                else:
-                    query &= (table.organisation_id == row.id)
-                    limitby = (0, 1)
-                l10n = current.db(query).select(table.organisation_id,
-                                                table.name_l10n,
-                                                table.acronym_l10n,
-                                                limitby = limitby,
-                                                ).as_dict(key="organisation_id")
+            # Custom Row (with the name_l10n left-joined)
+            name = row["org_organisation_name.name_l10n"] or row["org_organisation.name"]
+            acronym = row["org_organisation_name.acronym_l10n"] or row["org_organisation.acronym"]
             if self.parent:
-                # Custom Row (with the parent left-joined)
-                org = l10n.get(row["org_organisation.id"])
-                if org:
-                    name = org.get("name_l10n") or row["org_organisation.name"] or ""
-                    acronym = org.get("acronym_l10n") or row["org_organisation.acronym"]
-                else:
-                    name = row["org_organisation.name"] or ""
-                    acronym = row["org_organisation.acronym"]
-                porg = l10n.get(row["org_parent_organisation.id"])
-                if porg:
-                    parent = porg.get("name_l10n") or row["org_parent_organisation.name"]
-                else:
-                    parent = row["org_parent_organisation.name"]
-            else:
-                # Standard row (from fields)
-                org = l10n.get(row.id)
-                if org:
-                    name = org.get("name_l10n") or row["org_organisation.name"] or ""
-                    acronym = org.get("acronym_l10n") or row["org_organisation.acronym"]
-                else:
-                    name = row["org_organisation.name"] or ""
-                    acronym = row["org_organisation.acronym"]
+                parent = row["org_parent_organisation_name.name_l10n"] or row["org_parent_organisation.name"]
         else:
             if self.parent:
                 # Custom Row (with the parent left-joined)
@@ -4556,7 +4560,12 @@ class org_OrganisationRepresent(S3Represent):
     # -------------------------------------------------------------------------
     def dt_orderby(self, field, direction, orderby, left):
         """
-            Custom orderby-logic for datatables
+            Custom orderby logic for datatables
+
+            @ToDo: Support for self.translate = True
+                   need to handle the inevitable NULL values which vary in
+                   order by DB, altthough perhaps DB handline doesn't matter
+                   here.
         """
 
         otable = current.s3db.org_organisation
@@ -4570,7 +4579,11 @@ class org_OrganisationRepresent(S3Represent):
             left.add(rotable.on(otable.root_organisation == rotable.id))
 
             orderby.extend(["org_root_organisation.name%s" % direction,
-                            "org_organisation.name%s" % direction])
+                            "org_organisation.name%s" % direction,
+                            ])
+        #elif self.translate:
+        #    # Order by translated name
+        #    orderby.append("org_organisation_name.name_l10n%s" % direction)
         else:
             # Otherwise: order by organisation name
             # e.g. the branches component view

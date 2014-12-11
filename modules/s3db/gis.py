@@ -5373,6 +5373,7 @@ class gis_LocationRepresent(S3Represent):
             if language == current.deployment_settings.get_L10n_default_language():
                 translate = False
             else:
+                # @ToDo: Move the query into a new custom_lookup_rows()
                 s3db = current.s3db
                 table = s3db.gis_location_name
                 query = (table.deleted == False) & \
@@ -5388,7 +5389,7 @@ class gis_LocationRepresent(S3Represent):
                                                 limitby = limitby,
                                                 ).as_dict(key="location_id")
         if translate:
-            loc = l10n.get(row.id, None)
+            loc = l10n.get(row.id)
             if loc:
                 name = loc["name_l10n"]
             else:
