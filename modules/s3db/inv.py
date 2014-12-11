@@ -170,6 +170,15 @@ class S3WarehouseModel(S3Model):
         # ---------------------------------------------------------------------
         # Warehouses
         #
+
+        settings = current.deployment_settings
+        db = current.db
+
+        if settings.get_inv_warehouse_code_unique():
+            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "inv_warehouse.code"))
+        else:
+            code_unique = None
+
         tablename = "inv_warehouse"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
@@ -182,10 +191,7 @@ class S3WarehouseModel(S3Model):
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),
                            represent = lambda v: v or NONE,
-                           # Deployments that don't wants warehouse codes can hide them
-                           #readable=False,
-                           #writable=False,
-                           # @ToDo: Deployment Setting to add validator to make these unique
+                           requires = code_unique,
                            ),
                      self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
