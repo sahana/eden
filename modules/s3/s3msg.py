@@ -157,14 +157,21 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def sanitise_phone(phone):
+    def sanitise_phone(phone, channel_id = None):
         """
             Strip out unnecessary characters from the string:
             +()- & space
         """
 
         settings = current.deployment_settings
-        default_country_code = settings.get_L10n_default_country_code()
+        table = s3db.msg_sms_outbound_gateway
+
+        if channel_id:
+            row = db(table.channel_id == channel_id).select(limitby=(0, 1)
+                                                                ).first()
+            default_country_code = row["msg_sms_outbound_gateway.default_country_code"]
+        else:
+            default_country_code = settings.get_L10n_default_country_code()
 
         clean = phone.translate(IDENTITYTRANS, NOTPHONECHARS)
 
@@ -956,7 +963,7 @@ class S3Msg(object):
         for p in parts:
             post_data[p.split("=")[0]] = p.split("=")[1]
 
-        mobile = self.sanitise_phone(mobile)
+        mobile = self.sanitise_phone(mobile, channel_id)
 
         # To send non-ASCII characters in UTF-8 encoding, we'd need
         # to hex-encode the text and activate unicode=1, but this
@@ -1024,7 +1031,7 @@ class S3Msg(object):
             - needs to have the cron/sms_handler_modem.py script running
         """
 
-        mobile = self.sanitise_phone(mobile)
+        mobile = self.sanitise_phone(mobile, channel_id)
 
         # Add '+' before country code
         mobile = "+%s" % mobile
@@ -1057,7 +1064,7 @@ class S3Msg(object):
         if not settings:
             return False
 
-        mobile = self.sanitise_phone(mobile)
+        mobile = self.sanitise_phone(mobile, channel_id)
 
         to = "%s@%s" % (mobile,
                         settings.address)
@@ -1103,7 +1110,7 @@ class S3Msg(object):
             return
 
         if network == "SMS":
-            recipient = self.sanitise_phone(recipient)
+            recipient = self.sanitise_phone(recipient, channel_id)
 
         try:
             s3db.msg_tropo_scratch.insert(row_id = row_id,

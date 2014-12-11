@@ -5368,6 +5368,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         elif address or postcode or lat or lon or wkt:
             specific = True
             record_id = value.get("id")
+        else:
+            record_id = None
         if not record_id:
             record_id = 0
         record.id = record_id
@@ -5376,13 +5378,13 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         # Construct the path (must have a path to prevent update_location_tree)
         path = [str(record_id)]
-        level = 0
+        level = None
         append = None
         for l in xrange(5, -1, -1):
             lx = value.get("L%s" % l)
             if lx:
                 if not specific and l < 5:
-                    level = l + 1
+                    level = l
                 lx_ids[l] = lx
                 if append is None:
                     append = path.append
@@ -5392,7 +5394,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         record.path = "/".join(path)
 
         # Determine the Lx level
-        if specific:
+        if specific or level is None:
             record.level = None
         else:
             record.level = "L%s" % level
@@ -5412,7 +5414,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     lx_name = lx_names.get(lx_ids[l])["name"]
                 else:
                     lx_name = None
-                record["L%s" % l] = lx_name if lx_name else ""
+                if not lx_name:
+                    lx_name = ""
+                record["L%s" % l] = lx_name
+                if level == l:
+                    record["name"] = lx_name
 
         # Call standard location represent
         represent = self._represent

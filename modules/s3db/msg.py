@@ -1426,11 +1426,15 @@ class S3SMSOutboundModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # SMS Outbound Gateway
         # - select which gateway is in active use for which Organisation/Branch
         #
+
+        country_code = settings.get_L10n_default_country_code()
+
         tablename = "msg_sms_outbound_gateway"
         define_table(tablename,
                      self.msg_channel_id(
@@ -1451,9 +1455,9 @@ class S3SMSOutboundModel(S3Model):
                      self.org_organisation_id(),
                      # @ToDo: Allow selection of different gateways based on destination Location
                      #self.gis_location_id(),
-                     # @ToDo: Allow addition of relevant country code (currently in deployment_settings)
-                     #Field("default_country_code", "integer",
-                     #      default = 44),
+                     Field("default_country_code", "integer",
+                           default = country_code,
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -2208,10 +2212,18 @@ class S3BaseStationModel(S3Model):
         T = current.T
 
         define_table = self.define_table
+        settings = current.deployment_settings
+        db = current.db
 
         # ---------------------------------------------------------------------
         # Base Stations (Cell Towers)
         #
+
+        if settings.get_msg_basestation_code_unique():
+            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "msg_basestation.code"))
+        else:
+            code_unique = None
+
         tablename = "msg_basestation"
         define_table(tablename,
                      self.super_link("site_id", "org_site"),
@@ -2221,10 +2233,7 @@ class S3BaseStationModel(S3Model):
                            ),
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),
-                           # Deployments that don't wants site codes can hide them
-                           #readable = False,
-                           #writable = False,
-                           # @ToDo: Deployment Setting to add validator to make these unique
+                           requires = code_unique,
                            ),
                      self.org_organisation_id(
                             label = T("Operator"),

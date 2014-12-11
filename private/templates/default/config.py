@@ -320,6 +320,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.msg.parser = "mytemplatefolder"
 # Uncomment to turn off enforcement of E.123 international phone number notation
 #settings.msg.require_international_phone_numbers = False
+# Uncomment to make basestation codes unique
+#settings.msg.basestation_code_unique = True
 
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False
@@ -428,6 +430,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.richtext = True
 # Uncomment to show Events in Newsfeed
 #settings.cms.show_events = True
+# Uncomment to hide Attachments in Newsfeed
+#settings.cms.show_attachments = False
 # Uncomment to show Links in Newsfeed
 #settings.cms.show_links = True
 # Uncomment to show Tags in Newsfeed
@@ -622,6 +626,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.inv.stock_count = True
 # Use the term 'Order' instead of 'Shipment'
 #settings.inv.shipment_name = "order"
+# Uncomment to validate for Unique Warehouse Codes
+#settings.inv.warehouse_code_unique = True
 # Uncomment to not track pack values
 #settings.inv.track_pack_values = False
 #settings.inv.show_mode_of_transport = True
@@ -756,6 +762,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.project.activities = True
 # Uncomment this to use Activity Types for Activities & Projects
 #settings.project.activity_types = True
+# Uncomment this to filter dates in Activities
+#settings.project.activity_filter_year = True
 # Uncomment this to use Codes for projects
 #settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
