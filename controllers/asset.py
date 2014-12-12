@@ -14,18 +14,12 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-    """ Module's Home Page """
+    """ Module Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    module_name = settings.modules[module].name_nice
+    response.title = module_name
 
-# -----------------------------------------------------------------------------
-def index_alt():
-    """
-        Module homepage for non-Admin users when no CMS content found
-    """
-
-    # Just redirect to the list of Assets
-    redirect(URL(f="asset"))
+    return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
 def create():
@@ -39,9 +33,9 @@ def asset():
 
     # Use the item() controller in this module to set options correctly
     s3db.asset_asset.item_id.comment = S3AddResourceLink(f="item",
-        label=T("Create Item"),
+        label=T("Add New Item"),
         title=T("Item"),
-        tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."))
+        tooltip=T("Type the name of an existing catalog item OR Click 'Add New Item' to add an item which is not in the catalog."))
 
     # Defined in Model for use from Multiple Controllers for unified menus
     return s3db.asset_controller()
@@ -57,8 +51,7 @@ def catalog():
     """ RESTful CRUD controller """
 
     return s3_rest_controller("supply", "catalog",
-                              rheader = s3db.supply_catalog_rheader,
-                              )
+                              rheader=s3db.supply_catalog_rheader)
 
 # -----------------------------------------------------------------------------
 def item():
@@ -79,11 +72,11 @@ def item():
                                    s3db.supply_item_category_represent,
                                    sort=True,
                                    filterby = "can_be_asset",
-                                   filter_opts = (True,)
+                                   filter_opts = [True]
                                    )
                     
         field.comment = S3AddResourceLink(f="item_category",
-                                          label=T("Create Item Category"),
+                                          label=T("Add Item Category"),
                                           title=T("Item Category"),
                                           tooltip=T("Only Categories of type 'Asset' will be seen in the dropdown."))
 
@@ -98,8 +91,8 @@ def catalog_item():
     """
 
     return s3_rest_controller("supply", "catalog_item",
-                              csv_template = ("supply", "catalog_item"),
-                              csv_stylesheet = ("supply", "catalog_item.xsl"),
+                              csv_template=("supply", "catalog_item"),
+                              csv_stylesheet=("supply", "catalog_item.xsl"),
                               )
 
 # -----------------------------------------------------------------------------
@@ -122,32 +115,29 @@ def item_category():
 def supplier():
     """ RESTful CRUD controller """
 
-    get_vars["organisation_type.name"] = "Supplier"
+    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
 
     # Load model
     table = s3db.org_organisation
 
     # Modify CRUD Strings
+    ADD_SUPPLIER = T("Add Supplier")
     s3.crud_strings.org_organisation = Storage(
-        label_create = T("Create Supplier"),
-        title_display = T("Supplier Details"),
-        title_list = T("Suppliers"),
-        title_update = T("Edit Supplier"),
-        title_upload = T("Import Suppliers"),
-        label_list_button = T("List Suppliers"),
-        label_delete_button = T("Delete Supplier"),
-        msg_record_created = T("Supplier added"),
-        msg_record_modified = T("Supplier updated"),
-        msg_record_deleted = T("Supplier deleted"),
-        msg_list_empty = T("No Suppliers currently registered")
+        title_create=ADD_SUPPLIER,
+        title_display=T("Supplier Details"),
+        title_list=T("Suppliers"),
+        title_update=T("Edit Supplier"),
+        title_search=T("Search Suppliers"),
+        title_upload=T("Import Suppliers"),
+        subtitle_create=ADD_SUPPLIER,
+        label_list_button=T("List Suppliers"),
+        label_create_button=ADD_SUPPLIER,
+        label_delete_button=T("Delete Supplier"),
+        msg_record_created=T("Supplier added"),
+        msg_record_modified=T("Supplier updated"),
+        msg_record_deleted=T("Supplier deleted"),
+        msg_list_empty=T("No Suppliers currently registered")
         )
-
-    # Modify filter_widgets
-    filter_widgets = s3db.get_config("org_organisation", "filter_widgets")
-    # Remove type (always 'Supplier')
-    filter_widgets.pop(1)
-    # Remove sector (not relevant)
-    filter_widgets.pop(1)
 
     return s3db.org_organisation_controller()
 

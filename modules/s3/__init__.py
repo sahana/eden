@@ -63,16 +63,12 @@ from s3error import *
 # Asynchronous Tasks
 from s3task import *
 
-# Hierarchy Handling
-from s3hierarchy import *
-
 # Core Framework ==============================================================
 
 # Model Extensions
 from s3model import S3Model
 
 # Resource Framework
-from s3query import *
 from s3resource import *
 
 # Authentication, Authorization, Accounting
@@ -87,12 +83,13 @@ from s3rest import *
 from s3crud import *
 from s3forms import *
 
-# Filtering
+# Search
+from s3search import *
 from s3filter import *
 
 # Reporting
 from s3report import *
-from s3timeplot import *
+from s3report2 import *
 
 # Profiles
 from s3profile import *

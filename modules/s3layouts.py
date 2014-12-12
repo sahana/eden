@@ -2,7 +2,7 @@
 
 """ Sahana Eden GUI Layouts (HTML Renderers)
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -42,6 +42,7 @@ __all__ = ["S3MainMenuDefaultLayout",
            ]
 
 from gluon import *
+from gluon.storage import Storage
 from s3 import *
 
 # =============================================================================
@@ -292,7 +293,7 @@ class S3AddResourceLink(S3NavigationItem):
             @param f: the target function
             @param t: the target table (defaults to c_f)
             @param vars: the request vars (format="popup" will be added automatically)
-            @param label: the link label (falls back to label_create)
+            @param label: the link label (falls back to label_create_button)
             @param info: hover-title for the label
             @param title: the tooltip title
             @param tooltip: the tooltip text
@@ -308,10 +309,10 @@ class S3AddResourceLink(S3NavigationItem):
             c = current.request.controller
 
         if label is None:
-            # Fall back to label_create
+            # Fall back to label_create_button
             if t is None:
                 t = "%s_%s" % (c, f)
-            label = S3CRUD.crud_string(t, "label_create")
+            label = S3CRUD.crud_string(t, "label_create_button")
 
         return super(S3AddResourceLink, self).__init__(label,
                                                        c=c, f=f, t=t,
@@ -330,14 +331,7 @@ class S3AddResourceLink(S3NavigationItem):
         if not item.authorized:
             return None
 
-
-        if current.deployment_settings.get_ui_use_button_glyphicons():
-            label = (I(" ", _class="icon-plus"),
-                      item.label)
-        else:
-            label = item.label
-
-        popup_link = A(label,
+        popup_link = A(item.label,
                        _href=item.url(format="popup"),
                        _class="s3_add_resource_link",
                        _id="%s_add" % item.function,
@@ -352,7 +346,7 @@ class S3AddResourceLink(S3NavigationItem):
         else:
             ttip = ""
 
-        return TAG[""](popup_link, ttip)
+        return DIV(popup_link, ttip)
 
     # -------------------------------------------------------------------------
     @staticmethod

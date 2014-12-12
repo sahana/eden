@@ -2,7 +2,7 @@
 
 """ OCR Utility Functions
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,9 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("OCRDataModel",
-           "ocr_buttons",
-           )
+__all__ = ["OCRDataModel", "ocr_buttons"]
 
 import os
 
@@ -39,15 +37,13 @@ from ..s3 import *
 
 # =============================================================================
 class OCRDataModel(S3Model):
-    """
-    """
 
-    names = ("ocr_meta",
+    names = ["ocr_meta",
              "ocr_payload",
              "ocr_form_status",
              "ocr_field_crops",
              "ocr_data_xml",
-             )
+            ]
 
     def model(self):
 
@@ -68,93 +64,93 @@ class OCRDataModel(S3Model):
         # OCR Meta Data
         #
         tablename = "ocr_meta"
-        define_table(tablename,
-                     Field("form_uuid",
-                           notnull=True,
-                           length=128,
-                           unique=True),
-                     Field("resource_name",
-                           notnull=True),
-                     Field("s3ocrxml_file", "upload",
-                           uploadfolder=metadata_folder),
-                     Field("layout_file", "upload",
-                           uploadfolder=metadata_folder),
-                     Field("revision",
-                           notnull=True,
-                           length=128,
-                           unique=True),
-                     Field("pages", "integer"),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("form_uuid",
+                                   notnull=True,
+                                   length=128,
+                                   unique=True),
+                             Field("resource_name",
+                                   notnull=True),
+                             Field("s3ocrxml_file", "upload",
+                                   uploadfolder=metadata_folder),
+                             Field("layout_file", "upload",
+                                   uploadfolder=metadata_folder),
+                             Field("revision",
+                                   notnull=True,
+                                   length=128,
+                                   unique=True),
+                             Field("pages", "integer"),
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Payload
         #
         tablename = "ocr_payload"
-        define_table(tablename,
-                     # a set of images = one complete form
-                     Field("image_set_uuid",
-                           notnull=True),
-                     Field("image_file", "upload",
-                           notnull=True,
-                           uploadfolder=payload_folder),
-                     Field("page_number", "integer",
-                           notnull=True),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             # a set of images = one complete form
+                             Field("image_set_uuid",
+                                   notnull=True),
+                             Field("image_file", "upload",
+                                   notnull=True,
+                                   uploadfolder=payload_folder),
+                             Field("page_number", "integer",
+                                   notnull=True),
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Form Status
         #
         tablename = "ocr_form_status"
-        define_table(tablename,
-                     Field("image_set_uuid",
-                           notnull=True,
-                           length=128,
-                           unique=True),
-                     Field("form_uuid",
-                           notnull=True),
-                     Field("review_status", "integer",
-                           notnull=True,
-                           default=0),
-                     Field("job_uuid",
-                           length=128,
-                           unique=True),
-                     Field("job_has_errors", "integer"),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("image_set_uuid",
+                                   notnull=True,
+                                   length=128,
+                                   unique=True),
+                             Field("form_uuid",
+                                   notnull=True),
+                             Field("review_status", "integer",
+                                   notnull=True,
+                                   default=0),
+                             Field("job_uuid",
+                                   length=128,
+                                   unique=True),
+                             Field("job_has_errors", "integer"),
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR Field Crops
         #
         tablename = "ocr_field_crops"
-        define_table(tablename,
-                     Field("image_set_uuid",
-                           notnull=True),
-                     Field("resource_table",
-                           notnull=True),
-                     Field("field_name",
-                           notnull=True),
-                     Field("image_file", "upload",
-                           notnull=True,
-                           uploadfolder=payload_folder),
-                     Field("value"),
-                     Field("sequence", "integer"),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("image_set_uuid",
+                                   notnull=True),
+                             Field("resource_table",
+                                   notnull=True),
+                             Field("field_name",
+                                   notnull=True),
+                             Field("image_file", "upload",
+                                   notnull=True,
+                                   uploadfolder=payload_folder),
+                             Field("value"),
+                             Field("sequence", "integer"),
+                             *s3_meta_fields())
 
         #======================================================================
         # OCR XML Data
         #
         tablename = "ocr_data_xml"
-        define_table(tablename,
-                     Field("image_set_uuid",
-                           length=128,
-                           unique=True,
-                           notnull=True),
-                     Field("data_file", "upload",
-                           notnull=True,
-                           uploadfolder=payload_folder),
-                     Field("form_uuid",
-                           notnull=True,
-                           default=""),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("image_set_uuid",
+                                   length=128,
+                                   unique=True,
+                                   notnull=True),
+                             Field("data_file", "upload",
+                                   notnull=True,
+                                   uploadfolder=payload_folder),
+                             Field("form_uuid",
+                                   notnull=True,
+                                   default=""),
+                             *s3_meta_fields())
 
 # =============================================================================
 def ocr_buttons(r):

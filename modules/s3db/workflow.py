@@ -3,7 +3,7 @@
 """
    S3 Workflow Engine Data Model
    
-   @copyright: 2012-2014 (c) Sahana Software Foundation
+   @copyright: 2012-13 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person
@@ -60,14 +60,11 @@ class S3WorkflowStatusModel(S3Model):
                           )
 
         tablename = "workflow_entity" 
-        s3db.super_entity(tablename, "workflow_id",
-                          we_types,
-                          )
+        table = s3db.super_entity(tablename, "workflow_id",
+                                  we_types)
 
         # Status as component
-        self.add_components(tablename,
-                            workflow_status="workflow_id",
-                            )
+        add_component("workflow_status", workflow_entity = "workflow_id")
 
 
         # ---------------------------------------------------------------------
@@ -76,16 +73,16 @@ class S3WorkflowStatusModel(S3Model):
         # - as component of workflow entities
         #
         tablename = "workflow_status"
-        define_table(tablename,
-                     super_link("workflow_id", "workflow_entity"),
-                     Field("name",
-                           length=64,
-                           notnull=True),
-                     Field("status",
-                           length=64,
-                           notnull=True),
-                     *s3_meta_fields(),
-                     )
+        table = define_table(tablename,
+                             super_link("workflow_id", "workflow_entity"),
+                             Field("name",
+                                   length=64,
+                                   notnull=True),
+                             Field("status",
+                                   length=64,
+                                   notnull=True),
+                             *s3_meta_fields()
+                            )
 
         return Storage()
         

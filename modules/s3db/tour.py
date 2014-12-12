@@ -2,7 +2,7 @@
 
 """ Sahana Eden Guided Tour Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3GuidedTourModel",
+__all__ = ["S3GuidedTourModel",
            "tour_rheader",
            "tour_builder",
-           )
+           ]
 
 from gluon import *
 from gluon.storage import Storage
@@ -42,10 +42,10 @@ class S3GuidedTourModel(S3Model):
 
     """ Details about which guided tours this Person has completed """
 
-    names = ("tour_config",
+    names = ["tour_config",
              "tour_details",
              "tour_user",
-             )
+             ]
 
     def model(self):
 
@@ -54,7 +54,7 @@ class S3GuidedTourModel(S3Model):
         NONE = current.messages["NONE"]
         s3 = current.response.s3
 
-        add_components = self.add_components
+        add_component = self.add_component
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
@@ -65,41 +65,44 @@ class S3GuidedTourModel(S3Model):
         # Guided tours that are available
         #
         tablename = "tour_config"
-        define_table(tablename,
-                     Field("name",
-                           represent=lambda v: v or NONE,
-                           label=T("Display name")),
-                     Field("code",
-                           length=255,
-                           notnull=True,
-                           unique=True,
-                           represent=lambda v: v or NONE,
-                           label=T("Unique code")),
-                     Field("controller",
-                           represent=lambda v: v or NONE,
-                           label=T("Controller tour is activated")),
-                     Field("function",
-                           represent=lambda v: v or NONE,
-                           label=T("Function tour is activated")),
-                     Field("autostart", "boolean",
-                           default=False,
-                           represent=lambda v: \
-                                     T("Yes") if v else T("No"),
-                           label=T("Auto start")),
-                     Field("role", "string",
-                           represent=lambda v: v or NONE,
-                           label=T("User's role")),
-                     * s3_meta_fields()
-                     )
+        table = define_table(tablename,
+                                  Field("name",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Display name")),
+                                  Field("code",
+                                        length=255,
+                                        notnull=True,
+                                        unique=True,
+                                        represent=lambda v: v or NONE,
+                                        label=T("Unique code")),
+                                  Field("controller",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Controller tour is activated")),
+                                  Field("function",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Function tour is activated")),
+                                  Field("autostart", "boolean",
+                                        default=False,
+                                        represent=lambda v: \
+                                            T("Yes") if v else T("No"),
+                                        label=T("Auto start")),
+                                  Field("role", "string",
+                                        represent=lambda v: v or NONE,
+                                        label=T("User's role")),
+                                  * s3_meta_fields()
+                                  )
 
         # CRUD strings
-        ADD_TOUR = T("Create Tour")
+        ADD_TOUR = T("Add Tour")
         crud_strings[tablename] = Storage(
-            label_create = ADD_TOUR,
+            title_create = ADD_TOUR,
             title_display = T("Tour Configuration"),
             title_list = T("Tours"),
             title_update = T("Edit Tour"),
+            title_search = T("Search Tours"),
+            subtitle_create = T("Add New Tour"),
             label_list_button = T("List Tours"),
+            label_create_button = ADD_TOUR,
             label_delete_button = T("Delete Tour"),
             msg_record_created = T("Tour added"),
             msg_record_modified = T("Tour updated"),
@@ -107,77 +110,76 @@ class S3GuidedTourModel(S3Model):
             msg_list_empty = T("No Tours currently registered"))
 
         represent = S3Represent(lookup=tablename, translate=True)
-        tour_config_id = S3ReusableField("tour_config_id", "reference %s" % tablename,
-                                         requires = IS_EMPTY_OR(
+        tour_config_id = S3ReusableField("tour_config_id", table,
+                                         requires = IS_NULL_OR(
                                                     IS_ONE_OF(db, "tour_config.id",
                                                               represent,
                                                               sort=True)),
                                          represent=represent,
                                          label=T("Tour Name"),
                                          ondelete="SET NULL")
-
-        # Components
-        add_components(tablename,
-                       # Details
-                       tour_details="tour_config_id",
-                       # Users
-                       tour_user="tour_config_id",
-                      )
+        # Details as component of Tour Configs
+        add_component("tour_details", tour_config="tour_config_id")
+        # Users as component of Tour Configs
+        add_component("tour_user", tour_config="tour_config_id")
 
         # ---------------------------------------------------------------------
         # Details of the tour.
         #
         tablename = "tour_details"
-        define_table(tablename,
-                     tour_config_id(),
-                     Field("posn", "integer",
-                           default=0,
-                           label=T("Position in tour")),
-                     Field("controller",
-                           represent=lambda v: v or NONE,
-                           label=T("Controller name")),
-                     Field("function",
-                           represent=lambda v: v or NONE,
-                           label=T("Function name")),
-                     Field("args",
-                           represent=lambda v: v or NONE,
-                           label=T("Arguments")),
-                     Field("tip_title",
-                           represent=lambda v: v or NONE,
-                           label=T("Title")),
-                     Field("tip_details",
-                           represent=lambda v: v or NONE,
-                           label=T("Details")),
-                     Field("html_id",
-                           represent=lambda v: v or NONE,
-                           label=T("HTML ID")),
-                     Field("html_class",
-                           represent=lambda v: v or NONE,
-                           label=T("HTML class")),
-                     Field("button",
-                           represent=lambda v: v or NONE,
-                           label=T("Button name")),
-                     Field("tip_location",
-                           represent=lambda v: v or NONE,
-                           label=T("Loctaion of tip")),
-                     Field("datatable_id",
-                           represent=lambda v: v or NONE,
-                           label=T("DataTable ID")),
-                     Field("datatable_row",
-                           represent=lambda v: v or NONE,
-                           label=T("DataTable row")),
-                     Field("redirect",
-                           represent=lambda v: v or NONE,
-                           label=T("Redirect URL")),
-                     )
+        table = define_table(tablename,
+                                  tour_config_id(),
+                                  Field("posn", "integer",
+                                        default=0,
+                                        label=T("Position in tour")),
+                                  Field("controller",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Controller name")),
+                                  Field("function",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Function name")),
+                                  Field("args",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Arguments")),
+                                  Field("tip_title",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Title")),
+                                  Field("tip_details",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Details")),
+                                  Field("html_id",
+                                        represent=lambda v: v or NONE,
+                                        label=T("HTML ID")),
+                                  Field("html_class",
+                                        represent=lambda v: v or NONE,
+                                        label=T("HTML class")),
+                                  Field("button",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Button name")),
+                                  Field("tip_location",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Loctaion of tip")),
+                                  Field("datatable_id",
+                                        represent=lambda v: v or NONE,
+                                        label=T("DataTable ID")),
+                                  Field("datatable_row",
+                                        represent=lambda v: v or NONE,
+                                        label=T("DataTable row")),
+                                  Field("redirect",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Redirect URL")),
+                                  )
         # CRUD strings
-        ADD_DETAILS = T("Create Details")
+        ADD_DETAILS = T("Add Details")
         crud_strings[tablename] = Storage(
-            label_create = ADD_DETAILS,
+            title_create = ADD_DETAILS,
             title_display = T("Tour Details"),
             title_list = T("Details"),
             title_update = T("Edit Details"),
+            title_search = T("Search Details"),
+            subtitle_create = T("Add New Detail"),
             label_list_button = T("List Details"),
+            label_create_button = ADD_DETAILS,
             label_delete_button = T("Delete Detail"),
             msg_record_created = T("Detail added"),
             msg_record_modified = T("Detail updated"),
@@ -185,40 +187,43 @@ class S3GuidedTourModel(S3Model):
             msg_list_empty = T("No Details currently registered"))
 
         configure(tablename,
-                  orderby = "tour_details.tour_config_id,tour_details.posn"
+                  orderby=table.tour_config_id | table.posn
                   )
         # ---------------------------------------------------------------------
         # Details of the tours that the user has taken.
         #
         tablename = "tour_user"
-        define_table(tablename,
-                     person_id(label = T("Person"),
-                               ondelete="CASCADE"),
-                     tour_config_id(),
-                     Field("place",
-                           represent=lambda v: v or NONE,
-                           label=T("Where reached")),
-                     Field("resume",
-                           represent=lambda v: v or NONE,
-                           label=T("URL to resume tour")),
-                     Field("completed", "boolean",
-                           default=False,
-                           represent=lambda v: \
-                                     T("Yes") if v else T("No"),
-                           label=T("Completed tour?")),
-                     Field("trip_counter", "integer",
-                           default=0,
-                           label=T("Times Completed")),
-                     )
+        table = define_table(tablename,
+                                  person_id(label = T("Person"),
+                                            ondelete="CASCADE"),
+                                  tour_config_id(),
+                                  Field("place",
+                                        represent=lambda v: v or NONE,
+                                        label=T("Where reached")),
+                                  Field("resume",
+                                        represent=lambda v: v or NONE,
+                                        label=T("URL to resume tour")),
+                                  Field("completed", "boolean",
+                                        default=False,
+                                        represent=lambda v: \
+                                            T("Yes") if v else T("No"),
+                                        label=T("Completed tour?")),
+                                  Field("trip_counter", "integer",
+                                        default=0,
+                                        label=T("Times Completed")),
+                                  )
 
         # CRUD strings
-        ADD_USER = T("Create User")
+        ADD_USER = T("Add User")
         crud_strings[tablename] = Storage(
-            label_create = ADD_USER,
+            title_create = ADD_USER,
             title_display = T("Tour User"),
             title_list = T("Users"),
             title_update = T("Edit User"),
+            title_search = T("Search Users"),
+            subtitle_create = T("Add New User"),
             label_list_button = T("List Users"),
+            label_create_button = ADD_USER,
             label_delete_button = T("Delete User"),
             msg_record_created = T("User added"),
             msg_record_modified = T("User updated"),
@@ -228,8 +233,9 @@ class S3GuidedTourModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(tour_config_id = tour_config_id,
-                    )
+        return Storage(
+                       tour_config_id = tour_config_id,
+                      )
 
 # =============================================================================
 def tour_rheader(r):
@@ -264,11 +270,10 @@ def tour_builder(output):
     """
          Helper function to attach a guided tour (if required) to the output
     """
-
-    auth = current.auth
-    db = current.db
-    s3db = current.s3db
     request = current.request
+    auth = current.auth
+    s3db = current.s3db
+    db = current.db
     s3 = current.response.s3
     T = current.T
 
@@ -414,7 +419,7 @@ def tour_builder(output):
         post_ride_data = [cnt, tour_id]
     joyride_div = DIV(joyride_OL,
                       _class="hidden")
-    # Add the javascript configuration data
+    # add the javascript configuration data
     from gluon.serializers import json as jsons
     if pre_step_data:
         joyride_div.append(INPUT(_type="hidden",
@@ -453,7 +458,7 @@ def tour_builder(output):
         appname = request.application
         s3.scripts.append("/%s/static/scripts/jquery.joyride.js" % appname)
         s3.scripts.append("/%s/static/scripts/S3/s3.guidedtour.js" % appname)
-        s3.stylesheets.append("plugins/joyride.min.css")
+        s3.stylesheets.append("plugins/guidedtour.min.css")
     else:
         s3.scripts.append("/%s/static/scripts/S3/s3.guidedtour.min.js" % request.application)
         s3.stylesheets.append("plugins/joyride.css")

@@ -33,60 +33,36 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
         """
             @case: HRM001
             @description: Create Volunteer Certificate
-
+            
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
-       
-        if not current.deployment_settings.get_hrm_use_certificates():
-            return
-        
-        # To check if required database is prepopulated
-        # If not prepopulate it with a test value
-        if current.deployment_settings.get_hrm_use_skills():
-            skill_table = current.s3db["hrm_skill"]
-            db = current.db
-            query = (skill_table.id > 0)
-            row = db(query).select(skill_table.name,
-                                   limitby=(0, 1)).first()
-            if row:
-                name=row.name
-            
-            else:
-                skill_table.insert(name="Test")
-                db.commit()
-                name="Test"
-        
-        # Start the test
+
         self.login(account="admin", nexturl="vol/certificate/create")
 
-        self.create("hrm_certificate",
-                    [("name",
+        self.create("hrm_certificate", 
+                    [( "name",
                        "Advance First Aid ATest"
                        ),
-                     ("organisation_id",
+                     ( "organisation_id",
                        "Timor-Leste Red Cross Society",
                        ),
-                     ("expiry",
+                     ( "expiry",
                        "12"
                        ),
                      ]
                      )
-
-        # Find the current URL of the browser
-        current_url = str(self.browser.current_url)
-        current_form = str(current_url.split('/')[-1])
+        # Check if add button is present on the page. Click it if found.
+        add_btn = self.browser.find_elements_by_id("show-add-btn")
+        if len(add_btn) > 0:
+            add_btn[0].click()
         
-        # Check if the form we arrived on is right or not
-        if current_form == "certificate_skill":
-            # Check if add button is present on the page. Click it if found.
-            add_btn = self.browser.find_elements_by_id("show-add-btn")
-            if len(add_btn) > 0:
-                add_btn[0].click()
-                
-                self.create("hrm_certificate_skill",
-                           [("skill_id",
-                              name),
-                           ]
-                           )
+        if current.deployment_settings.get_hrm_use_skills():
+            self.create("hrm_certificate_skill",	 
+                        [( "skill_id",
+                           "Hazmat"),
+                         ( "competency_id",
+                           "Level 2"),
+                         ]
+                         )

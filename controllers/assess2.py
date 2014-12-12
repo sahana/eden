@@ -55,7 +55,7 @@ def s3_assess_severity_represent(value):
 repr_select = lambda l: len(l.name) > 48 and "%s..." % l.name[:44] or l.name
 S3Represent = s3base.S3Represent
 
-add_components = s3db.add_components
+add_component = s3db.add_component
 configure = s3db.configure
 crud_strings = s3.crud_strings
 define_table = db.define_table
@@ -69,7 +69,7 @@ human_resource_id = s3db.hrm_human_resource_id
 ireport_id = s3db.irs_ireport_id
 
 # Impact as component of assessments
-add_components("assess_assess", impact_impact="assess_id")
+add_component("impact_impact", assess_assess="assess_id")
 
 def assess_tables():
     """ Load the Assess Tables when needed """
@@ -83,22 +83,22 @@ def assess_tables():
     #
     resourcename = "assess"
     tablename = "assess_assess"
-    define_table(tablename,
-                 Field("datetime", "datetime",
-                       label = T("Date & Time"),
-                       default = request.utcnow),
-                 location_id(widget = S3LocationAutocompleteWidget(),
-                             requires = IS_LOCATION()),
-                 organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
-                 person_id("assessor_person_id",
-                           label = T("Assessor"),
-                           default = s3_logged_in_person()),
-                 s3_comments(),
-                 ireport_id(),      # Assessment can be linked to an Incident Report
-                 *s3_meta_fields())
+    table = define_table(tablename,
+                         Field("datetime", "datetime",
+                               label = T("Date & Time"),
+                               default = request.utcnow),
+                         location_id(widget = S3LocationAutocompleteWidget(),
+                                     requires = IS_LOCATION()),
+                         organisation_id(widget = S3OrganisationAutocompleteWidget(default_from_profile=True)),
+                         person_id("assessor_person_id",
+                                   label = T("Assessor"),
+                                   default = s3_logged_in_person()),
+                         s3_comments(),
+                         ireport_id(),      # Assessment can be linked to an Incident Report
+                         *s3_meta_fields())
 
-    assess_id = S3ReusableField("assess_id", "reference %s" % tablename,
-                                requires = IS_EMPTY_OR(
+    assess_id = S3ReusableField("assess_id", table,
+                                requires = IS_NULL_OR(
                                             IS_ONE_OF(db, "assess_assess.id", "%(id)s")
                                             ),
                                 represent = lambda id: id,
@@ -108,11 +108,14 @@ def assess_tables():
     # CRUD strings
     ADD_ASSESSMENT = T("Add Assessment")
     crud_strings[tablename] = Storage(
-        label_create = ADD_ASSESSMENT,
+        title_create = ADD_ASSESSMENT,
         title_display = T("Assessment Details"),
         title_list = T("Assessments"),
         title_update = T("Edit Assessment"),
+        title_search = T("Search Assessments"),
+        subtitle_create = T("Add New Assessment"),
         label_list_button = T("List Assessments"),
+        label_create_button = ADD_ASSESSMENT,
         label_delete_button = T("Delete Assessment"),
         msg_record_created = T("Assessment added"),
         msg_record_modified = T("Assessment updated"),
@@ -122,7 +125,7 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # assess_assess as component of org_organisation
-    add_components("org_organisation", assess_assess="organisation_id")
+    add_component(table, org_organisation="organisation_id")
 
     # Hide Add Assessment functionality. Users should only add assessments
     # through the Basic Assessment.
@@ -133,18 +136,21 @@ def assess_tables():
     # Baseline Type
     #
     tablename = "assess_baseline_type"
-    define_table(tablename,
-                 Field("name", length=128, notnull=True, unique=True),
-                 *s3_meta_fields())
+    table = define_table(tablename,
+                         Field("name", length=128, notnull=True, unique=True),
+                         *s3_meta_fields())
 
     # CRUD strings
     ADD_BASELINE_TYPE = T("Add Baseline Type")
     crud_strings[tablename] = Storage(
-        label_create = ADD_BASELINE_TYPE,
+        title_create = ADD_BASELINE_TYPE,
         title_display = T("Baseline Type Details"),
         title_list = T("Baseline Types"),
         title_update = T("Edit Baseline Type"),
+        title_search = T("Search Baseline Type"),
+        subtitle_create = T("Add New Baseline Type"),
         label_list_button = T("List Baseline Types"),
+        label_create_button = ADD_BASELINE_TYPE,
         label_delete_button = T("Delete Baseline Type"),
         msg_record_created = T("Baseline Type added"),
         msg_record_modified = T("Baseline Type updated"),
@@ -163,12 +169,12 @@ def assess_tables():
             return None
 
     represent = S3Represent(tablename)
-    baseline_type_id = S3ReusableField("baseline_type_id", "reference %s" % tablename,
+    baseline_type_id = S3ReusableField("baseline_type_id", table,
                                        sortby="name",
-                                       requires = IS_EMPTY_OR(IS_ONE_OF(db,
-                                                                        "assess_baseline_type.id",
-                                                                        represent,
-                                                                        sort=True)),
+                                       requires = IS_NULL_OR(IS_ONE_OF(db,
+                                                                       "assess_baseline_type.id",
+                                                                       represent,
+                                                                       sort=True)),
                                        represent = represent,
                                        label = T("Baseline Type"),
                                        comment = baseline_type_comment(),
@@ -179,22 +185,25 @@ def assess_tables():
     # Baseline
     #
     tablename = "assess_baseline"
-    define_table(tablename,
-                 # Hide FK fields in forms
-                 assess_id(readable = False, writable = False),
-                 baseline_type_id(),
-                 Field("value", "double"),
-                 s3_comments(),
-                 *s3_meta_fields())
+    table = define_table(tablename,
+                         # Hide FK fields in forms
+                         assess_id(readable = False, writable = False),
+                         baseline_type_id(),
+                         Field("value", "double"),
+                         s3_comments(),
+                         *s3_meta_fields())
 
     # CRUD strings
     ADD_BASELINE = T("Add Baseline")
     crud_strings[tablename] = Storage(
-        label_create = ADD_BASELINE,
+        title_create = ADD_BASELINE,
         title_display = T("Baselines Details"),
         title_list = T("Baselines"),
         title_update = T("Edit Baseline"),
+        title_search = T("Search Baselines"),
+        subtitle_create = T("Add New Baseline"),
         label_list_button = T("List Baselines"),
+        label_create_button = ADD_BASELINE,
         label_delete_button = T("Delete Baseline"),
         msg_record_created = T("Baseline added"),
         msg_record_modified = T("Baseline updated"),
@@ -204,33 +213,36 @@ def assess_tables():
         name_nice_plural = T("Baselines"))
 
     # Baseline as component of assessments
-    add_components("assess_assess", assess_baseline="assess_id")
+    add_component(table, assess_assess="assess_id")
 
     # =========================================================================
     # Summary
     #
     tablename = "assess_summary"
-    define_table(tablename,
-                 assess_id(readable = False, writable = False),
-                 sector_id(),
-                 #Field("value", "double"),
-                 Field("value", "integer",
-                       default = 0,
-                       label = T("Severity"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(assess_severity_opts)),
-                       widget = SQLFORM.widgets.radio.widget,
-                       represent = s3_assess_severity_represent),
-                 s3_comments(),
-                 *s3_meta_fields())
+    table = define_table(tablename,
+                         assess_id(readable = False, writable = False),
+                         sector_id(),
+                         #Field("value", "double"),
+                         Field("value", "integer",
+                               default = 0,
+                               label = T("Severity"),
+                               requires = IS_EMPTY_OR(IS_IN_SET(assess_severity_opts)),
+                               widget = SQLFORM.widgets.radio.widget,
+                               represent = s3_assess_severity_represent),
+                         s3_comments(),
+                         *s3_meta_fields())
 
     # CRUD strings
     ADD_ASSESS_SUMMARY = T("Add Assessment Summary")
     crud_strings[tablename] = Storage(
-        label_create = ADD_ASSESS_SUMMARY,
+        title_create = ADD_ASSESS_SUMMARY,
         title_display = T("Assessment Summary Details"),
         title_list = T("Assessment Summaries"),
         title_update = T("Edit Assessment Summary"),
+        title_search = T("Search Assessment Summaries"),
+        subtitle_create = T("Add New Assessment Summary"),
         label_list_button = T("List Assessment Summaries"),
+        label_create_button = ADD_ASSESS_SUMMARY,
         label_delete_button = T("Delete Assessment Summary"),
         msg_record_created = T("Assessment Summary added"),
         msg_record_modified = T("Assessment Summary updated"),
@@ -240,7 +252,7 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # Summary as component of assessments
-    add_components("assess_assess", assess_summary="assess_id")
+    add_component(table, assess_assess="assess_id")
 
     # Pass variables back to global scope (response.s3.*)
     return dict(
@@ -266,11 +278,14 @@ def rat_tables():
     # Section CRUD strings
     ADD_SECTION = T("Add Section")
     rat_section_crud_strings = Storage(
-        label_create = ADD_SECTION,
+        title_create = ADD_SECTION,
         title_display = T("Section Details"),
         title_list = T("Sections"),
         title_update = "",
+        title_search = T("Search Sections"),
+        subtitle_create = "",
         label_list_button = T("List Sections"),
+        label_create_button = ADD_SECTION,
         label_delete_button = T("Delete Section"),
         msg_record_created = T("Section updated"),
         msg_record_modified = T("Section updated"),
@@ -388,51 +403,54 @@ def rat_tables():
     # contains Section 1: Identification Information
     #
     tablename = "assess_rat"
-    define_table(tablename,
-                 Field("date", "date",
-                       requires = [IS_DATE(format = settings.get_L10n_date_format()),
-                                   IS_NOT_EMPTY()],
-                       default = datetime.datetime.today()),
-                 location_id(widget = S3LocationAutocompleteWidget(),
-                             requires = IS_LOCATION()),
-                 human_resource_id("staff_id", label=T("Staff")),
-                 human_resource_id("staff2_id", label=T("Staff2")),
-                 Field("interview_location", "list:integer",
-                       label = T("Interview taking place at"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_interview_location_opts,
-                                                        multiple=True,
-                                                        zero=None)),
-                       #widget = SQLFORM.widgets.checkboxes.widget,
-                       represent = lambda opt, set=rat_interview_location_opts: \
-                                      rat_represent_multiple(set, opt),
-                       comment = "(%s)" % T("Select all that apply")),
-                 Field("interviewee", "list:integer",
-                       label = T("Person interviewed"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_interviewee_opts,
-                                                        multiple=True,
-                                                        zero=None)),
-                       #widget = SQLFORM.widgets.checkboxes.widget,
-                      represent = lambda opt, set=rat_interviewee_opts: \
-                                    rat_represent_multiple(set, opt),
-                       comment = "(%s)" % T("Select all that apply")),
-                 Field("accessibility", "integer",
-                       label = T("Accessibility of Affected Location"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_accessibility_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_accessibility_opts.get(opt, opt)),
-                 s3_comments(),
-                 #document_id(),  # Better to have multiple Documents on a Tab
-                 s3db.shelter_id(),
-                 *s3_meta_fields())
+    table = define_table(tablename,
+                         Field("date", "date",
+                               requires = [IS_DATE(format = settings.get_L10n_date_format()),
+                                           IS_NOT_EMPTY()],
+                               default = datetime.datetime.today()),
+                         location_id(widget = S3LocationAutocompleteWidget(),
+                                     requires = IS_LOCATION()),
+                         human_resource_id("staff_id", label=T("Staff")),
+                         human_resource_id("staff2_id", label=T("Staff2")),
+                         Field("interview_location", "list:integer",
+                               label = T("Interview taking place at"),
+                               requires = IS_NULL_OR(IS_IN_SET(rat_interview_location_opts,
+                                                               multiple=True,
+                                                               zero=None)),
+                               #widget = SQLFORM.widgets.checkboxes.widget,
+                               represent = lambda opt, set=rat_interview_location_opts: \
+                                               rat_represent_multiple(set, opt),
+                               comment = "(%s)" % T("Select all that apply")),
+                         Field("interviewee", "list:integer",
+                               label = T("Person interviewed"),
+                               requires = IS_NULL_OR(IS_IN_SET(rat_interviewee_opts,
+                                                               multiple=True,
+                                                               zero=None)),
+                               #widget = SQLFORM.widgets.checkboxes.widget,
+                               represent = lambda opt, set=rat_interviewee_opts: \
+                                               rat_represent_multiple(set, opt),
+                               comment = "(%s)" % T("Select all that apply")),
+                         Field("accessibility", "integer",
+                               label = T("Accessibility of Affected Location"),
+                               requires = IS_NULL_OR(IS_IN_SET(rat_accessibility_opts,
+                                                               zero=None)),
+                               represent = lambda opt: rat_accessibility_opts.get(opt, opt)),
+                         s3_comments(),
+                         #document_id(),  # Better to have multiple Documents on a Tab
+                         s3db.shelter_id(),
+                         *s3_meta_fields())
 
     # CRUD strings
     ADD_ASSESSMENT = T("Add Rapid Assessment")
     crud_strings[tablename] = Storage(
-        label_create = ADD_ASSESSMENT,
+        title_create = ADD_ASSESSMENT,
         title_display = T("Rapid Assessment Details"),
         title_list = T("Rapid Assessments"),
         title_update = T("Edit Rapid Assessment"),
+        title_search = T("Search Rapid Assessments"),
+        subtitle_create = T("Add New Rapid Assessment"),
         label_list_button = T("List Rapid Assessments"),
+        label_create_button = ADD_ASSESSMENT,
         label_delete_button = T("Delete Rapid Assessment"),
         msg_record_created = T("Rapid Assessment added"),
         msg_record_modified = T("Rapid Assessment updated"),
@@ -490,8 +508,8 @@ def rat_tables():
 
     # -------------------------------------------------------------------------
     # re-usable field
-    assessment_id = S3ReusableField("assessment_id", "reference %s" % tablename,
-                                    requires = IS_EMPTY_OR(
+    assessment_id = S3ReusableField("assessment_id", table,
+                                    requires = IS_NULL_OR(
                                                 IS_ONE_OF(db, "assess_rat.id",
                                                           rat_represent,
                                                           orderby="assess_rat.id")
@@ -511,7 +529,7 @@ def rat_tables():
     # Assessment as component of cr_shelter.
     # RAT has components itself, so best not to constrain within the parent resource tabs
     # - therefore disable the listadd & jump out of the tabs for Create/Update
-    add_components("cr_shelter", assess_rat="shelter_id")
+    add_component(table, cr_shelter="shelter_id")
 
     configure(tablename,
               listadd=False,    # We override this in the RAT controller for when not a component
@@ -520,110 +538,113 @@ def rat_tables():
     # Section 2: Demographic --------------------------------------------------
 
     tablename = "assess_section2"
-    define_table(tablename,
-                 assessment_id(),
-                 Field("population_total", "integer",
-                       label = T("Total population of site visited"),
-                       comment = T("people")),
-                Field("households_total", "integer",
-                    label = T("Total # of households of site visited"),
-                    comment = T("households")),
-                Field("population_affected", "integer",
-                    label = T("Estimated # of people who are affected by the emergency"),
-                    comment = T("people")),
-                Field("households_affected", "integer",
-                    label = T("Estimated # of households who are affected by the emergency"),
-                    comment = T("households")),
-                Field("male_05", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 0-5")),
-                Field("male_612", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 6-12")),
-                Field("male_1317", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 13-17")),
-                Field("male_1825", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 18-25")),
-                Field("male_2660", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 26-60")),
-                Field("male_61", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 61+")),
-                Field("female_05", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 0-5")),
-                Field("female_612", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 6-12")),
-                Field("female_1317", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 13-17")),
-                Field("female_1825", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 18-25")),
-                Field("female_2660", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 26-60")),
-                Field("female_61", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 61+")),
-                Field("dead_women", "integer",
-                    label = T("How many Women (18 yrs+) are Dead due to the crisis"),
-                    comment = T("people")),  # @ToDo: Should this say "Number of people"?
-                Field("dead_men", "integer",
-                    label = T("How many Men (18 yrs+) are Dead due to the crisis"),
-                    comment = T("people")),
-                Field("dead_girl", "integer",
-                    label = T("How many Girls (0-17 yrs) are Dead due to the crisis"),
-                    comment = T("people")),
-                Field("dead_boy", "integer",
-                    label = T("How many Boys (0-17 yrs) are Dead due to the crisis"),
-                    comment = T("people")),
-                Field("injured_women", "integer",
-                    label = T("How many Women (18 yrs+) are Injured due to the crisis"),
-                    comment = T("people")),
-                Field("injured_men", "integer",
-                    label = T("How many Men (18 yrs+) are Injured due to the crisis"),
-                    comment = T("people")),
-                Field("injured_girl", "integer",
-                    label = T("How many Girls (0-17 yrs) are Injured due to the crisis"),
-                    comment = T("people")),
-                Field("injured_boy", "integer",
-                    label = T("How many Boys (0-17 yrs) are Injured due to the crisis"),
-                    comment = T("people")),
-                Field("missing_women", "integer",
-                    label = T("How many Women (18 yrs+) are Missing due to the crisis"),
-                    comment = T("people")),
-                Field("missing_men", "integer",
-                    label = T("How many Men (18 yrs+) are Missing due to the crisis"),
-                    comment = T("people")),
-                Field("missing_girl", "integer",
-                    label = T("How many Girls (0-17 yrs) are Missing due to the crisis"),
-                    comment = T("people")),
-                Field("missing_boy", "integer",
-                    label = T("How many Boys (0-17 yrs) are Missing due to the crisis"),
-                    comment = T("people")),
-                Field("household_head_elderly", "integer",
-                    label = T("Elderly person headed households (>60 yrs)"),
-                    comment = T("households")),
-                Field("household_head_female", "integer",
-                    label = T("Female headed households"),
-                    comment = T("households")),
-                Field("household_head_child", "integer",
-                    label = T("Child headed households (<18 yrs)"),
-                    comment = T("households")),
-                Field("disabled_physical", "integer",
-                    label = T("Persons with disability (physical)"),
-                    comment = T("people")),
-                Field("disabled_mental", "integer",
-                    label = T("Persons with disability (mental)"),
-                    comment = T("people")),
-                Field("pregnant", "integer",
-                    label = T("Pregnant women"),
-                    comment = T("people")),
-                Field("lactating", "integer",
-                    label = T("Lactating women"),
-                    comment = T("people")),
-                Field("minorities", "integer",
-                    label = T("Migrants or ethnic minorities"),
-                    comment = T("people")),
-                s3_comments(),
-                *s3_meta_fields())
+    table = define_table(tablename,
+                         assessment_id(),
+                         Field("population_total", "integer",
+                               label = T("Total population of site visited"),
+                               comment = T("people")),
+                         Field("households_total", "integer",
+                               label = T("Total # of households of site visited"),
+                               comment = T("households")),
+                         Field("population_affected", "integer",
+                               label = T("Estimated # of people who are affected by the emergency"),
+                               comment = T("people")),
+                         Field("households_affected", "integer",
+                               label = T("Estimated # of households who are affected by the emergency"),
+                               comment = T("households")),
+                         Field("male_05", "double",
+                               label = T("Number/Percentage of affected population that is Male & Aged 0-5")),
+                         Field("male_612", "double",
+                               label = T("Number/Percentage of affected population that is Male & Aged 6-12")),
+                         Field("male_1317", "double",
+                               label = T("Number/Percentage of affected population that is Male & Aged 13-17")),
+                         Field("male_1825", "double",
+                               label = T("Number/Percentage of affected population that is Male & Aged 18-25")),
+                         Field("male_2660", "double",
+                               label = T("Number/Percentage of affected population that is Male & Aged 26-60")),
+                         Field("male_61", "double",
+                               label = T("Number/Percentage of affected population that is Male & Aged 61+")),
+                         Field("female_05", "double",
+                               label = T("Number/Percentage of affected population that is Female & Aged 0-5")),
+                         Field("female_612", "double",
+                               label = T("Number/Percentage of affected population that is Female & Aged 6-12")),
+                         Field("female_1317", "double",
+                               label = T("Number/Percentage of affected population that is Female & Aged 13-17")),
+                         Field("female_1825", "double",
+                               label = T("Number/Percentage of affected population that is Female & Aged 18-25")),
+                         Field("female_2660", "double",
+                               label = T("Number/Percentage of affected population that is Female & Aged 26-60")),
+                         Field("female_61", "double",
+                               label = T("Number/Percentage of affected population that is Female & Aged 61+")),
+                         Field("dead_women", "integer",
+                               label = T("How many Women (18 yrs+) are Dead due to the crisis"),
+                               comment = T("people")),  # @ToDo: Should this say "Number of people"?
+                         Field("dead_men", "integer",
+                               label = T("How many Men (18 yrs+) are Dead due to the crisis"),
+                               comment = T("people")),
+                         Field("dead_girl", "integer",
+                               label = T("How many Girls (0-17 yrs) are Dead due to the crisis"),
+                               comment = T("people")),
+                         Field("dead_boy", "integer",
+                               label = T("How many Boys (0-17 yrs) are Dead due to the crisis"),
+                               comment = T("people")),
+                         Field("injured_women", "integer",
+                               label = T("How many Women (18 yrs+) are Injured due to the crisis"),
+                               comment = T("people")),
+                         Field("injured_men", "integer",
+                               label = T("How many Men (18 yrs+) are Injured due to the crisis"),
+                               comment = T("people")),
+                         Field("injured_girl", "integer",
+                               label = T("How many Girls (0-17 yrs) are Injured due to the crisis"),
+                               comment = T("people")),
+                         Field("injured_boy", "integer",
+                               label = T("How many Boys (0-17 yrs) are Injured due to the crisis"),
+                               comment = T("people")),
+                         Field("missing_women", "integer",
+                               label = T("How many Women (18 yrs+) are Missing due to the crisis"),
+                               comment = T("people")),
+                         Field("missing_men", "integer",
+                               label = T("How many Men (18 yrs+) are Missing due to the crisis"),
+                               comment = T("people")),
+                         Field("missing_girl", "integer",
+                               label = T("How many Girls (0-17 yrs) are Missing due to the crisis"),
+                               comment = T("people")),
+                         Field("missing_boy", "integer",
+                               label = T("How many Boys (0-17 yrs) are Missing due to the crisis"),
+                               comment = T("people")),
+                         Field("household_head_elderly", "integer",
+                               label = T("Elderly person headed households (>60 yrs)"),
+                               comment = T("households")),
+                         Field("household_head_female", "integer",
+                               label = T("Female headed households"),
+                               comment = T("households")),
+                         Field("household_head_child", "integer",
+                               label = T("Child headed households (<18 yrs)"),
+                               comment = T("households")),
+                         Field("disabled_physical", "integer",
+                               label = T("Persons with disability (physical)"),
+                               comment = T("people")),
+                         Field("disabled_mental", "integer",
+                               label = T("Persons with disability (mental)"),
+                               comment = T("people")),
+                         Field("pregnant", "integer",
+                               label = T("Pregnant women"),
+                               comment = T("people")),
+                         Field("lactating", "integer",
+                               label = T("Lactating women"),
+                               comment = T("people")),
+                         Field("minorities", "integer",
+                               label = T("Migrants or ethnic minorities"),
+                               comment = T("people")),
+                         s3_comments(),
+                         *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
     configure(tablename, deletable=False)
 
     # Section 3: Shelter & Essential NFIs -------------------------------------
@@ -647,7 +668,7 @@ def rat_tables():
     }
 
     tablename = "assess_section3"
-    define_table(tablename,
+    table = define_table(tablename,
                          assessment_id(),
                          Field("houses_total", "integer",
                                label = T("Total number of houses in the area"),
@@ -664,9 +685,9 @@ def rat_tables():
                                    "Number of houses damaged, but usable",
                                    "How many houses suffered damage but remain usable (usable = windows broken, cracks in walls, roof slightly damaged)?")),
                          Field("houses_salvmat", "list:integer",
-                               requires = IS_EMPTY_OR(IS_IN_SET(rat_houses_salvmat_types,
-                                                                multiple=True,
-                                                                zero=None)),
+                               requires = IS_NULL_OR(IS_IN_SET(rat_houses_salvmat_types,
+                                                               multiple=True,
+                                                               zero=None)),
                                represent = lambda opt, set=rat_houses_salvmat_types: \
                                                rat_represent_multiple(set, opt),
                                **rat_label_and_tooltip(
@@ -735,6 +756,10 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
     # Section 4 - Water and Sanitation ----------------------------------------
@@ -778,7 +803,7 @@ def rat_tables():
     }
 
     tablename = "assess_section4"
-    define_table(tablename,
+    table = define_table(tablename,
                         assessment_id(),
                         Field("water_source_pre_disaster_type", "integer",
                               label = T("Type of water source before the disaster"),
@@ -891,6 +916,10 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
     # Section 5 - Health ------------------------------------------------------
@@ -916,7 +945,7 @@ def rat_tables():
     }
 
     tablename = "assess_section5"
-    define_table(tablename,
+    table = define_table(tablename,
                         assessment_id(),
                         Field("health_services_pre_disaster", "boolean",
                               **rat_label_and_tooltip(
@@ -1050,6 +1079,10 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
     # Section 6 - Nutrition/Food Security -------------------------------------
@@ -1088,7 +1121,7 @@ def rat_tables():
     }
 
     tablename = "assess_section6"
-    define_table(tablename,
+    table = define_table(tablename,
                         assessment_id(),
                         Field("food_stocks_main_dishes", "list:integer",
                               requires = IS_EMPTY_OR(IS_IN_SET(rat_main_dish_types,
@@ -1149,6 +1182,10 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
     # Section 7 - Livelihood --------------------------------------------------
@@ -1185,7 +1222,7 @@ def rat_tables():
     rat_ranking_opts = xrange(1, 7)
 
     tablename = "assess_section7"
-    define_table(tablename,
+    table = define_table(tablename,
                         assessment_id(),
                         Field("income_sources_pre_disaster", "list:integer",
                               requires = IS_EMPTY_OR(IS_IN_SET(rat_income_source_opts,
@@ -1266,6 +1303,10 @@ def rat_tables():
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
     # Section 8 - Education ---------------------------------------------------
@@ -1306,7 +1347,7 @@ def rat_tables():
     }
 
     tablename = "assess_section8"
-    define_table(tablename,
+    table = define_table(tablename,
                         assessment_id(),
                         Field("schools_total", "integer",
                               label = T("Total number of schools in affected area"),
@@ -1464,7 +1505,11 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-    
+
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
 
@@ -1499,258 +1544,238 @@ def rat_tables():
     })
 
     tablename = "assess_section9"
-    define_table(tablename,
-                 assessment_id(),
-                 Field("vulnerable_groups_safe_env", "boolean",
-                       label = T("Safe environment for vulnerable groups"),
-                       comment = rat_tooltip("Are the areas that children, older people, and people with disabilities live in, play in and walk through on a daily basis physically safe?")),
-                 Field("safety_children_women_affected", "boolean",
-                       label = T("Safety of children and women affected by disaster?"),
-                       comment = rat_tooltip("Has the safety and security of women and children in your community changed since the emergency?")),
-                 Field("sec_incidents", "boolean",
-                       label = T("Known incidents of violence since disaster"),
-                       comment = rat_tooltip("Do you know of any incidents of violence?")),
-                 Field("sec_incidents_gbv", "boolean",
-                       label = T("Known incidents of violence against women/girls"),
-                       comment = rat_tooltip("Without mentioning any names or indicating anyone, do you know of any incidents of violence against women or girls occuring since the disaster?")),
-                 Field("sec_current_needs",
-                       label = T("Needs to reduce vulnerability to violence"),
-                       comment = rat_tooltip("What should be done to reduce women and children's vulnerability to violence?")),
-                 Field("children_separated", "integer",
-                       label = T("Children separated from their parents/caregivers"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of children separated from their parents or caregivers?")),
-                 Field("children_separated_origin",
-                       label = T("Origin of the separated children"),
-                       comment = rat_tooltip("Where are the separated children originally from?")),
-                 Field("children_missing", "integer",
-                       label = T("Parents/Caregivers missing children"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of parents/caregivers missing children?")),
-                 Field("children_orphaned", "integer",
-                       label = T("Children orphaned by the disaster"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of children that have been orphaned by the disaster?")),
-                 Field("children_unattended", "integer",
-                       label = T("Children living on their own (without adults)"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of children living on their own (without adults)?")),
-                 Field("children_disappeared", "integer",
-                       label = T("Children who have disappeared since the disaster"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of children that have disappeared without explanation in the period since the disaster?")),
-                 Field("children_evacuated", "integer",
-                       label = T("Children that have been sent to safe places"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of children that have been sent to safe places?")),
-                 Field("children_evacuated_to",
-                       label = T("Places the children have been sent to"),
-                       comment = rat_tooltip("Where have the children been sent?")),
-                 Field("children_with_older_caregivers", "integer",
-                       label = T("Older people as primary caregivers of children"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
-                                                                           UNKNOWN_OPT),
-                       comment = rat_tooltip("Do you know of older people who are primary caregivers of children?")),
-                 Field("children_in_disabled_homes", "boolean",
-                       label = T("Children in homes for disabled children"),
-                       comment = rat_tooltip("Are there children living in homes for disabled children in this area?")),
-                 Field("children_in_orphanages", "boolean",
-                       label = T("Children in orphanages"),
-                       comment = rat_tooltip("Are there children living in orphanages in this area?")),
-                 Field("children_in_boarding_schools", "boolean",
-                       label = T("Children in boarding schools"),
-                       comment = rat_tooltip("Are there children living in boarding schools in this area?")),
-                 Field("children_in_juvenile_detention", "boolean",
-                       label = T("Children in juvenile detention"),
-                       comment = rat_tooltip("Are there children living in juvenile detention in this area?")),
-                 Field("children_in_adult_prisons", "boolean",
-                       label = T("Children in adult prisons"),
-                       comment = rat_tooltip("Are there children living in adult prisons in this area?")),
-                 Field("people_in_adult_prisons", "boolean",
-                       label = T("Adults in prisons"),
-                       comment = rat_tooltip("Are there adults living in prisons in this area?")),
-                 Field("people_in_care_homes", "boolean",
-                       label = T("Older people in care homes"),
-                       comment = rat_tooltip("Are there older people living in care homes in this area?")),
-                 Field("people_in_institutions_est_total", "integer",
-                       label = T("Estimated total number of people in institutions"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_quantity_opts,
-                                                        zero=None)),
-                       represent = lambda opt: rat_quantity_opts.get(opt,
-                                                                     UNKNOWN_OPT),
-                       comment = rat_tooltip("What is the estimated total number of people in all of these institutions?")),
-                 Field("staff_in_institutions_present", "boolean",
-                       label = T("Staff present and caring for residents"),
-                       comment = rat_tooltip("Are there staff present and caring for the residents in these institutions?")),
-                 Field("adequate_food_water_in_institutions", "boolean",
-                       label = T("Adequate food and water available"),
-                       comment = rat_tooltip("Is adequate food and water available for these institutions?")),
-                 Field("child_activities_u12f_pre_disaster", "list:integer",
-                       label = T("Activities of girls <12yrs before disaster"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                       rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How did girls <12yrs spend most of their time prior to the disaster?",
-                                             multiple=True)),
-                 Field("child_activities_u12f_pre_disaster_other",
-                       label = T("Other activities of girls<12yrs before disaster")),
-                 Field("child_activities_u12m_pre_disaster", "list:integer",
-                       label = T("Activities of boys <12yrs before disaster"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How did boys <12yrs spend most of their time prior to the disaster?",
-                                             multiple=True)),
-                 Field("child_activities_u12m_pre_disaster_other",
-                       label = T("Other activities of boys <12yrs before disaster")),
-                 Field("child_activities_o12f_pre_disaster", "list:integer",
-                       label = T("Activities of girls 13-17yrs before disaster"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How did boys girls 13-17yrs spend most of their time prior to the disaster?",
-                                             multiple=True)),
-                 Field("child_activities_o12f_pre_disaster_other",
-                       label = T("Other activities of girls 13-17yrs before disaster")),
-                 Field("child_activities_o12m_pre_disaster", "list:integer",
-                       label = T("Activities of boys 13-17yrs before disaster"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How did boys 13-17yrs spend most of their time prior to the disaster?",
-                                             multiple=True)),
-                 Field("child_activities_o12m_pre_disaster_other",
-                       label = T("Other activities of boys 13-17yrs before disaster")),
+    table = define_table(tablename,
+                        assessment_id(),
+                        Field("vulnerable_groups_safe_env", "boolean",
+                              label = T("Safe environment for vulnerable groups"),
+                              comment = rat_tooltip("Are the areas that children, older people, and people with disabilities live in, play in and walk through on a daily basis physically safe?")),
+                        Field("safety_children_women_affected", "boolean",
+                              label = T("Safety of children and women affected by disaster?"),
+                              comment = rat_tooltip("Has the safety and security of women and children in your community changed since the emergency?")),
+                        Field("sec_incidents", "boolean",
+                              label = T("Known incidents of violence since disaster"),
+                              comment = rat_tooltip("Do you know of any incidents of violence?")),
+                        Field("sec_incidents_gbv", "boolean",
+                              label = T("Known incidents of violence against women/girls"),
+                              comment = rat_tooltip("Without mentioning any names or indicating anyone, do you know of any incidents of violence against women or girls occuring since the disaster?")),
 
-                 Field("child_activities_u12f_post_disaster", "list:integer",
-                       label = T("Activities of girls <12yrs now"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How do girls <12yrs spend most of their time now?",
-                                             multiple=True)),
-                 Field("child_activities_u12f_post_disaster_other",
-                       label = T("Other activities of girls<12yrs")),
-                 Field("child_activities_u12m_post_disaster", "list:integer",
-                       label = T("Activities of boys <12yrs now"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How do boys <12yrs spend most of their time now?",
-                                              multiple=True)),
-                 Field("child_activities_u12m_post_disaster_other",
-                       label = T("Other activities of boys <12yrs")),
-                 Field("child_activities_o12f_post_disaster", "list:integer",
-                       label = T("Activities of girls 13-17yrs now"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How do girls 13-17yrs spend most of their time now?",
-                                             multiple=True)),
-                 Field("child_activities_o12f_post_disaster_other",
-                       label = T("Other activities of girls 13-17yrs")),
-                 Field("child_activities_o12m_post_disaster", "list:integer",
-                       label = T("Activities of boys 13-17yrs now"),
-                       requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
-                                                        zero=None,
-                                                        multiple=True)),
-                       represent = lambda opt, set=rat_child_activity_opts: \
-                                        rat_represent_multiple(set, opt),
-                       comment = rat_tooltip("How do boys 13-17yrs spend most of their time now?",
-                                             multiple=True)),
-                 Field("child_activities_o12m_post_disaster_other",
-                       label = T("Other activities of boys 13-17yrs")),
+                        Field("sec_current_needs",
+                              label = T("Needs to reduce vulnerability to violence"),
+                              comment = rat_tooltip("What should be done to reduce women and children's vulnerability to violence?")),
 
-                 Field("coping_activities_elderly", "boolean",
-                       label = T("Older people participating in coping activities"),
-                       comment = rat_tooltip("Do older people in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
-                 Field("coping_activities_women", "boolean",
-                       label = T("Women participating in coping activities"),
-                       comment = rat_tooltip("Do women in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
-                 Field("coping_activities_disabled", "boolean",
-                       label = T("Disabled participating in coping activities"),
-                       comment = rat_tooltip("Do people with disabilities in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
-                 Field("coping_activities_minorities", "boolean",
-                       label = T("Minorities participating in coping activities"),
-                       comment = rat_tooltip("Do minority members in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
-                 Field("coping_activities_adolescent", "boolean",
-                       label = T("Adolescent participating in coping activities"),
-                       comment = rat_tooltip("Do adolescent and youth in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
+                        Field("children_separated", "integer",
+                              label = T("Children separated from their parents/caregivers"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of children separated from their parents or caregivers?")),
+                        Field("children_separated_origin",
+                              label = T("Origin of the separated children"),
+                              comment = rat_tooltip("Where are the separated children originally from?")),
+                        Field("children_missing", "integer",
+                              label = T("Parents/Caregivers missing children"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of parents/caregivers missing children?")),
+                        Field("children_orphaned", "integer",
+                              label = T("Children orphaned by the disaster"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of children that have been orphaned by the disaster?")),
+                        Field("children_unattended", "integer",
+                              label = T("Children living on their own (without adults)"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of children living on their own (without adults)?")),
+                        Field("children_disappeared", "integer",
+                              label = T("Children who have disappeared since the disaster"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of children that have disappeared without explanation in the period since the disaster?")),
+                        Field("children_evacuated", "integer",
+                              label = T("Children that have been sent to safe places"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of children that have been sent to safe places?")),
+                        Field("children_evacuated_to",
+                              label = T("Places the children have been sent to"),
+                              comment = rat_tooltip("Where have the children been sent?")),
+                        Field("children_with_older_caregivers", "integer",
+                              label = T("Older people as primary caregivers of children"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_fuzzy_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_fuzzy_quantity_opts.get(opt,
+                                                                                  UNKNOWN_OPT),
+                              comment = rat_tooltip("Do you know of older people who are primary caregivers of children?")),
 
-                 Field("current_general_needs", "text",
-                       label = T("Current greatest needs of vulnerable groups"),
-                       comment = rat_tooltip("In general, what are the greatest needs of older people, people with disabilities, children, youth and women in your community?")),
+                        Field("children_in_disabled_homes", "boolean",
+                              label = T("Children in homes for disabled children"),
+                              comment = rat_tooltip("Are there children living in homes for disabled children in this area?")),
+                        Field("children_in_orphanages", "boolean",
+                              label = T("Children in orphanages"),
+                              comment = rat_tooltip("Are there children living in orphanages in this area?")),
+                        Field("children_in_boarding_schools", "boolean",
+                              label = T("Children in boarding schools"),
+                              comment = rat_tooltip("Are there children living in boarding schools in this area?")),
+                        Field("children_in_juvenile_detention", "boolean",
+                              label = T("Children in juvenile detention"),
+                              comment = rat_tooltip("Are there children living in juvenile detention in this area?")),
+                        Field("children_in_adult_prisons", "boolean",
+                              label = T("Children in adult prisons"),
+                              comment = rat_tooltip("Are there children living in adult prisons in this area?")),
+                        Field("people_in_adult_prisons", "boolean",
+                              label = T("Adults in prisons"),
+                              comment = rat_tooltip("Are there adults living in prisons in this area?")),
+                        Field("people_in_care_homes", "boolean",
+                              label = T("Older people in care homes"),
+                              comment = rat_tooltip("Are there older people living in care homes in this area?")),
+                        Field("people_in_institutions_est_total", "integer",
+                              label = T("Estimated total number of people in institutions"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_quantity_opts,
+                                                               zero=None)),
+                              represent = lambda opt: rat_quantity_opts.get(opt,
+                                                                            UNKNOWN_OPT),
+                              comment = rat_tooltip("What is the estimated total number of people in all of these institutions?")),
+                        Field("staff_in_institutions_present", "boolean",
+                              label = T("Staff present and caring for residents"),
+                              comment = rat_tooltip("Are there staff present and caring for the residents in these institutions?")),
+                        Field("adequate_food_water_in_institutions", "boolean",
+                              label = T("Adequate food and water available"),
+                              comment = rat_tooltip("Is adequate food and water available for these institutions?")),
 
-                 s3_comments(),
-                 *s3_meta_fields())
+                        Field("child_activities_u12f_pre_disaster", "list:integer",
+                              label = T("Activities of girls <12yrs before disaster"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How did girls <12yrs spend most of their time prior to the disaster?",
+                                                        multiple=True)),
+                        Field("child_activities_u12f_pre_disaster_other",
+                              label = T("Other activities of girls<12yrs before disaster")),
+                        Field("child_activities_u12m_pre_disaster", "list:integer",
+                              label = T("Activities of boys <12yrs before disaster"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How did boys <12yrs spend most of their time prior to the disaster?",
+                                                        multiple=True)),
+                        Field("child_activities_u12m_pre_disaster_other",
+                              label = T("Other activities of boys <12yrs before disaster")),
+                        Field("child_activities_o12f_pre_disaster", "list:integer",
+                              label = T("Activities of girls 13-17yrs before disaster"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How did boys girls 13-17yrs spend most of their time prior to the disaster?",
+                                                        multiple=True)),
+                        Field("child_activities_o12f_pre_disaster_other",
+                              label = T("Other activities of girls 13-17yrs before disaster")),
+                        Field("child_activities_o12m_pre_disaster", "list:integer",
+                              label = T("Activities of boys 13-17yrs before disaster"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How did boys 13-17yrs spend most of their time prior to the disaster?",
+                                                        multiple=True)),
+                        Field("child_activities_o12m_pre_disaster_other",
+                              label = T("Other activities of boys 13-17yrs before disaster")),
+
+                        Field("child_activities_u12f_post_disaster", "list:integer",
+                              label = T("Activities of girls <12yrs now"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How do girls <12yrs spend most of their time now?",
+                                                        multiple=True)),
+                        Field("child_activities_u12f_post_disaster_other",
+                              label = T("Other activities of girls<12yrs")),
+                        Field("child_activities_u12m_post_disaster", "list:integer",
+                              label = T("Activities of boys <12yrs now"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How do boys <12yrs spend most of their time now?",
+                                                        multiple=True)),
+                        Field("child_activities_u12m_post_disaster_other",
+                              label = T("Other activities of boys <12yrs")),
+                        Field("child_activities_o12f_post_disaster", "list:integer",
+                              label = T("Activities of girls 13-17yrs now"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How do girls 13-17yrs spend most of their time now?",
+                                                        multiple=True)),
+                        Field("child_activities_o12f_post_disaster_other",
+                              label = T("Other activities of girls 13-17yrs")),
+                        Field("child_activities_o12m_post_disaster", "list:integer",
+                              label = T("Activities of boys 13-17yrs now"),
+                              requires = IS_EMPTY_OR(IS_IN_SET(rat_child_activity_opts,
+                                                               zero=None,
+                                                               multiple=True)),
+                              represent = lambda opt, set=rat_child_activity_opts: \
+                                              rat_represent_multiple(set, opt),
+                              comment = rat_tooltip("How do boys 13-17yrs spend most of their time now?",
+                                                        multiple=True)),
+                        Field("child_activities_o12m_post_disaster_other",
+                              label = T("Other activities of boys 13-17yrs")),
+
+                        Field("coping_activities_elderly", "boolean",
+                              label = T("Older people participating in coping activities"),
+                              comment = rat_tooltip("Do older people in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
+                        Field("coping_activities_women", "boolean",
+                              label = T("Women participating in coping activities"),
+                              comment = rat_tooltip("Do women in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
+                        Field("coping_activities_disabled", "boolean",
+                              label = T("Disabled participating in coping activities"),
+                              comment = rat_tooltip("Do people with disabilities in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
+                        Field("coping_activities_minorities", "boolean",
+                              label = T("Minorities participating in coping activities"),
+                              comment = rat_tooltip("Do minority members in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
+                        Field("coping_activities_adolescent", "boolean",
+                              label = T("Adolescent participating in coping activities"),
+                              comment = rat_tooltip("Do adolescent and youth in your community participate in activities that help them cope with the disaster? (ex. meetings, religious activities, volunteer in the community clean-up, etc)")),
+
+                        Field("current_general_needs", "text",
+                              label = T("Current greatest needs of vulnerable groups"),
+                              comment = rat_tooltip("In general, what are the greatest needs of older people, people with disabilities, children, youth and women in your community?")),
+
+                        s3_comments(),
+                        *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-    
+
+    add_component(table,
+                  assess_rat=dict(joinby="assessment_id",
+                                  multiple=False))
+
     configure(tablename, deletable=False)
 
-    # Sections as components of RAT
-    add_components("assess_rat",
-                   assess_section2={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section3={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section4={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section5={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section6={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section7={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section8={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section9={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                  )
-                 
     # -----------------------------------------------------------------------------
     def assess_rat_summary(r, **attr):
 
@@ -1763,9 +1788,9 @@ def rat_tables():
                 return None
             else:
                 # Other formats?
-                raise HTTP(501, ERROR.BAD_FORMAT)
+                raise HTTP(501, body=BADFORMAT)
         else:
-            raise HTTP(501, ERROR.BAD_METHOD)
+            raise HTTP(501, body=BADMETHOD)
 
 
     s3db.set_method("assess", "rat",
@@ -1780,24 +1805,27 @@ def rat_tables():
 
 # Population Statistics
 tablename = "assess_population"
-define_table(tablename,
-             location_id(widget = S3LocationAutocompleteWidget(),
-                         requires = IS_LOCATION()),
-             Field("population", "integer"),
-             Field("households", "integer"),
-             Field("median_age", "double"),
-             Field("average_family_size", "double"),
-             Field("effective_date", "datetime"),
-             s3_comments(),
-             *(s3_timestamp() + s3_uid() + s3_deletion_status()))
+table = define_table(tablename,
+                     location_id(widget = S3LocationAutocompleteWidget(),
+                                 requires = IS_LOCATION()),
+                     Field("population", "integer"),
+                     Field("households", "integer"),
+                     Field("median_age", "double"),
+                     Field("average_family_size", "double"),
+                     Field("effective_date", "datetime"),
+                     s3_comments(),
+                     *(s3_timestamp() + s3_uid() + s3_deletion_status()))
 
 # CRUD strings
 crud_strings[tablename] = Storage(
-    label_create = T("Add Population Statistic"),
+    title_create = T("Add Population Statistic"),
     title_display = T("Population Statistic Details"),
     title_list = T("Population Statistics"),
     title_update = T("Edit Population Statistic"),
+    title_search = T("Search Population Statistics"),
+    subtitle_create = T("Add New Population Statistic"),
     label_list_button = T("List Population Statistics"),
+    label_create_button = T("Add Population Statistic"),
     label_delete_button = T("Delete Population Statistic"),
     msg_record_created = T("Population Statistic added"),
     msg_record_modified = T("Population Statistic updated"),
@@ -1807,7 +1835,7 @@ crud_strings[tablename] = Storage(
     name_nice_plural = T("Population Statistics"))
 
 # Impact as component of incident reports
-#add_components("irs_ireport", impact_impact="ireport_id")
+#add_component("impact_impact", irs_ireport="ireport_id")
 
 # =========================================================================
 def impact_tables():
@@ -1827,19 +1855,22 @@ def impact_tables():
     # Impact Type
     resourcename = "type"
     tablename = "%s_%s" % (module, resourcename)
-    db.define_table(tablename,
-                    Field("name", length=128, notnull=True, unique=True),
-                    sector_id(),
-                    *s3_meta_fields())
+    table = db.define_table(tablename,
+                            Field("name", length=128, notnull=True, unique=True),
+                            sector_id(),
+                            *s3_meta_fields())
 
     # CRUD strings
     ADD_IMPACT_TYPE = T("Add Impact Type")
     s3.crud_strings[tablename] = Storage(
-        label_create = ADD_IMPACT_TYPE,
+        title_create = ADD_IMPACT_TYPE,
         title_display = T("Impact Type Details"),
         title_list = T("Impact Types"),
         title_update = T("Edit Impact Type"),
+        title_search = T("Search Impact Type"),
+        subtitle_create = T("Add New Impact Type"),
         label_list_button = T("List Impact Types"),
+        label_create_button = ADD_IMPACT_TYPE,
         label_delete_button = T("Delete Impact Type"),
         msg_record_created = T("Impact Type added"),
         msg_record_modified = T("Impact Type updated"),
@@ -1857,9 +1888,9 @@ def impact_tables():
             return None
 
     represent = S3Represent(tablename)
-    impact_type_id = S3ReusableField("impact_type_id", "reference %s" % tablename,
+    impact_type_id = S3ReusableField("impact_type_id", table,
                                      sortby="name",
-                                     requires = IS_EMPTY_OR(
+                                     requires = IS_NULL_OR(
                                                     IS_ONE_OF(db,
                                                               "impact_type.id",
                                                               represent,
@@ -1875,27 +1906,31 @@ def impact_tables():
     ireport_id = s3db.irs_ireport_id
 
     tablename = "assess_impact"
-    define_table(tablename,
-                 ireport_id(readable=False, writable=False),
-                 assess_id(readable=False, writable=False),
-                 impact_type_id(),
-                 Field("value", "double"),
-                 Field("severity", "integer",
-                       requires = IS_EMPTY_OR(IS_IN_SET(assess_severity_opts)),
-                       widget=SQLFORM.widgets.radio.widget,
-                       represent = s3_assess_severity_represent,
-                       default = 0),
-                 s3_comments(),
-                 *s3_meta_fields())
+    table = define_table(tablename,
+                         ireport_id(readable=False, writable=False),
+                         assess_id(readable=False, writable=False),
+                         impact_type_id(),
+                         Field("value", "double"),
+                         Field("severity", "integer",
+                               default = 0),
+                         s3_comments(),
+                         *s3_meta_fields())
+
+    table.severity.requires = IS_EMPTY_OR(IS_IN_SET(assess_severity_opts))
+    table.severity.widget=SQLFORM.widgets.radio.widget
+    table.severity.represent = s3_assess_severity_represent
 
     # CRUD strings
     ADD_IMPACT = T("Add Impact")
     crud_strings[tablename] = Storage(
-        label_create = ADD_IMPACT,
+        title_create = ADD_IMPACT,
         title_display = T("Impact Details"),
         title_list = T("Impacts"),
         title_update = T("Edit Impact"),
+        title_search = T("Search Impacts"),
+        subtitle_create = T("Add New Impact"),
         label_list_button = T("List Impacts"),
+        label_create_button = ADD_IMPACT,
         label_delete_button = T("Delete Impact"),
         msg_record_created = T("Impact added"),
         msg_record_modified = T("Impact updated"),
@@ -1939,9 +1974,9 @@ def rat():
     table = db[tablename]
 
     # Villages only
-    #table.location_id.requires = IS_EMPTY_OR(IS_ONE_OF(db(db.gis_location.level == "L5"),
-    #                                                   "gis_location.id",
-    #                                                   repr_select, sort=True))
+    #table.location_id.requires = IS_NULL_OR(IS_ONE_OF(db(db.gis_location.level == "L5"),
+    #                                                  "gis_location.id",
+    #                                                  repr_select, sort=True))
 
     # Subheadings in forms:
     configure("assess_section2",
@@ -2032,7 +2067,8 @@ def rat():
         s3_action_buttons(r, deletable=False)
         # Redirect to update view to open tabs
         if r.representation == "html" and r.method == "create":
-            r.next = r.url(method="", id=s3base.s3_get_last_record_id("assess_rat"))
+            r.next = r.url(method="",
+                           id=s3mgr.get_session("assess", "rat"))
         return output
     response.s3.postp = postp
 
@@ -2508,7 +2544,7 @@ def custom_assess(custom_assess_fields, location_id=None):
         # Hard coded notification message for Demo
         #msg.send_by_pe_id(3,
         #                  message=message,
-        #                  contact_method = 2)
+        #                  pr_message_method = 2)
 
     return form, form_accepted, assess_id
 

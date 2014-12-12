@@ -15,7 +15,6 @@ current.models = models
 import s3db.assess
 import s3db.asset
 import s3db.auth
-import s3db.budget
 import s3db.cap
 import s3db.climate
 import s3db.cms
@@ -25,7 +24,6 @@ import s3db.deploy
 import s3db.doc
 import s3db.dvi
 import s3db.dvr
-import s3db.evr
 import s3db.event
 import s3db.fire
 import s3db.gis
@@ -43,10 +41,8 @@ import s3db.sit
 import s3db.proc
 import s3db.project
 import s3db.req
-import s3db.s3
 import s3db.scenario
 import s3db.security
-import s3db.setup
 import s3db.stats
 import s3db.supply
 import s3db.support
@@ -59,6 +55,8 @@ import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
 import s3db.water
+#import s3db.finance     
+#thishani
 
 current.s3db = s3db = S3Model()
 

@@ -6,7 +6,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -31,7 +31,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3Exporter",)
+__all__ = ["S3Exporter"]
 
 from gluon import current
 from gluon.storage import Storage
@@ -43,6 +43,17 @@ class S3Exporter(object):
     """
         Exporter toolkit
     """
+
+    def __init__(self):
+        """ Constructor """
+
+        T = current.T
+
+        self.ERROR = Storage(
+            REPORTLAB_ERROR = T("%(module)s not installed") % dict(module="ReportLab"),
+            NO_RECORDS = T("No records in this resource"),
+            XLWT_ERROR = T("%(module)s not installed") % dict(module="xlwt"),
+        )
 
     # -------------------------------------------------------------------------
     def csv(self, resource):

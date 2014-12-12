@@ -2,7 +2,7 @@
 
 """ Resource Summary Pages
 
-    @copyright: 2013-14 (c) Sahana Software Foundation
+    @copyright: 2013 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
@@ -29,7 +29,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import current, A, DIV, LI, UL
+from gluon import *
+from gluon.storage import Storage
 
 from s3filter import S3FilterForm
 from s3gis import MAP
@@ -51,8 +52,10 @@ class S3Summary(S3Method):
         if "w" in r.get_vars:
             # Ajax-request for a specific widget
             return self.ajax(r, **attr)
+
         else:
             # Full page request
+            # @todo: check for proper format + method
             return self.summary(r, **attr)
 
     # -------------------------------------------------------------------------
@@ -65,7 +68,6 @@ class S3Summary(S3Method):
         """
 
         output = {}
-        response = current.response
         resource = self.resource
         get_config = resource.get_config
 
@@ -89,22 +91,11 @@ class S3Summary(S3Method):
             active_tab = 0
         active_map = None
 
-        show_filter_form = False
-        filter_widgets = get_config("filter_widgets")
-        if filter_widgets and not self.hide_filter:
-            # Apply filter defaults (before rendering the data!)
-            show_filter_form = True
-            S3FilterForm.apply_filter_defaults(r, resource)
-
         # Render sections
         tab_idx = 0
         widget_idx = 0
         targets = []
         pending = []
-
-        # Dynamic filtering (e.g. plot-click in report widget)
-        attr["filter_form"] = form_id = "summary-filter-form"
-
         for section in config:
 
             common = section.get("common")
@@ -112,13 +103,15 @@ class S3Summary(S3Method):
             # Section container
             section_id = section["name"]
             s = DIV(_class="section-container", _id=section_id)
-
+            
             if not common:
                 # Label
                 label = section["label"]
                 translate = section.get("translate", True)
                 if isinstance(label, basestring) and translate:
-                    label = current.T(label)
+                    self.label = current.T(label)
+                else:
+                    self.label = label
 
                 # Add tab
                 tablist.append(LI(A(label, _href="#%s" % section_id)))
@@ -155,32 +148,17 @@ class S3Summary(S3Method):
                                      **attr)
                 else:
                     handler = r.get_widget_handler(method)
-                    if handler is None:
-                        # Fall back to CRUD
-                        handler = resource.crud
                     if handler is not None:
-                        if method == "datatable":
-                            # Assume that we have a FilterForm, so disable Quick Search
-                            dtargs = attr.get("dtargs", {})
-                            dtargs["dt_bFilter"] = "false"
-                            attr["dtargs"] = dtargs
                         content = handler(r,
                                           method=method,
                                           widget_id=widget_id,
                                           visible=visible,
                                           **attr)
                     else:
-                        r.error(405, current.ERROR.BAD_METHOD)
+                        r.error(405, r.ERROR.BAD_METHOD)
 
                 # Add content to section
                 if isinstance(content, dict):
-                    if r.http == "POST" and content.get("success"):
-                        # Form successfully processed: behave like the
-                        # primary method handler and redirect to next
-                        next_url = content.get("next")
-                        if next_url:
-                            self.next = next_url
-                            return content
                     for k, v in content.items():
                         if k not in ("tabs", "sections", "widget"):
                             output[k] = v
@@ -222,7 +200,9 @@ class S3Summary(S3Method):
 
         # Filter form
         filter_ajax = True
-        if show_filter_form:
+        form_id = "summary-filter-form"
+        filter_widgets = get_config("filter_widgets")
+        if filter_widgets and not self.hide_filter:
 
             # Where to retrieve filtered data from:
             if active_tab != 0:
@@ -237,9 +217,9 @@ class S3Summary(S3Method):
 
             # Where to retrieve updated filter options from:
             filter_ajax_url = attr.get("filter_ajax_url",
-                                       r.url(method="filter",
-                                             vars={},
-                                             representation="options"))
+                                        r.url(method="filter",
+                                              vars={},
+                                              representation="options"))
 
             filter_formstyle = get_config("filter_formstyle")
             filter_submit = get_config("filter_submit", True)
@@ -263,6 +243,7 @@ class S3Summary(S3Method):
             output["filter_form"] = ""
 
         # View
+        response = current.response
         response.view = self._view(r, "summary.html")
 
         if len(sections) > 1:
@@ -270,16 +251,16 @@ class S3Summary(S3Method):
             # which are rendered empty and need a trigger to Ajax-load
             # their data layer (e.g. maps, reports):
             pending = ",".join(pending) if pending else "null"
-
+            
             # Render the Sections as Tabs
             script = '''S3.search.summary_tabs("%s",%s,"%s")''' % \
                      (form_id, active_tab, pending)
             response.s3.jquery_ready.append(script)
 
-        if active_map:
-            # If there is a map on the active tab then we need to add
-            # a callback to the Map JS Loader
-            active_map.callback = '''S3.search.summary_maps("%s")''' % form_id
+            if active_map:
+                # If there is a map on the active tab then we need to add
+                # a callback to the Map JS Loader
+                active_map.callback = '''S3.search.summary_maps("%s")''' % form_id
 
         return output
 
@@ -313,7 +294,7 @@ class S3Summary(S3Method):
                                              widget_id=widget_id,
                                              **attr)
                         else:
-                            r.error(405, current.ERROR.BAD_METHOD)
+                            r.error(405, r.ERROR.BAD_METHOD)
                     return output
                 i += 1
 

@@ -2,7 +2,7 @@
 
 """ Translation API
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,26 +38,31 @@ from gluon.languages import read_dict, write_dict
     List of classes with description :
 
 
-    TranslateAPI           : API class to retrieve strings and files by module
+    TranslateAPI           : API class to retreive strings and files by module
 
     TranslateGetFiles      : Class to traverse the eden directory and
                              categorize files based on module
 
-    TranslateParseFiles    : Class to extract strings to translate from code files
+    TranslateParseFiles    : Class to parse python code using its parse tree
+                             and obtain the required strings and data
 
     TranslateReadFiles     : Class to open a file, read its contents and build
                              a parse tree (for .py files) or use regex
                              (for html/js files) to obtain a list of strings
                              by calling methods from TranslateParseFiles
 
-    Strings                : Class to manipulate strings and their files
-
-    Pootle                 : Class to synchronise a Pootle server's translation
-                             with the local one
-
     TranslateReportStatus  : Class to report the translated percentage of each
                              language file for each module. It also updates
                              these percentages as and when required
+
+    Strings                : Class which obtains strings for translation based
+                             on given modules, adds existing translations from
+                             corresponding language file to this list, and then
+                             outputs the list to a file for translators
+
+    CsvToWeb2py            : Class which reads a list of csv files containing
+                             translations, merges translations, and updates
+                             existing language file with new translations
 """
 
 # =============================================================================
@@ -67,12 +72,10 @@ class TranslateAPI:
             files, modules and strings individually
         """
 
-        core_modules = ["auth", "default", "errors", "appadmin"]
-
         def __init__(self):
 
             self.grp = TranslateGetFiles()
-            self.grp.group_files(current.request.folder)
+            self.grp.group_files(current.request.folder, "", 0)
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -95,42 +98,50 @@ class TranslateAPI:
             return self.grp.modlist
 
         # ---------------------------------------------------------------------
+        def get_files_by_module(self, module):
+            """ Return a list of files corresponding to a module """
+
+            if module in self.grp.d.keys():
+                return self.grp.d[module]
+            else:
+                print "Module '%s' doesn't exist!" % module
+                return []
+
+        # ---------------------------------------------------------------------
         def get_strings_by_module(self, module):
             """ Return a list of strings corresponding to a module """
 
-            grp = self.grp
-            d = grp.d
-            if module in d.keys():
-                fileList = d[module]
+            if module in self.grp.d.keys():
+                fileList = self.grp.d[module]
             else:
-                current.log.warning("Module '%s' doesn't exist!" % module)
+                print "Module '%s' doesn't exist!" % module
                 return []
 
-            modlist = grp.modlist
             strings = []
             sappend = strings.append
 
             R = TranslateReadFiles()
-            findstr = R.findstr
 
             for f in fileList:
+
+                tmpstr = []
                 if f.endswith(".py") == True:
-                    tmpstr = findstr(f, "ALL", modlist)
+                    tmpstr = R.findstr(f, "ALL", self.grp.modlist)
                 elif f.endswith(".html") == True or \
                      f.endswith(".js") == True:
                     tmpstr = R.read_html_js(f)
-                else:
-                    tmpstr = []
                 for s in tmpstr:
                     sappend(("%s:%s" % (f, str(s[0])), s[1]))
 
             # Handle "special" files separately
-            fileList = d["special"]
+            fileList = self.grp.d["special"]
             for f in fileList:
+
+                tmpstr=[]
                 if f.endswith(".py") == True:
-                    tmpstr = findstr(f, module, modlist)
-                    for s in tmpstr:
-                        sappend(("%s:%s" % (f, str(s[0])), s[1]))
+                    tmpstr = R.findstr(f, module, self.grp.modlist)
+                for s in tmpstr:
+                    sappend(("%s:%s" % (f, str(s[0])), s[1]))
 
             return strings
 
@@ -176,7 +187,7 @@ class TranslateGetFiles:
 
             # Initialize to an empty list for each module
             d = {}
-            modlist = self.get_module_list(current.request.folder)
+            modlist = self.get_module_list()
             for m in modlist:
                 d[m] = []
 
@@ -195,7 +206,7 @@ class TranslateGetFiles:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def get_module_list(dir):
+        def get_module_list():
             """
                 Returns a list of modules using files in /controllers/
                 as point of reference
@@ -203,23 +214,17 @@ class TranslateGetFiles:
 
             mod = []
             mappend = mod.append
-            cont_dir = os.path.join(dir, "controllers")
+            cont_dir = os.path.join(current.request.folder, "controllers")
             mod_files = os.listdir(cont_dir)
 
             for f in mod_files:
                 if f[0] != ".":
-                    # Strip extension
                     mappend(f[:-3])
-
-            # Add Modules which aren't in controllers
-            mod += ["support",
-                    "translate",
-                    ]
 
             return mod
 
         # ---------------------------------------------------------------------
-        def group_files(self, currentDir, curmod="", vflag=0):
+        def group_files(self, currentDir, curmod, vflag):
             """
                 Recursive function to group Eden files into respective modules
             """
@@ -237,33 +242,37 @@ class TranslateGetFiles:
             if base_dir == "views":
                 vflag = 1
 
-            d = self.d
             files = os.listdir(currentDir)
 
             for f in files:
-                if f.startswith(".") or f.endswith(".pyc") or f in ("test.py", "tests.py"):
-                    continue
-
                 curFile = path.join(currentDir, f)
+                baseFile = path.basename(curFile)
                 if path.isdir(curFile):
+
                     # If the current directory is /views,
                     # categorize files based on the directory name
-                    if vflag:
-                        self.group_files(curFile, f, vflag)
+                    if base_dir == "views":
+                        self.group_files(curFile, path.basename(curFile),
+                                         vflag)
                     else:
                         self.group_files(curFile, curmod, vflag)
 
-                else:
+                elif (baseFile == "test.py" or \
+                      baseFile == "tests.py") == False:
+
                     # If in /appname/views, categorize by parent directory name
-                    if vflag:
+                    if vflag == 1:
                         base = curmod
 
                     # Categorize file as "special" as it contains strings
                     # belonging to various modules
-                    elif f in ("s3menus.py", "s3cfg.py", "000_config.py", "config.py"):
+                    elif curFile.endswith("/%s/modules/s3menus.py" % appname) or \
+                         curFile.endswith("/%s/modules/s3cfg.py" % appname) or \
+                         baseFile == "000_config.py" or \
+                         baseFile == "config.py":
                         base = "special"
                     else:
-                        # Remove extension ('.py')
+                        # Remove '.py'
                         base = path.splitext(f)[0]
 
                         # If file has "s3" as prefix, remove "s3" to get module name
@@ -272,20 +281,20 @@ class TranslateGetFiles:
 
                         # If file is inside /models and file name is
                         # of the form var_module.py, remove the "var_" prefix
-                        #elif base_dir == "models" and "_" in base:
-                        #    base = base.split("_")[1]
+                        elif base_dir == "models" and "_" in base:
+                            base = base.split("_")[1]
 
                     # If base refers to a module, append to corresponding list
-                    if base in d.keys():
-                        d[base].append(curFile)
+                    if base in self.d.keys():
+                        self.d[base].append(curFile)
                     else:
                         # Append it to "core" files list
-                        d["core"].append(curFile)
+                        self.d["core"].append(curFile)
 
 # =============================================================================
 class TranslateParseFiles:
         """
-            Class to extract strings to translate from code files
+            Class to extract strings from files depending on module and file
         """
 
         def __init__(self):
@@ -613,7 +622,7 @@ class TranslateParseFiles:
 
 # =============================================================================
 class TranslateReadFiles:
-        """ Class to read code files """
+        """ Class to open and read files """
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -634,48 +643,46 @@ class TranslateReadFiles:
                     f = open(fileName)
                 except:
                     return
-
             # Read all contents of file
             fileContent = f.read()
-            f.close()
-
             # Remove CL-RF and NOEOL characters
             fileContent = "%s\n" % fileContent.replace("\r", "")
+
+            P = TranslateParseFiles()
 
             try:
                 st = parser.suite(fileContent)
             except:
                 return []
 
+            f.close()
+
             # Create a parse tree list for traversal
             stList = parser.st2list(st, line_info=1)
-
-            P = TranslateParseFiles()
 
             # List which holds the extracted strings
             strings = []
 
             if spmod == "ALL":
                 # If all strings are to be extracted, call ParseAll()
-                parseAll = P.parseAll
                 for element in stList:
-                    parseAll(strings, element)
+                    P.parseAll(strings, element)
             else:
                 # Handle cases for special files which contain
                 # strings belonging to different modules
                 appname = current.request.application
-                fileName = os.path.basename(fileName)
-                if fileName == "s3menus.py":
+                if fileName.endswith("/%s/modules/s3menus.py" % appname) == True:
                     parseMenu = P.parseMenu
                     for element in stList:
                         parseMenu(spmod, strings, element, 0)
 
-                elif fileName == "s3cfg.py":
+                elif fileName.endswith("/%s/modules/s3cfg.py" % appname) == True:
                     parseS3cfg = P.parseS3cfg
                     for element in stList:
                         parseS3cfg(spmod, strings, element, modlist)
 
-                elif fileName in ("000_config.py", "config.py"):
+                elif os.path.basename(fileName) == "000_config.py" or \
+                     os.path.basename(fileName) == "config.py":
                     parseConfig = P.parseConfig
                     for element in stList:
                         parseConfig(spmod, strings, element, modlist)
@@ -698,13 +705,9 @@ class TranslateReadFiles:
 
                         # Get the actual value
                         for atr in l[1:]:
-                            try:
-                                obj = getattr(obj, atr)()
-                            except:
-                                current.log.warning("Can't find this deployment_setting, maybe a crud.settings", atr)
-                            else:
-                                s = obj
-                                fsappend((loc, s))
+                            obj = getattr(obj, atr)()
+                        s = obj
+                        fsappend((loc, s))
                     else:
                         #@ToDo : Get the value of non-settings variables
                         pass
@@ -798,6 +801,24 @@ class TranslateReadFiles:
 
         # ---------------------------------------------------------------------
         @staticmethod
+        def read_w2pfile(fileName):
+            """
+                Function to read a web2py language file and
+                return a list of translation string pairs
+            """
+
+            data = read_dict(fileName)
+
+            # Convert to list of tuples
+            # @ToDo: Why?
+            strings = []
+            sappend = strings.append
+            for s in data:
+                sappend((s, data[s]))
+            return strings
+
+        # ---------------------------------------------------------------------
+        @staticmethod
         def get_database_strings(all_template_flag):
             """
                 Function to get database strings from csv files
@@ -806,13 +827,13 @@ class TranslateReadFiles:
 
             from s3import import S3BulkImporter
 
-            # List of database strings
+            # List of database strings.
             database_strings = []
             template_list = []
             tappend = template_list.append
             base_dir = current.request.folder
             path = os.path
-            # If all templates flag is set we look in all templates' tasks.cfg file
+            # if all templates flag is set we look in all templates' tasks.cfg file
             if all_template_flag:
                 template_dir = path.join(base_dir, "private", "templates")
                 files = os.listdir(template_dir)
@@ -823,13 +844,11 @@ class TranslateReadFiles:
                     if path.isdir(curFile):
                         tappend(baseFile)
             else:
-                # Set current template.
+                # Setting current template.
                 tappend(current.deployment_settings.base.template)
 
-            # Use bulk importer class to parse tasks.cfg in template folder
+            # Using bulk importer class to parse tasks.cfg in template folder
             bi = S3BulkImporter()
-            S = Strings()
-            read_csv = S.read_csv
             for template in template_list:
                 pth = path.join(base_dir, "private", "templates", template)
                 if path.exists(path.join(pth, "tasks.cfg")) == False:
@@ -838,14 +857,14 @@ class TranslateReadFiles:
 
                 s3db = current.s3db
                 for csv in bi.tasks:
-                    # Ignore special import files
+                    # Not to consider special import files
                     if csv[0] != 1:
                         continue
 
                     # csv is in format: prefix, tablename, path of csv file
                     # assuming represent.translate is always on primary key id
                     translate = False
-                    fieldname = "%s_%s_id" % (csv[1], csv[2])
+                    fieldname = "%s_%s_id" %(csv[1], csv[2])
                     if hasattr(s3db, fieldname) == False:
                         continue
                     reusable_field = s3db.get(fieldname)
@@ -854,7 +873,7 @@ class TranslateReadFiles:
                         if hasattr(represent, "translate"):
                             translate = represent.translate
 
-                    # If translate attribute is set to True
+                    # if translate attribute is set to True
                     if translate:
                         if hasattr(represent, "fields") == False:
                             # Only name field is considered
@@ -863,13 +882,9 @@ class TranslateReadFiles:
                             # List of fields is retrieved from represent.fields
                             fields = represent.fields
 
-                        # Consider it for translation (csv[3])
-                        csv_path = csv[3]
-                        try:
-                            data = read_csv(csv_path)
-                        except IOError:
-                            # Phantom
-                            continue
+                        # Consider it for transation (csv[3])
+                        obj = CsvToWeb2py()
+                        data = obj.read_csvfile(csv[3])
                         title_row = data[0]
                         idx = 0
                         idxlist = []
@@ -879,25 +894,187 @@ class TranslateReadFiles:
                                 idxappend(idx)
                             idx += 1
 
+                        # if list is not empty
                         if idxlist:
-                            # Line number of string retrieved.
+                            # Line number of string retreived.
                             line_number = 1
                             for row in data[1:]:
                                 line_number += 1
                                 # If string is not empty
                                 for idx in idxlist:
-                                    try:
-                                        if row[idx] != "":
-                                            loc = "%s:%s" % (csv_path, line_number)
-                                            database_strings.append((loc, row[idx]))
-                                    except:
-                                        current.log.error("CSV row incomplete", csv_path)
+                                    if row[idx] != "":
+                                        loc = "%s:%s" %(csv[3], str(line_number))
+                                        database_strings.append((loc, row[idx]))
 
             return database_strings
 
 # =============================================================================
+class TranslateReportStatus:
+        """
+           Class to report the percentage of translated strings for each module
+           for a given language
+        """
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def create_master_file():
+            """ Function to create a master file containing all the strings """
+
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+
+            A = TranslateAPI()
+            modlist = A.get_modules()
+            modlist.append("core")
+
+            # List containing all the strings in the eden code
+            all_strings = []
+            asappend = all_strings.append
+            # Dictionary keyed on modules containg the indices of strings
+            # in all_strings which belong to the corresponding module
+            string_dict = {}
+            ind = 0
+
+            for mod in modlist:
+                string_list = []
+                sappend = string_list.append
+                strings = A.get_strings_by_module(mod)
+                for (l, s) in strings:
+                    # Removing quotes around the strings
+                    if (s[0] == '"' and s[-1] == '"') or\
+                       (s[0] == "'" and s[-1] == "'"):
+                        s = s[1:-1]
+
+                    if s not in all_strings:
+                        asappend(s)
+                        sappend(ind)
+                        ind += 1
+                    else:
+                        tmpind = all_strings.index(s)
+                        sappend(tmpind)
+                string_dict[mod] = string_list
+
+            # Save all_strings and string_dict as pickle objects in a file
+            data_file = os.path.join(current.request.folder, "uploads",
+                                     "temp.pkl")
+
+            f = open(data_file, "wb")
+            pickle.dump(all_strings, f)
+            pickle.dump(string_dict, f)
+            f.close()
+
+            # Set the update flag for all languages to indicate that the
+            # previously stored percentages of translation may have changed
+            # as the master file has been changed.
+            ptable = current.s3db.translate_percentage
+            current.db(ptable.id > 0).update(dirty=True)
+
+        # ---------------------------------------------------------------------
+        @staticmethod
+        def update_percentages(lang_code):
+            """
+               Update the translation percentages for all modules for a given
+               language
+            """
+
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+
+            base_dir = current.request.folder
+            langfile = "%s.py" % lang_code
+            langfile = os.path.join(base_dir, "languages", langfile)
+
+            # Read the language file
+            lang_strings = read_dict(langfile)
+
+            # translated_strings contains those strings which are translated
+            translated_strings = []
+            tappend = translated_strings.append
+            for s1 in lang_strings:
+                s2 = lang_strings[s1]
+                if not s2.startswith("*** "):
+                    if s1 != s2 or lang_code == "en-gb":
+                        tappend(s1)
+
+            # Retrieve the data stored in master file
+            data_file = os.path.join(base_dir, "uploads", "temp.pkl")
+            f = open(data_file, "rb")
+            all_strings = pickle.load(f)
+            string_dict = pickle.load(f)
+            f.close()
+
+            db = current.db
+            ptable = current.s3db.translate_percentage
+            for mod in string_dict.keys():
+
+                count = 0
+
+                for ind in string_dict[mod]:
+                    string = all_strings[ind]
+                    if string in translated_strings:
+                        count += 1
+
+                # Update the translation count in the table
+                query = (ptable.code == lang_code) & \
+                        (ptable.module == mod)
+                db(query).update(translated = count,
+                                 untranslated = len(string_dict[mod]) - count,
+                                 dirty=False,
+                                 )
+
+        # ---------------------------------------------------------------------
+        def get_translation_percentages(self, lang_code):
+            """
+            """
+
+            pickle_file = os.path.join(current.request.folder, "uploads", "temp.pkl")
+            # If master file doesn't exist, create it
+            if not os.path.exists(pickle_file):
+                self.create_master_file()
+
+            db = current.db
+            ptable = current.s3db.translate_percentage
+
+            rows = db(ptable.code == lang_code).select(ptable.dirty,
+                                                       ptable.translated,
+                                                       ptable.untranslated,
+                                                       ptable.module,
+                                                       )
+            if rows.first().dirty:
+                # Update the percentages
+                self.update_percentages(lang_code)
+
+            # Dictionary keyed on modules to store percentage for each module
+            percent_dict = {}
+            # Total number of translated strings for the given language
+            total_translated = 0
+            # Total number of untranslated strings for the given language
+            total_untranslated = 0
+
+            # Display the translation percentage for each module
+            # by fetching the data from the table
+            for row in rows:
+                total_translated += row.translated
+                total_untranslated += row.untranslated
+                percent_dict[row.module] = \
+                  (float(row.translated) / (row.translated + row.untranslated)) * 100
+            percent_dict["complete_file"] = \
+            (float(total_translated) / (total_translated + total_untranslated)) * 100
+
+            # Round off the percentages to 2 decimal places
+            for mod in percent_dict.keys():
+                percent_dict[mod] = round(percent_dict[mod], 2)
+
+            # Return the dictionary
+            return percent_dict
+
+# =============================================================================
 class Strings:
-        """ Class to manipulate strings and their files """
+        """ Class to export strings to a file """
 
         # ---------------------------------------------------------------------
         @staticmethod
@@ -953,37 +1130,76 @@ class Strings:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def remove_untranslated(lang_code):
+        def create_spreadsheet(Strings, langcode):
             """
-                Function to remove all untranslated strings from a lang_code.py
+                Function to create a spreadsheet (.xls file) of strings with
+                location, original string and translated string as columns
             """
 
-            w2pfilename = os.path.join(current.request.folder, "languages",
-                                       "%s.py" % lang_code)
+            try:
+                from cStringIO import StringIO    # Faster, where available
+            except:
+                from StringIO import StringIO
+            import xlwt
 
-            data = read_dict(w2pfilename)
-            #try:
-            #    # Python 2.7
-            #    # - won't even compile
-            #    data = {k: v for k, v in data.iteritems() if k != v}
-            #except:
-            # Python 2.6
-            newdata = {}
-            for k, v in data.iteritems():
-                if k != v:
-                    new_data[k] = v
-            data = new_data
+            from gluon.contenttype import contenttype
 
-            write_dict(w2pfilename, data)
+            from s3.s3utils import s3_debug
+
+            # Define spreadsheet properties
+            wbk = xlwt.Workbook("utf-8")
+            sheet = wbk.add_sheet("Translate")
+            style = xlwt.XFStyle()
+            font = xlwt.Font()
+            font.name = "Times New Roman"
+            style.font = font
+
+            sheet.write(0, 0, "location", style)
+            sheet.write(0, 1, "source", style)
+            sheet.write(0, 2, "target", style)
+
+            row_num = 1
+
+            # Write the data to spreadsheet
+            for (loc, d1, d2) in Strings:
+                d2 = d2.decode("string-escape").decode("utf-8")
+                sheet.write(row_num, 0, loc, style)
+                try:
+                    sheet.write(row_num, 1, d1, style)
+                except:
+                    s3_debug("Invalid source string!", loc)
+                    sheet.write(row_num, 1, "", style)
+                sheet.write(row_num, 2, d2, style)
+                row_num += 1
+
+            # Set column width
+            for colx in range(0, 3):
+                sheet.col(colx).width = 15000
+
+            # Initialize output
+            output = StringIO()
+
+            # Save the spreadsheet
+            wbk.save(output)
+
+            # Modify headers to return the xls file for download
+            filename = "%s.xls" % langcode
+            disposition = "attachment; filename=\"%s\"" % filename
+            response = current.response
+            response.headers["Content-Type"] = contenttype(".xls")
+            response.headers["Content-disposition"] = disposition
+
+            output.seek(0)
+            return output.read()
 
         # ---------------------------------------------------------------------
         def export_file(self, langfile, modlist, filelist, filetype, all_template_flag):
             """
                 Function to get the strings by module(s)/file(s), merge with
                 those strings from existing w2p language file which are already
-                translated and call the "write_xls()" method if the
+                translated and call the "create_spreadsheet()" method if the
                 default filetype "xls" is chosen. If "po" is chosen, then the
-                write_po()" method is called.
+                export_to_po()" method is called.
             """
 
             request = current.request
@@ -1002,11 +1218,11 @@ class Strings:
 
             if all_template_flag == 1:
                 # Select All Templates
-                A.grp.group_files(os.path.join(request.folder, "private", "templates"))
+                A.grp.group_files(os.path.join(request.folder, "private", "templates"), "", 0)
             else:
                 # A specific template is selected
                 template_folder = os.path.join(request.folder, "private", "templates", settings.get_template())
-                A.grp.group_files(template_folder)
+                A.grp.group_files(template_folder, "", 0)
             R = TranslateReadFiles()
 
             # Select Modules
@@ -1032,14 +1248,12 @@ class Strings:
                             if element not in modlist:
                                 modlist.append(element)
 
-            get_strings_by_module = A.get_strings_by_module
             for mod in modlist:
-                NewStrings += get_strings_by_module(mod)
+                NewStrings += A.get_strings_by_module(mod)
 
             # Retrieve strings in a file
-            get_strings_by_file = A.get_strings_by_file
             for f in filelist:
-                NewStrings += get_strings_by_file(f)
+                NewStrings += A.get_strings_by_file(f)
 
             # Remove quotes
             NewStrings = self.remove_quotes(NewStrings)
@@ -1052,12 +1266,11 @@ class Strings:
             NewStrings.sort(key=lambda tup: tup[1])
 
             # Retrieve strings from existing w2p language file
-            OldStrings = self.read_w2p(langfile)
+            OldStrings = R.read_w2pfile(langfile)
             OldStrings.sort(key=lambda tup: tup[0])
 
             # Merge those strings which were already translated earlier
             Strings = []
-            sappend = Strings.append
             i = 0
             lim = len(OldStrings)
 
@@ -1068,55 +1281,25 @@ class Strings:
 
                 if i != lim and OldStrings[i][0] == s and \
                    OldStrings[i][1].startswith("*** ") == False:
-                    sappend((l, s, OldStrings[i][1]))
+                    Strings.append((l, s, OldStrings[i][1]))
                 else:
-                    sappend((l, s, ""))
+                    Strings.append((l, s, ""))
 
             if filetype == "xls":
                 # Create excel file
-                return self.write_xls(Strings, langcode)
+                return self.create_spreadsheet(Strings, langcode)
             elif filetype == "po":
                 # Create pootle file
-                return self.write_po(Strings)
+                C = CsvToWeb2py()
+                return C.export_to_po(Strings)
+
+# =============================================================================
+class CsvToWeb2py:
+        """ Class to convert a group of csv files to a web2py language file"""
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def read_csv(fileName):
-            """ Function to read a CSV file and return a list of rows """
-
-            import csv
-            csv.field_size_limit(2**20)  # 1 Mb
-
-            data = []
-            dappend = data.append
-            f = open(fileName, "rb")
-            transReader = csv.reader(f)
-            for row in transReader:
-                dappend(row)
-            f.close()
-            return data
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def read_w2p(fileName):
-            """
-                Function to read a web2py language file and
-                return a list of translation string pairs
-            """
-
-            data = read_dict(fileName)
-
-            # Convert to list of tuples
-            # @ToDo: Why?
-            strings = []
-            sappend = strings.append
-            for s in data:
-                sappend((s, data[s]))
-            return strings
-
-        # ---------------------------------------------------------------------
-        @staticmethod
-        def write_csv(fileName, data):
+        def write_csvfile(fileName, data):
             """ Function to write a list of rows into a csv file """
 
             import csv
@@ -1133,7 +1316,7 @@ class Strings:
             f.close()
 
         # ---------------------------------------------------------------------
-        def write_po(self, data):
+        def export_to_po(self, data):
             """ Returns a ".po" file constructed from given strings """
 
             from subprocess import call
@@ -1142,7 +1325,7 @@ class Strings:
 
             f = NamedTemporaryFile(delete=False)
             csvfilename = "%s.csv" % f.name
-            self.write_csv(csvfilename, data)
+            self.write_csvfile(csvfilename, data)
 
             g = NamedTemporaryFile(delete=False)
             pofilename = "%s.po" % g.name
@@ -1163,14 +1346,14 @@ class Strings:
             return h.read()
 
         # ---------------------------------------------------------------------
-        def write_w2p(self, csvfiles, lang_code, option):
+        def convert_to_w2p(self, csvfiles, w2pfilename, option):
             """
                 Function to merge multiple translated csv files into one
                 and then merge/overwrite the existing w2p language file
             """
 
             w2pfilename = os.path.join(current.request.folder, "languages",
-                                       "%s.py" % lang_code)
+                                       w2pfilename)
 
             # Dictionary to store translated strings
             # with untranslated string as the key
@@ -1178,11 +1361,12 @@ class Strings:
 
             errors = 0
             for f in csvfiles:
-                newdata = self.read_csv(f)
+                newdata = self.read_csvfile(f)
                 # Test: 2 cols or 3?
                 cols = len(newdata[0])
                 if cols == 1:
-                    raise SyntaxError("CSV file needs to have at least 2 columns!")
+                    current.session.error = T("CSV file needs to have at least 2 columns!")
+                    redirect(URL(c="admin", f="translate"))
                 elif cols == 2:
                     # 1st column is source, 2nd is target
                     for row in newdata:
@@ -1204,84 +1388,33 @@ class Strings:
 
         # ---------------------------------------------------------------------
         @staticmethod
-        def write_xls(Strings, langcode):
-            """
-                Function to create a spreadsheet (.xls file) of strings with
-                location, original string and translated string as columns
-            """
+        def read_csvfile(fileName):
+            """ Function to read a csv file and return a list of rows """
 
-            try:
-                from cStringIO import StringIO    # Faster, where available
-            except:
-                from StringIO import StringIO
-            import xlwt
+            import csv
 
-            from gluon.contenttype import contenttype
-
-            # Define spreadsheet properties
-            wbk = xlwt.Workbook("utf-8")
-            sheet = wbk.add_sheet("Translate")
-            style = xlwt.XFStyle()
-            font = xlwt.Font()
-            font.name = "Times New Roman"
-            style.font = font
-
-            sheet.write(0, 0, "location", style)
-            sheet.write(0, 1, "source", style)
-            sheet.write(0, 2, "target", style)
-
-            row_num = 1
-
-            # Write the data to spreadsheet
-            for (loc, d1, d2) in Strings:
-                d2 = d2.decode("string-escape").decode("utf-8")
-                sheet.write(row_num, 0, loc, style)
-                try:
-                    sheet.write(row_num, 1, d1, style)
-                except:
-                    current.log.warning("Invalid source string!", loc)
-                    sheet.write(row_num, 1, "", style)
-                sheet.write(row_num, 2, d2, style)
-                row_num += 1
-
-            # Set column width
-            for colx in range(0, 3):
-                sheet.col(colx).width = 15000
-
-            # Initialize output
-            output = StringIO()
-
-            # Save the spreadsheet
-            wbk.save(output)
-
-            # Modify headers to return the xls file for download
-            filename = "%s.xls" % langcode
-            disposition = "attachment; filename=\"%s\"" % filename
-            response = current.response
-            response.headers["Content-Type"] = contenttype(".xls")
-            response.headers["Content-disposition"] = disposition
-
-            output.seek(0)
-            return output.read()
+            data = []
+            dappend = data.append
+            f = open(fileName, "rb")
+            transReader = csv.reader(f)
+            for row in transReader:
+                dappend(row)
+            f.close()
+            return data
 
 # =============================================================================
 class Pootle:
         """
             Class to synchronise a Pootle server's translation with the local
             one
-
-            @ToDo: Before uploading file to Pootle, ensure all relevant
-                   untranslated strings are present.
         """
 
         # ---------------------------------------------------------------------
-        def upload(self, lang_code, filename):
-            """
-                Upload a file to Pootle
-            """
+        def upload_to_pootle(self, lang_code, filename):
 
             import mechanize
             import re
+            from s3.s3utils import s3_debug
 
             br = mechanize.Browser()
             br.addheaders = [("User-agent", "Firefox")]
@@ -1293,29 +1426,27 @@ class Pootle:
             br.set_handle_referer(False)
 
             settings = current.deployment_settings
-
-            username = settings.get_L10n_pootle_username()
-            if username is False:
-                current.log.error("No login information found")
-                return
-
-            pootle_url = settings.get_L10n_pootle_url()
-            login_url = "%saccounts/login" % pootle_url
+            url = "%saccounts/login" % settings.get_L10n_pootle_url()
             try:
-                br.open(login_url)
+                br.open(url)
             except:
-                current.log.error("Connecton Error")
+                s3_debug("Connecton Error")
                 return
 
             br.select_form("loginform")
+            username = settings.get_L10n_pootle_username()
+            if username == False:
+                s3_debug("No login information found")
+                return
 
+            password = settings.get_L10n_pootle_password()
             br.form["username"] = username
-            br.form["password"] = settings.get_L10n_pootle_password()
+            br.form["password"] = password
             br.submit()
 
             current_url = br.geturl()
             if current_url.endswith("login/"):
-                current.log.error("Login Error")
+                s3_debug("Login Error")
                 return
 
             pattern = "<option value=(.+?)>%s.po" % lang_code
@@ -1324,7 +1455,7 @@ class Pootle:
             if len(lang_code) > 2:
                 lang_code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
 
-            link = "%s%s/eden/" % (pootle_url, lang_code)
+            link = "%s%s/eden/" % (settings.get_L10n_pootle_url(), lang_code)
 
             page_source = br.open(link).read()
             # Use Regex to extract the value for field : "upload to"
@@ -1341,16 +1472,11 @@ class Pootle:
                 br.form.add_file(open(filename), "text/plain", file_name)
                 br.submit()
             except:
-                current.log.error("Error in Uploading form")
+                s3_debug("Error in Uploading form")
                 return
 
         # ---------------------------------------------------------------------
-        def download(self, lang_code):
-            """
-                Download a file from Pootle
-
-                @ToDo: Allow selection between different variants of language files
-            """
+        def download_strings(self, lang_code):
 
             import requests
             import zipfile
@@ -1361,17 +1487,19 @@ class Pootle:
             from subprocess import call
             from tempfile import NamedTemporaryFile
 
+            from s3.s3utils import s3_debug
+
             code = lang_code
             if len(lang_code) > 2:
                 code = "%s_%s" % (lang_code[:2], lang_code[-2:].upper())
 
-            pootle_url = current.deployment_settings.get_L10n_pootle_url()
-            link = "%s%s/eden/export/zip" % (pootle_url, code)
+            settings = current.deployment_settings
+            link = "%s%s/eden/export/zip" % (settings.get_L10n_pootle_url(), code)
             try:
                 r = requests.get(link)
             except:
-                current.log.error("Connection Error")
-                return False
+                s3_debug("Connection Error")
+                return False		
 
             zipf = zipfile.ZipFile(StringIO.StringIO(r.content))
             zipf.extractall()
@@ -1383,14 +1511,12 @@ class Pootle:
 
             call(["po2web2py", "-i", file_name_po, "-o", w2pfilename])
 
-            S = Strings()
+            tfile = TranslateReadFiles()
             path = os.path.join(current.request.folder, "languages", file_name_py)
-            pystrings = S.read_w2p(path)
+            pystrings = tfile.read_w2pfile(path)
             pystrings.sort(key=lambda tup: tup[0])
 
-            postrings = S.read_w2p(w2pfilename)
-            # Remove untranslated strings
-            postrings = [tup for tup in postrings if tup[0] != tup[1]]
+            postrings = tfile.read_w2pfile(w2pfilename)
             postrings.sort(key=lambda tup: tup[0])
 
             os.unlink(file_name_po)
@@ -1399,9 +1525,6 @@ class Pootle:
 
         # ---------------------------------------------------------------------
         def merge_strings(self, postrings, pystrings, preference):
-            """
-                Merge strings from a PO file and a Py file
-            """
 
             lim_po = len(postrings)
             lim_py = len(pystrings)
@@ -1452,19 +1575,19 @@ class Pootle:
         # ---------------------------------------------------------------------
         def merge_pootle(self, preference, lang_code):
 
-            # returns a tuple (postrings, pystrings)
-            ret = self.download(lang_code)
-            if not ret:
-                return
-
             from subprocess import call
             from tempfile import NamedTemporaryFile
             import sys
 
+            # returns a tuple (postrings, pystrings)
+            ret = self.download_strings(lang_code)
+            if not ret:
+                return
+
             # returns pystrings if preference was True else returns postrings
             ret = self.merge_strings(ret[0], ret[1], preference)
 
-            S = Strings()
+            cfile = CsvToWeb2py()
 
             data = []
             dappend = data.append
@@ -1474,12 +1597,13 @@ class Pootle:
 
             if preference:
                 # Only python file has been changed
+                file_name_py = "%s.py" %lang_code
                 for i in ret:
                     dappend(("", i[0], i[1].decode("string-escape")))
 
-                S.write_csv(csvfilename, data)
+                cfile.write_csvfile(csvfilename, data)
                 # overwrite option
-                S.write_w2p([csvfilename], lang_code, "o")
+                cfile.convert_to_w2p([csvfilename], file_name_py, "o")
 
                 os.unlink(csvfilename)
 
@@ -1488,7 +1612,7 @@ class Pootle:
                 for i in ret:
                     dappend(("", i[0], i[1].decode("string-escape")))
 
-                S.write_csv(csvfilename, data)
+                cfile.write_csvfile(csvfilename, data)
 
                 temp_po = NamedTemporaryFile(delete=False)
                 pofilename = "%s.po" % temp_po.name
@@ -1496,204 +1620,10 @@ class Pootle:
                 # Shell needed on Win32
                 # @ToDo: Copy relevant parts of Translate Toolkit internally to avoid external dependencies
                 call(["csv2po", "-i", csvfilename, "-o", pofilename], shell=True)
-                self.upload(lang_code, pofilename)
+                self.upload_to_pootle(lang_code, pofilename)
 
                 # Clean up extra created files
                 os.unlink(csvfilename)
                 os.unlink(pofilename)
-
-# =============================================================================
-class TranslateReportStatus(object):
-    """
-        Class to report the percentage of translated strings for
-        each module for a given language.
-    """
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def create_master_file(cls):
-        """
-            Create master file of strings and their distribution in modules
-        """
-
-        try:
-            import cPickle as pickle
-        except:
-            import pickle
-
-        # Instantiate the translateAPI
-        api = TranslateAPI()
-
-        # Generate list of modules
-        modules = api.get_modules()
-        modules.append("core")
-
-        # The list of all strings
-        all_strings = []
-        addstring = all_strings.append
-
-        # Dictionary of {module: indices of strings used in this module}
-        indices = {}
-
-        # Helper dict for fast lookups
-        string_indices = {}
-
-        index = 0
-        get_strings_by_module = api.get_strings_by_module
-        for module in modules:
-
-            module_indices = []
-            addindex = module_indices.append
-
-            strings = get_strings_by_module(module)
-            for (origin, string) in strings:
-
-                # Remove outermost quotes around the string
-                if (string[0] == '"' and string[-1] == '"') or\
-                   (string[0] == "'" and string[-1] == "'"):
-                    string = string[1:-1]
-
-                string_index = string_indices.get(string)
-                if string_index is None:
-                    string_indices[string] = index
-                    addstring(string)
-                    addindex(index)
-                    index += 1
-                else:
-                    addindex(string_index)
-
-            indices[module] = module_indices
-
-        # Save all_strings and string_dict as pickle objects in a file
-        data_file = os.path.join(current.request.folder,
-                                 "uploads",
-                                 "temp.pkl")
-        f = open(data_file, "wb")
-        pickle.dump(all_strings, f)
-        pickle.dump(indices, f)
-        f.close()
-
-        # Mark all string counts as dirty
-        ptable = current.s3db.translate_percentage
-        current.db(ptable.id > 0).update(dirty=True)
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def update_string_counts(cls, lang_code):
-        """
-            Update the translation percentages for all modules for a given
-            language.
-
-            @ToDo: Generate fresh .py files with all relevant strings for this
-                    (since we don't store untranslated strings)
-        """
-
-        try:
-            import cPickle as pickle
-        except:
-            import pickle
-
-        base_dir = current.request.folder
-
-        # Read the language file
-        langfile = "%s.py" % lang_code
-        langfile = os.path.join(base_dir, "languages", langfile)
-        lang_strings = read_dict(langfile)
-
-        # Retrieve the data stored in master file
-        data_file = os.path.join(base_dir, "uploads", "temp.pkl")
-        f = open(data_file, "rb")
-        all_strings = pickle.load(f)
-        string_dict = pickle.load(f)
-        f.close()
-
-        db = current.db
-        ptable = current.s3db.translate_percentage
-
-        translated = set()
-        addindex = translated.add
-        for index, string in enumerate(all_strings):
-            translation = lang_strings.get(string)
-            if translation is None or translation[:4] == "*** ":
-                continue
-            elif translation != string or lang_code == "en-gb":
-                addindex(index)
-
-        for module, indices in string_dict.items():
-            all_indices = set(indices)
-            num_untranslated = len(all_indices - translated)
-            num_translated = len(all_indices) - num_untranslated
-
-            data = dict(code = lang_code,
-                        module = module,
-                        translated = num_translated,
-                        untranslated = num_untranslated,
-                        dirty=False)
-
-            query = (ptable.code == lang_code) & \
-                    (ptable.module == module)
-            record = db(query).select(ptable._id, limitby=(0, 1)).first()
-            if record:
-                record.update_record(**data)
-            else:
-                ptable.insert(**data)
-
-        return
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def get_translation_percentages(cls, lang_code):
-        """
-            Get the percentages of translated strings per module for
-            the given language code.
-
-            @param lang_code: the language code
-        """
-
-        pickle_file = os.path.join(current.request.folder,
-                                   "uploads",
-                                   "temp.pkl")
-        # If master file doesn't exist, create it
-        if not os.path.exists(pickle_file):
-            cls.create_master_file()
-
-        db = current.db
-        ptable = current.s3db.translate_percentage
-
-        query = (ptable.code == lang_code)
-        fields = ("dirty", "translated", "untranslated", "module")
-
-        rows = db(query).select(*fields)
-        if not rows or rows.first().dirty:
-            # Update the string counts
-            cls.update_string_counts(lang_code)
-            rows = db(query).select(*fields)
-
-        percentage = {}
-        total_strings = 0
-        total_translated = 0
-        total_untranslated = 0
-        for row in rows:
-
-            num_translated = row.translated
-            num_untranslated = row.untranslated
-
-            total_strings += num_translated + num_untranslated
-
-            if not num_untranslated:
-                percentage[row.module] = 100
-            else:
-                total = num_translated + num_untranslated
-                total_translated += num_translated
-                total_untranslated += num_untranslated
-                percentage[row.module] = \
-                        round((float(num_translated) / total) * 100, 2)
-
-        if not total_untranslated:
-            percentage["complete_file"] = 100
-        else:
-            percentage["complete_file"] = \
-                round((float(total_translated) / (total_strings)) * 100, 2)
-        return percentage
 
 # END =========================================================================

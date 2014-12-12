@@ -2,10 +2,10 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 """
-   This file parses messages using functions defined in in the template's
-   parser.py
+   This file imports the Message parsers from the core code
+   and links them with the respective parsing tasks defined in msg_parser
 
-   @copyright: 2012-14 (c) Sahana Software Foundation
+   @copyright: 2012-13 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person
@@ -30,8 +30,8 @@
    OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3Parsing",)
-
+#import inspect
+import string
 import sys
 
 from gluon import current
@@ -44,7 +44,7 @@ class S3Parsing(object):
     """
 
     # -------------------------------------------------------------------------
-    @staticmethod
+    @static_method
     def parser(function_name, message_id, **kwargs):
         """
            1st Stage Parser
@@ -87,13 +87,13 @@ class S3Parsing(object):
             % (current.request.application, template)
         __import__(module_name)
         mymodule = sys.modules[module_name]
-        S3Parser = mymodule.S3Parser()
+        S3Parsing = mymodule.S3Parsing()
 
         # Pass the message to the parser
         try:
-            fn = getattr(S3Parser, function_name)
+            fn = getattr(S3Parsing, function_name)
         except:
-            current.log.error("Parser not found: %s" % function_name)
+            s3_debug("Parser not found: %s" % function_name)
             return None
 
         reply = fn(message, **kwargs) or reply
@@ -113,19 +113,19 @@ class S3Parsing(object):
         if not message:
             return None, None
 
-        words = message.body.split(" ")
+        words = string.split(message.body)
         login = False
         email = None
         password = None
-
+        
         if "LOGIN" in [word.upper() for word in words]:
-            login = True
+            login = True 
         if len(words) == 2 and login:
             password = words[1]
         elif len(words) == 3 and login:
             email = words[1]
             password = words[2]
-        if login:
+        if login:    
             if password and not email:
                 email = message.from_address
             return email, password
@@ -136,7 +136,7 @@ class S3Parsing(object):
     @staticmethod
     def is_session_alive(from_address):
         """
-            Check whether there is an alive session from the same sender
+            Check whether there is an alive sessions from the same sender
         """
 
         email = None
@@ -157,62 +157,8 @@ class S3Parsing(object):
                 email = record.email
                 break
             else:
-                record.update_record(is_expired = True)
+                record.update_record(is_expired = True) 
 
         return email
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def lookup_person(address):
-        """
-            Lookup a Person from an Email Address
-        """
-
-        s3db = current.s3db
-
-        if "<" in address:
-            address = address.split("<")[1].split(">")[0]
-        ptable = s3db.pr_person
-        ctable = s3db.pr_contact
-        query = (ctable.value == address) & \
-                (ctable.contact_method == "EMAIL") & \
-                (ctable.pe_id == ptable.pe_id) & \
-                (ptable.deleted == False) & \
-                (ctable.deleted == False)
-        possibles = current.db(query).select(ptable.id,
-                                             limitby=(0, 2))
-        if len(possibles) == 1:
-            return possibles.first().id
-
-        return None
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def lookup_human_resource(address):
-        """
-            Lookup a Human Resource from an Email Address
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        if "<" in address:
-            address = address.split("<")[1].split(">")[0]
-        hrtable = s3db.hrm_human_resource
-        ptable = db.pr_person
-        ctable = s3db.pr_contact
-        query = (ctable.value == address) & \
-                (ctable.contact_method == "EMAIL") & \
-                (ctable.pe_id == ptable.pe_id) & \
-                (ptable.id == hrtable.person_id) & \
-                (ctable.deleted == False) & \
-                (ptable.deleted == False) & \
-                (hrtable.deleted == False)
-        possibles = db(query).select(hrtable.id,
-                                     limitby=(0, 2))
-        if len(possibles) == 1:
-            return possibles.first().id
-
-        return None
 
 # END =========================================================================

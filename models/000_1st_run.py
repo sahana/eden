@@ -42,7 +42,7 @@ if update_check_needed:
     try:
         import s3 as s3base
     except Exception, e:
-        errors.append(e.message)
+        errors.extend(e.message)
 
     import sys
 
@@ -51,15 +51,13 @@ if update_check_needed:
         prefix = "\n%s: " % T("WARNING")
         msg = prefix + prefix.join(warnings)
         print >> sys.stderr, msg
+
     if errors:
         # Report errors and stop.
-        actionrequired = T("ACTION REQUIRED")
-        prefix = "\n%s: " % actionrequired
+        prefix = "\n%s: " % T("ACTION REQUIRED")
         msg = prefix + prefix.join(errors)
         print >> sys.stderr, msg
-        htmlprefix = "\n<br /><b>%s</b>: " % actionrequired
-        html = "<errors>" + htmlprefix + htmlprefix.join(errors) + "\n</errors>"
-        raise HTTP(500, body=html)
+        raise HTTP(500, body=msg)
 
     # Create or update the canary file.
     from gluon import portalocker

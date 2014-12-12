@@ -42,16 +42,6 @@ def index():
     return dict(module_name=module_name)
 
 # -----------------------------------------------------------------------------
-def create():
-    """
-        Enter a new assessment.
-        - provides a simpler URL to access from mobile devices...
-    """
-    
-    redirect(URL(f="newAssessment.iframe",
-                 vars={"viewing": "survey_series.%s" % request.args[0]}))
-
-# -----------------------------------------------------------------------------
 def template():
     """ RESTful CRUD controller """
 
@@ -171,8 +161,8 @@ def templateRead():
     """
     """
 
-    if len(get_vars) > 0:
-        dummy, template_id = get_vars.viewing.split(".")
+    if len(request.get_vars) > 0:
+        dummy, template_id = request.get_vars.viewing.split(".")
     else:
         template_id = request.args[0]
 
@@ -211,8 +201,8 @@ def templateSummary():
 
     def postp(r, output):
         if r.interactive:
-            if len(get_vars) > 0:
-                dummy, template_id = get_vars.viewing.split(".")
+            if len(request.get_vars) > 0:
+                dummy, template_id = request.get_vars.viewing.split(".")
             else:
                 template_id = r.id
             form = s3db.survey_build_template_summary(template_id)
@@ -750,13 +740,13 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                   style
                                   )
             except Exception as msg:
-                log = current.log
-                log.error(msg)
-                log.debug("row: %s + vert: %s, col: %s + horiz %s" % \
-                          (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                s3_debug = s3base.s3_debug
+                s3_debug(msg)
+                s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                    (cell.row, cell.mergeV, cell.col, cell.mergeH))
                 posn = "%s,%s" % (cell.row, cell.col)
                 if matrix.matrix[posn]:
-                    log.debug(matrix.matrix[posn])
+                    s3_debug(matrix.matrix[posn])
             rows = math.ceil((len(text) / characters_in_cell) / (1 + cell.mergeH))
         else:
             sheet.write(cell.row,
@@ -938,7 +928,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     maxCol = 0
     for cell in matrix.matrix.values():
         if cell.col + cell.mergeH > 255:
-            current.log.warning("Cell (%s,%s) - (%s,%s) ignored" % \
+            s3base.s3_debug("Cell (%s,%s) - (%s,%s) ignored" % \
                 (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV))
             continue
         if cell.col + cell.mergeH > maxCol:
@@ -970,13 +960,13 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                        joinedStyle
                                        )
                 except Exception as msg:
-                    log = current.log
-                    log.error(msg)
-                    log.debug("row: %s + vert: %s, col: %s + horiz %s" % \
-                              (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                    s3_debug = s3base.s3_debug
+                    s3_debug(msg)
+                    s3_debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                        (cell.row, cell.mergeV, cell.col, cell.mergeH))
                     posn = "%s,%s" % (cell.row, cell.col)
                     if matrix.matrix[posn]:
-                        log.debug(matrix.matrix[posn])
+                        s3_debug(matrix.matrix[posn])
             else:
                 sheet1.write(cell.row,
                              cell.col,
@@ -1026,23 +1016,25 @@ def completed_chart():
         chart drawn is managed by the analysis widget.
     """
 
-    series_id = get_vars.get("series_id")
-    if not series_id:
+    vars = request.vars
+    if "series_id" in vars:
+        seriesID = vars.series_id
+    else:
         return "Programming Error: Series ID missing"
-
-    question_id = get_vars.get("question_id")
-    if not question_id:
+    if "question_id" in vars:
+        qstnID = vars.question_id
+    else:
         return "Programming Error: Question ID missing"
-
-    q_type = get_vars.get("type")
-    if not q_type:
+    if "type" in vars:
+        type = vars.type
+    else:
         return "Programming Error: Question Type missing"
 
     getAnswers = s3db.survey_getAllAnswersForQuestionInSeries
-    answers = getAnswers(question_id, series_id)
-    analysisTool = survey_analysis_type[q_type](question_id, answers)
+    answers = getAnswers(qstnID, seriesID)
+    analysisTool = survey_analysis_type[type](qstnID, answers)
     qstnName = analysisTool.qstnWidget.question.name
-    image = analysisTool.drawChart(series_id, output="png")
+    image = analysisTool.drawChart(seriesID, output="png")
     return image
 
 # -----------------------------------------------------------------------------
@@ -1121,8 +1113,8 @@ def question_metadata():
 # -----------------------------------------------------------------------------
 def newAssessment():
     """
-        RESTful CRUD controller to create a new 'complete' survey
-        - although the created form is a fully custom one
+        RESTful CRUD controller
+        @ToDo: Why is this a specialised function?
     """
 
     # Load Model
@@ -1131,11 +1123,11 @@ def newAssessment():
 
     def prep(r):
         if r.interactive:
-            viewing = get_vars.get("viewing", None)
+            viewing = request.get_vars.get("viewing", None)
             if viewing:
                 dummy, series_id = viewing.split(".")
             else:
-                series_id = get_vars.get("series", None)
+                series_id = request.get_vars.get("series", None)
 
             if not series_id:
                 series_id = r.id
@@ -1155,11 +1147,11 @@ def newAssessment():
     def postp(r, output):
         if r.interactive:
             # Not sure why we need to repeat this & can't do it outside the prep/postp
-            viewing = get_vars.get("viewing", None)
+            viewing = request.get_vars.get("viewing", None)
             if viewing:
                 dummy, series_id = viewing.split(".")
             else:
-                series_id = get_vars.get("series", None)
+                series_id = request.get_vars.get("series", None)
 
             if not series_id:
                 series_id = r.id
@@ -1192,8 +1184,8 @@ def newAssessment():
     s3.postp = postp
 
     output = s3_rest_controller(module, "complete",
-                                method = "create",
-                                rheader = s3db.survey_series_rheader
+                                method="create",
+                                rheader=s3db.survey_series_rheader
                                 )
     return output
 
@@ -1208,7 +1200,7 @@ def complete():
 
     series_id = None
     try:
-        viewing = get_vars.get("viewing", None)
+        viewing = request.get_vars.get("viewing", None)
         if viewing:
             dummy, series_id = viewing.split(".")
             series_name = s3.survey_getSeriesName(series_id)
@@ -1240,7 +1232,7 @@ def complete():
             import xlrd
             from xlwt.Utils import cell_to_rowcol2
         except ImportError:
-            current.log.error("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
+            s3base.s3_debug("ERROR: xlrd & xlwt modules are needed for importing spreadsheets")
             return None
         workbook = xlrd.open_workbook(file_contents=uploadFile)
         try:
@@ -1342,9 +1334,8 @@ def analysis():
     """
 
     s3db.configure("survey_complete",
-                   deletable = False,
-                   listadd = False,
-                   )
+                   listadd=False,
+                   deletable=False)
 
     output = s3_rest_controller(module, "complete")
     return output
@@ -1353,20 +1344,20 @@ def analysis():
 def admin():
     """ Custom Page """
 
-    series_id = None
-    get_vars_new = Storage()
+    series_id = False
+    vars = Storage()
     try:
         series_id = int(request.args[0])
     except:
         try:
-            (dummy, series_id) = get_vars["viewing"].split(".")
+            (dummy, series_id) = request.vars["viewing"].split(".")
             series_id = int(series_id)
         except:
             pass
     if series_id:
-        get_vars_new.viewing = "survey_complete.%s" % series_id
+        vars.viewing = "survey_complete.%s" % series_id
 
     return dict(series_id = series_id,
-                vars = get_vars_new)
+                vars = vars)
 
 # END =========================================================================

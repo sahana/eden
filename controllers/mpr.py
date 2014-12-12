@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-""" Missing Person Registry """
+"""
+    Missing Person Registry
+
+    @author: nursix
+"""
 
 module = request.controller
 prefix = request.controller
@@ -103,24 +107,24 @@ def person():
         msg_list_empty = T("No Persons currently reported missing"))
 
     s3db.configure("pr_group_membership",
-                   list_fields=["id",
-                                "group_id",
-                                "group_head",
-                                "comments"
+                    list_fields=["id",
+                                 "group_id",
+                                 "group_head",
+                                 "description"
                                 ])
 
     s3db.configure(tablename,
-                   create_next = URL(c="mpr", f="person",
-                                     args=["[id]", "note", "create"],
-                                     vars=dict(status="missing")),
-                   list_fields=["id",
-                                "first_name",
-                                "middle_name",
-                                "last_name",
-                                "picture",
-                                "gender",
-                                "age_group",
-                                "missing"
+                    create_next = URL(c="mpr", f="person",
+                                      args=["[id]", "note", "create"],
+                                      vars=dict(status="missing")),
+                    list_fields=["id",
+                                 "first_name",
+                                 "middle_name",
+                                 "last_name",
+                                 "picture",
+                                 "gender",
+                                 "age_group",
+                                 "missing"
                                 ])
 
     def prep(r):
@@ -145,13 +149,17 @@ def person():
                     ntable.status.writable = False
                     ntable.timestmp.label = T("Date/Time when last seen")
                     ntable.note_text.label = T("Circumstances of disappearance")
-                    s3.crud_strings[str(ntable)].label_create = "Add Missing Report"
+                    s3.crud_strings[str(ntable)].update(
+                        title_create = "Add Missing Report",
+                        subtitle_create = "Add Missing Report")
                 elif status == "found":
                     ntable.status.default = 2
                     ntable.status.writable = False
                     ntable.timestmp.label = T("Date/Time when found")
                     ntable.note_text.label = T("Comments")
-                    s3.crud_strings[str(ntable)].abel_create = "Add Find Report"
+                    s3.crud_strings[str(ntable)].update(
+                        title_create = "Add Find Report",
+                        subtitle_create = "Add Find Report")
                 else:
                     ntable.status.default = 99
                     ntable.status.writable = True

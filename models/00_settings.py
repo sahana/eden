@@ -35,6 +35,13 @@ s3.download_url = "%s/default/download" % s3.base_url
 # Global variables
 
 # Strings to i18n
+messages["UNAUTHORISED"] = "Not authorised!"
+messages["BADFORMAT"] = "Unsupported data format!"
+messages["BADMETHOD"] = "Unsupported method!"
+messages["BADRECORD"] = "Record not found!"
+messages["INVALIDREQUEST"] = "Invalid request!"
+messages["XLWT_ERROR"] = "xlwt module not available within the running Python - this needs installing for XLS output!"
+messages["REPORTLAB_ERROR"] = "ReportLab module not available within the running Python - this needs installing for PDF output!"
 # Common Labels
 #messages["BREADCRUMB"] = ">> "
 messages["UNKNOWN_OPT"] = "Unknown"
@@ -45,43 +52,22 @@ messages["DELETE"] = "Delete"
 messages["COPY"] = "Copy"
 messages["NOT_APPLICABLE"] = "N/A"
 messages["ADD_PERSON"] = "Add Person"
-messages["ADD_LOCATION"] = "Create Location"
+messages["ADD_LOCATION"] = "Add Location"
 messages["SELECT_LOCATION"] = "Select a location"
 messages["COUNTRY"] = "Country"
 messages["ORGANISATION"] = "Organization"
-messages["AUTOCOMPLETE_HELP"] = "Enter some characters to bring up a list of possible matches"
 
 for u in messages:
     if isinstance(messages[u], str):
         globals()[u] = T(messages[u])
 
-# CRUD Labels
-s3.crud_labels = Storage(READ=READ,
-                         UPDATE=UPDATE,
-                         DELETE=DELETE,
-                         COPY=COPY,
-                         NONE=NONE,
-                         )
+# Pass to CRUD
+s3mgr.LABEL["READ"] = READ
+s3mgr.LABEL["UPDATE"] = UPDATE
+s3mgr.LABEL["DELETE"] = DELETE
+s3mgr.LABEL["COPY"] = COPY
+s3mgr.LABEL["NONE"] = NONE
 
-# Error Messages
-ERROR["BAD_RECORD"] = "Record not found!"
-ERROR["BAD_METHOD"] = "Unsupported method!"
-ERROR["BAD_FORMAT"] = "Unsupported data format!"
-ERROR["BAD_REQUEST"] = "Invalid request"
-ERROR["BAD_SOURCE"] = "Invalid source"
-ERROR["BAD_TEMPLATE"] = "XSLT stylesheet not found"
-ERROR["BAD_RESOURCE"] = "Nonexistent or invalid resource"
-ERROR["DATA_IMPORT_ERROR"] = "Data import error"
-ERROR["INTEGRITY_ERROR"] = "Integrity error: record can not be deleted while it is referenced by other records"
-ERROR["METHOD_DISABLED"] = "Method disabled"
-ERROR["NO_MATCH"] = "No matching element found in the data source"
-ERROR["NOT_IMPLEMENTED"] = "Not implemented"
-ERROR["NOT_PERMITTED"] = "Operation not permitted"
-ERROR["PARSE_ERROR"] = "XML parse error"
-ERROR["TRANSFORMATION_ERROR"] = "XSLT transformation error"
-ERROR["UNAUTHORISED"] = "Not Authorized"
-ERROR["VALIDATION_ERROR"] = "Validation error"
-        
 # To get included in <HEAD>
 s3.stylesheets = []
 s3.external_stylesheets = []
@@ -98,8 +84,8 @@ s3.l10n_languages = settings.get_L10n_languages()
 # Default strings are in US English
 T.current_languages = ["en", "en-us"]
 # Check if user has selected a specific language
-if get_vars._language:
-    language = get_vars._language
+if request.get_vars._language:
+    language = request.get_vars._language
     session.s3.language = language
 elif session.s3.language:
     # Use the last-selected language
@@ -132,7 +118,9 @@ else:
     s3.language = "%s_%s" % (lang_parts[0], lang_parts[1].upper())
 
 # List of Languages which use a Right-to-Left script (Arabic, Hebrew, Farsi, Urdu)
-if language in ("ar", "prs", "ps", "ur"):
+s3_rtl_languages = ["ur", "ar"]
+
+if T.accepted_language in s3_rtl_languages:
     s3.rtl = True
 else:
     s3.rtl = False
@@ -144,6 +132,9 @@ _settings = auth.settings
 _settings.lock_keys = False
 
 _settings.expiration = 28800  # seconds
+
+_settings.facebook = settings.get_auth_facebook()
+_settings.google = settings.get_auth_google()
 
 if settings.get_auth_openid():
     # Requires http://pypi.python.org/pypi/python-openid/
@@ -184,8 +175,51 @@ _settings.on_failed_authorization = URL(c="default", f="user",
 _settings.reset_password_requires_verification = True
 _settings.verify_email_next = URL(c="default", f="index")
 
+# Auth Messages
+_messages = auth.messages
+
+_messages.verify_email = "Click on the link %(url)s%(key)s to verify your email" % \
+    dict(url="%s/default/user/verify_email/" % s3.base_url,
+         key="%(key)s")
+_messages.verify_email_subject = "%(system_name)s - Verify Email" % \
+    {"system_name" : settings.get_system_name()}
+_messages.reset_password = "%s %s/default/user/reset_password/%s %s" % \
+    (T("Click on the link"),
+     s3.base_url,
+     "%(key)s",
+     T("to reset your password"))
+_messages.help_mobile_phone = T("Entering a phone number is optional, but doing so allows you to subscribe to receive SMS messages.")
 # Require Admin approval for self-registered users
 _settings.registration_requires_approval = settings.get_auth_registration_requires_approval()
+_messages.registration_pending = settings.get_auth_registration_pending()
+
+_messages["approve_user"] = \
+"""Your action is required to approve a New User for %(system_name)s:
+%(name_format)s
+Please go to %(base_url)s/admin/user/%(id)s to approve this user.""" \
+% dict(system_name = settings.get_system_name(),
+       name_format = \
+"""%(first_name)s %(last_name)s
+%(email)s""",
+       base_url = s3.base_url,
+       id = "%(id)s")
+
+_messages["new_user"] = \
+"""A New User has registered for %(system_name)s:
+%(name_format)s
+No action is required.""" \
+% dict(system_name = settings.get_system_name(),
+       name_format = \
+"""%(first_name)s %(last_name)s
+%(email)s""")
+
+_messages["confirmation_email_subject"] = "%s %s" % (settings.get_system_name(),
+                                                     T("access granted"))
+_messages["confirmation_email"] = "%s %s %s %s. %s." % (T("Welcome to the"),
+                                                        settings.get_system_name(),
+                                                        T("Portal at"),
+                                                        s3.base_url,
+                                                        T("Thanks for your assistance"))
 
 # We don't wish to clutter the groups list with 1 per user.
 _settings.create_user_groups = False
@@ -268,10 +302,13 @@ _crud.confirm_delete = T("Do you really want to delete these records?")
 _crud.archive_not_delete = settings.get_security_archive_not_delete()
 _crud.navigate_away_confirm = settings.get_ui_navigate_away_confirm()
 
+s3mgr.crud = s3base.S3CRUD
+s3mgr.search = s3base.S3Search
+
 # Content Type Headers, default is application/xml for XML formats
 # and text/x-json for JSON formats, other content types must be
 # specified here:
-s3.content_type = Storage(
+s3mgr.content_type = Storage(
     tc = "application/atom+xml", # TableCast feeds
     rss = "application/rss+xml", # RSS
     georss = "application/rss+xml", # GeoRSS
@@ -279,13 +316,12 @@ s3.content_type = Storage(
 )
 
 # JSON Formats
-s3.json_formats = ["geojson", "s3json"]
+s3mgr.json_formats = ["geojson", "s3json"]
 
 # CSV Formats
-s3.csv_formats = ["hrf", "s3csv"]
+s3mgr.csv_formats = ["hrf", "s3csv"]
 
-# Datatables default number of rows per page
-s3.ROWSPERPAGE = 20
+s3mgr.ROWSPERPAGE = 20
 
 # Valid Extensions for Image Upload fields
 s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
@@ -293,18 +329,21 @@ s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF",
 # Default CRUD strings
 ADD_RECORD = T("Add Record")
 s3.crud_strings = Storage(
-    label_create = ADD_RECORD,
+    title_create = ADD_RECORD,
     title_display = T("Record Details"),
     title_list = T("Records"),
     title_update = T("Edit Record"),
+    title_search = T("Search Records"),
     title_map = T("Map"),
     title_report = T("Report"),
+    subtitle_create = T("Add New Record"),
     label_list_button = T("List Records"),
+    label_create_button = ADD_RECORD,
     label_delete_button = T("Delete Record"),
     msg_record_created = T("Record added"),
     msg_record_modified = T("Record updated"),
     msg_record_deleted = T("Record deleted"),
-    msg_list_empty = T("No Records available"),
+    msg_list_empty = T("No Records currently available"),
     msg_match = T("Matching Records"),
     msg_no_match = T("No Matching Records"),
     name_nice = T("Record"),

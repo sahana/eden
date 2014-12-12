@@ -8,8 +8,8 @@
 if request.is_local:
     # This is a request made from the local server
 
-    f = get_vars.get("format", None)
-    auth_token = get_vars.get("subscription", None)
+    f = request.get_vars.get("format", None)
+    auth_token = request.get_vars.get("subscription", None)
     if auth_token and f == "msg":
         # Subscription lookup request
         rtable = s3db.pr_subscription_resource
@@ -28,6 +28,26 @@ if request.is_local:
         else:
             # Anonymous request
             auth.s3_impersonate(None)
+    else:
+
+        # @todo: deprecate this:
+        search_subscription = request.get_vars.get("search_subscription", None)
+        if search_subscription:
+            # We're doing a request for a saved search
+            table = s3db.pr_saved_search
+            search = db(table.auth_token == search_subscription).select(table.pe_id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+            if search:
+                # Impersonate user
+                user_id = auth.s3_get_user_id(pe_id=search.pe_id)
+
+                if user_id:
+                    # Impersonate the user who is subscribed to this saved search
+                    auth.s3_impersonate(user_id)
+                else:
+                    # Request is ANONYMOUS
+                    auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can
@@ -204,7 +224,18 @@ def s3_barchart(r, **attr):
         except ValueError:
             raise HTTP(400, "Bad Request")
     else:
-        raise HTTP(501, ERROR.BAD_FORMAT)
+        raise HTTP(501, body=BADFORMAT)
+
+
+# -----------------------------------------------------------------------------
+def s3_guided_tour(output):
+    """
+        Helper function to attach a guided tour (if required) to the output
+    """
+    if request.get_vars.tour:
+        output = s3db.tour_builder(output)
+
+    return output
 
 # -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
@@ -258,15 +289,12 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     """
 
     # Customise Controller from Template
-    attr = settings.customise_controller("%s_%s" % (prefix or request.controller,
-                                                    resourcename or request.function),
-                                         **attr)
+    attr = settings.ui_customize("%s_%s" % (prefix or request.controller,
+                                            resourcename or request.function),
+                                 **attr)
 
     # Parse the request
     r = s3_request(prefix, resourcename)
-
-    # Customize target resource(s) from Template
-    r.customise_resource()
 
     # Configure standard method handlers
     set_handler = r.set_handler
@@ -280,13 +308,11 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                             vars={"from_record":r.id})))
     set_handler("deduplicate", s3base.S3Merge)
     set_handler("filter", s3base.S3Filter)
-    set_handler("hierarchy", s3base.S3HierarchyCRUD)
     set_handler("import", s3base.S3Importer)
     set_handler("map", s3base.S3Map)
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)
-    set_handler("report", s3base.S3Report, transform=True)
-    set_handler("timeplot", s3base.S3TimePlot) # temporary setting for testing
+    set_handler("report2", s3base.S3Report2) # temporary setting for testing
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
     
@@ -347,10 +373,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                                authorised=authorised,
                                                update=editable,
                                                native=native)("[id]")
-            if r.representation == "iframe" and not settings.get_ui_iframe_opens_full():
-                # If this request is in iframe-format, "open" should
-                # be in iframe-format as well
-                open_url = s3base.s3_set_extension(open_url, "iframe")
 
             # Add action buttons for Open/Delete/Copy as appropriate
             s3_action_buttons(r,
@@ -364,16 +386,16 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                               )
 
             # Override Add-button, link to native controller and put
-            # the primary key into get_vars for automatic linking
+            # the primary key into vars for automatic linking
             if native and not listadd and \
                s3_has_permission("create", tablename):
                 label = s3base.S3CRUD.crud_string(tablename,
-                                                  "label_create")
+                                                  "label_create_button")
                 hook = r.resource.components[name]
                 fkey = "%s.%s" % (name, hook.fkey)
-                get_vars_copy = get_vars.copy()
-                get_vars_copy.update({fkey: r.record[hook.fkey]})
-                url = URL(prefix, name, args=["create"], vars=get_vars_copy)
+                vars = request.vars.copy()
+                vars.update({fkey: r.record[hook.fkey]})
+                url = URL(prefix, name, args=["create"], vars=vars)
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
@@ -384,8 +406,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                         "deduplicate"):
         s3.actions = None
 
-    if get_vars.tour:
-        output = s3db.tour_builder(output)
+    output = s3_guided_tour(output)
 
     return output
 

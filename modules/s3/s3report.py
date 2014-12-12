@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Pivot Table Reports Method
+""" S3 Reporting Framework
 
-    @copyright: 2011-2014 (c) Sahana Software Foundation
+    @copyright: 2011-2013 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{Python 2.6}} <http://www.python.org>}
@@ -29,8 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import os
-import re
+import datetime
 
 try:
     import json # try stdlib (Python 2.6)
@@ -41,787 +40,631 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
-from gluon.storage import Storage
 from gluon.html import *
+from gluon.languages import lazyT
 from gluon.sqlhtml import OptionsWidget
-from gluon.validators import IS_IN_SET, IS_EMPTY_OR
+from gluon.storage import Storage
+from gluon.validators import IS_EMPTY_OR
 
-from s3rest import S3Method
-
-layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
-
-# Compact JSON encoding
-SEPARATORS = (",", ":")
+from s3crud import S3CRUD
+from s3data import S3PivotTable
+from s3search import S3Search
+from s3validators import IS_IN_SET
 
 # =============================================================================
-class S3Report(S3Method):
+class S3Report(S3CRUD):
     """ RESTful method for pivot table reports """
+
+    T = current.T
+    SHOW = T("Show")
+    HIDE = T("Hide")
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Page-render entry point for REST interface.
+            API entry point
 
             @param r: the S3Request instance
             @param attr: controller attributes for the request
         """
 
-        if r.http == "GET":
-            if r.representation == "geojson":
-                output = self.geojson(r, **attr)
-            else:
-                output = self.report(r, **attr)
+        if r.http in ("GET", "POST"):
+            output = self.report(r, **attr)
         else:
-            r.error(405, current.ERROR.BAD_METHOD)
+            r.error(405, current.manager.ERROR.BAD_METHOD)
         return output
 
     # -------------------------------------------------------------------------
     def report(self, r, **attr):
         """
-            Pivot table report page
+            Generate a pivot table report
 
             @param r: the S3Request instance
             @param attr: controller attributes for the request
-        """
-
-        output = {}
-
-        resource = self.resource
-        get_config = resource.get_config
-
-        show_filter_form = False
-        if r.representation in ("html", "iframe"):
-            filter_widgets = get_config("filter_widgets", None)
-            if filter_widgets and not self.hide_filter:
-                # Apply filter defaults (before rendering the data!)
-                from s3filter import S3FilterForm
-                show_filter_form = True
-                S3FilterForm.apply_filter_defaults(r, resource)
-
-        # Filter
-        response = current.response
-        s3_filter = response.s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
-        widget_id = "pivottable"
-
-        # @todo: make configurable:
-        maxrows = 10
-        maxcols = 10
-
-        # Extract the relevant GET vars
-        report_vars = ("rows", "cols", "fact", "aggregate", "totals")
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
-
-        # Fall back to report options defaults
-        report_options = get_config("report_options", {})
-        defaults = report_options.get("defaults", {})
-
-        if not any (k in get_vars for k in ("rows", "cols", "fact")):
-            get_vars = defaults
-        get_vars["chart"] = r.get_vars.get("chart",
-                              defaults.get("chart", None))
-        get_vars["table"] = r.get_vars.get("table",
-                              defaults.get("table", None))
-
-        # Generate the pivot table
-        if get_vars:
-
-            rows = get_vars.get("rows", None)
-            cols = get_vars.get("cols", None)
-            layer = get_vars.get("fact", "id")
-
-            if layer is not None:
-                m = layer_pattern.match(layer)
-                if m is None:
-                    # Backward-compatiblity: alternative "aggregate" option
-                    selector = layer
-                    if get_vars and "aggregate" in get_vars:
-                        method = get_vars["aggregate"]
-                    else:
-                        method = "count"
-                else:
-                    selector, method = m.group(2), m.group(1)
-
-            if not layer or not any([rows, cols]):
-                pivottable = None
-            else:
-                prefix = resource.prefix_selector
-                selector = prefix(selector)
-                layer = (selector, method)
-                get_vars["rows"] = prefix(rows) if rows else None
-                get_vars["cols"] = prefix(cols) if cols else None
-                get_vars["fact"] = "%s(%s)" % (method, selector)
-
-                pivottable = resource.pivottable(rows, cols, [layer])
-        else:
-            pivottable = None
-
-        # Render as JSON-serializable dict
-        if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
-        else:
-            pivotdata = None
-
-        if r.representation in ("html", "iframe"):
-
-            tablename = resource.tablename
-
-            output["title"] = self.crud_string(tablename, "title_report")
-
-            # Filter widgets
-            if show_filter_form:
-                advanced = False
-                for widget in filter_widgets:
-                    if "hidden" in widget.opts and widget.opts.hidden:
-                        advanced = resource.get_config("report_advanced", True)
-                        break
-
-                filter_formstyle = get_config("filter_formstyle", None)
-                filter_form = S3FilterForm(filter_widgets,
-                                           formstyle=filter_formstyle,
-                                           advanced=advanced,
-                                           submit=False,
-                                           _class="filter-form",
-                                           _id="%s-filter-form" % widget_id)
-                fresource = current.s3db.resource(tablename)
-                alias = resource.alias if r.component else None
-                filter_widgets = filter_form.fields(fresource,
-                                                    r.get_vars,
-                                                    alias=alias)
-            else:
-                # Render as empty string to avoid the exception in the view
-                filter_widgets = None
-
-            # Generate the report form
-            ajax_vars = Storage(r.get_vars)
-            ajax_vars.update(get_vars)
-            filter_url = r.url(method="",
-                               representation="",
-                               vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                        if k not in report_vars)))
-            ajaxurl = attr.get("ajaxurl", r.url(method="report",
-                                                representation="json",
-                                                vars=ajax_vars))
-
-            output["form"] = S3ReportForm(resource) \
-                                    .html(pivotdata,
-                                          get_vars = get_vars,
-                                          filter_widgets = filter_widgets,
-                                          ajaxurl = ajaxurl,
-                                          filter_url = filter_url,
-                                          widget_id = widget_id)
-
-            # View
-            response.view = self._view(r, "report.html")
-
-        elif r.representation == "json":
-
-            output = json.dumps(pivotdata, separators=SEPARATORS)
-
-        else:
-            r.error(501, current.ERROR.BAD_FORMAT)
-
-        return output
-
-    # -------------------------------------------------------------------------
-    def geojson(self, r, **attr):
-        """
-            Render the pivot table data as a dict ready to be exported as
-            GeoJSON for display on a Map.
-
-            @param r: the S3Request instance
-            @param attr: controller attributes for the request
-        """
-
-        resource = self.resource
-        response = current.response
-        s3 = response.s3
-
-        # Filter
-        s3_filter = s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
-        # Extract the relevant GET vars
-        report_vars = ("fact", "level")
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
-
-        # Fall back to report options defaults
-        get_config = resource.get_config
-        report_options = get_config("report_options", {})
-        defaults = report_options.get("defaults", {})
-
-        # The rows dimension
-        level = get_vars.get("level", "L0")
-        # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
-        context = get_config("context")
-        if context and "location" in context:
-            rows = "(location)$%s" % level
-        else:
-            # Fallback to location_id
-            rows = "location_id$%s" % level
-            # Fallback we can add if-required
-            #rows = "site_id$location_id$%s" % level
-
-        # Build the Pivot Table
-        cols = None
-        layer = get_vars.get("fact",
-                             defaults.get("fact",
-                                          "count(id)"))
-        m = layer_pattern.match(layer)
-        selector, method = m.group(2), m.group(1)
-        prefix = resource.prefix_selector
-        selector = prefix(selector)
-        layer = (selector, method)
-        pivottable = resource.pivottable(rows, cols, [layer])
-
-        # Extract the Location Data
-        ids, location_data = pivottable.geojson(layer=layer, level=level)
-
-        # Set XSLT stylesheet
-        stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")
-
-        gresource = current.s3db.resource("gis_location", id=ids)
-        output = gresource.export_xml(fields=[],
-                                      mcomponents=None,
-                                      references=[],
-                                      stylesheet=stylesheet,
-                                      as_json=True,
-                                      location_data=location_data,
-                                      )
-        # Set response headers
-        response.headers["Content-Type"] = s3.content_type.get("geojson",
-                                                               "application/json")
-
-        # Transformation error?
-        if not output:
-            r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
-
-        return output
-
-    # -------------------------------------------------------------------------
-    def widget(self, r, method=None, widget_id=None, visible=True, **attr):
-        """
-            Pivot table report widget
-
-            @param r: the S3Request
-            @param method: the widget method
-            @param widget_id: the widget ID
-            @param visible: whether the widget is initially visible
-            @param attr: controller attributes
-        """
-
-        output = {}
-
-        resource = self.resource
-        get_config = resource.get_config
-
-        # Filter
-        s3_filter = current.response.s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
-        # @todo: make configurable:
-        maxrows = 20
-        maxcols = 20
-
-        # Extract the relevant GET vars
-        report_vars = ("rows", "cols", "fact", "aggregate", "totals")
-        get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
-                        if k in report_vars)
-
-        # Fall back to report options defaults
-        report_options = get_config("report_options", {})
-        defaults = report_options.get("defaults", {})
-
-        if not any (k in get_vars for k in ("rows", "cols", "fact")):
-            get_vars = defaults
-        get_vars["chart"] = r.get_vars.get("chart",
-                              defaults.get("chart", None))
-        get_vars["table"] = r.get_vars.get("table",
-                              defaults.get("table", None))
-
-        # Generate the pivot table
-        if get_vars:
-
-            rows = get_vars.get("rows", None)
-            cols = get_vars.get("cols", None)
-            layer = get_vars.get("fact", "id")
-
-            # Backward-compatiblity: alternative "aggregate" option
-            if layer is not None:
-                m = layer_pattern.match(layer)
-                if m is None:
-                    selector = layer
-                    if get_vars and "aggregate" in get_vars:
-                        method = get_vars["aggregate"]
-                    else:
-                        method = "count"
-                else:
-                    selector, method = m.group(2), m.group(1)
-
-            if not layer or not any([rows, cols]):
-                pivottable = None
-            else:
-                prefix = resource.prefix_selector
-                selector = prefix(selector)
-                layer = (selector, method)
-                get_vars["rows"] = prefix(rows) if rows else None
-                get_vars["cols"] = prefix(cols) if cols else None
-                get_vars["fact"] = "%s(%s)" % (method, selector)
-
-                if visible:
-                    pivottable = resource.pivottable(rows, cols, [layer])
-                else:
-                    pivottable = None
-        else:
-            pivottable = None
-
-        # Render as JSON-serializable dict
-        if pivottable is not None:
-            pivotdata = pivottable.json(maxrows=maxrows, maxcols=maxcols)
-        else:
-            pivotdata = None
-
-        if r.representation in ("html", "iframe"):
-
-            # Generate the report form
-            ajax_vars = Storage(r.get_vars)
-            ajax_vars.update(get_vars)
-            filter_form = attr.get("filter_form", None)
-            filter_tab = attr.get("filter_tab", None)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
-            ajaxurl = attr.get("ajaxurl", r.url(method="report",
-                                                representation="json",
-                                                vars=ajax_vars))
-            output = S3ReportForm(resource).html(pivotdata,
-                                                 get_vars = get_vars,
-                                                 filter_widgets = None,
-                                                 ajaxurl = ajaxurl,
-                                                 filter_url = filter_url,
-                                                 filter_form = filter_form,
-                                                 filter_tab = filter_tab,
-                                                 widget_id = widget_id)
-
-        else:
-            r.error(501, current.ERROR.BAD_FORMAT)
-
-        return output
-
-# =============================================================================
-class S3ReportForm(object):
-    """ Helper class to render a report form """
-
-    def __init__(self, resource):
-
-        self.resource = resource
-
-    # -------------------------------------------------------------------------
-    def html(self,
-             pivotdata,
-             filter_widgets=None,
-             get_vars=None,
-             ajaxurl=None,
-             filter_url=None,
-             filter_form=None,
-             filter_tab=None,
-             widget_id=None):
-        """
-            Render the form for the report
-
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element base ID for the widgets
         """
 
         T = current.T
-        appname = current.request.application
+        response = current.response
+        session = current.session
+        s3 = session.s3
 
-        # Report options
-        report_options = self.report_options(get_vars = get_vars,
-                                             widget_id = widget_id)
+        tablename = self.tablename
 
-        # Pivot data
-        if pivotdata is not None:
-            labels = pivotdata["labels"]
+        # Get the options
+        # Figure out which set of options to use:
+        # POST > GET > session > table defaults > list view
+        if r.http == "POST":
+            # Form has been submitted
+            form_values = r.post_vars
+
+            # The totals option is used to turn OFF the totals cols/rows but
+            # post vars only contain checkboxes that are enabled and checked,
+            # hence add it here if not present
+            if "totals" not in r.post_vars:
+                form_values["totals"] = "off"
+
         else:
-            labels = None
-        hidden = {"pivotdata": json.dumps(pivotdata, separators=SEPARATORS)}
+            # Form has been requested
 
-        empty = T("No report specified.")
-        hide = T("Hide Table")
-        show = T("Show Table")
+            # Clear session options?
+            clear_opts = False
+            if "clear_opts" in r.get_vars:
+                clear_opts = True
+                del r.get_vars["clear_opts"]
+            if "clear_opts" in r.vars:
+                del r.vars["clear_opts"]
 
-        throbber = "/%s/static/img/indicator.gif" % appname
+            # Lambda to get the last value in a list
+            last = lambda opt: opt[-1] if type(opt) is list else opt
 
-        # Filter options
-        if filter_widgets is not None:
-            filter_options = self._fieldset(T("Filter Options"),
-                                            filter_widgets,
-                                            _id="%s-filters" % widget_id,
-                                            _class="filter-form")
-        else:
-            filter_options = ""
 
-        # Report form submit element
-        resource = self.resource
-        submit = resource.get_config("report_submit", True)
-        if submit:
-            _class = "pt-submit"
-            if submit is True:
-                label = T("Update Report")
-            elif isinstance(submit, (list, tuple)):
-                label = submit[0]
-                _class = "%s %s" % (submit[1], _class)
+            # Do we have URL options?
+            url_options = Storage([(k, last(v))
+                                   for k, v in r.get_vars.iteritems() if v and k not in ("table", "chart")])
+            if url_options:
+                form_values = url_options
+                if not form_values._formname:
+                    form_values._formname = "report"
+
             else:
-                label = submit
-            submit = TAG[""](
-                        INPUT(_type="button",
-                              _value=label,
-                              _class=_class))
+                # Do we have session options?
+                session_options = s3.report_options
+                if session_options and tablename in session_options:
+                    if clear_opts:
+                        # Clear all filter options (but not report options)
+                        opts = Storage([(o, v)
+                                    for o, v in session_options[tablename].items()
+                                    if o in ("rows", "cols", "fact", "aggregate", "show_totals")])
+                        session_options[tablename] = opts
+                        session_options = opts
+                    else:
+                        session_options = session_options[tablename]
+                else:
+                    session_options = Storage()
+                if session_options:
+                    form_values = session_options
+
+                # otherwise, fallback to report_options (table config)
+                else:
+                    report_options = self._config("report_options", Storage())
+                    if report_options and "defaults" in report_options:
+                        default_options = report_options["defaults"]
+                    else:
+                        default_options = Storage()
+                    if default_options:
+                        form_values = default_options
+                        if "_formname" not in form_values:
+                            form_values["_formname"] = "report"
+                    else:
+                        form_values = Storage()
+
+        # Remove the existing session filter if this is a new
+        if r.http == "GET" and r.representation != "aadata":
+            if "filter" in s3:
+                del s3["filter"]
+
+        # Generate the report and resource filter form
+        show_form = attr.get("interactive_report", True)
+        if show_form:
+
+            # Build the form and prepopulate with values we've got
+            opts = Storage(r.get_vars)
+            opts["clear_opts"] = "1"
+            clear_opts = A(T("Reset all filters"),
+                           _href=r.url(vars=opts),
+                           _class="action-lnk")
+            form = self._create_form(form_values, clear_opts=clear_opts)
+
+            # Validate the form; only compare to the session if
+            # POSTing to prevent cross-site scripting.
+            if r.http == "POST" and \
+               form.accepts(form_values,
+                            session,
+                            formname="report",
+                            onvalidation=self.report_options_validation):
+
+                # Store options in session
+                if "report_options" not in s3:
+                    s3.report_options = Storage()
+
+                s3.report_options[tablename] = Storage([(k, v)
+                                        for k, v in form_values.iteritems()
+                                            if v and not k[0] == "_"])
+
+            elif not form.errors:
+                form.vars = form_values
+
+            # Use the form values to generate the filter
+            dq, vq, errors = self._process_filter_options(form)
+            if not errors:
+                self.resource.add_filter(dq)
+                self.resource.add_filter(vq)
+                query = dq
+                if vq is not None:
+                    if query is not None:
+                        query &= vq
+                    else:
+                        query = vq
+            else:
+                query = None
+
         else:
-            submit = ""
+            query = None
+            form = None
 
-        # General layout (@todo: make configurable)
-        form = DIV(DIV(FORM(filter_options,
-                            report_options,
-                            submit,
-                            hidden = hidden,
-                            _class = "pt-form",
-                            _id = "%s-pt-form" % widget_id,
-                            ),
-                       _class="pt-form-container form-container",
-                       ),
-                   DIV(IMG(_src=throbber,
-                           _alt=current.T("Processing"),
-                           _class="pt-throbber"),
-                       DIV(DIV(_class="pt-chart-controls"),
-                           DIV(DIV(_class="pt-hide-chart"),
-                               DIV(_class="pt-chart-title"),
-                               DIV(_class="pt-chart"),
-                               _class="pt-chart-contents"
-                           ),
-                           _class="pt-chart-container"
-                       ),
-                       DIV(hide,
-                           _class="pt-toggle-table pt-hide-table"),
-                       DIV(show,
-                           _class="pt-toggle-table pt-show-table"),
-                       DIV(DIV(_class="pt-table-controls"),
-                           DIV(DIV(_class="pt-table"),
-                               _class="pt-table-contents"
-                           ),
-                           _class="pt-table-container"
-                       ),
-                       DIV(empty, _class="pt-empty"),
-                   ),
-                   _class="pt-container",
-                   _id=widget_id
-               )
+        # Process the form values
+        # Get rows, cols, fact and aggregate
+        rows = form_values.get("rows", None)
+        cols = form_values.get("cols", None)
+        fact = form_values.get("fact", None)
+        aggregate = form_values.get("aggregate", "list")
+        if not aggregate:
+            aggregate = "list"
 
-        # Settings
-        settings = current.deployment_settings
+        # Fall back to list view if no dimensions specified
+        if not rows and not cols:
+            self.method = "list"
 
-        # Default options
-        opts = {
-            #"renderFilter": True,
-            #"collapseFilter": False,
-
-            #"renderOptions": True,
-            "collapseOptions": settings.get_ui_hide_report_options(),
-
-            "renderTable": True,
-            "collapseTable": False,
-            "showTotals": self.show_totals,
-
-            "ajaxURL": ajaxurl,
-
-            "renderChart": True,
-            "collapseChart": True,
-            "defaultChart": None,
-
-            "exploreChart": True,
-            "filterURL": filter_url,
-            "filterTab": filter_tab,
-            "filterForm": filter_form,
-
-            "autoSubmit": settings.get_ui_report_auto_submit(),
-
-            "thousandSeparator": settings.get_L10n_thousands_separator(),
-            "thousandGrouping": settings.get_L10n_thousands_grouping(),
-        }
-
-        chart_opt = get_vars["chart"]
-        if chart_opt is not None:
-            if str(chart_opt).lower() in ("0", "off", "false"):
-                opts["renderChart"] = False
-            elif ":" in chart_opt:
-                opts["collapseChart"] = False
-                ctype, caxis = chart_opt.split(":", 1)
-                opts["defaultChart"] = {"type": ctype, "axis": caxis}
-
-        table_opt = get_vars["table"]
-        if table_opt is not None:
-            table_opt = str(table_opt).lower()
-            if table_opt in ("0", "off", "false"):
-                opts["renderTable"] = False
-            elif table_opt == "collapse":
-                opts["collapseTable"] = True
-
-        # Scripts
-        s3 = current.response.s3
-        scripts = s3.scripts
-        if s3.debug:
-            script = "/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname
-            if script not in scripts:
-                scripts.append(script)
-            script = "/%s/static/scripts/flot/jquery.flot.js" % appname
-            if script not in scripts:
-                scripts.append(script)
-            script = "/%s/static/scripts/flot/jquery.flot.pie.js" % appname
-            if script not in scripts:
-                scripts.append(script)
+        # Show totals?
+        show_totals = form_values.get("totals", True)
+        if show_totals and str(show_totals).lower() in ("false", "off"):
+            show_totals = False
         else:
-            script = "/%s/static/scripts/S3/s3.pivotTables.min.js" % appname
-            if script not in scripts:
-                scripts.append(script)
+            show_totals = True
 
-        script = '''$('#%(widget_id)s').pivottable(%(opts)s)''' % \
-                                        dict(widget_id = widget_id,
-                                             opts = json.dumps(opts,
-                                                               separators=SEPARATORS),
-                                             )
+        # Get the layers
+        layers = []
+        if not fact:
+            table = self.table
+            if "name" in table:
+                fact = "name"
+            else:
+                fact = table._id.name
+        if fact:
+            if not isinstance(fact, list):
+                fact = [fact]
+            for f in fact:
+                f = f.split(",")
+                for l in f:
+                    if ":" in l:
+                        method, layer = l.split(":", 1)
+                    else:
+                        method = aggregate
+                        layer = l
+                    layers.append((layer, method))
 
-        s3.jquery_ready.append(script)
+        # Generate the report
+        resource = self.resource
+        representation = r.representation
+
+        if not form.errors and self.method == "report":
+
+            # Get a pivot table from the resource
+            try:
+                report = resource.pivottable(rows, cols, layers)
+            except ImportError:
+                msg = T("S3PivotTable unresolved dependencies")
+                import sys
+                e = sys.exc_info()[1]
+                if hasattr(e, "message"):
+                    e = e.message
+                else:
+                    e = str(e)
+                msg = "%s: %s" % (msg, e)
+                r.error(400, msg, next=r.url(vars={"clear":1}))
+            except:
+                raise
+                msg = T("Could not generate report")
+                import sys
+                e = sys.exc_info()[1]
+                if hasattr(e, "message"):
+                    e = e.message
+                else:
+                    e = str(e)
+                msg = "%s: %s" % (msg, e)
+                r.error(400, msg, next=r.url(vars={"clear":1}))
+
+            if representation in ("html", "iframe"):
+                if not report.empty:
+                    items = report.html(show_totals=show_totals,
+                                        filter_query=query,
+                                        url=r.url(method=""),
+                                        _id="datatable",
+                                        _class="dataTable display report")
+                    report_data = report.report_data
+                    json_data = report_data.json_data
+                else:
+                    items = self.crud_string(tablename, "msg_no_match")
+                    hide_opts = current.deployment_settings.get_ui_hide_report_options()
+                    report_data = None
+                    json_data = json.dumps({"cols": None,
+                                            "rows": None,
+                                            "h": hide_opts,
+                                            })
+
+                report_options = self._config("report_options", Storage())
+
+                # Display options
+
+                # Show or hide the pivot table by default?
+                # either report_options.table=True|False or URL ?table=1|0
+                get_vars = r.get_vars
+                hide, show = {}, {"_style": "display:none;"}
+                if "table" in get_vars and r.get_vars["table"] != "1" or \
+                   report_options and report_options.get("table", False):
+                    hide, show = show, hide
+
+                # Which chart to show by default?
+                # either report_options.chart="type:dim" or URL ?chart=type:dim
+                # type=piechart|barchart|breakdown|hide (defaults to hide)
+                # dim=rows|cols (defaults to rows)
+                chart_opt = get_vars.get("chart", report_options.get("chart", None))
+                chart_dim = "rows"
+                if chart_opt:
+                    if ":" in chart_opt:
+                        chart_type, chart_dim = chart_opt.split(":", 1)
+                    else:
+                        chart_type = chart_opt
+                else:
+                    chart_type = "hide"
+                chart_opts = '''chart_opts=%s''' % json.dumps({"type":chart_type, "dim": chart_dim})
+
+                # Render the pivot table + controls
+                pivot_table = DIV(
+                    DIV(
+                        DIV(T("Hide Pivot Table"), _class="pivot-table-toggle", **hide),
+                        DIV(T("Show Pivot Table"), _class="pivot-table-toggle", **show),
+                        _class="pivot-table-control"
+                    ),
+                    DIV(items, _class="pivot-table-contents", **hide),
+                    _id="pivot-table"
+                )
+                output = dict(pivot_table=pivot_table,
+                              chart_opts=chart_opts,
+                              report_data=report_data,
+                              json_data=json_data,
+                              )
+
+                # Other output options
+                s3 = response.s3
+                s3.dataTable_iDisplayLength = 50
+                s3.no_formats = True
+                s3.no_sspag = True
+                s3.actions = []
+                output["sortby"] = [[0, "asc"]]
+
+            else:
+                r.error(501, current.manager.ERROR.BAD_FORMAT)
+
+        elif representation in ("html", "iframe"):
+           
+            output = dict(pivot_table="",
+                          chart_opts=None,
+                          report_data=None,
+                          json_data = """{}""")
+
+        else:
+            r.error(501, current.manager.ERROR.BAD_METHOD)
+
+        # Complete the page
+        if representation in ("html", "iframe"):
+            crud_string = self.crud_string
+            title = crud_string(tablename, "title_report")
+            if not title:
+                title = crud_string(tablename, "title_list")
+            if form is not None:
+                form = DIV(DIV(form,
+                               _id="reportform"),
+                           _style="margin-bottom: 5px;")
+            else:
+                form = ""
+            output["title"] = title
+            output["form"] = form
+            response.view = self._view(r, "report.html")
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _create_form(self, form_values=None, clear_opts=""):
+        """
+            Create the report filter and options form
+
+            @param form_values: the form values to populate the widgets
+            @clear_opts: action link to clear all filter opts
+        """
+
+        T = current.T
+
+        filter_options = self._filter_options(form_values)
+        report_options, hidden = self._report_options(form_values)
+
+        if filter_options is None:
+            filter_options = ""
+        if report_options is None:
+            report_options = ""
+        
+        form = FORM(filter_options,
+                    report_options,
+                    DIV(INPUT(_value=current.T("Submit"),
+                              _type="submit",
+                              _class="report-submit-button",
+                              ),
+                        clear_opts
+                       ),
+                    hidden=hidden,
+                   )
 
         return form
 
     # -------------------------------------------------------------------------
-    def report_options(self, get_vars=None, widget_id="pivottable"):
+    def _filter_options(self, form_values=None):
         """
-            Render the widgets for the report options form
+            Render the filter options for the form
 
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element base ID for the widgets
+            @param form_values: the form values to populate the widgets
         """
+
+        report_options = self._config("report_options", None)
+        if not report_options:
+            return None
+        filter_widgets = report_options.get("search", None)
+        if not filter_widgets:
+            return None
 
         T = current.T
 
-        SHOW_TOTALS = T("Show totals")
-        FACT = T("Report of")
-        ROWS = T("Grouped by")
-        COLS = T("and")
-
         resource = self.resource
-        get_config = resource.get_config
-        options = get_config("report_options")
-        report_formstyle = get_config("report_formstyle", None)
+        vars = form_values if form_values else self.request.vars
+        trows = []
+        tappend = trows.append
+        for widget in filter_widgets:
+            name = widget.attr["_name"]
+            _widget = widget.widget(resource, vars)
+            if not name or _widget is None:
+                # Skip this widget as we have nothing but the label
+                continue
+            label = widget.field
+            if isinstance(label, (list, tuple)) and len(label):
+                label = label[0]
+            comment = ""
+            if hasattr(widget, "attr"):
+                label = widget.attr.get("label", label)
+                comment = widget.attr.get("comment", comment)
+            if comment:
+                comment = DIV(_class="tooltip",
+                              _title="%s|%s" % (label, comment))
+            tr = TR(TD("%s: " % label, _class="w2p_fl"),
+                    TD(widget.widget(resource, vars)),
+                    TD(comment))
+            tappend(tr)
+            
+        hide = current.deployment_settings.get_ui_hide_report_filter_options()
 
-        label = lambda s, **attr: LABEL("%s:" % s, **attr)
+        return FIELDSET(
+                    LEGEND(T("Filter Options"),
+                        BUTTON(self.SHOW,
+                               _type="button",
+                               _class="toggle-text",
+                               _style="display:none" if not hide else None),
+                        BUTTON(self.HIDE,
+                               _type="button",
+                               _class="toggle-text",
+                               _style="display:none" if hide else None)
+                    ),
+                    TABLE(trows,
+                          _style="display:none" if hide else None),
+                    _id="filter_options"
+                )
 
-        if report_formstyle:
-            # @ToDo: Full formstyle support
-            selectors = DIV()
-        else:
-            selectors = TABLE()
+    # -------------------------------------------------------------------------
+    def _report_options(self, form_values=None):
+        """
+            Render the report options for the form
+
+            @param form_values: the form values to populate the widgets
+        """
+
+        T = current.T
+        request = current.request
+        resource = self.resource
+
+        # Get the config options
+        _config = self._config
+        report_options = _config("report_options", Storage())
+
+        label = lambda s, **attr: TD(LABEL("%s:" % s, **attr),
+                                     _class="w2p_fl")
+
+        # Rows/Columns selector
+        fs = self._field_select
+        select_rows = fs("rows", report_options, form_values)
+        select_cols = fs("cols", report_options, form_values)
+        selectors = TABLE(TR(label(T("Report of"), _for="report-rows"),
+                             TD(select_rows),
+                             label(T("Grouped by"), _for="report-cols"),
+                             TD(select_cols)
+                            )
+                          )
 
         # Layer selector
-        layer_id = "%s-fact" % widget_id
-        layer, single = self.layer_options(options=options,
-                                           get_vars=get_vars,
-                                           widget_id=layer_id)
-        single_opt = {"_class": "pt-fact-single-option"} if single else {}
+        layer, hidden = self._method_select("fact",
+                                            report_options, form_values)
+        single_opt = {"_class": "report-fact-single-option"} \
+                     if hidden else {}
         if layer:
-            selectors.append(TR(TD(label(FACT, _for=layer_id)),
-                                TD(layer),
-                                **single_opt
-                               )
-                             )
-
-        # Rows/Columns selectors
-        axis_options = self.axis_options
-        rows_id = "%s-rows" % widget_id
-        cols_id = "%s-cols" % widget_id
-        select_rows = axis_options("rows",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=rows_id)
-        select_cols = axis_options("cols",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=cols_id)
-
-        selectors.append(TR(TD(label(ROWS, _for=rows_id)),
-                            TD(select_rows),
-                            TD(label(COLS, _for=cols_id)),
-                            TD(select_cols)
-                           )
-                        )
+            selectors.append(TR(label(T("Value"), _for="report-fact"),
+                                TD(layer), **single_opt))
 
         # Show Totals switch
-        show_totals_id = "%s-totals" % widget_id
+        # totals are "on" or True by default
         show_totals = True
-        if get_vars and "totals" in get_vars and \
-           str(get_vars["totals"]).lower() in ("0", "false", "off"):
-            show_totals = False
-        self.show_totals = show_totals
-
-        selectors.append(TR(TD(label(SHOW_TOTALS, _for=show_totals_id)),
+        if "totals" in form_values:
+            show_totals = form_values["totals"]
+            if str(show_totals).lower() in ("false", "off"):
+                show_totals = False
+        selectors.append(TR(TD(LABEL("%s:" % T("Show totals"),
+                                     _for="report-totals"),
+                               _class="w2p_fl"),
                             TD(INPUT(_type="checkbox",
-                                     _id=show_totals_id,
+                                     _id="report-totals",
                                      _name="totals",
-                                     _class="pt-totals",
-                                     value=show_totals
-                                    )
-                              ),
-                            _class = "pt-show-totals-option"
-                           )
+                                     value=show_totals)),
+                         _class = "report-show-totals-option")
                          )
 
         # Render field set
-        fieldset = self._fieldset(T("Report Options"),
-                                  selectors,
-                                  _id="%s-options" % widget_id)
-        return fieldset
+        form_report_options = FIELDSET(
+                LEGEND(T("Report Options"),
+                    BUTTON(self.SHOW,
+                           _type="button",
+                           _class="toggle-text",
+                           _style="display:none"),
+                    BUTTON(self.HIDE,
+                           _type="button",
+                           _class="toggle-text")
+                ),
+                selectors, _id="report_options")
+
+        return form_report_options, hidden
 
     # -------------------------------------------------------------------------
-    def axis_options(self, axis,
-                     options=None,
-                     get_vars=None,
-                     widget_id=None):
+    def _field_select(self, name, options=None, form_values=None, **attr):
         """
-            Construct an OptionsWidget for rows or cols axis
+            Returns a SELECT of field names
 
-            @param axis: "rows" or "cols"
+            @param name: the element name
             @param options: the report options
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element ID for the widget
+            @param form_values: the form values to populate the widget
+            @param attr: the HTML attributes for the widget
         """
 
         resource = self.resource
-        prefix = resource.prefix_selector
-
-        # Get all selectors
-        if options and axis in options:
-            fields = options[axis]
+        if options and name in options:
+            fields = options[name]
         else:
-            fields = resource.get_config("list_fields")
+            fields = self._config("list_fields", None)
         if not fields:
             fields = [f.name for f in resource.readable_fields()]
 
-        # Resolve the selectors
-        pkey = str(resource._id)
-        resolve_selector = resource.resolve_selector
-        rfields = []
-        append = rfields.append
-        for f in fields:
-            if isinstance(f, (tuple, list)):
-                label, selector = f[:2]
-            else:
-                label, selector = None, f
-            rfield = resolve_selector(selector)
-            if rfield.colname == pkey:
-                continue
-            if label:
-                rfield.label = label
-            append(rfield)
+        prefix = lambda v: "%s.%s" % (resource.alias, v) \
+                           if "." not in v.split("$", 1)[0] \
+                           else v.replace("~", resource.alias)
 
-        # Get current value
-        if get_vars and axis in get_vars:
-            value = get_vars[axis]
+        attr = Storage(attr)
+        if "_name" not in attr:
+            attr["_name"] = name
+        if "_id" not in attr:
+            attr["_id"] = "report-%s" % name
+
+        if form_values:
+            value = form_values.get(name, "")
         else:
             value = ""
         if value:
             value = prefix(value)
 
-        # Dummy field
-        opts = [(prefix(rfield.selector), rfield.label) for rfield in rfields]
-        dummy_field = Storage(name=axis, requires=IS_IN_SET(opts))
-
-        # Construct widget
-        return OptionsWidget.widget(dummy_field,
-                                    value,
-                                    _id=widget_id,
-                                    _name=axis,
-                                    _class="pt-%s" % axis)
+        table = self.table
+        rfields, j, l, d = resource.resolve_selectors(fields)
+        opts = [(prefix(f.selector), f.label) for f in rfields
+                if f.show and
+                   (f.field is None or f.field.name != table._id.name)]
+        dummy_field = Storage(name=name, requires=IS_IN_SET(opts))
+        return OptionsWidget.widget(dummy_field, value, **attr)
 
     # -------------------------------------------------------------------------
-    def layer_options(self,
-                      options=None,
-                      get_vars=None,
-                      widget_id=None):
+    def _method_select(self, name, options, form_values=None, **attr):
         """
-            Construct an OptionsWidget for the fact layer
+            Returns a SELECT of (field:method) options
 
+            @param name: the element name
             @param options: the report options
-            @param get_vars: the GET vars if the request (as dict)
-            @param widget_id: the HTML element ID for the widget
+            @param form_values: the form values to populate the widget
+            @param attr: the HTML attributes for the widget
         """
 
-        resource = self.resource
-
-        from s3data import S3PivotTable
-        all_methods = S3PivotTable.METHODS
-
-        # Get all layers
-        layers = None
-        methods = None
-        if options:
-            if "methods" in options:
-                methods = options["methods"]
-            if "fact" in options:
-                layers = options["fact"]
-        if not layers:
-            layers = resource.get_config("list_fields")
-        if not layers:
-            layers = [f.name for f in resource.readable_fields()]
-        if not methods:
-            methods = all_methods
-
-        # Resolve layer options
         T = current.T
         RECORDS = T("Records")
-        mname = S3PivotTable._get_method_label
 
-        def layer_label(rfield, method):
-            """ Helper to construct a layer label """
-            mlabel = mname(method)
-            flabel = rfield.label if rfield.label != "Id" else RECORDS
-            return T("%s (%s)") % (flabel, mlabel)
+        if "methods" in options:
+            all_methods = options["methods"]
+        else:
+            all_methods = S3PivotTable.METHODS
 
-        prefix = resource.prefix_selector
+        resource = self.resource
+        if options and name in options:
+            methods = options[name]
+        else:
+            methods = self._config("list_fields", None)
+        if not methods:
+            methods = [f.name for f in resource.readable_fields()]
 
-        layer_opts = []
-        for layer in layers:
+        prefix = lambda v: "%s.%s" % (resource.alias, v) \
+                           if "." not in v.split("$", 1)[0] \
+                           else v.replace("~", resource.alias)
 
-            # Parse option
-            if type(layer) is tuple:
-                label, s = layer
+        attr = Storage(attr)
+        if "_name" not in attr:
+            attr["_name"] = name
+        if "_id" not in attr:
+            attr["_id"] = "report-%s" % name
+
+        if form_values:
+            value = form_values.get(name, "")
+        else:
+            value = ""
+        if value:
+            value = prefix(value)
+
+        # Backward-compatiblity: render aggregate if given
+        if "aggregate" in form_values and ":" not in value:
+            value = "%s:%s" % (form_values["aggregate"], value)
+
+        # Resolve selectors, add method options
+        opts = []
+        for o in methods:
+
+            if type(o) is tuple and isinstance(o[0], lazyT):
+                # Backward compatibility
+                opt = [o]
             else:
-                label, s = None, layer
-            match = layer_pattern.match(s)
-            if match is not None:
-                s, m = match.group(2), match.group(1)
+                opt = list(o) if isinstance(o, (tuple, list)) else [o]
+            s = opt[0]
+            if isinstance(s, tuple):
+                label, selector = s
             else:
-                m = None
-
-            # Resolve the selector
-            selector = prefix(s)
+                label, selector = None, s
+            selector = prefix(selector)
             rfield = resource.resolve_selector(selector)
             if not rfield.field and not rfield.virtual:
                 continue
-            if m is None and label:
+            if label is not None:
                 rfield.label = label
+            else:
+                label = rfield.label if rfield.label != "Id" else RECORDS
 
-            if m is None:
-                # Only field given -> auto-detect aggregation methods
+            if len(opt) == 1:
                 is_amount = None
+                # Only field given -> auto-detect aggregation methods
                 ftype = rfield.ftype
                 if ftype == "integer":
                     is_amount = True
@@ -847,79 +690,80 @@ class S3ReportForm(object):
                     mopts = ["sum", "min", "max", "avg"]
                 else:
                     mopts = ["count", "list"]
-                for method in mopts:
-                    if method in methods:
-                        label = layer_label(rfield, method)
-                        layer_opts.append(("%s(%s)" % (method, selector), label))
+                opts.extend([(rfield, opt[0], m)
+                             for m in mopts if m in all_methods])
             else:
-                # Explicit method specified
-                if label is None:
-                    label = layer_label(rfield, m)
-                layer_opts.append(("%s(%s)" % (m, selector), label))
+                opt.insert(0, rfield)
+                opts.append(opt)
 
-        # Get current value
-        if get_vars and "fact" in get_vars:
-            layer = get_vars["fact"]
-        else:
-            layer = ""
-        if layer:
-            match = layer_pattern.match(layer)
-            if match is None:
-                layer = ""
+        # Construct missing labels
+        _methods = []
+        mname = S3PivotTable._get_method_label
+        for opt in opts:
+            if len(opt) == 3:
+                # field+method -> construct label
+                mlabel = mname(opt[2])
+                flabel = opt[0].label if opt[0].label != "Id" else RECORDS
+                label = T("%s (%s)") % (flabel, mlabel)
+                _methods.append((opt[0].selector, opt[2], label))
             else:
-                selector, method = match.group(2), match.group(1)
-                selector = prefix(selector)
-                layer = "%s(%s)" % (method, selector)
+                _methods.append((opt[0].selector, opt[2], opt[3]))
 
-        if len(layer_opts) == 1:
-            # Field is read-only if there is only 1 option
-            default = layer_opts[0]
-            widget = TAG[""](default[1],
-                             INPUT(_type="hidden",
-                                   _id=widget_id,
-                                   _name=widget_id,
-                                   _value=default[0]))
-            single = True
-        else:
-            # Render Selector
-            dummy_field = Storage(name="fact",
-                                  requires=IS_IN_SET(layer_opts))
-            widget = OptionsWidget.widget(dummy_field,
-                                          layer,
-                                          _id=widget_id,
-                                          _name="fact",
-                                          _class="pt-fact")
-            single = False
-
-        return widget, single
+        # Build the widget
+        opts = [("%s:%s" % (m[1], m[0]), m[2]) for m in _methods]
+        if len(opts) == 1:
+            opt = opts[0]
+            return opt[1], {name: opt[0]}
+        dummy_field = Storage(name=name, requires=IS_IN_SET(opts))
+        return OptionsWidget.widget(dummy_field, value, **attr), {}
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _fieldset(title, widgets, **attr):
+    def report_options_validation(form):
         """
-            Helper method to wrap widgets in a FIELDSET container with
-            show/hide option
+            Report options form validation
 
-            @param title: the title for the field set
-            @param widgets: the widgets
-            @param attr: HTML attributes for the field set
+            @param form: the form
         """
 
-        T = current.T
-        SHOW = T("Show")
-        HIDE = T("Hide")
+        if form.vars.rows == form.vars.cols:
+           form.errors.cols = current.T("Duplicate label selected")
 
-        return FIELDSET(LEGEND(title,
-                               BUTTON(SHOW,
-                                      _type="button",
-                                      _class="toggle-text",
-                                      ),
-                               BUTTON(HIDE,
-                                      _type="button",
-                                      _class="toggle-text",
-                                      )
-                        ),
-                        widgets,
-                        **attr)
+    # -------------------------------------------------------------------------
+    def _process_filter_options(self, form):
+        """
+            Processes the filter widgets into a filter query
+
+            @param form: the filter form
+
+            @rtype: tuple
+            @return: tuple containing (query object, validation errors)
+        """
+
+        default = (None, None, None)
+
+        report_options = self._config("report_options", None)
+        if not report_options:
+            return default
+
+        filter_widgets = report_options.get("search", None)
+        if not filter_widgets:
+            return default
+
+        resource = self.resource
+        dq, vq, errors = default
+        build_query = S3Search._build_widget_query
+        for widget in filter_widgets:
+            if hasattr(widget, "name"):
+                name = widget.name
+            else:
+                name = widget.attr.get("_name", None)
+
+            dq, vq, errors = build_query(resource, name, widget, form, dq, vq)
+            if errors:
+                form.errors.update(errors)
+
+        errors = form.errors
+        return (dq, vq, errors)
 
 # END =========================================================================

@@ -456,14 +456,10 @@ a.popup_link:hover {
     <td>%(Pass)s</td>
     <td>%(fail)s</td>
     <td>%(error)s</td>
-""" # variables: (style, desc, count, Pass, fail, error, cid)
-    # Use it with REPORT_CLASS_TMPL_ADD_LINK to complete the table
-
-    REPORT_CLASS_TMPL_ADD_LINK = r"""
     <td><a href="javascript:showClassDetail('%(cid)s',%(count)s)">Detail</a></td>
 </tr>
-""" # variables: (cid, count)
-    # Use it after REPORT_CLASS_TMPL
+""" # variables: (style, desc, count, Pass, fail, error, cid)
+
 
     REPORT_TEST_WITH_OUTPUT_TMPL = r"""
 <tr id='%(tid)s' class='%(Class)s'>
@@ -471,7 +467,7 @@ a.popup_link:hover {
     <td colspan='5' align='center'>
 
     <!--css div popup start-->
-    <a class="popup_link" onfocus='this.blur()' href="javascript:showTestDetail('div_%(tid)s')" >
+    <a class="popup_link" onfocus='this.blur();' href="javascript:showTestDetail('div_%(tid)s')" >
         %(status)s</a>
 
     <div id='div_%(tid)s' class="popup_window">
@@ -574,14 +570,6 @@ class _TestResult(TestResult):
 
 
     def addSuccess(self, test):
-        # broken_links testcase passes by default; calling addSuccess.
-        # Below condition checks if a link failed in smoke tests and if it did; addFailure
-        # is called
-        if "smoke_results" in current.data:
-            if current.data['smoke_results']['broken_links_count'] != 0:
-                self.addFailure(test,("Broken Links Found", None, None))
-                return
-
         self.success_count += 1
         TestResult.addSuccess(self, test)
         output = self.complete_output()
@@ -671,16 +659,10 @@ class HTMLTestRunner(Template_mixin):
         # Get the current template
         settings = current.deployment_settings
         template = settings.get_template()
-
+        
         startTime = str(self.startTime)[:19]
         duration = str(self.stopTime - self.startTime)
         status = []
-        # change counts if smoke test has run
-        if 'smoke_results' in current.data:
-            sc, fc = self._get_smoke_results()
-            result.success_count = sc
-            result.failure_count = fc
-
         if result.success_count: status.append('Pass %s'    % result.success_count)
         if result.failure_count: status.append('Failure %s' % result.failure_count)
         if result.error_count:   status.append('Error %s'   % result.error_count  )
@@ -711,7 +693,6 @@ class HTMLTestRunner(Template_mixin):
             report = report,
             ending = ending,
         )
-        self.tearDown()
         self.stream.write(output.encode('utf8'))
 
 
@@ -734,10 +715,6 @@ class HTMLTestRunner(Template_mixin):
         )
         return heading
 
-    def _get_smoke_results(self):
-        sc = current.data['smoke_results']['working_links']
-        fc = current.data['smoke_results']['broken_links_count']
-        return sc, fc
 
     def _generate_report(self, result):
         rows = []
@@ -749,9 +726,6 @@ class HTMLTestRunner(Template_mixin):
                 if n == 0: np += 1
                 elif n == 1: nf += 1
                 else: ne += 1
-            # change counts if smoke test is run
-            if 'smoke_results' in current.data:
-                np, nf = self._get_smoke_results()
 
             # format class description
             if cls.__module__ == "__main__":
@@ -770,16 +744,6 @@ class HTMLTestRunner(Template_mixin):
                 error = ne,
                 cid = 'c%s' % (cid+1),
             )
-            # Only one row is generated in smoke tests
-            if 'smoke_results' in current.data:
-                total_count = 1
-            else:
-                total_count = np+nf+ne
-            row = row + self.REPORT_CLASS_TMPL_ADD_LINK % dict(
-                count = total_count,
-                cid = 'c%s' % (cid+1),
-            )
-
             rows.append(row)
 
             for tid, (n,t,o,e) in enumerate(cls_results):
@@ -837,10 +801,6 @@ class HTMLTestRunner(Template_mixin):
 
     def _generate_ending(self):
         return self.ENDING_TMPL
-
-    def tearDown(self):
-        if 'smoke_results' in current.data:
-            del current.data['smoke_results']
 
 
 ##############################################################################

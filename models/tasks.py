@@ -256,12 +256,10 @@ if settings.has_module("msg"):
     tasks["msg_process_keygraph"] = msg_process_keygraph
 
     # -------------------------------------------------------------------------
-    def msg_poll(tablename, channel_id, user_id=None):
+    def msg_poll(tablename, channel_id):
         """
             Poll an inbound channel
         """
-        if user_id:
-            auth.s3_impersonate(user_id)
         # Run the Task & return the result
         result = msg.poll(tablename, channel_id)
         db.commit()
@@ -270,12 +268,10 @@ if settings.has_module("msg"):
     tasks["msg_poll"] = msg_poll
 
     # -----------------------------------------------------------------------------
-    def msg_parse(channel_id, function_name, user_id=None):
+    def msg_parse(channel_id, function_name):
         """
             Parse Messages coming in from a Source Channel
         """
-        if user_id:
-            auth.s3_impersonate(user_id)
         # Run the Task & return the result
         result = msg.parse(channel_id, function_name)
         db.commit()
@@ -283,14 +279,25 @@ if settings.has_module("msg"):
 
     tasks["msg_parse"] = msg_parse
 
+    # --------------------------------------------------------------------------
+    def msg_search_subscription_notifications(frequency):
+        """
+            Search Subscriptions & send Notifications.
+            @ToDo: Deprecate
+        """
+        # Run the Task & return the result
+        result = s3db.msg_search_subscription_notifications(frequency=frequency)
+        db.commit()
+        return result
+
+    tasks["msg_search_subscription_notifications"] = msg_search_subscription_notifications
+
     # -------------------------------------------------------------------------
     def notify_check_subscriptions(user_id=None):
         """
             Scheduled task to check subscriptions for updates,
             creates notify_notify tasks where updates exist.
         """
-        if user_id:
-            auth.s3_impersonate(user_id)
         notify = s3base.S3Notifications()
         return notify.check_subscriptions()
 
@@ -305,8 +312,7 @@ if settings.has_module("msg"):
             @param subscription: JSON with the subscription data
             @param now: lookup date (@todo: remove this)
         """
-        if user_id:
-            auth.s3_impersonate(user_id)
+
         notify = s3base.S3Notifications
         return notify.notify(resource_id)
 
@@ -330,133 +336,6 @@ if settings.has_module("req"):
     tasks["req_add_from_template"] = req_add_from_template
 
 # -----------------------------------------------------------------------------
-if settings.has_module("setup"):
-
-    def deploy(playbook, private_key, host=["127.0.0.1"], only_tags="all", user_id=None):
-
-        pb = s3db.setup_create_playbook(playbook, host, private_key, only_tags)
-        pb.run()
-
-        processed_hosts = sorted(pb.stats.processed.keys())
-
-        for h in processed_hosts:
-            t = pb.stats.summarize(h)
-            if t["failures"] > 0:
-                raise Exception("One of the tasks failed")
-            elif t["unreachable"] > 0:
-                raise Exception("Host unreachable")
-
-    tasks["deploy"] = deploy
-
-    def setup_management(_type, instance_id, deployment_id, user_id=None):
-        import ansible.runner
-        s3db = current.s3db
-        db = current.db
-
-        # get all servers associated
-        stable = s3db.setup_server
-        servers = db(stable.deployment_id == deployment_id).select(stable.role,
-                                                                   stable.host_ip,
-                                                                   orderby=stable.role
-                                                                   )
-
-        # get deployment
-
-        dtable = s3db.setup_deployment
-        deployment = db(dtable.id == deployment_id).select(dtable.private_key,
-                                                           dtable.remote_user,
-                                                           limitby=(0, 1)).first()
-        private_key = os.path.join(current.request.folder, "uploads", deployment.private_key)
-
-        hosts = [server.host_ip for server in servers]
-        inventory = ansible.inventory.Inventory(hosts)
-
-        tasks = []
-        runner = ansible.runner.Runner
-
-        itable = s3db.setup_instance
-        instance = db(itable.id == instance_id).select(itable.type,
-                                                       limitby=(0, 1)).first()
-        instance_types = ["prod", "test", "demo"]
-
-        if _type == "clean":
-
-            host_ip = servers[0].host_ip
-
-            arguments = [dict(module_name = "service",
-                              module_args={"name": "uwsgi",
-                                           "status": "stop",
-                                           },
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=host_ip,
-                              inventory=inventory,
-                              sudo=True
-                              ),
-                          dict(module_name = "command",
-                              module_args="clean %s" % instance_types[instance.type - 1],
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=host_ip,
-                              inventory=inventory,
-                              sudo=True
-                              ),
-                          dict(module_name = "command",
-                              module_args="clean_eden %s" % instance_types[instance.type - 1],
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=servers[0].host_ip,
-                              inventory=inventory,
-                              sudo=True
-                              ),
-                          dict(module_name = "service",
-                              module_args={"name": "uwsgi",
-                                           "status": "start",
-                                           },
-                              remote_user=deployment.remote_user,
-                              private_key_file=private_key,
-                              pattern=host_ip,
-                              inventory=inventory,
-                              sudo=True
-                              ),
-                          ]
-
-            if len(servers) > 1:
-                host_ip = servers[2].host_ip
-                arguments[0]["pattern"] = host_ip
-                arguments[2]["pattern"] = host_ip
-                arguments[3]["pattern"] = host_ip
-
-            for argument in arguments:
-                tasks.append(runner(**argument))
-
-            # run the tasks
-            for task in tasks:
-                response = task.run()
-                if response["dark"]:
-                    raise Exception("Error contacting the server")
-
-        elif _type == "eden":
-            argument = dict(module_name="command",
-                            module_args="pull %s" % [instance_types[instance.type - 1]],
-                            remote_user=deployment.remote_user,
-                            private_key_file=private_key,
-                            pattern=servers[0].host_ip,
-                            inventory=inventory,
-                            sudo=True
-                            )
-
-            if len(servers) > 1:
-                argument["pattern"] = servers[2].host_ip
-
-            task = runner(**argument)
-            response = task.run()
-            if response["dark"]:
-                raise Exception("Error contacting the server")
-
-    tasks["setup_management"] = setup_management
-
-# --------------------e--------------------------------------------------------
 if settings.has_module("stats"):
     def stats_demographic_update_aggregates(records=None, user_id=None):
         """

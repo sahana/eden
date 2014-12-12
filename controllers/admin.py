@@ -35,9 +35,8 @@ def role():
     """
 
     # ACLs as component of roles
-    s3db.add_components("auth_group",
-                        **{auth.permission.TABLENAME: "group_id"}
-                       )
+    s3db.add_component(auth.permission.table,
+                       auth_group="group_id")
 
     def prep(r):
         if r.representation != "html":
@@ -73,31 +72,21 @@ def user():
         # Needed as Admin has all roles
         pe_ids = None
     elif s3_has_role("ORG_ADMIN"):
-        if settings.get_security_policy() < 6:
-            # Filter users to just those belonging to the Org Admin's Org & Descendants
-            otable = s3db.org_organisation
-            pe_id = db(otable.id == auth.user.organisation_id).select(otable.pe_id,
-                                                                      limitby=(0, 1),
-                                                                      cache=s3db.cache,
-                                                                      ).first().pe_id
-            pe_ids = s3db.pr_get_descendants(pe_id, entity_types="org_organisation")
-            pe_ids.append(pe_id)
-            s3.filter = (otable.pe_id.belongs(pe_ids)) & \
-                        (table.organisation_id == otable.id)
-        else:
-            # Filter users to just those belonging to the Org Admin's Realms
-            pe_ids = auth.user.realms[auth.get_system_roles().ORG_ADMIN]
-            if pe_ids:
-                otable = s3db.org_organisation
-                s3.filter = (otable.pe_id.belongs(pe_ids)) & \
-                            (table.organisation_id == otable.id)
+        # Filter users to just those belonging to the Org Admin's Org & Descendants
+        otable = s3db.org_organisation
+        pe_id = db(otable.id == auth.user.organisation_id).select(otable.pe_id,
+                                                                  limitby=(0, 1)
+                                                                  ).first().pe_id
+        pe_ids = s3db.pr_get_descendants(pe_id, entity_types="org_organisation")
+        pe_ids.append(pe_id)
+        s3.filter = (otable.pe_id.belongs(pe_ids)) & \
+                    (table.organisation_id == otable.id)
     else:
         auth.permission.fail()
 
     auth.configure_user_fields(pe_ids)
 
-    s3db.add_components("auth_user",
-                        auth_membership = "user_id")
+    s3db.add_component("auth_membership", auth_user="user_id")
 
     list_fields = ["first_name",
                    "last_name",
@@ -106,28 +95,21 @@ def user():
     lappend = list_fields.append
     if len(settings.get_L10n_languages()) > 1:
         lappend("language")
-    if auth.s3_has_role("ADMIN"):
-        if settings.get_auth_admin_sees_organisation():
-            lappend("organisation_id")
-    elif settings.get_auth_registration_requests_organisation():
+    if settings.get_auth_registration_requests_organisation():
         lappend("organisation_id")
     if settings.get_auth_registration_requests_organisation_group():
         lappend("org_group_id")
     if settings.get_auth_registration_requests_site():
         lappend("site_id")
-    link_user_to = settings.get_auth_registration_link_user_to()
-    if link_user_to and len(link_user_to) > 1 and settings.get_auth_show_link():
+    if settings.get_auth_registration_link_user_to() and settings.get_auth_show_link():
         lappend("link_user_to")
-    lappend((T("Registration"), "created_on"))
-    table.created_on.represent = s3base.S3DateTime.date_represent
     lappend((T("Roles"), "membership.group_id"))
 
     s3db.configure("auth_user",
+                   main="first_name",
                    create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
                    create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
-                   main = "first_name",
-                   #update_onaccept = lambda form: auth.s3_link_user(form.vars),
                    )
 
     def disable_user(r, **args):
@@ -180,14 +162,17 @@ def user():
                action=link_user)
 
     # CRUD Strings
-    ADD_USER = T("Create User")
+    ADD_USER = T("Add User")
     s3.crud_strings["auth_user"] = Storage(
-        label_create = ADD_USER,
+        title_create = ADD_USER,
         title_display = T("User Details"),
         title_list = T("Users"),
         title_update = T("Edit User"),
+        title_search = T("Search Users"),
         title_upload = T("Import Users"),
+        subtitle_create = T("Add New User"),
         label_list_button = T("List Users"),
+        label_create_button = ADD_USER,
         label_delete_button = T("Delete User"),
         msg_record_created = T("User added"),
         msg_record_modified = T("User updated"),
@@ -244,20 +229,19 @@ def user():
     def prep(r):
         if r.interactive:
             s3db.configure(r.tablename,
-                           addbtn = True,
-                           # Password confirmation
-                           create_onvalidation = user_create_onvalidation,
-                           deletable = False,
+                           deletable=False,
                            # jquery.validate is clashing with dataTables so don't embed the create form in with the List
-                           listadd = False,
+                           listadd=False,
+                           addbtn=True,
                            sortby = [[2, "asc"], [1, "asc"]],
-                           )
+                           # Password confirmation
+                           create_onvalidation = user_create_onvalidation)
         elif r.representation == "xls":
             lappend((T("Status"), "registration_key"))
 
         if r.method == "delete" and r.http == "GET":
             if r.id == session.auth.user.id: # we're trying to delete ourself
-                get_vars.update({"user.id":str(r.id)})
+                request.get_vars.update({"user.id":str(r.id)})
                 r.id = None
                 s3db.configure(r.tablename,
                                delete_next = URL(c="default", f="user/logout"))
@@ -326,43 +310,59 @@ def user():
             form = output.get("form", None)
             if not form:
                 create_url = URL(args=["create"])
-                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Create User"),
+                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Add User"),
                                                                   _href=create_url)
                 return output
-            # Assume formstyle callable
-            id = "auth_user_password_two__row"
-            label = "%s:" % T("Verify password")
-            widget = INPUT(_name="password_two",
-                           _id="password_two",
-                           _type="password",
-                           _disabled="disabled",
-                           )
-            comment = ""
-            row = s3_formstyle(id, label, widget, comment, hidden=True)
-            if isinstance(row, tuple):
-                # Formstyle with separate row for label (e.g. default Eden formstyle)
-                tuple_rows = True
-                form[0].insert(8, row)
+            form.attributes["_id"] = "regform"
+            if s3_formstyle == "bootstrap":
+                div = DIV(LABEL("%s:" % T("Verify password"),
+                                _id="auth_user_password_two__label",
+                                _for="password_two",
+                                _class="control-label",
+                                ),
+                          DIV(INPUT(_name="password_two",
+                                    _id="password_two",
+                                    _type="password",
+                                    _disabled="disabled",
+                                    _class="password input-xlarge",
+                                    ),
+                              _class="controls",
+                              ),
+                          # Somewhere to store Error Messages
+                          SPAN(_class="help-block"),
+                          _id="auth_user_password_two__row",
+                          _class="control-group hide",
+                          )
+                form[0].insert(4, div)
+                # @ToDo:
+                #if settings.get_auth_registration_requests_mobile_phone():
             else:
-                # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
-                tuple_rows = False
-                form[0].insert(4, row)
-            # @ToDo: Ensure this reads existing values & creates/updates when saved
-            #if settings.get_auth_registration_requests_mobile_phone():
-            #    id = "auth_user_mobile__row"
-            #    label = LABEL("%s:" % settings.get_ui_label_mobile_phone(),
-            #                  _for="mobile",
-            #                  )
-            #    widget = INPUT(_name="mobile",
-            #                   _id="auth_user_mobile",
-            #                   _class="string",
-            #                   )
-            #    comment = ""
-            #    row = s3_formstyle(id, label, widget, comment)
-            #    if tuple_rows:
-            #        form[0].insert(-8, row)
-            #    else:
-            #        form[0].insert(-4, row)
+                # Assume callable
+                id = "auth_user_password_two__row"
+                label = "%s:" % T("Verify password")
+                widget = INPUT(_name="password_two",
+                               _id="password_two",
+                               _type="password",
+                               _disabled="disabled",
+                               )
+                comment = ""
+                row = s3_formstyle(id, label, widget, comment, hidden=True)
+                if s3.theme == "DRRPP":
+                    form[0].insert(4, row)
+                else:
+                    form[0].insert(8, row)
+                if settings.get_auth_registration_requests_mobile_phone():
+                    id = "auth_user_mobile__row"
+                    label = "%s:" % settings.get_ui_label_mobile_phone()
+                    widget = INPUT(_name="mobile",
+                                   _id="mobile",
+                                   _class="string",
+                                   )
+                    comment = ""
+                    row = s3_formstyle(id, label, widget, comment)
+                    # @ToDo:
+                    #if s3.theme == "DRRPP":
+                    form[0].insert(-8, row)
 
             # Add client-side validation
             auth.s3_register_validation()
@@ -370,12 +370,12 @@ def user():
         return output
     s3.postp = postp
 
-    s3.import_prep = auth.s3_import_prep
+    s3mgr.import_prep = auth.s3_import_prep
 
     output = s3_rest_controller("auth", "user",
-                                csv_stylesheet = ("auth", "user.xsl"),
-                                csv_template = ("auth", "user"),
-                                rheader = rheader,
+                                rheader=rheader,
+                                csv_template=("auth", "user"),
+                                csv_stylesheet=("auth", "user.xsl")
                                 )
     return output
 
@@ -395,13 +395,16 @@ def group():
                        deletable=False)
 
     # CRUD Strings
-    ADD_ROLE = T("Create Role")
+    ADD_ROLE = T("Add Role")
     s3.crud_strings[tablename] = Storage(
-        label_create = ADD_ROLE,
+        title_create = ADD_ROLE,
         title_display = T("Role Details"),
         title_list = T("Roles"),
         title_update = T("Edit Role"),
+        title_search = T("Search Roles"),
+        subtitle_create = T("Add New Role"),
         label_list_button = T("List Roles"),
+        label_create_button = ADD_ROLE,
         msg_record_created = T("Role added"),
         msg_record_modified = T("Role updated"),
         msg_record_deleted = T("Role deleted"),
@@ -424,11 +427,14 @@ def organisation():
     table = s3db[tablename]
 
     s3.crud_strings[tablename] = Storage(
-        label_create = T("Add Organization Domain"),
+        title_create = T("Add Organization Domain"),
         title_display = T("Organization Domain Details"),
         title_list = T("Organization Domains"),
         title_update = T("Edit Organization Domain"),
+        title_search = T("Search Organization Domains"),
+        subtitle_create = T("Add New Organization Domain"),
         label_list_button = T("List Organization Domains"),
+        label_create_button = T("Add Organization Domain"),
         label_delete_button = T("Delete Organization Domain"),
         msg_record_created = T("Organization Domain added"),
         msg_record_modified = T("Organization Domain updated"),
@@ -645,26 +651,18 @@ def portable():
         else:
             session.flash = T("Web2py executable zip file found - Upload to replace the existing file")
 
-    # Since the 2nd form depends on having uploaded the zip
-    # in order to work we only show it if the upload was successfully
-    # completed.
+    generator_form = SQLFORM.factory(
+            Field("copy_database", "boolean"),
+            Field("copy_uploads", "boolean"),
+            )
 
-    if web2py_source_exists:
-        generator_form = SQLFORM.factory(
-                Field("copy_database", "boolean"),
-                Field("copy_uploads", "boolean"),
-                )
-
-        if generator_form.accepts(request.vars, keepvalues=True, session=None):
-            if web2py_source_exists:
-                create_portable_app(web2py_source=web2py_source,\
-                        copy_database = request.vars.copy_database,\
-                        copy_uploads = request.vars.copy_uploads)
-            else:
-                session.error = T("Web2py executable zip file needs to be uploaded first to use this function.")
-    else:
-        generator_form = None
-
+    if generator_form.accepts(request.vars, keepvalues=True, session=None):
+        if web2py_source_exists:
+            create_portable_app(web2py_source=web2py_source,\
+                    copy_database = request.vars.copy_database,\
+                    copy_uploads = request.vars.copy_uploads)
+        else:
+            session.error = T("Web2py executable zip file needs to be uploaded to use this function.")
     if last_build_exists:
         download_last_form = SQLFORM.factory()
         if download_last_form.accepts(request.vars, keepvalues=True, session=None):
@@ -786,7 +784,7 @@ def translate():
                - only opt 2 makes use of this so it's unnecessary overhead!
     """
 
-    opt = get_vars.get("opt", None)
+    opt = request.get_vars.get("opt", None)
     if not opt:
         # Show index page
         return dict()
@@ -851,8 +849,8 @@ def translate():
             # Retrieve list of active modules
             activemodlist = settings.modules.keys()
             modlist = activemodlist
-            # Hiding core modules
-            hidden_modules = A.core_modules
+            # Hide core modules
+            hidden_modules = ["auth", "default", "error", "appadmin"]
             for module in hidden_modules:
                 if module in modlist:
                     modlist.remove(module)

@@ -3,20 +3,21 @@
 # Layouts Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/modules/s3layouts.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3layouts.py
 #
 import unittest
 
 from gluon import current
-from s3.s3layouts import homepage, S3AddResourceLink
+from s3layouts import homepage, S3AddResourceLink
 
 # =============================================================================
 class LayoutTests(unittest.TestCase):
     """ Layout Tests """
 
-    # -------------------------------------------------------------------------
+    def setUp(self):
+        pass
+
     def testHomepageFunction(self):
-        """ Test homepage() navigation item """
 
         # Test existing module
         hp = homepage("pr")
@@ -29,9 +30,7 @@ class LayoutTests(unittest.TestCase):
         rendered_hp = hp.xml()
         self.assertEqual(rendered_hp, "")
 
-    # -------------------------------------------------------------------------
     def testAddResourceLink(self):
-        """ Test AddResourceLink """
 
         auth = current.auth
         deployment_settings = current.deployment_settings
@@ -45,18 +44,18 @@ class LayoutTests(unittest.TestCase):
 
         # Label should fall back to CRUD string
         from s3.s3crud import S3CRUD
-        crud_string = S3CRUD.crud_string("pr_person", "label_create")
+        crud_string = S3CRUD.crud_string("pr_person", "label_create_button")
         self.assertEqual(comment.label, crud_string)
 
-        if "inv" in deployment_settings.modules:
-            comment = S3AddResourceLink(c="inv", f="inv_item")
+        if "dvi" in deployment_settings.modules:
+            comment = S3AddResourceLink(c="dvi", f="body")
             # Deactivate module
-            inv = deployment_settings.modules["inv"]
-            del deployment_settings.modules["inv"]
+            dvi = deployment_settings.modules["dvi"]
+            del deployment_settings.modules["dvi"]
             # Comment should auto-deactivate
             self.assertFalse(comment.check_active())
             # Restore module
-            deployment_settings.modules["inv"] = inv
+            deployment_settings.modules["dvi"] = dvi
             # Comment should auto-reactivate
             self.assertTrue(comment.check_active())
 

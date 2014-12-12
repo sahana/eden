@@ -24,7 +24,6 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
-from gluon import current
 
 from tests.web2unittest import SeleniumUnitTest
 
@@ -33,23 +32,20 @@ class CreateVolunteerSkill(SeleniumUnitTest):
         """
             @case: HRM001
             @description: Create Volunteer Skill
+            
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
 
-        settings = current.deployment_settings
-
         self.login(account="admin", nexturl="vol/skill/create")
 
-        data = [
-            ("name",
-                "Technical"),
-            ("comments",
-                "Comment/Description of the skill goes here.")
-        ]
-
-        if settings.get_hrm_skill_types():
-            data.append(("skill_type_id", "Computer"))
-
-        self.create("hrm_skill", data)
+        self.create("hrm_skill", 
+                    [( "name",
+                       "Technical"
+                       ),
+                     ( "comments",
+                       "Comment/Description of the skill goes here."),
+                     ]
+                     )
+        

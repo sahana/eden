@@ -1,0 +1,43 @@
+{{extend "layout.html"}}
+<div class='home'>
+{{try:}}{{=title}}
+ <div class='home-title'>
+  <h1>{{=title}}</h1>
+ </div>
+{{except:}}{{pass}}
+{{=XML(item)}}
+{{if AUTHENTICATED not in session.s3.roles:}}
+ <div class='home-register'>
+  <div class='login-box'>
+  {{if not self_registration or registered:}}
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration:}}
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  </div>
+ </div>
+{{else:}}
+ <div class='home-content'>
+  <div class='welcome'>
+   <h2>Welcome To GrassRooted Trust!</h2>		
+   <ol class='welcome-steps'>
+    <!--<li>Please read our <a href="">How-to Guide</a> for lots of tips from other organizers.</li>-->
+    <li>If you need help on HIV <a href="http://grassrooted.net"> Grass Rooted Trust </li>
+    <li>Thank you for donating your time!</li>
+   </ol>	
+  </div>
+{{pass}}
+</div>

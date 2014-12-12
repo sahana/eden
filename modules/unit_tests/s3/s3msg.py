@@ -11,7 +11,8 @@ from lxml import etree
 from gluon import *
 from gluon.storage import Storage
 from gluon.dal import Row
-from s3 import *
+from s3.s3resource import *
+from s3.s3fields import s3_meta_fields
 
 # =============================================================================
 class S3OutboxTests(unittest.TestCase):
