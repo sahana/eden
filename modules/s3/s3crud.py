@@ -2100,7 +2100,9 @@ class S3CRUD(S3Method):
                 widget = field.widget
                 if isinstance(widget, S3Selector):
                     # Use widget-validator instead of field-validator
-                    value, error = widget.validate(value)
+                    value, error = widget.validate(value, 
+                                                   requires=field.requires,
+                                                   )
                     validated["value"] = widget.serialize(value)
                     # Use widget-represent instead of standard represent
                     widget_represent = widget.represent

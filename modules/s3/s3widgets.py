@@ -4104,6 +4104,9 @@ class S3LocationSelector(S3Selector):
         * Should support multiple on a page
     """
 
+    keys = ("L0", "L1", "L2", "L3", "L4", "L5", 
+            "address", "postcode", "lat", "lon", "wkt", "specific", "id")
+
     def __init__(self,
                  levels = None,
                  hide_lx = True,
@@ -5388,6 +5391,10 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             @return: string representation for the values dict
         """
 
+        if not values or not any(values.get(key) for key in self.keys):
+            # No data
+            return current.messages["NONE"]
+
         lat = value.get("lat")
         lon = value.get("lon")
         wkt = value.get("wkt")
@@ -5439,7 +5446,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             record.level = None
         else:
             record.level = "L%s" % level
-
+            
         # Get the Lx names
         s3db = current.s3db
         ltable = s3db.gis_location
@@ -5475,20 +5482,23 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         return s3_unicode(text)
 
     # -------------------------------------------------------------------------
-    def validate(self, value):
+    def validate(self, value, requires=None):
         """
             Parse and validate the input value, but don't create or update
             any location data
 
             @param value: the value from the form
+            @param requires: the field validator
             @returns: tuple (values, error) with values being the parsed
                       value dict, and error any validation errors
         """
 
         values = self.parse(value)
 
-        if not values or not any(values.values()):
+        if not values or not any(values.get(key) for key in self.keys):
             # No data
+            if requires and not isinstance(requires, IS_EMPTY_OR):
+                return values, current.T("Location data required")
             return values, None
 
         table = current.s3db.gis_location
