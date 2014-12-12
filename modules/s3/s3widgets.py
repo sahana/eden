@@ -5299,7 +5299,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         path_ok = True
         if level:
             # Lx location
-            specific = None
+            values["level"] = level
+            values["specific"] = None
 
             if len(path) != (int(level[1:]) + 1):
                 # We don't have a full path
@@ -5307,7 +5308,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         else:
             # Specific location
-            specific = record.id
+            values["parent"] = record.parent
+            values["specific"] = specific
 
             if len(path) < (len(levels) + 1):
                 # We don't have a full path
@@ -5344,13 +5346,6 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 address = record.addr_street
             if postcode is None:
                 postcode = record.addr_postcode
-
-        # Parent/Level
-        values["level"] = level
-        values["parent"] = record.parent
-
-        # Specific location
-        values["specific"] = specific
 
         # Path
         if path_ok:

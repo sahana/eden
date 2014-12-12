@@ -1344,7 +1344,14 @@
                 suffix = ['address', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
                 i,
                 s,
-                f;
+                f,
+                visible = function(field) {
+                    if (field.hasClass('multiselect')) {
+                        return field.next('button.ui-multiselect').is(':visible');
+                    } else {
+                        return field.is(':visible');
+                    }
+                };
 
             if (current_value) {
                 if (!hierarchyLocations[current_value]) {
@@ -1352,11 +1359,11 @@
                     return true;
                 }
                 var current_level = hierarchyLocations[current_value].l;
-                // Is a higher-level required? If so, then prevent submission
+                // Is a lower level required? If so, then prevent submission
                 for (i = 0; i < 6 - current_level; i++) {
                     s = selector + '_' + suffix[i];
                     f = $(s);
-                    if (f.length && f.hasClass('required') && f.is(':visible')) {
+                    if (f.length && f.hasClass('required') && visible(f)) {
                         S3.fieldError(s, i18n.enter_value);
                         return false;
                     }
@@ -1371,7 +1378,7 @@
                 for (i = 0; i < 7; i++) {
                     s = selector + '_' + suffix[i];
                     f = $(s);
-                    if (f.length && f.hasClass('required') && f.is(':visible')) {
+                    if (f.length && f.hasClass('required') && visible(f)) {
                         S3.fieldError(s, i18n.enter_value);
                         return false;
                     }
