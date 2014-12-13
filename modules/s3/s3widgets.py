@@ -5312,7 +5312,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         else:
             # Specific location
             values["parent"] = record.parent
-            values["specific"] = specific
+            values["specific"] = record.id
 
             if len(path) < (len(levels) + 1):
                 # We don't have a full path
