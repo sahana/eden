@@ -2394,10 +2394,32 @@ class S3HRSkillModel(S3Model):
                              label = T("Date Received")
                              ),
                      s3_date("end_date",
-                             # @ToDo: Automation based on deployment_settings, e.g.: date received + 6/12 months
                              label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
+
+        hrm_end_date_days = settings.get_hrm_credential_start_end_days()
+        s3.jquery_ready.append(
+            '''
+            var hrm_credential_start_date;
+            var hrm_end_date_days = %d;
+
+            var end_date_automate = function() {
+              hrm_credential_start_date = new Date($("#hrm_credential_start_date").val());
+                hrm_credential_start_date.setDate(hrm_credential_start_date.getDate() + hrm_end_date_days);
+                $("#hrm_credential_end_date").val(hrm_credential_start_date.toInputFormat());
+            };
+
+            $("#hrm_credential_start_date").ready(end_date_automate);
+            $("#hrm_credential_start_date").change(end_date_automate);
+
+            Date.prototype.toInputFormat = function() {
+                var yyyy = this.getFullYear().toString();
+                var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
+                var dd  = this.getDate().toString();
+                return yyyy + "-" + (mm[1]?mm:"0"+mm[0]) + "-" + (dd[1]?dd:"0"+dd[0]);
+            };
+            ''' % hrm_end_date_days)
 
         crud_strings[tablename] = Storage(
             label_create = T("Add Credential"),

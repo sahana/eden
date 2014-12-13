@@ -817,7 +817,7 @@ class S3DeploymentAlertModel(S3Model):
                                    label = T("Alert"),
                                    ondelete = "CASCADE",
                                    represent = represent,
-                                   requires = IS_ONE_OF(db, "deploy_alert.id",
+                                   requires = IS_ONE_OF(current.db, "deploy_alert.id",
                                                         represent),
                                    )
 
