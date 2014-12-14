@@ -106,15 +106,16 @@ class S3PatientModel(S3Model):
             msg_record_deleted = T("Patient deleted"),
             msg_list_empty = T("No Patients currently registered"))
 
+        patient_represent = patient_PatientRepresent(lookup = "patient_patient")
+
         # Reusable Field for Component Link
         patient_id = S3ReusableField("patient_id", "reference %s" % tablename,
                                      ondelete = "RESTRICT",
-                                     represent = self.patient_represent,
+                                     represent = patient_represent,
                                      requires = IS_ONE_OF(db,
                                                           "patient_patient.id",
-                                                          self.patient_represent),
+                                                          patient_represent),
                                      )
-
         # Search method
         filter_widgets = [
             S3TextFilter(["person_id$first_name",
@@ -229,26 +230,52 @@ class S3PatientModel(S3Model):
         #
         return dict()
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def patient_represent(id, row=None):
-        """
-            Represent a Patient by their full name
+# =============================================================================
+class patient_PatientRepresent(S3Represent):
+    """
+        Representation of Patient names by their full name
+    """
 
-            @ToDo: Migrate to S3Represent
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for Patient names
+
+            @param key: Key for patient table
+            @param values: Patient IDs
         """
 
-        if row:
-            pass
-        elif not id:
-            return current.messages["NONE"]
+        table = self.table
+        ptable = current.s3db.pr_person
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
         else:
-            db = current.db
-            table = db.patient_patient
-            row = db(table.id == id).select(table.person_id,
-                                            limitby=(0, 1)).first()
+            query = (key.belongs(values))
+
+        left = ptable.on(table.person_id == ptable.id)
+
+#        db = current.db
+        rows = db(query).select(patient_patient.id,
+                                pr_person.first_name,
+                                pr_person.middle_name,
+                                pr_person.last_name,
+                                limitby = (0, count),
+                                left = left)
+
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row for a particular patient
+
+            @param row: patient_patient Row
+        """
+
         try:
-            return s3_fullname(row.person_id)
+            return s3_fullname(row)
         except:
             return current.messages.UNKNOWN_OPT
 
