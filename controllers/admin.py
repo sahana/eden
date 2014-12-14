@@ -269,7 +269,7 @@ def user():
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive:
+        if r.interactive and isinstance(output, dict):
             # Only show the disable button if the user is not currently disabled
             table = r.table
             query = (table.registration_key == None) | \
