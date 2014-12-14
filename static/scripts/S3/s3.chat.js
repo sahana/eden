@@ -8,10 +8,15 @@ require(['converse'], function (converse) {
         hide_muc_server: false,
         // @ToDo: Support other locales
         //Falls back to English if browser is unsupported
-        i18n: locales[navigator.language || navigator.userLanguage], 
+        i18n: geti18nSetting(), 
         prebind: false,
         show_controlbox_by_default: true,
         xhr_user_search: false
     });
+   function geti18nSetting()
+   {
+       var lang = document.getElementsByTagName('html')[0].getAttribute('lang');
+       return (lang != null)? lang : 'en';
+   }
 });
 
