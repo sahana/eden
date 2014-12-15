@@ -4697,7 +4697,11 @@ class org_SiteRepresent(S3Represent):
                       ]
             left = []
             for instance_type in instance_types:
-                table = s3db[instance_type]
+                try:
+                    table = s3db[instance_type]
+                except AttributeError:
+                    continue
+
                 fields.append(table.id)
                 left.append(table.on(table.site_id == stable.site_id))
 
