@@ -12,10 +12,9 @@ require(['converse'], function (converse) {
         show_controlbox_by_default: true,
         xhr_user_search: false
     });
-   var geti18nSetting = function()
-   {
-       var lang = document.getElementsByTagName('html')[0].getAttribute('lang');
-       return (lang != null)? lang : 'en';
-   }
+    var geti18nSetting = function() {
+        var lang = document.getElementsByTagName('html')[0].getAttribute('lang');
+        return (lang != null)? lang : 'en';
+    }
 });
 

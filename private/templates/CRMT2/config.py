@@ -1367,6 +1367,7 @@ $(document).ready(function(){
     s3.jquery_ready.append(script)
 
     # Recent Contacts
+    # @ToDo: Filter to just this Coalition
     ptable = s3db.pr_person
     query = (ptable.deleted == False)
     output["total_contacts"] = db(query).count()
