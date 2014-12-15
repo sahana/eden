@@ -4020,7 +4020,14 @@ class S3Selector(FormWidget):
         else:
             _class = classes
 
-        defaults = dict(requires = self.postprocess,
+        requires = self.postprocess
+
+        fieldname = str(field).replace(".", "_")
+        if fieldname.startswith("sub_"):
+            from s3forms import SKIP_POST_VALIDATION
+            requires = SKIP_POST_VALIDATION(requires)
+
+        defaults = dict(requires = requires,
                         _type = "hidden",
                         _class = _class,
                         )
