@@ -5394,7 +5394,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             @return: string representation for the values dict
         """
 
-        if not values or not any(values.get(key) for key in self.keys):
+        if not value or not any(value.get(key) for key in self.keys):
             # No data
             return current.messages["NONE"]
 
