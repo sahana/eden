@@ -1367,33 +1367,44 @@ $(document).ready(function(){
     s3.jquery_ready.append(script)
 
     # Recent Contacts
-    # @ToDo: Filter to just this Coalition
     ptable = s3db.pr_person
-    query = (ptable.deleted == False)
-    output["total_contacts"] = db(query).count()
-
     htable = s3db.hrm_human_resource
     otable = s3db.org_organisation
-    left = [htable.on(htable.person_id == ptable.id),
-            otable.on(htable.organisation_id == otable.id),
+    ltable = s3db.org_group_person
+
+    left = [htable.on((htable.person_id == ptable.id) & \
+                      (htable.deleted == False) & \
+                      (htable.status == 1)),
+            otable.on(otable.id == htable.organisation_id),
+            ltable.on((ltable.person_id == ptable.id) & \
+                      (ltable.deleted == False)),
             ]
-    rows = db(query).select(ptable.id,
-                            ptable.first_name,
-                            ptable.middle_name,
-                            ptable.last_name,
-                            ptable.created_on,
-                            otable.name,
-                            left = left,
-                            limitby = (0, 5),
-                            orderby = ~ptable.created_on
-                            )
+
+    query = (ltable.org_group_id == org_group_id) & \
+            (ptable.deleted == False)
+
+    cnt = ptable.id.count()
+    row = db(query).select(cnt, left=left).first()
+
+    total = output["total_contacts"] = row[cnt]
     recent_contacts = []
-    for row in rows:
-        person = row["pr_person"]
-        recent_contacts.append(Storage(id = person.id,
-                                       name = s3_fullname(person),
-                                       org = row["org_organisation.name"],
-                                       ))
+    if total:
+        rows = db(query).select(ptable.id,
+                                ptable.first_name,
+                                ptable.middle_name,
+                                ptable.last_name,
+                                ptable.created_on,
+                                otable.name,
+                                left = left,
+                                limitby = (0, 5),
+                                orderby = ~ptable.created_on
+                                )
+        for row in rows:
+            person = row["pr_person"]
+            recent_contacts.append(Storage(id = person.id,
+                                           name = s3_fullname(person),
+                                           org = row["org_organisation.name"],
+                                           ))
     output["recent_contacts"] = recent_contacts
 
     # Latest Activities

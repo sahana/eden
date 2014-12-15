@@ -22,7 +22,7 @@
     <li><a href='/{{=appname}}/pr/person/{{=p.id}}/read'>{{=p.name}} <small class='location'>{{=p.org}}</small></a></li>
    {{pass}}
    </ul>        
-   <a href='/{{=appname}}/pr/person/summary' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_contacts)}}</a>
+   <a href='/{{=appname}}/pr/person/summary?group_person.org_group_id={{=coalition_id}}' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_contacts)}}</a>
   </div>
 </div>
 <div class='medium-12 large-4 columns dashboard-organizations'>
@@ -33,7 +33,7 @@
    <li><a href='/{{=appname}}/org/organisation/{{=o.id}}/read'>{{=o.name}}</a></li>
   {{pass}}
   </ul>        
-  <a href='/{{=appname}}/org/organisation/summary?&group_membership.group_id__belongs={{=coalition_id}}' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_orgs)}}</a>
+  <a href='/{{=appname}}/org/organisation/summary?group_membership.group_id__belongs={{=coalition_id}}' class='button tiny'>{{=T("See all %(total)s") % dict(total=total_orgs)}}</a>
  </div>
 </div>
 <div class='medium-12 large-4 columns dashboard-activities'>
