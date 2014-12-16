@@ -259,11 +259,21 @@
 
             <!-- Office data -->
             <data field="name"><xsl:value-of select="$officename"/></data>
-            <data field="phone1"><xsl:value-of select="col[@field='Phone1']"/></data>
-            <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
-            <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
-            <data field="fax"><xsl:value-of select="col[@field='Fax']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <xsl:if test="col[@field='Phone1']!=''">
+                <data field="phone1"><xsl:value-of select="col[@field='Phone1']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Phone2']!=''">
+                <data field="phone2"><xsl:value-of select="col[@field='Phone2']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Email']!=''">
+                <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Fax']!=''">
+                <data field="fax"><xsl:value-of select="col[@field='Fax']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
 
             <!-- Site Contacts -->
             <xsl:if test="$ContactFirstName!=''">

@@ -185,7 +185,7 @@ class S3ShelterModel(S3Model):
 
         service_represent = S3Represent(lookup=tablename, translate=True)
         service_multirepresent = S3Represent(lookup=tablename,
-		                                     translate=True,
+                                             translate=True,
                                              multiple=True
                                              )
 

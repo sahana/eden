@@ -816,13 +816,15 @@ class DataMatrixBuilder():
 # =============================================================================
 def getMatrix(title,
               logo,
-              series,
               layout,
               widgetList,
               secondaryMatrix,
               langDict,
               showSectionLabels=True,
               layoutBlocks=None):
+    """
+    """
+
     matrix = DataMatrix()
     if secondaryMatrix:
         secondaryMatrix = DataMatrix()
@@ -850,23 +852,23 @@ def getMatrix(title,
                                            section,
                                            ["styleHeader"],
                                            len(section)
-                                          )
+                                           )
         (row, col) = builder.processRule(rules, row, col, matrix)
     row = 0
     col = 0
     logoWidth = 0
     if logo != None:
         logoWidth = 6
-        (nextRow,col) = matrix.addCell(row,col,"",[],logoWidth-1,1)
+        (nextRow,col) = matrix.addCell(row, col, "", [], logoWidth - 1, 1)
     titleWidth = max(len(title), matrix.lastCol-logoWidth)
-    (row,col) = matrix.addCell(row,col,title,["styleTitle"],titleWidth,1)
+    (row, col) = matrix.addCell(row, col, title, ["styleTitle"], titleWidth, 1)
     if layoutBlocks != None:
         maxCol = col
         for block in layoutBlocks.contains:
             if block.endPosn[1] > maxCol:
                 maxCol = block.endPosn[1]
-        layoutBlocks.setPosn((0,0), (row,maxCol))
-    matrix.boxRange(0, 0, matrix.lastRow+1, matrix.lastCol, 2)
+        layoutBlocks.setPosn((0, 0), (row, maxCol))
+    matrix.boxRange(0, 0, matrix.lastRow + 1, matrix.lastCol, 2)
     if secondaryMatrix:
         return (matrix, secondaryMatrix)
     else:
