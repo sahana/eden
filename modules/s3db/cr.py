@@ -131,7 +131,7 @@ class S3ShelterModel(S3Model):
                   deduplicate = self.cr_shelter_type_duplicate,
                   )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         shelter_type_id = S3ReusableField("shelter_type_id", "reference %s" % tablename,
                                           label = SHELTER_TYPE_LABEL,
                                           ondelete = "RESTRICT",
@@ -183,8 +183,9 @@ class S3ShelterModel(S3Model):
                 msg_record_deleted = T("Shelter Service deleted"),
                 msg_list_empty = T("No Shelter Services currently registered"))
 
-        service_represent = S3Represent(lookup=tablename)
+        service_represent = S3Represent(lookup=tablename, translate=True)
         service_multirepresent = S3Represent(lookup=tablename,
+		                                     translate=True,
                                              multiple=True
                                              )
 
@@ -192,11 +193,11 @@ class S3ShelterModel(S3Model):
                                              "list:reference cr_shelter_service",
                                              label = SHELTER_SERVICE_LABEL,
                                              ondelete = "RESTRICT",
-                                             represent = self.cr_shelter_service_multirepresent,
+                                             represent = service_multirepresent,
                                              requires = IS_EMPTY_OR(
                                                             IS_ONE_OF(db,
                                                                       "cr_shelter_service.id",
-                                                                      self.cr_shelter_service_represent,
+                                                                      service_represent,
                                                                       multiple=True)),
                                              sortby = "name",
                                              comment = S3AddResourceLink(c="cr",
@@ -217,14 +218,15 @@ class S3ShelterModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        environment_represent = S3Represent(lookup=tablename)
+        environment_represent = S3Represent(lookup=tablename, translate=True)
         environment_multirepresent = S3Represent(lookup=tablename,
+		                                         translate=True,
                                                  multiple=True
                                                  )
 
         shelter_environment_id = S3ReusableField("cr_shelter_environment_id",
                                                  "list:reference cr_shelter_environment",
-                                                 label = "Environmental Characteristics",
+                                                 label = T("Environmental Characteristics"),
                                                  ondelete = "RESTRICT",
                                                  represent = environment_multirepresent,
                                                  requires = IS_EMPTY_OR(IS_ONE_OF(db,
