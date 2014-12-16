@@ -57,6 +57,80 @@ settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the 
 # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
 settings.gis.print_button = True
 
+def hospital_marker_fn(record):
+    """
+        Function to show different markers based on hospital status
+    """
+    db = current.db
+    s3db = current.s3db    
+    stable = s3db.hms_status
+    query = (stable.hospital_id == record.id)
+    stype = db(query).select(stable.id)
+    # The default marker type is set
+    default_marker = "hospital"  
+    marker = default_marker    
+    if stype and stype.first() and stype.first().id:
+        htype = stype.first().id
+        if htype == 1:
+            # If the hospital status is normal/functional, then the marker is green
+            marker = "%s_green" % marker
+        elif htype == 2 or htype == 3:
+            # If the hospital status is compromised/evacuating, then the marker is yellow
+            marker = "%s_yellow" % marker
+        elif htype == 4:
+            # If the hospital status is closed, then the marker is red
+            marker = "%s_red" % marker    
+
+    mtable = db.gis_marker
+    try:
+        marker = db(mtable.name == marker).select(mtable.image,
+                                                  mtable.height,
+                                                  mtable.width,
+                                                  cache=s3db.cache,
+                                                  limitby=(0, 1)
+                                                  ).first()
+    except:
+        marker = db(mtable.name == default_marker).select(mtable.image,
+                                                       mtable.height,
+                                                       mtable.width,
+                                                       cache=s3db.cache,
+                                                       limitby=(0, 1)
+                                                       ).first()
+    return marker
+
+def customise_hms_hospital_resource(r, tablename):
+    s3db = current.s3db
+    s3db.configure("hms_hospital", marker_fn=hospital_marker_fn)
+    #Set these to True/False to show/hide corresponding fields in the hospital screens
+    #This was implemented to hide complexity from the user
+    show_code_related_data = True
+    show_operational_data = True
+    table = current.s3db.hms_hospital
+    if not show_code_related_data:
+        table.code.readable  = False
+        table.code.writable  = False
+        table.aka1.readable  = False
+        table.aka1.writable  = False
+        table.aka2.readable  = False
+        table.aka2.writable  = False
+    if not show_operational_data:
+        table.total_beds.readable  = False
+        table.total_beds.writable  = False
+        table.available_beds.readable  = False
+        table.available_beds.writable  = False
+        table.doctors.readable  = False
+        table.doctors.writable  = False
+        table.nurses.readable  = False
+        table.nurses.writable  = False
+        table.non_medical_staff.readable  = False
+        table.non_medical_staff.writable  = False
+    from s3.s3widgets import S3LocationSelectorWidget2
+    levels = ("L1","L2","L3",)    
+    s3db.hms_hospital.location_id.widget = S3LocationSelectorWidget2(levels=levels,
+                                                                     hide_lx = False,
+                                                                     )    
+
+
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
 # http://www.loc.gov/standards/iso639-2/php/code_list.php
