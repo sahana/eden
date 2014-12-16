@@ -864,7 +864,7 @@ class S3Config(Storage):
         """
             Display Lat/Lon form fields when selecting Locations
         """
-        return self.gis.get("latlon_selector", True)
+        return self.gis.get("latlon_selector", False)
 
     def get_gis_layer_metadata(self):
         """
