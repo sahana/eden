@@ -2517,6 +2517,13 @@ class S3Config(Storage):
         """
         return self.irs.get("vehicle", False)
 
+    def get_irs_dispatch_ireport_subject(self):
+        """
+            Dispatch notice report for irs_dispatch
+        """
+        return current.T(self.irs.get("dispatch_ireport_subject", T("Deployment Request")))
+
+
     # -------------------------------------------------------------------------
     # Members
     #

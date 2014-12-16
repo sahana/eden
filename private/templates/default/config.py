@@ -807,6 +807,8 @@ settings.gis.geonames_username = "eden_test"
 # Incidents
 # Uncomment this to use vehicles when responding to Incident Reports
 #settings.irs.vehicle = True
+# Uncomment to change the subject of irc_dispatch_shelter 
+#settings.irs.dispatch_ireport_subject = T("Deployment Requests")
 
 # -----------------------------------------------------------------------------
 # Transport
