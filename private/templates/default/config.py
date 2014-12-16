@@ -312,9 +312,11 @@ settings.L10n.decimal_separator = "."
 #settings.gis.widget_wms_browser = True
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
-# GeoNames username
+# Uncomment to set fallback to point for geojson
+#settings.gis.geojson_fallback_to_points = True
 settings.gis.geonames_username = "eden_test"
 
+# 
 # Messaging Settings
 # If you wish to use a parser.py in another folder than "default"
 #settings.msg.parser = "mytemplatefolder"
