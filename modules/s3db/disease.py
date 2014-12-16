@@ -65,7 +65,9 @@ class DiseaseDataModel(S3Model):
         tablename = "disease_disease"
         table = define_table(tablename,
                              self.super_link("doc_id", "doc_entity"),
-                             Field("name"),
+                             Field("name",
+                                   requires = IS_NOT_EMPTY()
+                                   ),
                              Field("short_name"),
                              Field("acronym"),
                              Field("code",
@@ -1164,6 +1166,7 @@ class DiseaseStatsModel(S3Model):
                      super_link("parameter_id", "stats_parameter"),
                      Field("name",
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            represent = lambda v: T(v) if v is not None \
                                                     else NONE,
                            ),
