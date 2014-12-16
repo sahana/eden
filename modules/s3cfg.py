@@ -44,8 +44,6 @@ from gluon.storage import Storage
 
 from s3theme import *
 
-T = current.T
-
 class S3Config(Storage):
     """
         Deployment Settings Helper Class
@@ -2084,7 +2082,7 @@ class S3Config(Storage):
         """
             Subject for the Shelter Notification Dispatcher
         """
-        return self.cr.get("shelter_notification_subject", T("Deployment Request"))
+        return current.T(self.cr.get("shelter_notification_subject", "Deployment Request"))
 
     # -------------------------------------------------------------------------
     # Deployments
@@ -2115,7 +2113,7 @@ class S3Config(Storage):
         """
             Subject for the Event Notification Dispatcher
         """
-        return self.event.get("notification_subject", T("Deployment Request"))
+        return current.T(self.event.get("notification_subject", "Deployment Request"))
 
     # -------------------------------------------------------------------------
     # Evacuees
