@@ -2394,10 +2394,25 @@ class S3HRSkillModel(S3Model):
                              label = T("Date Received")
                              ),
                      s3_date("end_date",
-                             # @ToDo: Automation based on deployment_settings, e.g.: date received + 6/12 months
                              label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
+
+        hrm_end_date_days = settings.get_hrm_credential_start_end_days()
+
+        # Checks whether the hrm_end_date_days is valid
+        # i.e Is an integer and greater than 0
+        if (hrm_end_date_days < 0) or (not isinstance(hrm_end_date_days, (int, long))):
+            hrm_end_date_days = 0
+        format_date = current.deployment_settings.get_L10n_date_format()
+
+        # Convert date format to js valid format
+        format_date = S3DateTime.get_js_format(format_date)
+
+        s3.js_global.append('''
+            var hrm_end_date_days=%d
+            var date_format="%s"
+            ''' % (hrm_end_date_days, format_date))
 
         crud_strings[tablename] = Storage(
             label_create = T("Add Credential"),
