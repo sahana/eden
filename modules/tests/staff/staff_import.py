@@ -38,17 +38,14 @@ class ImportStaff(SeleniumUnitTest):
             @description: Import Staff
         """
         print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
+
         base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
         file_path = os.path.join(base_dir, "modules", "tests", "staff", "staff.csv")
 
-        #@ToDo: Move these into we2unittest
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+        today = self.today()
+        now = self.now()
+        now_1_day = self.now_1_day()
+        now_1_week = self.now_1_week()
         
         # HRM004
         # Login, if not-already done so
@@ -68,17 +65,14 @@ class ImportStaff(SeleniumUnitTest):
             This test removes any exsisting data before importing
         """
         print "\n"
-        
-        import datetime
-        from dateutil.relativedelta import relativedelta
+
         base_dir = os.path.join(os.getcwd(), "applications", current.request.application)
         file_path = os.path.join(base_dir, "modules", "tests", "staff", "staff.csv")
 
-        #@ToDo: Move these into we2unittest
-        today = datetime.date.today().strftime("%Y-%m-%d")
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        now_1_day = (datetime.datetime.now() + relativedelta( days = +1 )).strftime("%Y-%m-%d %H:%M:%S")
-        now_1_week = (datetime.date.today() + relativedelta( weeks = +1 )).strftime("%Y-%m-%d %H:%M:%S")
+        today = self.today()
+        now = self.now()
+        now_1_day = self.now_1_day()
+        now_1_week = self.now_1_week()
         
         # HRM004
         # Login, if not-already done so

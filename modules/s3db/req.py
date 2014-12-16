@@ -37,6 +37,7 @@ __all__ = ("S3RequestModel",
            "S3CommitItemModel",
            "S3CommitPersonModel",
            "S3CommitSkillModel",
+           "req_RequesterRepresent",
            "req_item_onaccept",
            "req_update_status",
            "req_rheader",
@@ -66,6 +67,7 @@ class S3RequestModel(S3Model):
     names = ("req_req",
              "req_req_id",
              "req_req_ref",
+             "req_req_event",
              "req_hide_quantities",
              "req_inline_form",
              "req_create_form_mods",
@@ -178,13 +180,6 @@ class S3RequestModel(S3Model):
         tablename = "req_req"
         self.define_table(tablename,
                           super_link("doc_id", "doc_entity"),
-                          # @ToDo: Replace with Link Table
-                          self.event_event_id(
-                               default = session.s3.event,
-                               ondelete = "SET NULL",
-                               readable = False,
-                               writable = False,
-                               ),
                           Field("type", "integer",
                                 label = T("Request Type"),
                                 represent = lambda opt: \
@@ -263,6 +258,7 @@ class S3RequestModel(S3Model):
                                     default = requester_default,
                                     empty = settings.get_req_requester_optional(),
                                     label = requester_label,
+                                    represent = req_RequesterRepresent(),
                                     #writable = False,
                                     comment = S3AddResourceLink(c="pr", f="person",
                                                                 vars = dict(child="requester_id",
@@ -545,7 +541,21 @@ class S3RequestModel(S3Model):
                    method="form",
                    action=self.req_form)
 
+        # ---------------------------------------------------------------------
+        # Link Table: Request <> Events
+        tablename = "req_req_event"
+        self.define_table(tablename,
+                          req_id(empty=False),
+                          self.event_event_id(
+                               default = session.s3.event,
+                               ondelete = "SET NULL",
+                               readable = False,
+                               writable = False,
+                               ),
+                          *s3_meta_fields())
+
         # Components
+        tablename = "req_req"
         add_components(tablename,
                        # Documents
                        req_document = "req_id",
@@ -564,6 +574,11 @@ class S3RequestModel(S3Model):
                                                "joinby": "req_id",
                                                "key": "item_category_id",
                                                },
+                       # Request Event
+                       req_req_event = {"joinby": "req_id",
+                                        "link": "req_req_event",
+                                        "key": "event_id",
+                                        },
 
                        **{# Scheduler Jobs (for recurring requests)
                           S3Task.TASK_TABLENAME: {"name": "job",
@@ -735,7 +750,12 @@ $.filterOptionsS3({
                                   "item_pack_id",
                                   "quantity",
                                   "comments"
-                                  ]
+                                  ],
+                        ),
+                      S3SQLInlineLink(
+                        "req_event",
+                        label="",
+                        field = "event_id"
                       ),
                       "comments",
                       ]
@@ -804,6 +824,11 @@ $.filterOptionsS3({
                                   "skill_id",
                                   "comments"
                                   ]
+                      ),
+                      S3SQLInlineLink(
+                        "req_event",
+                        label="",
+                        field = "event_id"
                       ),
                       "comments",
                       ]
@@ -1593,6 +1618,87 @@ $.filterOptionsS3({
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
+class req_RequesterRepresent(S3Represent):
+    """
+        Represents the Requester 
+    """
+
+    def __init__(self, show_link=True):
+        """
+            Constructor
+        """
+        self.has_hrm = current.deployment_settings.has_module("hrm")
+        super(req_RequesterRepresent, self).__init__(show_link=show_link, 
+                                                     lookup="pr_person")
+
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        ptable = s3db.pr_person
+        ctable = s3db.pr_contact
+        qty = len(values)
+
+        if qty == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        left = ctable.on((ctable.pe_id == ptable.pe_id) & \
+                         (ctable.contact_method == "SMS"))
+
+        fields = [ptable.id,
+                  ptable.first_name,
+                  ptable.middle_name,
+                  ptable.last_name,
+                  ctable.value]
+
+        if self.has_hrm:
+            htable = s3db.hrm_human_resource
+            left = [left, htable.on(htable.person_id == ptable.id)]
+            fields.append(htable.type)
+
+        rows = db(query).select(left=left,
+                                limitby=(0, qty),
+                                *fields)
+        return rows
+
+    def represent_row(self, row):
+        """
+            Represents a row
+        """
+
+        output = s3_fullname(row.pr_person)
+        contact = row["pr_contact.value"]
+        if contact:
+            output = "%s %s" % (output, contact)
+
+        if self.show_link:
+            hr_type = row["hrm_human_resource.type"]
+            if self.has_hrm and hr_type:
+                if hr_type == 1:
+                    controller = "hrm"
+                else:
+                    controller = "vol"
+            else:
+                controller = "pr"
+            current.request.extention = "html"
+
+            return A(output,
+                     _href = URL(c = controller,
+                                 f = "person",
+                                 args = [row["pr_person.id"], "contacts"]
+                                 )
+                     )
+
+        return output
+
+# =============================================================================
+
 class S3RequestItemModel(S3Model):
     """
     """

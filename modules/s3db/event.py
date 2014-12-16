@@ -2343,8 +2343,7 @@ def event_notification_dispatcher(r, **attr):
 
         # Create the form
         opts = dict(type="SMS",
-                    # @ToDo: deployment_setting
-                    subject = T("Deployment Request"),
+                    subject = settings.get_event_notification_subject(),
                     message = message + text,
                     url = url,
                     )
