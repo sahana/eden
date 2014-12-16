@@ -219,8 +219,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.geocode_imported_addresses = "google"
 # Hide the Map-based selection tool in the Location Selector
 #settings.gis.map_selector = False
-# Hide LatLon boxes in the Location Selector
-#settings.gis.latlon_selector = False
+# Show LatLon boxes in the Location Selector
+#settings.gis.latlon_selector = True
 # Use Building Names as a separate field in Street Addresses?
 #settings.gis.building_name = False
 # Use a non-default fillColor for Clustered points

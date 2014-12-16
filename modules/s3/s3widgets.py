@@ -2961,7 +2961,6 @@ class S3LocationDropdownWidget(FormWidget):
 class S3LocationLatLonWidget(FormWidget):
     """
         Renders a Lat & Lon input for a Location
-
     """
 
     def __init__(self, empty=False):
@@ -4123,7 +4122,7 @@ class S3LocationSelector(S3Selector):
                  reverse_lx = False,
                  show_address = False,
                  show_postcode = False,
-                 show_latlon = False,
+                 show_latlon = None,
                  latlon_mode = "decimal",
                  latlon_mode_toggle = True,
                  show_map = True,
@@ -4177,10 +4176,12 @@ class S3LocationSelector(S3Selector):
         self.show_address = show_address
         self.show_postcode = show_postcode
 
-        # @todo: latlon_toggle_mode should default to a deployment setting
+        if show_latlon is None:
+            show_latlon = current.deployment_settings.get_gis_latlon_selector()
         self.show_latlon = show_latlon
         self.latlon_mode = latlon_mode
         if show_latlon:
+            # @todo: latlon_toggle_mode should default to a deployment setting
             self.latlon_mode_toggle = latlon_mode_toggle
         else:
             self.latlon_mode_toggle = False
