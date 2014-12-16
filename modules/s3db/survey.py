@@ -869,16 +869,16 @@ class S3SurveyQuestionModel(S3Model):
 
         tablename = "survey_question"
         define_table(tablename,
-                     Field("name", "string", length=200,
+                     Field("name", length=200,
                            notnull = True,
                            represent = self.qstn_name_represent,
                            ),
-                     Field("code", "string", length=16,
+                     Field("code", length=16,
                            notnull = True,
                            ),
-                     Field("notes", "string", length=400
+                     Field("notes", length=400
                            ),
-                     Field("type", "string", length=40,
+                     Field("type", length=40,
                            notnull = True,
                            ),
                      Field("metadata", "text",

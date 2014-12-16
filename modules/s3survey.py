@@ -27,8 +27,6 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-import sys
-
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -49,6 +47,7 @@ from s3chart import S3Chart
 
 DEBUG = False
 if DEBUG:
+    import sys
     print >> sys.stderr, "S3Survey: DEBUG MODE"
     def _debug(m):
         print >> sys.stderr, m
@@ -437,7 +436,7 @@ class DataMatrix():
         try:
             self.addElement(cell)
         except Exception as msg:
-            print >> sys.stderr, msg
+            current.log.error(msg)
         return (row + 1 + vertical,
                 col + 1 + horizontal)
 
@@ -671,31 +670,31 @@ class DataMatrixBuilder():
         if "heading" in rules:
             text = rules["heading"]
             if len(parent) == 1:
-                width = min(len(text),matrix.lastCol)+1
+                width = min(len(text), matrix.lastCol) + 1
                 height = 1
                 styleName = "styleSectionHeading"
             else:
                 width = 11
-                height = len(text)/(2*width) + 1
+                height = len(text) / (2 * width) + 1
                 styleName = "styleSubHeader"
             cell = MatrixElement(row, col, text, style = styleName)
-            cell.merge(horizontal = width-1, vertical = height-1)
+            cell.merge(horizontal = width - 1, vertical = height-1)
             try:
                 matrix.addElement(cell)
             except Exception as msg:
-                print >> sys.stderr, msg
+                current.log.error(msg)
                 return (row,col)
             endrow = row + height
             endcol = col + width
             if "hint" in rules:
                 text = rules["hint"]
                 cell = MatrixElement(endrow,startcol,text, style="styleHint")
-                height = int(((len(text)/(2*width))*0.75)+0.5) + 1
-                cell.merge(horizontal=width-1, vertical=height-1)
+                height = int(((len(text) / (2 * width)) * 0.75) + 0.5) + 1
+                cell.merge(horizontal = width - 1, vertical = height - 1)
                 try:
                     matrix.addElement(cell)
                 except Exception as msg:
-                    print >> sys.stderr, msg
+                    current.log.error(msg)
                     return (row,col)
                 endrow = endrow + height
         if "labelLeft" in rules:
@@ -781,7 +780,7 @@ class DataMatrixBuilder():
         try:
             self.matrix.addElement(cell)
         except Exception as msg:
-            print >> sys.stdout,  msg
+            current.log.error(msg)
             return (row,col)
         endrow = row + height
         endcol = col + width
@@ -806,7 +805,7 @@ class DataMatrixBuilder():
                                                        langDict = self.langDict
                                                       )
         except Exception as msg:
-            print >> sys.stderr, msg
+            current.log.error(msg)
             return (row,col)
         #if question["type"] == "Grid":
         if self.boxOpen == False:
@@ -1023,14 +1022,10 @@ class S3QuestionTypeAbstractWidget(FormWidget):
 
         try:
             from xlwt.Utils import rowcol_to_cell
-            self.rowcol_to_cell = rowcol_to_cell
         except:
-            import sys
-            print >> sys.stderr, "WARNING: S3Survey: xlwt module needed for XLS export"
-
-    # -------------------------------------------------------------------------
-    def setDict(self, langDict):
-        self.langDict = langDict
+            current.log.error("WARNING: S3Survey: xlwt module needed for XLS export")
+        else:
+            self.rowcol_to_cell = rowcol_to_cell
 
     # -------------------------------------------------------------------------
     def _store_metadata(self, qstn_id=None, update=False):
@@ -1431,7 +1426,8 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         if error:
             w_code = self.question["code"]
             msg = "Coord Verification Error for widget %s, startPosn:(%s, %s), expected:(%s, %s), observed:(%s, %s)" % (w_code, self.startPosn[1], self.startPosn[0], endrow, endcol, calcrow, calccol)
-            print >> sys.stdout, msg
+            current.log.error(msg)
+
     ######################################################################
     # Functions not fully implemented or used
     ######################################################################
@@ -2433,8 +2429,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             height += lheight
             if lwidth > width:
                 width = lwidth
-        if DEBUG:
-            print >> sys.stdout, "%s (%s,%s)" % (self.question["code"], height, width)
+        _debug("%s (%s,%s)" % (self.question["code"], height, width))
         self.xlsWidgetSize = (width,height)
         return (height, width)
         
@@ -3160,7 +3155,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         try:
             from numpy import array
         except:
-            print >> sys.stderr, "ERROR: S3Survey requires numpy library installed."
+            current.log.error("ERROR: S3Survey requires numpy library installed.")
 
         array = array(self.valueList)
         self.std = array.std()
