@@ -256,6 +256,7 @@ class S3StatsDemographicModel(S3Model):
                      # Instance
                      super_link("parameter_id", "stats_parameter"),
                      Field("name",
+                           requires = IS_NOT_EMPTY(),
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                     else NONE,
