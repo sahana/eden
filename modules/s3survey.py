@@ -877,34 +877,49 @@ def getMatrix(title,
 # Question Types
 def survey_stringType(question_id = None):
     return S3QuestionTypeStringWidget(question_id)
+
 def survey_textType(question_id = None):
     return S3QuestionTypeTextWidget(question_id)
+
 def survey_numericType(question_id = None):
     return S3QuestionTypeNumericWidget(question_id)
+
 def survey_dateType(question_id = None):
     return S3QuestionTypeDateWidget(question_id)
+
 def survey_timeType(question_id = None):
     return S3QuestionTypeTimeWidget(question_id)
+
 def survey_optionType(question_id = None):
     return S3QuestionTypeOptionWidget(question_id)
+
 def survey_ynType(question_id = None):
     return S3QuestionTypeOptionYNWidget(question_id)
+
 def survey_yndType(question_id = None):
     return S3QuestionTypeOptionYNDWidget(question_id)
+
 def survey_optionOtherType(question_id = None):
     return S3QuestionTypeOptionOtherWidget(question_id)
+
 def survey_multiOptionType(question_id = None):
     return S3QuestionTypeMultiOptionWidget(question_id)
+
 def survey_locationType(question_id = None):
     return S3QuestionTypeLocationWidget(question_id)
+
 def survey_linkType(question_id = None):
     return S3QuestionTypeLinkWidget(question_id)
+
 def survey_ratingType(question_id = None):
     pass
+
 def survey_gridType(question_id = None):
     return S3QuestionTypeGridWidget(question_id)
+
 def survey_gridChildType(question_id = None):
     return S3QuestionTypeGridChildWidget(question_id)
+
 def survey_T(phrase, langDict):
     """
         Function to translate a phrase using the dictionary passed in
@@ -914,23 +929,22 @@ def survey_T(phrase, langDict):
     else:
         return phrase
 
-survey_question_type = {
-    "String": survey_stringType,
-    "Text": survey_textType,
-    "Numeric": survey_numericType,
-    "Date": survey_dateType,
-    "Time": survey_timeType,
-    "Option": survey_optionType,
-    "YesNo": survey_ynType,
-    "YesNoDontKnow": survey_yndType,
-    "OptionOther": survey_optionOtherType,
-    "MultiOption" : survey_multiOptionType,
-    "Location": survey_locationType,
-    "Link" : survey_linkType,
-    #"Rating": survey_ratingType,
-    "Grid" : survey_gridType,
-    "GridChild" : survey_gridChildType,
-}
+survey_question_type = {"String": survey_stringType,
+                        "Text": survey_textType,
+                        "Numeric": survey_numericType,
+                        "Date": survey_dateType,
+                        "Time": survey_timeType,
+                        "Option": survey_optionType,
+                        "YesNo": survey_ynType,
+                        "YesNoDontKnow": survey_yndType,
+                        "OptionOther": survey_optionOtherType,
+                        "MultiOption" : survey_multiOptionType,
+                        "Location": survey_locationType,
+                        "Link" : survey_linkType,
+                        #"Rating": survey_ratingType,
+                        "Grid" : survey_gridType,
+                        "GridChild" : survey_gridChildType,
+                        }
 
 # =============================================================================
 class S3QuestionTypeAbstractWidget(FormWidget):

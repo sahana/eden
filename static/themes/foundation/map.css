@@ -6,6 +6,9 @@
     border: none;
     margin-bottom: 0;
 }
+.map_wrapper table tr:nth-of-type(2n) {
+    background-color: inherit;
+}
 .map_wrapper table tr th,
 .map_wrapper table tr td {
     color: inherit;

@@ -56,6 +56,29 @@ class index(S3CustomController):
                                              ))
         output["latest_activities"] = latest_activities
 
+        # Which Map should we link to in "Know your community"?
+        auth = current.auth
+        table = s3db.gis_config
+        if auth.is_logged_in() and auth.user.org_group_id:
+            # Coalition Map
+            ogtable = s3db.org_group
+            og = db(ogtable.id == auth.user.org_group_id).select(ogtable.pe_id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
+            query = (table.pe_id == og.pe_id)
+        else:
+            # Default Map
+            query = (table.uuid == "SITE_DEFAULT")
+
+        config = db(query).select(table.id,
+                                  limitby=(0, 1)
+                                  ).first()
+
+        try:
+            output["config_id"] = config.id
+        except:
+            output["config_id"] = None
+
         self._view(THEME, "index.html")
         return output
 

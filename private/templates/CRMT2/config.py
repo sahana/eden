@@ -488,6 +488,7 @@ def customise_pr_person_controller(**attr):
                          #"job_title_id",
                          #"site_id",
                          ]
+            s3db.hrm_human_resource.organisation_id.label = ""
             #if widgets:
             #    # Context from a Profile page?"
             #    organisation_id = current.request.get_vars.get("(organisation)", None)
@@ -505,7 +506,7 @@ def customise_pr_person_controller(**attr):
                         "human_resource",
                         name = "human_resource",
                         columns = (4,),
-                        label = "",
+                        label = T("Organization"),
                         multiple = False,
                         fields = hr_fields,
                     ),
@@ -2417,6 +2418,18 @@ def customise_gis_poi_controller(**attr):
                                         "person_id",
                                         "location_id",
                                         )
+
+            # Patch the style
+            script = \
+'''var s=$('#gis_poi_poi_type_id__row .small-10') 
+var c=s.html()
+s.html('<div class="row"><div class="small-4 end columns"></div></div>')
+$('#gis_poi_poi_type_id__row .small-10 .small-4').html(c)
+s=$('#gis_poi_organisation_id__row .small-10') 
+c=s.html()
+s.html('<div class="row"><div class="small-4 end columns"></div></div>')
+$('#gis_poi_organisation_id__row .small-10 .small-4').html(c)'''
+            s3.jquery_ready.append(script)
 
             s3db.configure(tablename,
                            create_next = create_next,
