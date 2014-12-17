@@ -3075,6 +3075,10 @@ $.filterOptionsS3({
             return True
 
         if not self.is_logged_in():
+            # @note: MUST NOT send an HTTP Auth challenge here because
+            #        otherwise, negative tests (e.g. if not auth.s3_logged_in())
+            #        would always raise and never succeed => omit basic_auth_realm,
+            #        and send the challenge in permission.fail() instead
             basic = self.basic()
             try:
                 return basic[2]
@@ -6122,7 +6126,11 @@ class S3Permission(object):
             if self.auth.s3_logged_in():
                 raise HTTP(403, body=self.INSUFFICIENT_PRIVILEGES)
             else:
-                raise HTTP(401, body=self.AUTHENTICATION_REQUIRED)
+                # RFC1945/2617 compliance:
+                # Must raise an HTTP Auth challenge with status 401
+                challenge = {"WWW-Authenticate": 
+                             u"Basic realm=%s" % current.request.application}
+                raise HTTP(401, body=self.AUTHENTICATION_REQUIRED, **challenge)
 
     # -------------------------------------------------------------------------
     # ACL Lookup

@@ -69,6 +69,79 @@ class AuthUtilsTests(unittest.TestCase):
         # Logout
         auth.s3_impersonate(None)
 
+    # -------------------------------------------------------------------------
+    def testFail(self):
+        """ Test authorization failure for RFC1945/2617 compliance """
+
+        auth = current.auth
+        
+        # Save current request format
+        f = auth.permission.format
+
+        assertEqual = self.assertEqual
+        assertIn = self.assertIn
+        try:
+            # Interactive => redirects to login page
+            auth.permission.format = "html"
+            auth.s3_impersonate(None)
+            try:
+                auth.permission.fail()
+            except HTTP, e:
+                assertEqual(e.status, 303)
+                headers = e.headers
+                assertIn("Location", headers)
+                location = headers["Location"].split("?", 1)[0]
+                assertEqual(location, URL(c="default", 
+                                          f="user", 
+                                          args=["login"]))
+            else:
+                raise AssertionError("No HTTP status raised")
+
+            # Non-interactive => raises 401 including challenge
+            auth.permission.format = "xml"
+            auth.s3_impersonate(None)
+            try:
+                auth.permission.fail()
+            except HTTP, e:
+                assertEqual(e.status, 401)
+                headers = e.headers
+                assertIn("WWW-Authenticate", headers)
+            else:
+                raise AssertionError("No HTTP status raised")
+                
+            # Non-interactive => raises 403 if logged in
+            auth.permission.format = "xml"
+            auth.s3_impersonate("admin@example.com")
+            try:
+                auth.permission.fail()
+            except HTTP, e:
+                assertEqual(e.status, 403)
+                headers = e.headers
+                # No Auth challenge with 403
+                self.assertNotIn("WWW-Authenticate", headers)
+            else:
+                raise AssertionError("No HTTP status raised")
+
+            # auth.s3_logged_in() MUST NOT raise a challenge
+            msg = "s3_logged_in must not raise HTTP Auth challenge"
+            auth.permission.format = "xml"
+            auth.s3_impersonate(None)
+            try:
+                basic = auth.s3_logged_in()
+            except HTTP:
+                raise AssertionError(msg)
+            # ...especially not in interactive requests!
+            auth.permission.format = "html"
+            auth.s3_impersonate(None)
+            try:
+                basic = auth.s3_logged_in()
+            except HTTP:
+                raise AssertionError(msg)
+
+        finally:
+            auth.s3_impersonate(None)
+            auth.permission.format = f
+        
 # =============================================================================
 class SetRolesTests(unittest.TestCase):
     """ Test AuthS3.set_roles """
