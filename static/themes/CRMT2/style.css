@@ -381,7 +381,7 @@ aside .form-container input[type=radio] + label:before {
     background-color: #04A4A4;
     color: white;
     border-radius: 100%;
-    opacity:1;
+    opacity: 1;
 }
 .slick-prev:hover:before,
 .slick-next:hover:before {
@@ -394,9 +394,9 @@ aside .form-container input[type=radio] + label:before {
     content: "\f10b"; 
 }
 .slick-dots {
-    position:static;
-    margin-top:20px;
-    margin-left:0;
+    position: static;
+    margin-top: 20px;
+    margin-left: 0;
 }
 .slick-dots li button:before {
     font-size: 0.7rem;
@@ -405,13 +405,23 @@ aside .form-container input[type=radio] + label:before {
 }
 .slick-slide,
 .slick-dots li.slick-active button:before {
-    color: #EEEEEE;
+    color: #EEE;
 }
 .slick-slide {
-    color: #EEEEEE;
+    color: #EEE;
 }
 .slick-slide img {
     border: 5px solid white;
+}
+
+/* Dashboard */
+.dashboard-stats a {
+    color: #444;
+}
+
+/* Override widgets.css */
+.tooltip {
+    height: auto;
 }
 
 /* END */
@@ -854,6 +864,7 @@ th.sorting {
     font-size: 75%;
     padding: 0 24px; }
 
+/* Replaced by Slick
 .orbit-container {
   overflow: visible; }
   .orbit-container .orbit-prev {
@@ -875,6 +886,7 @@ th.sorting {
 
 .orbit-bullets li {
   margin-right: 12px; }
+*/
 
 .dashboard-lists {
   margin-top: -24px;
