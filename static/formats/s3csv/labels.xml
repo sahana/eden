@@ -138,6 +138,7 @@
 
     <column name="OfficeName">
         <match>|Name|name|Office|office|</match>
+        <label>Name</label>
         <label>name</label>
         <label>Office</label>
         <label>office</label>
