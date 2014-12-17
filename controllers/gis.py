@@ -1240,8 +1240,7 @@ def config():
                             form_vars = Storage(config_id = config_id,
                                                 layer_id = layer_id,
                                                 )
-                            form_vars.style = json.dumps(layer["style"],
-                                                         separators=SEPARATORS)
+                            form_vars.style = layer["style"]
                             # Update or Insert?
                             stable = s3db.gis_style
                             query = (stable.config_id == config_id) & \

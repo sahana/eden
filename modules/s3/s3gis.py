@@ -7481,8 +7481,15 @@ class Layer(object):
             if styled:
                 style = row.get("gis_style", None)
                 if style:
-                    if style.style:
-                        record["style"] = style.style
+                    style_dict = style.style
+                    if isinstance(style_dict, basestring):
+                        # Matryoshka?
+                        try:
+                            style_dict = json.loads(style_dict)
+                        except ValueError:
+                            pass
+                    if style_dict:
+                        record["style"] = style_dict
                     else:
                         record["style"] = None
                         marker = row.get("gis_marker", None)
