@@ -750,6 +750,53 @@ class ResourceFilterQueryTests(unittest.TestCase):
         self.assertEqual(str(query), str(expected))
 
     # -------------------------------------------------------------------------
+    def testDateTimeComparison(self):
+        """ 
+            Test virtual field string value comparison against
+            date/time value
+        """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+        
+        resource = current.s3db.resource("org_organisation")
+        row = Storage()
+        
+        # Test matching date
+        query = FS("test") == datetime.datetime(2014,10,5).date()
+
+        row.test = "2014-10-05"
+        assertTrue(query(resource, row))
+        row.test = "2013-12-02"
+        assertFalse(query(resource, row))
+        row.test = ""
+        assertFalse(query(resource, row))
+        
+        # Test matching datetime
+        query = FS("test") == datetime.datetime(2014,10,5,10,0,0)
+
+        row.test = "2014-10-05 10:00:00"
+        assertTrue(query(resource, row))
+        row.test = "2014-10-05 11:00:00"
+        assertFalse(query(resource, row))
+        row.test = "2013-12-02"
+        assertFalse(query(resource, row))
+        row.test = ""
+        assertFalse(query(resource, row))
+
+        # Test matching time
+        query = FS("test") == datetime.time(10,0,0)
+        
+        row.test = "10:00:00"
+        assertTrue(query(resource, row))
+        row.test = "11:00:00"
+        assertFalse(query(resource, row))
+        row.test = "2013-12-02"
+        assertFalse(query(resource, row))
+        row.test = ""
+        assertFalse(query(resource, row))
+        
+    # -------------------------------------------------------------------------
     def tearDown(self):
 
         current.auth.override = False
