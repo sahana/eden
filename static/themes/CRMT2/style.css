@@ -22,6 +22,16 @@ header.row {
     margin: 0;
 }
 
+/* Override widgets.css */
+.box_top label {
+    background-color: inherit;
+}
+
+.box_bottom {
+    padding: 0;
+    margin-bottom: 16px;
+}
+
 /* Not considered in Theme */
 .row.alert-space {
     padding: 0;
@@ -41,9 +51,17 @@ header.row {
     border: 0;
 }
 
+input.password {
+    /* Match email */
+    width: 500px;
+}
+
 table.embeddedComponent,
 form table.embeddedComponent td {
     border: none;
+}
+.ui-datepicker-trigger {
+    background-image: url(../../img/bootstrap/calendar.gif);
 }
 
 .ui-tabs .ui-tabs-nav li {

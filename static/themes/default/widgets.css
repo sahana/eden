@@ -300,7 +300,9 @@ textarea.richtext {
     margin-top: 30px;
 }
 
-/* dataTables Styling */
+/* dataTables Styling
+    @ToDo: Move colours out of widgets.css
+ */
 div .dataTable_table {
     /* Scroll the table not the wrapper */
     overflow: auto;
@@ -972,6 +974,7 @@ form table td.box_top_td {
 .box_top label,
 .box_top_inner label {
     display: block;
+    /* @ToDo: Move colour out of widgets.css */
     background-color: #fbfbfb;
     float: left;
     margin-top: -6px;
