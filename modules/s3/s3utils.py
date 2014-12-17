@@ -1983,12 +1983,20 @@ class S3TypeConverter(object):
 
         if isinstance(b, basestring):
             return b
+
+        from locale import nl_langinfo, D_FMT, D_T_FMT, T_FMT
         if isinstance(b, datetime.date):
-            raise TypeError # @todo: implement
+            format = nl_langinfo(D_FMT)
+            return b.strftime(format)
+
         if isinstance(b, datetime.datetime):
-            raise TypeError # @todo: implement
+            format = nl_langinfo(D_T_FMT)
+            return b.strftime(format)
+
         if isinstance(b, datetime.time):
-            raise TypeError # @todo: implement
+            format = nl_langinfo(T_FMT)
+            return b.strftime(format)
+
         return str(b)
 
     # -------------------------------------------------------------------------
