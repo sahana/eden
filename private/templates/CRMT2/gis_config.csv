@@ -1,5 +1,5 @@
 UUID,Name,OU,OU Type,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker,Image
-SITE_DEFAULT,Default,,,US,California,Los Angeles County,9,34.026689,-118.210315,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Default.jpg
+SITE_DEFAULT,Default,,,US,California,Los Angeles County,9,34.026689,-118.210315,900913,32.9,44,-123,-111,True,empty,http://aidiq.com/downloads/LACRMT/Default.jpg
 ,Acton & Agua Dulce,Acton & Agua Dulce,org_group,US,California,Los Angeles County,12,34.4998267777,-118.216151487,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/ActonAguaDulce.jpg
 ,Culver City,Culver City,org_group,US,California,Los Angeles County,13,34.0042128627,-118.383323206,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/CulverCity.jpg
 ,Huntington Park,Huntington Park,org_group,US,California,Los Angeles County,14,33.9776987662,-118.212546598,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/HuntingtonPark.jpg
