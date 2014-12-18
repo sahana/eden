@@ -1866,6 +1866,24 @@ class S3DateTime(object):
             return current.messages["NONE"]
 
     # -----------------------------------------------------------------------------
+    @classmethod
+    def get_js_format(cls, date_format):
+        """
+            Convert a python date format into javascript date format
+
+            @param date_format: the python date format string (eg: '%d-%m-%Y')
+            @return: The js date format string (eg: 'dd-mm-yy')
+        """
+        py_js_formats = {'%d': 'dd',
+                         '%m': 'mm',
+                         '%Y': 'yy'}
+
+        for py_js_format in py_js_formats:
+            date_format = date_format.replace(py_js_format, py_js_formats[py_js_format])
+
+        return date_format
+
+    # -----------------------------------------------------------------------------
     @staticmethod
     def get_offset_value(offset_str):
         """
