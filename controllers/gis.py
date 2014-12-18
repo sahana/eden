@@ -3731,7 +3731,15 @@ def screenshot():
         width =  14061 # 3375 for 72ppi
     else:
         height = get_vars.get("height")
+        try:
+            height = int(height)
+        except ValueError:
+            height = 2480
         width = get_vars.get("width")
+        try:
+            width = int(width)
+        except ValueError:
+            width = 3508
 
     filename = gis.get_screenshot(config_id, height=height, width=width)
     if filename:
