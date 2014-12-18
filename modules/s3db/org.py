@@ -903,17 +903,6 @@ class S3OrganisationModel(S3Model):
             @param attr: request attributes
         """
 
-        response = current.response
-        resource = r.resource
-        table = resource.table
-        settings = current.deployment_settings
-
-        use_branches = settings.get_org_branches()
-
-        # Query comes in pre-filtered to accessible & deletion_status
-        # Respect response.s3.filter
-        resource.add_filter(response.s3.filter)
-
         _vars = current.request.get_vars
 
         # JQueryUI Autocomplete uses "term"
@@ -930,11 +919,26 @@ class S3OrganisationModel(S3Model):
                             "Missing option! Require value")
             raise HTTP(400, body=output)
 
+        response = current.response
+        resource = r.resource
+        table = resource.table
+        settings = current.deployment_settings
+
+        use_branches = settings.get_org_branches()
+        search_l10n = settings.get_L10n_translate_org_organisation()
+
+        # Query comes in pre-filtered to accessible & deletion_status
+        # Respect response.s3.filter
+        resource.add_filter(response.s3.filter)
+
         query = (FS("organisation.name").lower().like(value + "%")) | \
                 (FS("organisation.acronym").lower().like(value + "%"))
         if use_branches:
             query |= (FS("parent.name").lower().like(value + "%")) | \
                      (FS("parent.acronym").lower().like(value + "%"))
+        if search_l10n:
+            query |= (FS("name.name_l10n").lower().like(value + "%")) | \
+                     (FS("name.acronym_l10n").lower().like(value + "%"))
         resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
@@ -954,6 +958,10 @@ class S3OrganisationModel(S3Model):
                       ]
             if use_branches:
                 fields.append("parent.name")
+            if search_l10n:
+                fields += ["name.name_l10n",
+                           "name.acronym_l10n",
+                           ]
 
             rows = resource.select(fields,
                                    start=0,
@@ -964,12 +972,16 @@ class S3OrganisationModel(S3Model):
             append = output.append
             for row in rows:
                 acronym = ""
-                if use_branches:
+                if use_branches or search_l10n:
                     _row = row[table]
                 else:
                     _row = row
-                name = _row.name
-                acronym = _row.acronym
+                if search_l10n:
+                    name = row["org_organisation_name.name_l10n"] or _row.name
+                    acronym = row["org_organisation_name.acronym_l10n"] or _row.acronym
+                else:
+                    name = _row.name
+                    acronym = _row.acronym
                 record = dict(id = _row.id,
                               name = name,
                               )

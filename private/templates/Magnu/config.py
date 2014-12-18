@@ -160,6 +160,7 @@ settings.org.groups = "Coalition / Consortium"
 #settings.org.branches = True
 # Show branches as tree rather than as table
 #settings.org.branches_tree_view = True
+#settings.org.autocomplete = True
 
 # Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
 settings.hrm.site_contact_unique = False
