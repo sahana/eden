@@ -356,7 +356,7 @@ aside .form-container input[type=radio] + label:before {
 }
 
 /* Override widget.css .expanded-selector for top bar */
-.top-bar .expanded {
+.top-bar.expanded {
     float: none;
     width: auto;
 }
