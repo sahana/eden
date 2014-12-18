@@ -2812,6 +2812,9 @@ class GIS(object):
             height = settings.get_gis_map_height()
         if width is None:
             width = settings.get_gis_map_width()
+        # For Screenshots
+        #height = 410
+        #width = 820
         driver.set_window_size(width + 5, height + 20)
 
         # Load the homepage

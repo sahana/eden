@@ -1208,8 +1208,7 @@ def customise_org_organisation_controller(**attr):
                                                 fields = [("", "location_id"),
                                                         ],
                                                 columns = (10,),
-                                                # @ToDo: Fix
-                                                multiple = False,
+                                                multiple = True,
                                        ))
 
                     ftable = s3db.org_facility
