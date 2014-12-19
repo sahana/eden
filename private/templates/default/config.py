@@ -614,6 +614,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.use_trainings = False
 # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
 #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
+# Uncomment to set End Date in Credential dynamically; specify the integer as difference between start and end date
+#settings.hrm.credential_start_end_days = 730
 
 # -----------------------------------------------------------------------------
 # Inventory Management

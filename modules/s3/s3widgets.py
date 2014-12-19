@@ -1243,13 +1243,17 @@ class S3DateWidget(FormWidget):
 
     def __init__(self,
                  format = None,
-                 past=1440,     # how many months into the past the date can be set to
-                 future=1440    # how many months into the future the date can be set to
+                 past=1440,     # how many months into the past the date can be set to.
+                 future=1440,    # how many months into the future the date can be set to.
+                 set_interval = None,   # id of of some other date field. (eg: start_date for end_date.)
+                 interval_day = None,   # how many days ahead should this field be set w.r.t other field.
                  ):
 
         self.format = format
         self.past = past
         self.future = future
+        self.set_interval = set_interval
+        self.interval_day = interval_day
 
     def __call__(self, field, value, **attributes):
 
@@ -1330,6 +1334,16 @@ class S3DateWidget(FormWidget):
                 maxDate = "-%s" % days
         else:
             maxDate = "+0"
+
+        # Set auto updation of end_date based on start_date if set_interval and interval_day attr are set
+        set_interval = self.set_interval
+        interval_day = self.interval_day
+        if set_interval and interval_day:
+            s3.js_global.append('''
+var add_end_date_days=%d
+var start_date_selector="#%s"
+var end_date_selector="#%s"
+''' % (interval_day, set_interval, selector))
 
         script = \
 '''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
