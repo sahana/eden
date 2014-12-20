@@ -2225,7 +2225,9 @@ class S3OrganisationServiceModel(S3Model):
         #
         tablename = "org_service"
         define_table(tablename,
-                     Field("name", length=128, notnull=True, unique=True,
+                     Field("name", length=128, notnull=True,
+                           # Comment this if we need to support the same service at different locations in hierarchy
+                           unique = True,
                            label = T("Name"),
                            ),
                      Field("parent", "reference org_service", # This form of hierarchy may not work on all Databases
@@ -2285,6 +2287,8 @@ class S3OrganisationServiceModel(S3Model):
                                      )
 
         configure(tablename,
+                  # If we need to support the same service at different locations in hierarchy
+                  #deduplicate = self.org_service_deduplicate,
                   hierarchy = hierarchy,
                   )
 
@@ -2316,6 +2320,26 @@ class S3OrganisationServiceModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_service_deduplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        name = data.get("name")
+        if name:
+            table = item.table
+            query = (table.name == name)
+            parent = data.get("parent")
+            if parent:
+                query &= (table.parent == parent)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
