@@ -312,6 +312,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.widget_wms_browser = True
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
+# Uncomment to open Location represent links in a Popup Window
+#settings.gis.popup_location_link = True
 # GeoNames username
 settings.gis.geonames_username = "eden_test"
 

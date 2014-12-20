@@ -5229,66 +5229,24 @@ class gis_LocationRepresent(S3Represent):
         settings = current.deployment_settings
         # Translation uses gis_location_name & not T()
         translate = settings.get_L10n_translate_gis_location()
-
+        language = current.session.s3.language
+        if language == settings.get_L10n_default_language():
+            translate = False
+        # Iframe height(Link)
+        self.iheight = settings.get_gis_map_selector_height() 
         address_only = address_only or \
                        settings.get_gis_location_represent_address_only()
         show_marker_icon = True if address_only == "icon" else False
         self.address_only = address_only
         self.show_marker_icon = show_marker_icon
-
         self.sep = sep
-        self.show_name = show_name
-
         if sep:
-            # Separator to place between all elements in the hierarchy
-            fields = ["name",
-                      "level",
-                      "path",
-                      "L0",
-                      "L1",
-                      "L2",
-                      "L3",
-                      "L4",
-                      "L5",
-                      ]
-            self.multi_country = len(current.deployment_settings.get_gis_countries()) != 1
-        elif address_only and not show_marker_icon:
-            fields = ["id",
-                      "name",
-                      "level",
-                      "parent",
-                      "path",
-                      "L0",
-                      "L1",
-                      "L2",
-                      "L3",
-                      "L4",
-                      "L5",
-                      "addr_street",
-                      "addr_postcode",
-                      ]
-        else:
-            fields = ["id",
-                      "name",
-                      "level",
-                      "parent",
-                      "path",
-                      "L0",
-                      "L1",
-                      "L2",
-                      "L3",
-                      "L4",
-                      "L5",
-                      "addr_street",
-                      "addr_postcode",
-                      "inherited",
-                      "lat",
-                      "lon",
-                      ]
+            self.multi_country = len(settings.get_gis_countries()) != 1
+        self.show_name = show_name
+        self.lookup_complete = False
 
         super(gis_LocationRepresent,
               self).__init__(lookup="gis_location",
-                             fields=fields,
                              show_link=show_link,
                              translate=translate,
                              multiple=multiple)
@@ -5303,10 +5261,17 @@ class gis_LocationRepresent(S3Represent):
             @param v: the representation of the key
             @param row: the row with this key (unused here)
         """
-
+        if k is None:
+            return "-"
+        settings = current.deployment_settings
+        iheight = settings.get_gis_map_selector_height()
+        popup = settings.get_gis_popup_location_link()
         return A(v,
                  _style="cursor:pointer;cursor:hand",
-                 _onclick="s3_showMap(%i);return false" % k)
+                 _onclick="s3_viewMap(%i, %i, '%s');return false" % (k,
+                                                                     iheight,
+                                                                     popup),
+                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5352,6 +5317,83 @@ class gis_LocationRepresent(S3Represent):
             return text
 
     # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for Location(GIS) rows.Parameters
+            key and fields are not used, but are kept for API
+            compatiblity reasons.
+
+            @param values: the gis_location IDs
+        """     
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.gis_location
+        table = s3db.gis_location_name
+        count = len(values)
+        sep = self.sep
+        translate = self.translate
+
+        # Initialized here to keep the init lightweight
+        fields = [ltable.id,
+                  ltable.name,
+                  ltable.level,
+                  ltable.path,
+                  ltable.L0,
+                  ltable.L1,
+                  ltable.L2,
+                  ltable.L3,
+                  ltable.L4,
+                  ltable.L5,
+                  ]
+        if sep:
+            # Separator to place between all elements in the hierarchy
+            gis_fields = fields
+        elif self.address_only and not self.show_marker_icon:
+            gis_fields = fields + [ltable.parent,
+                                   ltable.addr_street,
+                                   ltable.addr_postcode]
+        else:
+            gis_fields = fields + [ltable.parent,
+                                   ltable.addr_street,
+                                   ltable.addr_postcode,
+                                   ltable.inherited,
+                                   ltable.lat,
+                                   ltable.lon]
+        if count == 1:
+            query = (ltable.id == values[0])
+        else:
+            query = (ltable.id.belongs(values))
+
+        rows = db(query).select(limitby = (0, count),
+                                *gis_fields)
+        location_ids = []
+        paths = self.paths = {}
+        if sep or translate:
+            for row in rows:
+                path = row.path
+                if not path:
+                    path = current.gis.update_location_tree(row)
+                split_path = path.split("/")
+                paths[row.id] = split_path
+                location_ids += split_path
+            location_ids = set(location_ids)
+
+        if translate:
+            query = (table.deleted == False) & \
+                    (table.language == current.session.s3.language)
+            count = len(location_ids)
+            if count == 1:
+                query &= (table.location_id == row.id)
+            else:
+                query &= (table.location_id.belongs(location_ids))
+            self.l10n = db(query).select(table.location_id,
+                                         table.name_l10n,
+                                         limitby = (0, count),
+                                         ).as_dict(key="location_id")
+        self.lookup_complete = True
+        return rows
+
+    # -------------------------------------------------------------------------
     def represent_row(self, row):
         """
             Represent a single Row
@@ -5363,32 +5405,37 @@ class gis_LocationRepresent(S3Represent):
 
         sep = self.sep
         translate = self.translate
-        if sep or translate:
+        if self.lookup_complete is False:
+            # lookup_rows was skipped, represent called from widget(eg S3LocationSelector)
+            # Need to initialize l10n and paths
+            self.paths = {}
+
             path = row.path
             if not path:
                 path = current.gis.update_location_tree(row)
-            ids = path.split("/")
-        if translate:
-            language = current.session.s3.language
-            if language == current.deployment_settings.get_L10n_default_language():
-                translate = False
-            else:
-                # @ToDo: Move the query into a new custom_lookup_rows()
-                s3db = current.s3db
-                table = s3db.gis_location_name
+            split_path = path.split("/")
+            self.paths[row.id] = split_path
+            location_ids = set(split_path)
+
+            # Lookup l10n
+            if translate:
+                table = current.s3db.gis_location_name
                 query = (table.deleted == False) & \
-                        (table.language == language)
-                if len(ids) == 1:
+                        (table.language == current.session.s3.language)
+                count = len(location_ids)
+                if count == 1:
                     query &= (table.location_id == row.id)
-                    limitby = (0, 1)
                 else:
-                    query &= (table.location_id.belongs(ids))
-                    limitby = (0, len(ids))
-                l10n = current.db(query).select(table.location_id,
-                                                table.name_l10n,
-                                                limitby = limitby,
-                                                ).as_dict(key="location_id")
+                    query &= (table.location_id.belongs(location_ids))
+                self.l10n = current.db(query).select(table.location_id,
+                                                     table.name_l10n,
+                                                     limitby = (0, count),
+                                                     ).as_dict(key="location_id")
+
+        ids = self.paths.get(row.id)
+
         if translate:
+            l10n = self.l10n
             loc = l10n.get(row.id)
             if loc:
                 name = loc["name_l10n"]
@@ -5519,7 +5566,10 @@ class gis_LocationRepresent(S3Represent):
                     represent = name or "ID: %s" % row.id
 
                 if has_lat_lon and self.show_marker_icon:
-                    script = '''s3_showMap(%i);return false''' % row.id
+                    popup = settings.get_gis_popup_location_link()
+                    script = '''s3_viewMap(%i, %i, '%s');return false''' % (row.id, 
+                                                                            self.iheight,
+                                                                            popup)
                     represent = SPAN(s3_unicode(represent),
                                      I(_class="icon icon-map-marker",
                                        _title=self.lat_lon_represent(row),

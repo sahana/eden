@@ -1127,6 +1127,14 @@ class S3Config(Storage):
         """
         return self.gis.get("lookup_code", False)
 
+    def get_gis_popup_location_link(self):
+        """
+            Whether a Pop-up Window should open on clicking
+            Location represent links
+            - Default: Map opens in a div
+        """
+        return self.gis.get("popup_location_link", False)
+
     # -------------------------------------------------------------------------
     # L10N Settings
     def get_L10n_default_language(self):
