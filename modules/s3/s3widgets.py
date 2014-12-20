@@ -4447,11 +4447,12 @@ class S3LocationSelector(S3Selector):
                               '''{decimal:"%(decimal)s",dms:"%(dms)s"}''' % 
                               latlon_labels)
                 global_append('''i18n.latlon_error='''
-                              '''{lat:"%s",lon:"%s",min:"%s",sec:"%s"}''' % 
+                              '''{lat:"%s",lon:"%s",min:"%s",sec:"%s",format:"%s"}''' % 
                               (T("Latitude must be -90..90"),
                                T("Longitude must be -180..180"),
                                T("Minutes must be 0..59"),
                                T("Seconds must be 0..59"),
+                               T("Unrecognized format"),
                                ))
 
         # If we need to show the map since we have an existing lat/lon/wkt

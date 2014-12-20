@@ -1684,7 +1684,7 @@
                 var input = $('<div>').hide().insertAfter(el);
 
                 // Decimal Input
-                var decimalInput = $('<input type="text" class="double dms-input" size="18">').hide();
+                var decimalInput = $('<input type="text" class="dms-input" size="18">').hide();
                 this.decimalInput = decimalInput;
                 
                 // DMS Inputs
@@ -1858,7 +1858,8 @@
             
             var type = this.options.type,
                 range,
-                rangeError;
+                rangeError,
+                formatError = i18n.latlon_error.format;
             
             if (type == 'lat') {
                 range = 90;
@@ -1873,12 +1874,158 @@
                 // Removed
                 return '';
             }
-            decimal = parseFloat(decimal);
-            if (Math.abs(decimal) > range) {
+            decimal = this._parse(decimal, type);
+            if (decimal === null) {
+                this._showError(this.decimalInput, formatError);
+            } else if (Math.abs(decimal) > range) {
                 this._showError(this.decimalInput, rangeError);
-                return null;
+                decimal = null;
             }
             return decimal;
+        },
+        
+        /**
+         * Parser for the decimal input - tries to recognize the input format
+         * and convert it into decimal degrees. Supports a variety of DMS formats,
+         * as well as explicit direction (N|S|E|W). Simplifies input by allowing
+         * copy/paste (which is not easily possible with strict DMS input).
+         * 
+         * @param {string} value: the input value
+         * @param {string} mode: 'lat' or 'lon'
+         */
+        _parse: function(value, mode) {
+            
+            var directions;
+            if (mode == 'lat') {
+                directions = {'N': 1, 'S': -1};
+            } else {
+                directions = {'E': 1, 'W': -1};
+            }
+            var DEG_REGEX = /^([NSEW]{0,1})\s*([-+]?\d+[.,]?\d*)\s*°?\s*([NSEW])?\s*$/,
+                DMS_REGEX = /^([NSEW]{0,1})\s*([-+]?\d+[.,]?\d*)?\s*([°'"]{0,1})\s*:?\s*([-+]?\d+[.,]?\d*)?\s*(['"]{0,1})\s*:?\s*([-+]?\d+[.,]?\d*)?\s*(['"]{0,1})\s*([NSEW])?\s*$/,
+                match,
+                direction,
+                degrees = 0,
+                minutes = 0,
+                seconds = 0;
+
+            if (value.match(DEG_REGEX)) {
+                // Decimal format
+                match = value.replace(DEG_REGEX, "$1|$2|$3").split('|');
+                direction = match[0] || match[2];
+                if (direction) {
+                    direction = directions[direction];
+                }
+                degrees = parseFloat(match[1]);
+                // Ignore direction if number is negative
+                if (direction && Math.abs(degrees) != degrees) {
+                    direction = null;
+                }
+                if (direction) {
+                    degrees *= direction;
+                }
+                return degrees;
+
+            } else if (value.match(DMS_REGEX)) {
+                // DMS format
+                match = value.replace(DMS_REGEX, "$1|$2|$3|$4|$5|$6|$7|$8").split('|');
+                direction = match[0] || match[7];
+                if (direction) {
+                    direction = directions[direction];
+                }
+                var numbers = [],
+                    symbols = [],
+                    n,
+                    s,
+                    i;
+                for (i = 1; i < 6; i += 2) {
+                    n = match[i];
+                    s = match[i + 1];
+                    if (s) {
+                        numbers.push(parseFloat(n) || 0);
+                        symbols.push(s);
+                    } else if (n) {
+                        numbers.push(parseFloat(n));
+                        symbols.push(null);
+                    }
+                }
+                var DEGREES = '°', 
+                    MINUTES = "'", 
+                    SECONDS = '"',
+                    len = numbers.length;
+                if (!len) {
+                    // No number - invalid!
+                    return null;
+                } else {
+                    // Keep only the leading number as signed number
+                    for (i=1; i<len; i++) {
+                        numbers[i] = Math.abs(numbers[i]);
+                    }
+                    // Ignore direction if the leading number is negative
+                    n = numbers[0];
+                    if (Math.abs(n) != n) {
+                        direction = 1;
+                    }
+                    if (len == 1) {
+                        // Single number - decide by symbol
+                        s = symbols[0];
+                        if (s == SECONDS) {
+                            seconds = numbers[0];
+                        } else if (s == MINUTES) {
+                            minutes = numbers[0];
+                        } else if (!s || s == DEGREES) {
+                            // Should have matched DEG_REGEX?
+                            degrees = numbers[0];
+                        }
+                    } else if (len == 2) {
+                        // Two numbers - try to figure out what is what
+                        var s0 = symbols[0],
+                            s1 = symbols[1];
+                        if (s0 == DEGREES) {
+                            degrees = numbers[0];
+                            if (s1 == SECONDS) {
+                                seconds = numbers[1];
+                            } else if (s1 == MINUTES || !s1) {
+                                minutes = numbers[1];
+                            }
+                        } else if (!s0) {
+                            if (s1 == SECONDS) {
+                                minutes = numbers[0];
+                                seconds = numbers[1];
+                            } else if (s1 == MINUTES || !s1) {
+                                degrees = numbers[0];
+                                minutes = numbers[1];
+                            }
+                        } else if (s0 == MINUTES && (!s1 || s1 == SECONDS)) {
+                            minutes = numbers[0];
+                            seconds = numbers[1];
+                        } else {
+                            // Unrecognized format
+                            return null;
+                        }
+                    } else {
+                        // Three numbers - verify symbols and order
+                        if ((!symbols[0] || symbols[0] == DEGREES) &&
+                            (!symbols[1] || symbols[1] == MINUTES) &&
+                            (!symbols[2] || symbols[2] == SECONDS)) {
+                            degrees = numbers[0];
+                            minutes = numbers[1];
+                            seconds = numbers[2];
+                        } else {
+                            // Unrecognized format
+                            return null;
+                        }
+                    }
+                    // Compute total and hemisphere
+                    var decimal = degrees + minutes / 60 + seconds / 3600;
+                    if (direction) {
+                        decimal *= direction;
+                    }
+                    return decimal;
+                }
+            }
+            // Unrecognized format
+            return null;
         },
         
         /**
@@ -1902,6 +2049,7 @@
                 var value = self._validateDecimal();
                 if (value !== null) {
                     $(self.element).val(value).change();
+                    self.decimalInput.val(value);
                 } else {
                     $(self.element).val(self.defaultValue).change();
                 }
