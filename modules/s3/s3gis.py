@@ -2844,9 +2844,10 @@ class GIS(object):
         def map_loaded(driver):
             test = '''return S3.gis.maps['%s'].s3.loaded''' % map_id
             try:
-                return driver.execute_script(test)
-            except WebDriverException:
-                return False
+                result = driver.execute_script(test)
+            except WebDriverException, e:
+                result = False
+            return result
 
         try:
             # Wait for up to 100s (large screenshots take a long time for layers to load)

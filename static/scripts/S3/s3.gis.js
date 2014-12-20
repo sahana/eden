@@ -139,7 +139,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 S3.hideAlerts('warning');
             }
         });
-
+        
         $.when(layersLoaded(map_id)).then(
             function(status) {
                 // Success:
@@ -153,9 +153,21 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         hideThrobber(null, map);
                         // Set a flag to show that we've completed loading
                         // - used by gis.get_screenshot()
-                        // PhantomJS isn't waiting for the callbacks, so currently adding a manual delay
-                        //map.s3.loaded = true;
-                        setTimeout(function(){ map.s3.loaded = true; }, 50000);
+                        // NB: Even after all tiles are loaded, they may still
+                        //     be in the drawing queue hence invisible - wait
+                        //     until the tile manager has unqueued them all
+                        setTimeout(function drawing() {
+                            try {
+                                if (map.tileManager.tileQueue[map.id].length) {
+                                    setTimeout(drawing, 250);
+                                } else {
+                                    map.s3.loaded = true;
+                                }
+                            } catch(e) {
+                                // What? No tile queue? Well, then we have to... :/
+                                setTimeout(function() {map.s3.loaded = true}, 50000);
+                            }
+                        }, 1);
                     },
                     function(status) {
                         // Failed
@@ -211,25 +223,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
      * Check that all Layer Tiles are Loaded
      */
     var tilesLoaded = function(layer) {
+
         if (undefined == layer.numLoadingTiles) {
             return true;
         }
 
         var dfd = new jQuery.Deferred();
 
-        // Test every half-second
-        setTimeout(function working() {
+        // NB: numLoadingTiles is incremented/decremented individually per each
+        //     asynchronously loading tile - thus it is 0 both before /and/ after
+        //     tile loading, and sometimes even in between when loading is very
+        //     fast - so we must wait for loadend before checking, otherwise the
+        //     dfd will be resolved instantly with not a single tile loaded yet ;)
+        layer.events.register('loadend', '', function() {
             if (layer.numLoadingTiles == 0) {
                 dfd.resolve('Tiles loaded');
             } else if (dfd.state() === 'pending') {
-                // Notify progress
-                dfd.notify('waiting for Tiles to load...');
-                // Loop
-                setTimeout(working, 250);
+                dfd.reject('Tile loading failed');
             } else {
                 // Failed!?
             }
-        }, 1);
+        });
 
         // Return the Promise so caller can't change the Deferred
         return dfd.promise();

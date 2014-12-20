@@ -3733,12 +3733,12 @@ def screenshot():
         height = get_vars.get("height")
         try:
             height = int(height)
-        except ValueError:
+        except (ValueError, TypeError):
             height = 2480
         width = get_vars.get("width")
         try:
             width = int(width)
-        except ValueError:
+        except (ValueError, TypeError):
             width = 3508
 
     filename = gis.get_screenshot(config_id, height=height, width=width)
