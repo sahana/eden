@@ -246,13 +246,13 @@ class S3DocumentLibrary(S3Model):
                      super_link(doc_id, "doc_entity"),
                      super_link("pe_id", "pr_pentity"), # @ToDo: Remove & make Persons doc entities instead?
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
-                     Field("file", "upload", autodelete=True,
+                     Field("file", "upload", autodelete = True,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
-                                        # Distingish from prepop
-                                        null = "",
-                                      ),
+                                                  IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
+                                                  # Distingish from prepop
+                                                  null = "",
+                                                  ),
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
                                                        "uploads",
@@ -403,7 +403,8 @@ class S3DocumentLibrary(S3Model):
                 if not form_vars.name:
                     form_vars.name = filename
 
-        if not hasattr(doc, "file") and not doc and not form_vars.url:
+        if not hasattr(doc, "file") and not doc and \
+           not form_vars.url and not form_vars.file:
             if document:
                 msg = current.T("Either file upload or document URL required.")
             else:
