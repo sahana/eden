@@ -2387,6 +2387,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("activity_types", None)
 
+    def get_hrm_credential_start_end_days(self):
+        """
+            Days between Credential Start and End
+        """
+        return self.hrm.get("credential_start_end_days", 365)
+
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #

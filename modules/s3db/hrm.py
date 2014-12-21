@@ -2373,6 +2373,13 @@ class S3HRSkillModel(S3Model):
                                 9: T("Fail"),
                                 }
 
+        hrm_end_date_days = settings.get_hrm_credential_start_end_days()
+
+        # Checks whether the hrm_end_date_days is valid
+        # i.e Is an integer and greater than 0
+        if (hrm_end_date_days < 0) or (not isinstance(hrm_end_date_days, (int, long))):
+            hrm_end_date_days = None
+
         tablename = "hrm_credential"
         define_table(tablename,
                      person_id(),
@@ -2394,7 +2401,8 @@ class S3HRSkillModel(S3Model):
                              label = T("Date Received")
                              ),
                      s3_date("end_date",
-                             # @ToDo: Automation based on deployment_settings, e.g.: date received + 6/12 months
+                             interval_day = hrm_end_date_days,
+                             set_interval = "hrm_credential_start_date",
                              label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
