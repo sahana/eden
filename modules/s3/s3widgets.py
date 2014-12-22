@@ -717,17 +717,22 @@ class S3AddPersonWidget2(FormWidget):
         if controller == "hrm":
             emailRequired = settings.get_hrm_email_required()
             occupation = None
+
         elif controller == "vol":
             dtable = s3db.pr_person_details
             occupation = dtable.occupation
             emailRequired = settings.get_hrm_email_required()
+
         elif controller == "patient":
+            controller = "pr"
             emailRequired = settings.get_hrm_email_required()
             occupation = None
+
         elif hrm:
             controller = "hrm"
             emailRequired = settings.get_hrm_email_required()
             occupation = None
+
         else:
             controller = "pr"
             emailRequired = False
