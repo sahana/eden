@@ -4986,6 +4986,8 @@ class S3LocationSelector(S3Selector):
             _placeholder = label
         else:
             _placeholder = None
+        if isinstance(value, unicode):
+            value = value.encode("utf-8")
         widget = INPUT(_name=name,
                        _id=input_id,
                        _class=_class,
