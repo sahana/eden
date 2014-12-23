@@ -1126,6 +1126,12 @@ class S3Config(Storage):
         """
         return self.gis.get("lookup_code", False)
 
+    def get_gis_geojson_fallback_to_points(self):
+        """
+            Configure the fallback to point for geojson
+        """
+        return self.gis.get("geojson_fallback_to_points", True)
+
     # -------------------------------------------------------------------------
     # L10N Settings
     def get_L10n_default_language(self):
@@ -1309,7 +1315,6 @@ class S3Config(Storage):
 
         return excluded_fields
 
-    # -------------------------------------------------------------------------
     # UI Settings
     #
     def get_ui_formstyle(self):
@@ -2090,11 +2095,10 @@ class S3Config(Storage):
     #
     def get_deploy_hr_label(self):
         """
-            Label for deployable Human Resources
-            e.g. 'Staff', 'Volunteer' (CERT), 'Member' (RDRT)
+            Configure fall back point of geojson
         """
         return self.deploy.get("hr_label", "Staff")
-
+    
     # -------------------------------------------------------------------------
     # Events
     #
@@ -2516,6 +2520,13 @@ class S3Config(Storage):
             Use Vehicles to respond to Incident Reports?
         """
         return self.irs.get("vehicle", False)
+
+    def get_irs_dispatch_ireport_subject(self):
+        """
+            Dispatch notice report for irs_dispatch
+        """
+        return current.T(self.irs.get("dispatch_ireport_subject", T("Deployment Request")))
+
 
     # -------------------------------------------------------------------------
     # Members

@@ -710,8 +710,7 @@ class S3IRSModel(S3Model):
             # Create the form
             opts = dict(
                     type="SMS",
-                    # @ToDo: deployment_setting
-                    subject = T("Deployment Request"),
+                    subject = settings.get_irs_dispatch_ireport_subject(),
                     message = message,
                     url = url,
                     #formid = r.id

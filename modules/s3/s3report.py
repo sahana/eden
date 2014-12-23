@@ -286,8 +286,9 @@ class S3Report(S3Method):
         # Set XSLT stylesheet
         stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")
 
+
         # Do we have any data at this level of aggregation?
-        fallback_to_points = True # @ToDo: deployment_setting?
+        fallback_to_points = settings.get_gis_geojson_fallback_to_points()
         output = None
         if fallback_to_points:
             if resource.count() == 0:
