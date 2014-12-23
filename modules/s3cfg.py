@@ -93,6 +93,7 @@ class S3Config(Storage):
                     }
 
     def __init__(self):
+        self.asset = Storage()
         self.auth = Storage()
         self.auth.email_domains = []
         self.base = Storage()
@@ -1868,6 +1869,15 @@ class S3Config(Storage):
 
     # =========================================================================
     # Modules
+
+    # -------------------------------------------------------------------------
+    # Asset: Asset Management
+    #
+    def get_asset_telephones(self):
+        """
+            Whether Assets should include a specific type for Telephones
+        """
+        return self.asset.get("telephones", False)
 
     # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol

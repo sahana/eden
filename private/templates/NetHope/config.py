@@ -45,9 +45,16 @@ settings.mail.approver = "ADMIN"
 # Restrict the Location Selector to just certain countries
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
-settings.gis.countries = ("GN", "LR", "ML", "SL")
+settings.gis.countries = ("GN", "LR", "SL")
+# Show LatLon boxes in the Location Selector
+settings.gis.latlon_selector = True
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to Disable the Postcode selector in the LocationSelector
+settings.gis.postcode_selector = False
+# Uncomment to show the Print control:
+# http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
+settings.gis.print_button = True
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -99,11 +106,24 @@ settings.L10n.thousands_separator = ","
 # 6: Apply Controller, Function, Table ACLs and Entity Realm
 # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
 # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-#
-#settings.security.policy = 7 # Organisation-ACLs
+
+settings.security.policy = 3 # Controller ACLs (currently all access is by Admins)
+
+settings.asset.telephones = True
 
 settings.inv.direct_stock_edits = True
 
+settings.req.req_type = ("Stock",)
+
+# -----------------------------------------------------------------------------
+def customise_asset_asset_resource(r, tablename):
+
+    table = r.table
+    table.type.default = 3 # Telephones
+    table.purchase_price.readable = table.purchase_price.writable = False
+    table.purchase_currency.readable = table.purchase_currency.writable = False
+    
+settings.customise_asset_asset_resource = customise_asset_asset_resource
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them
 # Modules menu is defined in modules/eden/menu.py

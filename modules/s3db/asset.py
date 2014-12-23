@@ -30,6 +30,7 @@
 __all__ = ("S3AssetModel",
            "S3AssetHRModel",
            "S3AssetTeamModel",
+           "S3AssetTelephoneModel",
            #"asset_rheader",
            "asset_types",
            "asset_log_status",
@@ -52,13 +53,13 @@ from ..s3 import *
 from s3layouts import S3AddResourceLink
 
 ASSET_TYPE_VEHICLE   = 1   # => Extra Tab(s) for Registration Documents, Fuel Efficiency
-ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
+#ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
 ASSET_TYPE_TELEPHONE = 3   # => Extra Tab(s) for Contact Details & Airtime Billing
 ASSET_TYPE_OTHER     = 4   # => No extra Tabs
 
 # To pass to global scope
 asset_types = {"VEHICLE"    : ASSET_TYPE_VEHICLE,
-               "RADIO"      : ASSET_TYPE_RADIO,
+               #"RADIO"      : ASSET_TYPE_RADIO,
                "TELEPHONE"  : ASSET_TYPE_TELEPHONE,
                "OTHER"      : ASSET_TYPE_OTHER,
                }
@@ -116,7 +117,10 @@ class S3AssetModel(S3Model):
 
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
-        vehicle = settings.has_module("vehicle")
+        #radios = settings.get_asset_radios()
+        telephones = settings.get_asset_telephones()
+        vehicles = settings.has_module("vehicle")
+        types = telephones or vehicles
 
         # Shortcuts
         add_components = self.add_components
@@ -128,11 +132,14 @@ class S3AssetModel(S3Model):
         #--------------------------------------------------------------------------
         # Assets
         #
-        asset_type_opts = {ASSET_TYPE_VEHICLE     : T("Vehicle"),
-                           #ASSET_TYPE_RADIO      : T("Radio"),
-                           #ASSET_TYPE_TELEPHONE  : T("Telephone"),
-                           ASSET_TYPE_OTHER       : T("Other"),
+        asset_type_opts = {ASSET_TYPE_OTHER : T("Other"),
                            }
+        #if radios:
+        #    asset_type_opts[ASSET_TYPE_RADIO] = T("Radio")
+        if telephones:
+            asset_type_opts[ASSET_TYPE_TELEPHONE] = T("Telephone")
+        if vehicles:
+            asset_type_opts[ASSET_TYPE_VEHICLE] = T("Vehicle")
 
         asset_condition_opts = {1: T("Good Condition"),
                                 2: T("Minor Damage"),
@@ -156,15 +163,15 @@ class S3AssetModel(S3Model):
                      Field("number",
                            label = T("Asset Number"),
                            ),
-                     # @ToDo: We could set this automatically based on Item Category
                      Field("type", "integer",
+                           # @ToDo: We could set this automatically based on Item Category
                            default = ASSET_TYPE_OTHER,
                            label = T("Type"),
                            represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(asset_type_opts),
-                           readable = vehicle,
-                           writable = vehicle,
+                           readable = types,
+                           writable = types,
                            ),
                      item_id(represent = supply_item_represent,
                              requires = IS_ONE_OF(asset_items_set,
@@ -404,6 +411,8 @@ $.filterOptionsS3({
                        asset_item = "asset_id",
                        asset_log = "asset_id",
                        asset_human_resource = "asset_id",
+                       asset_telephone = "asset_id",
+                       asset_telephone_usage = "asset_id",
                        hrm_human_resource = {"link": "asset_human_resource",
                                              "joinby": "asset_id",
                                              "key": "human_resource_id",
@@ -876,6 +885,57 @@ class S3AssetTeamModel(S3Model):
                                            empty = False,
                                            ),
                           #s3_comments(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
+class S3AssetTelephoneModel(S3Model):
+    """
+        Extend the Assset Module for Telephones:
+            Usage Costs
+    """
+
+    names = ("asset_telephone",
+             "asset_telephone_usage",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        #--------------------------------------------------------------------------
+        # Asset Telephones
+        #
+        tablename = "asset_telephone"
+        self.define_table(tablename,
+                          self.asset_asset_id(empty = False),
+                          # @ToDo: Filter to Suppliers
+                          self.org_organisation_id(label = T("Airtime Provider")),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        #--------------------------------------------------------------------------
+        # Telephone Usage Costs
+        #
+        # @ToDo: Virtual Fields for Month/Year for Reporting
+        #
+        tablename = "asset_telephone_usage"
+        self.define_table(tablename,
+                          self.asset_asset_id(empty = False),
+                          s3_date(label = T("Start Date")),
+                          s3_date(label = T("End Date")),
+                          Field("units_used", "double", # 'usage' is a reserved word in MySQL
+                                label = T("Usage"),
+                                ),
+                          #Field("cost", "double",
+                          #      label = T("Cost"),
+                          #      ),
+                          #s3_currency(),
+                          s3_comments(),
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------

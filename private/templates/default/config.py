@@ -419,6 +419,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.label_permalink = "Permalink"
 
 # -----------------------------------------------------------------------------
+# Asset
+# Uncomment to have a specific asset type for Telephones
+#settings.asset.telephones = True
+
+# -----------------------------------------------------------------------------
 # CMS
 # Uncomment to use Bookmarks in Newsfeed
 #settings.cms.bookmarks = True
@@ -707,9 +712,9 @@ settings.gis.geonames_username = "eden_test"
 #settings.req.req_form_name = "Request Issue Form"
 #settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
-# list are ["Stock", "People", "Other"]. If this is commented out then
+# list are ("Stock", "People", "Other"). If this is commented out then
 # all types will be valid.
-#settings.req.req_type = ["Stock"]
+#settings.req.req_type = ("Stock",)
 # Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
 #settings.req.summary = True
 # Uncomment to restrict adding new commits to Completed commits
