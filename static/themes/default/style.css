@@ -677,3 +677,8 @@ input.date.hasDatepicker {
 }
 
 /* Miscellaneous */
+/* Iframe Map (Location Represent links) */
+#close-iframe-map {
+    padding: 7px;
+    margin-top: 5px;
+}

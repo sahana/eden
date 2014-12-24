@@ -2928,6 +2928,9 @@ def display_feature():
     feature_id = request.args[0]
 
     table = s3db.gis_location
+    ftable = s3db.gis_layer_feature
+    stable = s3db.gis_style
+    gtable = s3db.gis_config
 
     # Check user is authorised to access record
     if not s3_has_permission("read", table, feature_id):
@@ -2966,20 +2969,49 @@ def display_feature():
     # zoom = config.zoom + 2
     bounds = gis.get_bounds(features=[feature])
 
-    response.view = "gis/iframe.html"
-    map = gis.show_map(
-        features = [feature.wkt],
-        lat = lat,
-        lon = lon,
-        #zoom = zoom,
-        bbox = bounds,
-        window = False,
-        closable = False,
-        collapsed = True,
-        width=640,
-        height=480,
-    )
+    options = {"lat": lat,
+               "lon": lon,
+               #"zoom": zoom,
+               "bbox": bounds,
+               "window": False,
+               "closable": False,
+               "collapsed": True,
+               }
+    # Layers
+    controller = request.get_vars.controller
+    function = request.get_vars.function
+    # Record id
+    rid = request.get_vars.rid
+    query = ((ftable.controller == controller) & \
+             (ftable.function == function) & \
+             (ftable.layer_id == stable.layer_id) & \
+             # Marker not specific to a record
+             (stable.record_id == None) & \
+             # Marker available to all or 'Default' Profile
+             ((stable.config_id == None) | ((stable.config_id == gtable.id) & \
+                                            (gtable.name == "Default")))
+             )
+    rows = db(query).select(ftable.layer_id).first()
+    if rows:
+        feature_opts = {"name": T("Represent"),
+                        "id": "resource_represent",
+                        "active": True,
+                        "layer_id": rows.layer_id}
+        if rid:
+            feature_opts["filter"] = "~.id=%s" % rid
+        options["feature_resources"] = [feature_opts]
+    else:
+        options["features"] = [feature.wkt]
 
+    # Add Width & Height if opened in Window
+    if request.get_vars.popup == "1":
+        options["width"] = 640
+        options["height"] = 480
+    else:
+        options["height"] = settings.get_gis_map_selector_height()
+
+    response.view = "gis/iframe.html"
+    map = gis.show_map(**options)
     return dict(map=map)
 
 # -----------------------------------------------------------------------------
