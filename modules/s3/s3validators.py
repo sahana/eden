@@ -2159,9 +2159,12 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 from nameparser import HumanName
                 name = HumanName(name)
 
-                # @ToDo?: name.nickname
+                # Refer usage for HumanName parser
+                # http://nameparser.readthedocs.org/en/latest/usage.html
+                if name.nickname == '':
+                    name.nickname = '-'
 
-                return name.first, name.middle, name.last
+                return name.first, name.middle, name.last, name.nickname
 
             def email_validate(value, person_id):
                 """ Validate the email address """
@@ -2325,10 +2328,11 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 return (None, error)
 
             # Separate the Name into components
-            first_name, middle_name, last_name = name_split(fullname)
+            first_name, middle_name, last_name, preferred_name = name_split(fullname)
             _vars["first_name"] = first_name
             _vars["middle_name"] = middle_name
             _vars["last_name"] = last_name
+            _vars["preferred_name"] = preferred_name
 
             # Validate and add the person record
             for f in ptable._filter_fields(_vars):
