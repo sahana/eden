@@ -51,6 +51,8 @@ settings.gis.countries = ("CF",) # Initially, will change
 settings.gis.latlon_selector = True
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to open Location represent links in a Popup Window
+settings.gis.popup_location_link = True
 # Uncomment to Disable the Postcode selector in the LocationSelector
 settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
 # Uncomment to show the Print control:

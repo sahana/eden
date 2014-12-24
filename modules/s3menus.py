@@ -465,9 +465,16 @@ class S3OptionsMenu(object):
         """ ASSET Controller """
 
         ADMIN = current.session.s3.system_roles.ADMIN
+        telephones = lambda i: current.deployment_settings.get_asset_telephones()
 
         return M(c="asset")(
                     M("Assets", f="asset", m="summary")(
+                        M("Create", m="create"),
+                        #M("Map", m="map"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Telephones", f="telephone", m="summary",
+                      check=telephones)(
                         M("Create", m="create"),
                         #M("Map", m="map"),
                         M("Import", m="import", p="create"),

@@ -47,6 +47,8 @@ settings.mail.approver = "ADMIN"
 settings.gis.countries = ("GN", "LR", "ML", "NG", "SL", "SN")
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to open Location represent links in a Popup Window
+settings.gis.popup_location_link = True
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)

@@ -2978,10 +2978,10 @@ def display_feature():
                "collapsed": True,
                }
     # Layers
-    controller = request.get_vars.controller
-    function = request.get_vars.function
+    controller = get_vars.controller
+    function = get_vars.function
     # Record id
-    rid = request.get_vars.rid
+    rid = get_vars.rid
     query = ((ftable.controller == controller) & \
              (ftable.function == function) & \
              (ftable.layer_id == stable.layer_id) & \
@@ -3004,7 +3004,7 @@ def display_feature():
         options["features"] = [feature.wkt]
 
     # Add Width & Height if opened in Window
-    if request.get_vars.popup == "1":
+    if get_vars.popup == "1":
         options["width"] = 640
         options["height"] = 480
     else:

@@ -131,7 +131,7 @@ class S3LocationModel(S3Model):
         else:
             meta_spatial_fields = (s3_meta_fields())
 
-        gis_location_represent = gis_LocationRepresent()
+        gis_location_represent = gis_LocationRepresent(show_link=True)
 
         tablename = "gis_location"
         self.define_table(tablename,
@@ -5268,9 +5268,9 @@ class gis_LocationRepresent(S3Represent):
         popup = settings.get_gis_popup_location_link()
         return A(v,
                  _style="cursor:pointer;cursor:hand",
-                 _onclick="s3_viewMap(%i, %i, '%s');return false" % (k,
-                                                                     iheight,
-                                                                     popup),
+                 _onclick="s3_viewMap(%i,%i,'%s');return false" % (k,
+                                                                   iheight,
+                                                                   popup),
                  )
 
     # -------------------------------------------------------------------------

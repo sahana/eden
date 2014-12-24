@@ -224,6 +224,7 @@ class S3SupplyModel(S3Model):
         # Item Category
         #
         asset = settings.has_module("asset")
+        telephone = settings.get_asset_telephones()
         vehicle = settings.has_module("vehicle")
 
         item_category_represent = supply_ItemCategoryRepresent()
@@ -253,18 +254,25 @@ class S3SupplyModel(S3Model):
                            label = T("Name"),
                            ),
                      Field("can_be_asset", "boolean",
-                           default=True,
-                           readable=asset,
-                           writable=asset,
+                           default = True,
+                           readable = asset,
+                           writable = asset,
                            represent = s3_yes_no_represent,
-                           label=T("Items in Category can be Assets"),
+                           label = T("Items in Category can be Assets"),
+                           ),
+                     Field("is_telephone", "boolean",
+                           default = False,
+                           readable = telephone,
+                           writable = telephone,
+                           represent = s3_yes_no_represent,
+                           label = T("Items in Category are Telephones"),
                            ),
                      Field("is_vehicle", "boolean",
-                           default=False,
-                           readable=vehicle,
-                           writable=vehicle,
+                           default = False,
+                           readable = vehicle,
+                           writable = vehicle,
                            represent = s3_yes_no_represent,
-                           label=T("Items in Category are Vehicles"),
+                           label = T("Items in Category are Vehicles"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -946,8 +954,8 @@ $.filterOptionsS3({
         if code:
             # Same Code => definitely duplicate
             table = item.table
-            query = (table.deleted != True)
-            query = query & (table.code.lower() == code.lower())
+            query = (table.deleted != True) & \
+                    (table.code.lower() == code.lower())
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -964,14 +972,13 @@ $.filterOptionsS3({
                 # Try to extract UM from Name
                 name, um = item_um_from_name(name)
             table = item.table
-            query = (table.deleted != True)
-            if name:
-                query = query & (table.name.lower() == name.lower())
+            query = (table.deleted != True) & \
+                    (table.name.lower() == name.lower())
             if um:
-                query = query & (table.um.lower() == um.lower())
+                query &= (table.um.lower() == um.lower())
             catalog_id = data.get("catalog_id")
             if catalog_id:
-                query = query & (table.catalog_id == catalog_id)
+                query &= (table.catalog_id == catalog_id)
 
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -994,16 +1001,16 @@ $.filterOptionsS3({
         query = (table.deleted != True)
         name = data.get("name")
         if name:
-            query = query & (table.name.lower() == name.lower())
+            query &= (table.name.lower() == name.lower())
         code = data.get("code")
         if code:
-            query = query & (table.code.lower() == code.lower())
+            query &= (table.code.lower() == code.lower())
         catalog_id = data.get("catalog_id")
         if catalog_id:
-            query = query & (table.catalog_id == catalog_id)
+            query &= (table.catalog_id == catalog_id)
         parent_category_id = data.get("parent_category_id")
         if parent_category_id:
-            query = query & (table.parent_category_id == parent_category_id)
+            query &= (table.parent_category_id == parent_category_id)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -1025,13 +1032,13 @@ $.filterOptionsS3({
         query = (table.deleted != True)
         item_id = data.get("item_id")
         if item_id:
-            query = query & (table.item_id == item_id)
+            query &= (table.item_id == item_id)
         catalog_id = data.get("catalog_id")
         if catalog_id:
-            query = query & (table.catalog_id == catalog_id)
+            query &= (table.catalog_id == catalog_id)
         item_category_id = data.get("item_category_id")
         if item_category_id:
-            query = query & (table.item_category_id == item_category_id)
+            query &= (table.item_category_id == item_category_id)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -1053,13 +1060,13 @@ $.filterOptionsS3({
         query = (table.deleted != True)
         name = data.get("name")
         if name:
-            query = query & (table.name.lower() == name.lower())
+            query &= (table.name.lower() == name.lower())
         item_id = data.get("item_id")
         if item_id:
-            query = query & (table.item_id == item_id)
+            query &= (table.item_id == item_id)
         quantity = data.get("quantity")
         if quantity:
-            query = query & (table.quantity == quantity)
+            query &= (table.quantity == quantity)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:

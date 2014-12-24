@@ -21,6 +21,7 @@
          Category........................supply_item_category.name
          Code............................supply_item_category.code
          Asset...........................supply_item_category.can_be_asset
+         Telephone.......................supply_item_category.is_telephone
          Vehicle.........................supply_item_category.is_vehicle
 
     *********************************************************************** -->
@@ -56,14 +57,32 @@
                     <xsl:value-of select="$CatalogName"/>
                 </xsl:attribute>
             </reference>
-            <data field="code"><xsl:value-of select="col[@field='Cat Code']"/></data>
+            <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
             <data field="name"><xsl:value-of select="col[@field='Category']"/></data>
-            <xsl:if test="col[@field='Asset']='Asset'">
-                <data field="can_be_asset" value="true">True</data>
-            </xsl:if>
-            <xsl:if test="col[@field='Vehicle']='Vehicle'">
-                <data field="is_vehicle" value="true">True</data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="col[@field='Asset']='Asset'">
+                    <data field="can_be_asset" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="col[@field='Asset']='True'">
+                    <data field="can_be_asset" value="true">True</data>
+                </xsl:when>
+            </xsl:choose>
+            <xsl:choose>
+                <xsl:when test="col[@field='Telephone']='Telephone'">
+                    <data field="is_telephone" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="col[@field='Telephone']='True'">
+                    <data field="is_telephone" value="true">True</data>
+                </xsl:when>
+            </xsl:choose>
+            <xsl:choose>
+                <xsl:when test="col[@field='Vehicle']='Vehicle'">
+                    <data field="is_vehicle" value="true">True</data>
+                </xsl:when>
+                <xsl:when test="col[@field='Vehicle']='True'">
+                    <data field="is_vehicle" value="true">True</data>
+                </xsl:when>
+            </xsl:choose>
         </resource>
 
     </xsl:template>
