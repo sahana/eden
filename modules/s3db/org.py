@@ -1026,6 +1026,7 @@ class S3OrganisationNameModel(S3Model):
     def model(self):
 
         T = current.T
+        l10n_languages = current.deployment_settings.get_L10n_languages()
 
         # ---------------------------------------------------------------------
         # Local Names

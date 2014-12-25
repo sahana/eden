@@ -5493,8 +5493,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             # Fall back to default
             represent = s3db.gis_location_id().represent
 
-        if hasattr(represent, "represent_row"):
-            text = represent.represent_row(record)
+        if hasattr(represent, "alt_represent_row"):
+            text = represent.alt_represent_row(record)
         else:
             text = represent(record)
 
