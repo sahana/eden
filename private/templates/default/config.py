@@ -1111,7 +1111,7 @@ settings.modules = OrderedDict([
     # @ToDo: Port these Assessments to the Survey module
     #("building", Storage(
     #    name_nice = T("Building Assessments"),
-    #    #description = "Building Safety Assessments",
+    #    description = "Building Safety Assessments",
     #    restricted = True,
     #    module_type = 10,
     #)),
