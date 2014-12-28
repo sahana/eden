@@ -837,17 +837,19 @@ def customise_pr_person_controller(**attr):
             if not result:
                 return False
 
-        s3db = current.s3db
-        tablename = "pr_person"
-
-        if r.interactive:
+        resource = r.resource
+        if r.interactive or r.representation == "aadata":
             # Set the list fields
-            list_fields = ["first_name",
+            list_fields = ("first_name",
                            "middle_name",
                            "last_name",
                            "human_resource.organisation_id",
-                           "address.location_id"
-                           ]
+                           "address.location_id",
+                           )
+            resource.configure(list_fields = list_fields)
+
+        if r.interactive:
+            tablename = "pr_person"
 
             # Set the CRUD Strings
             s3.crud_strings[tablename] = Storage(
@@ -865,7 +867,6 @@ def customise_pr_person_controller(**attr):
 
             # Custom Form (Read/Create/Update)
             from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
-
             crud_form = S3SQLCustomForm(
                 "first_name",
                 "middle_name",
@@ -908,11 +909,7 @@ def customise_pr_person_controller(**attr):
                         render_list = True
                     ),
                 )
-
-            s3db.configure(tablename,
-                           crud_form = crud_form,
-                           list_fields = list_fields
-                           )
+            resource.configure(crud_form = crud_form)
         return True
     s3.prep = custom_prep
 
