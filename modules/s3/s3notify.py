@@ -34,6 +34,7 @@ import urlparse
 import urllib2
 from urllib import urlencode
 from uuid import uuid4
+import string
 
 try:
     from cStringIO import StringIO # Faster, where available
