@@ -619,6 +619,25 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def dc():
+        """ Data Collection Tool """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="dc")(
+                    M("Templates", f="template")(
+                        M("Create", m="create"),
+                    ),
+                    M("Questions", f="question")(
+                        M("Create", m="create"),
+                    ),
+                    M("Data Collections", f="collection")(
+                        M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def delphi():
         """ DELPHI / Delphi Decision Maker """
 
@@ -687,7 +706,7 @@ class S3OptionsMenu(object):
                     M("Cases",
                       c="disease", f="case", m="summary")(
                         M("Create", m="create"),
-                        M("Watch List", m="summary", 
+                        M("Watch List", m="summary",
                           vars={"~.monitoring_level__belongs": "OBSERVATION,DIAGNOSTICS"}),
                     ),
                     M("Contact Tracing",

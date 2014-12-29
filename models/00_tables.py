@@ -20,6 +20,7 @@ import s3db.cap
 import s3db.climate
 import s3db.cms
 import s3db.cr
+import s3db.dc
 import s3db.delphi
 import s3db.deploy
 import s3db.disease

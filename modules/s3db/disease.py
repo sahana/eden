@@ -1,5 +1,32 @@
 # -*- coding: utf-8 -*-
 
+""" Sahana Eden Disease Tracking Models
+
+    @copyright: 2014-2015 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+"""
+
 __all__ = ("DiseaseDataModel",
            "CaseTrackingModel",
            "ContactTracingModel",
@@ -63,25 +90,25 @@ class DiseaseDataModel(S3Model):
         # Basic Disease Information
         #
         tablename = "disease_disease"
-        table = define_table(tablename,
-                             self.super_link("doc_id", "doc_entity"),
-                             Field("name",
-                                   requires = IS_NOT_EMPTY()
-                                   ),
-                             Field("short_name"),
-                             Field("acronym"),
-                             Field("code",
-                                   label = T("ICD-10-CM Code"),
-                                   ),
-                             Field("description", "text"),
-                             Field("trace_period", "integer",
-                                   label = T("Trace Period before Symptom Debut (days)"),
-                                   ),
-                             Field("watch_period", "integer",
-                                   label = T("Watch Period after Exposure (days)"),
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
+                     Field("name",
+                           requires = IS_NOT_EMPTY()
+                           ),
+                     Field("short_name"),
+                     Field("acronym"),
+                     Field("code",
+                           label = T("ICD-10-CM Code"),
+                           ),
+                     Field("description", "text"),
+                     Field("trace_period", "integer",
+                           label = T("Trace Period before Symptom Debut (days)"),
+                           ),
+                     Field("watch_period", "integer",
+                           label = T("Watch Period after Exposure (days)"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         represent = S3Represent(lookup=tablename)
         disease_id = S3ReusableField("disease_id", "reference %s" % tablename,
@@ -123,16 +150,16 @@ class DiseaseDataModel(S3Model):
         # Symptom Information
         #
         tablename = "disease_symptom"
-        table = define_table(tablename,
-                             disease_id(),
-                             Field("name"),
-                             Field("description",
-                                   label = T("Short Description"),
-                                   ),
-                             Field("assessment",
-                                   label = T("Assessment method"),
-                                   ),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     disease_id(),
+                     Field("name"),
+                     Field("description",
+                           label = T("Short Description"),
+                           ),
+                     Field("assessment",
+                           label = T("Assessment method"),
+                           ),
+                     *s3_meta_fields())
 
         # @todo: refine to include disease name?
         represent = S3Represent(lookup=tablename)
@@ -282,52 +309,53 @@ class CaseTrackingModel(S3Model):
         # Case
         #
         tablename = "disease_case"
-        table = define_table(tablename,
-                             Field("case_number", length=64,
-                                   requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "disease_case.case_number")),
-                                   ),
-                             person_id(empty = False,
-                                       ondelete = "CASCADE",
-                                       ),
-                             self.disease_disease_id(),
-                             #s3_date(), # date registered == created_on?
-                             self.gis_location_id(),
-                             # @todo: add site ID for registering site?
+        define_table(tablename,
+                     Field("case_number", length=64,
+                           requires = IS_EMPTY_OR(
+                                        IS_NOT_IN_DB(db, "disease_case.case_number")),
+                           ),
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     self.disease_disease_id(),
+                     #s3_date(), # date registered == created_on?
+                     self.gis_location_id(),
+                     # @todo: add site ID for registering site?
 
-                             # Current illness status and symptom debut
-                             Field("illness_status",
-                                   label = T("Current Illness Status"),
-                                   represent = illness_status_represent,
-                                   requires = IS_IN_SET(illness_status),
-                                   default = "UNKNOWN",
-                                   ),
-                             s3_date("symptom_debut",
-                                     label = T("Symptom Debut"),
-                                     ),
+                     # Current illness status and symptom debut
+                     Field("illness_status",
+                           label = T("Current Illness Status"),
+                           represent = illness_status_represent,
+                           requires = IS_IN_SET(illness_status),
+                           default = "UNKNOWN",
+                           ),
+                     s3_date("symptom_debut",
+                             label = T("Symptom Debut"),
+                             ),
 
-                             # Current diagnosis status and date of last status update
-                             Field("diagnosis_status",
-                                   label = T("Diagnosis Status"),
-                                   represent = diagnosis_status_represent,
-                                   requires = IS_IN_SET(diagnosis_status),
-                                   default = "UNKNOWN",
-                                   ),
-                             s3_date("diagnosis_date",
-                                     default = "now",
-                                     label = T("Diagnosis Date"),
-                                     ),
+                     # Current diagnosis status and date of last status update
+                     Field("diagnosis_status",
+                           label = T("Diagnosis Status"),
+                           represent = diagnosis_status_represent,
+                           requires = IS_IN_SET(diagnosis_status),
+                           default = "UNKNOWN",
+                           ),
+                     s3_date("diagnosis_date",
+                             default = "now",
+                             label = T("Diagnosis Date"),
+                             ),
 
-                             # Current monitoring level and end date
-                             Field("monitoring_level",
-                                   label = T("Current Monitoring Level"),
-                                   represent = monitoring_level_represent,
-                                   requires = IS_IN_SET(monitoring_levels),
-                                   default = "NONE",
-                                   ),
-                             s3_date("monitoring_until",
-                                     label = T("Monitoring required until"),
-                                     ),
-                             *s3_meta_fields())
+                     # Current monitoring level and end date
+                     Field("monitoring_level",
+                           label = T("Current Monitoring Level"),
+                           represent = monitoring_level_represent,
+                           requires = IS_IN_SET(monitoring_levels),
+                           default = "NONE",
+                           ),
+                     s3_date("monitoring_until",
+                             label = T("Monitoring required until"),
+                             ),
+                     *s3_meta_fields())
 
         # Reusable Field
         represent = disease_CaseRepresent()
@@ -419,15 +447,15 @@ class CaseTrackingModel(S3Model):
         # Monitoring
         #
         tablename = "disease_case_monitoring"
-        table = define_table(tablename,
-                             case_id(),
-                             s3_datetime(default="now"),
-                             Field("illness_status",
-                                   represent = illness_status_represent,
-                                   requires = IS_IN_SET(illness_status),
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     case_id(),
+                     s3_datetime(default="now"),
+                     Field("illness_status",
+                           represent = illness_status_represent,
+                           requires = IS_IN_SET(illness_status),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # Reusable Field
         represent = S3Represent(lookup=tablename, fields=["case_id"])
@@ -490,12 +518,12 @@ class CaseTrackingModel(S3Model):
         # Monitoring <=> Symptom
         #
         tablename = "disease_case_monitoring_symptom"
-        table = define_table(tablename,
-                             Field("status_id", "reference disease_case_monitoring",
-                                   requires = IS_ONE_OF(db, "disease_case_monitoring.id"),
-                                   ),
-                             self.disease_symptom_id(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     Field("status_id", "reference disease_case_monitoring",
+                           requires = IS_ONE_OF(db, "disease_case_monitoring.id"),
+                           ),
+                     self.disease_symptom_id(),
+                     *s3_meta_fields())
 
         # =====================================================================
         # Diagnostics
@@ -507,34 +535,34 @@ class CaseTrackingModel(S3Model):
                         "LOST": T("Lost"),
                         }
         tablename = "disease_case_diagnostics"
-        table = define_table(tablename,
-                             case_id(),
-                             # @todo: make a lookup table in DiseaseDataModel:
-                             Field("probe_type"),
-                             Field("probe_number", length = 64, unique = True,
-                                   ),
-                             s3_date("probe_date",
-                                     default = "now",
-                                     label = T("Probe Date"),
-                                     ),
-                             Field("probe_status",
-                                   represent = S3Represent(options = probe_status),
-                                   requires = IS_IN_SET(probe_status),
-                                   default = "PENDING",
-                                   ),
-                             # @todo: make a lookup table in DiseaseDataModel:
-                             Field("test_type"),
-                             Field("result"),
-                             s3_date("result_date",
-                                     label = T("Result Date"),
-                                     ),
-                             Field("conclusion",
-                                   represent = diagnosis_status_represent,
-                                   requires = IS_EMPTY_OR(
-                                                IS_IN_SET(diagnosis_status)),
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     case_id(),
+                     # @todo: make a lookup table in DiseaseDataModel:
+                     Field("probe_type"),
+                     Field("probe_number", length = 64, unique = True,
+                           ),
+                     s3_date("probe_date",
+                             default = "now",
+                             label = T("Probe Date"),
+                             ),
+                     Field("probe_status",
+                           represent = S3Represent(options = probe_status),
+                           requires = IS_IN_SET(probe_status),
+                           default = "PENDING",
+                           ),
+                     # @todo: make a lookup table in DiseaseDataModel:
+                     Field("test_type"),
+                     Field("result"),
+                     s3_date("result_date",
+                             label = T("Result Date"),
+                             ),
+                     Field("conclusion",
+                           represent = diagnosis_status_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(diagnosis_status)),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -820,30 +848,30 @@ class ContactTracingModel(S3Model):
         }
 
         tablename = "disease_tracing"
-        table = define_table(tablename,
-                             case_id(),
-                             s3_datetime("start_date",
-                                         label = T("From"),
-                                         widget = S3DateTimeWidget(set_min="disease_end_date",
-                                                                   ),
-                                         ),
-                             s3_datetime("end_date",
-                                         label = T("To"),
-                                         widget = S3DateTimeWidget(set_max="disease_start_date",
-                                                                   ),
-                                         ),
-                             # @todo: add site_id?
-                             self.gis_location_id(),
-                             Field("circumstances", "text",
-                                   ),
-                             Field("status",
-                                   default = "OPEN",
-                                   label = T("Tracing Status"),
-                                   requires = IS_IN_SET(contact_tracing_status, zero=None),
-                                   represent = S3Represent(options=contact_tracing_status),
-                                   ),
-                             s3_comments(),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     case_id(),
+                     s3_datetime("start_date",
+                                 label = T("From"),
+                                 widget = S3DateTimeWidget(set_min="disease_end_date",
+                                                           ),
+                                 ),
+                     s3_datetime("end_date",
+                                 label = T("To"),
+                                 widget = S3DateTimeWidget(set_max="disease_start_date",
+                                                           ),
+                                 ),
+                     # @todo: add site_id?
+                     self.gis_location_id(),
+                     Field("circumstances", "text",
+                           ),
+                     Field("status",
+                           default = "OPEN",
+                           label = T("Tracing Status"),
+                           requires = IS_IN_SET(contact_tracing_status, zero=None),
+                           represent = S3Represent(options=contact_tracing_status),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # @todo: implement specific S3Represent class
         represent = S3Represent(lookup=tablename, fields=["case_id"])
@@ -910,31 +938,31 @@ class ContactTracingModel(S3Model):
         # Exposure: when and how was a person exposed to the disease?
         #
         tablename = "disease_exposure"
-        table = define_table(tablename,
-                             case_id(),
-                             tracing_id(),
-                             self.pr_person_id(requires = IS_ADD_PERSON_WIDGET2(),
-                                               widget = S3AddPersonWidget2(controller="pr"),
-                                               ),
-                             s3_datetime(),
-                             #self.gis_location_id(),
-                             Field("exposure_type",
-                                   default = "UNKNOWN",
-                                   represent = exposure_type_represent,
-                                   requires = IS_IN_SET(exposure_type, zero=None),
-                                   ),
-                             Field("protection_level",
-                                   default = "NONE",
-                                   represent = protection_level_represent,
-                                   requires = IS_IN_SET(protection_level, zero=None),
-                                   ),
-                             Field("exposure_risk",
-                                   default = "LOW",
-                                   represent = exposure_risk_represent,
-                                   requires = IS_IN_SET(exposure_risk, zero=None),
-                                   ),
-                             Field("circumstances", "text"),
-                             *s3_meta_fields())
+        define_table(tablename,
+                     case_id(),
+                     tracing_id(),
+                     self.pr_person_id(requires = IS_ADD_PERSON_WIDGET2(),
+                                       widget = S3AddPersonWidget2(controller="pr"),
+                                       ),
+                     s3_datetime(),
+                     #self.gis_location_id(),
+                     Field("exposure_type",
+                           default = "UNKNOWN",
+                           represent = exposure_type_represent,
+                           requires = IS_IN_SET(exposure_type, zero=None),
+                           ),
+                     Field("protection_level",
+                           default = "NONE",
+                           represent = protection_level_represent,
+                           requires = IS_IN_SET(protection_level, zero=None),
+                           ),
+                     Field("exposure_risk",
+                           default = "LOW",
+                           represent = exposure_risk_represent,
+                           requires = IS_IN_SET(exposure_risk, zero=None),
+                           ),
+                     Field("circumstances", "text"),
+                     *s3_meta_fields())
 
         self.configure(tablename,
                        onaccept = self.exposure_onaccept,
@@ -1785,6 +1813,9 @@ def disease_rheader(r, tabs=None):
         rheader_fields = (["case_id"],
                           )
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    else:
+        rheader = ""
 
     return rheader
 

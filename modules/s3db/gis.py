@@ -3630,60 +3630,60 @@ class S3MapModel(S3Model):
         gis_feature_type_opts = self.gis_feature_type_opts
 
         tablename = "gis_layer_shapefile"
-        table = define_table(tablename,
-                             layer_id,
-                             name_field()(),
-                             desc_field()(),
-                             source_name_field()(),
-                             source_url_field()(),
-                             Field("shape", "upload", autodelete=True,
-                                   label = T("ESRI Shape File"),
-                                   requires = IS_UPLOAD_FILENAME(extension="zip"),
-                                   # upload folder needs to be visible to the download() function as well as the upload
-                                   uploadfolder = os.path.join(request.folder,
-                                                               "uploads",
-                                                               "shapefiles"),
-                                   comment = DIV(_class="tooltip",
-                                                 _title="%s|%s" % (T("ESRI Shape File"),
-                                                                   T("An ESRI Shapefile (zipped)"),
-                                                                   )),
+        define_table(tablename,
+                     layer_id,
+                     name_field()(),
+                     desc_field()(),
+                     source_name_field()(),
+                     source_url_field()(),
+                     Field("shape", "upload", autodelete=True,
+                           label = T("ESRI Shape File"),
+                           requires = IS_UPLOAD_FILENAME(extension="zip"),
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(request.folder,
+                                                       "uploads",
+                                                       "shapefiles"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("ESRI Shape File"),
+                                                           T("An ESRI Shapefile (zipped)"),
+                                                           )),
+                           ),
+                     Field("gis_feature_type", "integer",
+                           label = T("Feature Type"),
+                           represent = lambda opt: \
+                           gis_feature_type_opts.get(opt,
+                                                     messages.UNKNOWN_OPT),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(gis_feature_type_opts,
+                                                  zero=None)),
+                           # Auto-populated by reading Shapefile
+                           writable = False,
+                           ),
+                     # @ToDo: Can we auto-populate this from the layer?
+                     projection_id(# Nice if we could get this set to epsg field without having to do a DB lookup
+                                   #default = 4326,
+                                   empty = False,
                                    ),
-                             Field("gis_feature_type", "integer",
-                                   label = T("Feature Type"),
-                                   represent = lambda opt: \
-                                    gis_feature_type_opts.get(opt,
-                                                              messages.UNKNOWN_OPT),
-                                   requires = IS_EMPTY_OR(
-                                                IS_IN_SET(gis_feature_type_opts,
-                                                          zero=None)),
-                                   # Auto-populated by reading Shapefile
-                                   writable = False,
-                                   ),
-                             # @ToDo: Can we auto-populate this from the layer?
-                             projection_id(# Nice if we could get this set to epsg field without having to do a DB lookup
-                                           #default = 4326,
-                                           empty = False,
-                                           ),
-                             Field("filter",
-                                   label = T("REST Filter"),
-                                   comment = DIV(_class="stickytip",
-                                                 _title="%s|%s" % (T("REST Filter"),
-                                                                   "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
-                                                                     T("Uses the REST Query Format defined in"))),
-                                   ),
-                             # @ToDo: Switch type to "json" & Test
-                             Field("data", "text",
-                                   label = T("Attributes"),
-                                   represent = lambda v: v or NONE,
-                                   # Auto-populated by reading Shapefile
-                                   readable = False,
-                                   writable = False,
-                                   ),
-                             # @ToDo
-                             #gis_refresh()(),
-                             cluster_attribute()(),
-                             s3_role_required(), # Single Role
-                             *s3_meta_fields())
+                     Field("filter",
+                           label = T("REST Filter"),
+                           comment = DIV(_class="stickytip",
+                                         _title="%s|%s" % (T("REST Filter"),
+                                                           "%s: <a href='http://eden.sahanafoundation.org/wiki/S3XRC/RESTfulAPI/URLFormat#BasicQueryFormat' target='_blank'>Trac</a>" % \
+                                                            T("Uses the REST Query Format defined in"))),
+                           ),
+                     # @ToDo: Switch type to "json" & Test
+                     Field("data", "text",
+                           label = T("Attributes"),
+                           represent = lambda v: v or NONE,
+                           # Auto-populated by reading Shapefile
+                           readable = False,
+                           writable = False,
+                           ),
+                     # @ToDo
+                     #gis_refresh()(),
+                     cluster_attribute()(),
+                     s3_role_required(), # Single Role
+                     *s3_meta_fields())
 
         configure(tablename,
                   create_onaccept = self.gis_layer_shapefile_onaccept,
@@ -5234,7 +5234,7 @@ class gis_LocationRepresent(S3Represent):
         if language == settings.get_L10n_default_language():
             translate = False
         # Iframe height(Link)
-        self.iheight = settings.get_gis_map_selector_height() 
+        self.iheight = settings.get_gis_map_selector_height()
         address_only = address_only or \
                        settings.get_gis_location_represent_address_only()
         show_marker_icon = True if address_only == "icon" else False
@@ -5324,7 +5324,7 @@ class gis_LocationRepresent(S3Represent):
             compatiblity reasons.
 
             @param values: the gis_location IDs
-        """     
+        """
         db = current.db
         s3db = current.s3db
         ltable = s3db.gis_location
@@ -5574,7 +5574,7 @@ class gis_LocationRepresent(S3Represent):
 
                 if has_lat_lon and self.show_marker_icon:
                     popup = settings.get_gis_popup_location_link()
-                    script = '''s3_viewMap(%i,%i,'%s');return false''' % (row.id, 
+                    script = '''s3_viewMap(%i,%i,'%s');return false''' % (row.id,
                                                                           self.iheight,
                                                                           popup)
                     represent = SPAN(s3_unicode(represent),
