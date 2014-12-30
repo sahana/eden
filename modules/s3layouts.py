@@ -329,6 +329,84 @@ class S3BreadcrumbsLayout(S3NavigationItem):
             return LI(A(item.label, _href=item.url(), _class=_class))
 
 # =============================================================================
+class S3HomepageMenuLayout(S3NavigationItem):
+    """
+        Layout for homepage menu
+
+        @todo: better design, robust/responsive CSS, utilize Foundation!
+    """
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized and not item.opts.always_display:
+            item.enabled = False
+            item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = True
+            item.visible = True
+
+        if item.enabled and item.visible:
+            items = item.render_components()
+            if item.parent is None:
+                # Top level (menu box)
+                arrow = "/%s/static/img/arrow_blue_right.png" % current.request.application
+                components = []
+                append = components.append
+                number_of_links = 0
+                for submenu in items:
+                    append(submenu)
+                    if item.opts.arrows:
+                        append(DIV(IMG(_src=arrow), _class="div_arrow"))
+                    number_of_links += len(submenu.elements("a"))
+
+                if not number_of_links:
+                    # Hide the entire menu if it doesn't contain any links
+                    return None
+                elif item.label:
+                    components.insert(0, H3(item.label))
+                if item.opts.arrows:
+                    # Remove the last arrow
+                    components = components[:-1]
+                menu = DIV(TAG[""](components),
+                           _id = item.attr._id,
+                           _class = item.attr._class,
+                           )
+                menu.add_class("menu_box")
+                return menu
+            else:
+                if item.components:
+                    # Branch node (submenu, menu div)
+                    _class = item.attr._class
+                    if not _class:
+                        _class = "menu_div"
+                    return DIV(H3(item.label),
+                               TAG[""](items),
+                               _id = item.attr._id,
+                               _class=_class,
+                               )
+                else:
+                    # Leaf node (menu item)
+                    if item.opts.icon:
+                        # Icon-type item
+                        return A(IMG(_src=item.opts.icon),
+                                 _href=item.url(),
+                                 _title=item.label,
+                                 )
+                    else:
+                        # Button-type item
+                        return A(DIV(item.label,
+                                     _class="menu-btn-r",
+                                     ),
+                                 _class="menu-btn-l",
+                                 _href=item.url(),
+                                 )
+        else:
+            return None
+
+# =============================================================================
 class S3AddResourceLink(S3NavigationItem):
     """
         Links in form fields comments to show a form for adding

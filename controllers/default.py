@@ -137,76 +137,42 @@ def index():
     else:
         SHELTERS = ""
 
-    # Menu Boxes
-    menu_btns = [#div, label, app, function
-                 ["facility", T("Facilities"), "org", "facility"],
-                 ["facility", T("Hospitals"), "hms", "hospital"],
-                 ["facility", T("Offices"), "org", "office"],
-                 ["facility", SHELTERS, "cr", "shelter"],
-                 ["facility", T("Warehouses"), "inv", "warehouse"],
-                 ["sit", T("Staff"), "hrm", "staff"],
-                 ["sit", T("Volunteers"), "vol", "volunteer"],
-                 ["sit", T("Incidents"), "irs", "ireport"],
-                 ["sit", T("Assessments"), "survey", "series"],
-                 ["sit", T("Assets"), "asset", "asset"],
-                 ["sit", T("Inventory Items"), "inv", "inv_item"],
-                 #["dec", T("Gap Map"), "project", "gap_map"],
-                 #["dec", T("Gap Report"), "project", "gap_report"],
-                 ["dec", T("Requests"), "req", "req"],
-                 ["res", T("Projects"), "project", "project"],
-                 ["res", T("Commitments"), "req", "commit"],
-                 ["res", T("Sent Shipments"), "inv", "send"],
-                 ["res", T("Received Shipments"), "inv", "recv"],
-                ]
+    # Menu boxes
+    from s3layouts import S3HomepageMenuLayout as HM
 
-    # Change to (Mitigation)/Preparedness/Response/Recovery?
-    menu_divs = {"facility": DIV(H3(T("Facilities")),
-                                 _id = "facility_box",
-                                 _class = "menu_box",
-                                 ),
-                 "sit": DIV(H3(T("Situation")),
-                            _id = "menu_div_sit",
-                            _class = "menu_div",
-                            ),
-                 "dec": DIV(H3(T("Decision")),
-                            _id = "menu_div_dec",
-                            _class = "menu_div",
-                            ),
-                 "res": DIV(H3(T("Response")),
-                            _id = "menu_div_res",
-                            _class = "menu_div",
-                            ),
-                 }
+    sit_dec_res_box = HM(_class="fleft swidth", arrows=True)(
+        HM("Situation")(
+            HM("Staff", c="hrm", f="staff", t="hrm_human_resource"),
+            HM("Volunteers", c="vol", f="volunteer", t="hrm_human_resource"),
+            HM("Incidents", c="event", f="incident_report"),
+            HM("Assessments", c="survey", f="series"),
+            HM("Assets", c="asset", f="asset"),
+            HM("Inventory Items", c="inv", f="inv_item"),
+        ),
+        HM("Decision")(
+            HM("Home", c="default", f="index"),
+            #HM("Gap Map", c="project", f="gap_map"),
+            #HM("Gap Report", c="project", f="gap_report"),
+            HM("Requests", c="req", f="req"),
+        ),
+        HM("Response")(
+            HM("Projects", c="project", f="project"),
+            HM("Commitments", c="req", f="commit"),
+            HM("Sent Shipments", c="inv", f="send"),
+            HM("Received Shipments", c="inv", f="recv"),
+        ),
+    )
 
-    for div, label, app, function in menu_btns:
-        if has_module(app):
-            # @ToDo: Also check permissions (e.g. for anonymous users)
-            menu_divs[div].append(A(DIV(label,
-                                        _class = "menu-btn-r"),
-                                    _class = "menu-btn-l",
-                                    _href = URL(app, function)
-                                    )
-                                 )
-
-    div_arrow = DIV(IMG(_src = "/%s/static/img/arrow_blue_right.png" % \
-                                 appname),
-                    _class = "div_arrow")
-    sit_dec_res_box = DIV(menu_divs["sit"],
-                          div_arrow,
-                          menu_divs["dec"],
-                          div_arrow,
-                          menu_divs["res"],
-                          _id = "sit_dec_res_box",
-                          _class = "menu_box fleft swidth"
-                     #div_additional,
-                    )
-    facility_box  = menu_divs["facility"]
-    facility_box.append(A(IMG(_src = "/%s/static/img/map_icon_128.png" % \
-                                       appname),
-                          _href = URL(c="gis", f="index"),
-                          _title = T("Map")
-                          )
-                        )
+    facility_box = HM("Facilities", _id="facility_box")(
+        HM("Facilities", c="org", f="facility"),
+        HM("Hospitals", c="hms", f="hospital"),
+        HM("Offices", c="org", f="office"),
+        HM(SHELTERS, c="cr", f="shelter"),
+        HM("Warehouses", c="inv", f="warehouse"),
+        HM("Map", c="gis", f="index",
+           icon="/%s/static/img/map_icon_128.png" % appname,
+           ),
+    )
 
     # Check logged in AND permissions
     roles = session.s3.roles
