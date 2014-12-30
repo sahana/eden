@@ -30,6 +30,7 @@
 __all__ = ("S3AssetModel",
            "S3AssetHRModel",
            "S3AssetTeamModel",
+           "S3AssetTelephoneModel",
            #"asset_rheader",
            "asset_types",
            "asset_log_status",
@@ -52,13 +53,13 @@ from ..s3 import *
 from s3layouts import S3AddResourceLink
 
 ASSET_TYPE_VEHICLE   = 1   # => Extra Tab(s) for Registration Documents, Fuel Efficiency
-ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
+#ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies
 ASSET_TYPE_TELEPHONE = 3   # => Extra Tab(s) for Contact Details & Airtime Billing
 ASSET_TYPE_OTHER     = 4   # => No extra Tabs
 
 # To pass to global scope
 asset_types = {"VEHICLE"    : ASSET_TYPE_VEHICLE,
-               "RADIO"      : ASSET_TYPE_RADIO,
+               #"RADIO"      : ASSET_TYPE_RADIO,
                "TELEPHONE"  : ASSET_TYPE_TELEPHONE,
                "OTHER"      : ASSET_TYPE_OTHER,
                }
@@ -116,7 +117,10 @@ class S3AssetModel(S3Model):
 
         settings = current.deployment_settings
         org_site_label = settings.get_org_site_label()
-        vehicle = settings.has_module("vehicle")
+        #radios = settings.get_asset_radios()
+        telephones = settings.get_asset_telephones()
+        vehicles = settings.has_module("vehicle")
+        types = telephones or vehicles
 
         # Shortcuts
         add_components = self.add_components
@@ -128,11 +132,14 @@ class S3AssetModel(S3Model):
         #--------------------------------------------------------------------------
         # Assets
         #
-        asset_type_opts = {ASSET_TYPE_VEHICLE     : T("Vehicle"),
-                           #ASSET_TYPE_RADIO      : T("Radio"),
-                           #ASSET_TYPE_TELEPHONE  : T("Telephone"),
-                           ASSET_TYPE_OTHER       : T("Other"),
+        asset_type_opts = {ASSET_TYPE_OTHER : T("Other"),
                            }
+        #if radios:
+        #    asset_type_opts[ASSET_TYPE_RADIO] = T("Radio")
+        if telephones:
+            asset_type_opts[ASSET_TYPE_TELEPHONE] = T("Telephone")
+        if vehicles:
+            asset_type_opts[ASSET_TYPE_VEHICLE] = T("Vehicle")
 
         asset_condition_opts = {1: T("Good Condition"),
                                 2: T("Minor Damage"),
@@ -156,15 +163,15 @@ class S3AssetModel(S3Model):
                      Field("number",
                            label = T("Asset Number"),
                            ),
-                     # @ToDo: We could set this automatically based on Item Category
                      Field("type", "integer",
+                           # @ToDo: We could set this automatically based on Item Category
                            default = ASSET_TYPE_OTHER,
                            label = T("Type"),
                            represent = lambda opt: \
                                        asset_type_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(asset_type_opts),
-                           readable = vehicle,
-                           writable = vehicle,
+                           readable = types,
+                           writable = types,
                            ),
                      item_id(represent = supply_item_represent,
                              requires = IS_ONE_OF(asset_items_set,
@@ -180,7 +187,7 @@ class S3AssetModel(S3Model):
                            label = T("Kit?"),
                            represent = lambda opt: \
                                        (opt and [T("Yes")] or [NONE])[0],
-                           # Enable in template if-required
+                           # @ToDo: deployment_setting
                            readable = False,
                            writable = False,
                            ),
@@ -404,6 +411,8 @@ $.filterOptionsS3({
                        asset_item = "asset_id",
                        asset_log = "asset_id",
                        asset_human_resource = "asset_id",
+                       asset_telephone = "asset_id",
+                       asset_telephone_usage = "asset_id",
                        hrm_human_resource = {"link": "asset_human_resource",
                                              "joinby": "asset_id",
                                              "key": "human_resource_id",
@@ -438,21 +447,25 @@ $.filterOptionsS3({
                            requires = IS_INT_IN_RANGE(1, 1000),
                            ),
                      Field("sn",
-                           label = T("Serial Number")),
+                           label = T("Serial Number"),
+                           ),
                      organisation_id("supply_org_id",
                                      label = T("Supplier/Donor"),
-                                     ondelete = "SET NULL"),
+                                     ondelete = "SET NULL",
+                                     ),
                      s3_date("purchase_date",
-                             label = T("Purchase Date")),
+                             label = T("Purchase Date"),
+                             ),
                      Field("purchase_price", "double",
                            #default=0.00,
                            represent=lambda v, row=None: \
-                                     IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                                     IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           ),
                      s3_currency("purchase_currency"),
                      # Base Location, which should always be a Site & set via Log
-                     location_id(readable=False,
-                                 writable=False),
-                     s3_comments(comment=None),
+                     location_id(readable = False,
+                                 writable = False),
+                     s3_comments(comment = None),
                      *s3_meta_fields())
 
         # =====================================================================
@@ -884,6 +897,69 @@ class S3AssetTeamModel(S3Model):
         return dict()
 
 # =============================================================================
+class S3AssetTelephoneModel(S3Model):
+    """
+        Extend the Assset Module for Telephones:
+            Usage Costs
+    """
+
+    names = ("asset_telephone",
+             "asset_telephone_usage",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        #--------------------------------------------------------------------------
+        # Asset Telephones
+        #
+        tablename = "asset_telephone"
+        self.define_table(tablename,
+                          self.asset_asset_id(empty = False),
+                          # @ToDo: Filter to Suppliers
+                          self.org_organisation_id(label = T("Airtime Provider")),
+                          # We'll need something more complex here as there may be a per-month cost with bundled units
+                          #Field("unit_cost", "double",
+                          #      label = T("Unit Cost"),
+                          #      ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        #--------------------------------------------------------------------------
+        # Telephone Usage Costs
+        #
+        # @ToDo: Virtual Fields for Month/Year for Reporting
+        #
+        tablename = "asset_telephone_usage"
+        self.define_table(tablename,
+                          self.asset_asset_id(empty = False),
+                          s3_date(label = T("Start Date")),
+                          # @ToDo: Validation to ensure not before Start Date
+                          s3_date("end_date",
+                                  label = T("End Date"),
+                                  ),
+                          Field("units_used", "double", # 'usage' is a reserved word in MySQL
+                                label = T("Usage"),
+                                ),
+                          # mins, Mb (for BGANs)
+                          #Field("unit",
+                          #      label = T("Usage"),
+                          #      ),
+                          # @ToDo: Calculate this from asset_telephone fields
+                          #Field("cost", "double",
+                          #      label = T("Cost"),
+                          #      ),
+                          #s3_currency(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
+
+# =============================================================================
 def asset_get_current_log(asset_id):
     """
         Get the current log entry for this asset
@@ -1039,7 +1115,14 @@ def asset_rheader(r):
 
             NONE = current.messages["NONE"]
 
-            if record.type == ASSET_TYPE_VEHICLE:
+            if record.type == ASSET_TYPE_TELEPHONE:
+                tabs = [(T("Asset Details"), None, {"native": True}),
+                        (T("Telephone Details"), "telephone"),
+                        (T("Usage"), "telephone_usage"),
+                        ]
+            #elif record.type == s3.asset.ASSET_TYPE_RADIO:
+            #    tabs.append((T("Radio Details"), "radio"))
+            elif record.type == ASSET_TYPE_VEHICLE:
                 STAFF = current.deployment_settings.get_hrm_staff_label()
                 tabs = [(T("Asset Details"), None, {"native": True}),
                         (T("Vehicle Details"), "vehicle"),
@@ -1051,10 +1134,6 @@ def asset_rheader(r):
                         ]
             else:
                 tabs = [(T("Edit Details"), None)]
-            #elif record.type == s3.asset.ASSET_TYPE_RADIO:
-            #    tabs.append((T("Radio Details"), "radio"))
-            #elif record.type == s3.asset.ASSET_TYPE_TELEPHONE:
-            #    tabs.append((T("Telephone Details"), "phone"))
             tabs.append((T("Log"), "log"))
             tabs.append((T("Documents"), "document"))
 

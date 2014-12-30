@@ -187,7 +187,7 @@ select {
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date) {
+.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 500px !important;
 }
 
@@ -224,6 +224,7 @@ select {
 .inline-tooltip .stickytip,
 .inline-tooltip .ajaxtip {
   display: block;
+  margin-top: 10px;
   padding: 0;
   width: 60px;
 }
@@ -675,4 +676,8 @@ input.date.hasDatepicker {
   padding: 0.3em;
 }
 
-/* Miscellaneous */
+/* Iframe Map (Location Represent links) */
+#close-iframe-map {
+    padding: 7px;
+    margin-top: 5px;
+}

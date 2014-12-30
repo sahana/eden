@@ -47,8 +47,17 @@ settings.mail.approver = "ADMIN"
 # NB This can also be over-ridden for specific contexts later
 # e.g. Activities filtered to those of parent Project
 settings.gis.countries = ("CF",) # Initially, will change
+# Show LatLon boxes in the Location Selector
+settings.gis.latlon_selector = True
 # Uncomment to display the Map Legend as a floating DIV
 settings.gis.legend = "float"
+# Uncomment to open Location represent links in a Popup Window
+settings.gis.popup_location_link = True
+# Uncomment to Disable the Postcode selector in the LocationSelector
+settings.gis.postcode_selector = False # @ToDo: Vary by country (include in the gis_config!)
+# Uncomment to show the Print control:
+# http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
+settings.gis.print_button = True
 
 # L10n settings
 # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -90,6 +99,8 @@ settings.L10n.utc_offset = "UTC +0100"
 #settings.L10n.decimal_separator = "."
 # Thousands separator for numbers (defaults to space)
 #settings.L10n.thousands_separator = ","
+# Uncomment this to Translate Organisation Names/Acronyms
+settings.L10n.translate_org_organisation = True
 
 # Security Policy
 # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -151,9 +162,21 @@ settings.org.groups = "Coalition / Consortium"
 #settings.org.branches = True
 # Show branches as tree rather than as table
 #settings.org.branches_tree_view = True
+#settings.org.autocomplete = True
 
 # Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
 settings.hrm.site_contact_unique = False
+
+# -----------------------------------------------------------------------------
+def customise_org_organisation_resource(r, tablename):
+
+    s3db = current.s3db
+    table = s3db[tablename]
+    list_fields = s3db.get_config(tablename, "list_fields")
+    list_fields.insert(2, (T("French Name"), "name.name_l10n"))
+    list_fields.insert(4, (T("French Acronym"), "name.acronym_l10n"))
+
+settings.customise_org_organisation_resource = customise_org_organisation_resource
 
 # -----------------------------------------------------------------------------
 # Comment/uncomment modules here to disable/enable them

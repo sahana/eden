@@ -78,7 +78,7 @@ $(document).ready(function() {
                 e.preventDefault();
                 $('#pr_contact_value_error').remove();
                 contact.removeClass('edit').addClass('saving');
-                form.append($('<img class="pr_contact_throbber" src="' + S3.Ap.concat('/static/img/jquery-ui/ui-anim_basic_16x16.gif') + '">').addClass('fright'));
+                form.append($('<img class="pr_contact_throbber inline-throbber fright">'));
                 form.find('input[type=submit]').addClass('hide');
                 $.post(S3.Ap.concat('/pr/contact/' + id[0] + '.s3json'),
                     '{"$_pr_contact":' + JSON.stringify({'value': input.val()}) + '}',
@@ -116,7 +116,9 @@ $(document).ready(function() {
         $('#emergency-add_throbber').removeClass('hide').show();
         var button = $(this);
         // Remove any existing form
-        $('#popup').remove();
+        $('.iframe-container').remove();
+        // Display all contacts
+        $('.emergency').show();
         // Download the form
         var url = S3.Ap.concat('/pr/contact_emergency/create.iframe');
         if (access) {
@@ -126,7 +128,7 @@ $(document).ready(function() {
             // Hide the Add button
             button.hide();
             // Add a DIV to show the iframe in
-            button.after('<div></div>');
+            button.after('<div class="iframe-container"></div>');
             // Load the Form into the iframe
             button.next().html(data);
             // Modify the submission URL
@@ -134,11 +136,11 @@ $(document).ready(function() {
             if (access) {
                 url2 += '&access=' + access;
             }
-            $('#popup').find('form').attr('action', url2);
             // Hide the spinner
             $('#emergency-add_throbber').hide();
-            // Show the form
-            $('#popup form').show();
+            // Modify the submission URL, Display form
+            var $form = $('.iframe-container form');
+            $form.attr('action', url2).show();
         });
     });
 
@@ -160,20 +162,23 @@ $(document).ready(function() {
             var url = S3.Ap.concat('/pr/contact_emergency/' + id + '.iframe/update');
             $.get(url, function(data) {
                 // Remove any existing form
-                $('#popup').remove();
+                $('.iframe-container').remove();
+                // Display all contacts
+                $('.emergency').show();
+                // Show Add button
+                $('#emergency-add').show();
                 // Hide the Read row
                 emergency.hide();
                 // Add a DIV to show the iframe in
-                emergency.after('<div></div>');
+                emergency.after('<div class="iframe-container"></div>');
                 // Load the Form into the iframe
                 emergency.next().html(data);
-                // Modify the submission URL
-                var url2 = S3.Ap.concat('/pr/contact_emergency/' + id + '/update?person=' + person_id + '&controller=' + controller);
-                $('#popup').find('form').attr('action', url2);
                 // Hide the spinner
                 $('#emergency-add_throbber').hide();
-                // Show the form
-                $('#popup form').show();
+                // Modify the submission URL, Display form
+                var url2 = S3.Ap.concat('/pr/contact_emergency/' + id + '/update?person=' + person_id + '&controller=' + controller);
+                var $form = $('.iframe-container form');
+                $form.attr('action', url2).show();
             });
         });
     });

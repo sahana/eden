@@ -351,8 +351,10 @@ def series():
     def prep(r):
         if r.interactive:
             if r.method == "create":
-                allTemplates = s3db.survey_getAllTemplates()
-                if len(allTemplates) == 0:
+                ttable = s3db.survey_template
+                if not db(ttable.deleted == False).select(ttable.id,
+                                                          limitby=(0, 1)
+                                                          ):
                     session.warning = T("You need to create a template before you can create a series")
                     redirect(URL(c="survey", f="template", args=[], vars={}))
             if r.id and (r.method == "update"):
@@ -389,10 +391,12 @@ def series():
 
     # Remove CRUD generated buttons in the tabs
     s3db.configure("survey_series",
-                   deletable = False,)
+                   deletable = False,
+                   )
     s3db.configure("survey_complete",
-                   listadd=False,
-                   deletable=False)
+                   listadd = False,
+                   deletable = False,
+                   )
 
     output = s3_rest_controller(rheader=s3db.survey_series_rheader)
     return output
@@ -409,11 +413,11 @@ def export_all_responses():
         import xlwt
     except:
         output = s3_rest_controller(module, "series",
-                                    rheader=s3db.survey_series_rheader)
+                                    rheader = s3db.survey_series_rheader)
         return output
 
     # Load Model
-    s3db.table("survey_series")
+    table = s3db.survey_series
     s3db.table("survey_section")
     s3db.table("survey_complete")
 
@@ -421,10 +425,18 @@ def export_all_responses():
     # otherwise xlwt will crash if it comes across a T string
     T.lazy = False
 
-    seriesName = s3db.survey_getSeriesName(series_id)
     sectionBreak = False
 
-    filename = "%s_All_responses.xls" % seriesName
+    series = db(table.id == series_id).select(table.name,
+                                              limitby=(0, 1)
+                                              ).first()
+
+    try:
+        filename = "%s_All_responses.xls" % series.name
+    except:
+        session.error = "Series not found!"
+        redirect(URL(c="series"))
+
     contentType = ".xls"
     output = StringIO()
     book = xlwt.Workbook(encoding="utf-8")
@@ -458,7 +470,7 @@ def export_all_responses():
         sheet.write(row,col,widgetObj.fullName())
         # For each question get the response
         allResponses = s3db.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
-                                                                  series_id)
+                                                                    series_id)
         for answer in allResponses:
             value = answer["value"]
             complete_id = answer["complete_id"]
@@ -494,16 +506,18 @@ def series_export_formatted():
         series_id = request.args[0]
     except:
         output = s3_rest_controller(module, "series",
-                                    rheader=s3db.survey_series_rheader)
+                                    rheader = s3db.survey_series_rheader)
         return output
 
     # Load Model
-    s3db.table("survey_series")
+    table = s3db.survey_series
     s3db.table("survey_complete")
 
     vars = request.post_vars
-    seriesName = s3db.survey_getSeriesName(series_id)
-    series = s3db.survey_getSeries(series_id)
+    series = db(table.id == series_id).select(series.name,
+                                              series.logo,
+                                              limitby = (0, 1)
+                                              ).first()
     if not series.logo:
         logo = None
     else:
@@ -515,7 +529,7 @@ def series_export_formatted():
                             "uploads",
                             "survey",
                             "logo",
-                            "%s.%s" %(series.logo,ext)
+                            "%s.%s" % (series.logo, ext)
                             )
         if not os.path.exists(logo) or not os.path.isfile(logo):
             logo = None
@@ -529,7 +543,8 @@ def series_export_formatted():
         else:
             try:
                 from gluon.languages import read_dict
-                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % (appname, lang)
+                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % \
+                                    (appname, lang)
                 langDict = read_dict(lang_fileName)
             except:
                 langDict = dict()
@@ -540,12 +555,12 @@ def series_export_formatted():
                                                         logo,
                                                         langDict,
                                                         justified = True
-                                                       )
+                                                        )
         output = series_export_spreadsheet(matrix,
                                            matrixAnswers,
                                            logo,
-                                          )
-        filename = "%s.xls" % seriesName
+                                           )
+        filename = "%s.xls" % series.name
         contentType = ".xls"
 
     elif "Export_Word" in vars:
@@ -555,12 +570,12 @@ def series_export_formatted():
         title = survey_T(title, langDict)
         widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
         output = series_export_word(widgetList, langDict, title, logo)
-        filename = "%s.rtf" % seriesName
+        filename = "%s.rtf" % series.name
         contentType = ".rtf"
 
     else:
         output = s3_rest_controller(module, "series",
-                                    rheader=s3db.survey_series_rheader)
+                                    rheader = s3db.survey_series_rheader)
         return output
 
     output.seek(0)
@@ -569,7 +584,7 @@ def series_export_formatted():
     return output.read()
 
 # -----------------------------------------------------------------------------
-def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
+def series_prepare_matrix(series_id, series, logo, langDict, justified=False):
     """
         Helper function for series_export_formatted()
     """
@@ -582,11 +597,13 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
     # * The layout rules for each question
     ######################################################################
     # Check that the series_id has been passed in
-    if len(request.args) != 1:
+    try:
+        series_id = request.args[0]
+    except:
         output = s3_rest_controller(module, "series",
-                                    rheader=s3db.survey_series_rheader)
+                                    rheader = s3db.survey_series_rheader)
         return output
-    series_id = request.args[0]
+
     template = s3db.survey_getTemplateFromSeries(series_id)
     template_id = template.id
     sectionList = s3db.survey_getAllSectionsForSeries(series_id)
@@ -613,7 +630,6 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
     ######################################################################
     preliminaryMatrix = getMatrix(title,
                                   logo,
-                                  series,
                                   layout,
                                   widgetList,
                                   False,
@@ -623,6 +639,7 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
                                   )
     if not justified:
         return preliminaryMatrix
+
     ######################################################################
     # Align the questions so that each row takes up the same space.
     # This is done by storing resize and margin instructions with
@@ -636,7 +653,6 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified = False):
     layoutBlocks = LayoutBlocks()
     (matrix1, matrix2) = getMatrix(title,
                                    logo,
-                                   series,
                                    layout,
                                    widgetList,
                                    True,
@@ -1203,7 +1219,7 @@ def complete():
 
     # Load Model
     table = s3db.survey_complete
-    s3db.table("survey_series")
+    stable = s3db.survey_series
     s3db.survey_answerlist_dataTable_pre()
 
     series_id = None
@@ -1211,7 +1227,13 @@ def complete():
         viewing = get_vars.get("viewing", None)
         if viewing:
             dummy, series_id = viewing.split(".")
-            series_name = s3.survey_getSeriesName(series_id)
+            series = db(stable.id == series_id).select(stable.name,
+                                                       limitby=(0, 1)
+                                                       ).first()
+            if series:
+                series_name = series.name
+            else:
+                series_name = ""
         if series_name != "":
             csv_extra_fields = [dict(label="Series", value=series_name)]
         else:
@@ -1323,7 +1345,7 @@ def complete():
 
     s3.xls_parser = import_xls
 
-    output = s3_rest_controller(csv_extra_fields=csv_extra_fields)
+    output = s3_rest_controller(csv_extra_fields = csv_extra_fields)
     return output
 
 # -----------------------------------------------------------------------------

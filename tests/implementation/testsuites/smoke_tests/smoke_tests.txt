@@ -2,7 +2,9 @@
 # are broken
 # This suite is designed to be run inside EdenTest without generating reports
 # or logs(as generating them would require a lot of time)
-# Usage: python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A  smoke_tests  -o NONE -l NONE
+
+# Usage with timestamped output file: python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A  smoke_tests  -o NONE -l NONE
+# Usage with given name of output file: python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A  smoke_tests  -o NONE -l NONE -v filename:smoke_tests.txt
 
 *** Variables ***
 # It contains the configuration settings to run the smoke tests
@@ -105,9 +107,13 @@ Add Current Urls to ToVisit Urls
     [Return]  ${To Visit}
 
 Create Log File
+    ${name}=  Get Variable Value  ${filename}
     ${Time}=  Get Current Date  result_format=datetime
     ${Time}=  Convert Date  ${Time}  result_format=%d.%m.%Y.%H.%M
-    Set Global Variable  ${Log File}  ${Time}_smoke_tests_log.txt
+
+    Run Keyword If  '${name}'=='default'  Set Global Variable  ${Log File}  ${Time}_smoke_tests_log.txt
+    Run Keyword Unless  '${name}'=='default'  Set Global Variable  ${Log File}  ${name}
+
     Remove File  ${Log File}
     Create File  ${Log File}
 

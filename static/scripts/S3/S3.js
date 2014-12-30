@@ -602,21 +602,76 @@ S3.unmask = function(table, field) {
     }
 };
 // ============================================================================
-var s3_viewMap = function(feature_id) {
+var s3_viewMap = function(feature_id, iframe_height, popup) {
     // Display a Feature on a BaseMap within an iframe
-    var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
-    var oldhtml = $('#map').html();
-    var iframe = "<iframe width='640' height='480' src='" + url + "'></iframe>";
-    var closelink = $('<a href=\"#\">' + i18n.close_map + '</a>');
+    var url = S3.Ap.concat('/gis/display_feature/') + feature_id,
+        $map = $('#map'),
+        $iframe_map = $('#iframe-map'),
+        curl = document.location.pathname.split("/"),
+        controller = curl[2],
+        func = curl[3];
 
-    // @ToDo: Also make the represent link act as a close
-    closelink.bind('click', function(evt) {
-        $('#map').html(oldhtml);
-        evt.preventDefault();
-    });
-
-    $('#map').html(iframe);
-    $('#map').append($("<div style='margin-bottom:10px' />").append(closelink));
+    url += '?controller=' + controller + '&function=' + func;
+    if (curl.length>4) {
+        // Record id
+        if ($.isNumeric(curl[4])) {
+            url += '&rid=' + curl[4];
+        }
+    }
+    
+    if ($map.length==0 || popup=='True') {
+        url += '&popup=1';
+        S3.openPopup(url, true);
+    }
+    else {
+        var toggleButton = function() {
+            // Hide/Show the 'Close Map' button
+            var closeMap = $('#close-iframe-map');
+            if ($iframe_map.is(':visible')) {
+                closeMap.css({
+                    'display': ''
+                });
+            }
+            else {  
+                closeMap.css({
+                    'display': 'none'
+                });
+            }
+        };
+        var closeMap = function() {
+            // Hide the Map
+            $('#iframe-map').slideUp('medium');
+            $('#close-iframe-map').css({
+                'display': 'none'
+            });
+        };
+        
+        if ($iframe_map.length==0) {
+            // 1st iframe to be loaded in 'map'
+            var iframe = $("<iframe id='iframe-map' data-feature='" + feature_id + "' style='border-style:none' width='100%' height='" + iframe_height + "' src='" + url + "' />"),
+                closelink = $("<a class='button tiny' id='close-iframe-map'>" + i18n.close_map + "</a>");
+                
+            closelink.bind('click', closeMap);
+            // Display Map
+            $map.slideDown('medium');
+            $map.append(iframe);
+            $map.append($('<div style="margin-bottom:10px" />').append(closelink));
+        }   
+        else {
+            fid = $iframe_map.attr('data-feature');
+            if (fid==feature_id) {
+                // Same feature request. Display Map
+                $iframe_map.slideToggle('medium', toggleButton);
+            }
+            else {
+                $iframe_map.attr({
+                    'src': url,
+                    'data-feature': feature_id
+                });
+                $iframe_map.slideDown('medium', toggleButton);
+            }
+        }
+    }
 };
 var s3_viewMapMulti = function(module, resource, instance, jresource) {
     // Display a set of Features on a BaseMap within an iframe
@@ -644,24 +699,6 @@ S3.openPopup = function(url, center) {
         }
         S3.popupWin = window.open(url, 'popupWin', params);
     } else S3.popupWin.focus();
-};
-var s3_showMap = function(feature_id) {
-    // Display a Feature on a BaseMap within an iframe
-    var url = S3.Ap.concat('/gis/display_feature/') + feature_id;
-	// new Ext.Window({
-		// autoWidth: true,
-		// floating: true,
-		// items: [{
-			// xtype: 'component',
-			// autoEl: {
-				// tag: 'iframe',
-				// width: 650,
-				// height: 490,
-				// src: url
-			// }
-		// }]
-	// }).show();
-    S3.openPopup(url, true);
 };
 
 // ============================================================================

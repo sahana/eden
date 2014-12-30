@@ -2329,6 +2329,9 @@ $.filterOptionsS3({
         # Add to user Person Registry and Email/Mobile to pr_contact
         person_id = self.s3_link_to_person(user, organisation_id)
 
+        if user.org_group_id:
+            self.s3_link_to_org_group(user, person_id)
+
         utable = self.settings.table_user
 
         link_user_to = user.link_user_to or utable.link_user_to.default
@@ -2717,6 +2720,49 @@ $.filterOptionsS3({
         return organisation_id
 
     # -------------------------------------------------------------------------
+    def s3_link_to_org_group(self, user, person_id):
+        """
+            Link a user account to an organisation group
+
+            @param user: the user account record
+            @param person_id: the person record ID associated with this user
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        org_group_id = user.get("org_group_id")
+        if not org_group_id or not person_id:
+            return None
+
+        # Default status to "Member"
+        stable = s3db.org_group_person_status
+        query = (stable.name.lower() == "member") & \
+                (stable.deleted != True)
+        row = db(query).select(stable.id, limitby=(0, 1)).first()
+        if row:
+            status_id = row.id
+        else:
+            status_id = None
+
+        # Check if link exists
+        ltable = s3db.org_group_person
+        query = (ltable.person_id == person_id) & \
+                (ltable.org_group_id == org_group_id) & \
+                (ltable.deleted != True)
+        row = db(query).select(ltable.id, limitby=(0, 1)).first()
+        if not row:
+            # Make sure person record and org_group record exist
+            ptable = s3db.pr_person
+            gtable = s3db.org_group
+            if ptable[person_id] and gtable[org_group_id]:
+                ltable.insert(person_id=person_id,
+                              org_group_id=org_group_id,
+                              status_id=status_id,
+                              )
+        return org_group_id
+
+    # -------------------------------------------------------------------------
     def s3_link_to_human_resource(self,
                                   user,
                                   person_id,
@@ -3029,6 +3075,10 @@ $.filterOptionsS3({
             return True
 
         if not self.is_logged_in():
+            # @note: MUST NOT send an HTTP Auth challenge here because
+            #        otherwise, negative tests (e.g. if not auth.s3_logged_in())
+            #        would always raise and never succeed => omit basic_auth_realm,
+            #        and send the challenge in permission.fail() instead
             basic = self.basic()
             try:
                 return basic[2]
@@ -6076,7 +6126,11 @@ class S3Permission(object):
             if self.auth.s3_logged_in():
                 raise HTTP(403, body=self.INSUFFICIENT_PRIVILEGES)
             else:
-                raise HTTP(401, body=self.AUTHENTICATION_REQUIRED)
+                # RFC1945/2617 compliance:
+                # Must raise an HTTP Auth challenge with status 401
+                challenge = {"WWW-Authenticate": 
+                             u"Basic realm=%s" % current.request.application}
+                raise HTTP(401, body=self.AUTHENTICATION_REQUIRED, **challenge)
 
     # -------------------------------------------------------------------------
     # ACL Lookup

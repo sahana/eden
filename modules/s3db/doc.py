@@ -246,7 +246,8 @@ class S3DocumentLibrary(S3Model):
                      super_link(doc_id, "doc_entity"),
                      super_link("pe_id", "pr_pentity"), # @ToDo: Remove & make Persons doc entities instead?
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
-                     Field("file", "upload", autodelete=True,
+                     Field("file", "upload",
+                           autodelete = True,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
                                         IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),
@@ -399,7 +400,7 @@ class S3DocumentLibrary(S3Model):
                 f.filename = uuid.uuid4().hex + filename
                 import cStringIO
                 f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
-                form_vars.file = f
+                doc = form_vars.file = f
                 if not form_vars.name:
                     form_vars.name = filename
 

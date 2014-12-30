@@ -60,6 +60,19 @@ def group_membership_status():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def group_person():
+    """ REST controller for options.s3json lookups """
+
+    s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def group_person_status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def region():
     """ RESTful CRUD controller """
 
@@ -227,7 +240,7 @@ def room():
         field.readable = field.writable = True
         return True
     s3.prep = prep
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -317,7 +330,7 @@ def resource():
 
         return True
     s3.prep = prep
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

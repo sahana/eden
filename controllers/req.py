@@ -211,25 +211,25 @@ def req_controller(template = False):
         #    s3db.configure("req_req", list_fields=list_fields)
 
         type = (r.record and r.record.type) or \
-               (request.vars.type and int(request.vars.type))
+               (get_vars.type and int(get_vars.type))
 
         if r.interactive:
             # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
-            if "req_item_id" in request.vars and "inv_item_id" in request.vars:
+            if "req_item_id" in get_vars and "inv_item_id" in get_vars:
                 iitable = s3db.inv_inv_item
-                inv_item = db(iitable.id == request.vars.inv_item_id).select(iitable.site_id,
-                                                                             iitable.item_id,
-                                                                             limitby=(0, 1)
-                                                                             ).first()
+                inv_item = db(iitable.id == get_vars.inv_item_id).select(iitable.site_id,
+                                                                         iitable.item_id,
+                                                                         limitby=(0, 1)
+                                                                         ).first()
                 site_id = inv_item.site_id
                 item_id = inv_item.item_id
                 # @ToDo: Check Permissions & Avoid DB updates in GETs
-                db(s3db.req_req_item.id == request.vars.req_item_id).update(site_id = site_id)
+                db(s3db.req_req_item.id == get_vars.req_item_id).update(site_id = site_id)
                 response.confirmation = T("%(item)s requested from %(site)s") % \
                     {"item": s3db.supply_ItemRepresent()(item_id),
                      "site": s3db.org_SiteRepresent()(site_id)
                      }
-            elif "req.site_id" in r.get_vars:
+            elif "req.site_id" in get_vars:
                 # Called from 'Make new request' button on [siteinstance]/req page
                 table.site_id.default = get_vars.get("req.site_id")
                 table.site_id.writable = False
@@ -282,7 +282,7 @@ def req_controller(template = False):
                 table.recv_by_id.label = T("Reported To")
 
             if r.component:
-                if r.component.name == "document":
+                if r.component_name == "document":
                     s3.crud.submit_button = T("Add")
                     #table = r.component.table
                     # @ToDo: Fix for Link Table
@@ -297,12 +297,12 @@ def req_controller(template = False):
                     #        table.location_id.default = site.location_id
                     #        table.organisation_id.default = site.organisation_id
 
-                elif r.component.name == "req_item":
+                elif r.component_name == "req_item":
                     ctable = r.component.table
                     ctable.site_id.writable = ctable.site_id.readable = False
                     s3.req_hide_quantities(ctable)
 
-                elif r.component.name == "req_skill":
+                elif r.component_name == "req_skill":
                     s3.req_hide_quantities(r.component.table)
 
                 elif r.component.alias == "job":
@@ -341,15 +341,15 @@ def req_controller(template = False):
                         if not table.site_id.default:
                             table.site_id.default = auth.user.site_id
 
-                elif method == "map":
-                    # Tell the client to request per-feature markers
-                    s3db.configure("req_req", marker_fn=marker_fn)
-
                 elif method == "update":
                     if settings.get_req_inline_forms():
                         # Inline Forms
                         s3.req_inline_form(type, method)
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
+
+                elif method == "map":
+                    # Tell the client to request per-feature markers
+                    s3db.configure("req_req", marker_fn=marker_fn)
 
             # Prevent Items from being added to closed or cancelled requests
             if r.record and (r.record.closed or r.record.cancel):
@@ -657,7 +657,8 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
         return output
     s3.postp = postp
 
-    return s3_rest_controller("req", "req", rheader = s3db.req_rheader)
+    return s3_rest_controller("req", "req",
+                              rheader = s3db.req_rheader)
 
 # =============================================================================
 def req_item():
@@ -812,11 +813,11 @@ def req_item_inv_item():
 
     response.view = "req/req_item_inv_item.html"
     s3.actions = [dict(url = URL(c = request.controller,
-                                          f = "req",
-                                          args = [req_item.req_id, "req_item"],
-                                          vars = dict(req_item_id = req_item_id,
-                                                      inv_item_id = "[id]")
-                                         ),
+                                 f = "req",
+                                 args = [req_item.req_id, "req_item"],
+                                 vars = dict(req_item_id = req_item_id,
+                                              inv_item_id = "[id]")
+                                 ),
                                 _class = "action-btn",
                                 label = str(T("Request From")),
                                 )]

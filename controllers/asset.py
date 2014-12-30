@@ -77,9 +77,9 @@ def item():
         field.requires = IS_ONE_OF(db,
                                    "supply_item_category.id",
                                    s3db.supply_item_category_represent,
-                                   sort=True,
                                    filterby = "can_be_asset",
-                                   filter_opts = (True,)
+                                   filter_opts = (True,),
+                                   sort = True,
                                    )
                     
         field.comment = S3AddResourceLink(f="item_category",
@@ -150,5 +150,73 @@ def supplier():
     filter_widgets.pop(1)
 
     return s3db.org_organisation_controller()
+
+# -----------------------------------------------------------------------------
+def telephone():
+    """
+        RESTful CRUD controller
+        Filtered version of the asset_asset resource
+    """
+
+    tablename = "asset_asset"
+    table = s3db[tablename]
+
+    s3db.configure("asset_telephone",
+                   deletable = False,
+                   )
+
+    # Type is Telephone
+    TELEPHONE = s3db.asset_types["TELEPHONE"]
+    field = table.type
+    field.default = TELEPHONE
+    field.readable = False
+    field.writable = False
+
+    # Only show telephones
+    s3.filter = (field == TELEPHONE)
+
+    # Remove type from list_fields
+    list_fields = s3db.get_config("asset_asset", "list_fields")
+    if "type" in list_fields:
+        list_fields.remove("type")
+
+    field = table.item_id
+    field.label = T("Telephone Type")
+    field.comment = S3AddResourceLink(f="item",
+                                      # Use this controller for options.json rather than looking for one called 'asset'
+                                      vars=dict(parent="telephone"),
+                                      label=T("Add Telephone Type"),
+                                      info=T("Add a new telephone type"),
+                                      title=T("Telephone Type"),
+                                      tooltip=T("Only Items whose Category are of type 'Telephone' will be seen in the dropdown."))
+
+    # Only select from telephones
+    field.widget = None # We want a simple dropdown
+    ctable = s3db.supply_item_category
+    itable = s3db.supply_item
+    query = (ctable.is_telephone == True) & \
+            (itable.item_category_id == ctable.id)
+    field.requires = IS_ONE_OF(db(query),
+                               "supply_item.id",
+                               "%(name)s",
+                               sort=True)
+    # CRUD strings
+    s3.crud_strings[tablename] = Storage(
+        label_create = T("Add Telephone"),
+        title_display = T("Telephone Details"),
+        title_list = T("Telephones"),
+        title_update = T("Edit Telephone"),
+        title_map = T("Map of Telephones"),
+        label_list_button = T("List Telephones"),
+        label_delete_button = T("Delete Telephone"),
+        msg_record_created = T("Telephone added"),
+        msg_record_modified = T("Telephone updated"),
+        msg_record_deleted = T("Telephone deleted"),
+        msg_list_empty = T("No Telephones currently registered"))
+
+    # @ToDo: Tweak the search comment
+
+    # Defined in Model
+    return s3db.asset_controller()
 
 # END =========================================================================

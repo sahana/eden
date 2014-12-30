@@ -29,7 +29,9 @@ def case():
 
     def prep(r):
         if r.method == "update":
-            r.table.person_id.writable = False
+            person_id = r.table.person_id
+            person_id.writable = False
+            person_id.comment = None
         else:
             dtable = s3db.disease_disease
             diseases = db(dtable.deleted == False).select(dtable.id,

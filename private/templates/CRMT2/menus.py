@@ -113,8 +113,6 @@ class S3MainMenu(default.S3MainMenu):
             if user.org_group_id:
                 menu_auth = MM(greeting, c="org", f="group",
                                args=[user.org_group_id, "dashboard"], 
-                               # Remove the following line to activate the dashboard-link:
-                               link=False,
                                translate=False, 
                                _id="auth_menu_email",
                                **attr)

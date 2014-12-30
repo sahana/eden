@@ -585,7 +585,7 @@ class EdenDocTemplate(BaseDocTemplate):
             for cell in line:
                 try:
                     if cell.startswith("*"):
-                        (instruction,sep,text) = cell.partition(" ")
+                        (instruction, sep, text) = cell.partition(" ")
                         style += self.cellStyle(instruction, (col, row))
                         table[row][col] = text
                 except:
@@ -828,7 +828,7 @@ class S3PDFTable(object):
                 row_height = self.rowHeights[0][0]
                 rows = len(page)
                 if self.body_height > row_height * rows:
-                    rowCnt = int(self.body_height/row_height)
+                    rowCnt = int(self.body_height / row_height)
                     extra_rows = rowCnt - rows
                     if extra_rows:
                         cells = len(colWidths)

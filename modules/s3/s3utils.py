@@ -1983,12 +1983,6 @@ class S3TypeConverter(object):
 
         if isinstance(b, basestring):
             return b
-        if isinstance(b, datetime.date):
-            raise TypeError # @todo: implement
-        if isinstance(b, datetime.datetime):
-            raise TypeError # @todo: implement
-        if isinstance(b, datetime.time):
-            raise TypeError # @todo: implement
         return str(b)
 
     # -------------------------------------------------------------------------

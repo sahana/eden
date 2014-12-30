@@ -1240,8 +1240,7 @@ def config():
                             form_vars = Storage(config_id = config_id,
                                                 layer_id = layer_id,
                                                 )
-                            form_vars.style = json.dumps(layer["style"],
-                                                         separators=SEPARATORS)
+                            form_vars.style = layer["style"]
                             # Update or Insert?
                             stable = s3db.gis_style
                             query = (stable.config_id == config_id) & \
@@ -2929,6 +2928,9 @@ def display_feature():
     feature_id = request.args[0]
 
     table = s3db.gis_location
+    ftable = s3db.gis_layer_feature
+    stable = s3db.gis_style
+    gtable = s3db.gis_config
 
     # Check user is authorised to access record
     if not s3_has_permission("read", table, feature_id):
@@ -2967,20 +2969,49 @@ def display_feature():
     # zoom = config.zoom + 2
     bounds = gis.get_bounds(features=[feature])
 
-    response.view = "gis/iframe.html"
-    map = gis.show_map(
-        features = [feature.wkt],
-        lat = lat,
-        lon = lon,
-        #zoom = zoom,
-        bbox = bounds,
-        window = False,
-        closable = False,
-        collapsed = True,
-        width=640,
-        height=480,
-    )
+    options = {"lat": lat,
+               "lon": lon,
+               #"zoom": zoom,
+               "bbox": bounds,
+               "window": False,
+               "closable": False,
+               "collapsed": True,
+               }
+    # Layers
+    controller = get_vars.controller
+    function = get_vars.function
+    # Record id
+    rid = get_vars.rid
+    query = ((ftable.controller == controller) & \
+             (ftable.function == function) & \
+             (ftable.layer_id == stable.layer_id) & \
+             # Marker not specific to a record
+             (stable.record_id == None) & \
+             # Marker available to all or 'Default' Profile
+             ((stable.config_id == None) | ((stable.config_id == gtable.id) & \
+                                            (gtable.name == "Default")))
+             )
+    rows = db(query).select(ftable.layer_id).first()
+    if rows:
+        feature_opts = {"name": T("Represent"),
+                        "id": "resource_represent",
+                        "active": True,
+                        "layer_id": rows.layer_id}
+        if rid:
+            feature_opts["filter"] = "~.id=%s" % rid
+        options["feature_resources"] = [feature_opts]
+    else:
+        options["features"] = [feature.wkt]
 
+    # Add Width & Height if opened in Window
+    if get_vars.popup == "1":
+        options["width"] = 640
+        options["height"] = 480
+    else:
+        options["height"] = settings.get_gis_map_selector_height()
+
+    response.view = "gis/iframe.html"
+    map = gis.show_map(**options)
     return dict(map=map)
 
 # -----------------------------------------------------------------------------
@@ -3710,28 +3741,37 @@ def screenshot():
 
     config_id = request.args(0) or 1
 
+    # If passed a size, set the Pixels for 300ppi
     size = get_vars.get("size")
     if size == "Letter":
-        height = 612
-        width = 792
+        height = 2550 # 612 for 72ppi
+        width = 3300  # 792 for 72ppi
     elif size == "A4":
-        height = 595
-        width = 842
+        height = 2480 # 595 for 72ppi
+        width = 3508  # 842 for 72ppi
     elif size == "A3":
-        height = 842
-        width = 1191
+        height = 3508 # 842 for 72ppi
+        width = 4962  # 1191 for 72ppi
     elif size == "A2":
-        height = 1191
-        width = 1684
+        height = 4962 # 1191 for 72ppi
+        width = 7017  # 1684 for 72ppi
     elif size == "A1":
-        height = 1684
-        width = 2384
+        height = 7017 # 1684 for 72ppi
+        width =  9933 # 2384 for 72ppi
     elif size == "A0":
-        height = 2384
-        width = 3375
+        height = 9933 # 2384 for 72ppi
+        width =  14061 # 3375 for 72ppi
     else:
         height = get_vars.get("height")
+        try:
+            height = int(height)
+        except (ValueError, TypeError):
+            height = 2480
         width = get_vars.get("width")
+        try:
+            width = int(width)
+        except (ValueError, TypeError):
+            width = 3508
 
     filename = gis.get_screenshot(config_id, height=height, width=width)
     if filename:

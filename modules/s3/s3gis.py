@@ -2768,15 +2768,6 @@ class GIS(object):
             @requires:
                 PhantomJS http://phantomjs.org
                 Selenium https://pypi.python.org/pypi/selenium
-
-            OpenLayers.DOTS_PER_INCH = 72
-            Pixels at 72 dpi:
-            Letter = 612 x 792
-            A4 = 595 x 842
-            A3 = 842 x 1191
-            A2 = 1191 x 1684
-            A1 = 1684 x 2384
-            A0 = 2384 x 3375
         """
 
         # @ToDo: allow selection of map_id
@@ -2809,7 +2800,8 @@ class GIS(object):
         os.chdir(cachepath)
 
         #driver = webdriver.PhantomJS()
-        driver = WebDriver()
+        # Disable Proxy for Win32 Network Latency issue
+        driver = WebDriver(service_args=["--proxy-type=none"])
 
         # Change back for other parts
         os.chdir(cwd)
@@ -2820,6 +2812,9 @@ class GIS(object):
             height = settings.get_gis_map_height()
         if width is None:
             width = settings.get_gis_map_width()
+        # For Screenshots
+        #height = 410
+        #width = 820
         driver.set_window_size(width + 5, height + 20)
 
         # Load the homepage
@@ -2845,18 +2840,21 @@ class GIS(object):
         driver.get(url)
 
         # Wait for map to load (including it's layers)
+        # Alternative approach: https://raw.githubusercontent.com/ariya/phantomjs/master/examples/waitfor.js
         def map_loaded(driver):
             test = '''return S3.gis.maps['%s'].s3.loaded''' % map_id
             try:
-                return driver.execute_script(test)
-            except WebDriverException:
-                return False
+                result = driver.execute_script(test)
+            except WebDriverException, e:
+                result = False
+            return result
 
         try:
-            WebDriverWait(driver, 10).until(map_loaded)
+            # Wait for up to 100s (large screenshots take a long time for layers to load)
+            WebDriverWait(driver, 100).until(map_loaded)
         except TimeoutException, e:
             driver.quit()
-            current.log.error(e)
+            current.log.error("Timeout: %s" % e)
             return None
 
         # Save the Output
@@ -2876,7 +2874,7 @@ class GIS(object):
         #                        "width": width,
         #                        "height": height
         #                        }
-        #driver.page.render(filename, {"format": "jpeg", "quality": "90"})
+        #driver.page.render(filename, {"format": "jpeg", "quality": "100"})
 
         script = '''
 var page = this;
@@ -2885,7 +2883,7 @@ page.clipRect = {top: 10,
                  width: %(width)s,
                  height: %(height)s
                  };
-page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
+page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     dict(width = width,
                          height = height,
                          filename = filename,
@@ -2894,7 +2892,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
             result = driver.execute_phantomjs(script)
         except WebDriverException, e:
             driver.quit()
-            current.log.error(e)
+            current.log.error("WebDriver crashed: %s" % e)
             return None
 
         driver.quit()
@@ -7487,8 +7485,15 @@ class Layer(object):
             if styled:
                 style = row.get("gis_style", None)
                 if style:
-                    if style.style:
-                        record["style"] = style.style
+                    style_dict = style.style
+                    if isinstance(style_dict, basestring):
+                        # Matryoshka?
+                        try:
+                            style_dict = json.loads(style_dict)
+                        except ValueError:
+                            pass
+                    if style_dict:
+                        record["style"] = style_dict
                     else:
                         record["style"] = None
                         marker = row.get("gis_marker", None)

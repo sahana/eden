@@ -83,6 +83,8 @@ settings.base.guided_tour = True
 #settings.auth.registration_requests_site = True
 # Uncomment this to allow Admin to see Organisations in User Admin even if the Registration doesn't request this
 #settings.auth.admin_sees_organisation = True
+# Uncomment to hide the UTC Offset in Registration/Profile
+#settings.auth.show_utc_offset = False
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -185,6 +187,8 @@ settings.L10n.decimal_separator = "."
 #settings.L10n.translate_gis_location = True
 # Uncomment this for Alternate Location Names
 #settings.L10n.name_alt_gis_location = True
+# Uncomment this to Translate Organisation Names/Acronyms
+#settings.L10n.translate_org_organisation = True
 
 # Finance settings
 #settings.fin.currencies = {
@@ -215,8 +219,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.geocode_imported_addresses = "google"
 # Hide the Map-based selection tool in the Location Selector
 #settings.gis.map_selector = False
-# Hide LatLon boxes in the Location Selector
-#settings.gis.latlon_selector = False
+# Show LatLon boxes in the Location Selector
+#settings.gis.latlon_selector = True
 # Use Building Names as a separate field in Street Addresses?
 #settings.gis.building_name = False
 # Use a non-default fillColor for Clustered points
@@ -308,6 +312,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.widget_wms_browser = True
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
+# Uncomment to open Location represent links in a Popup Window
+#settings.gis.popup_location_link = True
 # GeoNames username
 settings.gis.geonames_username = "eden_test"
 
@@ -316,6 +322,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.msg.parser = "mytemplatefolder"
 # Uncomment to turn off enforcement of E.123 international phone number notation
 #settings.msg.require_international_phone_numbers = False
+# Uncomment to make basestation codes unique
+#settings.msg.basestation_code_unique = True
 
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False
@@ -357,6 +365,8 @@ settings.gis.geonames_username = "eden_test"
 # restricted to MapAdmins.
 # Uncomment to disable that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False
+# Uncomment to Disable the Postcode selector in the LocationSelector
+#settings.gis.postcode_selector = False
 
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
@@ -411,6 +421,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.label_permalink = "Permalink"
 
 # -----------------------------------------------------------------------------
+# Asset
+# Uncomment to have a specific asset type for Telephones
+#settings.asset.telephones = True
+
+# -----------------------------------------------------------------------------
 # CMS
 # Uncomment to use Bookmarks in Newsfeed
 #settings.cms.bookmarks = True
@@ -422,6 +437,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.richtext = True
 # Uncomment to show Events in Newsfeed
 #settings.cms.show_events = True
+# Uncomment to hide Attachments in Newsfeed
+#settings.cms.show_attachments = False
 # Uncomment to show Links in Newsfeed
 #settings.cms.show_links = True
 # Uncomment to show Tags in Newsfeed
@@ -624,6 +641,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.inv.stock_count = True
 # Use the term 'Order' instead of 'Shipment'
 #settings.inv.shipment_name = "order"
+# Uncomment to validate for Unique Warehouse Codes
+#settings.inv.warehouse_code_unique = True
 # Uncomment to not track pack values
 #settings.inv.track_pack_values = False
 #settings.inv.show_mode_of_transport = True
@@ -703,9 +722,9 @@ settings.gis.geonames_username = "eden_test"
 #settings.req.req_form_name = "Request Issue Form"
 #settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
-# list are ["Stock", "People", "Other"]. If this is commented out then
+# list are ("Stock", "People", "Other"). If this is commented out then
 # all types will be valid.
-#settings.req.req_type = ["Stock"]
+#settings.req.req_type = ("Stock",)
 # Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
 #settings.req.summary = True
 # Uncomment to restrict adding new commits to Completed commits
@@ -758,6 +777,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.project.activities = True
 # Uncomment this to use Activity Types for Activities & Projects
 #settings.project.activity_types = True
+# Uncomment this to filter dates in Activities
+#settings.project.activity_filter_year = True
 # Uncomment this to use Codes for projects
 #settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
@@ -973,6 +994,12 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 5,
     )),
+    #("dc", Storage(
+    #   name_nice = T("Data Collection"),
+    #   #description = "Data collection tool",
+    #   restricted = True,
+    #   module_type = 10
+    #)),
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",

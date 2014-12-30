@@ -2054,7 +2054,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 orderby = component.get_config("orderby")
 
             if record_id:
-                if "filterby" in self.options:
+                if "filterby" in options:
                     # Filter
                     f = self._filterby_query()
                     if f is not None:
@@ -2065,8 +2065,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 else:
                     extra_fields = []
                 all_fields = fields + virtual_fields + extra_fields
+                start = 0
+                limit = 1 if options.multiple is False else None
                 data = component.select(all_fields,
-                                        limit=None,
+                                        start=start,
+                                        limit=limit,
                                         represent=True,
                                         raw_data=True,
                                         show_links=False,

@@ -263,7 +263,7 @@ def person():
     # Custom Method for CV
     set_method("pr", resourcename,
                method = "cv",
-               action = s3db.hrm_cv)
+               action = s3db.hrm_CV)
 
     # Custom Method for HR Record
     set_method("pr", resourcename,

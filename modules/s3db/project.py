@@ -950,16 +950,17 @@ class S3ProjectActivityModel(S3Model):
                                     # Doesn't support translation
                                     #represent = "%(name)s",
                                     ))
-        # @ToDo: deployment_setting
-        filter_widgets.append(
-            S3OptionsFilter("year",
-                            label = T("Year"),
-                            #operator = "anyof",
-                            #options = lambda: \
-                            #    self.stats_year_options("project_activity"),
-                            options = project_activity_year_options,
-                            ),
-            )
+
+        if settings.get_project_activity_filter_year():
+            filter_widgets.append(
+                S3OptionsFilter("year",
+                                label = T("Year"),
+                                #operator = "anyof",
+                                #options = lambda: \
+                                #    self.stats_year_options("project_activity"),
+                                options = project_activity_year_options,
+                                ),
+                )
 
         if use_projects and settings.get_project_mode_drr():
             rappend(("project_id$hazard_project.hazard_id"))

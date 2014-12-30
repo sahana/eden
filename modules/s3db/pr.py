@@ -844,9 +844,8 @@ class S3PersonModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PERSON = messages.ADD_PERSON
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create a Person"),
+            label_create = messages.ADD_PERSON,
             title_display = T("Person Details"),
             title_list = T("Persons"),
             title_update = T("Edit Person Details"),
@@ -1031,6 +1030,8 @@ class S3PersonModel(S3Model):
                        hrm_salary = "person_id",
                        # Organisation Memberships
                        member_membership = "person_id",
+                       # Organisation Group Association
+                       org_group_person = "person_id",
                        # Education history
                        pr_education = "person_id",
                        # Group Memberships

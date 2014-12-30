@@ -93,6 +93,7 @@ class S3Config(Storage):
                     }
 
     def __init__(self):
+        self.asset = Storage()
         self.auth = Storage()
         self.auth.email_domains = []
         self.base = Storage()
@@ -864,7 +865,7 @@ class S3Config(Storage):
         """
             Display Lat/Lon form fields when selecting Locations
         """
-        return self.gis.get("latlon_selector", True)
+        return self.gis.get("latlon_selector", False)
 
     def get_gis_layer_metadata(self):
         """
@@ -1126,6 +1127,14 @@ class S3Config(Storage):
         """
         return self.gis.get("lookup_code", False)
 
+    def get_gis_popup_location_link(self):
+        """
+            Whether a Pop-up Window should open on clicking
+            Location represent links
+            - Default: Map opens in a div
+        """
+        return self.gis.get("popup_location_link", False)
+
     # -------------------------------------------------------------------------
     # L10N Settings
     def get_L10n_default_language(self):
@@ -1269,6 +1278,13 @@ class S3Config(Storage):
             Whether to use Alternate Location names
         """
         return self.L10n.get("name_alt_gis_location", False)
+
+    def get_L10n_translate_org_organisation(self):
+        """
+            Whether to translate Organisation names/acronyms
+        """
+        return self.L10n.get("translate_org_organisation", False)
+
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
@@ -1696,6 +1712,12 @@ class S3Config(Storage):
         """
         return self.msg.get("max_send_retries", 9)
 
+    def get_msg_basestation_code_unique(self):
+        """
+            Validate for Unique Basestations Codes
+        """
+        return self.msg.get("basestation_code_unique", False)
+
     # -------------------------------------------------------------------------
     # Mail settings
     def get_mail_server(self):
@@ -1857,6 +1879,15 @@ class S3Config(Storage):
     # Modules
 
     # -------------------------------------------------------------------------
+    # Asset: Asset Management
+    #
+    def get_asset_telephones(self):
+        """
+            Whether Assets should include a specific type for Telephones
+        """
+        return self.asset.get("telephones", False)
+
+    # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #
     def get_cap_identifier_prefix(self):
@@ -2015,6 +2046,12 @@ class S3Config(Storage):
             Whether to show Events in News Feed
         """
         return self.cms.get("show_events", False)
+
+    def get_cms_show_attachments(self):
+        """
+            Whether to show Attachments (such as Sources) in News Feed
+        """
+        return self.cms.get("show_attachments", True)
 
     def get_cms_show_links(self):
         """
@@ -2507,6 +2544,12 @@ class S3Config(Storage):
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
 
+    def get_inv_warehouse_code_unique(self):
+        """
+            Validate for Unique Warehouse Codes
+        """
+        return self.inv.get("warehouse_code_unique", False)
+
     # -------------------------------------------------------------------------
     # IRS
     #
@@ -2828,6 +2871,12 @@ class S3Config(Storage):
             Use Activity Types in Activities & Projects
         """
         return self.project.get("activity_types", False)
+
+    def get_project_activity_filter_year(self):
+        """
+            Filter according to Year in Activities
+        """
+        return self.project.get("activity_filter_year", False)
 
     def get_project_codes(self):
         """

@@ -22,9 +22,25 @@ header.row {
     margin: 0;
 }
 
+/* Override widgets.css */
+.box_top label {
+    background-color: inherit;
+}
+
+.box_bottom {
+    padding: 0;
+    margin-bottom: 16px;
+}
+
 /* Not considered in Theme */
 .row.alert-space {
     padding: 0;
+}
+.alert-success,
+.alert-error,
+.alert-info,
+.alert-warning {
+    margin: 0;
 }
 
 .x-btn button {
@@ -41,9 +57,22 @@ header.row {
     border: 0;
 }
 
+input.password {
+    /* Match email. Not responsive */
+    width: 500px;
+}
+
 table.embeddedComponent,
 form table.embeddedComponent td {
     border: none;
+}
+
+button.ui-multiselect {
+    margin: 0;
+}
+
+#gis_poi_organisation_id__row {
+    margin-bottom: 16px;
 }
 
 .ui-tabs .ui-tabs-nav li {
@@ -317,24 +346,30 @@ aside .form-container input[type=radio] + label:before {
     display: inline;
     max-width: 12rem;
 }
+.form-container form button.ui-datepicker-trigger,
 .ui-datepicker-trigger {
+    background-color: transparent;
+    background-image: url(../../img/bootstrap/calendar.gif);
+    /* Breaks on focus
+    padding: 5px 0 0 0; */
     padding: 0;
 }
 
 /* Override widget.css .expanded-selector for top bar */
-.top-bar .expanded {
+.top-bar.expanded {
     float: none;
     width: auto;
 }
 
 /* Apply theme styles for multiselect to the right selector */
+.ui-multiselect.ui-state-default,
 .ui-multiselect {
     -webkit-appearance: none !important;
     -webkit-border-radius: 0px;
     background-color: #FAFAFA;
     background-position: 100% center;
     background-repeat: no-repeat;
-    border: 1px solid #cccccc;
+    border: 1px solid #ccc;
     padding: 0.5rem;
     font-size: 0.875rem;
     font-family: Lato, "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
@@ -344,6 +379,13 @@ aside .form-container input[type=radio] + label:before {
     height: 2.3125rem;
     display: block;
     text-align: left;
+}
+.ui-multiselect.ui-state-hover {
+    background-color: #038383;
+    color: #fff;
+}
+.ui-multiselect-close {
+    visibility: hidden;
 }
 /* Force multiselect button to adapt to grid */
 .columns > .ui-multiselect,
@@ -380,7 +422,7 @@ aside .form-container input[type=radio] + label:before {
     background-color: #04A4A4;
     color: white;
     border-radius: 100%;
-    opacity:1;
+    opacity: 1;
 }
 .slick-prev:hover:before,
 .slick-next:hover:before {
@@ -393,9 +435,9 @@ aside .form-container input[type=radio] + label:before {
     content: "\f10b"; 
 }
 .slick-dots {
-    position:static;
-    margin-top:20px;
-    margin-left:0;
+    position: static;
+    margin-top: 20px;
+    margin-left: 0;
 }
 .slick-dots li button:before {
     font-size: 0.7rem;
@@ -404,13 +446,23 @@ aside .form-container input[type=radio] + label:before {
 }
 .slick-slide,
 .slick-dots li.slick-active button:before {
-    color: #EEEEEE;
+    color: #EEE;
 }
 .slick-slide {
-    color: #EEEEEE;
+    color: #EEE;
 }
 .slick-slide img {
     border: 5px solid white;
+}
+
+/* Dashboard */
+.dashboard-stats a {
+    color: #444;
+}
+
+/* Override widgets.css */
+.tooltip {
+    height: auto;
 }
 
 /* END */
@@ -700,7 +752,7 @@ dl.horizontal {
     width: 75%;
     margin: 0 12.5%;
     position: relative;
-    top: 91px;
+    top: 109px;
     color: #fff;
     color: rgba(255, 255, 255, 0.5);
     height: 2px; }
@@ -853,6 +905,7 @@ th.sorting {
     font-size: 75%;
     padding: 0 24px; }
 
+/* Replaced by Slick
 .orbit-container {
   overflow: visible; }
   .orbit-container .orbit-prev {
@@ -874,6 +927,7 @@ th.sorting {
 
 .orbit-bullets li {
   margin-right: 12px; }
+*/
 
 .dashboard-lists {
   margin-top: -24px;
