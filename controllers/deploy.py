@@ -262,7 +262,7 @@ def assignment():
                 if hr:
                     get_vars = {"mission_id": r.record.mission_id,
                                 }
-                    
+
                     if popup:
                         method = "create.popup"
                         refresh = get_vars.get("refresh", None)
@@ -567,7 +567,7 @@ def email_inbox():
                                     label = T("Attachments"),
                                     fields = ["document_id",
                                               ],
-                                    ),                                                                
+                                    ),
                                 )
 
     s3db.configure(tablename,
@@ -711,15 +711,7 @@ def alert_recipient():
         - needed for adding recipients
     """
 
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
 
     return s3_rest_controller()
 

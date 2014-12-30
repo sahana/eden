@@ -784,13 +784,13 @@ def task_tag():
 # =============================================================================
 def role():
     """ RESTful CRUD controller """
-    
+
     return s3_rest_controller()
 
 # =============================================================================
 def member():
     """ RESTful CRUD Controller """
-    
+
     s3.prep = lambda r: r.representation == "s3json"
 
     return s3_rest_controller()
@@ -960,29 +960,20 @@ def comments():
     field.default = task_id
     field.writable = field.readable = False
 
-    from s3 import S3SQLCustomForm, S3Request
     # Create S3Request for S3SQLForm
-    r = S3Request(prefix="project",
-                  name="comment",
-                  r=request,
-                  c=request.controller,
-                  f=request.function,
-                  # Override task_id
-                  args=[],
-                  vars=None,
-                  # Override .loads
-                  extension="html",
-                  get_vars=get_vars,
-                  post_vars=request.post_vars,
-                  http=request.env.request_method)
+    r = s3_request(prefix="project",
+                   name="comment",
+                   # Override task_id
+                   args=[],
+                   vars=None,
+                   # Override .loads
+                   extension="html")
 
     # Customise resource
     r.customise_resource()
 
     # Form to add a new Comment
-    form = S3SQLCustomForm("parent",
-                           "task_id",
-                           "body")(r)
+    form = s3base.S3SQLCustomForm("parent", "task_id", "body")(r)
 
     # List of existing Comments
     comments = db(field == task_id).select(table.id,
