@@ -47,7 +47,7 @@ class DataCollectionTemplateModel(S3Model):
              "dc_question",
              "dc_question_id",
              "dc_template_question",
-             #"dc_question_l10n",       # @todo
+             "dc_question_l10n",
              )
 
     def model(self):
@@ -58,6 +58,7 @@ class DataCollectionTemplateModel(S3Model):
         crud_strings = current.response.s3.crud_strings
 
         define_table = self.define_table
+        add_components = self.add_components
 
         # =====================================================================
         # Data Collection Template
@@ -101,15 +102,15 @@ class DataCollectionTemplateModel(S3Model):
             msg_list_empty = T("No Templates currently registered"))
 
         # Components
-        self.add_components(tablename,
-                            dc_question = {"link": "dc_template_question",
-                                           "joinby": "template_id",
-                                           "key": "question_id",
-                                           # @todo: embed?
-                                           "actuate": "hide",
-                                           "autodelete": False,
-                                           },
-                            )
+        add_components(tablename,
+                       dc_question = {"link": "dc_template_question",
+                                      "joinby": "template_id",
+                                      "key": "question_id",
+                                      # @todo: embed?
+                                      "actuate": "hide",
+                                      "autodelete": False,
+                                      },
+                       )
 
         # =====================================================================
         # Data Collection Question
@@ -160,6 +161,11 @@ class DataCollectionTemplateModel(S3Model):
                                                                   ),
                                       )
 
+        # Components
+        add_components(tablename,
+                       dc_question_l10n = "question_id",
+                       )
+
         # =====================================================================
         # Template <=> Question link table
         #
@@ -167,7 +173,6 @@ class DataCollectionTemplateModel(S3Model):
         define_table(tablename,
                      template_id(),
                      question_id(),
-                     #s3_comments(),
                      *s3_meta_fields())
 
         # CRUD strings
@@ -177,6 +182,46 @@ class DataCollectionTemplateModel(S3Model):
             msg_record_created = T("Question added"),
             msg_record_deleted = T("Question remove"),
             msg_list_empty = T("No Questions currently registered"))
+
+        # =====================================================================
+        # Questions l10n
+        #
+        l10n_languages = current.deployment_settings.get_L10n_languages()
+
+        tablename = "dc_question_l10n"
+        define_table(tablename,
+                     question_id(ondelete = "CASCADE",
+                                 ),
+                     Field("language",
+                           label = T("Language"),
+                           represent = lambda opt: l10n_languages.get(opt,
+                                                   current.messages.UNKNOWN_OPT),
+                           requires = IS_ISO639_2_LANGUAGE_CODE(),
+                           ),
+                     Field("question",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("options", "json",
+                           requires = IS_EMPTY_OR(IS_JSON()),
+                           # @todo: representation
+                           # @todo: widget
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Translation"),
+            title_display = T("Translation"),
+            title_list = T("Translations"),
+            title_update = T("Edit Translation"),
+            title_upload = T("Import Translations"),
+            label_list_button = T("List Translations"),
+            label_delete_button = T("Delete Translation"),
+            msg_record_created = T("Translation added"),
+            msg_record_modified = T("Translation updated"),
+            msg_record_deleted = T("Translation deleted"),
+            msg_list_empty = T("No Translations currently available"))
 
         # =====================================================================
         # Pass names back to global scope (s3.*)
@@ -202,7 +247,7 @@ class DataCollectionTemplateModel(S3Model):
 class DataCollectionModel(S3Model):
 
     names = ("dc_collection",
-             #"dc_answer",
+             "dc_answer",
              )
 
     def model(self):
@@ -336,6 +381,16 @@ def dc_rheader(r, tabs=None):
                 )
 
         rheader_fields = (["name"],
+                          )
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    elif resourcename == "question":
+
+        tabs = ((T("Question Details"), None),
+                (T("Translations"), "question_l10n"),
+                )
+
+        rheader_fields = (["question"],
                           )
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
