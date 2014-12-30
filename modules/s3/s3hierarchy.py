@@ -126,6 +126,11 @@ class S3HierarchyCRUD(S3Method):
                              representation="popup"),
             "addLabel": str(T("Add")),
             "addTitle": str(crud_string("label_create")),
+            "deleteLabel": str(T("Delete")),
+            "deleteURL": r.url(method="delete",
+                               id="[id]",
+                               representation="json"),
+            # @todo: disable root node deletion if r.record is not None
             "addURL": r.url(method="create", representation="popup"),
         }
         theme = current.deployment_settings.get_ui_hierarchy_theme()
@@ -179,6 +184,7 @@ class S3HierarchyCRUD(S3Method):
                     h._represent(node_ids=children)
                     for child_id in children:
                         label = h.label(child_id)
+                        # @todo: include CRUD permissions?
                         nodes.append({"node": child_id,
                                       "label": str(label) if label else None,
                                       })
@@ -795,6 +801,49 @@ class S3Hierarchy(object):
         return
 
     # -------------------------------------------------------------------------
+    def delete(self, node_ids, cascade=False):
+        """
+            Recursive deletion of hierarchy branches
+
+            @param node_ids: the parent node IDs of the branches to be deleted
+            @param cascade: cascade call, do not commit (internal use)
+
+            @return: number of deleted nodes, or None if cascade failed
+        """
+
+        if not self.config:
+            return None
+
+        tablename = self.tablename
+
+        total = 0
+        for node_id in node_ids:
+
+            # Recursively delete child nodes
+            children = self.children(node_id)
+            if children:
+                result = self.delete(children, cascade=True)
+                if result is None:
+                    return None
+                else:
+                    total += result
+
+            # Delete node
+            from s3query import FS
+            query = (FS(self.pkey.name) == node_id)
+            resource = current.s3db.resource(tablename, filter=query)
+            success = resource.delete(cascade=True)
+            if success:
+                total += 1
+            else:
+                return None
+
+        if not cascade and total:
+            self.dirty(tablename)
+
+        return total
+
+    # -------------------------------------------------------------------------
     def add(self, node_id, parent_id=None, category=None):
         """
             Add a new node to the hierarchy
@@ -1223,6 +1272,8 @@ class S3Hierarchy(object):
             @param represent: the node ID representation method
 
             @return: the list item (LI)
+
+            @todo: option to add CRUD permissions
         """
 
         node = self.nodes.get(node_id)
