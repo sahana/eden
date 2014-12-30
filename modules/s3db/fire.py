@@ -60,7 +60,9 @@ class S3FireModel(S3Model):
         tablename = "fire_zone_type"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      # @ToDo: Currently unused - apply in layer_feature for now
                      Field("style", "text",
                            label=T("Style")),
@@ -93,7 +95,9 @@ class S3FireModel(S3Model):
         tablename = "fire_zone"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("zone_type_id", db.fire_zone_type,
                            requires = IS_EMPTY_OR(
                                          IS_ONE_OF(db, "fire_zone_type.id",
@@ -301,7 +305,10 @@ class S3FireStationModel(S3Model):
         #
         tablename = "fire_water_source"
         define_table(tablename,
-                     Field("name", "string"),
+                     Field("name", "string",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      location_id(),
                      #Field("good_for_human_usage", "boolean"),
                      #Field("fresh", "boolean"),
@@ -349,7 +356,10 @@ class S3FireStationModel(S3Model):
         tablename = "fire_hazard_point"
         define_table(tablename,
                      location_id(),
-                     Field("name", "string"),
+                     Field("name", "string",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      # What are the Org & Person for? Contacts?
                      organisation_id(),
                      person_id(),
@@ -386,7 +396,8 @@ class S3FireStationModel(S3Model):
         define_table(tablename,
                      station_id(),
                      #shift_id(),
-                     human_resource_id(),
+                     human_resource_id(empty = False,
+                                       ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
