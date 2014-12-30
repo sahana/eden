@@ -199,6 +199,13 @@ settings.L10n.decimal_separator = "."
 #settings.fin.currency_default = "USD"
 #settings.fin.currency_writable = False # False currently breaks things
 
+# Vulnerability settings
+# Uncomment this line to configure countries
+#settings.vulnerability.countries = ["TL", "VN"]
+# Uncomment to enable the approval for vulnerability data
+#settings.vulnerability.stats_data_approval = True
+
+
 # PDF settings
 # Default page size for reports (defaults to A4)
 #settings.base.paper_size = T("Letter")
@@ -312,8 +319,6 @@ settings.L10n.decimal_separator = "."
 #settings.gis.widget_wms_browser = True
 # Uncomment to hide the Zoom control
 #settings.gis.zoomcontrol = False
-# Uncomment to open Location represent links in a Popup Window
-#settings.gis.popup_location_link = True
 # GeoNames username
 settings.gis.geonames_username = "eden_test"
 
@@ -324,7 +329,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.msg.require_international_phone_numbers = False
 # Uncomment to make basestation codes unique
 #settings.msg.basestation_code_unique = True
-
+# Uncomment to change the label for 'Member'
+#settings.deploy.member_label = "Member"
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False
 
@@ -421,11 +427,6 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.label_permalink = "Permalink"
 
 # -----------------------------------------------------------------------------
-# Asset
-# Uncomment to have a specific asset type for Telephones
-#settings.asset.telephones = True
-
-# -----------------------------------------------------------------------------
 # CMS
 # Uncomment to use Bookmarks in Newsfeed
 #settings.cms.bookmarks = True
@@ -452,6 +453,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.organisation_group = "post_organisation_group.group_id"
 # Uncomment to use person_id instead of created_by in Newsfeed
 #settings.cms.person = "person_id"
+# Uncomment to enable multiple Organisations per Posts
+#settings.cms.multiple_organisations = True
+# Uncomment to enable multiple Organisations Groups per Posts
+#settings.cms.multiple_organisation_groups = True
 
 # -----------------------------------------------------------------------------
 # Shelters
@@ -459,6 +464,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cr.shelter_population_dynamic = True
 # Uncomment to disable people registration in shelters
 #settings.cr.people_registration = False
+# Uncomment to change the notification subject
+#settings.cr.shelter_notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Events
@@ -466,6 +473,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.event.types_hierarchical = True
 # Make Incident Types Hierarchical
 #settings.event.incident_types_hierarchical = True
+# Uncomment to change the Event notification subject
+#settings.event.notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Members
@@ -580,6 +589,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.location_vol = ("person_id", "site_id")
 # Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
 #settings.hrm.site_contact_unique = False
+# Uncomment this to allow multiple site contacts per site
+#settings.hrm.multiple_site_contact = True
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
 # Uncomment to disable Staff experience
@@ -621,6 +632,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.use_trainings = False
 # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
 #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
+# Uncomment to change the label for HR Credentials Widget  
+#settings.hrm.credentials_widget_label = "Sectors"
 
 # -----------------------------------------------------------------------------
 # Inventory Management
@@ -714,9 +727,9 @@ settings.gis.geonames_username = "eden_test"
 #settings.req.req_form_name = "Request Issue Form"
 #settings.req.req_shortname = "RIS"
 # Restrict the type of requests that can be made, valid values in the
-# list are ("Stock", "People", "Other"). If this is commented out then
+# list are ["Stock", "People", "Other"]. If this is commented out then
 # all types will be valid.
-#settings.req.req_type = ("Stock",)
+#settings.req.req_type = ["Stock"]
 # Uncomment to enable Summary 'Site Needs' tab for Offices/Facilities
 #settings.req.summary = True
 # Uncomment to restrict adding new commits to Completed commits
@@ -756,6 +769,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.supply.use_alt_name = False
 # Do not edit after deployment
 #settings.supply.catalog_default = T("Default")
+
+# -----------------------------------------------------------------------------
+# Disease
+# Uncomment to enable the approval for disease stats data
+#settings.disease.stats_data_approval = True
 
 # -----------------------------------------------------------------------------
 # Projects
@@ -809,6 +827,8 @@ settings.gis.geonames_username = "eden_test"
 # Uncomment to customise the list of options for the Status of a Task.
 # NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
 #settings.project.task_status_opts =
+# Uncomment to configure beneficiary in project activity reports
+#settings.project.activity_filter_beneficiary = False
 
 # -----------------------------------------------------------------------------
 # Incidents
@@ -986,12 +1006,6 @@ settings.modules = OrderedDict([
         restricted = True,
         module_type = 5,
     )),
-    #("dc", Storage(
-    #   name_nice = T("Data Collection"),
-    #   #description = "Data collection tool",
-    #   restricted = True,
-    #   module_type = 10
-    #)),
     ("cr", Storage(
         name_nice = T("Shelters"),
         #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -1082,7 +1096,7 @@ settings.modules = OrderedDict([
     #    #description = "Manages vulnerability indicators",
     #    restricted = True,
     #    module_type = 10,
-    # )),
+    #)),
     #("fire", Storage(
     #   name_nice = T("Fire Stations"),
     #   #description = "Fire Station Management",
@@ -1130,7 +1144,7 @@ settings.modules = OrderedDict([
     # @ToDo: Port these Assessments to the Survey module
     #("building", Storage(
     #    name_nice = T("Building Assessments"),
-    #    #description = "Building Safety Assessments",
+    #    description = "Building Safety Assessments",
     #    restricted = True,
     #    module_type = 10,
     #)),
