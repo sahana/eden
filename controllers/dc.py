@@ -27,7 +27,9 @@ def template():
 def question():
     """ Manage Data Collection Questions """
 
-    return s3_rest_controller()
+    # @todo: prep to populate question_l10n from question
+
+    return s3_rest_controller(rheader = s3db.dc_rheader)
 
 # -----------------------------------------------------------------------------
 def collection():
