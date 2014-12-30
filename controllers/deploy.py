@@ -705,6 +705,25 @@ def email_channel():
     return s3_rest_controller("msg")
 
 # =============================================================================
+def alert_recipient():
+    """
+        RESTful CRUD controller for options.s3json lookups
+        - needed for adding recipients
+    """
+
+    if auth.permission.format != "s3json":
+        return ""
+
+    # Pre-process
+    def prep(r):
+        if r.method != "options":
+            return False
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# =============================================================================
 # Messaging
 # =============================================================================
 def compose():
