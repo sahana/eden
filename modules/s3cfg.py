@@ -2112,6 +2112,10 @@ class S3Config(Storage):
             e.g. 'Staff', 'Volunteer' (CERT), 'Member' (RDRT)
         """
         return self.deploy.get("hr_label", "Staff")
+    
+    def get_deploy_member_label(self):
+
+        return self.deploy.get("member_label", "Member")
 
     # -------------------------------------------------------------------------
     # Events
