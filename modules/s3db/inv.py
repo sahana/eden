@@ -1941,7 +1941,6 @@ $.filterOptionsS3({
         request = current.request
         response = current.response
         s3 = response.s3
-
         # Limit site_id to sites the user has permissions for
         error_msg = T("You do not have permission for any facility to send a shipment.")
         current.auth.permitted_facilities(table=sendtable, error_msg=error_msg)
@@ -2142,9 +2141,12 @@ $.filterOptionsS3({
                     # "received" must not propagate:
                     del request.get_vars["received"]
                     # Set the items to being received
-                    # @ToDo: Check Permissions & Avoid DB updates in GETs
-                    db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
-                    db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
+                    auth = current.auth
+                    if r.http != 'GET':
+                        if auth.s3_has_permission("update", sendtable):
+                            db(sendtable.id == r.id).update(status = SHIP_STATUS_RECEIVED)
+                        if auth.s3_has_permission("update", tracktable):
+                            db(tracktable.send_id == r.id).update(status = TRACK_STATUS_ARRIVED)
                     req_ref = record.req_ref
                     if req_ref:
                         # Update the Request Status

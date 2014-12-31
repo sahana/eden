@@ -5453,28 +5453,24 @@ class project_BeneficiaryRepresent(S3Represent):
             reasons.
 
             @param values: the project_beneficiary IDs
-
         """
 
         db = current.db
-        table = db.project_beneficiary
+        table = self.table
         ttable = db.project_beneficiary_type
-        fields = ["project_beneficiary.id",
-                  "project_beneficiary.value",
-                  "project_beneficiary_type.name"]
 
         left = [ttable.on(table.parameter_id == ttable.id)]
-        qty = len(values)
-        if qty == 1:
+        count = len(values)
+        if count == 1:
             query = (table.id == values[0])
-            limitby = (0, 1)
         else:
             query = (table.id.belongs(values))
-            limitby = (0, qty)
 
-        rows = db(query).select(left=left,
-                                limitby=limitby,
-                                *fields)
+        rows = db(query).select(table.id,
+                                table.value,
+                                ttable.name,
+                                left=left,
+                                limitby=(0, count))
 
         return rows
 

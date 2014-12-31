@@ -2111,7 +2111,7 @@ class S3Config(Storage):
         """
         return self.event.get("incident_types_hierarchical", False)
 
-    def get_event_notification_subject(self):
+    def get_event_event_notification_subject(self):
         """
             Subject for the Event Notification Dispatcher
         """
