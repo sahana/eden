@@ -150,7 +150,6 @@ def index():
             HM("Inventory Items", c="inv", f="inv_item"),
         ),
         HM("Decision")(
-            HM("Home", c="default", f="index"),
             #HM("Gap Map", c="project", f="gap_map"),
             #HM("Gap Report", c="project", f="gap_report"),
             HM("Requests", c="req", f="req"),
