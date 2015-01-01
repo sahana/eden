@@ -2,7 +2,7 @@
 
 """ S3 Logging Facility
 
-    @copyright: (c) 2014 Sahana Software Foundation
+    @copyright: (c) 2015 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
