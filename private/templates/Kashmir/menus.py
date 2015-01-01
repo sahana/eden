@@ -38,7 +38,7 @@ class S3MainMenu(default.S3MainMenu):
 
         menu_help = MM("Help", c="default", f="help", **attr)(
             MM("Contact us", f="contact"),
-            MM("About Us", f="about"),
+            MM("About Us", f="index/about"),
             MM("User Guide", f="index/userguide"),
         )
         return menu_help
