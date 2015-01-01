@@ -1973,7 +1973,6 @@ class S3EventSiteModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Facilities
-        # @ToDo: Filter Widgets
         tablename = "event_site"
         self.define_table(tablename,
                           # Instance table
@@ -2044,6 +2043,17 @@ class S3EventSiteModel(S3Model):
                                       "allocation.end_date",
                                       "allocation.daily_cost",
                                       ],
+                       filter_widgets = [S3OptionsFilter("site_id",
+                                                         label = T("Facility"),
+                                                         multiple = False),
+                                         S3OptionsFilter("status",
+                                                         label = T("Status"),
+                                                         multiple = False,
+                                                         hidden = True),
+                                         S3OptionsFilter("allocation.budget_id",
+                                                         label = T("Budget"),
+                                                         hidden = True),
+                                        ],
                        super_entity = "budget_cost_item",
                        )
 
@@ -2344,7 +2354,7 @@ def event_notification_dispatcher(r, **attr):
 
         # Create the form
         opts = dict(type="SMS",
-                    subject = settings.get_event_notification_subject(),
+                    subject = settings.get_event_event_notification_subject(),
                     message = message + text,
                     url = url,
                     )

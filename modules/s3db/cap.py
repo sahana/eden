@@ -1475,7 +1475,7 @@ class CAPImportFeed(S3Method):
 
             title = T("Import from Feed URL")
 
-            # @ToDo: use Formstyle
+            formstyle = current.deployment_settings.get_ui_formstyle()
             form = FORM(
                     TABLE(
                         TR(TD(DIV(B("%s:" % T("URL")),
@@ -1503,7 +1503,8 @@ class CAPImportFeed(S3Method):
                            TD(INPUT(_type="submit", _value=T("Import"))),
                            TD(),
                            )
-                        )
+                        ),
+                    formstyle = formstyle
                     )
 
             response.view = "create.html"

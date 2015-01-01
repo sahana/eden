@@ -208,12 +208,14 @@ class S3ContentModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      s3_datetime(default = "now"),
-                     # @ToDo: Also have a datetime for 'Expires On'
                      Field("expired", "boolean",
                            default = False,
                            label = T("Expired?"),
                            represent = s3_yes_no_represent,
                            ),
+                     s3_datetime(label=T("Expires On"),
+                                 name="expires_on",
+                                 past=0),
                      #Field("published", "boolean",
                      #      default=True,
                      #      label=T("Published")),
@@ -258,6 +260,7 @@ class S3ContentModel(S3Model):
                        "location_id",
                        "date",
                        "expired",
+                       "expires_on",
                        "comments"
                        ]
 

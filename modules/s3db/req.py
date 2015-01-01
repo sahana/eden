@@ -548,7 +548,7 @@ class S3RequestModel(S3Model):
                           req_id(empty=False),
                           self.event_event_id(
                                default = session.s3.event,
-                               ondelete = "SET NULL",
+                               ondelete = "CASCADE",
                                readable = False,
                                writable = False,
                                ),
@@ -1641,9 +1641,9 @@ class req_RequesterRepresent(S3Represent):
 
         ptable = s3db.pr_person
         ctable = s3db.pr_contact
-        qty = len(values)
+        count = len(values)
 
-        if qty == 1:
+        if count == 1:
             query = (key == values[0])
         else:
             query = key.belongs(values)
@@ -1663,7 +1663,7 @@ class req_RequesterRepresent(S3Represent):
             fields.append(htable.type)
 
         rows = db(query).select(left=left,
-                                limitby=(0, qty),
+                                limitby=(0, count),
                                 *fields)
         return rows
 
@@ -1686,12 +1686,12 @@ class req_RequesterRepresent(S3Represent):
                     controller = "vol"
             else:
                 controller = "pr"
-            current.request.extention = "html"
 
             return A(output,
                      _href = URL(c = controller,
                                  f = "person",
-                                 args = [row["pr_person.id"], "contacts"]
+                                 args = [row["pr_person.id"], "contacts"],
+                                 extension = "html"
                                  )
                      )
 
