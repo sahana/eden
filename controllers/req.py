@@ -29,7 +29,6 @@ def index_alt():
 def is_affiliated():
     """
         Check if User is affiliated to an Organisation
-        @ToDo: Move this elsewhere
     """
 
     if not auth.is_logged_in():
@@ -468,9 +467,10 @@ $.filterOptionsS3({
             elif type == 3: # People
                 # Limit site_id to orgs the user has permissions for
                 # @ToDo: Make this customisable between Site/Org
-                # @ToDo: is_affiliated()
-                auth.permitted_facilities(table=r.table,
-                                          error_msg=T("You do not have permission for any facility to make a commitment."))
+                if is_affiliated():
+                    auth.permitted_facilities(table = r.table,
+                                              error_msg = T("You do not have permission for any facility to make a commitment.")
+                                              )
                 # Limit organisation_id to organisations the user has permissions for
                 #auth.permitted_organisations(table=r.table, redirect_on_error=False)
                 if r.interactive:

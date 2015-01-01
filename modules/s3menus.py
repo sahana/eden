@@ -1439,7 +1439,7 @@ class S3OptionsMenu(object):
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        M("Create Organization", m="create"),
+                        M("Create", m="create"),
                         M("Import", m="import")
                     ),
                     M("Offices", f="office")(
