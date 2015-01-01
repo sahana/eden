@@ -149,7 +149,8 @@ def incident():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader = s3db.event_rheader)
+    output = s3_rest_controller(rheader = s3db.event_rheader,
+                                hide_filter = {"site": False})
     return output
 
 # -----------------------------------------------------------------------------
