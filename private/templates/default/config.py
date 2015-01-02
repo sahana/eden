@@ -83,6 +83,8 @@ settings.base.guided_tour = True
 #settings.auth.registration_requests_site = True
 # Uncomment this to allow Admin to see Organisations in User Admin even if the Registration doesn't request this
 #settings.auth.admin_sees_organisation = True
+# Uncomment to hide the UTC Offset in Registration/Profile
+#settings.auth.show_utc_offset = False
 # Uncomment to set the default role UUIDs assigned to newly-registered users
 # This is a dictionary of lists, where the key is the realm that the list of roles applies to
 # The key 0 implies not realm restricted
@@ -185,6 +187,8 @@ settings.L10n.decimal_separator = "."
 #settings.L10n.translate_gis_location = True
 # Uncomment this for Alternate Location Names
 #settings.L10n.name_alt_gis_location = True
+# Uncomment this to Translate Organisation Names/Acronyms
+#settings.L10n.translate_org_organisation = True
 
 # Finance settings
 #settings.fin.currencies = {
@@ -194,6 +198,13 @@ settings.L10n.decimal_separator = "."
 #}
 #settings.fin.currency_default = "USD"
 #settings.fin.currency_writable = False # False currently breaks things
+
+# Vulnerability settings
+# Uncomment this line to configure countries
+#settings.vulnerability.countries = ["TL", "VN"]
+# Uncomment to enable the approval for vulnerability data
+#settings.vulnerability.stats_data_approval = True
+
 
 # PDF settings
 # Default page size for reports (defaults to A4)
@@ -215,8 +226,8 @@ settings.L10n.decimal_separator = "."
 #settings.gis.geocode_imported_addresses = "google"
 # Hide the Map-based selection tool in the Location Selector
 #settings.gis.map_selector = False
-# Hide LatLon boxes in the Location Selector
-#settings.gis.latlon_selector = False
+# Show LatLon boxes in the Location Selector
+#settings.gis.latlon_selector = True
 # Use Building Names as a separate field in Street Addresses?
 #settings.gis.building_name = False
 # Use a non-default fillColor for Clustered points
@@ -316,7 +327,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.msg.parser = "mytemplatefolder"
 # Uncomment to turn off enforcement of E.123 international phone number notation
 #settings.msg.require_international_phone_numbers = False
-
+# Uncomment to make basestation codes unique
+#settings.msg.basestation_code_unique = True
+# Uncomment to change the label for 'Member'
+#settings.deploy.member_label = "Member"
 # Use 'soft' deletes
 #settings.security.archive_not_delete = False
 
@@ -357,6 +371,8 @@ settings.gis.geonames_username = "eden_test"
 # restricted to MapAdmins.
 # Uncomment to disable that LatLons are within boundaries of their parent
 #settings.gis.check_within_parent_boundaries = False
+# Uncomment to Disable the Postcode selector in the LocationSelector
+#settings.gis.postcode_selector = False
 
 # Enable this for a UN-style deployment
 #settings.ui.cluster = True
@@ -366,6 +382,9 @@ settings.gis.geonames_username = "eden_test"
 #settings.ui.iframe_opens_full = True
 # Enable this to change the label for 'Attachments' tabs
 #settings.ui.label_attachments = "Attachments"
+# Uncomment to configure the LocationSelector labels for the Map button with Points
+#settings.label_locationselector_map_point_add = "Find on Map"
+#settings.label_locationselector_map_point_view = "Find on Map"
 # Enable this to change the label for 'Mobile Phone'
 #settings.ui.label_mobile_phone = "Cell Phone"
 # Enable this to change the label for 'Postcode'
@@ -419,6 +438,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.richtext = True
 # Uncomment to show Events in Newsfeed
 #settings.cms.show_events = True
+# Uncomment to hide Attachments in Newsfeed
+#settings.cms.show_attachments = False
 # Uncomment to show Links in Newsfeed
 #settings.cms.show_links = True
 # Uncomment to show Tags in Newsfeed
@@ -432,6 +453,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.organisation_group = "post_organisation_group.group_id"
 # Uncomment to use person_id instead of created_by in Newsfeed
 #settings.cms.person = "person_id"
+# Uncomment to enable multiple Organisations per Posts
+#settings.cms.multiple_organisations = True
+# Uncomment to enable multiple Organisations Groups per Posts
+#settings.cms.multiple_organisation_groups = True
 
 # -----------------------------------------------------------------------------
 # Shelters
@@ -439,6 +464,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cr.shelter_population_dynamic = True
 # Uncomment to disable people registration in shelters
 #settings.cr.people_registration = False
+# Uncomment to change the notification subject
+#settings.cr.shelter_notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Events
@@ -446,6 +473,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.event.types_hierarchical = True
 # Make Incident Types Hierarchical
 #settings.event.incident_types_hierarchical = True
+# Uncomment to change the Event notification subject
+#settings.event.notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Members
@@ -558,6 +587,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.location_staff = ("site_id", "person_id")
 # Uncomment to have Volunteers use their Site Address as fallback if they have no Home Address defined
 #settings.hrm.location_vol = ("person_id", "site_id")
+# Uncomment this to allow multiple site contacts per site (e.g. if needing a separate contact per sector)
+#settings.hrm.site_contact_unique = False
+# Uncomment this to allow multiple site contacts per site
+#settings.hrm.multiple_site_contact = True
 # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
 #settings.hrm.skill_types = True
 # Uncomment to disable Staff experience
@@ -599,6 +632,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.hrm.use_trainings = False
 # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
 #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
+# Uncomment to change the label for HR Credentials Widget  
+#settings.hrm.credentials_widget_label = "Sectors"
 
 # -----------------------------------------------------------------------------
 # Inventory Management
@@ -611,6 +646,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.inv.stock_count = True
 # Use the term 'Order' instead of 'Shipment'
 #settings.inv.shipment_name = "order"
+# Uncomment to validate for Unique Warehouse Codes
+#settings.inv.warehouse_code_unique = True
 # Uncomment to not track pack values
 #settings.inv.track_pack_values = False
 #settings.inv.show_mode_of_transport = True
@@ -734,6 +771,11 @@ settings.gis.geonames_username = "eden_test"
 #settings.supply.catalog_default = T("Default")
 
 # -----------------------------------------------------------------------------
+# Disease
+# Uncomment to enable the approval for disease stats data
+#settings.disease.stats_data_approval = True
+
+# -----------------------------------------------------------------------------
 # Projects
 # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
 #settings.project.mode_3w = True
@@ -745,6 +787,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.project.activities = True
 # Uncomment this to use Activity Types for Activities & Projects
 #settings.project.activity_types = True
+# Uncomment this to filter dates in Activities
+#settings.project.activity_filter_year = True
 # Uncomment this to use Codes for projects
 #settings.project.codes = True
 # Uncomment this to call project locations 'Communities'
@@ -783,6 +827,8 @@ settings.gis.geonames_username = "eden_test"
 # Uncomment to customise the list of options for the Status of a Task.
 # NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
 #settings.project.task_status_opts =
+# Uncomment to configure beneficiary in project activity reports
+#settings.project.activity_filter_beneficiary = False
 
 # -----------------------------------------------------------------------------
 # Incidents
@@ -1050,7 +1096,7 @@ settings.modules = OrderedDict([
     #    #description = "Manages vulnerability indicators",
     #    restricted = True,
     #    module_type = 10,
-    # )),
+    #)),
     #("fire", Storage(
     #   name_nice = T("Fire Stations"),
     #   #description = "Fire Station Management",
@@ -1098,7 +1144,7 @@ settings.modules = OrderedDict([
     # @ToDo: Port these Assessments to the Survey module
     #("building", Storage(
     #    name_nice = T("Building Assessments"),
-    #    #description = "Building Safety Assessments",
+    #    description = "Building Safety Assessments",
     #    restricted = True,
     #    module_type = 10,
     #)),
