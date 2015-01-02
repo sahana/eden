@@ -2016,7 +2016,8 @@ $.filterOptionsS3({
                 tracktable.pack_value.readable = True
 
         def prep(r):
-            # Default to the Search tab in the location selector
+            # Default to the Search tab in the S3LocationSelectorWidget if still-used
+            # @ToDo: Port this functionality to S3LocationSelector
             s3.gis.tab = "search"
             record = db(sendtable.id == r.id).select(sendtable.status,
                                                      sendtable.req_ref,
@@ -2028,10 +2029,10 @@ $.filterOptionsS3({
                     # Now that the shipment has been sent,
                     # lock the record so that it can't be meddled with
                     s3db.configure("inv_send",
-                                   create=False,
-                                   listadd=False,
-                                   editable=False,
-                                   deletable=False,
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
                                    )
 
             if r.component:
@@ -2144,7 +2145,7 @@ $.filterOptionsS3({
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
             else:
-                if r.id and request.get_vars.get("received", None):
+                if r.id and request.get_vars.get("received"):
                     # "received" must not propagate:
                     del request.get_vars["received"]
                     # Set the items to being received

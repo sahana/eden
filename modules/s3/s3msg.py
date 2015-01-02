@@ -619,37 +619,38 @@ class S3Msg(object):
         if not rows:
             return
 
-        htable = s3db.hrm_human_resource
-        otable = db.org_organisation
-        ptable = db.pr_person
+        htable = s3db.table("hrm_human_resource")
+        otable = s3db.org_organisation
+        ptable = s3db.pr_person
         gtable = s3db.pr_group
         mtable = db.pr_group_membership
 
         # Left joins for multi-recipient lookups
-        gleft = [mtable.on((mtable.group_id == gtable.id) &
-                           (mtable.person_id != None) &
+        gleft = [mtable.on((mtable.group_id == gtable.id) & \
+                           (mtable.person_id != None) & \
                            (mtable.deleted != True)),
-                 ptable.on((ptable.id == mtable.person_id) &
+                 ptable.on((ptable.id == mtable.person_id) & \
                            (ptable.deleted != True))
                  ]
 
-        oleft = [htable.on((htable.organisation_id == otable.id) &
-                           (htable.person_id != None) &
-                           (htable.deleted != True)),
-                 ptable.on((ptable.id == htable.person_id) &
-                           (ptable.deleted != True))
-                 ]
-
-        atable = s3db.table("deploy_alert", None)
-        if atable:
-            ltable = db.deploy_alert_recipient
-            aleft = [ltable.on(ltable.alert_id == atable.id),
-                     htable.on((htable.id == ltable.human_resource_id) &
-                               (htable.person_id != None) &
+        if htable:
+            oleft = [htable.on((htable.organisation_id == otable.id) & \
+                               (htable.person_id != None) & \
                                (htable.deleted != True)),
-                     ptable.on((ptable.id == htable.person_id) &
-                               (ptable.deleted != True))
+                     ptable.on((ptable.id == htable.person_id) & \
+                               (ptable.deleted != True)),
                      ]
+    
+            atable = s3db.table("deploy_alert")
+            if atable:
+                ltable = db.deploy_alert_recipient
+                aleft = [ltable.on(ltable.alert_id == atable.id),
+                         htable.on((htable.id == ltable.human_resource_id) & \
+                                   (htable.person_id != None) & \
+                                   (htable.deleted != True)),
+                         ptable.on((ptable.id == htable.person_id) & \
+                                   (ptable.deleted != True))
+                         ]
 
         # chainrun: used to fire process_outbox again,
         # when messages are sent to groups or organisations
@@ -686,7 +687,19 @@ class S3Msg(object):
             pe_id = row.pe_id
             message_id = row.message_id
 
-            if entity_type == "pr_group":
+            if entity_type == "pr_person":
+                # Send the message to this person
+                try:
+                    status = dispatch_to_pe_id(pe_id,
+                                               subject,
+                                               message,
+                                               row.id,
+                                               message_id,
+                                               organisation_id)
+                except:
+                    status = False
+
+            elif entity_type == "pr_group":
                 # Re-queue the message for each member in the group
                 gquery = (gtable.pe_id == pe_id)
                 recipients = db(gquery).select(ptable.pe_id, left=gleft)
@@ -701,22 +714,7 @@ class S3Msg(object):
                     chainrun = True
                 status = True
 
-            elif entity_type == "deploy_alert":
-                # Re-queue the message for each HR in the group
-                aquery = (atable.pe_id == pe_id)
-                recipients = db(aquery).select(ptable.pe_id, left=aleft)
-                pe_ids = set(r.pe_id for r in recipients)
-                pe_ids.discard(None)
-                if pe_ids:
-                    for pe_id in pe_ids:
-                        outbox.insert(message_id=message_id,
-                                      pe_id=pe_id,
-                                      contact_method=contact_method,
-                                      system_generated=True)
-                    chainrun = True
-                status = True
-
-            elif entity_type == "org_organisation":
+            elif htable and entity_type == "org_organisation":
                 # Re-queue the message for each HR in the organisation
                 oquery = (otable.pe_id == pe_id)
                 recipients = db(oquery).select(ptable.pe_id, left=oleft)
@@ -731,17 +729,21 @@ class S3Msg(object):
                     chainrun = True
                 status = True
 
-            elif entity_type == "pr_person":
-                # Send the message to this person
-                try:
-                    status = dispatch_to_pe_id(pe_id,
-                                               subject,
-                                               message,
-                                               row.id,
-                                               message_id,
-                                               organisation_id)
-                except:
-                    status = False
+            elif atable and entity_type == "deploy_alert":
+                # Re-queue the message for each HR in the group
+                aquery = (atable.pe_id == pe_id)
+                recipients = db(aquery).select(ptable.pe_id, left=aleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      contact_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
+                status = True
+
             else:
                 # Unsupported entity type
                 row.update_record(status = 4) # Invalid
