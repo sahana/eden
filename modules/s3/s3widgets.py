@@ -1700,70 +1700,131 @@ class S3EmbedComponentWidget(FormWidget):
         if pp is not None:
             clear = "%s%s" % (clear, pp)
 
-        # Select from registry buttons
-        url = "/%s/%s/%s/" % (appname, prefix, resourcename)
-        select_row = TR(TD(A(T("Select from registry"),
-                             _href="#",
+        # Subform controls
+        controls = TAG[""](A(T("Select from registry"),
+                             #_href="#",
                              _id="select_from_registry",
-                             _class="action-btn"),
+                             _class="action-btn",
+                             ),
                            A(T("Remove selection"),
-                             _href="#",
+                             #_href="#",
                              _onclick=clear,
                              _id="clear_form_link",
                              _class="action-btn hide",
-                             _style="padding-left:15px;"),
+                             _style="padding-left:15px;",
+                             ),
                            A(T("Edit Details"),
-                             _href="#",
+                             #_href="#",
                              _onclick="edit_selected_form();",
                              _id="edit_selected_link",
                              _class="action-btn hide",
-                             _style="padding-left:15px;"),
+                             _style="padding-left:15px;",
+                             ),
                            DIV(_id="load_throbber",
                                _class="throbber hide",
-                               _style="padding-left:85px;"),
-                           _class="w2p_fw"),
-                        TD(),
-                        _id="select_from_registry_row",
-                        _class=_class,
-                        _controller=prefix,
-                        _component=self.component,
-                        _url=url,
-                        _field=real_input,
-                        _value=str(value))
+                               _style="padding-left:85px;",
+                               ),
+                           )
 
-        # Autocomplete/Selector
+        url = "/%s/%s/%s/" % (appname, prefix, resourcename)
+        if callable(formstyle):
+            controls = formstyle("select_from_registry_row",
+                                 "",
+                                 controls,
+                                 "",
+                                 )
+            # Pass parameters as attributes
+            # @todo: move to data dict
+            controls.update(_controller=prefix,
+                            _component=self.component,
+                            _url=url,
+                            _field=real_input,
+                            _value=str(value),
+                            )
+            controls.add_class(_class)
+        else:
+            # Legacy
+            # @todo: deprecate
+            controls = TR(TD(select_components, _class="w2p_fw"),
+                          TD(),
+                          _id="select_from_registry_row",
+                          _class=_class,
+                          _controller=prefix,
+                          _component=self.component,
+                          _url=url,
+                          _field=real_input,
+                          _value=str(value),
+                          )
+
+        # Selector
         autocomplete = self.autocomplete
         if autocomplete:
-            ac_field = ctable[autocomplete]
-            select = "select_component($('#%s').val());" % real_input
+            # Autocomplete
+            select = "if($('#%(input)s').val()){select_component($('#%(input)s').val());}" % \
+                     {"input": real_input}
             if pp is not None:
                 select = "%s%s" % (pp, select)
+            ac_field = ctable[autocomplete]
+
             widget = S3AutocompleteWidget(prefix,
                                           resourcename=resourcename,
                                           fieldname=autocomplete,
                                           link_filter=self.link_filter,
                                           post_process=select)
-            ac_row = TR(TD(LABEL("%s: " % ac_field.label,
-                                 _class="hide",
-                                 _id="component_autocomplete_label"),
-                        widget(field, value)),
-                        TD(),
-                        _id="component_autocomplete_row",
-                        _class="box_top")
+            if callable(formstyle):
+                selector = formstyle("component_autocomplete_row",
+                                     LABEL("%s: " % ac_field.label,
+                                           _class="hide",
+                                           _id="component_autocomplete_label"),
+                                     widget(field, value),
+                                     "",
+                                     )
+                selector.add_class("box_top")
+            else:
+                # Legacy
+                # @todo: deprecate
+                selector = TR(TD(LABEL("%s: " % ac_field.label,
+                                       _class="hide",
+                                      _id="component_autocomplete_label",
+                                      ),
+                                 widget(field, value),
+                                 ),
+                              TD(),
+                              _id="component_autocomplete_row",
+                              _class="box_top",
+                              )
+
         else:
-            select = "select_component($('#%s').val());" % dummy
-            if pp is not None:
-                select = "%s%s" % (pp, select)
+            # Options widget
             # @todo: add link_filter here as well
-            widget = OptionsWidget.widget
-            ac_row = TR(TD(LABEL("%s: " % field.label,
-                                 _class="hide",
-                                 _id="component_autocomplete_label"),
-                           widget(field, None, _class="hide",
-                                  _id=dummy, _onchange=select)),
-                        TD(INPUT(_id=real_input, _class="hide")),
-                        _id="component_autocomplete_row",
-                        _class="box_top")
+            select = "if($('#%(input)s').val()){select_component($('#%(input)s').val());}" % \
+                     {"input": dummy}
+            widget = OptionsWidget.widget(field, None,
+                                          _class="hide",
+                                          _id=dummy,
+                                          _onchange=select,
+                                          )
+            label = LABEL("%s: " % field.label,
+                          _class="hide",
+                          _id="component_autocomplete_label",
+                          )
+            hidden_input = INPUT(_id=real_input, _class="hide")
+
+            if callable(formstyle):
+                selector = formstyle("component_autocomplete_row",
+                                     label,
+                                     TAG[""](widget, hidden_input),
+                                     "",
+                                     )
+                selector.add_class("box_top")
+            else:
+                # Legacy
+                # @todo: deprecate
+                selector = TR(TD(label, widget),
+                              TD(hidden_input),
+                              _id="component_autocomplete_row",
+                              _class="box_top",
+                              )
 
         # Embedded Form
         fields = [f for f in ctable
@@ -1785,20 +1846,26 @@ class S3EmbedComponentWidget(FormWidget):
                                upload="default/download",
                                separator = "",
                                *fields)
-        trs = []
-        att = "box_middle embedded"
-        for tr in form[0]:
-            if not tr.attributes["_id"].startswith("submit_record"):
-                if "_class" in tr.attributes:
-                    tr.attributes["_class"] = "%s %s" % (tr.attributes["_class"], att)
-                else:
-                    tr.attributes["_class"] = att
-                trs.append(tr)
-        table = DIV(*trs)
+        formrows = []
+        append = formrows.append
+        for formrow in form[0]:
+            if not formrow.attributes["_id"].startswith("submit_record"):
+                if hasattr(formrow, "add_class"):
+                    formrow.add_class("box_middle embedded")
+                append(formrow)
+        formrows = TAG[""](formrows)
 
         # Divider
-        divider = TR(TD(_class="subheading"), TD(),
-                     _class="box_bottom embedded")
+        if callable(formstyle):
+            divider = formstyle("", "", DIV(_class="subheading"), "")
+            divider.add_class("box_bottom embedded")
+        else:
+            # Legacy
+            # @todo: deprecate
+            divider = TR(TD(_class="subheading"),
+                         TD(),
+                         _class="box_bottom embedded",
+                         )
 
         # JavaScript
         if s3.debug:
@@ -1809,9 +1876,9 @@ class S3EmbedComponentWidget(FormWidget):
         s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
 
         # Overall layout of components
-        return TAG[""](select_row,
-                       ac_row,
-                       table,
+        return TAG[""](controls,
+                       selector,
+                       formrows,
                        divider,
                        )
 
@@ -4118,7 +4185,7 @@ class S3LocationSelector(S3Selector):
         * Should support multiple on a page
     """
 
-    keys = ("L0", "L1", "L2", "L3", "L4", "L5", 
+    keys = ("L0", "L1", "L2", "L3", "L4", "L5",
             "address", "postcode", "lat", "lon", "wkt", "specific", "id")
 
     def __init__(self,
@@ -4203,7 +4270,7 @@ class S3LocationSelector(S3Selector):
         else:
             self.feature_required = None
         self.show_map = show_map
-        
+
         self.lines = lines
         self.points = points
         self.polygons = polygons
@@ -4449,10 +4516,10 @@ class S3LocationSelector(S3Selector):
                 global_append('''i18n.search="%s"''' % T("Search"))
             if latlon_labels:
                 global_append('''i18n.latlon_mode='''
-                              '''{decimal:"%(decimal)s",dms:"%(dms)s"}''' % 
+                              '''{decimal:"%(decimal)s",dms:"%(dms)s"}''' %
                               latlon_labels)
                 global_append('''i18n.latlon_error='''
-                              '''{lat:"%s",lon:"%s",min:"%s",sec:"%s",format:"%s"}''' % 
+                              '''{lat:"%s",lon:"%s",min:"%s",sec:"%s",format:"%s"}''' %
                               (T("Latitude must be -90..90"),
                                T("Longitude must be -180..180"),
                                T("Minutes must be 0..59"),
@@ -5176,8 +5243,8 @@ class S3LocationSelector(S3Selector):
             global_append('''i18n.show_map_add="%s"
 i18n.show_map_view="%s"
 i18n.hide_map="%s"
-i18n.map_feature_required="%s"''' % (show_map_add, 
-                                     show_map_view, 
+i18n.map_feature_required="%s"''' % (show_map_add,
+                                     show_map_view,
                                      T("Hide Map"),
                                      T("Map Input Required"),
                                      ))
@@ -5465,7 +5532,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             record.level = None
         else:
             record.level = "L%s" % level
-            
+
         # Get the Lx names
         s3db = current.s3db
         ltable = s3db.gis_location

@@ -45,9 +45,9 @@ $(function() {
     clear_component_form = function() {
         enable_embedded();
         $(real_input).val('');
-        $('.embedded > td > input').val('');
-        $('.embedded > td > select').val('');
-        $('.embedded > td > textarea').val('');
+        $('.embedded input').val('');
+        $('.embedded select').val('');
+        $('.embedded textarea').val('');
         $('#clear_form_link').addClass('hide');
         $('#edit_selected_link').addClass('hide');
     };
@@ -143,13 +143,13 @@ $(function() {
         $('.embedded').removeClass('hide');
     }
     function enable_embedded() {
-        $('.embedded > td > input').prop('disabled', false);
-        $('.embedded > td > select').prop('disabled', false);
-        $('.embedded > td > textarea').prop('disabled', false);
+        $('.embedded input').prop('disabled', false);
+        $('.embedded select').prop('disabled', false);
+        $('.embedded textarea').prop('disabled', false);
     }
     function disable_embedded() {
-        $('.embedded > td > input').prop('disabled', true);
-        $('.embedded > td > select').prop('disabled', true);
-        $('.embedded > td > textarea').prop('disabled', true);
+        $('.embedded input').prop('disabled', true);
+        $('.embedded select').prop('disabled', true);
+        $('.embedded textarea').prop('disabled', true);
     }
 });
