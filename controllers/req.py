@@ -368,7 +368,9 @@ def req_controller(template = False):
                 req_ref_represent(v, show_link)
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
-            s3db.configure("req_req", marker_fn=marker_fn)
+            s3db.configure("req_req",
+                           marker_fn = marker_fn,
+                           )
 
         if r.component and r.component.name == "commit":
             table = r.component.table
@@ -378,10 +380,10 @@ def req_controller(template = False):
 
             # Commits belonging to this request
             rsites = []
-            query = (table.deleted == False)&(table.req_id == record.id)
+            query = (table.deleted == False) & (table.req_id == record.id)
             req_sites = db(query).select(table.site_id)
             for req_site in req_sites:
-                rsites += [req_site.site_id]
+                rsites.append(req_site.site_id)
 
             # All the sites
             commit_sites = db((stable.deleted == False)).select(stable.id,
@@ -415,15 +417,13 @@ def req_controller(template = False):
                     # Dropdown not Autocomplete
                     itable = s3db.req_commit_item
                     itable.req_item_id.widget = None
-                    req_id = r.id
-                    s3db.req_commit_item.req_item_id.requires = \
-                                    IS_ONE_OF(db,
-                                              "req_req_item.id",
+                    itable.req_item_id.requires = \
+                                    IS_ONE_OF(db, "req_req_item.id",
                                               s3db.req_item_represent,
-                                              orderby = "req_req_item.id",
                                               filterby = "req_id",
-                                              filter_opts = [req_id],
-                                              sort=True
+                                              filter_opts = [r.id],
+                                              orderby = "req_req_item.id",
+                                              sort = True,
                                               )
                     s3.jquery_ready.append('''
 $.filterOptionsS3({
@@ -468,7 +468,7 @@ $.filterOptionsS3({
             elif type == 3: # People
                 # Limit site_id to orgs the user has permissions for
                 # @ToDo: Make this customisable between Site/Org
-                # @ToDo: is_affiliated()
+                # @ToDo: is_affiliated() once Org is possible
                 auth.permitted_facilities(table=r.table,
                                           error_msg=T("You do not have permission for any facility to make a commitment."))
                 # Limit organisation_id to organisations the user has permissions for
@@ -762,7 +762,7 @@ def req_item():
                                      label = str(T("Request from Facility")),
                                      )
         if s3.actions:
-            s3.actions += [req_item_inv_item_btn]
+            s3.actions.append(req_item_inv_item_btn)
         else:
             s3.actions = [req_item_inv_item_btn]
 
@@ -877,9 +877,9 @@ def req_item_inv_item():
                                  vars = dict(req_item_id = req_item_id,
                                               inv_item_id = "[id]")
                                  ),
-                                _class = "action-btn",
-                                label = str(T("Request From")),
-                                )]
+                       _class = "action-btn",
+                       label = str(T("Request From")),
+                       )]
 
     return output
 
@@ -897,11 +897,12 @@ def req_skill():
         if r.interactive or r.representation == "aadata":
             list_fields = s3db.get_config("req_req_skill", "list_fields")
             list_fields.insert(1, "req_id$site_id")
+            # @ToDo: Do this based on active gis_config/gis_hierarchy
             list_fields.insert(1, "req_id$site_id$location_id$L4")
             list_fields.insert(1, "req_id$site_id$location_id$L3")
 
             s3db.configure("req_req_skill",
-                           insertable=False,
+                           insertable = False,
                            list_fields = list_fields,
                            )
 
@@ -948,7 +949,8 @@ def commit():
         # & can only make single-person commitments
         # (This should have happened in the main commitment)
         s3db.configure(tablename,
-                       insertable=False)
+                       insertable = False,
+                       )
 
     def prep(r):
 
@@ -984,8 +986,7 @@ $('#req_commit_site_id_link').click(function(){
  return true
 })''')
                     # Dropdown not Autocomplete
-                    itable = s3db.req_commit_item
-                    itable.req_item_id.widget = None
+                    s3db.req_commit_item.req_item_id.widget = None
                     
                     # Options updater for inline items
                     if not r.component:
@@ -1068,30 +1069,26 @@ $.filterOptionsS3({
                     table.site_id.writable = False
 
         if r.component:
-            req_id = r.record.req_id
-            if r.component.name == "commit_item":
+            if r.component_name == "commit_item":
                 # Limit commit items to items from the request
                 s3db.req_commit_item.req_item_id.requires = \
-                    IS_ONE_OF(db,
-                              "req_req_item.id",
+                    IS_ONE_OF(db, "req_req_item.id",
                               s3db.req_item_represent,
-                              orderby = "req_req_item.id",
                               filterby = "req_id",
-                              filter_opts = [req_id],
-                              sort=True
+                              filter_opts = [r.record.req_id],
+                              orderby = "req_req_item.id",
+                              sort = True,
                               )
-            elif r.component.name == "person":
-                pass
-                # Limit commit skills to skills from the request
-                #db.req_commit_skill.req_skill_id.requires = \
-                #    IS_ONE_OF(db,
-                #              "req_req_skill.id",
-                #              s3db.req_skill_represent,
-                #              orderby = "req_req_skill.id",
-                #              filterby = "req_id",
-                #              filter_opts = [req_id],
-                #              sort=True
-                #              )
+            #elif r.component_name == "person":
+            #    # Limit commit skills to skills from the request
+            #    db.req_commit_skill.req_skill_id.requires = \
+            #        IS_ONE_OF(db, "req_req_skill.id",
+            #                  s3db.req_skill_represent,
+            #                  filterby = "req_id",
+            #                  filter_opts = [r.record.req_id],
+            #                  orderby = "req_req_skill.id",
+            #                  sort = True,
+            #                  )
         return True
     s3.prep = prep
 
@@ -1114,7 +1111,7 @@ $.filterOptionsS3({
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader=commit_rheader)
+    return s3_rest_controller(rheader = commit_rheader)
 
 # -----------------------------------------------------------------------------
 def commit_rheader(r):
@@ -1220,7 +1217,8 @@ def send():
     """ RESTful CRUD controller """
 
     s3db.configure("inv_send",
-                   listadd=False)
+                   listadd = False,
+                   )
 
     return s3db.inv_send_controller()
 
@@ -1531,6 +1529,7 @@ def send_req():
 # =============================================================================
 def commit_item_json():
     """
+       @ToDo: docstring to explain where this is used
     """
 
     ctable = s3db.req_commit

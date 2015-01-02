@@ -792,16 +792,17 @@ class S3PersonModel(S3Model):
                      Field("first_name", notnull=True,
                            length=64, # Mayon Compatibility
                            #default = "?" if current.auth.permission.format != "html" else "",
+                           label = T("First Name"),
                            # NB Not possible to have an IS_NAME() validator here
                            # http://eden.sahanafoundation.org/ticket/834
                            requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
                            comment =  DIV(_class="tooltip",
                                           _title="%s|%s" % (T("First Name"),
                                                         T("The first or only name of the person (mandatory)."))),
-                           label = T("First Name")),
+                           ),
                      Field("middle_name", length=64, # Mayon Compatibility
-                           represent = lambda v: v or NONE,
                            label = T("Middle Name"),
+                           represent = lambda v: v or NONE,
                            ),
                      Field("last_name", length=64, # Mayon Compatibility
                            label = T("Last Name"),
@@ -809,7 +810,8 @@ class S3PersonModel(S3Model):
                            requires = last_name_validate,
                            ),
                      Field("initials", length=8,
-                           label = T("Initials")),
+                           label = T("Initials"),
+                           ),
                      Field("preferred_name", length=64, # Mayon Compatibility
                            label = T("Preferred Name"),
                            comment = DIV(_class="tooltip",
