@@ -86,16 +86,14 @@
                         //    create.click();
                         //} else {
                             // No link to create new (e.g. no permission to do so)
-                            data.push({
-                                id: 0,
-                                label: i18n.no_matching_records
-                            });
+                            var extra = {id: 0};
+                            extra[fieldname] = i18n.no_matching_records;
+                            data.push(extra);
                         //}
                     } else {
-                        data.push({
-                            id: 0,
-                            label: i18n.none_of_the_above
-                        });
+                        var extra = {id: 0};
+                        extra[fieldname] = i18n.none_of_the_above;
+                        data.push(extra);
                     }
                     response(data);
                 });
@@ -114,12 +112,12 @@
             select: function(event, ui) {
                 var item = ui.item;
                 if (item.id) {
-                    dummy_input.val(item.label);
+                    dummy_input.val(item[fieldname]);
                     real_input.val(item.id).change();
                     // Update existing, so blur does not remove
                     // the selection again:
                     existing = {value: item.id,
-                                label: item.label
+                                label: item[fieldname]
                                 };
                 } else {
                     // No Match & no ability to create new
@@ -135,7 +133,7 @@
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
             return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + item.label + '</a>')
+                            .append('<a>' + item[fieldname] + '</a>')
                             .appendTo(ul);
         };
         dummy_input.blur(function() {
