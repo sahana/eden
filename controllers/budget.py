@@ -67,8 +67,8 @@ def item():
     """ REST controller for items """
 
     # @todo: link to supply items
-    
-    s3.formats.pdf = URL(f="item_export_pdf")
+
+    #s3.formats.pdf = URL(f="item_export_pdf")
 
     return s3_rest_controller()
 
@@ -76,8 +76,8 @@ def item():
 def kit():
     """ REST controller for kits """
 
-    s3.formats.pdf = URL(f="kit_export_pdf")
-    s3.formats.xls = URL(f="kit_export_xls")
+    #s3.formats.pdf = URL(f="kit_export_pdf")
+    #s3.formats.xls = URL(f="kit_export_xls")
 
     if len(request.args) == 2:
         s3db.configure("budget_kit",
@@ -185,7 +185,7 @@ def parameter():
             output["buttons"].pop("list_btn", None)
         return output
     s3.postp = postp
-    
+
     r = s3_request(args=[str(record_id)])
     return r()
 
