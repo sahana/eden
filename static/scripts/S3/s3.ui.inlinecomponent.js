@@ -1,7 +1,7 @@
 /**
  * jQuery UI InlineComponent Widget
  *
- * @copyright 2014 (c) Sahana Software Foundation
+ * @copyright 2015 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
