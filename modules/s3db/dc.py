@@ -267,13 +267,15 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
                      self.dc_template_id(),
-                     # @todo: default to now
-                     s3_date(),
+                     s3_date(
+                             default = "now"
+                            ),
                      self.gis_location_id(),
                      # @todo: default to user root-org
                      self.org_organisation_id(),
-                     # @todo: default to logged-in user
-                     self.pr_person_id(),
+                     self.pr_person_id(
+                                       default = current.auth.s3_logged_in_person(),
+                                      ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -301,9 +303,8 @@ class DataCollectionModel(S3Model):
             msg_record_deleted = T("Data Collection deleted"),
             msg_list_empty = T("No Data Collections currently registered"))
 
-        # @todo: representation including template name, location and date
         represent = S3Represent(lookup=tablename,
-                                fields=["date"],
+                                fields=["template_id","location_id","date" ],
                                 )
 
         # Reusable field
@@ -327,8 +328,12 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      collection_id(),
                      self.dc_question_id(),
-                     # @todo: elaborate:
-                     Field("answer"),
+                     Field("answer", "text", 
+                           length=1000,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T(""),
+                                                           T("Answer the question within 200 words"))),
+                          ),
                      s3_comments(),
                      *s3_meta_fields())
 
