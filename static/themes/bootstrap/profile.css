@@ -185,8 +185,8 @@ div.card-header.profile-head {
 }
 
 .main_contact_ph,
-.main_contact_email, /* @ToDo: Replace with .card_1_line */
-.main_office-add, /* @ToDo: Replace with .card_many_lines */
+.card_1_line, /* @ToDo: Replace with .card_1_line */
+.card_many_line, /* @ToDo: Replace with .card_many_lines */
 .main_contact {
     font-size: 12px;
     padding-top: 4px;
