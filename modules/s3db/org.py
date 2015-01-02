@@ -3921,6 +3921,27 @@ class S3OfficeModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        form_fields = ["name",
+                       "code",
+                       "organisation_id",
+                       "office_type_id",
+                       "location_id",
+                       "phone1",
+                       "phone2",
+                       "email",
+                       "fax",
+                       "obsolete",
+                       "comments",
+                       ]
+        org_summary = settings.get_org_summary()
+        if org_summary:
+            # Include Summary fields in form
+            position = form_fields.index("email")
+            form_fields.insert(position+1, "summary.national_staff")
+            form_fields.insert(position+2, "summary.international_staff")  
+
+        crud_form = S3SQLCustomForm(*form_fields)
+
         # CRUD strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Office"),
@@ -4001,6 +4022,7 @@ class S3OfficeModel(S3Model):
                              "organisation": "organisation_id",
                              "org_group": "organisation_id$group_membership.group_id",
                              },
+                  crud_form = crud_form,
                   deduplicate = self.org_office_duplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
@@ -4025,10 +4047,11 @@ class S3OfficeModel(S3Model):
                   update_realm = True,
                   )
 
-        if settings.get_org_summary():
+        if org_summary:
             add_components(tablename,
                            org_office_summary = {"name": "summary",
                                                  "joinby": "office_id",
+                                                 "multiple": False,
                                                  },
                            )
 
@@ -5302,16 +5325,13 @@ def org_organisation_controller():
 
     # Post-process
     def postp(r, output):
-        if r.interactive:
-            cname = r.component_name
-            if cname == "human_resource":
-                # Modify action button to open staff instead of human_resource
-                # (Delete not overridden to keep errors within Tab)
-                read_url = URL(c="hrm", f="staff", args=["[id]"])
-                update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                S3CRUD.action_buttons(r, read_url=read_url,
-                                         update_url=update_url)
-
+        if r.interactive and r.component_name == "human_resource":
+            # Modify action button to open staff instead of human_resource
+            # (Delete not overridden to keep errors within Tab)
+            read_url = URL(c="hrm", f="staff", args=["[id]"])
+            update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+            S3CRUD.action_buttons(r, read_url=read_url,
+                                     update_url=update_url)
         return output
     s3.postp = postp
 
@@ -5467,85 +5487,13 @@ def org_office_controller():
 
     # Post-process
     def postp(r, output):
-        if r.interactive:
-            if not r.component and \
-               settings.get_org_summary():
-                # Insert fields to view/record the summary data
-                # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
-                table = s3db.org_office_summary
-                field1 = table.national_staff
-                field2 = table.international_staff
-                row = None
-                if r.id:
-                    query = (table.office_id == r.id)
-                    row = current.db(query).select(field1,
-                                                   field2,
-                                                   limitby=(0, 1)).first()
-                s3_formstyle = settings.get_ui_formstyle()
-                if r.method == "read" and \
-                   "item" in output:
-                    for field in [field1, field2]:
-                        if row:
-                            widget = row[field]
-                        else:
-                            widget = current.messages["NONE"]
-                        field_id = "%s_%s" % (table._tablename, field.name)
-                        label = field.label
-                        label = LABEL(label, _for=field_id,
-                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        comment = ""
-                        rows = s3_formstyle(row_id, label, widget, comment)
-                        try:
-                            # Insert Label row
-                            output["item"][0].insert(-2, rows[0])
-                        except:
-                            pass
-                        try:
-                            # Insert Widget row
-                            output["item"][0].insert(-2, rows[1])
-                        except:
-                            # A non-standard formstyle with just a single row
-                            pass
-
-                elif r.method not in ("import", "map") and \
-                     "form" in output:
-
-                    sep = ": "
-                    for field in [field1, field2]:
-                        if row:
-                            default = row[field]
-                        else:
-                            default = field.default
-                        widget = field.widget or SQLFORM.widgets.integer.widget(field, default)
-                        field_id = "%s_%s" % (table._tablename, field.name)
-                        label = field.label
-                        label = LABEL(label, label and sep, _for=field_id,
-                                      _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-                        comment = field.comment or ""
-                        row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                        rows = s3_formstyle(row_id, label, widget, comment)
-                        try:
-                            # Insert Label row
-                            output["form"][0].insert(-4, rows[0])
-                        except:
-                            pass
-                        try:
-                            # Insert Widget row
-                            output["form"][0].insert(-4, rows[1])
-                        except:
-                            # A non-standard formstyle with just a single row
-                            pass
-
-            else:
-                cname = r.component_name
-                if cname == "human_resource":
-                    # Modify action button to open staff instead of human_resource
-                    # (Delete not overridden to keep errors within Tab)
-                    read_url = URL(c="hrm", f="staff", args=["[id]"])
-                    update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
-                    S3CRUD.action_buttons(r, read_url=read_url,
-                                             update_url=update_url)
+        if r.interactive and r.component_name == "human_resource":
+            # Modify action button to open staff instead of human_resource
+            # (Delete not overridden to keep errors within Tab)
+            read_url = URL(c="hrm", f="staff", args=["[id]"])
+            update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
+            S3CRUD.action_buttons(r, read_url=read_url,
+                                     update_url=update_url)
         return output
     s3.postp = postp
 
