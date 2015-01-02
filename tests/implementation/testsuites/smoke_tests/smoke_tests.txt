@@ -107,7 +107,7 @@ Add Current Urls to ToVisit Urls
     [Return]  ${To Visit}
 
 Create Log File
-    ${name}=  Get Variable Value  ${filename}
+    ${name}=  Get Variable Value  ${filename}  default
     ${Time}=  Get Current Date  result_format=datetime
     ${Time}=  Convert Date  ${Time}  result_format=%d.%m.%Y.%H.%M
 
