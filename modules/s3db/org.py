@@ -3071,6 +3071,7 @@ class S3FacilityModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("parent", "reference org_facility_type", # This form of hierarchy may not work on all Databases
                            label = T("SubType of"),

@@ -165,7 +165,8 @@ class S3FireStationModel(S3Model):
              "fire_station_vehicle",
              "fire_water_source",
              "fire_hazard_point",
-             "fire_staff_on_duty"
+             "fire_staff_on_duty",
+             "fire_shift_staff",
              )
 
     def model(self):

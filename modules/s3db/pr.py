@@ -2195,6 +2195,7 @@ class S3ContactModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      Field("name",
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("relationship",
                            label = T("Relationship"),
