@@ -14,10 +14,15 @@ $(function (){
         if (mode == i18n.assign_role) {
             // Assign 'Watch' Role
             var task_uuid = $assignBtn.attr('data-task_uuid'),
-                role_uuid = $assignBtn.attr('data-role_uuid');
+                role_uuid = $assignBtn.attr('data-role_uuid'),
+                curl = document.location.pathname.split('/'),
+                task_id = curl.indexOf('task') + 1;
 
-            type = 'PUT';
             url = S3.Ap.concat('/project/member.s3json');
+            type = 'PUT';
+            if (task_id<=curl.length) {
+                url += '?task_id=' + curl[task_id];
+            }
             data_json = {'$_project_member':[{'$k_task_id':{'@resource':'project_task',
                                                             '@uuid':task_uuid},
                                               '$k_role_id':{'@resource':'project_role',
