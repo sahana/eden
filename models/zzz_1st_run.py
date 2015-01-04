@@ -236,19 +236,25 @@ if len(pop_list) > 0:
         if pop_setting == 1:
             # Populate with the default data
             path = path_join(request_folder,
-                             "private",
+                             "modules",
                              "templates",
                              "default")
             bi.perform_tasks(path)
         else:
             path = path_join(request_folder,
-                             "private",
+                             "modules",
                              "templates",
                              pop_setting)
-            if os.path.exists(path):
-                bi.perform_tasks(path)
-            else:
-                print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
+            if not os.path.exists(path):
+                # Legacy template?
+                path = path_join(request_folder,
+                                 "private",
+                                 "templates",
+                                 pop_setting)
+                if not os.path.exists(path):
+                    print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
+                    continue
+            bi.perform_tasks(path)
 
         grandTotalEnd = datetime.datetime.now()
         duration = grandTotalEnd - grandTotalStart

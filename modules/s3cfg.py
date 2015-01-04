@@ -49,6 +49,8 @@ class S3Config(Storage):
         Deployment Settings Helper Class
     """
 
+    DEPRECATION_WARNING = True
+
     # Used by modules/s3theme.py
     FORMSTYLE = {"default": formstyle_foundation,
                  "default_inline": formstyle_foundation_inline,
@@ -140,14 +142,76 @@ class S3Config(Storage):
         """
         return self.base.get("template", "default")
 
+    def get_template_location(self):
+        
+        return self.base.get("template_location", "modules")
+        
     def exec_template(self, path):
         """
-            Execute the template
+            Legacy function, retained for backwards-compatibility with
+            existing 000_config.py instances => modern 000_config.py
+            should just call settings.import_template()
+            
+            @todo: deprecate
         """
-        from gluon.fileutils import read_file
-        from gluon.restricted import restricted
-        code = read_file(path)
-        restricted(code, layer=path)
+        self.import_template()
+
+    def import_template(self, config="config"):
+        """
+            Import and invoke the template config (new module pattern)
+
+            @param config: name of the config-module
+
+            @todo: rewrite all config.py's with module pattern
+            @todo: remove fallback when migration complete (+giving some
+                   time for downstream projects to adapt)
+        """
+        
+        name = self.get_template()
+        package = "templates.%s" % name
+        
+        template = None
+        try:
+            # Import the template
+            template = getattr(__import__(package, fromlist=[config]), config)
+        except ImportError:
+            # Legacy template in "private"?
+            self.execute_template(name)
+        else:
+            template.config(self)
+        return template
+
+    def execute_template(self, name):
+        """
+            Fallback for legacy templates - execute config.py
+        """
+
+        request = current.request
+        import os
+
+        location = "private"
+        path = os.path.join(request.folder, 
+                            location, 
+                            "templates", 
+                            name,
+                            "config.py")
+
+        if os.path.exists(path):
+            # Old-style config.py => deprecation warning (S3Log not available yet)
+            import sys
+            print >> sys.stderr, "%s/config.py: script pattern deprecated." % name
+            # Remember the non-standard location
+            self.base.template_location = location
+            # Execute config.py
+            from gluon.fileutils import read_file
+            from gluon.restricted import restricted
+            code = read_file(path)
+            restricted(code, layer=path)
+        else:
+            # Nonexistent template 
+            # => could be ignored here, but would crash later anyway,
+            #    so exit early with a clear error message
+            raise RuntimeError("Template not found: %s" % name)
 
     # -------------------------------------------------------------------------
     # Theme

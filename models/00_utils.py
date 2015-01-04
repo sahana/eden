@@ -53,16 +53,17 @@ current.menu = Storage(options=None, override={})
 if auth.permission.format in ("html"):
     menus = None
     theme = settings.get_theme()
+    location = settings.get_template_location()
     if theme != "default":
         # If there is a custom Theme, then attempot to load a custom menu from it
-        menus = "applications.%s.private.templates.%s.menus" % \
-                (appname, theme)
+        menus = "applications.%s.%s.templates.%s.menus" % \
+                (appname, location, theme)
     else:
         template = settings.get_template()
         if template != "default":
             # If there is a custom Template, then attempt to load a custom menu from it
-            menus = "applications.%s.private.templates.%s.menus" % \
-                    (appname, template)
+            menus = "applications.%s.%s.templates.%s.menus" % \
+                    (appname, location, template)
     if menus:
         try:
             exec("import %s as deployment_menus" % menus)

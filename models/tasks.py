@@ -13,13 +13,15 @@ def maintenance(period="daily"):
         - these are read from the template
     """
 
-    mod = "applications.%s.private.templates.%s.maintenance as maintenance" % \
-                    (appname, settings.get_template())
+    mod = "applications.%s.%s.templates.%s.maintenance as maintenance" % \
+                    (appname, 
+                     settings.get_template_location(),
+                     settings.get_template())
     try:
         exec("import %s" % mod)
     except ImportError, e:
         # No Custom Maintenance available, use the default
-        exec("import applications.%s.private.templates.default.maintenance as maintenance" % appname)
+        exec("import applications.%s.modules.templates.default.maintenance as maintenance" % appname)
 
     if period == "daily":
         result = maintenance.Daily()()

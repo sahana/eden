@@ -393,7 +393,8 @@ class S3Notifications(object):
             if method == "EMAIL" and email_format:
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
             if theme != "default":
-                path = join("private", "templates", theme, "views", "msg")
+                location = settings.get_template_location()
+                path = join(location, "templates", theme, "views", "msg")
                 template = get_template(path, filenames)
             if template is None:
                 path = join("views", "msg")
