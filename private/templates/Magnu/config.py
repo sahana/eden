@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 try:
     # Python 2.7
@@ -22,6 +22,30 @@ settings = current.deployment_settings
 #settings.base.system_name_short = T("Magnu")
 settings.base.system_name = T("Sahana")
 settings.base.system_name_short = T("Sahana")
+
+settings.hms.show_operational_data = False
+settings.hms.show_code_related_data = False
+def customise_hms_hospital_resource(r, tablename):
+    table = current.s3db.hms_hospital
+    if not settings.hms.show_code_related_data:
+        table.code.readable  = False
+        table.code.writable  = False
+        table.aka1.readable  = False
+        table.aka1.writable  = False
+        table.aka2.readable  = False
+        table.aka2.writable  = False
+    if not settings.hms.show_operational_data:
+        table.total_beds.readable  = False
+        table.total_beds.writable  = False
+        table.available_beds.readable  = False
+        table.available_beds.writable  = False
+        table.doctors.readable  = False
+        table.doctors.writable  = False
+        table.nurses.readable  = False
+        table.nurses.writable  = False
+        table.non_medical_staff.readable  = False
+        table.non_medical_staff.writable  = False
+settings.customise_hms_hospital_resource = customise_hms_hospital_resource
 
 # PrePopulate data
 settings.base.prepopulate = ("Magnu", "default/users")
