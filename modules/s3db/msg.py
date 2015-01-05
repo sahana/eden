@@ -904,6 +904,7 @@ class S3ParsingModel(S3Model):
              "msg_parsing_status",
              "msg_session",
              "msg_keyword",
+             "msg_keyword_incident_type",
              "msg_sender",
              "msg_parser_enabled",
              "msg_parser_enable",
@@ -1003,10 +1004,33 @@ class S3ParsingModel(S3Model):
                      Field("keyword",
                            label = T("Keyword"),
                            ),
-                     # @ToDo: Move this to a link table
-                     self.event_incident_type_id(),
                      *s3_meta_fields())
 
+        self.add_components(tablename,
+                            msg_keyword_incident_type = {"link": "msg_keyword_incident_type",
+                                                         "joinby": "msg_keyword_id",
+                                                         "key": "incident_type_id",
+                                                        })
+
+        crud_form = S3SQLCustomForm("keyword",
+                                    S3SQLInlineLink("keyword_incident_type",
+                                                    label=T("Incident"),
+                                                    field="incident_type_id"))
+        self.configure(tablename,
+                       crud_form=crud_form)
+        # ---------------------------------------------------------------------
+        # Message Keyword <> Event Incident Type Link Table
+        #
+        represent = S3Represent(lookup="msg_keyword")
+        tablename = "msg_keyword_incident_type"
+        define_table(tablename,
+                     Field("msg_keyword_id", self.msg_keyword,
+                           represent = represent,
+                           requires = IS_ONE_OF(current.db, "msg_keyword.id",
+                                                represent,
+                                                sort=True)),
+                     self.event_incident_type_id(),
+                     *s3_meta_fields())
         # ---------------------------------------------------------------------
         # Senders for Message Parsing
         # - whitelist / blacklist / prioritise

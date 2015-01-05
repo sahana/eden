@@ -80,149 +80,6 @@ class S3CAPModel(S3Model):
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
-        # List of Incident Categories -- copied from irs module <--
-        # @ToDo: Switch to using event_incident_type
-        #
-        # The keys are based on the Canadian ems.incident hierarchy, with a
-        # few extra general versions added to 'other'
-        # The values are meant for end-users, so can be customised as-required
-        # NB It is important that the meaning of these entries is not changed
-        # as otherwise this hurts our ability to do synchronisation
-        # Entries can be hidden from user view in the controller.
-        # Additional sets of 'translations' can be added to the tuples.
-        cap_incident_type_opts = {
-            "animalHealth.animalDieOff": T("Animal Die Off"),
-            "animalHealth.animalFeed": T("Animal Feed"),
-            "aviation.aircraftCrash": T("Aircraft Crash"),
-            "aviation.aircraftHijacking": T("Aircraft Hijacking"),
-            "aviation.airportClosure": T("Airport Closure"),
-            "aviation.airspaceClosure": T("Airspace Closure"),
-            "aviation.noticeToAirmen": T("Notice to Airmen"),
-            "aviation.spaceDebris": T("Space Debris"),
-            "civil.demonstrations": T("Demonstrations"),
-            "civil.dignitaryVisit": T("Dignitary Visit"),
-            "civil.displacedPopulations": T("Displaced Populations"),
-            "civil.emergency": T("Civil Emergency"),
-            "civil.looting": T("Looting"),
-            "civil.publicEvent": T("Public Event"),
-            "civil.riot": T("Riot"),
-            "civil.volunteerRequest": T("Volunteer Request"),
-            "crime": T("Crime"),
-            "crime.bomb": T("Bomb"),
-            "crime.bombExplosion": T("Bomb Explosion"),
-            "crime.bombThreat": T("Bomb Threat"),
-            "crime.dangerousPerson": T("Dangerous Person"),
-            "crime.drugs": T("Drugs"),
-            "crime.homeCrime": T("Home Crime"),
-            "crime.illegalImmigrant": T("Illegal Immigrant"),
-            "crime.industrialCrime": T("Industrial Crime"),
-            "crime.poisoning": T("Poisoning"),
-            "crime.retailCrime": T("Retail Crime"),
-            "crime.shooting": T("Shooting"),
-            "crime.stowaway": T("Stowaway"),
-            "crime.terrorism": T("Terrorism"),
-            "crime.vehicleCrime": T("Vehicle Crime"),
-            "fire": T("Fire"),
-            "fire.forestFire": T("Forest Fire"),
-            "fire.hotSpot": T("Hot Spot"),
-            "fire.industryFire": T("Industry Fire"),
-            "fire.smoke": T("Smoke"),
-            "fire.urbanFire": T("Urban Fire"),
-            "fire.wildFire": T("Wild Fire"),
-            "flood": T("Flood"),
-            "flood.damOverflow": T("Dam Overflow"),
-            "flood.flashFlood": T("Flash Flood"),
-            "flood.highWater": T("High Water"),
-            "flood.overlandFlowFlood": T("Overland Flow Flood"),
-            "flood.tsunami": T("Tsunami"),
-            "geophysical.avalanche": T("Avalanche"),
-            "geophysical.earthquake": T("Earthquake"),
-            "geophysical.lahar": T("Lahar"),
-            "geophysical.landslide": T("Landslide"),
-            "geophysical.magneticStorm": T("Magnetic Storm"),
-            "geophysical.meteorite": T("Meteorite"),
-            "geophysical.pyroclasticFlow": T("Pyroclastic Flow"),
-            "geophysical.pyroclasticSurge": T("Pyroclastic Surge"),
-            "geophysical.volcanicAshCloud": T("Volcanic Ash Cloud"),
-            "geophysical.volcanicEvent": T("Volcanic Event"),
-            "hazardousMaterial": T("Hazardous Material"),
-            "hazardousMaterial.biologicalHazard": T("Biological Hazard"),
-            "hazardousMaterial.chemicalHazard": T("Chemical Hazard"),
-            "hazardousMaterial.explosiveHazard": T("Explosive Hazard"),
-            "hazardousMaterial.fallingObjectHazard": T("Falling Object Hazard"),
-            "hazardousMaterial.infectiousDisease": T("Infectious Disease (Hazardous Material)"),
-            "hazardousMaterial.poisonousGas": T("Poisonous Gas"),
-            "hazardousMaterial.radiologicalHazard": T("Radiological Hazard"),
-            "health.infectiousDisease": T("Infectious Disease"),
-            "health.infestation": T("Infestation"),
-            "ice.iceberg": T("Iceberg"),
-            "ice.icePressure": T("Ice Pressure"),
-            "ice.rapidCloseLead": T("Rapid Close Lead"),
-            "ice.specialIce": T("Special Ice"),
-            "marine.marineSecurity": T("Marine Security"),
-            "marine.nauticalAccident": T("Nautical Accident"),
-            "marine.nauticalHijacking": T("Nautical Hijacking"),
-            "marine.portClosure": T("Port Closure"),
-            "marine.specialMarine": T("Special Marine"),
-            "meteorological.blizzard": T("Blizzard"),
-            "meteorological.blowingSnow": T("Blowing Snow"),
-            "meteorological.drought": T("Drought"),
-            "meteorological.dustStorm": T("Dust Storm"),
-            "meteorological.fog": T("Fog"),
-            "meteorological.freezingDrizzle": T("Freezing Drizzle"),
-            "meteorological.freezingRain": T("Freezing Rain"),
-            "meteorological.freezingSpray": T("Freezing Spray"),
-            "meteorological.hail": T("Hail"),
-            "meteorological.hurricane": T("Hurricane"),
-            "meteorological.rainFall": T("Rain Fall"),
-            "meteorological.snowFall": T("Snow Fall"),
-            "meteorological.snowSquall": T("Snow Squall"),
-            "meteorological.squall": T("Squall"),
-            "meteorological.stormSurge": T("Storm Surge"),
-            "meteorological.thunderstorm": T("Thunderstorm"),
-            "meteorological.tornado": T("Tornado"),
-            "meteorological.tropicalStorm": T("Tropical Storm"),
-            "meteorological.waterspout": T("Waterspout"),
-            "meteorological.winterStorm": T("Winter Storm"),
-            "missingPerson": T("Missing Person"),
-            # http://en.wikipedia.org/wiki/Amber_Alert
-            "missingPerson.amberAlert": T("Child Abduction Emergency"),
-            "missingPerson.missingVulnerablePerson": T("Missing Vulnerable Person"),
-            # http://en.wikipedia.org/wiki/Silver_Alert
-            "missingPerson.silver": T("Missing Senior Citizen"),
-            "publicService.emergencySupportFacility": T("Emergency Support Facility"),
-            "publicService.emergencySupportService": T("Emergency Support Service"),
-            "publicService.schoolClosure": T("School Closure"),
-            "publicService.schoolLockdown": T("School Lockdown"),
-            "publicService.serviceOrFacility": T("Service or Facility"),
-            "publicService.transit": T("Transit"),
-            "railway.railwayAccident": T("Railway Accident"),
-            "railway.railwayHijacking": T("Railway Hijacking"),
-            "roadway.bridgeClosure": T("Bridge Closed"),
-            "roadway.hazardousRoadConditions": T("Hazardous Road Conditions"),
-            "roadway.roadwayAccident": T("Road Accident"),
-            "roadway.roadwayClosure": T("Road Closed"),
-            "roadway.roadwayDelay": T("Road Delay"),
-            "roadway.roadwayHijacking": T("Road Hijacking"),
-            "roadway.roadwayUsageCondition": T("Road Usage Condition"),
-            "roadway.trafficReport": T("Traffic Report"),
-            "temperature.arcticOutflow": T("Arctic Outflow"),
-            "temperature.coldWave": T("Cold Wave"),
-            "temperature.flashFreeze": T("Flash Freeze"),
-            "temperature.frost": T("Frost"),
-            "temperature.heatAndHumidity": T("Heat and Humidity"),
-            "temperature.heatWave": T("Heat Wave"),
-            "temperature.windChill": T("Wind Chill"),
-            "wind.galeWind": T("Gale Wind"),
-            "wind.hurricaneForceWind": T("Hurricane Force Wind"),
-            "wind.stormForceWind": T("Storm Force Wind"),
-            "wind.strongWind": T("Strong Wind"),
-            "other.buildingCollapsed": T("Building Collapsed"),
-            "other.peopleTrapped": T("People Trapped"),
-            "other.powerFailure": T("Power Failure"),
-        }
-
-        # ---------------------------------------------------------------------
         # CAP alerts
         #
 
@@ -356,24 +213,16 @@ class S3CAPModel(S3Model):
                            #                           one_to_many=True,
                            #                           allow_create=False),
                            ),
-                     # @ToDo: Switch to using event_incident_type_id
-                     Field("incidents", "list:string",
-                           label = T("Incidents"),
-                           represent = S3Represent(options = cap_incident_type_opts,
-                                                   multiple = True),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_incident_type_opts,
-                                                  multiple = True,
-                                                  sort = True,
-                                                  )),
-                           widget = S3MultiSelectWidget(),
-                           ),
+                     self.event_incident_type_id(
+                            label = T("Incidents"),
+                            widget = S3MultiSelectWidget(),
+                            ),
                      *s3_meta_fields())
 
         filter_widgets = [
             S3TextFilter(["identifier",
                           "sender",
-                          "incidents",
+                          "incident_type_id",
                           "cap_info.headline",
                           "cap_info.event",
                           ],
@@ -1626,7 +1475,7 @@ class CAPImportFeed(S3Method):
 
             title = T("Import from Feed URL")
 
-            # @ToDo: use Formstyle
+            formstyle = current.deployment_settings.get_ui_formstyle()
             form = FORM(
                     TABLE(
                         TR(TD(DIV(B("%s:" % T("URL")),
@@ -1654,7 +1503,8 @@ class CAPImportFeed(S3Method):
                            TD(INPUT(_type="submit", _value=T("Import"))),
                            TD(),
                            )
-                        )
+                        ),
+                    formstyle = formstyle
                     )
 
             response.view = "create.html"

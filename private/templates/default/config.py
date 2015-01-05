@@ -452,6 +452,10 @@ settings.gis.geonames_username = "eden_test"
 #settings.cms.organisation_group = "post_organisation_group.group_id"
 # Uncomment to use person_id instead of created_by in Newsfeed
 #settings.cms.person = "person_id"
+# Uncomment to enable multiple Organisations per Posts
+#settings.cms.multiple_organisations = True
+# Uncomment to enable multiple Organisations Groups per Posts
+#settings.cms.multiple_organisation_groups = True
 
 # -----------------------------------------------------------------------------
 # Shelters
@@ -459,6 +463,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.cr.shelter_population_dynamic = True
 # Uncomment to disable people registration in shelters
 #settings.cr.people_registration = False
+# Uncomment to change the notification subject
+#settings.cr.shelter_notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Events
@@ -466,6 +472,8 @@ settings.gis.geonames_username = "eden_test"
 #settings.event.types_hierarchical = True
 # Make Incident Types Hierarchical
 #settings.event.incident_types_hierarchical = True
+# Uncomment to change the Event notification subject
+#settings.event.notification_subject = "Deployment Requests"
 
 # -----------------------------------------------------------------------------
 # Members
@@ -1130,7 +1138,7 @@ settings.modules = OrderedDict([
     # @ToDo: Port these Assessments to the Survey module
     #("building", Storage(
     #    name_nice = T("Building Assessments"),
-    #    #description = "Building Safety Assessments",
+    #    description = "Building Safety Assessments",
     #    restricted = True,
     #    module_type = 10,
     #)),

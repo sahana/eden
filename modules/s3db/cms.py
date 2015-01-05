@@ -208,12 +208,14 @@ class S3ContentModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      s3_datetime(default = "now"),
-                     # @ToDo: Also have a datetime for 'Expires On'
                      Field("expired", "boolean",
                            default = False,
                            label = T("Expired?"),
                            represent = s3_yes_no_represent,
                            ),
+                     s3_datetime(label=T("Expires On"),
+                                 name="expires_on",
+                                 past=0),
                      #Field("published", "boolean",
                      #      default=True,
                      #      label=T("Published")),
@@ -258,6 +260,7 @@ class S3ContentModel(S3Model):
                        "location_id",
                        "date",
                        "expired",
+                       "expires_on",
                        "comments"
                        ]
 
@@ -358,13 +361,11 @@ class S3ContentModel(S3Model):
                        cms_tag_post = "post_id",
 
                        cms_post_organisation = {"joinby": "post_id",
-                                                # @ToDo: deployment_setting
-                                                "multiple": False,
+                                                "multiple": settings.get_cms_multiple_organisations(),
                                                 },
 
                        cms_post_organisation_group = {"joinby": "post_id",
-                                                      # @ToDo: deployment_setting
-                                                      "multiple": False,
+                                                      "multiple": settings.get_cms_multiple_organisation_groups(),
                                                       },
 
                        # For InlineForm to tag Posts to Events/Incidents/Incident Types
