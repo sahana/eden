@@ -1154,23 +1154,28 @@ def contact():
 
     template = settings.get_template()
     if template != "default":
+        # Try a Custom Controller
         location = settings.get_template_location()
-        # Try a Custom Page
-        controller = "applications.%s.%s.templates.%s.controllers" % \
-                            (appname, location, template)
+        package = "applications.%s.%s.templates.%s" % \
+                    (appname, location, template)
+        name = "controllers"
         try:
-            exec("import %s as custom" % controller) in globals(), locals()
-        except ImportError, e:
+            custom = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
             # No Custom Page available, try a custom view
             pass
         else:
-            if "contact" in custom.__dict__:
-                output = custom.contact()()
-                return output
+            if hasattr(custom, "contact"):
+                controller = getattr(custom, "contact")()
+                return controller()
 
         # Try a Custom View
-        view = os.path.join(request.folder, location, "templates",
-                            template, "views", "contact.html")
+        view = os.path.join(request.folder,
+                            location,
+                            "templates",
+                            template,
+                            "views",
+                            "contact.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
