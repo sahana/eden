@@ -69,49 +69,52 @@ def index():
     auth.configure_user_fields()
 
     page = request.args(0)
+    custom = None
     if page:
-        # Go to a custom page
-        # Arg 1 = function in /modules/templates/<template>/controllers.py
-        # other Args & Vars passed through
+        # Go to a custom page,
+        # - args[0] = name of the class in /modules/templates/<template>/controllers.py
+        # - other args & vars passed through
         template = settings.get_template()
         location = settings.get_template_location()
-        controller = "applications.%s.%s.templates.%s.controllers" % \
-                        (appname, location, template)
+        package = "applications.%s.%s.templates.%s" % \
+                    (appname, location, template)
+        name = "controllers"
         try:
-            exec("import %s as custom" % controller)
-        except ImportError:
+            custom = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
             # No Custom Page available, continue with the default
-            page = "%s/templates/%s/controllers.py" % \
-                        (location, template)
+            page = "%s/templates/%s/controllers.py" % (location, template)
             current.log.warning("File not loadable",
                                 "%s, %s" % (page, sys.exc_info()[1]))
         else:
             if "." in page:
-                # Remove extension
+                # Remove format extension
                 page = page.split(".", 1)[0]
-            if page in custom.__dict__:
-                exec ("output = custom.%s()()" % page)
-                return output
+            if hasattr(custom, page):
+                controller = getattr(custom, page)()
             elif page != "login":
                 raise(HTTP(404, "Function not found: %s()" % page))
             else:
-                output = custom.index()()
-                return output
+                controller = custom.index()
+            output = controller()
+            return output
+
     elif settings.get_template() != "default":
         # Try a Custom Homepage
-        controller = "applications.%s.%s.templates.%s.controllers" % \
-                            (appname,
-                             settings.get_template_location(),
-                             settings.get_template())
+        package = "applications.%s.%s.templates.%s" % \
+                    (appname,
+                     settings.get_template_location(),
+                     settings.get_template())
+        name = "controllers"
         try:
-            exec("import %s as custom" % controller)
-        except ImportError:
+            custom = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
             # No Custom Page available, continue with the default
             # @ToDo: cache this result in session
             current.log.warning("Custom homepage cannot be loaded",
                                 sys.exc_info()[1])
         else:
-            if "index" in custom.__dict__:
+            if hasattr(custom, "index"):
                 output = custom.index()()
                 return output
 
