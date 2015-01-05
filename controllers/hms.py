@@ -58,7 +58,14 @@ def ltc():
         Filtered REST Controller for Sandy
     """
 
-    s3.filter = (s3db.hms_hospital.facility_type == 31)
+    # @ToDo: Do we need standard UUIDs to deal with variant names? If so, first
+    # term would become, e.g.:
+    #(s3db.hms_hospital_type.uuid == "www.sahanafoundation.org/HOSPITAL-TYPE-LONG-TERM-CARE") & \
+
+    s3.filter = \
+        (s3db.hms_hospital_type.name == "Long-term care") & \
+        (s3db.hms_hospital_type.id == s3db.hms_hospital_hospital_type.hospital_type_id) & \
+        (s3db.hms_hospital_hospital_type.hospital_id == s3db.hms_hospital.id)
     return hospital()
 
 # -----------------------------------------------------------------------------
@@ -255,6 +262,12 @@ def hospital():
 
     output = s3_rest_controller(rheader=s3db.hms_hospital_rheader)
     return output
+
+# -----------------------------------------------------------------------------
+def hospital_type():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def incoming():

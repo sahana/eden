@@ -9,7 +9,7 @@
          CSV fields:
          Name....................hms_hospital
          Code....................hms_hospital.code
-         Type....................hms_hospital.facility_type
+         Types...................hms_hospital_type (comma-separated list)
          Status..................hms_status.facility_status
          Reopening Date..........hms_status.date_reopening
          Power...................hms_status.power_supply_type
@@ -41,6 +41,8 @@
     <xsl:output method="xml"/>
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
+
+    <xsl:variable name="HospitalTypePrefix" select="'HospitalType:'"/>
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
@@ -74,7 +76,7 @@
     <xsl:template match="/">
         <s3xml>
             <!-- Hospital Types
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('hospital_type', col[@field='Type'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('hospital_type', col[@field='Types'])[1])]">
                 <xsl:call-template name="HospitalType" />
             </xsl:for-each> -->
 
@@ -112,6 +114,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="HospitalName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="Types" select="col[@field='Types']"/>
 
         <xsl:variable name="postcode">
             <xsl:call-template name="GetColumnValue">
@@ -166,30 +169,13 @@
             <data field="total_beds"><xsl:value-of select="col[@field='Beds Total']"/></data>
             <data field="available_beds"><xsl:value-of select="col[@field='Beds Available']"/></data>
 
-            <xsl:variable name="Type" select="col[@field='Type']/text()"/>
-            <data field="facility_type">
-                <xsl:choose>
-                    <xsl:when test="$Type='Hospital'">1</xsl:when>
-                    <xsl:when test="$Type='Field Hospital'">2</xsl:when>
-                    <xsl:when test="$Type='Specialized Hospital'">3</xsl:when>
-                    <xsl:when test="$Type='Health center'">11</xsl:when>
-                    <xsl:when test="$Type='Health centre'">11</xsl:when>
-                    <xsl:when test="$Type='Health center with beds'">12</xsl:when>
-                    <xsl:when test="$Type='Health centre with beds'">12</xsl:when>
-                    <xsl:when test="$Type='Health center without beds'">13</xsl:when>
-                    <xsl:when test="$Type='Health centre without beds'">13</xsl:when>
-                    <xsl:when test="$Type='Dispensary'">21</xsl:when>
-                    <xsl:when test="$Type='Long-term care'">31</xsl:when>
-                    <xsl:when test="$Type='ETC'">41</xsl:when>
-                    <xsl:when test="$Type='Triage'">42</xsl:when>
-                    <xsl:when test="$Type='Holding Center'">43</xsl:when>
-                    <xsl:when test="$Type='Holding Centre'">43</xsl:when>
-                    <xsl:when test="$Type='Transit Center'">44</xsl:when>
-                    <xsl:when test="$Type='Transit Centre'">44</xsl:when>
-                    <xsl:when test="$Type='Other'">98</xsl:when>
-                    <xsl:otherwise>99</xsl:otherwise>
-                </xsl:choose>
-            </data>
+            <!-- Hospital type -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list">
+                    <xsl:value-of select="$Types"/>
+                </xsl:with-param>
+                <xsl:with-param name="arg">hospital_type_ref</xsl:with-param>
+            </xsl:call-template>
 
             <xsl:variable name="Power" select="col[@field='Power']/text()"/>
             <xsl:variable name="Status" select="col[@field='Status']/text()"/>
@@ -236,6 +222,11 @@
 
         <xsl:call-template name="Locations"/>
 
+        <xsl:call-template name="splitList">
+            <xsl:with-param name="list"><xsl:value-of select="$Types"/></xsl:with-param>
+            <xsl:with-param name="arg">hospital_type_res</xsl:with-param>
+        </xsl:call-template>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -249,6 +240,33 @@
                 <data field="value"><xsl:value-of select="$Value"/></data>
             </resource>
         </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="resource">
+        <xsl:param name="item"/>
+        <xsl:param name="arg"/>
+
+        <xsl:choose>
+            <!-- Hospital Types -->
+            <xsl:when test="$arg='hospital_type_ref'">
+                <resource name="hms_hospital_hospital_type">
+                    <reference field="hospital_type_id" resource="hms_hospital_type">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat($HospitalTypePrefix, $item)"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:when>
+            <xsl:when test="$arg='hospital_type_res'">
+                <resource name="hms_hospital_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat($HospitalTypePrefix, $item)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -319,7 +337,7 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="HospitalType">
+    <!-- <xsl:template name="HospitalType">
 
         <xsl:variable name="Type" select="col[@field='Type']"/>
 
@@ -331,7 +349,7 @@
                 <data field="name"><xsl:value-of select="$Type"/></data>
             </resource>
         </xsl:if>
-    </xsl:template>
+    </xsl:template> -->
 
     <!-- ****************************************************************** -->
     <xsl:template name="Locations">
