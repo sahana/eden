@@ -14,9 +14,9 @@ def config(settings):
     """
         Template settings
 
-        All settings which are to configure a specific template are located here
-
-        Deployers should ideally not need to edit any other files outside of their template folder
+        All settings which are to configure a specific template are located
+        here. Deployers should ideally not need to edit any other files outside
+        of their template folder.
     """
 
     T = current.T
@@ -420,12 +420,12 @@ def config(settings):
     # Uncomment to modify the label of the Permalink
     #settings.ui.label_permalink = "Permalink"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Asset
     # Uncomment to have a specific asset type for Telephones
     #settings.asset.telephones = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # CMS
     # Uncomment to use Bookmarks in Newsfeed
     #settings.cms.bookmarks = True
@@ -453,26 +453,26 @@ def config(settings):
     # Uncomment to use person_id instead of created_by in Newsfeed
     #settings.cms.person = "person_id"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Shelters
     # Uncomment to use a dynamic population estimation by calculations based on registrations
     #settings.cr.shelter_population_dynamic = True
     # Uncomment to disable people registration in shelters
     #settings.cr.people_registration = False
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Events
     # Make Event Types Hierarchical
     #settings.event.types_hierarchical = True
     # Make Incident Types Hierarchical
     #settings.event.incident_types_hierarchical = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Members
     # Show a CV tab for Members
     #settings.member.cv_tab = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Persons
     # Uncomment to allow person imports to match even without email addresses
     #settings.pr.import_update_requires_email = False
@@ -494,7 +494,7 @@ def config(settings):
     # Show separate Public and Private Contacts Tabs
     #settings.pr.contacts_tabs = ("public", "private")
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Organisations
     # Uncomment to use an Autocomplete for Organisation lookup fields
     #settings.org.autocomplete = True
@@ -556,7 +556,7 @@ def config(settings):
     # Uncomment to make Facility codes unique
     #settings.org.facility_code_unique = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to change the label for 'Staff'
     #settings.hrm.staff_label = "Contacts"
@@ -622,7 +622,7 @@ def config(settings):
     # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
     #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Inventory Management
     #settings.inv.collapse_tabs = False
     # Uncomment to customise the label for Facilities in Inventory Management
@@ -670,7 +670,7 @@ def config(settings):
     #        4: T("Surplus")
     #   }
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Requests Management
     # Uncomment to disable Inline Forms in Requests module
     #settings.req.inline_forms = False
@@ -751,13 +751,13 @@ def config(settings):
     #    msg_record_deleted = T("Request for Volunteers Canceled"),
     #    msg_list_empty = T("No Requests for Volunteers"))
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Supply
     #settings.supply.use_alt_name = False
     # Do not edit after deployment
     #settings.supply.catalog_default = T("Default")
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Projects
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
     #settings.project.mode_3w = True
@@ -810,12 +810,12 @@ def config(settings):
     # NB Be very cautious about doing this (see docstring in modules/s3cfg.py)
     #settings.project.task_status_opts =
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Incidents
     # Uncomment this to use vehicles when responding to Incident Reports
     #settings.irs.vehicle = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Transport
     # Uncomment to make Airport codes unique
     #settings.transport.airport_code_unique = True
@@ -824,7 +824,7 @@ def config(settings):
     # Uncomment to make Heliport codes unique
     #settings.transport.heliport_code_unique = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Filter Manager
     #settings.search.filter_manager = False
 
@@ -833,6 +833,7 @@ def config(settings):
     #                                 title = T("Introduction"),
     #                                 video_id = "HR-FtR2XkBU"),]
 
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
     # Modules menu is defined in modules/eden/menu.py
