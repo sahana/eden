@@ -240,7 +240,7 @@ class S3Parser(object):
                                             lon = lon)
             elif service == "twitter":
                 # @ToDo: Use Geolocation of Tweet
-                #location_id = 
+                #location_id =
                 pass
 
         # @ToDo: Update records inside this function with parsed data
@@ -259,7 +259,7 @@ class S3Parser(object):
         """
 
         # Equivalent keywords in one list
-        primary_keywords = ["get", "give", "show"] 
+        primary_keywords = ["get", "give", "show"]
         contact_keywords = ["email", "mobile", "facility", "clinical",
                             "security", "phone", "status", "hospital",
                             "person", "organisation"]
@@ -349,7 +349,7 @@ class S3Parser(object):
 
         elif len(result) > 1:
             return T("Multiple Matches")
-            
+
         else:
             # Single Match
             reply = result[0]["name"]
@@ -379,7 +379,7 @@ class S3Parser(object):
                     reply = "%s 's Mobile Contact Not available!" % reply
 
         return reply
-    
+
     # ---------------------------------------------------------------------
     def search_hospital(self, message, pquery=None, name=None):
         """
@@ -556,8 +556,8 @@ class S3Parser(object):
                 reply = self._respond_drequest(message, report_id, response, text)
             else:
                 reply = None
-                       
-        return reply				    
+
+        return reply
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -574,7 +574,7 @@ class S3Parser(object):
         category = ""
         for a in range(0, len(info) - 1):
             category = category + info[a] + " "
-            
+
         #@ToDo: Check for an existing location in DB
         #records = db(gtable.id>0).select(gtable.id, \
         #                                 gtable.lat,
@@ -594,12 +594,12 @@ class S3Parser(object):
         rtable.insert(name=name,
                       message=text,
                       category=category,
-                      location_id=location_id)			
+                      location_id=location_id)
 
         # @ToDo: Include URL?
         reply = "Incident Report Logged!"
         return reply
-	                    
+
     # -------------------------------------------------------------------------
     @staticmethod
     def _respond_drequest(message, report_id, response, text):

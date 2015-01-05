@@ -56,7 +56,7 @@ class S3MainMenu(default.S3MainMenu):
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
-    
+
     """
         Custom Controller Menus
 
@@ -79,7 +79,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     # -------------------------------------------------------------------------
     def hrm(self):
         """ Staff """
-        
+
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
 
@@ -137,7 +137,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Personal Profile", f="person",
                       check=manager_mode, vars=dict(mode="personal"))
                 )
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def vol():
@@ -228,11 +228,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=manager_mode, vars=dict(mode="personal"))
                 )
 
-        
+
 #    -------------------------------------------------------------------------
     def evr(self):
         """ EVR / Evacuees Registry """
- 
+
         return M(c="evr")(
                     M("Persons", f="person")(
                         M("New", m="create"),

@@ -149,7 +149,7 @@ def config(settings):
     #     "url": "http://api2.socialmention.com/search?q=protezionecivile&t=all&f=rss"
     #     },
     ]
-    
+
     # -------------------------------------------------------------------------
     # Resource customization
     #
@@ -267,7 +267,7 @@ def config(settings):
             module_type = 10,
         )),
     ])
-    
+
 # -----------------------------------------------------------------------------
 def evass_realm_entity(table, row):
     """
@@ -322,6 +322,7 @@ def evass_realm_entity(table, row):
 # -----------------------------------------------------------------------------
 def customise_pr_person_resource(r, tablename):
 
+    T = current.T
     s3db = current.s3db
     table = r.resource.table
 
@@ -334,7 +335,7 @@ def customise_pr_person_resource(r, tablename):
 
     if r.controller == "evr":
         # Hide evacuees emergency contacts
-        settings.pr.show_emergency_contacts = False
+        current.deployment_settings.pr.show_emergency_contacts = False
 
         # Last name and date of birth mandatory in EVR module
         table.last_name.requires = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
@@ -432,6 +433,8 @@ def customise_pr_group_resource(r, tablename):
 
     messages = current.messages
     field = r.table.group_type
+
+    T = current.T
     pr_group_types = {1 : T("Family"),
                       2 : T("Tourist Group"),
                       3 : T("Relief Team"),
