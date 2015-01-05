@@ -13,7 +13,7 @@ except ImportError:
     from gluon.dal import Query
 from s3.s3utils import *
 from s3.s3rest import s3_request
-from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_uid
+from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_meta_fields
 from lxml import etree
 
 # =============================================================================
@@ -31,12 +31,14 @@ class S3HierarchyTests(unittest.TestCase):
                           Field("category"),
                           Field("type"),
                           Field("parent", "reference test_hierarchy"),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         s3db.define_table("test_hierarchy_reference",
-                          Field("test_hierarchy_id", "reference test_hierarchy"),
+                          Field("test_hierarchy_id", "reference test_hierarchy",
+                                ondelete = "RESTRICT",
+                                ),
                           Field("test_hierarchy_multi_id", "list:reference test_hierarchy"),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         xmlstr = """
 <s3xml>
@@ -124,11 +126,12 @@ class S3HierarchyTests(unittest.TestCase):
     def setUp(self):
 
         current.auth.override = True
-        
+
         db = current.db
 
         if not hasattr(self, "rows"):
-            rows = db(db.test_hierarchy.id>0).select()
+            table = db.test_hierarchy
+            rows = db((table.id>0) & (table.deleted != True)).select()
             self.rows = {}
             self.uids = {}
             self.ids = {}
@@ -176,9 +179,9 @@ class S3HierarchyTests(unittest.TestCase):
         h = S3Hierarchy("test_hierarchy")
         link = h.preprocess_create_node(r, parent_id)
         self.assertEqual(link, None)
-        
+
         assertEqual = self.assertEqual
-        
+
         post_vars = r.post_vars
         assertEqual(post_vars["parent"], parent_id)
 
@@ -189,6 +192,175 @@ class S3HierarchyTests(unittest.TestCase):
         self.assertFalse(field.writable)
 
     # -------------------------------------------------------------------------
+    def testDeleteBranch(self):
+        """ Test recursive deletion of a hierarchy branch """
+
+        # Add additional nodes
+        xmlstr = """
+<s3xml>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-3">
+        <data field="name">Type 1-3</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1"/>
+    </resource>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-3-1">
+        <data field="name">Type 1-3-1</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-3"/>
+    </resource>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-3-2">
+        <data field="name">Type 1-3-2</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-3"/>
+    </resource>
+</s3xml>
+"""
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        resource = current.s3db.resource("test_hierarchy")
+        resource.import_xml(xmltree)
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+        assertEqual = self.assertEqual
+
+        # Capture the uuids
+        db = current.db
+        table = db.test_hierarchy
+        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+
+        uids = {}
+        for row in rows:
+            assertFalse(row.deleted)
+            uids[row.uuid] = row.id
+
+        # Mark as dirty after import
+        h = S3Hierarchy("test_hierarchy")
+        h.dirty("test_hierarchy")
+
+        # Verify that branch node has been added to the hierarchy
+        branches = h.children(self.uids["HIERARCHY1"])
+        assertTrue(uids["HIERARCHY1-3"] in branches)
+
+        # Verify that children have been added, too
+        children = h.children(uids["HIERARCHY1-3"])
+        assertEqual(len(children), 2)
+
+        # Delete the branch
+        success = h.delete([uids["HIERARCHY1-3"]])
+        assertEqual(success, 3)
+
+        # Verify that branch has been deleted
+        branches = h.children(self.uids["HIERARCHY1"])
+        assertFalse(uids["HIERARCHY1-3"] in branches)
+
+        # Child nodes must be gone as well
+        nodes = h.nodes
+        assertTrue(all(uids[uid] not in nodes for uid in uids))
+
+        # Verify that the nodes are deleted from database too
+        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+        for row in rows:
+            assertTrue(row.deleted)
+            uids[row.uuid] = row.id
+
+    # -------------------------------------------------------------------------
+    def testDeleteBranchFailure(self):
+        """
+            Test proper handling of deletion cascade failure due to
+            db integrity constraints
+        """
+
+        # Add additional nodes
+        xmlstr = """
+<s3xml>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-3">
+        <data field="name">Type 1-3</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1"/>
+    </resource>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-3-1">
+        <data field="name">Type 1-3-1</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-3"/>
+    </resource>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-3-2">
+        <data field="name">Type 1-3-2</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-3"/>
+    </resource>
+    <resource name="test_hierarchy_reference" uuid="REF1">
+        <reference field="test_hierarchy_id" uuid="HIERARCHY1-3-1"/>
+    </resource>
+</s3xml>
+"""
+        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        s3db = current.s3db
+        resource = s3db.resource("test_hierarchy")
+        resource.import_xml(xmltree)
+        resource = s3db.resource("test_hierarchy_reference")
+        resource.import_xml(xmltree)
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+        assertEqual = self.assertEqual
+
+        # Capture the uuids
+        db = current.db
+        table = db.test_hierarchy
+        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+
+        uids = {}
+        for row in rows:
+            assertFalse(row.deleted)
+            uids[row.uuid] = row.id
+
+        # Mark as dirty after import
+        h = S3Hierarchy("test_hierarchy")
+        h.dirty("test_hierarchy")
+
+        # Verify that branch node has been added to the hierarchy
+        branches = h.children(self.uids["HIERARCHY1"])
+        assertTrue(uids["HIERARCHY1-3"] in branches)
+
+        # Verify that children have been added, too
+        children = h.children(uids["HIERARCHY1-3"])
+        assertEqual(len(children), 2)
+
+        # Try delete the branch => should fail
+        success = h.delete([uids["HIERARCHY1-3"]])
+        assertEqual(success, None)
+
+        # Verify that branch has not been deleted
+        branches = h.children(self.uids["HIERARCHY1"])
+        assertTrue(uids["HIERARCHY1-3"] in branches)
+
+        # Child nodes must still be in the hierarchy
+        nodes = h.nodes
+        assertTrue(all(uids[uid] in nodes for uid in uids))
+
+        # Verify that the nodes are not deleted from database either
+        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+        for row in rows:
+            assertFalse(row.deleted)
+
+        # Remove the blocker
+        db(db.test_hierarchy_reference.uuid == "REF1").delete()
+
+        # Try again to delete the branch => should succeed now
+        success = h.delete([uids["HIERARCHY1-3"]])
+        assertEqual(success, 3)
+
+        # Verify that branch has been deleted
+        branches = h.children(self.uids["HIERARCHY1"])
+        assertFalse(uids["HIERARCHY1-3"] in branches)
+
+        # Child nodes must be gone as well
+        nodes = h.nodes
+        assertTrue(all(uids[uid] not in nodes for uid in uids))
+
+        # Verify that the nodes are deleted from database too
+        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+        for row in rows:
+            assertTrue(row.deleted)
+            uids[row.uuid] = row.id
+
+    # -------------------------------------------------------------------------
     def testCategory(self):
         """ Test node category lookup """
 
@@ -196,7 +368,7 @@ class S3HierarchyTests(unittest.TestCase):
         rows = self.rows
 
         assertEqual = self.assertEqual
-        
+
         h = S3Hierarchy("test_hierarchy")
         for uid in uids:
             category = h.category(uids[uid])
@@ -209,9 +381,9 @@ class S3HierarchyTests(unittest.TestCase):
         ids = self.ids
         uids = self.uids
         rows = self.rows
-        
+
         assertEqual = self.assertEqual
-        
+
         h = S3Hierarchy("test_hierarchy")
         for uid in uids:
             parent, category = h.parent(uids[uid], classify=True)
@@ -323,7 +495,7 @@ class S3HierarchyTests(unittest.TestCase):
         uids = self.uids
 
         h = S3Hierarchy("test_hierarchy")
-        
+
         assertEqual = self.assertEqual
 
         root = uids["HIERARCHY1"]
@@ -348,7 +520,7 @@ class S3HierarchyTests(unittest.TestCase):
                     "HIERARCHY1-2-2",
                     ]
         assertEqual(nodes, set(uids[uid] for uid in expected))
-        
+
         root = uids["HIERARCHY2"]
         nodes = h.findall(root, category="Cat 1")
         expected = ["HIERARCHY2-1",
@@ -433,12 +605,12 @@ class S3LinkedHierarchyTests(unittest.TestCase):
                           Field("name"),
                           Field("category"),
                           Field("type"),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         s3db.define_table("test_lhierarchy_link",
                           Field("parent_id", "reference test_lhierarchy"),
                           Field("child_id", "reference test_lhierarchy"),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         # Component for import
         s3db.add_components("test_lhierarchy",
@@ -448,7 +620,7 @@ class S3LinkedHierarchyTests(unittest.TestCase):
                                                "key": "parent_id",
                                                },
                             ),
-        
+
 
         xmlstr = """
 <s3xml>
@@ -626,7 +798,7 @@ class S3LinkedHierarchyTests(unittest.TestCase):
 
         h = S3Hierarchy("test_lhierarchy")
         link = h.preprocess_create_node(r, parent_node.id)
-        
+
         self.assertNotEqual(link, None)
         assertEqual = self.assertEqual
         assertEqual(link["linktable"], "test_lhierarchy_link")
@@ -911,7 +1083,7 @@ class S3TypeOfTests(unittest.TestCase):
 
         s3db.define_table("typeof_nonhierarchy",
                           Field("name"),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         s3db.define_table("typeof_hierarchy",
                           Field("name"),
@@ -920,12 +1092,12 @@ class S3TypeOfTests(unittest.TestCase):
                           Field("typeof_nonhierarchy_multi_id", "list:reference typeof_nonhierarchy"),
                           Field.Method("vsfield", lambda row: "test"),
                           Field.Method("vmfield", lambda row: ["test1", "test2", "test3"]),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         s3db.define_table("typeof_hierarchy_reference",
                           Field("typeof_hierarchy_id", "reference typeof_hierarchy"),
                           Field("typeof_hierarchy_multi_id", "list:reference typeof_hierarchy"),
-                          *s3_uid())
+                          *s3_meta_fields())
 
         xmlstr = """
 <s3xml>

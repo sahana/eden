@@ -834,6 +834,7 @@ class S3Hierarchy(object):
             resource = current.s3db.resource(tablename, filter=query)
             success = resource.delete(cascade=True)
             if success:
+                self.remove(node_id)
                 total += 1
             else:
                 return None
@@ -874,6 +875,28 @@ class S3Hierarchy(object):
 
         theset[node_id] = node
         return node
+
+    # -------------------------------------------------------------------------
+    def remove(self, node_id):
+        """
+            Remove a node from the hierarchy
+
+            @param node_id: the node ID
+        """
+
+        theset = self.__theset
+
+        if node_id in theset:
+            node = theset[node_id]
+        else:
+            return False
+
+        parent_id = node["p"]
+        if parent_id:
+            parent = theset[parent_id]
+            parent["s"].discard(node_id)
+        del theset[node_id]
+        return True
 
     # -------------------------------------------------------------------------
     def __subset(self):
