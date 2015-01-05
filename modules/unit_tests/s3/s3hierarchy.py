@@ -113,14 +113,16 @@ class S3HierarchyTests(unittest.TestCase):
         current.auth.override = True
         resource = s3db.resource("test_hierarchy")
         resource.import_xml(xmltree)
+        current.db.commit()
 
     # -------------------------------------------------------------------------
     @classmethod
     def tearDownClass(cls):
 
         db = current.db
-        db.test_hierarchy.drop(mode="cascade")
         db.test_hierarchy_reference.drop()
+        db.test_hierarchy.drop(mode="cascade")
+        current.db.commit()
 
     # -------------------------------------------------------------------------
     def setUp(self):
@@ -217,49 +219,56 @@ class S3HierarchyTests(unittest.TestCase):
         resource = current.s3db.resource("test_hierarchy")
         resource.import_xml(xmltree)
 
+        # Commit here, otherwise failing deletion will roll back the import, too
+        db = current.db
+        db.commit()
+
         assertTrue = self.assertTrue
         assertFalse = self.assertFalse
         assertEqual = self.assertEqual
 
-        # Capture the uuids
-        db = current.db
         table = db.test_hierarchy
-        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+        try:
+            # Capture the uuids
+            rows = db(table.uuid.like("HIERARCHY1-3%")).select()
 
-        uids = {}
-        for row in rows:
-            assertFalse(row.deleted)
-            uids[row.uuid] = row.id
+            uids = {}
+            for row in rows:
+                assertFalse(row.deleted)
+                uids[row.uuid] = row.id
 
-        # Mark as dirty after import
-        h = S3Hierarchy("test_hierarchy")
-        h.dirty("test_hierarchy")
+            # Mark as dirty after import
+            h = S3Hierarchy("test_hierarchy")
+            h.dirty("test_hierarchy")
 
-        # Verify that branch node has been added to the hierarchy
-        branches = h.children(self.uids["HIERARCHY1"])
-        assertTrue(uids["HIERARCHY1-3"] in branches)
+            # Verify that branch node has been added to the hierarchy
+            branches = h.children(self.uids["HIERARCHY1"])
+            assertTrue(uids["HIERARCHY1-3"] in branches)
 
-        # Verify that children have been added, too
-        children = h.children(uids["HIERARCHY1-3"])
-        assertEqual(len(children), 2)
+            # Verify that children have been added, too
+            children = h.children(uids["HIERARCHY1-3"])
+            assertEqual(len(children), 2)
 
-        # Delete the branch
-        success = h.delete([uids["HIERARCHY1-3"]])
-        assertEqual(success, 3)
+            # Delete the branch
+            success = h.delete([uids["HIERARCHY1-3"]])
+            assertEqual(success, 3)
 
-        # Verify that branch has been deleted
-        branches = h.children(self.uids["HIERARCHY1"])
-        assertFalse(uids["HIERARCHY1-3"] in branches)
+            # Verify that branch has been deleted
+            branches = h.children(self.uids["HIERARCHY1"])
+            assertFalse(uids["HIERARCHY1-3"] in branches)
 
-        # Child nodes must be gone as well
-        nodes = h.nodes
-        assertTrue(all(uids[uid] not in nodes for uid in uids))
+            # Child nodes must be gone as well
+            nodes = h.nodes
+            assertTrue(all(uids[uid] not in nodes for uid in uids))
 
-        # Verify that the nodes are deleted from database too
-        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
-        for row in rows:
-            assertTrue(row.deleted)
-            uids[row.uuid] = row.id
+            # Verify that the nodes are deleted from database too
+            rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+            for row in rows:
+                assertTrue(row.deleted)
+                uids[row.uuid] = row.id
+        finally:
+            # Cleanup
+            db(table.uuid.like("HIERARCHY1-3%")).delete()
 
     # -------------------------------------------------------------------------
     def testDeleteBranchFailure(self):
@@ -271,94 +280,101 @@ class S3HierarchyTests(unittest.TestCase):
         # Add additional nodes
         xmlstr = """
 <s3xml>
-    <resource name="test_hierarchy" uuid="HIERARCHY1-3">
-        <data field="name">Type 1-3</data>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-4">
+        <data field="name">Type 1-4</data>
         <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1"/>
     </resource>
-    <resource name="test_hierarchy" uuid="HIERARCHY1-3-1">
-        <data field="name">Type 1-3-1</data>
-        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-3"/>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-4-1">
+        <data field="name">Type 1-4-1</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-4"/>
     </resource>
-    <resource name="test_hierarchy" uuid="HIERARCHY1-3-2">
-        <data field="name">Type 1-3-2</data>
-        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-3"/>
+    <resource name="test_hierarchy" uuid="HIERARCHY1-4-2">
+        <data field="name">Type 1-4-2</data>
+        <reference field="parent" resource="test_hierarchy" uuid="HIERARCHY1-4"/>
     </resource>
     <resource name="test_hierarchy_reference" uuid="REF1">
-        <reference field="test_hierarchy_id" uuid="HIERARCHY1-3-1"/>
+        <reference field="test_hierarchy_id" uuid="HIERARCHY1-4-1"/>
     </resource>
 </s3xml>
 """
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
 
+        db = current.db
         s3db = current.s3db
         resource = s3db.resource("test_hierarchy")
         resource.import_xml(xmltree)
         resource = s3db.resource("test_hierarchy_reference")
         resource.import_xml(xmltree)
 
+        # Commit here, otherwise failing deletion will roll back the import, too
+        db.commit()
+
         assertTrue = self.assertTrue
         assertFalse = self.assertFalse
         assertEqual = self.assertEqual
 
-        # Capture the uuids
-        db = current.db
         table = db.test_hierarchy
-        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
+        try:
+            # Capture the uuids
+            rows = db(table.uuid.like("HIERARCHY1-4%")).select()
 
-        uids = {}
-        for row in rows:
-            assertFalse(row.deleted)
-            uids[row.uuid] = row.id
+            uids = {}
+            for row in rows:
+                assertFalse(row.deleted)
+                uids[row.uuid] = row.id
 
-        # Mark as dirty after import
-        h = S3Hierarchy("test_hierarchy")
-        h.dirty("test_hierarchy")
+            # Mark as dirty after import
+            h = S3Hierarchy("test_hierarchy")
+            h.dirty("test_hierarchy")
 
-        # Verify that branch node has been added to the hierarchy
-        branches = h.children(self.uids["HIERARCHY1"])
-        assertTrue(uids["HIERARCHY1-3"] in branches)
+            # Verify that branch node has been added to the hierarchy
+            branches = h.children(self.uids["HIERARCHY1"])
+            assertTrue(uids["HIERARCHY1-4"] in branches)
 
-        # Verify that children have been added, too
-        children = h.children(uids["HIERARCHY1-3"])
-        assertEqual(len(children), 2)
+            # Verify that children have been added, too
+            children = h.children(uids["HIERARCHY1-4"])
+            assertEqual(len(children), 2)
 
-        # Try delete the branch => should fail
-        success = h.delete([uids["HIERARCHY1-3"]])
-        assertEqual(success, None)
+            # Try delete the branch => should fail
+            success = h.delete([uids["HIERARCHY1-4"]])
+            assertEqual(success, None)
 
-        # Verify that branch has not been deleted
-        branches = h.children(self.uids["HIERARCHY1"])
-        assertTrue(uids["HIERARCHY1-3"] in branches)
+            # Verify that branch has not been deleted
+            branches = h.children(self.uids["HIERARCHY1"])
+            assertTrue(uids["HIERARCHY1-4"] in branches)
 
-        # Child nodes must still be in the hierarchy
-        nodes = h.nodes
-        assertTrue(all(uids[uid] in nodes for uid in uids))
+            # Child nodes must still be in the hierarchy
+            nodes = h.nodes
+            assertTrue(all(uids[uid] in nodes for uid in uids))
 
-        # Verify that the nodes are not deleted from database either
-        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
-        for row in rows:
-            assertFalse(row.deleted)
+            # Verify that the nodes are not deleted from database either
+            rows = db(table.uuid.like("HIERARCHY1-4%")).select()
+            for row in rows:
+                assertFalse(row.deleted)
 
-        # Remove the blocker
-        db(db.test_hierarchy_reference.uuid == "REF1").delete()
+            # Remove the blocker
+            db(db.test_hierarchy_reference.uuid == "REF1").delete()
 
-        # Try again to delete the branch => should succeed now
-        success = h.delete([uids["HIERARCHY1-3"]])
-        assertEqual(success, 3)
+            # Try again to delete the branch => should succeed now
+            success = h.delete([uids["HIERARCHY1-4"]])
+            assertEqual(success, 3)
 
-        # Verify that branch has been deleted
-        branches = h.children(self.uids["HIERARCHY1"])
-        assertFalse(uids["HIERARCHY1-3"] in branches)
+            # Verify that branch has been deleted
+            branches = h.children(self.uids["HIERARCHY1"])
+            assertFalse(uids["HIERARCHY1-4"] in branches)
 
-        # Child nodes must be gone as well
-        nodes = h.nodes
-        assertTrue(all(uids[uid] not in nodes for uid in uids))
+            # Child nodes must be gone as well
+            nodes = h.nodes
+            assertTrue(all(uids[uid] not in nodes for uid in uids))
 
-        # Verify that the nodes are deleted from database too
-        rows = db(table.uuid.like("HIERARCHY1-3%")).select()
-        for row in rows:
-            assertTrue(row.deleted)
-            uids[row.uuid] = row.id
+            # Verify that the nodes are deleted from database too
+            rows = db(table.uuid.like("HIERARCHY1-4%")).select()
+            for row in rows:
+                assertTrue(row.deleted)
+                uids[row.uuid] = row.id
+        finally:
+            # Cleanup
+            db(table.uuid.like("HIERARCHY1-4%")).delete()
 
     # -------------------------------------------------------------------------
     def testCategory(self):

@@ -824,6 +824,8 @@ class S3Hierarchy(object):
             if children:
                 result = self.delete(children, cascade=True)
                 if result is None:
+                    if not cascade:
+                        current.db.rollback()
                     return None
                 else:
                     total += result
@@ -837,6 +839,8 @@ class S3Hierarchy(object):
                 self.remove(node_id)
                 total += 1
             else:
+                if not cascade:
+                    current.db.rollback()
                 return None
 
         if not cascade and total:
