@@ -49,8 +49,6 @@ class S3Config(Storage):
         Deployment Settings Helper Class
     """
 
-    DEPRECATION_WARNING = True
-
     # Used by modules/s3theme.py
     FORMSTYLE = {"default": formstyle_foundation,
                  "default_inline": formstyle_foundation_inline,
@@ -143,15 +141,15 @@ class S3Config(Storage):
         return self.base.get("template", "default")
 
     def get_template_location(self):
-        
+
         return self.base.get("template_location", "modules")
-        
+
     def exec_template(self, path):
         """
             Legacy function, retained for backwards-compatibility with
             existing 000_config.py instances => modern 000_config.py
             should just call settings.import_template()
-            
+
             @todo: deprecate
         """
         self.import_template()
@@ -166,10 +164,10 @@ class S3Config(Storage):
             @todo: remove fallback when migration complete (+giving some
                    time for downstream projects to adapt)
         """
-        
+
         name = self.get_template()
         package = "templates.%s" % name
-        
+
         template = None
         try:
             # Import the template
@@ -190,9 +188,9 @@ class S3Config(Storage):
         import os
 
         location = "private"
-        path = os.path.join(request.folder, 
-                            location, 
-                            "templates", 
+        path = os.path.join(request.folder,
+                            location,
+                            "templates",
                             name,
                             "config.py")
 
@@ -208,7 +206,7 @@ class S3Config(Storage):
             code = read_file(path)
             restricted(code, layer=path)
         else:
-            # Nonexistent template 
+            # Nonexistent template
             # => could be ignored here, but would crash later anyway,
             #    so exit early with a clear error message
             raise RuntimeError("Template not found: %s" % name)

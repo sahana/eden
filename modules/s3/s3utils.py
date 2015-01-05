@@ -926,7 +926,7 @@ def s3_include_debug_css():
     request = current.request
     folder = request.folder
     appname = request.application
-    
+
     settings = current.deployment_settings
     theme = settings.get_theme()
     location = settings.get_template_location()
@@ -1779,7 +1779,7 @@ class S3CustomController(object):
     def _view(cls, theme, name):
 
         view = os.path.join(current.request.folder,
-                            current.deployment_settings.get_template_location(), 
+                            current.deployment_settings.get_template_location(),
                             "templates", theme, "views", name)
         try:
             # Pass view as file not str to work in compiled mode

@@ -15,7 +15,7 @@ class Daily():
         db = current.db
         s3db = current.s3db
         request = current.request
-        
+
         now = request.utcnow
         month_past = now - datetime.timedelta(weeks=4)
 

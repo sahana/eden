@@ -99,9 +99,9 @@ settings = s3cfg.S3Config()
 current.deployment_settings = deployment_settings = settings
 
 def template_path():
-    """ 
-        Return the path of the Template config.py to load 
-        
+    """
+        Return the path of the Template config.py to load
+
         @todo: deprecated, S3Config finds the path itself,
                modern 000_config.py should not use this anymore
     """

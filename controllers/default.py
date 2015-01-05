@@ -101,7 +101,7 @@ def index():
         # Try a Custom Homepage
         controller = "applications.%s.%s.templates.%s.controllers" % \
                             (appname,
-                             settings.get_template_location(), 
+                             settings.get_template_location(),
                              settings.get_template())
         try:
             exec("import %s as custom" % controller)
@@ -544,11 +544,11 @@ def user():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, 
-                            settings.get_template_location(), 
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
                             "templates",
-                            settings.get_template(), 
-                            "views", 
+                            settings.get_template(),
+                            "views",
                             "user.html")
         if os.path.exists(view):
             try:
@@ -924,11 +924,11 @@ def about():
     response.title = T("About")
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, 
-                            settings.get_template_location(), 
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
                             "templates",
-                            settings.get_template(), 
-                            "views", 
+                            settings.get_template(),
+                            "views",
                             "about.html")
         if os.path.exists(view):
             try:
@@ -1026,11 +1026,11 @@ def help():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, 
-                            settings.get_template_location(), 
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
                             "templates",
-                            settings.get_template(), 
-                            "views", 
+                            settings.get_template(),
+                            "views",
                             "help.html")
         if os.path.exists(view):
             try:
@@ -1049,11 +1049,11 @@ def privacy():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, 
-                            settings.get_template_location(), 
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
                             "templates",
-                            settings.get_template(), 
-                            "views", 
+                            settings.get_template(),
+                            "views",
                             "privacy.html")
         if os.path.exists(view):
             try:
@@ -1072,11 +1072,11 @@ def tos():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, 
-                            settings.get_template_location(), 
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
                             "templates",
-                            settings.get_template(), 
-                            "views", 
+                            settings.get_template(),
+                            "views",
                             "tos.html")
         if os.path.exists(view):
             try:
@@ -1095,11 +1095,11 @@ def video():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, 
-                            settings.get_template_location(), 
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
                             "templates",
-                            settings.get_template(), 
-                            "views", 
+                            settings.get_template(),
+                            "views",
                             "video.html")
         if os.path.exists(view):
             try:

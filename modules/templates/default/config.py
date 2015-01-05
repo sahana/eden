@@ -18,7 +18,7 @@ def config(settings):
 
         Deployers should ideally not need to edit any other files outside of their template folder
     """
-    
+
     T = current.T
 
     # Pre-Populate

@@ -42,7 +42,7 @@ $(function (){
         }
         else {
             // Revert Role
-            type = 'DELETE';    
+            type = 'DELETE';
             resource_url = $assignBtn.attr('data-url');
             member_id = $assignBtn.attr('data-id');
             url = S3.Ap.concat(resource_url + member_id);

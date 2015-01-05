@@ -14,7 +14,7 @@ def maintenance(period="daily"):
     """
 
     mod = "applications.%s.%s.templates.%s.maintenance as maintenance" % \
-                    (appname, 
+                    (appname,
                      settings.get_template_location(),
                      settings.get_template())
     try:

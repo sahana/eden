@@ -38,7 +38,7 @@ from s3 import *
 #            item.visible = True
 #
 #        if item.enabled and item.visible:
-#            
+#
 #            items = item.render_components()
 #            if item.parent is not None:
 #
@@ -189,7 +189,7 @@ from s3 import *
 #        if enabled and visible:
 #            if item.parent is not None:
 #                if item.enabled and item.authorized:
-#                    
+#
 #                    if item.components:
 #                        # Submenu
 #                        _class = ""
@@ -203,7 +203,7 @@ from s3 import *
 #                                      _class="heading %s" % _class,
 #                                      ),
 #                                   ]
-#                                   
+#
 #                        items = item.render_components()
 #                        if items:
 #                            section.append(UL(items))
@@ -219,7 +219,7 @@ from s3 import *
 #                        return LI(A(item.label,
 #                                    _href=item.url(),
 #                                    _id=item.attr._id,
-#                                    ), 
+#                                    ),
 #                                  _class=_class,
 #                                  )
 #            else:
@@ -237,7 +237,7 @@ from s3 import *
 #    @staticmethod
 #    def layout(item):
 #        """ Custom Layout Method """
-#        
+#
 #        if item.parent is not None:
 #            return LI(_class="divider hide-for-small")
 #        else:

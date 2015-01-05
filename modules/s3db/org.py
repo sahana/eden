@@ -3938,7 +3938,7 @@ class S3OfficeModel(S3Model):
             # Include Summary fields in form
             position = form_fields.index("email")
             form_fields.insert(position+1, "summary.national_staff")
-            form_fields.insert(position+2, "summary.international_staff")  
+            form_fields.insert(position+2, "summary.international_staff")
 
         crud_form = S3SQLCustomForm(*form_fields)
 
@@ -4568,7 +4568,7 @@ class org_OrganisationRepresent(S3Represent):
             else:
                 left = [ltable.on(ltable.organisation_id == otable.id),
                         ]
-        
+
         qty = len(values)
         if qty == 1:
             query = (otable.id == values[0])

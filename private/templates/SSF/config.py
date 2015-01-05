@@ -560,10 +560,10 @@ def project_member_ondelete(form, task_id):
 
 # -----------------------------------------------------------------------------
 def customise_project_member_resource(r, tablename):
-    
+
     s3db = current.s3db
     task_id = current.request.get_vars.get("task_id")
-    s3db.configure("project_member", 
+    s3db.configure("project_member",
                    onaccept = lambda form: project_member_onaccept(form, task_id),
                    ondelete = lambda form: project_member_ondelete(form, str(r.id)))
 
@@ -575,7 +575,7 @@ def customise_project_member_controller(**attr):
     request = current.request
     task_id = request.get_vars["task_id"]
     s3 = current.response.s3
-    
+
     standard_prep = s3.prep
     def custom_prep(r):
         # Call standard prep
@@ -603,7 +603,7 @@ def customise_project_member_controller(**attr):
                 return True
         else:
             return False
-        
+
     s3.prep = custom_prep
     # Custom postp
     standard_postp = s3.postp
@@ -1142,10 +1142,10 @@ class subscriptions(object):
         subscription["method"] = ["EMAIL"]
 
     def remove_task_subscription(self, task_id):
-        """ 
-            Remove Task from subscription filter 
         """
-        
+            Remove Task from subscription filter
+        """
+
         subscription = self.subscription
         rfilter = self.rfilter
         s3db = current.s3db
@@ -1169,8 +1169,8 @@ class subscriptions(object):
 
     # -------------------------------------------------------------------------
     def add_task_subscription(self, task_id):
-        """ 
-            Add Task to subscription filter 
+        """
+            Add Task to subscription filter
         """
 
         subscription = self.subscription
@@ -1189,8 +1189,8 @@ class subscriptions(object):
 
     # -------------------------------------------------------------------------
     def get_subscription(self):
-        """ 
-            Get current subscription settings 
+        """
+            Get current subscription settings
         """
 
         db = current.db
@@ -1263,8 +1263,8 @@ class subscriptions(object):
 
     # -------------------------------------------------------------------------
     def update_subscription(self):
-        """ 
-            Update subscription settings 
+        """
+            Update subscription settings
         """
 
         db = current.db
