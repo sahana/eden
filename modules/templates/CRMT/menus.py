@@ -17,7 +17,7 @@ class S3MainMenu(default.S3MainMenu):
     @classmethod
     def menu(cls):
 
-        image = "/%s/static/themes/CRMT2/img/logos/sahana-sunflower.png" % \
+        image = "/%s/static/themes/CRMT/img/logos/sahana-sunflower.png" % \
             current.request.application
         title_area = H1(A(IMG(_width="42",
                            _height="40",

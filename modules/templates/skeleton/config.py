@@ -12,7 +12,8 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings
+        Template settings: 'Skeleton' designed to be copied to quickly create
+                           custom templates
 
         All settings which are to configure a specific template are located
         here. Deployers should ideally not need to edit any other files outside
@@ -293,3 +294,5 @@ def config(settings):
         #    module_type = None,
         #)),
     ])
+
+# END =========================================================================

@@ -4,8 +4,8 @@ from gluon import current
 from s3 import *
 from s3layouts import *
 try:
-    # Nice to not have to copy this file
-    #from ..IFRC.layouts import *
+    # Nice to not have to copy this file, but currently imported in s3layouts.py
+    #from templates.IFRC.layouts import *
     from .layouts import *
 except ImportError:
     pass

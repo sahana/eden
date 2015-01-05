@@ -1902,7 +1902,7 @@ class S3SQLSubFormLayout(object):
         #appname = current.request.application
         #scripts = current.response.s3.scripts
 
-        #script = "/%s/static/themes/CRMT2/js/inlinecomponent.layout.js" % appname
+        #script = "/%s/static/themes/CRMT/js/inlinecomponent.layout.js" % appname
         #if script not in scripts:
             #scripts.append(script)
 

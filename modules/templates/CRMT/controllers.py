@@ -6,7 +6,7 @@ from gluon.storage import Storage
 
 from s3 import S3CustomController
 
-THEME = "CRMT2"
+THEME = "CRMT"
 
 # =============================================================================
 class index(S3CustomController):

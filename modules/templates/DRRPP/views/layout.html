@@ -106,7 +106,7 @@ div#header-top-menu{margin-top:0;}
 </div>
 {{if request.get_vars.footer != "hide":}}
 <div id='footer' class='container_12'>
- {{include "../private/templates/%s/views/footer.html" % response.s3.theme}}
+ {{include "../modules/templates/%s/views/footer.html" % response.s3.theme}}
  {{if s3.debug:}}{{=s3.toolbar()}}{{pass}}
 </div>
 {{pass}}
