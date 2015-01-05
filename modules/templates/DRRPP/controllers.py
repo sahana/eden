@@ -25,7 +25,7 @@ class index():
         request = current.request
         response = current.response
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -34,7 +34,7 @@ class index():
             from gluon.http import HTTP
             raise HTTP(404, "Unable to open Custom View: %s" % view)
 
-        # Show full width instead of login box if user is logged in 
+        # Show full width instead of login box if user is logged in
         if current.auth.is_logged_in():
             grid = "grid_12"
         else:
@@ -43,7 +43,7 @@ class index():
         latest_projects = DIV(_id="front-latest-body",
                               _class="%s alpha" % grid)
         lappend = latest_projects.append
-                              
+
         db = current.db
         s3db = current.s3db
         table = s3db.project_project
@@ -78,7 +78,7 @@ class index():
                              _href=URL(c="project", f="project", args=[row.project_project.id])),
                            _class="front-latest-title %s"  % grid,
                            ),
-                       
+
                        DIV("Lead Organization: %s" % s3db.org_organisation_represent(row.project_project.organisation_id),
                                 _class="front-latest-desc %s" % grid,
                            ),
@@ -138,7 +138,7 @@ class register():
         request = current.request
         response = current.response
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "register.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -396,7 +396,7 @@ class contact():
         request = current.request
         response = current.response
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "contact.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -507,7 +507,7 @@ class about():
         request = current.request
         T = current.T
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "about.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -540,7 +540,7 @@ class admin():
             request = current.request
             T = current.T
 
-            view = path.join(request.folder, "private", "templates",
+            view = path.join(request.folder, "modules", "templates",
                              THEME, "views", "admin.html")
             try:
                 # Pass view as file not str to work in compiled mode
@@ -548,9 +548,9 @@ class admin():
             except IOError:
                 from gluon.http import HTTP
                 raise HTTP(404, "Unable to open Custom View: %s" % view)
-            
+
             response.title = T("Administration Panel")
-            
+
             panel_list = [A(T("Verify Users"),
                             _href = URL(c="admin", f = "user")
                             ),
@@ -585,7 +585,7 @@ class admin():
                             _href = URL(c="project", f = "theme")
                             ),
                          ]
-            
+
             return dict(item = UL(*panel_list,
                                   _id = "admin_panel_list") )
         else:
@@ -602,7 +602,7 @@ class analysis():
         request = current.request
         T = current.T
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "analysis.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -628,7 +628,7 @@ class get_started():
         request = current.request
         T = current.T
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "get_started.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -653,7 +653,7 @@ class login():
         request = current.request
         T = current.T
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "login.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -685,7 +685,7 @@ class mypage():
         request = current.request
         T = current.T
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                             THEME, "views", "mypage.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -718,7 +718,7 @@ class organisations():
         response = current.response
 
         response.title = "DRR Projects Portal - Regional Organizations"
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          THEME, "views", "organisations.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -834,7 +834,7 @@ class organisations():
 
         rfields = data["rfields"]
         records = data["rows"]
-        
+
         numrows = len(records)
 
         rows = []

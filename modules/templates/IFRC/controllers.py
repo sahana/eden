@@ -16,7 +16,7 @@ class index():
         response = current.response
 
         response.title = current.deployment_settings.get_system_name()
-        view = path.join(current.request.folder, "private", "templates",
+        view = path.join(current.request.folder, "modules", "templates",
                          "IFRC", "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode
@@ -193,7 +193,7 @@ $('#single-col').css('padding', 0)'''
 
         append = map.append
         for marker in markers:
-            append(DIV(A("",    
+            append(DIV(A("",
                          _href=URL(c="org", f="organisation", args="read",
                                    vars={"organisation.name": marker.name})),
                        DIV(SPAN(marker.name),
@@ -206,7 +206,7 @@ $('#single-col').css('padding', 0)'''
                    _class="map-tip"))
 
         current.menu.breadcrumbs = None
-        
+
         return dict(map=map)
 
 # END =========================================================================

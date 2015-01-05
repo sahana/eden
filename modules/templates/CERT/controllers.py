@@ -23,7 +23,7 @@ class index():
         request = current.request
         response = current.response
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          "CERT", "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode

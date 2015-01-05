@@ -35,7 +35,7 @@ class index(S3CustomController):
         output = {}
         output["title"] = response.title = current.deployment_settings.get_system_name()
 
-        view = path.join(current.request.folder, "private", "templates",
+        view = path.join(current.request.folder, "modules", "templates",
                          THEME, "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode

@@ -31,11 +31,11 @@
 """
 
 __all__ = ("S3MainMenuDefaultLayout",
+           "MM",
            "S3OptionsMenuDefaultLayout",
+           "M",
            "S3MenuSeparatorDefaultLayout",
-           "S3MainMenuLayout", "MM",
-           "S3OptionsMenuLayout", "M",
-           "S3MenuSeparatorLayout", "SEP",
+           "SEP",
            "S3BreadcrumbsLayout",
            "S3AddResourceLink",
            "homepage",
@@ -48,6 +48,10 @@ from s3theme import NAV, SECTION
 # =============================================================================
 class S3MainMenuDefaultLayout(S3NavigationItem):
     """ Application Main Menu Layout """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3MainMenuLayout"
 
     @staticmethod
     def layout(item):
@@ -113,7 +117,7 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         # Submenu item
                         if isinstance(item.label, dict):
                             if "id" in item.label:
-                                return S3MainMenuLayout.checkbox_item(item)
+                                return S3MainMenuDefaultLayout.checkbox_item(item)
                             elif "name" in item.label:
                                 label = item.label["name"]
                             else:
@@ -212,6 +216,10 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
 class S3OptionsMenuDefaultLayout(S3NavigationItem):
     """ Controller Options Menu Layout """
 
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3OptionsMenuLayout"
+
     @staticmethod
     def layout(item):
         """ Layout Method (Item Renderer) """
@@ -272,6 +280,10 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
 class S3MenuSeparatorDefaultLayout(S3NavigationItem):
     """ Simple menu separator """
 
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3MenuSeparatorLayout"
+
     @staticmethod
     def layout(item):
         """ Layout Method (Item Renderer) """
@@ -284,35 +296,9 @@ class S3MenuSeparatorDefaultLayout(S3NavigationItem):
 # =============================================================================
 # Import menu layouts from template (if present)
 #
-S3MainMenuLayout = S3MainMenuDefaultLayout
-S3OptionsMenuLayout = S3OptionsMenuDefaultLayout
-S3MenuSeparatorLayout = S3MenuSeparatorDefaultLayout
-
-application = current.request.application
-settings = current.deployment_settings
-theme = settings.get_theme()
-template_location = settings.get_template_location()
-
-layouts = "applications.%s.%s.templates.%s.layouts" % \
-    (application, template_location, theme)
-try:
-    exec("import %s as deployment_layouts" % layouts)
-except:
-    pass
-else:
-    if "S3MainMenuLayout" in deployment_layouts.__dict__:
-        S3MainMenuLayout = deployment_layouts.S3MainMenuLayout
-    if "S3OptionsMenuLayout" in deployment_layouts.__dict__:
-        S3OptionsMenuLayout = deployment_layouts.S3OptionsMenuLayout
-    if "S3MenuSeparatorLayout" in deployment_layouts.__dict__:
-        S3MenuSeparatorLayout = deployment_layouts.S3MenuSeparatorLayout
-
-# =============================================================================
-# Shortcuts for menu construction
-#
-M = S3OptionsMenuLayout
-MM = S3MainMenuLayout
-SEP = S3MenuSeparatorLayout
+MM = S3MainMenuDefaultLayout
+M = S3OptionsMenuDefaultLayout
+SEP = S3MenuSeparatorDefaultLayout
 
 # =============================================================================
 class S3BreadcrumbsLayout(S3NavigationItem):
@@ -526,7 +512,7 @@ def homepage(module=None, *match, **attr):
     settings = current.deployment_settings
     all_modules = settings.modules
 
-    layout = S3MainMenuLayout
+    layout = S3MainMenuDefaultLayout
     c = [module] + list(match)
 
     if "name" in attr:

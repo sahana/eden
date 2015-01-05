@@ -5,13 +5,13 @@
 # 1. Downloads the latest copy of the Ebola Cases spreadsheet
 # 2. Disaggregates the data to have it not show cumulative cases (we'd rather have aggregation under Sahana's control)
 # 3. Convert it to a Sahana Import format
-#    - hardest part here is ensuring that Location Names are standardised with http://eden.sahanafoundation.org/wiki/GIS/Data 
+#    - hardest part here is ensuring that Location Names are standardised with http://eden.sahanafoundation.org/wiki/GIS/Data
 
 # Assumes that the GIS data from the Sahana page is imported
 
 # Needs to be run in the web2py environment:
 # cd web2py
-# python web2py.py -S eden -M -R applications/eden/private/templates/IRS/ebola.cases.update.py
+# python web2py.py -S eden -M -R applications/eden/modules/templates/IRS/ebola.cases.update.py
 
 from time import gmtime, strftime
 todays_date = strftime("%Y-%m-%d", gmtime())
@@ -161,7 +161,7 @@ def storeRow(location, row, country):
     if row[6] != None:
         source_url = row[6].strip()
     else:
-        source_url = "" 
+        source_url = ""
 
     if statistic not in statistics:
         statistics[statistic] = {}
@@ -282,7 +282,7 @@ def write_details_to_csv(csv_file, statistic, data):
                 source = tail.replace("%20", " ")
             cnt += 1
             writerow([statistic, row[0], loc[0], loc[1], loc[2], loc[3], key, s3_unicode(source).encode("utf-8"), row[1], source_url])
-            
+
 for s in statistics:
     write_details_to_csv(new_csv, s, statistics[s])
 

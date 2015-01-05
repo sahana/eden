@@ -10,7 +10,7 @@
         /models/000_config.py is NOT in the Git repository, to avoid leaking of
         sensitive or irrelevant information into the repository.
     For changes to be committed, please also edit:
-        private/templates/000_config.py
+        modules/templates/000_config.py
 """
 
 # Remove this line when you have edited this file sufficiently to proceed to the web interface

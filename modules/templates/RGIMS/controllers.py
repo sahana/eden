@@ -21,7 +21,7 @@ class index():
         s3 = response.s3
         settings = current.deployment_settings
 
-        view = path.join(request.folder, "private", "templates",
+        view = path.join(request.folder, "modules", "templates",
                          "RGIMS", "views", "index.html")
         try:
             # Pass view as file not str to work in compiled mode

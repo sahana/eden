@@ -220,7 +220,7 @@ def config(settings):
 
         # Set the custom view
         from os import path
-        view = path.join(current.request.folder, "private", "templates",
+        view = path.join(current.request.folder, "modules", "templates",
                          "SSF", "views", "deployment_page.html")
         try:
             # Pass view as file not str to work in compiled mode
