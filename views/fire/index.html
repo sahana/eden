@@ -4,5 +4,10 @@
 <p>
 {{=T("The Fire Stations Module can be used to record information on Fire Stations.")}}
 </p>
+{{if station_id:}}
+<ul>
+  <li><a href='{{=URL(f="station", args=[station_id])}}'>{{=station_name}}</a></li>
+</ul>
+{{pass}}
 {{=incidents}}
 </div>
