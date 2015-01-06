@@ -3039,6 +3039,25 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         return items
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def represent(cls, code):
+        """
+            Represent a language code by language name
+
+            @param code: the language code
+        """
+
+        l10n_languages = current.deployment_settings.get_L10n_languages()
+        if code in l10n_languages:
+            name = l10n_languages[code]
+        else:
+            all_languages = dict(cls.language_codes())
+            name = all_languages.get(code)
+            if name is None:
+                name = current.messages.UNKNOWN_OPT
+        return name
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def language_codes():
         """

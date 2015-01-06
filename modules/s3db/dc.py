@@ -186,17 +186,14 @@ class DataCollectionTemplateModel(S3Model):
         # =====================================================================
         # Questions l10n
         #
-        l10n_languages = current.deployment_settings.get_L10n_languages()
-
         tablename = "dc_question_l10n"
         define_table(tablename,
                      question_id(ondelete = "CASCADE",
                                  ),
                      Field("language",
                            label = T("Language"),
-                           represent = lambda opt: l10n_languages.get(opt,
-                                                   current.messages.UNKNOWN_OPT),
-                           requires = IS_ISO639_2_LANGUAGE_CODE(),
+                           represent = IS_ISO639_2_LANGUAGE_CODE.represent,
+                           requires = IS_ISO639_2_LANGUAGE_CODE(sort=True),
                            ),
                      Field("question",
                            requires = IS_NOT_EMPTY(),
@@ -267,8 +264,7 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
                      self.dc_template_id(),
-                     # @todo: default to now
-                     s3_date(),
+                     s3_date(default = "now"),
                      self.gis_location_id(),
                      # @todo: default to user root-org
                      self.org_organisation_id(),
