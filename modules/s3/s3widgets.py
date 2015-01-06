@@ -7440,9 +7440,9 @@ def search_ac(r, **attr):
         output = []
         append = output.append
         for row in rows:
-            record = dict(id = row.id,
-                          label = row[fieldname],
-                          )
+            record = {"id": row.id,
+                      fieldname: row[fieldname],
+                      }
             append(record)
 
     current.response.headers["Content-Type"] = "application/json"
