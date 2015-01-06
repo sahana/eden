@@ -25,8 +25,6 @@ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
-
-    @todo: update for new template path modules/template
 """
 __all__ = ("S3DeployModel",
            "setup_create_yaml_file",
@@ -115,10 +113,10 @@ class S3DeployModel(S3Model):
                            required = True,
                            ),
                      Field("private_key", "upload",
+                           custom_retrieve = retrieve_file,
+                           custom_store = store_file,
                            label = T("Private Key"),
                            required = True,
-                           custom_store = store_file,
-                           custom_retrieve = retrieve_file,
                            ),
                      Field("webserver_type", "integer",
                            label = T("Web Server"),
@@ -131,14 +129,14 @@ class S3DeployModel(S3Model):
                            requires = IS_IN_SET({1:"mysql", 2: "postgresql"}),
                            ),
                      Field("db_password", "password",
+                           label = T("Database Password"),
                            required = True,
                            readable = False,
-                           label = T("Database Password"),
                            ),
                      Field("repo_url",
-                           label = T("Eden Repo git URL"),
-                           # TODO: Add more advanced options
+                           # @ToDo: Add more advanced options
                            default = "https://github.com/flavour/eden",
+                           label = T("Eden Repo git URL"),
                            ),
                      Field("template",
                            label = T("Template"),
@@ -146,13 +144,13 @@ class S3DeployModel(S3Model):
                            requires = IS_IN_SET(setup_get_templates(), zero=None),
                            ),
                      Field("refresh_lock", "integer",
-                           writable = False,
+                           default = 0,
                            readable = False,
-                           default = 0
+                           writable = False,
                            ),
                      Field("last_refreshed", "datetime",
-                           writable = False,
                            readable = False,
+                           writable = False,
                            ),
                      *s3_meta_fields()
                     )
@@ -184,7 +182,11 @@ class S3DeployModel(S3Model):
         define_table(tablename,
                      Field("deployment_id", "reference setup_deployment"),
                      Field("role", "integer",
-                           requires = IS_IN_SET({1: "all", 2: "db", 3: "webserver", 4: "eden"})
+                           requires = IS_IN_SET({1: "all",
+                                                 2: "db",
+                                                 3: "webserver",
+                                                 4: "eden",
+                                                 }),
                            ),
                      Field("host_ip",
                            required = True,
@@ -215,20 +217,20 @@ class S3DeployModel(S3Model):
                            requires = IS_IN_SET([], multiple=True),
                            ),
                      Field("scheduler_id", "reference scheduler_task",
+                           readable = False,
                            writable = False,
-                           readable = False
                            ),
                      )
 
         configure(tablename,
-                  onaccept = instance_onaccept,
                   deletable = False,
-                  editable = False
+                  editable = False,
+                  onaccept = instance_onaccept,
                   )
 
         add_components("setup_deployment",
-                       setup_server = "deployment_id",
                        setup_instance = "deployment_id",
+                       setup_server = "deployment_id",
                        )
 
         tablename = "setup_packages"
@@ -245,7 +247,7 @@ class S3DeployModel(S3Model):
                            ),
                      Field("type",
                            label = T("Type of Package"),
-                           requires = IS_IN_SET(["os", "pip", "git"])
+                           requires = IS_IN_SET(["os", "pip", "git"]),
                            ),
                      Field("deployment",
                            "reference setup_deployment",
@@ -519,7 +521,7 @@ def setup_create_playbook(playbook, hosts, private_key, only_tags):
 
 # -----------------------------------------------------------------------------
 def setup_get_prepop_options(template):
-    module_name = "applications.eden_deployment.private.templates.%s.config" % template
+    module_name = "applications.eden_deployment.modules.templates.%s.config" % template
     __import__(module_name)
     config = sys.modules[module_name]
     prepopulate_options = config.settings.base.get("prepopulate_options")
@@ -551,7 +553,7 @@ def setup_log(filename, category, data):
 
 # -----------------------------------------------------------------------------
 def setup_get_templates():
-    path = os.path.join(current.request.folder, "private", "templates")
+    path = os.path.join(current.request.folder, "modules", "templates")
     templates = set(
                     os.path.basename(folder) for folder, subfolders, files in os.walk(path) \
                         for file_ in files if file_ == 'config.py'
@@ -842,7 +844,7 @@ class setup_UpgradeMethod(S3Method):
                 name,
                 vars = {
                     "playbook": file_path,
-                    "private_key":private_key,
+                    "private_key": private_key,
                     "host": [record.host],
                     "only_tags": only_tags,
                 },
@@ -1067,9 +1069,9 @@ def setup_getupgrades(host, web2py_path, remote_user=None, private_key=None):
     inventory = ansible.inventory.Inventory([host])
 
     if private_key and remote_user:
-        runner = ansible.runner.Runner(module_name = 'upgrade',
+        runner = ansible.runner.Runner(module_name = "upgrade",
                                        module_path = module_path,
-                                       module_args = 'web2py_path=/home/%s' % web2py_path,
+                                       module_args = "web2py_path=/home/%s" % web2py_path,
                                        remote_user = remote_user,
                                        private_key_file = private_key,
                                        pattern = host,
@@ -1078,9 +1080,9 @@ def setup_getupgrades(host, web2py_path, remote_user=None, private_key=None):
                                        )
 
     else:
-        runner = ansible.runner.Runner(module_name = 'upgrade',
+        runner = ansible.runner.Runner(module_name = "upgrade",
                                        module_path = module_path,
-                                       module_args = 'web2py_path=/home/%s' % web2py_path,
+                                       module_args = "web2py_path=/home/%s" % web2py_path,
                                        pattern = host,
                                        inventory = inventory,
                                        sudo = True,
