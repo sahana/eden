@@ -13,8 +13,10 @@ from os import path
 from gluon import current, URL
 from gluon.html import *
 from gluon.storage import Storage
+from gluon.sqlhtml import SQLFORM
 
-from s3 import S3FilterForm, S3CustomController, S3OptionsFilter
+from s3 import S3FilterForm, S3CustomController, S3OptionsFilter, S3Request, \
+               S3SQLCustomForm
 
 THEME = "SSF"
 
@@ -149,4 +151,81 @@ google.setOnLoadCallback(LoadFeeds)'''))
         s3.js_global.append(feed_control)
 
         return output
+
+# =============================================================================
+class subscriptions(S3CustomController):
+    """ 
+        Custom page to configure Subscription settings
+    """
+    def __call__(self):
+        """ 
+            Main entry point, configuration 
+        """
+
+        T = current.T
+        auth = current.auth
+        
+        # Must be logged in
+        if not auth.s3_logged_in():
+            auth.permission.fail()
+        
+        form = self.create_form()
+        if form:
+            output = {"title": T("Subscription Settings"),
+                      "form": form}
+        else:
+            output = {"title": T("No Subscriptions")}
+        # View
+        self._view(THEME, "subscriptions.html")
+        
+        return output
+
+    def create_form(self):
+        """ 
+            Build form for subscription settings
+        """
+
+        T = current.T
+        db = current.db
+        response = current.response
+
+        user = current.auth.user.pe_id
+        stable = current.s3db.pr_subscription
+        formstyle = current.deployment_settings.get_ui_formstyle()
+        query = (stable.pe_id == user) & \
+                (stable.deleted != True)
+        row = db(query).select(stable.id,   
+                               stable.frequency,
+                               stable.email_format,
+                               limitby=(0, 1))
+        messages = Storage(
+            ERROR = T("Error: could not update subscription settings"),
+            SUCCESS = T("Settings updated"),
+        )
+        if row:
+            # Subscription exists, build form
+            freq_field = stable.frequency
+            format_field = stable.email_format
+            freq_field.default = row[0].frequency
+            format_field.default = row[0].email_format
+            form = SQLFORM.factory(freq_field,
+                                   format_field,
+                                   formstyle = formstyle)
+            if form.accepts(current.request.post_vars,
+                            current.session,
+                            keepvalues=True):
+                formvars = form.vars
+                from templates.SSF.config import TaskSubscriptions
+                sub = TaskSubscriptions()
+
+                sub.subscription["frequency"] = formvars.frequency
+                sub.subscription["email_format"] = formvars.email_format
+                if sub.update_subscription():
+                    response.confirmation = messages.SUCCESS
+                else:
+                    response.error = messages.ERROR 
+            return form
+        else:
+            return None
+
 # =============================================================================
