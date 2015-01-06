@@ -159,7 +159,7 @@ def update_check(settings):
                         # the database is compromised
                         import uuid
                         hmac_key = uuid.uuid4()
-                        line = 'deployment_settings.auth.hmac_key = "%s"' % hmac_key
+                        line = 'settings.auth.hmac_key = "%s"' % hmac_key
                     output.write(line)
                 output.close()
                 input.close()

@@ -93,13 +93,18 @@ class S3Migration(object):
 
         request = current.request
 
-        # Load s3cfg
-        name = "applications.%s.modules.s3cfg" % request.application
-        s3cfg = __import__(name)
-        for item in name.split(".")[1:]:
-            # Remove the dot
-            s3cfg = getattr(s3cfg, item)
+        # Load s3cfg => but why do this so complicated?
+        #name = "applications.%s.modules.s3cfg" % request.application
+        #s3cfg = __import__(name)
+        #for item in name.split(".")[1:]:
+            ## Remove the dot
+            #s3cfg = getattr(s3cfg, item)
+        #settings = s3cfg.S3Config()
+
+        # Can use normal import here since executed in web2py environment:
+        import s3cfg
         settings = s3cfg.S3Config()
+
         # Pass into template
         current.deployment_settings = settings
 
@@ -107,20 +112,28 @@ class S3Migration(object):
         model = "%s/models/000_config.py" % request.folder
         code = getcfs(model, model, None)
         response = current.response
-        response.s3 = Storage() # Needed as some Templates look at this & we don't wish to crash
-        environment = build_environment(request, response,
-                                        current.session)
+
+        # Needed as some Templates look at this & we don't wish to crash:
+        response.s3 = Storage()
+
+        # Global variables for 000_config.py
+        environment = build_environment(request, response, current.session)
         environment["settings"] = settings
+        # Some (older) 000_config.py also use "deployment_settings":
+        environment["deployment_settings"] = settings
+        # For backwards-compatibility with older 000_config.py:
         def template_path():
-            " Return the path of the Template config.py to load "
-            path = os.path.join(request.folder,
-                                "private", "templates",
-                                settings.get_template(),
-                                "config.py")
-            return path
+            # When you see this warning, you should update 000_config.py
+            # See: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Templates/Migration#Changesin000_config.py
+            print "template_path() is deprecated, please update 000_config.py"
+            # Return just any valid path to make sure the path-check succeeds,
+            # => modern S3Config will find the template itself
+            return request.folder
         environment["template_path"] = template_path
         environment["os"] = os
         environment["Storage"] = Storage
+
+        # Execute 000_config.py
         restricted(code, environment, layer=model)
 
         self.db_engine = settings.get_database_type()
