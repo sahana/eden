@@ -563,6 +563,10 @@ def competency():
     """
 
     s3.filter = FS("person_id$human_resource.type") == 1
+
+    field = s3db.hrm_competency.person_id
+    field.widget = S3PersonAutocompleteWidget(ajax_filter = "~.human_resource.type=1")
+
     return s3db.hrm_competency_controller()
 
 # =============================================================================
