@@ -177,6 +177,8 @@ class S3Config(Storage):
             self.execute_template(name)
         else:
             template.config(self)
+            # Store location in response.s3 for compiled views
+            current.response.s3.template_location = "modules"
         return template
 
     def execute_template(self, name):
@@ -184,11 +186,10 @@ class S3Config(Storage):
             Fallback for legacy templates - execute config.py
         """
 
-        request = current.request
         import os
 
         location = "private"
-        path = os.path.join(request.folder,
+        path = os.path.join(current.request.folder,
                             location,
                             "templates",
                             name,
@@ -199,7 +200,8 @@ class S3Config(Storage):
             import sys
             print >> sys.stderr, "%s/config.py: script pattern deprecated." % name
             # Remember the non-standard location
-            self.base.template_location = location
+            # (need to be in response.s3 for compiled views)
+            current.response.s3.template_location = self.base.template_location = location
             # Execute config.py
             from gluon.fileutils import read_file
             from gluon.restricted import restricted

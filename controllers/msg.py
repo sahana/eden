@@ -1684,7 +1684,7 @@ def parser():
             import sys
 
             template = settings.get_msg_parser()
-            module_name = "applications.%s.private.templates.%s.parser" % \
+            module_name = "applications.%s.modules.templates.%s.parser" % \
                 (appname, template)
             __import__(module_name)
             mymodule = sys.modules[module_name]
