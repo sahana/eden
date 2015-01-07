@@ -305,6 +305,14 @@ div.form-container form fieldset input.errorfield {
     border-color: #c00;
     background-color: #fef;
 }
+#list-btn-add {
+  float: right;
+  margin-top: -0.5rem;
+  margin-right: 1.0rem;
+}
+#summary-common #list-btn-add {
+  margin-top: -2.0rem;
+}
 
 /*** Overrides to widgets.css ***/
 /* Screen width */
