@@ -548,6 +548,15 @@ def activity():
         return True
     s3.prep = prep
 
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                s3.jquery_ready.append(
+'''S3.start_end_date('project_activity_date','project_activity_end_date')''')
+
+        return output
+    s3.postp = postp
+
     return s3_rest_controller(csv_template = "activity",
                               hide_filter = False,
                               rheader = s3db.project_rheader,
