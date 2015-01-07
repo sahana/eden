@@ -463,6 +463,11 @@ class S3Msg(object):
         db = current.db
         s3db = current.s3db
 
+        lookup_org = False
+        channels = {}
+        outgoing_sms_handler = None
+        channel_id = None
+
         if contact_method == "SMS":
             # Read all enabled Gateways
             # - we assume there are relatively few & we may need to decide which to use based on the message's organisation
@@ -479,7 +484,6 @@ class S3Msg(object):
                 # task fail permanently until manually reset
                 raise ValueError("No SMS handler defined!")
 
-            channels = {}
             if len(rows) == 1:
                 lookup_org = False
                 row = rows.first()
