@@ -164,7 +164,7 @@ class S3Msg(object):
         """
 
         settings = current.deployment_settings
-        table = s3db.msg_sms_outbound_gateway
+        table = current.s3db.msg_sms_outbound_gateway
 
         if channel_id:
             row = db(table.channel_id == channel_id).select(limitby=(0, 1)
