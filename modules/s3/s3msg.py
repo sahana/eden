@@ -479,6 +479,7 @@ class S3Msg(object):
                 # task fail permanently until manually reset
                 raise ValueError("No SMS handler defined!")
 
+            channels = {}
             if len(rows) == 1:
                 lookup_org = False
                 row = rows.first()
@@ -489,7 +490,6 @@ class S3Msg(object):
                 org_branches = current.deployment_settings.get_org_branches()
                 if org_branches:
                     org_parents = s3db.org_parents
-                channels = {}
                 for row in rows:
                     channels[row["msg_sms_outbound_gateway.organisation_id"]] = \
                         dict(outgoing_sms_handler = row["msg_channel.instance_type"],
@@ -510,7 +510,9 @@ class S3Msg(object):
                               organisation_id = None,
                               contact_method = contact_method,
                               channel_id = channel_id,
-                              outgoing_sms_handler = outgoing_sms_handler):
+                              outgoing_sms_handler = outgoing_sms_handler,
+                              lookup_org = lookup_org,
+                              channels = channels):
             """
                 Helper method to send messages by pe_id
 
