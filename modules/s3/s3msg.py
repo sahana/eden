@@ -167,8 +167,8 @@ class S3Msg(object):
         table = current.s3db.msg_sms_outbound_gateway
 
         if channel_id:
-            row = db(table.channel_id == channel_id).select(limitby=(0, 1)
-                                                                ).first()
+            row = current.db(table.channel_id == channel_id) \
+                         .select(limitby=(0, 1)).first()
             default_country_code = row["msg_sms_outbound_gateway.default_country_code"]
         else:
             default_country_code = settings.get_L10n_default_country_code()
@@ -508,7 +508,9 @@ class S3Msg(object):
                               outbox_id,
                               message_id,
                               organisation_id = None,
-                              contact_method = contact_method):
+                              contact_method = contact_method,
+                              channel_id = channel_id,
+                              outgoing_sms_handler = outgoing_sms_handler):
             """
                 Helper method to send messages by pe_id
 
@@ -640,7 +642,7 @@ class S3Msg(object):
                      ptable.on((ptable.id == htable.person_id) & \
                                (ptable.deleted != True)),
                      ]
-    
+
             atable = s3db.table("deploy_alert")
             if atable:
                 ltable = db.deploy_alert_recipient
