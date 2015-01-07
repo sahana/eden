@@ -609,9 +609,19 @@ table.dataTable .selected-action {
   border-color: #ADA6A0;
 }
 
+#list-btn-add {
+  float: right;
+  margin-top: 1.0rem;
+  margin-right: 1.0rem;
+}
+
 /* Summary tabs */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
+}
+
+#summary-common #list-btn-add {
+  margin-top: -2.5rem;
 }
 
 #summary-tabs {
@@ -678,6 +688,6 @@ input.date.hasDatepicker {
 
 /* Iframe Map (Location Represent links) */
 #close-iframe-map {
-    padding: 7px;
-    margin-top: 5px;
+  padding: 7px;
+  margin-top: 5px;
 }

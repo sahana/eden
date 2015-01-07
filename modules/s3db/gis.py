@@ -5573,7 +5573,7 @@ class gis_LocationRepresent(S3Represent):
                     represent = name or "ID: %s" % row.id
 
                 if has_lat_lon and self.show_marker_icon:
-                    popup = settings.get_gis_popup_location_link()
+                    popup = current.deployment_settings.get_gis_popup_location_link()
                     script = '''s3_viewMap(%i,%i,'%s');return false''' % (row.id,
                                                                           self.iheight,
                                                                           popup)
