@@ -549,7 +549,7 @@ def config(settings):
             After DB I/O for Project Member
             - Subscribe User to Task updates
         """
-        sub = subscriptions()
+        sub = TaskSubscriptions()
         sub.add_task_subscription(task_id)
 
     # -----------------------------------------------------------------------------
@@ -557,7 +557,7 @@ def config(settings):
         """
             - Unsubscribe User to Task updates
         """
-        sub = subscriptions()
+        sub = TaskSubscriptions()
         sub.remove_task_subscription(task_id)
 
     # -----------------------------------------------------------------------------
@@ -852,6 +852,7 @@ def config(settings):
 
     settings.customise_project_task_resource = customise_project_task_resource
 
+    # -----------------------------------------------------------------------------
     def project_comment_onaccept(form):
         """
             After DB I/O for Task Comments
@@ -878,9 +879,10 @@ def config(settings):
                                   person_id=user,
                                   role_id=role[0].id)
                     # Subscribe user to task updates
-                    sub = subscriptions()
+                    sub = TaskSubscriptions()
                     sub.add_task_subscription(task_id)
 
+    # -----------------------------------------------------------------------------
     def customise_project_comment_resource(r, tablename):
 
         crud_strings = current.response.s3.crud_strings
@@ -1123,6 +1125,111 @@ def config(settings):
     settings.customise_pr_contact_controller = customise_pr_contact_controller
 
     # -----------------------------------------------------------------------------
+    def custom_render(resource, data, meta_data, format=None):
+        """
+            Custom Method to pre-render the contents for the message template
+
+            @param resource: the S3Resource
+            @param data: the data returned from S3Resource.select
+            @param meta_data: the meta data for the notification
+            @param format: the contents format ("text" or "html")
+        """
+        rows = data["rows"]
+ 
+        if format == "text":
+            
+            created_on_selector = resource.prefix_selector("created_on")
+            created_on_colname = None
+            as_utc = current.xml.as_utc
+            notify_on = meta_data["notify_on"]
+            last_check_time = meta_data["last_check_time"]
+            rfields = data["rfields"]
+            output = {}
+            new, upd = [], [] 
+            
+            # Standard text format
+            labels = []
+            append = labels.append
+
+            for rfield in rfields:
+                if rfield.selector == created_on_selector:
+                    created_on_colname = rfield.colname
+                elif rfield.ftype != "id":
+                    append((rfield.colname, rfield.label))
+
+            for row in rows:
+                append_record = upd.append
+                if created_on_colname:
+                    try:
+                        created_on = row["_row"][created_on_colname]
+                    except KeyError, AttributeError:
+                        pass
+                    else:
+                        if as_utc(created_on) >= last_check_time:
+                            append_record = new.append
+
+                record = []
+                append_column = record.append
+                for colname, label in labels:
+                    append_column((label, row[colname]))
+                append_record(record)
+
+            if "new" in notify_on and len(new):
+                output["new"] = len(new)
+                output["new_records"] = new
+            else:
+                output["new"] = None
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_records"] = upd
+            else:
+                output["upd"] = None
+        else:
+            # ** Styling must be inline for HTML emails **
+            panel_body = "border-radius:4px;\
+                          box-shadow:0 1px 1px rgba(0, 0, 0, 0.05);\
+                          background-color:#fff;\
+                          border:1px solid transparent;\
+                          border-color:#ddd;"
+            panel_title = "border-top-left-radius:3px;\
+                           border-top-right-radius:3px;\
+                           padding:10px 15px;\
+                           background-color:#f5f5f5;\
+                           color:#333;\
+                           border-bottom:1px solid #ddd;"
+            panel_heading = "color:inherit;\
+                             font-size:14px;\
+                             margin-bottom:0px;\
+                             margin-top:0px;\
+                             border-color:#ddd;"
+            panel_contents = "padding:15px;"
+            elements = []
+            append = elements.append
+            for row in rows:
+                comment_title = TAG[""](B(row["project_comment.created_by"]),
+                                        XML("&nbsp;&nbsp; commented on &nbsp;&nbsp;"),
+                                        B(row["project_comment.task_id"]))
+                comment_body = XML(row["project_comment.body"])
+                comment_container = DIV(DIV(DIV(comment_title,
+                                                _style=panel_heading),
+                                            _style=panel_title),
+                                        DIV(comment_body,
+                                            _style=panel_contents),
+                                        _style=panel_body)
+                append(comment_container)
+                append(BR())
+            output = {"body": DIV(*elements)}
+        
+        config_url = settings.get_base_public_url() + URL(c="default",
+                                                          f="index",
+                                                          args=["subscriptions"])
+        output["config"] = A("Configure Subscription settings", _href=config_url)
+        output.update(meta_data)
+        return output
+
+    settings.msg.notify_renderer = custom_render
+
+    # -----------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     settings.modules = OrderedDict([
         # Core modules which shouldn't be disabled
@@ -1265,7 +1372,7 @@ def config(settings):
 # -----------------------------------------------------------------------------
 
 # =============================================================================
-class subscriptions(object):
+class TaskSubscriptions(object):
     """ Manage subscriptions """
 
     def __init__(self):
@@ -1273,7 +1380,7 @@ class subscriptions(object):
         # Available resources
         resources = [dict(resource="project_comment",
                           url="project/comment",
-                          label=T("Updates"))
+                          label=current.T("Updates"))
                      ]
         self.rfilter = "comment.task_id__belongs"
         # Get current subscription settings resp. from defaults
@@ -1339,6 +1446,7 @@ class subscriptions(object):
 
         db = current.db
         s3db = current.s3db
+        settings = current.deployment_settings
 
         pe_id = current.auth.user.pe_id
 
@@ -1350,6 +1458,7 @@ class subscriptions(object):
         row = db(query).select(stable.id,
                                stable.notify_on,
                                stable.frequency,
+                               stable.email_format,
                                ftable.id,
                                ftable.query,
                                left=left,
@@ -1390,7 +1499,8 @@ class subscriptions(object):
                            "resources": rows,
                            "notify_on": s.notify_on,
                            "frequency": s.frequency,
-                           "method": ["EMAIL"] #s.method,
+                           "method": ["EMAIL"], #s.method,
+                           "email_format": s.email_format,
                            })
 
         else:
@@ -1401,7 +1511,8 @@ class subscriptions(object):
                            "resources": None,
                            "notify_on": stable.notify_on.default,
                            "frequency": stable.frequency.default,
-                           "method": ["EMAIL"] #stable.method.default
+                           "method": ["EMAIL"], #stable.method.default
+                           "email_format": settings.get_msg_notify_email_format(),
                            })
         return output
 
@@ -1433,11 +1544,13 @@ class subscriptions(object):
         stable = s3db.pr_subscription
         subscription_id = subscription["id"]
         frequency = subscription["frequency"]
+        email_format = subscription["email_format"]
         if not subscription_id:
             success = stable.insert(pe_id=pe_id,
                                     filter_id=filter_id,
                                     notify_on=subscription["notify_on"],
                                     frequency=frequency,
+                                    email_format=email_format,
                                     method=subscription["method"])
             subscription_id = success
         else:
@@ -1446,6 +1559,7 @@ class subscriptions(object):
                             filter_id=filter_id,
                             notify_on=subscription["notify_on"],
                             frequency=frequency,
+                            email_format=email_format,
                             method=subscription["method"])
         if not success:
             return None
