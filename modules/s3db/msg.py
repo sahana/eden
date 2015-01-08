@@ -2211,42 +2211,38 @@ class S3BaseStationModel(S3Model):
 
         T = current.T
 
-        define_table = self.define_table
-        settings = current.deployment_settings
-        db = current.db
-
         # ---------------------------------------------------------------------
         # Base Stations (Cell Towers)
         #
 
-        if settings.get_msg_basestation_code_unique():
+        if current.deployment_settings.get_msg_basestation_code_unique():
+            db = current.db
             code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "msg_basestation.code"))
         else:
             code_unique = None
 
         tablename = "msg_basestation"
-        define_table(tablename,
-                     self.super_link("site_id", "org_site"),
-                     Field("name", notnull=True,
-                           length=64, # Mayon Compatibility
-                           label = T("Name"),
-                           ),
-                     Field("code", length=10, # Mayon compatibility
-                           label = T("Code"),
-                           requires = code_unique,
-                           ),
-                     self.org_organisation_id(
-                            label = T("Operator"),
-                            #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                            requires = self.org_organisation_requires(required=True,
-                                                                    updateable=True),
-                            ),
-                     self.gis_location_id(),
-                     s3_comments(),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          self.super_link("site_id", "org_site"),
+                          Field("name", notnull=True,
+                                length=64, # Mayon Compatibility
+                                label = T("Name"),
+                                ),
+                          Field("code", length=10, # Mayon compatibility
+                                label = T("Code"),
+                                requires = code_unique,
+                                ),
+                          self.org_organisation_id(
+                                 label = T("Operator"),
+                                 requires = self.org_organisation_requires(required=True,
+                                                                           updateable=True),
+                                 #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
+                                 ),
+                          self.gis_location_id(),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_BASE = T("Create Base Station")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create=T("Create Base Station"),
             title_display=T("Base Station Details"),

@@ -30,7 +30,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Parser"]
+__all__ = ("S3Parser",)
 
 #import re
 

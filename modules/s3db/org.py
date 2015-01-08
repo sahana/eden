@@ -383,23 +383,23 @@ class S3OrganisationModel(S3Model):
                      #Field("archived", "boolean", default=False),
                      *s3_meta_fields())
 
-        form_fields = [ "name",
-                        "acronym",
-                        S3SQLInlineLink(
+        form_fields = ["name",
+                       "acronym",
+                       S3SQLInlineLink(
                             "organisation_type",
                             field = "organisation_type_id",
                             label = T("Type"),
                             multiple = multiple_organisation_types,
                             widget = type_widget,
-                        ),
-                        "region_id",
-                        "country",
-                        "phone",
-                        "website",
-                        "year",
-                        "logo",
-                        "comments",
-                        ]
+                       ),
+                       "region_id",
+                       "country",
+                       "phone",
+                       "website",
+                       "year",
+                       "logo",
+                       "comments",
+                       ]
 
         if settings.get_org_summary():
             # Include Summary fields in form
@@ -407,8 +407,8 @@ class S3OrganisationModel(S3Model):
             form_fields.insert(position + 1, "summary.national_staff")
             form_fields.insert(position + 2, "summary.international_staff")
 
-        crud_form = S3SQLCustomForm(*form_fields
-                                    )
+        crud_form = S3SQLCustomForm(*form_fields)
+
         # CRUD strings
         ADD_ORGANIZATION = T("Create Organization")
         crud_strings[tablename] = Storage(
@@ -1687,8 +1687,8 @@ class S3OrganisationLocationModel(S3Model):
         self.define_table(tablename,
                           self.org_organisation_id(),
                           self.gis_location_id(
-                            requires = IS_LOCATION(),
                             #represent = self.gis_LocationRepresent(sep=", "),
+                            requires = IS_LOCATION(),
                             widget = S3LocationAutocompleteWidget()
                           ),
                           *s3_meta_fields()

@@ -157,7 +157,7 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def sanitise_phone(phone, channel_id = None):
+    def sanitise_phone(phone, channel_id=None):
         """
             Strip out unnecessary characters from the string:
             +()- & space

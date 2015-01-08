@@ -5,7 +5,7 @@
 
     Template-specific Message Parsers are defined here.
 
-    @copyright: 2013 (c) Sahana Software Foundation
+    @copyright: 2013-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -30,7 +30,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Parser"]
+__all__ = ("S3Parser",)
 
 import datetime
 
