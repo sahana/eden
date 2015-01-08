@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,8 +27,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @todo: update for new template path modules/template
 """
 
 __all__ = ("S3Migration",)
@@ -86,7 +84,7 @@ class S3Migration(object):
         where TABLE_NAME = 'module_resourcename';
 
         @ToDo: Function to ensure that roles match those in prepop
-        @ToDo: Function to dos elective additional prepop
+        @ToDo: Function to do selective additional prepop
     """
 
     def __init__(self):

@@ -28,7 +28,6 @@ ANONYMOUS,Anonymous,,pr,person,,READ,,any,
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,any,
 AUTHENTICATED,Authenticated,,pr,person_search,,READ,,any,"Custom Controller to allow access to PR via JSON for AutoComplete"
 AUTHENTICATED,Authenticated,,supply,,,READ,,any,
-buildings,"Building Assessments",,assess,,,"READ|CREATE|UPDATE|DELETE",,,
 comms_dispatch,"Comms / Dispatch",,hrm,,,"READ|CREATE|UPDATE",,,
 comms_dispatch,"Comms / Dispatch",,hrm,human_resource,,"READ|CREATE|UPDATE",,,
 comms_dispatch,"Comms / Dispatch",,hrm,job_title,,READ,,,

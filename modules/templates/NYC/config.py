@@ -30,9 +30,6 @@ def config(settings):
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "NYC"
-    settings.ui.formstyle_row = "bootstrap"
-    settings.ui.formstyle = "bootstrap"
-    settings.ui.filter_formstyle = "table_inline"
 
     settings.msg.parser = "NYC"
 
@@ -1960,30 +1957,30 @@ def config(settings):
                 # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
                 module_type = None,
             )),
-        ("supply", Storage(
-                name_nice = T("Supply Chain Management"),
-                #description = "Used within Inventory Management, Request Management and Asset Management",
-                restricted = True,
-                module_type = None, # Not displayed
-            )),
-        ("inv", Storage(
-                name_nice = T("Inventory"),
-                #description = "Receiving and Sending Items",
-                restricted = True,
-                module_type = 10
-            )),
+        #("supply", Storage(
+        #        name_nice = T("Supply Chain Management"),
+        #        #description = "Used within Inventory Management, Request Management and Asset Management",
+        #        restricted = True,
+        #        module_type = None, # Not displayed
+        #    )),
+        #("inv", Storage(
+        #        name_nice = T("Inventory"),
+        #        #description = "Receiving and Sending Items",
+        #        restricted = True,
+        #        module_type = 10
+        #    )),
         #("proc", Storage(
         #        name_nice = T("Procurement"),
         #        #description = "Ordering & Purchasing of Goods & Services",
         #        restricted = True,
         #        module_type = 10
         #    )),
-        ("asset", Storage(
-                name_nice = T("Assets"),
-                #description = "Recording and Assigning Assets",
-                restricted = True,
-                module_type = 10,
-            )),
+        #("asset", Storage(
+        #        name_nice = T("Assets"),
+        #        #description = "Recording and Assigning Assets",
+        #        restricted = True,
+        #        module_type = 10,
+        #    )),
         # Vehicle depends on Assets
         #("vehicle", Storage(
         #        name_nice = T("Vehicles"),
@@ -1991,36 +1988,36 @@ def config(settings):
         #        restricted = True,
         #        module_type = 10,
         #    )),
-        ("req", Storage(
-                name_nice = T("Requests"),
-                #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-                restricted = True,
-                module_type = 1,
-            )),
-        ("project", Storage(
-                name_nice = T("Projects"),
-                #description = "Tracking of Projects, Activities and Tasks",
-                restricted = True,
-                module_type = 10
-            )),
-        ("assess", Storage(
-                name_nice = T("Assessments"),
-                #description = "Rapid Assessments & Flexible Impact Assessments",
-                restricted = True,
-                module_type = 5,
-            )),
-        ("event", Storage(
-                name_nice = T("Events"),
-                #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-                restricted = True,
-                module_type = 10,
-            )),
-        ("survey", Storage(
-                name_nice = T("Surveys"),
-                #description = "Create, enter, and manage surveys.",
-                restricted = True,
-                module_type = 5,
-            )),
+        #("req", Storage(
+        #        name_nice = T("Requests"),
+        #        #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #        restricted = True,
+        #        module_type = 1,
+        #    )),
+        #("project", Storage(
+        #        name_nice = T("Projects"),
+        #        #description = "Tracking of Projects, Activities and Tasks",
+        #        restricted = True,
+        #        module_type = 10
+        #    )),
+        #("assess", Storage(
+        #        name_nice = T("Assessments"),
+        #        #description = "Rapid Assessments & Flexible Impact Assessments",
+        #        restricted = True,
+        #        module_type = 5,
+        #    )),
+        #("event", Storage(
+        #        name_nice = T("Events"),
+        #        #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+        #        restricted = True,
+        #        module_type = 10,
+        #    )),
+        #("survey", Storage(
+        #        name_nice = T("Surveys"),
+        #        #description = "Create, enter, and manage surveys.",
+        #        restricted = True,
+        #        module_type = 5,
+        #    )),
         #("cr", Storage(
         #        name_nice = T("Shelters"),
         #        #description = "Tracks the location, capacity and breakdown of victims in Shelters",
