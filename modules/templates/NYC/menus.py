@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import *
+from gluon import current
 from s3 import *
 from s3layouts import *
 try:
@@ -44,7 +44,7 @@ class S3MainMenu(default.S3MainMenu):
         AUTHENTICATED = current.session.s3.system_roles.AUTHENTICATED
 
         return [
-            MM("Contacts", c="org", f="index")(
+            MM("Contacts", c="hrm", f="staff")(
             ),                
             MM("Facilities", c="org", f="facility", m="summary",
                restrict=[AUTHENTICATED])(
@@ -87,51 +87,51 @@ class S3OptionsMenu(default.S3OptionsMenu):
         AUTHENTICATED = s3.system_roles.AUTHENTICATED
 
         return M()(
-                    M("Contacts", c="hrm", f="staff",
-                      check=manager_mode)(
-                        M("Create", m="create"),
+                    M("Contacts", c="hrm", f="staff")(
                         M("View"),
-                        M("Import", f="person", m="import",
-                          vars={"group":"staff"}, p="create"),
+                        M("Create", m="create"),
                     ),
                     M("Organizations", c="org", f="organisation")(
+                        M("View"),
                         M("Create", m="create",
                           restrict=[AUTHENTICATED]),
-                        M("View"),
-                        M("Import", m="import",
-                          restrict=[SUPER])
                     ),
                     M("Groups", c="hrm", f="group")(
-                        M("Create", m="create"),
                         M("View"),
+                        M("Create", m="create"),
                     ),
                     M("Networks", c="org", f="group")(
-                        M("Create", m="create"),
                         M("View"),
+                        M("Create", m="create"),
                     ),
                     M("Your Personal Profile", c="default", f="person",
-                      m="update",
-                      ),
+                      m="update")(
+                    ),
+                    M("Import", link=False,
+                      restrict=[ADMIN])(
+                        M("Import Contacts", c="hrm", f="person", m="import",
+                          vars={"group":"staff"}),
+                        M("Import Organizations", c="org", f="organisation",
+                          m="import"),
+                        M("Import Groups", c="hrm", f="group", m="import"),
+                    ),
                     M("Organization Types", c="org", f="organisation_type",
                       restrict=[ADMIN])(
-                        M("Create", m="create"),
                         M("View"),
+                        M("Create", m="create"),
                     ),
                     M("Job Title Catalog", c="hrm", f="job_title",
                       restrict=[ADMIN])(
-                        M("Create", m="create"),
                         M("View"),
+                        M("Create", m="create"),
                     ),
                     M("Skills Catalog", c="hrm", f="skill",
                       restrict=[ADMIN])(
-                        M("Create", m="create"),
                         M("View"),
-                        #M("Skill Provisions", f="skill_provision"),
+                        M("Create", m="create"),
                     ),
                     M("Organization Approval", c="org", f="organisation",
-                      m="review",
-                      restrict=[ADMIN])(
-                        M("Review/Approve New", m="review"),
+                      m="review", restrict=[ADMIN])(
                     ),
                 )
 
@@ -143,17 +143,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
             ADMIN = current.session.s3.system_roles.ADMIN
             return M()(
                    M("Facilities", c="org", f="facility", m="summary")(
-                        M("Create", m="create"),
                         M("View"),
+                        M("Create", m="create"),
                     ),
                     M("Import Facilities", c="org", f="facility", m="import",
                       restrict=[ADMIN])(
-                        M("Import", m="import"),
                     ),
                     M("Facility Types", c="org", f="facility_type",
                       restrict=[ADMIN])(
-                        M("Create", m="create"),
                         M("View"),
+                        M("Create", m="create"),
                     ),
                 )
         else:
