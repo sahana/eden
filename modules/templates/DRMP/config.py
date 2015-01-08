@@ -14,7 +14,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_NOT_EMPTY
 
-from s3import FS, IS_ONE_OF, S3DateTime, S3Represent, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
+from s3 import FS, IS_ONE_OF, S3DateTime, S3Represent, s3_auth_user_represent_name, s3_avatar_represent, s3_unicode
 
 datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
 
