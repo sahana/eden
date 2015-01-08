@@ -107,7 +107,7 @@ class S3Parser(object):
             result = current.msg.send_email(to,
                                             subject,
                                             message)
-
+            return reply
         elif ":mission_id:" in message_body:
             # Response to a Deployment Alert
             pass
