@@ -955,6 +955,7 @@ class S3Msg(object):
             sms_api = db(table.channel_id == channel_id).select(limitby=(0, 1)
                                                                 ).first()
         else:
+            # @ToDo: Check for Organisation-specific Gateway
             sms_api = db(table.enabled == True).select(limitby=(0, 1)).first()
         if not sms_api:
             return False
