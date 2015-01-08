@@ -243,7 +243,7 @@ def templateTranslateDownload():
         @ToDo: Rewrite as S3Method handler
     """
 
-    error_url = URL(c="survey", f="templateTranslation", args=[], vars={})
+    error_url = URL(c="survey", f="template", args=[], vars={})
 
     try:
         translation_id = request.args[0]
@@ -284,7 +284,7 @@ def templateTranslateDownload():
     book = xlwt.Workbook(encoding="utf-8")
     sheet = book.add_sheet(language)
     output = StringIO()
-    qstnList = s3.survey_getAllQuestionsForTemplate(template_id)
+    qstnList = s3db.survey_getAllQuestionsForTemplate(template_id)
     original = {}
     original[template.name] = True
     if template.description != "":
@@ -296,11 +296,11 @@ def templateTranslateDownload():
             optionList = widgetObj.getList()
             for option in optionList:
                 original[option] = True
-    sections = s3.survey_getAllSectionsForTemplate(template_id)
+    sections = s3db.survey_getAllSectionsForTemplate(template_id)
     for section in sections:
         original[section["name"]] = True
         section_id = section["section_id"]
-        layoutRules = s3.survey_getQstnLayoutRules(template_id, section_id)
+        layoutRules = s3db.survey_getQstnLayoutRules(template_id, section_id)
         layoutStr = str(layoutRules)
         posn = layoutStr.find("heading")
         while posn != -1:
