@@ -164,11 +164,11 @@ class S3Msg(object):
         """
 
         settings = current.deployment_settings
-        table = s3db.msg_sms_outbound_gateway
+        table = current.s3db.msg_sms_outbound_gateway
 
         if channel_id:
-            row = db(table.channel_id == channel_id).select(limitby=(0, 1)
-                                                                ).first()
+            row = current.db(table.channel_id == channel_id) \
+                         .select(limitby=(0, 1)).first()
             default_country_code = row["msg_sms_outbound_gateway.default_country_code"]
         else:
             default_country_code = settings.get_L10n_default_country_code()
@@ -463,6 +463,11 @@ class S3Msg(object):
         db = current.db
         s3db = current.s3db
 
+        lookup_org = False
+        channels = {}
+        outgoing_sms_handler = None
+        channel_id = None
+
         if contact_method == "SMS":
             # Read all enabled Gateways
             # - we assume there are relatively few & we may need to decide which to use based on the message's organisation
@@ -489,7 +494,6 @@ class S3Msg(object):
                 org_branches = current.deployment_settings.get_org_branches()
                 if org_branches:
                     org_parents = s3db.org_parents
-                channels = {}
                 for row in rows:
                     channels[row["msg_sms_outbound_gateway.organisation_id"]] = \
                         dict(outgoing_sms_handler = row["msg_channel.instance_type"],
@@ -508,7 +512,11 @@ class S3Msg(object):
                               outbox_id,
                               message_id,
                               organisation_id = None,
-                              contact_method = contact_method):
+                              contact_method = contact_method,
+                              channel_id = channel_id,
+                              outgoing_sms_handler = outgoing_sms_handler,
+                              lookup_org = lookup_org,
+                              channels = channels):
             """
                 Helper method to send messages by pe_id
 
@@ -640,7 +648,7 @@ class S3Msg(object):
                      ptable.on((ptable.id == htable.person_id) & \
                                (ptable.deleted != True)),
                      ]
-    
+
             atable = s3db.table("deploy_alert")
             if atable:
                 ltable = db.deploy_alert_recipient
