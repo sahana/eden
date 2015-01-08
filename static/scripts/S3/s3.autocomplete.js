@@ -534,7 +534,7 @@
      * S3PersonAutocompleteWidget & hence S3AddPersonWidget
      * - used first/middle/last, but anything non-generic left?
      */
-    S3.autocomplete.person = function(controller, fn, input, postprocess, delay, min_length) {
+    S3.autocomplete.person = function(controller, fn, input, ajax_filter, postprocess, delay, min_length) {
         var dummy = 'dummy_' + input;
         var dummy_input = $('#' + dummy);
 
@@ -544,6 +544,10 @@
 
         var represent = represent_person;
         var url = S3.Ap.concat('/', controller, '/', fn, '/search_ac.json');
+
+        if (ajax_filter) {
+            url += "?" + ajax_filter;
+        }
 
         var real_input = $('#' + input);
         // Bootstrap overides .hide :/

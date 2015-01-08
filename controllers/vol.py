@@ -847,6 +847,9 @@ def competency():
     # Filter to just Volunteers
     s3.filter = FS("person_id$human_resource.type") == 2
 
+    field = s3db.hrm_competency.person_id
+    field.widget = S3PersonAutocompleteWidget(ajax_filter = "~.human_resource.type=2")
+
     return s3db.hrm_competency_controller()
 
 # -----------------------------------------------------------------------------

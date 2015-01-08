@@ -6500,7 +6500,9 @@ class S3PersonAutocompleteWidget(FormWidget):
                  post_process = "",
                  hideerror = False,
                  delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 min_length = 2,  # Increase this for large deployments
+                 ajax_filter = "",
+                 ):
 
         self.post_process = post_process
         self.delay = delay
@@ -6508,6 +6510,7 @@ class S3PersonAutocompleteWidget(FormWidget):
         self.c = controller
         self.f = function
         self.hideerror = hideerror
+        self.ajax_filter = ajax_filter
 
     def __call__(self, field, value, **attributes):
 
@@ -6549,17 +6552,22 @@ class S3PersonAutocompleteWidget(FormWidget):
         post_process = self.post_process
         delay = self.delay
         min_length = self.min_length
+
+        if self.ajax_filter:
+            options = ''',"%(ajax_filter)s"''' % \
+                dict(ajax_filter = self.ajax_filter)
+
         if min_length != 2:
-            options = ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
+            options += ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
                 dict(postprocess = post_process,
                      delay = delay,
                      min_length = min_length)
         elif delay != 450:
-            options = ''',"%(postprocess)s",%(delay)s''' % \
+            options += ''',"%(postprocess)s",%(delay)s''' % \
                 dict(postprocess = post_process,
                      delay = delay)
         elif post_process:
-            options = ''',"%(postprocess)s"''' % \
+            options += ''',"%(postprocess)s"''' % \
                 dict(postprocess = post_process)
 
         script = '''%s%s)''' % (script, options)
