@@ -14,13 +14,18 @@
 }
 .navbar .nav > li > a  {
     padding: 12px;
-    font-size: 18px;
-    height: 22px;
+    font-family: 'Open Sans','Lucida Grande','Lucida Sans',sans-serif;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: normal;
+    letter-spacing: 0;
+    text-transform: capitalize;
+
 }
 
 .navbar .nav.pull-right > li > a {
     font-family: 'Open Sans','Lucida Grande','Lucida Sans',sans-serif;
-    font-size: 13px;
+    font-size: 14px;
     font-style: normal;
     font-weight: normal;
     letter-spacing: 0;
