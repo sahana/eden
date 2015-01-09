@@ -131,6 +131,8 @@ class S3Config(Storage):
         self.vulnerability = Storage()
         self.transport = Storage()
 
+        self._debug = None
+
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -154,6 +156,28 @@ class S3Config(Storage):
         """
         self.import_template()
 
+    def check_debug(self):
+        """
+            (Lazy) check debug mode and activate the respective settings
+        """
+
+        debug = self._debug
+        base_debug = bool(self.get_base_debug())
+
+        # Modify settings only if self.base.debug has changed
+        if debug is None or debug != base_debug:
+            self._debug = base_debug
+            debug = base_debug or \
+                    current.request.get_vars.get("debug", False)
+            from gluon.custom_import import track_changes
+            s3 = current.response.s3
+            if debug:
+                s3.debug = True
+                track_changes(True)
+            else:
+                s3.debug = False
+                track_changes(False)
+
     def import_template(self, config="config"):
         """
             Import and invoke the template config (new module pattern)
@@ -167,6 +191,8 @@ class S3Config(Storage):
 
         name = self.get_template()
         package = "templates.%s" % name
+
+        self.check_debug()
 
         template = None
         try:

@@ -13,17 +13,7 @@ if settings.get_L10n_languages_readonly():
 get_vars = request.get_vars
 
 # Are we running in debug mode?
-request_debug = get_vars.get("debug", None)
-s3.debug = request_debug or settings.get_base_debug()
-if request_debug:
-    # Also override log level:
-    settings.log.level = "debug"
-
-if s3.debug:
-    # Reload all modules every request
-    # Doesn't catch s3cfg or s3/*
-    from gluon.custom_import import track_changes
-    track_changes(True)
+settings.check_debug()
 
 import datetime
 
@@ -127,7 +117,7 @@ else:
 # Set up logger (before any module attempts to use it!)
 import s3log
 s3log.S3Log.setup()
-    
+
 # AAA
 current.auth = auth = s3base.AuthS3()
 
