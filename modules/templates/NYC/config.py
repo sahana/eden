@@ -50,8 +50,11 @@ def config(settings):
     settings.L10n.default_country_code = 1
     # Enable this to change the label for 'Mobile Phone'
     settings.ui.label_mobile_phone = "Cell Phone"
+    # Uncomment to Disable the Postcode selector in the LocationSelector
+    # - using L4 instead
+    settings.gis.postcode_selector = False
     # Enable this to change the label for 'Postcode'
-    settings.ui.label_postcode = "ZIP Code"
+    #settings.ui.label_postcode = "ZIP Code"
     # Uncomment to disable responsive behavior of datatables
     # - Disabled until tested
     settings.ui.datatables_responsive = False
@@ -299,6 +302,31 @@ def config(settings):
             form_vars.name = current.db.org_facility.location_id.represent(form_vars.location_id)
 
     # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+
+        filter_widgets = [
+            S3TextFilter(["name"],
+                         label = T("Name"),
+                         ),
+            S3OptionsFilter("site_facility_type.facility_type_id",
+                            ),
+            S3OptionsFilter("organisation_id",
+                            ),
+            S3LocationFilter("location_id",
+                             levels = ("L3", "L4"),
+                             ),
+             S3OptionsFilter("site_org_group.group_id",
+                             represent = "%(name)s",
+                             ),
+            ]
+        
+        current.s3db.configure(tablename,
+                               filter_widgets = filter_widgets,
+                               )
+
+    # -------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):
 
         s3db = current.s3db
@@ -332,13 +360,14 @@ def config(settings):
                     field = table.location_id
                     if r.method in ("create", "update"):
                         field.label = "" # Gets replaced by widget
-                    levels = ("L2", "L3")
+                    levels = ("L3", "L4")
                     field.requires = IS_LOCATION()
                     field.widget = S3LocationSelector(levels=levels,
                                                       hide_lx=False,
                                                       reverse_lx=True,
                                                       show_address=True,
-                                                      show_postcode=True,
+                                                      # Using L4 instead
+                                                      show_postcode=False,
                                                       )
                     table.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
@@ -581,8 +610,13 @@ def config(settings):
                             represent = "%(name)s",
                             #hidden = True,
                             ),
+            S3LocationFilter("org_facility.location_id",
+                             label = T("Location"),
+                             levels = ("L3", "L4"),
+                             #hidden = True,
+                             ),
             S3LocationFilter("organisation_location.location_id",
-                             label = T("Neighborhood"),
+                             label = T("Areas Served"),
                              levels = ("L3", "L4"),
                              #hidden = True,
                              ),
@@ -595,10 +629,6 @@ def config(settings):
             #                  #label = T("Service"),
             #                  #hidden = True,
             #                  ),
-            S3OptionsFilter("organisation_organisation_type.organisation_type_id",
-                            label = T("Type"),
-                            #hidden = True,
-                            ),
             ]
 
         list_fields = ["name",
@@ -607,7 +637,6 @@ def config(settings):
                        "phone",
                        (T("Email"), "email.value"),
                        "website"
-                       #(T("Neighborhoods Served"), "location.name"),
                        ]
 
         s3db.configure("org_organisation",
@@ -641,13 +670,14 @@ def config(settings):
                         field = table.location_id
                         if r.method in ("create", "update"):
                             field.label = "" # Gets replaced by widget
-                        levels = ("L2", "L3")
+                        levels = ("L3", "L4")
                         field.requires = IS_LOCATION()
                         field.widget = S3LocationSelector(levels=levels,
                                                           hide_lx=False,
                                                           reverse_lx=True,
                                                           show_address=True,
-                                                          show_postcode=True,
+                                                          # Using L4 instead
+                                                          show_postcode=False,
                                                           )
                 elif r.component_name == "human_resource":
                     # Don't assume that user is from same org/site as Contacts they create
@@ -669,8 +699,8 @@ def config(settings):
                     tabs = [(T("Basic Details"), None),
                             (T("Contacts"), "human_resource"),
                             (T("Facilities"), "facility"),
-                            (T("Projects"), "project"),
-                            (T("Assets"), "asset"),
+                            #(T("Projects"), "project"),
+                            #(T("Assets"), "asset"),
                             ]
                     output["rheader"] = s3db.org_rheader(r, tabs=tabs)
             return output
@@ -1151,7 +1181,7 @@ def config(settings):
                               "comments",
                               "group_team.org_group_id$name",
                               ],
-                             label = T("Search"),
+                             label = T("Name"),
                              comment = T("You can search by by group name, description or comments and by network name. You may use % as wildcard. Press 'Search' without input to list all."),
                              #_class = "filter-search",
                              ),
@@ -1466,18 +1496,11 @@ def config(settings):
                                         ),
                         S3LocationFilter("location_id",
                                          label = T("Location"),
-                                         levels = ("L1", "L2", "L3", "L4"),
+                                         levels = ("L3", "L4"),
                                          hidden = True,
                                          ),
-                        S3OptionsFilter("site_id",
-                                        hidden = True,
-                                        ),
-                        S3OptionsFilter("training.course_id",
-                                        label = T("Training"),
-                                        hidden = True,
-                                        ),
                         S3OptionsFilter("group_membership.group_id",
-                                        label = T("Team"),
+                                        label = T("Group"),
                                         filter = True,
                                         header = "",
                                         hidden = True,

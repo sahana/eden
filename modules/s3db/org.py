@@ -3261,13 +3261,13 @@ class S3FacilityModel(S3Model):
 
         if hierarchical_facility_types:
             type_filter = S3HierarchyFilter("site_facility_type.facility_type_id",
-                                            label = T("Type"),
+                                            #label = T("Type"),
                                             )
         else:
             type_filter = S3OptionsFilter("site_facility_type.facility_type_id",
                                           # @ToDo: Introspect need for header based on # records
                                           #header = True,
-                                          label = T("Type"),
+                                          #label = T("Type"),
                                           # Doesn't support translation
                                           #represent = "%(name)s",
                                           )
@@ -3282,13 +3282,14 @@ class S3FacilityModel(S3Model):
             S3OptionsFilter("organisation_id",
                             # @ToDo: Introspect need for header based on # records
                             #header = True,
-                            label = T("Organization"),
-                            represent = "%(name)s",
+                            #label = T("Organization"),
+                            # Doesn't support l10n
+                            #represent = "%(name)s",
                             ),
             S3LocationFilter("location_id",
                              # @ToDo: Display by default in Summary Views but not others?
                              #hidden = True,
-                             label = T("Location"),
+                             #label = T("Location"),
                              levels = levels,
                              ),
             ]
@@ -3972,7 +3973,8 @@ class S3OfficeModel(S3Model):
             org_filter = S3OptionsFilter("organisation_id",
                                          label = ORGANISATION,
                                          comment = comment,
-                                         represent = "%(name)s",
+                                         # Doesn't support l10n
+                                         #represent = "%(name)s",
                                          #hidden = True,
                                          )
 
