@@ -1,8 +1,10 @@
 {{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='summary-common'>
+<div id='summary-common' class='row'>
  {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
- <div id='filter-form' class='form-container'>
-  {{try:}}{{=filter_form}}{{except:}}{{pass}}
+ <div class="medium-9 columns end">
+  <div id='filter-form' class='form-container'>
+   {{try:}}{{=filter_form}}{{except:}}{{pass}}
+  </div>
  </div>
 </div>
 <div id='summary-tabs'>

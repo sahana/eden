@@ -597,17 +597,12 @@ table.dataTable .selected-action {
 
 #list-btn-add {
   float: right;
-  margin-top: 1.0rem;
   margin-right: 1.0rem;
 }
 
 /* Summary tabs */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
-}
-
-#summary-common #list-btn-add {
-  margin-top: -2.5rem;
 }
 
 #summary-tabs {
