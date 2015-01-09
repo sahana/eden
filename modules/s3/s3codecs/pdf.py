@@ -259,8 +259,7 @@ class S3RL_PDF(S3Codec):
             response.headers["Content-Type"] = contenttype(".pdf")
             response.headers["Content-disposition"] = disposition
 
-        doc.output.seek(0)
-        return doc.output.read()
+        return doc.output.getvalue()
 
     # -------------------------------------------------------------------------
     def get_html_flowable(self, rules, printable_width):
@@ -1243,17 +1242,19 @@ class S3html2pdf():
         from reportlab.platypus import Image
 
         I = None
+        sep = os.path.sep
         if "_src" in html.attributes:
             src = html.attributes["_src"]
+            root_dir = "%s%s%s" % (sep, current.request.application, sep)
             if uploadfolder:
-                src = src.rsplit("/", 1)
+                src = src.rsplit(sep, 1)
                 src = os.path.join(uploadfolder, src[1])
-            elif src.startswith("/%s/static" % current.request.application):
-                src = src.split("/%s/" % current.request.application)[-1]
+            elif src.startswith("%sstatic" % root_dir):
+                src = src.split(root_dir)[-1]
                 src = os.path.join(current.request.folder, src)
             else:
-                src = src.rsplit("/", 1)
-                src = os.path.join(current.request.folder, "uploads/", src[1])
+                src = src.rsplit(sep, 1)
+                src = os.path.join(current.request.folder, "uploads%s"%sep, src[1])
             if os.path.exists(src):
                 I = Image(src)
 
