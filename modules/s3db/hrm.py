@@ -450,10 +450,17 @@ class S3HRModel(S3Model):
                                           readable = False,
                                           writable = False,
                                           ),
+                     Field("org_contact", "boolean",
+                           label = T("Organization Contact"),
+                           represent = s3_yes_no_represent,
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("site_contact", "boolean",
                            label = T("Facility Contact"),
-                           represent = lambda opt: \
-                            (T("No"), T("Yes"))[opt == True],
+                           represent = s3_yes_no_represent,
+                           #represent = lambda opt: \
+                            #(T("No"), T("Yes"))[opt == True],
                            ),
                      s3_comments(),
                      *s3_meta_fields())

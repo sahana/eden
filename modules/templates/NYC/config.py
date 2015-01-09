@@ -321,7 +321,7 @@ def config(settings):
                              represent = "%(name)s",
                              ),
             ]
-        
+
         current.s3db.configure(tablename,
                                filter_widgets = filter_widgets,
                                )
@@ -1459,6 +1459,20 @@ def config(settings):
     #settings.hrm.organisation_label = "National Society / Branch"
     settings.hrm.organisation_label = "Organization"
 
+    hrm_human_resource_list_fields = [
+        "id",
+        "person_id",
+        "job_title_id",
+        "organisation_id",
+        "org_contact",
+        (T("Network"), "group_person.group_id"),
+        (T("Groups"), "person_id$group_membership.group_id"),
+        "site_id",
+        #"site_contact",
+        (T("Email"), "email.value"),
+        (settings.get_ui_label_mobile_phone(), "phone.value"),
+    ]
+
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
@@ -1472,6 +1486,9 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
+
+            # Would be overridden by standard_prep, so re-apply
+            r.resource.configure(list_fields = hrm_human_resource_list_fields)
 
             if r.interactive or r.representation == "aadata":
                 if not r.component:
@@ -1553,35 +1570,26 @@ def config(settings):
                                         "joinby": "person_id",
                                         "key": "group_id",
                                         })
+        field = s3db.hrm_human_resource.org_contact
+        field.readable = field.writable = True
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm("person_id",
                                     "organisation_id",
+                                    "org_contact",
                                     "site_id",
                                     # Custom inline component
                                     S3SQLHRPersonLink("group",
                                                       label = T("Groups"),
-                                        field = "group_id",
-                                        multiple=True,
-                                    ),
+                                                      field = "group_id",
+                                                      multiple=True,
+                                                      ),
                                     "job_title_id",
                                     "start_date",
                                     )
-        list_fields = ["id",
-                       "person_id",
-                       "job_title_id",
-                       "organisation_id",
-                       (T("Network"), "group_person.group_id"),
-                       (T("Groups"), "person_id$group_membership.group_id"),
-                       "site_id",
-                       #"site_contact",
-                       (T("Email"), "email.value"),
-                       (settings.get_ui_label_mobile_phone(), "phone.value"),
-                       ]
-
         s3db.configure("hrm_human_resource",
                        crud_form = crud_form,
-                       list_fields = list_fields,
+                       list_fields = hrm_human_resource_list_fields,
                        )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
@@ -2120,6 +2128,37 @@ class S3SQLHRPersonLink(S3SQLInlineLink):
         person_resource = current.s3db.resource("pr_person",
                                                 components=[selector])
         return super(S3SQLHRPersonLink, self).resolve(person_resource)
+
+    # -------------------------------------------------------------------------
+    def extract(self, resource, record_id):
+        """
+            Override superclass method to map the master record to the
+            corresponding pr_person record (only required when called
+            from the form handler)
+
+            @param resource: the resource the record belongs to
+            @param record_id: the record ID
+            @return: the value for the input field that corresponds
+                      to the specified record.
+        """
+
+        if resource.tablename == "hrm_human_resource":
+            # Call by form handler
+            s3db = current.s3db
+            table = resource.table
+            query = (table._id == record_id)
+            master = current.db(query).select(table.person_id,
+                                              limitby=(0, 1)).first()
+            if not master:
+                raise KeyError("Record not found")
+            record_id = master.person_id
+            resource = s3db.resource("pr_person",
+                                     components=[self.selector],
+                                     id = record_id)
+
+        return super(S3SQLHRPersonLink, self).extract(resource,
+                                                      record_id,
+                                                      )
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):
