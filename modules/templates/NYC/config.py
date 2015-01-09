@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import A, URL
 from gluon.storage import Storage
 
-from s3 import s3_fullname
+from s3 import s3_fullname, S3SQLInlineLink
 
 def config(settings):
     """
@@ -117,7 +117,7 @@ def config(settings):
     settings.auth.record_approval = True
     settings.auth.record_approval_required_for = ("org_organisation",)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Audit
     def audit_write(method, tablename, form, record, representation):
         if not current.auth.user:
@@ -136,7 +136,7 @@ def config(settings):
 
     settings.security.audit_write = audit_write
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # CMS
     # Uncomment to use Bookmarks in Newsfeed
     settings.cms.bookmarks = True
@@ -159,7 +159,7 @@ def config(settings):
     # Uncomment to show post Titles in Newsfeed
     settings.cms.show_titles = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Inventory Management
     # Uncomment to customise the label for Facilities in Inventory Management
     settings.inv.facility_label = "Facility"
@@ -186,7 +186,7 @@ def config(settings):
             #4: T("Surplus")
        }
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Organisations
     #
     # Enable the use of Organisation Groups
@@ -219,7 +219,7 @@ def config(settings):
     # Uncomment to hide inv & req tabs from Sites
     #settings.org.site_inv_req_tabs = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def facility_marker_fn(record):
         """
             Function to decide which Marker to use for Facilities Map
@@ -281,7 +281,7 @@ def config(settings):
                                                         ).first()
         return marker
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def org_facility_onvalidation(form):
         """
             Default the name to the Street Address
@@ -298,7 +298,7 @@ def config(settings):
             # We need a default
             form_vars.name = current.db.org_facility.location_id.represent(form_vars.location_id)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):
 
         s3db = current.s3db
@@ -371,7 +371,7 @@ def config(settings):
 
     settings.customise_org_facility_controller = customise_org_facility_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         from gluon.html import DIV, INPUT
@@ -618,7 +618,7 @@ def config(settings):
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         s3db = current.s3db
@@ -680,7 +680,7 @@ def config(settings):
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_group_controller(**attr):
 
         s3db = current.s3db
@@ -873,7 +873,7 @@ def config(settings):
 
     settings.customise_org_group_controller = customise_org_group_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Persons
     # Uncomment to hide fields in S3AddPersonWidget
     settings.pr.request_dob = False
@@ -884,7 +884,7 @@ def config(settings):
     # Only show Private Contacts Tab (Public is done via Basic Details tab)
     settings.pr.contacts_tabs = ("private",)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Persons
     def customise_pr_person_controller(**attr):
         """
@@ -945,6 +945,14 @@ def config(settings):
                     MOBILE = settings.get_ui_label_mobile_phone()
                     EMAIL = T("Email")
 
+                    # We need a group-component for pr_person here to embed
+                    # group links in the custom form
+                    s3db.add_components("pr_person",
+                                        pr_group = {"name": "group",
+                                                    "link": "pr_group_membership",
+                                                    "joinby": "person_id",
+                                                    "key": "group_id",
+                                                    })
                     s3_sql_custom_fields = ["first_name",
                                             #"middle_name",
                                             "last_name",
@@ -979,6 +987,12 @@ def config(settings):
                                                                  options = 2),
                                                             ]
                                                 ),
+                                            S3SQLInlineLink(
+                                                "group",
+                                                label = T("Groups"),
+                                                field = "group_id",
+                                                multiple = True,
+                                            ),
                                             #S3SQLInlineComponent(
                                             #    "image",
                                             #    name = "image",
@@ -1061,7 +1075,7 @@ def config(settings):
 
     settings.customise_pr_person_controller = customise_pr_person_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Groups
     def chairperson(row):
         """
@@ -1098,7 +1112,7 @@ def config(settings):
         else:
             return current.messages["NONE"]
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_pr_group_controller(**attr):
 
         s3 = current.response.s3
@@ -1180,7 +1194,7 @@ def config(settings):
 
     settings.customise_pr_group_controller = customise_pr_group_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
         """
             Customise pr_group resource (in group & org_group controllers)
@@ -1220,7 +1234,7 @@ def config(settings):
 
     settings.customise_pr_group_resource = customise_pr_group_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def pr_contact_postprocess(form):
         """
             Import Organisation/Network RSS Feeds
@@ -1385,7 +1399,7 @@ def config(settings):
         async("msg_poll", args=["msg_rss_channel", channel_id])
         async("msg_parse", args=[channel_id, "parse_rss"])
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to chage the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
@@ -1415,7 +1429,7 @@ def config(settings):
     #settings.hrm.organisation_label = "National Society / Branch"
     settings.hrm.organisation_label = "Organization"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         s3 = current.response.s3
@@ -1498,26 +1512,35 @@ def config(settings):
 
     settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
         """
-            Customise hrm_human_resource resource (in facility, human_resource, organisation & person controllers)
+            Customise hrm_human_resource resource (in facility,
+            human_resource, organisation & person controllers)
                 - runs after controller customisation
                 - but runs before prep
         """
 
         s3db = current.s3db
+        # We need a group-component for pr_person here to embed
+        # group links in the contact form
+        s3db.add_components("pr_person",
+                            pr_group = {"name": "group",
+                                        "link": "pr_group_membership",
+                                        "joinby": "person_id",
+                                        "key": "group_id",
+                                        })
+
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm("person_id",
                                     "organisation_id",
                                     "site_id",
-                                    S3SQLInlineComponent(
-                                        "group_person",
-                                        label = T("Network"),
-                                        link = False,
-                                        fields = [("", "group_id")],
-                                        multiple = False,
-                                        ),
+                                    # Custom inline component
+                                    S3SQLHRPersonLink("group",
+                                                      label = T("Groups"),
+                                        field = "group_id",
+                                        multiple=True,
+                                    ),
                                     "job_title_id",
                                     "start_date",
                                     )
@@ -1540,7 +1563,7 @@ def config(settings):
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_job_title_controller(**attr):
 
         s3 = current.response.s3
@@ -1566,7 +1589,7 @@ def config(settings):
 
     settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Projects
     # Use codes for projects (called 'blurb' in NYC)
     settings.project.codes = True
@@ -1725,7 +1748,7 @@ def config(settings):
 
     settings.customise_project_project_controller = customise_project_project_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Requests Management
     settings.req.req_type = ["People", "Stock"]#, "Summary"]
     settings.req.prompt_match = False
@@ -1838,7 +1861,7 @@ def config(settings):
                                  url=url,
                                  )
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
         from s3layouts import S3AddResourceLink
@@ -1863,7 +1886,7 @@ def config(settings):
 
     settings.customise_req_req_resource = customise_req_req_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     settings.modules = OrderedDict([
         # Core modules which shouldn't be disabled
@@ -2051,5 +2074,55 @@ def config(settings):
         #        module_type = 10,
         #    )),
     ])
+
+# =============================================================================
+class S3SQLHRPersonLink(S3SQLInlineLink):
+    """
+        Special inline link variant to allow pr_person links to be
+        added inside an hrm_human_resource form.
+    """
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Override superclass method to resolve against the pr_person
+            resource instead of the master resource (=hrm_human_resource)
+
+            @param resource: the resource
+            @return: a tuple (self, None, Field instance)
+        """
+
+        selector = self.selector
+
+        person_resource = current.s3db.resource("pr_person",
+                                                components=[selector])
+        return super(S3SQLHRPersonLink, self).resolve(person_resource)
+
+    # -------------------------------------------------------------------------
+    def accept(self, form, master_id=None, format=None):
+        """
+            Override superclass method to use the person_id in
+            the master record instead of the master_id.
+
+            @param form: the master form
+            @param master_id: the ID of the master record in the form
+            @param format: the data format extension (for audit)
+        """
+
+        s3db = current.s3db
+
+        # Get the person_id corresponding to the master_id
+        htable = s3db.hrm_human_resource
+        query = (htable._id == master_id)
+        master = current.db(query).select(htable.person_id,
+                                          limitby=(0, 1)).first()
+        if not master:
+            return False
+        person_id = master.person_id
+
+        return super(S3SQLHRPersonLink, self).accept(form,
+                                                     master_id = person_id,
+                                                     format = format,
+                                                     )
 
 # END =========================================================================
