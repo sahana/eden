@@ -753,7 +753,7 @@ Thank you"""
             user = Storage(utable._filter_fields(user, id=True))
             self.login_user(user)
         if log and self.user:
-            self.log_event(log % self.user)
+            self.log_event(log, self.user)
 
         # How to continue
         if settings.login_form == self:
@@ -1304,7 +1304,7 @@ Thank you"""
             self.set_cookie()
 
             if log:
-                self.log_event(log % form.vars)
+                self.log_event(log, form.vars)
             if onaccept:
                 onaccept(form)
             if not next:
@@ -1406,7 +1406,7 @@ Thank you"""
             self.login_user(user)
 
         if log:
-            self.log_event(log % user)
+            self.log_event(log, user)
 
         redirect(next)
 
@@ -1540,7 +1540,7 @@ Thank you"""
             self.user.update(utable._filter_fields(form.vars))
             session.flash = messages.profile_updated
             if log:
-                self.log_event(log % self.user)
+                self.log_event(log, self.user)
             callback(onaccept, form)
             if not next:
                 next = self.url(args=request.args)
@@ -4235,8 +4235,8 @@ $.filterOptionsS3({
         if log:
             if not user_id and self.user:
                 user_id = self.user.id
-            self.log_event(log % dict(user_id=user_id,
-                                      group_id=group_id, check=r))
+            self.log_event(log, dict(user_id=user_id,
+                                     group_id=group_id, check=r))
         return r
 
     # Override original method
@@ -6128,7 +6128,7 @@ class S3Permission(object):
             else:
                 # RFC1945/2617 compliance:
                 # Must raise an HTTP Auth challenge with status 401
-                challenge = {"WWW-Authenticate": 
+                challenge = {"WWW-Authenticate":
                              u"Basic realm=%s" % current.request.application}
                 raise HTTP(401, body=self.AUTHENTICATION_REQUIRED, **challenge)
 
