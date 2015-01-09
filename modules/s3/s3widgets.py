@@ -2156,9 +2156,13 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Sort letters
         import locale
-        all_letters.sort(locale.strcoll)
-        first_letter = min(u"A", all_letters[0])
-        last_letter = max(u"Z", all_letters[-1])
+        if all_letters:
+            all_letters.sort(locale.strcoll)
+            first_letter = min(u"A", all_letters[0])
+            last_letter = max(u"Z", all_letters[-1])
+        else:
+            # No point with grouping if we don't have any labels
+            size = 0
 
         size = self.size
         cols = self.cols
@@ -2235,7 +2239,10 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Sort the group items
         if sort:
-            group_items = sorted(group["items"], key=lambda i: i[1].upper()[0])
+            group_items = sorted(group["items"], 
+                                 key = lambda i: i[1].upper()[0] \
+                                       if i[1] else None,
+                                 )
         else:
             group_items = group["items"]
 
