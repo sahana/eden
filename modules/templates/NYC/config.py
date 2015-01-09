@@ -1444,7 +1444,7 @@ def config(settings):
                                         header = "",
                                         hidden = True,
                                         ),
-                        S3OptionsFilter("group_person.group_id",
+                        S3OptionsFilter("group_membership.group_id$org_group_team.org_group_id",
                                         label = T("Network"),
                                         #filter = True,
                                         #header = "",
