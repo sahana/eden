@@ -110,9 +110,11 @@ def template():
                 s3_action_buttons(r)
                 s3.actions.append(dict(label=str(T("Download")),
                                        _class="action-btn",
-                                       url=URL(c=module,
-                                               f="templateTranslateDownload",
-                                               args=["[id]"])
+                                       url=r.url(method = "translate_download",
+                                                 component = "translate",
+                                                 component_id = "[id]",
+                                                 representation = "xls",
+                                                 )
                                        ),
                                   )
                 s3.actions.append(
@@ -237,110 +239,6 @@ def templateSummary():
     return output
 
 # -----------------------------------------------------------------------------
-def templateTranslateDownload():
-    """
-        Download a Translation Template
-        @ToDo: Rewrite as S3Method handler
-    """
-
-    error_url = URL(c="survey", f="templateTranslation", args=[], vars={})
-
-    try:
-        translation_id = request.args[0]
-    except:
-        redirect(error_url)
-
-    try:
-        import xlwt
-    except ImportError:
-        redirect(error_url)
-
-    table = s3db.survey_translate
-    record = db(table.id == translation_id).select(table.code,
-                                                   table.language,
-                                                   table.template_id,
-                                                   limitby=(0, 1)).first()
-    if record is None:
-        redirect(error_url)
-
-    code = record.code
-    language = record.language
-    lang_fileName = "applications/%s/languages/%s.py" % \
-                                    (appname, code)
-    try:
-        from gluon.languages import read_dict
-        strings = read_dict(lang_fileName)
-    except:
-        strings = dict()
-    template_id = record.template_id
-
-    # Load Model
-    table = s3db.survey_template
-    s3db.table("survey_complete")
-
-    template = db(table.id == template_id).select(table.name,
-                                                  table.description,
-                                                  limitby=(0, 1)).first()
-    book = xlwt.Workbook(encoding="utf-8")
-    sheet = book.add_sheet(language)
-    output = StringIO()
-    qstnList = s3.survey_getAllQuestionsForTemplate(template_id)
-    original = {}
-    original[template.name] = True
-    if template.description != "":
-        original[template.description] = True
-    for qstn in qstnList:
-        original[qstn["name"]] = True
-        widgetObj = survey_question_type[qstn["type"]](question_id = qstn["qstn_id"])
-        if isinstance(widgetObj, S3QuestionTypeOptionWidget):
-            optionList = widgetObj.getList()
-            for option in optionList:
-                original[option] = True
-    sections = s3.survey_getAllSectionsForTemplate(template_id)
-    for section in sections:
-        original[section["name"]] = True
-        section_id = section["section_id"]
-        layoutRules = s3.survey_getQstnLayoutRules(template_id, section_id)
-        layoutStr = str(layoutRules)
-        posn = layoutStr.find("heading")
-        while posn != -1:
-            start = posn + 11
-            end = layoutStr.find("}", start)
-            original[layoutStr[start:end]] = True
-            posn = layoutStr.find("heading", end)
-
-    row = 0
-    sheet.write(row,
-                0,
-                unicode("Original")
-                )
-    sheet.write(row,
-                1,
-                unicode("Translation")
-                )
-    originalList = original.keys()
-    originalList.sort()
-    for text in originalList:
-        row += 1
-        original = unicode(text)
-        sheet.write(row,
-                    0,
-                    original
-                    )
-        if (original in strings):
-            sheet.write(row,
-                        1,
-                        strings[original]
-                        )
-
-    book.save(output)
-    output.seek(0)
-    response.headers["Content-Type"] = contenttype(".xls")
-    filename = "%s.xls" % code
-    response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
-    return output.read()
-
-# -----------------------------------------------------------------------------
 def series():
     """ RESTful CRUD controller """
 
@@ -402,100 +300,6 @@ def series():
     return output
 
 # -----------------------------------------------------------------------------
-def export_all_responses():
-    """
-        Download all responses in a Spreadsheet
-        @ToDo: rewrite as S3Method handler
-    """
-
-    try:
-        series_id = request.args[0]
-        import xlwt
-    except:
-        output = s3_rest_controller(module, "series",
-                                    rheader = s3db.survey_series_rheader)
-        return output
-
-    # Load Model
-    table = s3db.survey_series
-    s3db.table("survey_section")
-    s3db.table("survey_complete")
-
-    # Turn off lazy translation
-    # otherwise xlwt will crash if it comes across a T string
-    T.lazy = False
-
-    sectionBreak = False
-
-    series = db(table.id == series_id).select(table.name,
-                                              limitby=(0, 1)
-                                              ).first()
-
-    try:
-        filename = "%s_All_responses.xls" % series.name
-    except:
-        session.error = "Series not found!"
-        redirect(URL(c="series"))
-
-    contentType = ".xls"
-    output = StringIO()
-    book = xlwt.Workbook(encoding="utf-8")
-    # Get all questions and write out as a heading
-    col = 0
-    completeRow = {}
-    nextRow = 2
-    qstnList = s3db.survey_getAllQuestionsForSeries(series_id)
-    if len(qstnList) > 256:
-        sectionList = s3db.survey_getAllSectionsForSeries(series_id)
-        sectionBreak = True
-    if sectionBreak:
-        sheets = {}
-        cols = {}
-        for section in sectionList:
-            sheetName = section["name"].split(" ")[0]
-            if sheetName not in sheets:
-                sheets[sheetName] = book.add_sheet(sheetName)
-                cols[sheetName] = 0
-    else:
-        sheet = book.add_sheet(T("Responses"))
-    for qstn in qstnList:
-        if sectionBreak:
-            sheetName = qstn["section"].split(" ")[0]
-            sheet = sheets[sheetName]
-            col = cols[sheetName]
-        row = 0
-        sheet.write(row,col,qstn["code"])
-        row += 1
-        widgetObj = s3db.survey_getWidgetFromQuestion(qstn["qstn_id"])
-        sheet.write(row,col,widgetObj.fullName())
-        # For each question get the response
-        allResponses = s3db.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
-                                                                    series_id)
-        for answer in allResponses:
-            value = answer["value"]
-            complete_id = answer["complete_id"]
-            if complete_id in completeRow:
-                row = completeRow[complete_id]
-            else:
-                completeRow[complete_id] = nextRow
-                row = nextRow
-                nextRow += 1
-            sheet.write(row,col,value)
-        col += 1
-        if sectionBreak:
-            cols[sheetName] += 1
-    sheet.panes_frozen = True
-    sheet.horz_split_pos = 2
-    book.save(output)
-
-    # Turn lazy translation back on
-    T.lazy = True
-    output.seek(0)
-    response.headers["Content-Type"] = contenttype(contentType)
-    response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
-    return output.read()
-
-# -----------------------------------------------------------------------------
 def series_export_formatted():
     """
         Download a Spreadsheet which can be filled-in offline & uploaded
@@ -514,8 +318,8 @@ def series_export_formatted():
     s3db.table("survey_complete")
 
     vars = request.post_vars
-    series = db(table.id == series_id).select(series.name,
-                                              series.logo,
+    series = db(table.id == series_id).select(table.name,
+                                              table.logo,
                                               limitby = (0, 1)
                                               ).first()
     if not series.logo:

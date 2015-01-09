@@ -70,7 +70,9 @@ class S3GuidedTourModel(S3Model):
         define_table(tablename,
                      Field("name",
                            represent=lambda v: v or NONE,
-                           label=T("Display name")),
+                           label=T("Display name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("code",
                            length=255,
                            notnull=True,
@@ -131,7 +133,7 @@ class S3GuidedTourModel(S3Model):
         #
         tablename = "tour_details"
         define_table(tablename,
-                     tour_config_id(),
+                     tour_config_id(empty = False),
                      Field("posn", "integer",
                            default=0,
                            label=T("Position in tour")),
@@ -195,7 +197,9 @@ class S3GuidedTourModel(S3Model):
         tablename = "tour_user"
         define_table(tablename,
                      person_id(label = T("Person"),
-                               ondelete="CASCADE"),
+                               ondelete="CASCADE",
+                               empty = False,
+                               ),
                      tour_config_id(),
                      Field("place",
                            represent=lambda v: v or NONE,
