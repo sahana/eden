@@ -20,7 +20,7 @@ def config(settings):
 
     T = current.T
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Pre-Populate
     settings.base.prepopulate = ("OCHAROCCA", "default/users")
 
@@ -30,9 +30,9 @@ def config(settings):
     # Levels for the LocationSelector
     gis_levels = ("L0", "L1", "L2", "L3")
 
-    # =============================================================================
+    # =========================================================================
     # System Settings
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Authorization Settings
     # Users can self-register
     #settings.security.self_registration = False
@@ -54,12 +54,12 @@ def config(settings):
     settings.auth.show_utc_offset = False
     settings.auth.show_link = False
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Security Policy
     settings.security.policy = 5 # Apply Controller, Function and Table ACLs
     settings.security.map = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "OCHAROCCA"
     settings.ui.formstyle_row = "bootstrap"
@@ -68,7 +68,7 @@ def config(settings):
     #settings.gis.map_height = 600
     #settings.gis.map_width = 854
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
@@ -131,29 +131,29 @@ def config(settings):
     # Use PCodes for Locations import
     settings.gis.lookup_code = "PCode"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Events
     # Make Event Types Hierarchical
     settings.event.types_hierarchical = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Vulnerability
     # Make Indicator Types Hierarchical
     settings.vulnerability.indicator_hierarchical = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Enable this for a UN-style deployment
     #settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
     #settings.ui.camp = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Uncomment to restrict the export formats available
     #settings.ui.export_formats = ["xls"]
 
     settings.ui.update_label = "Edit"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Summary Pages
     settings.ui.summary = [#{"common": True,
                            # "name": "cms",
@@ -175,7 +175,7 @@ def config(settings):
 
     settings.search.filter_manager = False
 
-    # =============================================================================
+    # =========================================================================
     # Menu
     current.response.menu = (
         #{"name": T("Places"),
@@ -246,10 +246,10 @@ def config(settings):
          }
         )
 
-    # =============================================================================
+    # =========================================================================
     # Custom Controllers
 
-    # =============================================================================
+    # =========================================================================
     def customise_gis_location_controller(**attr):
 
         s3 = current.response.s3
@@ -396,7 +396,7 @@ def config(settings):
 
     settings.customise_gis_location_controller = customise_gis_location_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_event_event_controller(**attr):
 
         s3 = current.response.s3
@@ -419,7 +419,7 @@ def config(settings):
 
     settings.customise_event_event_controller = customise_event_event_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_event_event_resource(r, tablename):
         """
             Customise event_event resource
@@ -550,14 +550,14 @@ def config(settings):
 
     settings.customise_event_event_resource = customise_event_event_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def represent_year(date):
         if date:
             return date.strftime("%Y")
         else:
             return ""
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_stats_demographic_data_resource(r, tablename):
         """
             Customise event_event resource
@@ -586,7 +586,7 @@ def config(settings):
 
     settings.customise_stats_demographic_data_resource = customise_stats_demographic_data_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_vulnerability_data_resource(r, tablename):
         """
             Customise vulnerability_data resource
@@ -657,7 +657,7 @@ def config(settings):
 
     settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
         """
             Customise event_event resource
@@ -756,7 +756,7 @@ def config(settings):
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
-    # =============================================================================
+    # =========================================================================
     # Modules
     # Comment/uncomment modules here to disable/enable them
     settings.modules = OrderedDict([
