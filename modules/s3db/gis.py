@@ -1360,7 +1360,7 @@ class S3LocationTagModel(S3Model):
                 (table.location_id == location_id)
 
         duplicate = current.db(query).select(table.id,
-                                              limitby=(0, 1)).first()
+                                             limitby=(0, 1)).first()
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE

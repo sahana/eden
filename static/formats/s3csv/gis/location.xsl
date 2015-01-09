@@ -33,7 +33,7 @@
          L5 L10n:XX.........L5 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For specific locations:
          Name...............Location Name
-         KV:XX..............Key,Value
+         KV:XX..............Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L10n:XX............name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For lowest-level specified:
          WKT................WKT

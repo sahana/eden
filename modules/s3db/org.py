@@ -38,6 +38,7 @@ __all__ = ("S3OrganisationModel",
            "S3OrganisationSectorModel",
            "S3OrganisationServiceModel",
            "S3OrganisationSummaryModel",
+           "S3OrganisationTagModel",
            "S3OrganisationTeamModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
@@ -560,6 +561,10 @@ class S3OrganisationModel(S3Model):
                        org_organisation_name = {"name": "name",
                                                 "joinby": "organisation_id",
                                                 },
+                       # Tags
+                       org_organisation_tag = {"name": "tag",
+                                               "joinby": "organisation_id",
+                                               },
                        # Sites
                        org_site = "organisation_id",
                        # Facilities
@@ -2395,6 +2400,73 @@ class S3OrganisationSummaryModel(S3Model):
         return dict()
 
 # =============================================================================
+class S3OrganisationTagModel(S3Model):
+    """
+        Organisation Tags
+    """
+
+    names = ("org_organisation_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Organisation Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        # - can be used to add custom fields
+        #
+        tablename = "org_organisation_tag"
+        self.define_table(tablename,
+                          self.org_organisation_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.org_organisation_tag_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_tag_deduplicate(item):
+        """
+           If the record is a duplicate then it will set the item method
+           to update
+
+           @param item: the S3ImportItem
+        """
+
+        data = item.data
+        tag = data.get("tag", None)
+        organisation_id = data.get("organisation_id", None)
+
+        if not tag or not organisation_id:
+            return
+
+        table = item.table
+        query = (table.tag.lower() == tag.lower()) & \
+                (table.organisation_id == organisation_id)
+
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
+
+# =============================================================================
 class S3OrganisationTeamModel(S3Model):
     """
         Link table between Organisations & Teams
@@ -2467,9 +2539,6 @@ class S3OrganisationTypeTagModel(S3Model):
         T = current.T
 
         # ---------------------------------------------------------------------
-        # Local Names
-        #
-        # ---------------------------------------------------------------------
         # Organisation Type Tags
         # - Key-Value extensions
         # - can be used to provide conversions to external systems, such as:
@@ -2489,8 +2558,39 @@ class S3OrganisationTypeTagModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
+        self.configure(tablename,
+                       deduplicate = self.org_organisation_type_tag_deduplicate,
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_type_tag_deduplicate(item):
+        """
+           If the record is a duplicate then it will set the item method
+           to update
+
+           @param item: the S3ImportItem
+        """
+
+        data = item.data
+        tag = data.get("tag", None)
+        organisation_type_id = data.get("organisation_type_id", None)
+
+        if not tag or not organisation_type_id:
+            return
+
+        table = item.table
+        query = (table.tag.lower() == tag.lower()) & \
+                (table.organisation_type_id == organisation_type_id)
+
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SiteModel(S3Model):

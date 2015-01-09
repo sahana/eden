@@ -404,7 +404,7 @@ def config(settings):
     def customise_org_organisation_resource(r, tablename):
 
         from gluon.html import DIV, INPUT
-        from s3 import S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+        from s3 import s3_comments_widget, S3LocationSelector, S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
 
         s3db = current.s3db
 
@@ -460,6 +460,9 @@ def config(settings):
                 # Create form: Default
                 rss_import = None
 
+        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L3", "L4"),
+                                                                               show_map=False)
+        s3db.org_organisation_tag.value.widget = s3_comments_widget
         mtable = s3db.org_group_membership
         mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
         mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
@@ -490,6 +493,15 @@ def config(settings):
                 #widget = "hierarchy",
             ),
             S3SQLInlineComponent(
+                "tag",
+                label = T("Service Description"),
+                multiple = False,
+                fields = [("", "value")],
+                filterby = dict(field = "tag",
+                                options = "service_description"
+                                )
+            ),
+            S3SQLInlineComponent(
                 "group_membership",
                 label = T("Network"),
                 fields = [("", "group_id"),
@@ -504,16 +516,12 @@ def config(settings):
                 # Ultimately should go into location_id$addr_street
                 fields = [("", "comments")],
             ),
-            S3SQLInlineComponentMultiSelectWidget(
-                "location",
-                label = T("Neighborhoods Served"),
-                field = "location_id",
-                filterby = dict(field = "level",
-                                options = "L4"
-                                ),
-                # @ToDo: GroupedCheckbox Widget or Hierarchical MultiSelectWidget
-                #cols = 5,
-            ),
+            S3SQLInlineComponent(
+                "organisation_location",
+                label = T("Areas Served"),
+                fields = [("", "location_id"),
+                          ],
+                ),
             "phone",
             S3SQLInlineComponent(
                 "contact",

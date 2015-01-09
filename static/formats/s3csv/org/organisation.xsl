@@ -36,6 +36,7 @@
         Facebook................pr_contact.value
         Twitter.................pr_contact.value
         Logo....................org_organisation.logo
+        KV:XX...................org_organisation_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
         Comments................org_organisation.comments
         Approved................org_organisation.approved_by
 
@@ -430,9 +431,28 @@
                         </xsl:attribute>-->
                     </data>
                 </xsl:if>
+
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+
             </xsl:if>
         </resource>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_organisation_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
