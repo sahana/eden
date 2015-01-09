@@ -104,7 +104,6 @@ class S3WarehouseModel(S3Model):
     def model(self):
 
         T = current.T
-        #db = current.db
         messages = current.messages
         NONE = messages["NONE"]
         #add_components = self.add_components
@@ -171,10 +170,8 @@ class S3WarehouseModel(S3Model):
         # Warehouses
         #
 
-        settings = current.deployment_settings
-        db = current.db
-
-        if settings.get_inv_warehouse_code_unique():
+        if current.deployment_settings.get_inv_warehouse_code_unique():
+            db = current.db
             code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "inv_warehouse.code"))
         else:
             code_unique = None
@@ -240,52 +237,59 @@ class S3WarehouseModel(S3Model):
             msg_record_deleted = T("Warehouse deleted"),
             msg_list_empty = T("No Warehouses currently registered"))
 
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+
+        list_fields = ["name",
+                       "organisation_id",   # Filtered in Component views
+                       #"type",
+                       ]
+
+        text_fields = ["name",
+                       "code",
+                       "comments",
+                       "organisation_id$name",
+                       "organisation_id$acronym",
+                       ]
+
+        #report_fields = ["name",
+        #                 "organisation_id",
+        #                 ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            list_fields.append(lfield)
+            #report_fields.append(lfield)
+            text_fields.append(lfield)
+
+        list_fields += [#(T("Address"), "location_id$addr_street"),
+                        "phone1",
+                        "email",
+                        ]
+
         # Filter widgets
         filter_widgets = [
-                S3TextFilter(["name",
-                              "code",
-                              "comments",
-                              "organisation_id$name",
-                              "organisation_id$acronym",
-                              "location_id$name",
-                              "location_id$L1",
-                              "location_id$L2",
-                              ],
-                             label=T("Name"),
-                             _class="filter-search",
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         #_class="filter-search",
+                         ),
+            S3OptionsFilter("organisation_id",
+                            #hidden=True,
+                            #label=T("Organization"),
+                            # Doesn't support l10n
+                            #represent="%(name)s",
+                            ),
+            S3LocationFilter("location_id",
+                             #hidden=True,
+                             #label=T("Location"),
+                             levels=levels,
                              ),
-                S3OptionsFilter("organisation_id",
-                                label=T("Organization"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                S3LocationFilter("location_id",
-                                 label=T("Location"),
-                                 levels=["L0", "L1", "L2"],
-                                 widget="multiselect",
-                                 cols=3,
-                                 #hidden=True,
-                                 ),
-                ]
+            ]
 
         configure(tablename,
                   deduplicate = self.inv_warehouse_duplicate,
-                  filter_widgets=filter_widgets,
-                  list_fields=["id",
-                               "name",
-                               "organisation_id",   # Filtered in Component views
-                               #"type",
-                               #(T("Address"), "location_id$addr_street"),
-                               (messages.COUNTRY, "location_id$L0"),
-                               "location_id$L1",
-                               "location_id$L2",
-                               "location_id$L3",
-                               #"location_id$L4",
-                               "phone1",
-                               "email"
-                               ],
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   onaccept = self.inv_warehouse_onaccept,
                   realm_components = ("contact_emergency",
                                       "physical_description",
