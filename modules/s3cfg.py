@@ -92,6 +92,40 @@ class S3Config(Storage):
                     "zh-cn": "%Y-%m-%d",
                     "zh-tw": "%Y/%m/%d",
                     }
+    # Custom fonts for each language
+    # fontset format -> [normal-version, bold-version]
+    font = {"ar": ["Helvetica", "Helvetica-Bold"],
+            "bs": ["Helvetica", "Helvetica-Bold"],
+            "de": ["Helvetica", "Helvetica-Bold"],
+            "el": ["Helvetica", "Helvetica-Bold"],
+            "es": ["Helvetica", "Helvetica-Bold"],
+            "en": ["Helvetica", "Helvetica-Bold"],
+            "fr": ["Helvetica", "Helvetica-Bold"],
+            "hr": ["Helvetica", "Helvetica-Bold"],
+            "it": ["Helvetica", "Helvetica-Bold"],
+            "ja": ["Helvetica", "Helvetica-Bold"],
+            "km": ["Helvetica", "Helvetica-Bold"],
+            "ko": ["Helvetica", "Helvetica-Bold"],
+            "mn": ["Helvetica", "Helvetica-Bold"],
+            "ne": ["Helvetica", "Helvetica-Bold"],
+            "prs": ["Helvetica", "Helvetica-Bold"],
+            "ps": ["Helvetica", "Helvetica-Bold"],
+            "pt": ["Helvetica", "Helvetica-Bold"],
+            "pt-br": ["Helvetica", "Helvetica-Bold"],
+            "ru": ["Helvetica", "Helvetica-Bold"],
+            "si": ["Helvetica", "Helvetica-Bold"],
+            "sr": ["Helvetica", "Helvetica-Bold"],
+            "sv": ["Helvetica", "Helvetica-Bold"],
+            "ta": ["Helvetica", "Helvetica-Bold"],
+            "tet": ["Helvetica", "Helvetica-Bold"],
+            "th": ["Helvetica", "Helvetica-Bold"],
+            "tr": ["unifont", "unifont"],
+            "tl": ["Helvetica", "Helvetica-Bold"],
+            "ur": ["Helvetica", "Helvetica-Bold"],
+            "vi": ["Helvetica", "Helvetica-Bold"],
+            "zh-cn": ["Helvetica", "Helvetica-Bold"],
+            "zh-tw": ["Helvetica", "Helvetica-Bold"],
+            }
 
     # PDF fonts for each language
     # fontset format -> [normal-version, bold-version]
@@ -1434,6 +1468,10 @@ class S3Config(Storage):
                 excluded_fields_dict.get(resourcename, [])
 
         return excluded_fields
+
+    def get_pdf_export_font(self):
+        language = current.session.s3.language
+        return self.font.get(language)
 
     # -------------------------------------------------------------------------
     # UI Settings

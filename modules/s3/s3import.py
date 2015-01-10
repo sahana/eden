@@ -37,6 +37,7 @@ __all__ = ("S3Importer",
 import cPickle
 import os
 import sys
+import requests
 import urllib2          # Needed for error handling on fetch
 import uuid
 from copy import deepcopy
@@ -3957,6 +3958,39 @@ class S3BulkImporter(object):
                 create_role(rulelist[0],
                             rulelist[1],
                             *acls[rulelist[0]])
+
+    # -------------------------------------------------------------------------
+    def import_font(self, url):
+        """
+            Import a Font File
+        """
+
+        filename = url.split("/")[-1]
+        extension = url.split(".")[-1]
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.content
+
+            if extension == "zip":
+                import zipfile
+                zf = zipfile.ZipFile(StringIO(data))
+                for fn in zf.namelist():
+                    data = zf.read(fn)
+
+            if extension == "gz":
+                import tarfile
+                tf = tarfile.open(fileobj=StringIO(data))
+                for fn in tf.getnames():
+                    data = tf.extractFile(fn).read()
+
+            f = open(os.path.join(current.request.folder,
+                                  "static",
+                                  "fonts",
+                                  filename), "wb")
+            f.write(data)
+            f.close()
+        else:
+            current.log.error("Network Error, Unable to import font")
 
     # -------------------------------------------------------------------------
     def import_user(self, filename):
