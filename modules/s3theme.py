@@ -220,19 +220,23 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         if isinstance(label, LABEL):
             label.add_class("left inline")
 
-        controls_col = DIV(widget, _class="medium-6 columns controls")
+        controls_col = DIV(widget, _class="medium-10 columns controls")
         if label:
             label_col = DIV(label, _class="medium-2 columns")
         else:
             label_col = ""
             controls_col.add_class("medium-offset-2")
-        comments_col = DIV(render_tooltip(label, comment),
-                           _class="medium-4 columns inline-tooltip")
+
+        if comment:
+            comment = render_tooltip(label,
+                                     comment,
+                                     _class="inline-tooltip tooltip",
+                                     )
+            controls_col.append(comment)
 
         _class = "form-row row hide" if hidden else "form-row row"
         return DIV(label_col,
                    controls_col,
-                   comments_col,
                    _class=_class, _id=row_id)
 
     if args:
@@ -321,7 +325,7 @@ def formstyle_table_inline(form, fields, *args, **kwargs):
         return parent
 
 # =============================================================================
-def render_tooltip(label, comment):
+def render_tooltip(label, comment, _class="tooltip"):
     """ Render a tooltip for a form field """
 
     if not comment:
@@ -329,7 +333,7 @@ def render_tooltip(label, comment):
     elif isinstance(comment, (lazyT, basestring)):
         if hasattr(label, "flatten"):
             label = label.flatten().strip("*")
-        tooltip = DIV(_class = "tooltip",
+        tooltip = DIV(_class = _class,
                       _title = "%s|%s" % (label, comment))
     else:
         tooltip = comment

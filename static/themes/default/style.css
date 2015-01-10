@@ -188,7 +188,7 @@ select {
   max-width: 100%;
 }
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
-  width: 500px !important;
+  width: 20rem !important;
 }
 
 .item-container .controls {
@@ -619,6 +619,11 @@ table.dataTable .selected-action {
   padding: 0.5em;
 }
 
+.widget-container #list-btn-add {
+    margin-bottom: 0;
+    position: relative;
+    top: 1.0rem;
+}
 #summary-tabs {
   margin-top: 10px;
 }
