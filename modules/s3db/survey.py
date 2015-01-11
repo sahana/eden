@@ -247,6 +247,13 @@ class S3SurveyTemplateModel(S3Model):
                        survey_translate = "template_id",
                        )
 
+        set_method = self.set_method
+        set_method("survey", "template",
+                   component_name = "translate",
+                   method = "translate_download",
+                   action = survey_TranslateDownload,
+                   )
+
         configure(tablename,
                   deduplicate = self.survey_template_duplicate,
                   onaccept = self.template_onaccept,
@@ -642,9 +649,9 @@ def survey_getAllSectionsForSeries(series_id):
     """
 
     table = current.s3db.survey_series
-    row = current.db(table.series_id == series_id).select(table.template_id,
-                                                          limitby = (0, 1)
-                                                          ).first()
+    row = current.db(table.id == series_id).select(table.template_id,
+                                                   limitby = (0, 1),
+                                                   ).first()
     return survey_getAllSectionsForTemplate(row.template_id)
 
 # =============================================================================
@@ -1616,8 +1623,12 @@ class S3SurveySeriesModel(S3Model):
                           Field("language", length=8,
                                 default = "en",
                                 ),
-                          s3_date("start_date"),
-                          s3_date("end_date"),
+                          s3_date("start_date",
+                                  label = T("Start Date"),
+                                  ),
+                          s3_date("end_date",
+                                  label = T("End Date"),
+                                  ),
                           #self.super_link("source_id", "doc_source_entity"),
                           *s3_meta_fields())
 
@@ -1669,6 +1680,8 @@ class S3SurveySeriesModel(S3Model):
                    action = self.seriesMap)
         set_method("survey", "series", method="series_chart_download",
                    action = self.seriesChartDownload)
+        set_method("survey", "series", method="export_responses",
+                   action = survey_ExportResponses)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2382,9 +2395,9 @@ def survey_series_rheader(r):
             except:
                 pass
             urlimport = URL(c="survey",
-                            f="export_all_responses",
-                            args=[record.id],
-                            )
+                            f="series",
+                            args=[record.id, "export_responses"],
+                            extension="xls")
             buttons = DIV(A(T("Export all Completed Assessment Data"),
                             _href=urlimport,
                             _id="All_resposnes",
@@ -3348,4 +3361,208 @@ def survey_getAllTranslationsForSeries(series_id):
     template_id = row.template_id
     return survey_getAllTranslationsForTemplate(template_id)
 
+# =============================================================================
+class survey_TranslateDownload(S3Method):
+    """
+        Download a Translation Template
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.representation != 'xls':
+            r.error(501, current.ERROR.BAD_FORMAT)
+
+        if r.id is None:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        translation_id = self.record_id
+        T = current.T
+
+        try:
+           import xlwt
+        except ImportError:
+            r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
+
+        s3 = current.response.s3
+        s3db = current.s3db
+        db = current.db
+        table = s3db.survey_translate
+        record = db(table.id == translation_id).select(table.code,
+                                                       table.language,
+                                                       limitby=(0, 1)).first()
+        if record is None:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        appname = r.application
+        code = record.code
+        language = record.language
+
+        from s3survey import S3QuestionTypeOptionWidget
+        lang_fileName = "applications/%s/languages/%s.py" % \
+                                  (appname, code)
+        try:
+            from gluon.languages import read_dict
+            strings = read_dict(lang_fileName)
+        except IOError:
+            strings = dict()
+
+        template_id = r.id
+        # Load Model
+        table = s3db.survey_template
+
+        template = db(table.id == template_id).select(table.name,
+                                                      table.description,
+                                                      limitby=(0, 1)).first()
+        book = xlwt.Workbook(encoding="utf-8")
+        sheet = book.add_sheet(language)
+        output = StringIO()
+        qstnList = s3db.survey_getAllQuestionsForTemplate(template_id)
+        original = {}
+        original[template.name] = True
+        if template.description != "":
+            original[template.description] = True
+
+        for qstn in qstnList:
+            original[qstn["name"]] = True
+            widgetObj = survey_question_type[qstn["type"]](question_id = qstn["qstn_id"])
+            if isinstance(widgetObj, S3QuestionTypeOptionWidget):
+                optionList = widgetObj.getList()
+                for option in optionList:
+                    original[option] = True
+        sections = s3db.survey_getAllSectionsForTemplate(template_id)
+
+        for section in sections:
+            original[section["name"]] = True
+            section_id = section["section_id"]
+            layoutRules = s3db.survey_getQstnLayoutRules(template_id, section_id)
+            layoutStr = str(layoutRules)
+            posn = layoutStr.find("heading")
+            while posn != -1:
+                start = posn + 11
+                end = layoutStr.find("}", start)
+                original[layoutStr[start:end]] = True
+                posn = layoutStr.find("heading", end)
+
+        row = 0
+        sheet.write(row, 0, u"Original")
+        sheet.write(row, 1, u"Translation")
+        originalList = original.keys()
+        originalList.sort()
+
+        for text in originalList:
+            row += 1
+            original = unicode(text)
+            sheet.write(row, 0, s3_unicode(original))
+            if (original in strings):
+                sheet.write(row, 1, s3_unicode(strings[original]))
+
+        from gluon.contenttype import contenttype
+        book.save(output)
+        output.seek(0)
+        current.response.headers["Content-Type"] = contenttype(".xls")
+        filename = "%s.xls" % code
+        current.response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+        return output.read()
+
+class survey_ExportResponses(S3Method):
+    """
+        Download all responses in a Spreadsheet
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.representation != "xls":
+            r.error(501, current.error.BAD_FORMAT)
+
+        if r.id is None:
+            r.error(405, current.error.BAD_METHOD)
+
+        s3db = current.s3db
+        series_id = r.id
+        try:
+            import xlwt
+        except ImportError:
+            r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
+
+        T = current.T
+        db = current.db
+
+        # Load Model
+        table = s3db.survey_series
+
+        sectionBreak = False
+        try:
+            filename = "%s_All_responses.xls" % r.record.name
+        except AttributeError:
+            r.error(500, T("Series not found!"))
+
+        output = StringIO()
+        book = xlwt.Workbook(encoding="utf-8")
+        # Get all questions and write out as a heading
+        col = 0
+        completeRow = {}
+        nextRow = 2
+        qstnList = s3db.survey_getAllQuestionsForSeries(series_id)
+        if len(qstnList) > 256:
+            sectionList = s3db.survey_getAllSectionsForSeries(series_id)
+            sectionBreak = True
+        if sectionBreak:
+            sheets = {}
+            cols = {}
+            for section in sectionList:
+                sheetName = section["name"].split(" ")[0]
+                if sheetName not in sheets:
+                    sheets[sheetName] = book.add_sheet(sheetName)
+                    cols[sheetName] = 0
+        else:
+            sheet = book.add_sheet(T("Responses", lazy = False))
+        for qstn in qstnList:
+            if sectionBreak:
+                sheetName = qstn["section"].split(" ")[0]
+                sheet = sheets[sheetName]
+                col = cols[sheetName]
+            row = 0
+            sheet.write(row, col, s3_unicode(qstn["code"]))
+            row += 1
+            widgetObj = s3db.survey_getWidgetFromQuestion(qstn["qstn_id"])
+            sheet.write(row, col, s3_unicode(widgetObj.fullName()))
+            # For each question get the response
+            allResponses = s3db.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
+                                                                        series_id)
+            for answer in allResponses:
+                value = answer["value"]
+                complete_id = answer["complete_id"]
+                if complete_id in completeRow:
+                    row = completeRow[complete_id]
+                else:
+                    completeRow[complete_id] = nextRow
+                    row = nextRow
+                    nextRow += 1
+                sheet.write(row, col, s3_unicode(value))
+            col += 1
+            if sectionBreak:
+                cols[sheetName] += 1
+        sheet.panes_frozen = True
+        sheet.horz_split_pos = 2
+        book.save(output)
+
+        from gluon.contenttype import contenttype
+        response = current.response
+
+        output.seek(0)
+        response.headers["Content-Type"] = contenttype(".xls")
+        response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+        return output.read()
 # END =========================================================================
