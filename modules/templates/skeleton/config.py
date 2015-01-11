@@ -78,6 +78,7 @@ def config(settings):
     #    ("ru", "русский"),
     #    ("tet", "Tetum"),
     #    ("tl", "Tagalog"),
+    #    ("tr", "Türkçe"),
     #    ("ur", "اردو"),
     #    ("vi", "Tiếng Việt"),
     #    ("zh-cn", "中文 (简体)"),

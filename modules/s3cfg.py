@@ -86,6 +86,7 @@ class S3Config(Storage):
                     #"tet": "",
                     "th": "%d/%m/%Y",
                     #"tl": "",
+                    "tr": "%d.%m.%Y",
                     #"ur": "",
                     "vi": "%d/%m/%Y",
                     "zh-cn": "%Y-%m-%d",
@@ -1258,6 +1259,7 @@ class S3Config(Storage):
                                                        #("ta", "தமிழ்"),               # Tamil
                                                        #("th", "ภาษาไทย"),        # Thai
                                                        ("tl", "Tagalog"),
+                                                       ("tr", "Türkçe"),
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),
                                                        ]))
