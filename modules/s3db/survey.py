@@ -70,6 +70,11 @@ __all__ = ("S3SurveyTemplateModel",
            )
 
 try:
+    from cStringIO import StringIO    # Faster, where available
+except:
+    from StringIO import StringIO
+
+try:
     import json # try stdlib (Python 2.6)
 except ImportError:
     try:
@@ -2764,10 +2769,6 @@ class S3SurveyCompleteModel(S3Model):
 
         import csv
         import os
-        try:
-            from cStringIO import StringIO    # Faster, where available
-        except:
-            from StringIO import StringIO
 
         strio = StringIO()
         strio.write(list)
@@ -3189,7 +3190,7 @@ def getLocationList(series_id):
                 continue
 
         for locCode in codeList:
-            # Retrieve the name of the lowest Lx 
+            # Retrieve the name of the lowest Lx
             if locCode in answer_dict:
                 name = answer_dict[locCode]
                 break
@@ -3375,53 +3376,45 @@ class survey_TranslateDownload(S3Method):
             @param attr: controller arguments
         """
 
-        if r.representation != 'xls':
+        if r.representation != "xls":
             r.error(501, current.ERROR.BAD_FORMAT)
 
-        if r.id is None:
+        template_id = r.id
+        template = r.record
+        if not template:
             r.error(405, current.ERROR.BAD_METHOD)
 
-        translation_id = self.record_id
         T = current.T
-
         try:
            import xlwt
         except ImportError:
             r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
 
-        s3 = current.response.s3
         s3db = current.s3db
         db = current.db
+
+        # Get the translate record
         table = s3db.survey_translate
-        record = db(table.id == translation_id).select(table.code,
+        record = db(table.id == self.record_id).select(table.code,
                                                        table.language,
                                                        limitby=(0, 1)).first()
         if record is None:
             r.error(404, current.ERROR.BAD_RECORD)
 
-        appname = r.application
         code = record.code
-        language = record.language
-
         from s3survey import S3QuestionTypeOptionWidget
-        lang_fileName = "applications/%s/languages/%s.py" % \
-                                  (appname, code)
+        lang_fileName = "applications/%s/languages/%s.py" % (r.application,
+                                                             code)
         try:
             from gluon.languages import read_dict
             strings = read_dict(lang_fileName)
         except IOError:
             strings = dict()
 
-        template_id = r.id
-        # Load Model
-        table = s3db.survey_template
-
-        template = db(table.id == template_id).select(table.name,
-                                                      table.description,
-                                                      limitby=(0, 1)).first()
-        book = xlwt.Workbook(encoding="utf-8")
-        sheet = book.add_sheet(language)
         output = StringIO()
+
+        book = xlwt.Workbook(encoding="utf-8")
+        sheet = book.add_sheet(record.language)
         qstnList = s3db.survey_getAllQuestionsForTemplate(template_id)
         original = {}
         original[template.name] = True
@@ -3462,14 +3455,19 @@ class survey_TranslateDownload(S3Method):
             if (original in strings):
                 sheet.write(row, 1, s3_unicode(strings[original]))
 
-        from gluon.contenttype import contenttype
         book.save(output)
-        output.seek(0)
-        current.response.headers["Content-Type"] = contenttype(".xls")
+
+        from gluon.contenttype import contenttype
         filename = "%s.xls" % code
-        current.response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+
+        headers = current.response.headers
+        headers["Content-Type"] = contenttype(".xls")
+        headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
+
+        output.seek(0)
         return output.read()
 
+# =============================================================================
 class survey_ExportResponses(S3Method):
     """
         Download all responses in a Spreadsheet
@@ -3486,29 +3484,26 @@ class survey_ExportResponses(S3Method):
         if r.representation != "xls":
             r.error(501, current.error.BAD_FORMAT)
 
-        if r.id is None:
+        series_id = self.record_id
+        if series_id is None:
             r.error(405, current.error.BAD_METHOD)
 
         s3db = current.s3db
-        series_id = r.id
+
+        T = current.T
         try:
             import xlwt
         except ImportError:
             r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
 
-        T = current.T
-        db = current.db
-
-        # Load Model
-        table = s3db.survey_series
-
         sectionBreak = False
         try:
             filename = "%s_All_responses.xls" % r.record.name
         except AttributeError:
-            r.error(500, T("Series not found!"))
+            r.error(404, T("Series not found!"))
 
         output = StringIO()
+
         book = xlwt.Workbook(encoding="utf-8")
         # Get all questions and write out as a heading
         col = 0
@@ -3556,13 +3551,16 @@ class survey_ExportResponses(S3Method):
                 cols[sheetName] += 1
         sheet.panes_frozen = True
         sheet.horz_split_pos = 2
+
         book.save(output)
 
         from gluon.contenttype import contenttype
-        response = current.response
+
+        headers = current.response.headers
+        headers["Content-Type"] = contenttype(".xls")
+        headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
 
         output.seek(0)
-        response.headers["Content-Type"] = contenttype(".xls")
-        response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
         return output.read()
+
 # END =========================================================================

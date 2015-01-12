@@ -690,7 +690,14 @@ def config(settings):
                 elif r.component_name == "human_resource":
                     # Don't assume that user is from same org/site as Contacts they create
                     r.component.table.site_id.default = None
-
+                    # Put organisation contacts on top of the list
+                    s3db.configure("hrm_human_resource",
+                                   orderby = ("hrm_human_resource.org_contact desc",
+                                              "pr_person.first_name asc",
+                                              "pr_person.middle_name asc",
+                                              "pr_person.last_name asc",
+                                              ),
+                                   )
             return result
         s3.prep = custom_prep
 
@@ -1540,6 +1547,13 @@ def config(settings):
                     s3db = current.s3db
                     s3db.configure("hrm_human_resource",
                                    filter_widgets = filter_widgets,
+                                   # Put organisation contacts first
+                                   orderby = ("org_organisation.name asc",
+                                              "hrm_human_resource.org_contact desc",
+                                              "pr_person.first_name asc",
+                                              "pr_person.middle_name asc",
+                                              "pr_person.last_name asc",
+                                              ),
                                    )
 
                     s3db.pr_contact.access.default = 2 # Primary contacts should be Public
@@ -1585,6 +1599,7 @@ def config(settings):
                                         })
         field = s3db.hrm_human_resource.org_contact
         field.readable = field.writable = True
+        field.label = T("PoC") # really?
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm("person_id",

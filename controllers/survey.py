@@ -47,7 +47,7 @@ def create():
         Enter a new assessment.
         - provides a simpler URL to access from mobile devices...
     """
-    
+
     redirect(URL(f="newAssessment.iframe",
                  vars={"viewing": "survey_series.%s" % request.args[0]}))
 
