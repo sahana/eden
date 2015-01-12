@@ -1,6 +1,8 @@
 /* Hide L3 Row (L2 pretends to be L3) */
 
 #org_facility_location_id_L3__row,
+#sub_defaultfacility_defaultfacility_i_location_id_edit_none_L3__row,
+#sub_defaultfacility_defaultfacility_i_location_id_edit_0_L3__row,
 #sub_defaultorganisation_location_defaultorganisation_location_i_location_id_edit_none_L3__row,
 #sub_defaultorganisation_location_defaultorganisation_location_i_location_id_edit_0_L3__row {
     display: none !important;
