@@ -4420,7 +4420,9 @@ class S3LocationSelector(S3Selector):
                 break
 
         # Field name for ID construction
-        fieldname = str(field).replace(".", "_")
+        fieldname = attributes.get("_name")
+        if not fieldname:
+            fieldname = str(field).replace(".", "_")
 
         # Load initial Hierarchy Labels (for Lx dropdowns)
         labels, labels_compact = self._labels(levels,
