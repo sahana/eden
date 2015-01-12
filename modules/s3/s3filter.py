@@ -380,10 +380,13 @@ class S3FilterWidget(object):
         alias = self.alias
         if alias is None:
             alias = "~"
-        if "." not in selector.split("$", 1)[0]:
-            return "%s.%s" % (alias, selector)
-        else:
-            return selector
+
+        head = selector.split("$", 1)[0]
+        if "." not in head:
+            selector = "%s.%s" % (alias, selector)
+        elif alias != "~" & head.split(".", 1)[0] != alias:
+            selector = "%s.%s" % (alias, selector)
+        return selector
 
     # -------------------------------------------------------------------------
     def _selector(self, resource, fields):
