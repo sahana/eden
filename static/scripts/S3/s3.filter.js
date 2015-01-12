@@ -1139,11 +1139,13 @@ S3.search = {};
                 if (undefined === gis.maps[map_id]) {
                     // Instantiate the map (can't be done when the DIV is hidden)
                     var options = gis.options[map_id];
-                    gis.show_map(map_id, options);
-                    // Get the current Filters
-                    var queries = getCurrentFilters($('#' + form));
-                    // Load the layer
-                    gis.refreshLayer('search_results', queries);
+                    if (undefined != options) {
+                        gis.show_map(map_id, options);
+                        // Get the current Filters
+                        var queries = getCurrentFilters($('#' + form));
+                        // Load the layer
+                        gis.refreshLayer('search_results', queries);
+                    }
                 }
             }
         }

@@ -142,9 +142,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
         if current.request.function in ("facility", "facility_type"):
             ADMIN = current.session.s3.system_roles.ADMIN
             return M()(
-                   M("Facilities", c="org", f="facility", m="summary")(
-                        M("View"),
-                        M("Create", m="create"),
+                    M("Create a Facility", c="org", f="facility", m="create")(
+                    ),
+                    M("View Facilities", c="org", f="facility", m="summary")(
+                        M("List", m="summary"),
+                        M("Map", m="summary", vars={"t":2}),
+                        M("Report", m="summary", vars={"t":1}),
                     ),
                     M("Import Facilities", c="org", f="facility", m="import",
                       restrict=[ADMIN])(
