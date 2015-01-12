@@ -844,10 +844,19 @@ def config(settings):
                                                                fields = [("", "project_id")],
                                                                multiple = False,
                                                                ))
+            
             crud_form = S3SQLCustomForm(*crud_fields)
-
+            get_config = s3db.get_config
+            list_fields = get_config(tablename, "list_fields")
+            filter_widgets = get_config(tablename, "filter_widgets")
+            # Remove 'Assigned to' field
+            list_fields.remove("pe_id")
+            custom_filter_widgets = [widget for widget in filter_widgets \
+                                                if "pe_id" not in widget.field ]
             s3db.configure(tablename,
                            crud_form = crud_form,
+                           list_fields = list_fields,
+                           filter_widgets = custom_filter_widgets,
                            )
 
     settings.customise_project_task_resource = customise_project_task_resource
