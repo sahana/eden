@@ -95,6 +95,10 @@
             this._openSingleRowSubforms();
             this._enforceRequired();
 
+            // Find non-static header rows
+            this.labelRow = $('#sub-' + this.formname + ' .label-row:not(.static)');
+
+            this._showHeaders();
             this._bindEvents();
         },
 
@@ -334,6 +338,23 @@
             var addRow = $('#add-row-' + this.formname);
             addRow.find('input, select, textarea').prop('disabled', false);
             addRow.find('.inline-add, .action-lnk').removeClass('hide');
+        },
+
+        /**
+         * Show or hide non-static header row
+         */
+        _showHeaders: function() {
+
+            var labelRow = this.labelRow;
+            if (labelRow && labelRow.length) {
+                var formname = this.formname;
+                var visibleReadRows = $('#sub-' + formname + ' .read-row:visible');
+                if (visibleReadRows.length) {
+                    labelRow.show();
+                } else {
+                    labelRow.hide();
+                }
+            }
         },
 
         /**
@@ -729,6 +750,7 @@
 
             // Disable the add-row while editing
             this._disableAddRow();
+            this._showHeaders();
         },
 
         /**
@@ -755,6 +777,7 @@
 
             // Enable the add-row
             this._enableAddRow();
+            this._showHeaders();
         },
 
         /**
@@ -892,6 +915,7 @@
 
                     // Append read-row
                     this._appendReadRow(formname, read_row);
+                    this._showHeaders();
                 }
             }
 
@@ -1013,6 +1037,7 @@
 
                         // Re-enable add-row
                         this._enableAddRow();
+                        this._showHeaders();
                     }
                 }
 
@@ -1048,6 +1073,7 @@
 
             // Remove the read-row for this item
             $('#read-row-' + rowname).remove();
+            this._showHeaders();
 
             // Remove all uploads for this item
             $('input[name^="' + 'upload_' + formname + '_"][name$="_' + rowindex + '"]').remove();
@@ -1272,70 +1298,6 @@
             self._serialize();
         },
 
-        /**
-         * S3LocationSelectorWidget2: change-event handler
-         *
-         * @param {event} event - the change event
-         */
-        _locationSelectorOnChange: function(event) {
-
-            var self = event.data.widget;
-
-            var $this = $(this);
-            var names = $this.attr('id').split('_');
-            var formname = names[1];
-
-            // @ToDo: Handle multiple=True
-            // - add-row always visible
-            // - delete
-            // - represent
-            if ($('#add-row-' + formname).is(':visible')) {
-                // Don't do anything if we're in a Create row as we'll be processed on form submission
-                return;
-            }
-            var fieldname = names[4] + '_' + names[5];
-
-            // Read current data from real input
-            var data = self._deserialize().data;
-
-            var new_value = $this.val(),
-                old_value,
-                item,
-                found = false;
-            for (var prop in data) {
-                item = data[prop];
-                if (item.hasOwnProperty(fieldname)) {
-                    found = true;
-                    old_value = item[fieldname].value;
-                    if (old_value) {
-                        old_value = old_value.toString();
-                    }
-                    break;
-                }
-            }
-
-            var represent;
-            if (found && (new_value != old_value)) {
-                // Modify the Data
-                item[fieldname].value = new_value;
-                // Calculate represent from Street Address or lowest-Lx.
-                // Only needed when we support multiple=True
-                represent = 'todo';
-                item[fieldname].text = represent;
-                item._changed = true;
-            } else if (new_value) {
-                // Add a New Item
-                item = {};
-                represent = 'todo';
-                item[fieldname] = {'text': represent, 'value': new_value};
-                item._changed = true;
-                data.push(item);
-            }
-
-            // Write data back to real input
-            self._serialize();
-        },
-
         // Event Management ---------------------------------------------------
 
         /**
@@ -1471,10 +1433,6 @@
                 el.find('.inline-multiselect-widget')
                   .bind('change' + ns, {widget: this}, this._multiselectOnChange);
             }
-
-            // Event Management for S3LocationSelectorWidget2
-            el.find('.inline-locationselector-widget')
-              .bind('change' + ns, {widget: this}, this._locationSelectorOnChange);
 
             return true;
         },

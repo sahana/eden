@@ -1789,7 +1789,7 @@ class S3SQLSubFormLayout(object):
 
         # Don't render a header row if there are no labels
         render_header = False
-        header_row = TR(_class="label-row")
+        header_row = TR(_class="label-row static")
         happend = header_row.append
         for f in fields:
             label = f["label"]
@@ -1863,9 +1863,18 @@ class S3SQLSubFormLayout(object):
                 append(action(T("Add this entry"), "add", throbber=True))
 
     # -------------------------------------------------------------------------
+    def rowstyle_read(self, form, fields, *args, **kwargs):
+        """
+            Formstyle for subform read-rows, normally identical
+            to rowstyle, but can be different in certain layouts
+        """
+
+        return self.rowstyle(form, fields, *args, **kwargs)
+
+    # -------------------------------------------------------------------------
     def rowstyle(self, form, fields, *args, **kwargs):
         """
-            Formstyle for subform rows
+            Formstyle for subform action-rows
         """
 
         def render_col(col_id, label, widget, comment, hidden=False):
@@ -2262,7 +2271,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         tablename = component.tablename
 
         # Configure the layout
-        layout = current.deployment_settings.get_ui_inline_component_layout()
+        layout = self._layout()
         columns = self.options.get("columns")
         if columns:
             layout.set_columns(columns, row_actions = multiple)
@@ -2454,7 +2463,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         resource = self.resource
         component = resource.components[data["component"]]
 
-        layout = current.deployment_settings.get_ui_inline_component_layout()
+        layout = self._layout()
         columns = self.options.get("columns")
         if columns:
             layout.set_columns(columns, row_actions=False)
@@ -2726,6 +2735,17 @@ class S3SQLInlineComponent(S3SQLSubForm):
             return "%s%s" % (self.alias, self.selector)
 
     # -------------------------------------------------------------------------
+    def _layout(self):
+        """ Get the current layout """
+
+        layout = self.options.layout
+        if not layout:
+            layout = current.deployment_settings.get_ui_inline_component_layout()
+        elif isinstance(layout, type):
+            layout = layout()
+        return layout
+
+    # -------------------------------------------------------------------------
     def _render_item(self,
                      table,
                      item,
@@ -2823,10 +2843,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
         # Render the subform
         subform_name = "sub_%s" % formname
+        rowstyle = layout.rowstyle_read if readonly else layout.rowstyle
         subform = SQLFORM.factory(*formfields,
                                   record=data,
                                   showid=False,
-                                  formstyle=layout.rowstyle,
+                                  formstyle=rowstyle,
                                   upload = s3.download_url,
                                   readonly=readonly,
                                   table_name=subform_name,
