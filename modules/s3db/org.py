@@ -3538,21 +3538,6 @@ class S3FacilityModel(S3Model):
                                       "address",
                                       ),
                   report_options = report_options,
-                  summary = [{"name": "table",
-                              "label": "Table",
-                              "widgets": [{"method": "datatable"}]
-                              },
-                             {"name": "report",
-                              "label": "Report",
-                              "widgets": [{"method": "report",
-                                           "ajax_init": True}]
-                              },
-                             {"name": "map",
-                              "label": "Map",
-                              "widgets": [{"method": "map",
-                                           "ajax_init": True}],
-                              },
-                             ],
                   super_entity = ("doc_entity", "org_site", "pr_pentity"),
                   update_realm = True,
                   )

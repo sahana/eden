@@ -315,16 +315,18 @@ def config(settings):
             S3OptionsFilter("organisation_id",
                             ),
             S3LocationFilter("location_id",
-                             levels = ("L3", "L4"),
+                             levels = ("L2", "L4"),
                              ),
-             S3OptionsFilter("site_org_group.group_id",
-                             represent = "%(name)s",
-                             ),
+            S3OptionsFilter("site_org_group.group_id",
+                            represent = "%(name)s",
+                            ),
             ]
 
         current.s3db.configure(tablename,
                                filter_widgets = filter_widgets,
                                )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
 
     # -------------------------------------------------------------------------
     def customise_org_facility_controller(**attr):
@@ -356,15 +358,12 @@ def config(settings):
                 table = s3db[tablename]
 
                 if not r.component and r.method in (None, "create", "update"):
-                    from s3 import IS_LOCATION, S3LocationSelector, S3MultiSelectWidget
+                    from s3 import S3LocationSelector, S3MultiSelectWidget
                     field = table.location_id
                     if r.method in ("create", "update"):
                         field.label = "" # Gets replaced by widget
-                    levels = ("L3", "L4")
-                    field.requires = IS_LOCATION()
+                    levels = ("L2", "L3", "L4")
                     field.widget = S3LocationSelector(levels=levels,
-                                                      hide_lx=False,
-                                                      reverse_lx=True,
                                                       show_address=True,
                                                       # Using L4 instead
                                                       show_postcode=False,
@@ -460,7 +459,7 @@ def config(settings):
                 # Create form: Default
                 rss_import = None
 
-        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L3", "L4"),
+        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L2", "L3", "L4"),
                                                                                show_map=False)
         s3db.org_organisation_tag.value.widget = s3_comments_widget
         mtable = s3db.org_group_membership
@@ -605,9 +604,7 @@ def config(settings):
             postprocess = pr_contact_postprocess,
         )
 
-        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
-        # activate hierarchical org_service:
-        #from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter, S3HierarchyFilter
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter#, S3HierarchyFilter
         filter_widgets = [
             S3TextFilter(["name", "acronym"],
                          label = T("Name"),
@@ -620,19 +617,19 @@ def config(settings):
                             ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),
-                             levels = ("L3", "L4"),
+                             levels = ("L2", "L4"),
                              #hidden = True,
                              ),
             S3LocationFilter("organisation_location.location_id",
                              label = T("Areas Served"),
-                             levels = ("L3", "L4"),
+                             levels = ("L2", "L4"),
                              #hidden = True,
                              ),
             S3OptionsFilter("service_organisation.service_id",
                             #label = T("Service"),
                             #hidden = True,
                             ),
-            # activate hierarchical org_service:
+            # for hierarchical org_service:
             #S3HierarchyFilter("service_organisation.service_id",
             #                  #label = T("Service"),
             #                  #hidden = True,
@@ -673,16 +670,13 @@ def config(settings):
             if r.interactive:
                 if r.component_name == "facility":
                     if r.method in (None, "create", "update"):
-                        from s3 import IS_LOCATION, S3LocationSelector
+                        from s3 import S3LocationSelector
                         table = s3db.org_facility
                         field = table.location_id
                         if r.method in ("create", "update"):
                             field.label = "" # Gets replaced by widget
-                        levels = ("L3", "L4")
-                        field.requires = IS_LOCATION()
+                        levels = ("L2", "L3", "L4")
                         field.widget = S3LocationSelector(levels=levels,
-                                                          hide_lx=False,
-                                                          reverse_lx=True,
                                                           show_address=True,
                                                           # Using L4 instead
                                                           show_postcode=False,
@@ -759,11 +753,9 @@ def config(settings):
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     if r.method != "read":
                         from gluon.validators import IS_EMPTY_OR
-                        from s3 import IS_LOCATION, S3LocationSelector
+                        from s3 import S3LocationSelector
                         field = table.location_id
                         field.label = "" # Gets replaced by widget
-                        #field.requires = IS_LOCATION()
-                        #field.requires = IS_EMPTY_OR(IS_LOCATION()) # That's the default!
                         field.widget = S3LocationSelector(levels = ("L2",),
                                                           points = True,
                                                           polygons = True,
@@ -1280,171 +1272,6 @@ def config(settings):
     settings.customise_pr_group_resource = customise_pr_group_resource
 
     # -------------------------------------------------------------------------
-    def pr_contact_postprocess(form):
-        """
-            Import Organisation/Network RSS Feeds
-        """
-
-        s3db = current.s3db
-        form_vars = form.vars
-
-        rss_url = form_vars.rsscontact_i_value_edit_0 or \
-                  form_vars.rsscontact_i_value_edit_none
-        if not rss_url:
-            if form.record:
-                # Update form
-                old_rss = form.record.sub_rsscontact
-                import json
-                data = old_rss = json.loads(old_rss)["data"]
-                if data:
-                    # RSS feed is being deleted, so we should disable it
-                    old_rss = data[0]["value"]["value"]
-                    table = s3db.msg_rss_channel
-                    old = current.db(table.url == old_rss).select(table.channel_id,
-                                                                  table.enabled,
-                                                                  limitby = (0, 1)
-                                                                  ).first()
-                    if old and old.enabled:
-                        s3db.msg_channel_disable("msg_rss_channel", old.channel_id)
-                    return
-            else:
-                # Nothing to do :)
-                return
-
-        # Check if we already have a channel for this Contact
-        db = current.db
-        name = form_vars.name
-        table = s3db.msg_rss_channel
-        name_exists = db(table.name == name).select(table.id,
-                                                    table.channel_id,
-                                                    table.enabled,
-                                                    table.url,
-                                                    limitby = (0, 1)
-                                                    ).first()
-
-        no_import = current.request.post_vars.get("rss_no_import", None)
-
-        if name_exists:
-            if name_exists.url == rss_url:
-                # No change to either Contact Name or URL
-                if no_import:
-                    if name_exists.enabled:
-                        # Disable channel (& associated parsers)
-                        s3db.msg_channel_disable("msg_rss_channel",
-                                                 name_exists.channel_id)
-                    return
-                elif name_exists.enabled:
-                    # Nothing to do :)
-                    return
-                else:
-                    # Enable channel (& associated parsers)
-                    s3db.msg_channel_enable("msg_rss_channel",
-                                            name_exists.channel_id)
-                    return
-
-            # Check if we already have a channel for this URL
-            url_exists = db(table.url == rss_url).select(table.id,
-                                                         table.channel_id,
-                                                         table.enabled,
-                                                         limitby = (0, 1)
-                                                         ).first()
-            if url_exists:
-                # We have 2 feeds: 1 for the Contact & 1 for the URL
-                # Disable the old Contact one and link the URL one to this Contact
-                # and ensure active or not as appropriate
-                # Name field is unique so rename old one
-                name_exists.update_record(name="%s (Old)" % name)
-                if name_exists.enabled:
-                    # Disable channel (& associated parsers)
-                    s3db.msg_channel_disable("msg_rss_channel",
-                                             name_exists.channel_id)
-                url_exists.update_record(name=name)
-                if no_import:
-                    if url_exists.enabled:
-                        # Disable channel (& associated parsers)
-                        s3db.msg_channel_disable("msg_rss_channel",
-                                                 url_exists.channel_id)
-                    return
-                elif url_exists.enabled:
-                    # Nothing to do :)
-                    return
-                else:
-                    # Enable channel (& associated parsers)
-                    s3db.msg_channel_enable("msg_rss_channel",
-                                            url_exists.channel_id)
-                    return
-            else:
-                # Update the URL
-                name_exists.update_record(url=rss_url)
-                if no_import:
-                    if name_exists.enabled:
-                        # Disable channel (& associated parsers)
-                        s3db.msg_channel_disable("msg_rss_channel",
-                                                 name_exists.channel_id)
-                    return
-                elif name_exists.enabled:
-                    # Nothing to do :)
-                    return
-                else:
-                    # Enable channel (& associated parsers)
-                    s3db.msg_channel_enable("msg_rss_channel",
-                                            name_exists.channel_id)
-                    return
-        else:
-            # Check if we already have a channel for this URL
-            url_exists = db(table.url == rss_url).select(table.id,
-                                                         table.channel_id,
-                                                         table.enabled,
-                                                         limitby = (0, 1)
-                                                         ).first()
-            if url_exists:
-                # Either Contact has changed Name or this feed is associated with
-                # another Contact
-                # - update Feed name
-                url_exists.update_record(name=name)
-                if no_import:
-                    if url_exists.enabled:
-                        # Disable channel (& associated parsers)
-                        s3db.msg_channel_disable("msg_rss_channel",
-                                                 url_exists.channel_id)
-                    return
-                elif url_exists.enabled:
-                    # Nothing to do :)
-                    return
-                else:
-                    # Enable channel (& associated parsers)
-                    s3db.msg_channel_enable("msg_rss_channel",
-                                            url_exists.channel_id)
-                    return
-            elif no_import:
-                # Nothing to do :)
-                return
-            #else:
-            #    # Create a new Feed
-            #    pass
-
-        # Add RSS Channel
-        _id = table.insert(name=name, enabled=True, url=rss_url)
-        record = dict(id=_id)
-        s3db.update_super(table, record)
-
-        # Enable
-        channel_id = record["channel_id"]
-        s3db.msg_channel_enable("msg_rss_channel", channel_id)
-
-        # Setup Parser
-        table = s3db.msg_parser
-        _id = table.insert(channel_id=channel_id,
-                           function_name="parse_rss",
-                           enabled=True)
-        s3db.msg_parser_enable(_id)
-
-        # Check Now
-        async = current.s3task.async
-        async("msg_poll", args=["msg_rss_channel", channel_id])
-        async("msg_parse", args=[channel_id, "parse_rss"])
-
-    # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to chage the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
@@ -1533,7 +1360,7 @@ def config(settings):
                                         ),
                         S3LocationFilter("location_id",
                                          label = T("Location"),
-                                         levels = ("L3", "L4"),
+                                         levels = ("L2", "L4"),
                                          #hidden = True,
                                          ),
                         S3OptionsFilter("group_membership.group_id",
@@ -1599,7 +1426,7 @@ def config(settings):
                                         })
         field = s3db.hrm_human_resource.org_contact
         field.readable = field.writable = True
-        field.label = T("PoC") # really?
+        field.label = T("Org PoC")
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm("person_id",
@@ -1769,7 +1596,7 @@ def config(settings):
                     #                ),
                     S3LocationFilter("location.location_id",
                                      label = T("Location"),
-                                     levels = ("L1", "L2", "L3", "L4"),
+                                     levels = ("L2", "L4"),
                                      #hidden = True,
                                      ),
                     # @ToDo: Widget to handle Start & End in 1!
@@ -2133,6 +1960,173 @@ def config(settings):
         #        module_type = 10,
         #    )),
     ])
+
+# -----------------------------------------------------------------------------
+# Functions & Classes which are importable by other Templates
+# -----------------------------------------------------------------------------
+def pr_contact_postprocess(form):
+    """
+        Import Organisation/Network RSS Feeds
+    """
+
+    s3db = current.s3db
+    form_vars = form.vars
+
+    rss_url = form_vars.rsscontact_i_value_edit_0 or \
+              form_vars.rsscontact_i_value_edit_none
+    if not rss_url:
+        if form.record:
+            # Update form
+            old_rss = form.record.sub_rsscontact
+            import json
+            data = old_rss = json.loads(old_rss)["data"]
+            if data:
+                # RSS feed is being deleted, so we should disable it
+                old_rss = data[0]["value"]["value"]
+                table = s3db.msg_rss_channel
+                old = current.db(table.url == old_rss).select(table.channel_id,
+                                                              table.enabled,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if old and old.enabled:
+                    s3db.msg_channel_disable("msg_rss_channel", old.channel_id)
+                return
+        else:
+            # Nothing to do :)
+            return
+
+    # Check if we already have a channel for this Contact
+    db = current.db
+    name = form_vars.name
+    table = s3db.msg_rss_channel
+    name_exists = db(table.name == name).select(table.id,
+                                                table.channel_id,
+                                                table.enabled,
+                                                table.url,
+                                                limitby = (0, 1)
+                                                ).first()
+
+    no_import = current.request.post_vars.get("rss_no_import", None)
+
+    if name_exists:
+        if name_exists.url == rss_url:
+            # No change to either Contact Name or URL
+            if no_import:
+                if name_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             name_exists.channel_id)
+                return
+            elif name_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        name_exists.channel_id)
+                return
+
+        # Check if we already have a channel for this URL
+        url_exists = db(table.url == rss_url).select(table.id,
+                                                     table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        if url_exists:
+            # We have 2 feeds: 1 for the Contact & 1 for the URL
+            # Disable the old Contact one and link the URL one to this Contact
+            # and ensure active or not as appropriate
+            # Name field is unique so rename old one
+            name_exists.update_record(name="%s (Old)" % name)
+            if name_exists.enabled:
+                # Disable channel (& associated parsers)
+                s3db.msg_channel_disable("msg_rss_channel",
+                                         name_exists.channel_id)
+            url_exists.update_record(name=name)
+            if no_import:
+                if url_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             url_exists.channel_id)
+                return
+            elif url_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        url_exists.channel_id)
+                return
+        else:
+            # Update the URL
+            name_exists.update_record(url=rss_url)
+            if no_import:
+                if name_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             name_exists.channel_id)
+                return
+            elif name_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        name_exists.channel_id)
+                return
+    else:
+        # Check if we already have a channel for this URL
+        url_exists = db(table.url == rss_url).select(table.id,
+                                                     table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        if url_exists:
+            # Either Contact has changed Name or this feed is associated with
+            # another Contact
+            # - update Feed name
+            url_exists.update_record(name=name)
+            if no_import:
+                if url_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             url_exists.channel_id)
+                return
+            elif url_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        url_exists.channel_id)
+                return
+        elif no_import:
+            # Nothing to do :)
+            return
+        #else:
+        #    # Create a new Feed
+        #    pass
+
+    # Add RSS Channel
+    _id = table.insert(name=name, enabled=True, url=rss_url)
+    record = dict(id=_id)
+    s3db.update_super(table, record)
+
+    # Enable
+    channel_id = record["channel_id"]
+    s3db.msg_channel_enable("msg_rss_channel", channel_id)
+
+    # Setup Parser
+    table = s3db.msg_parser
+    _id = table.insert(channel_id=channel_id,
+                       function_name="parse_rss",
+                       enabled=True)
+    s3db.msg_parser_enable(_id)
+
+    # Check Now
+    async = current.s3task.async
+    async("msg_poll", args=["msg_rss_channel", channel_id])
+    async("msg_parse", args=[channel_id, "parse_rss"])
 
 # =============================================================================
 class S3SQLHRPersonLink(S3SQLInlineLink):
