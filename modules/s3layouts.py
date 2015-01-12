@@ -236,6 +236,12 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
             if item.parent is not None:
                 if item.enabled and item.authorized:
 
+                    attr = dict(_id = item.attr._id)
+                    if item.attr._onclick:
+                        attr["_onclick"] = item.attr._onclick
+                    else:
+                        attr["_href"] = item.url()
+
                     if item.components:
                         # Submenu
                         _class = ""
@@ -243,8 +249,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                             _class = "active"
 
                         section = [LI(A(item.label,
-                                        _href=item.url(),
-                                        _id=item.attr._id,
+                                        **attr
                                         ),
                                       _class="heading %s" % _class,
                                       ),
@@ -263,8 +268,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                             _class = ""
 
                         return LI(A(item.label,
-                                    _href=item.url(),
-                                    _id=item.attr._id,
+                                    **attr
                                     ),
                                   _class=_class,
                                   )
