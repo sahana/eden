@@ -2239,7 +2239,7 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Sort the group items
         if sort:
-            group_items = sorted(group["items"], 
+            group_items = sorted(group["items"],
                                  key = lambda i: i[1].upper()[0] \
                                        if i[1] else None,
                                  )
@@ -5524,8 +5524,10 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         for l in xrange(5, -1, -1):
             lx = value.get("L%s" % l)
             if lx:
-                if not specific and l < 5:
+                if not level and not specific and l < 5:
                     level = l
+                elif level and not record.parent:
+                    record.parent = lx
                 lx_ids[l] = lx
                 if append is None:
                     append = path.append

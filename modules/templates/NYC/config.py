@@ -8,10 +8,10 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
-from gluon.html import A, URL
+from gluon.html import A, URL, TR, TD
 from gluon.storage import Storage
 
-from s3 import s3_fullname, S3SQLInlineLink
+from s3 import s3_fullname, S3SQLInlineLink, S3SQLSubFormLayout
 
 def config(settings):
     """
@@ -460,7 +460,9 @@ def config(settings):
                 rss_import = None
 
         s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L2", "L3", "L4"),
-                                                                               show_map=False)
+                                                                               show_map=False,
+                                                                               labels=False,
+                                                                               )
         s3db.org_organisation_tag.value.widget = s3_comments_widget
         mtable = s3db.org_group_membership
         mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
@@ -508,19 +510,31 @@ def config(settings):
                           ],
                 ),
             S3SQLInlineComponent(
-                "address",
-                label = T("Address"),
-                multiple = False,
-                # This is just Text - put into the Comments box for now
-                # Ultimately should go into location_id$addr_street
-                fields = [("", "comments")],
-            ),
-            S3SQLInlineComponent(
                 "organisation_location",
                 label = T("Areas Served"),
                 fields = [("", "location_id"),
                           ],
                 ),
+            #S3SQLInlineComponent(
+                #"address",
+                #label = T("Address"),
+                #multiple = False,
+                ## This is just Text - put into the Comments box for now
+                ## Ultimately should go into location_id$addr_street
+                #fields = [("", "comments")],
+            #),
+            S3SQLInlineComponent(
+                "facility",
+                label = T("Main Facility"),
+                fields = ["name",
+                          "location_id",
+                          ],
+                layout = FacilitySubFormLayout,
+                filterby = {"field": "main_facility",
+                            "options": True,
+                           },
+                multiple = False,
+            ),
             "phone",
             S3SQLInlineComponent(
                 "contact",
@@ -668,7 +682,7 @@ def config(settings):
                 result = True
 
             if r.interactive:
-                if r.component_name == "facility":
+                if r.component_name == "facility" or not r.component:
                     if r.method in (None, "create", "update"):
                         from s3 import S3LocationSelector
                         table = s3db.org_facility
@@ -2208,5 +2222,65 @@ class S3SQLHRPersonLink(S3SQLInlineLink):
                                                      master_id = person_id,
                                                      format = format,
                                                      )
+
+# =============================================================================
+class FacilitySubFormLayout(S3SQLSubFormLayout):
+    """
+        Custom layout for facility inline-component in org/organisation
+
+        - allows embedding of multiple fields besides the location selector
+        - renders an vertical layout for edit-rows
+        - standard horizontal layout for read-rows
+        - hiding header row if there are no visible read-rows
+    """
+
+    # -------------------------------------------------------------------------
+    def headers(self, data, readonly=False):
+        """
+            Header-row layout: same as default, but non-static (i.e. hiding
+            if there are no visible read-rows, because edit-rows have their
+            own labels)
+        """
+
+        headers = super(FacilitySubFormLayout, self).headers
+
+        header_row = headers(data, readonly = readonly)
+        element = header_row.element('tr');
+        if hasattr(element, "remove_class"):
+            element.remove_class("static")
+        return header_row
+
+    # -------------------------------------------------------------------------
+    def rowstyle_read(self, form, fields, *args, **kwargs):
+        """
+            Formstyle for subform read-rows, same as standard
+            horizontal layout.
+        """
+
+        rowstyle = super(FacilitySubFormLayout, self).rowstyle
+        return rowstyle(form, fields, *args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def rowstyle(self, form, fields, *args, **kwargs):
+        """
+            Formstyle for subform edit-rows, using a vertical
+            formstyle because multiple fields combined with
+            location-selector are too complex for horizontal
+            layout.
+        """
+
+        # Use standard foundation formstyle
+        from s3theme import formstyle_foundation as formstyle
+        if args:
+            col_id = form
+            label = fields
+            widget, comment = args
+            hidden = kwargs.get("hidden", False)
+            return formstyle(col_id, label, widget, comment, hidden)
+        else:
+            parent = TD(_colspan = len(fields))
+            for col_id, label, widget, comment in fields:
+                parent.append(formstyle(col_id, label, widget, comment))
+            return TR(parent)
 
 # END =========================================================================
