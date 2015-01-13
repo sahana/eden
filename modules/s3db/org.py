@@ -3585,6 +3585,26 @@ class S3FacilityModel(S3Model):
             Update Affiliation, record ownership and component ownership
         """
 
+        form_vars = form.vars
+
+        if "main_facility" in form_vars and form_vars.main_facility:
+            # Should be only one main facility per organisation
+            record_id = form_vars.id
+            if record_id:
+                db = current.db
+                table = current.s3db.org_facility
+                organisation_id = form_vars.organisation_id
+                if not organisation_id:
+                    query = table.id == record_id
+                    row = db(query).select(table.organisation_id,
+                                           limitby=(0, 1)).first()
+                    if row:
+                        organisation_id = row.organisation_id
+                if organisation_id:
+                    query = (table.id != record_id) & \
+                            (table.organisation_id == organisation_id)
+                    db(query).update(main_facility = False)
+
         org_update_affiliations("org_facility", form.vars)
 
     # -------------------------------------------------------------------------
