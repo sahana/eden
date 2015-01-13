@@ -71,7 +71,7 @@ __all__ = ("S3SurveyTemplateModel",
 
 try:
     from cStringIO import StringIO    # Faster, where available
-except:
+except ImportError:
     from StringIO import StringIO
 
 try:
@@ -79,21 +79,22 @@ try:
 except ImportError:
     try:
         import simplejson as json # try external module
-    except:
+    except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-try:
-    from gluon.dal.objects import Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Row
+from gluon.contenttype import contenttype
+from gluon.contrib.pyrtf import *
 from gluon.storage import Storage
-from ..s3 import *
 
+from ..s3 import *
 from s3chart import S3Chart
 from s3survey import survey_question_type, \
                      survey_analysis_type, \
+                     survey_T, \
+                     getMatrix, \
+                     DataMatrix, MatrixElement, \
+                     LayoutBlocks, \
                      _debug
 
 # =============================================================================
@@ -110,7 +111,7 @@ def json2py(jsonstr):
         jsonstr = unescape(jsonstr, {"u'": '"'})
         jsonstr = unescape(jsonstr, {"'": '"'})
         pythonStructure = json.loads(jsonstr)
-    except:
+    except ValueError:
         _debug("ERROR: attempting to convert %s using modules/s3db/survey/json2py.py" % (jsonstr))
         return jsonstr
     else:
@@ -275,10 +276,12 @@ class S3SurveyTemplateModel(S3Model):
         tablename = "survey_section"
         define_table(tablename,
                      Field("name", "string", length=120,
+                           label = T("Name"),
                            notnull = True,
                            default = "",
                            ),
                      Field("description", "text", length=500,
+                           label = T("Description"),
                            default = "",
                            ),
                      Field("posn", "integer"),
@@ -356,13 +359,13 @@ class S3SurveyTemplateModel(S3Model):
                                        code = code,
                                        notes = notes,
                                        type = type
-                                      )
+                                       )
             qstn_metadata_table = s3db.survey_question_metadata
             for (descriptor, value) in metadata.items():
                 qstn_metadata_table.insert(question_id = qstn_id,
                                            descriptor = descriptor,
                                            value = value
-                                          )
+                                           )
         # Add these questions to the section: "Background Information"
         sectable = s3db.survey_section
         section_name = "Background Information"
@@ -515,7 +518,7 @@ def survey_template_represent(id, row=None):
                                       limitby=(0, 1)).first()
     try:
         return record.name
-    except:
+    except AttributeError:
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
@@ -1113,12 +1116,12 @@ class S3SurveyQuestionModel(S3Model):
             template_id = vars.template_id
             section_id = vars.section_id
             posn = vars.posn
-        except:
+        except AttributeError:
             return
         record = qstntable[question_id]
         try:
             type = record.type
-        except:
+        except AttributeError:
             _debug("survey question missing type: %s" % record)
             return
         if type == "Grid":
@@ -1353,7 +1356,7 @@ def survey_updateMetaData (record, type, metadata):
             metatable.insert(question_id = id,
                              descriptor = desc,
                              value = value
-                            )
+                             )
     if type == "Grid":
         widgetObj = survey_question_type["Grid"]()
         widgetObj.insertChildren(record, metadataList)
@@ -1600,17 +1603,19 @@ class S3SurveySeriesModel(S3Model):
                          2: T("Closed"),
                          }
 
-        # @ToDo: i18n labels
         tablename = "survey_series"
         self.define_table(tablename,
                           Field("name", length=120,
+                                label = T("Name"),
                                 default = "",
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           Field("description", "text", length=500,
+                                label = T("Description"),
                                 default = "",
                                 ),
                           Field("status", "integer",
+                                label = T("Status"), 
                                 default = 1,
                                 represent = lambda index: series_status[index],
                                 requires = IS_IN_SET(series_status,
@@ -1623,9 +1628,11 @@ class S3SurveySeriesModel(S3Model):
                           person_id(),
                           organisation_id(widget = org_widget),
                           Field("logo", length=512,
+                                label = T("Logo"),
                                 default = ""
                                 ),
                           Field("language", length=8,
+                                label = T("Language"),
                                 default = "en",
                                 ),
                           s3_date("start_date",
@@ -1687,6 +1694,10 @@ class S3SurveySeriesModel(S3Model):
                    action = self.seriesChartDownload)
         set_method("survey", "series", method="export_responses",
                    action = survey_ExportResponses)
+        set_method("survey", "series", method="export_formatted_spreadsheet",
+                   action = series_ExportFormatted)
+        set_method("survey", "series", method="export_formatted_word",
+                   action = series_ExportFormatted)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1791,12 +1802,12 @@ class S3SurveySeriesModel(S3Model):
                               args=[series_id, "summary.pdf"],
                               vars = {"mode": mode,
                                       "selected": vars["selected"]}
-                             )
+                              )
                 url_xls = URL(c="survey", f="series",
                               args=[series_id, "summary.xls"],
                               vars = {"mode": mode,
                                       "selected": vars["selected"]}
-                             )
+                              )
                 s3.formats["pdf"] = url_pdf
                 s3.formats["xls"] = url_xls
             else:
@@ -2182,7 +2193,7 @@ $('#chart_btn').click(function(){
                                                 1:"Average",
                                                 2:"High",
                                                 },
-                                          zero = True)
+                                         zero = True)
         for series_id in series:
             series_name = series[series_id]
             response_locations = getLocationList(series_id)
@@ -2210,7 +2221,7 @@ $('#chart_btn').click(function(){
                                                     key)),
                             TD(priorityObj.desc(key)),
                             TD(priorityObj.rangeText(key, pBand)),
-                           )
+                            )
                     legend.append(tr)
                 output["legend"] = legend
 
@@ -2307,7 +2318,7 @@ def survey_serieslist_dataTable_post(r):
                         url=URL(c="survey", f="series",
                                 args=["[id]", "summary"]
                                 )
-                       ),
+                        ),
                   ]
 
 # =============================================================================
@@ -2352,53 +2363,56 @@ def survey_series_rheader(r):
             rsection = TR(TH(lblSection), TD(qty))
             tsection.append(rsection)
 
-            urlexport = URL(c="survey", f="series_export_formatted",
-                            args=[record.id])
-            tranForm = FORM(_action=urlexport)
-            translationList = survey_getAllTranslationsForSeries(record.id)
-            if len(translationList) > 0:
-                tranTable = TABLE()
+            url_export_spreadsheet = URL(c = "survey", f = "series",
+                                         args = [record.id, "export_formatted_spreadsheet"])
+
+            url_export_word = URL(c = "survey", f = "series",
+                                  args = [record.id, "export_formatted_word"])
+
+            spreadsheet_form = FORM(_action=url_export_spreadsheet)
+            word_form = FORM(_action=url_export_word)
+            translation_list = survey_getAllTranslationsForSeries(record.id)
+            if len(translation_list) > 0:
+                translate_table = TABLE()
                 tr = TR(INPUT(_type='radio',
-                              _name='translationLanguage',
+                              _name='translation_language',
                               _value="Default",
                               _checked=True,
                               ),
                         LABEL("Default"))
                 colCnt = 1
-                for translation in translationList:
+                for translation in translation_list:
                     # include a maximum of 4 translation languages per row
                     if colCnt == 4:
-                        tranTable.append(tr)
+                        translate_table.append(tr)
                         tr = TR()
                         colCnt = 0
                     tr.append(INPUT(_type="radio",
-                                    _name="translationLanguage",
+                                    _name="translation_language",
                                     _value=translation["code"],
-                                   ))
+                                    ))
                     tr.append(LABEL(translation["language"]))
                     colCnt += 1
                 if colCnt != 0:
-                    tranTable.append(tr)
-                tranForm.append(tranTable)
+                    translate_table.append(tr)
+
+                spreadsheet_form.append(translate_table)
+                word_form.append(translate_table)
+
             export_xls_btn = INPUT(_type="submit",
                                    _id="export_xls_btn",
-                                   _name="Export_Spreadsheet",
                                    _value=T("Download Assessment Form Spreadsheet"),
                                    _class="action-btn"
-                                  )
-            tranForm.append(export_xls_btn)
-            try:
-                # only add the Export to Word button up if PyRTF is installed
-                from PyRTF import Document
-                export_rtf_btn = INPUT(_type="submit",
-                                       _id="export_rtf_btn",
-                                       _name="Export_Word",
-                                       _value=T("Download Assessment Form Document"),
-                                       _class="action-btn"
-                                      )
-                tranForm.append(export_rtf_btn)
-            except:
-                pass
+                                   )
+            spreadsheet_form.append(export_xls_btn)
+
+            export_rtf_btn = INPUT(_type="submit",
+                                   _id="export_rtf_btn",
+                                   _value=T("Download Assessment Form Document"),
+                                   _class="action-btn"
+                                   )
+            word_form.append(export_rtf_btn)
+
             urlimport = URL(c="survey",
                             f="series",
                             args=[record.id, "export_responses"],
@@ -2418,9 +2432,10 @@ def survey_series_rheader(r):
                              TH("%s: " % T("Status")),
                              s3db.survey_series_status[record.status],
                              ),
-                              ),
+                                ),
                           tsection,
-                          tranForm,
+                          spreadsheet_form,
+                          word_form,
                           buttons,
                           rheader_tabs)
             return rheader
@@ -2555,7 +2570,7 @@ def buildSeriesSummary(series_id, posn_offset):
                                   **attr
                                   )
     series = INPUT(_type="hidden", _id="selectSeriesID", _name="series",
-                _value="%s" % series_id)
+                   _value="%s" % series_id)
     form.append(series)
     return form
 
@@ -2941,7 +2956,7 @@ def survey_answerlist_dataTable_post(r):
                         _class="action-btn edit",
                         url=URL(c="survey", f="series",
                                 args=[r.id, "complete", "[id]", "update"])
-                       ),
+                        ),
                   ]
 
 # =============================================================================
@@ -3172,7 +3187,7 @@ def getLocationList(series_id):
             elif question == "STD-Lat":
                 try:
                     lat = float(answer.strip('"'))
-                except:
+                except ValueError:
                     pass
                 else:
                     if lat < -90.0 or lat > 90.0:
@@ -3180,7 +3195,7 @@ def getLocationList(series_id):
             elif question == "STD-Lon":
                 try:
                     lon = float(answer.strip('"'))
-                except:
+                except ValueError:
                     pass
                 else:
                     if lon < -180.0 or lon > 180.0:
@@ -3194,6 +3209,12 @@ def getLocationList(series_id):
             if locCode in answer_dict:
                 name = answer_dict[locCode]
                 break
+        try:
+            from gluon.dal.objects import Row
+        except ImportError:
+        # old web2py
+            from gluon.dal import Row
+
         if lat and lon:
             # We have sufficient data to display on the map
             location = Row()
@@ -3244,12 +3265,13 @@ class S3SurveyTranslateModel(S3Model):
                           self.survey_template_id(),
                           Field("language",
                                 comment = DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Language"),
+                                              _title="%s|%s" % (T("Language"),
                                                                 LANG_HELP))
                                 ),
                           Field("code",
+                                requires = IS_NOT_EMPTY(),
                                 comment = DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Language Code"),
+                                              _title="%s|%s" % (T("Language Code"),
                                                                 CODE_HELP))
                                 ),
                           Field("file", "upload",
@@ -3302,14 +3324,14 @@ class S3SurveyTranslateModel(S3Model):
             code = form.record.code
             try:
                 workbook = xlrd.open_workbook(file_contents=openFile)
-            except:
+            except IOError:
                 msg = T("Unable to open spreadsheet")
                 response.error = msg
                 response.flash = None
                 return
             try:
                 sheetL = workbook.sheet_by_name(lang)
-            except:
+            except IOError:
                 msg = T("Unable to find sheet %(sheet_name)s in uploaded spreadsheet") % \
                     dict(sheet_name=lang)
                 response.error = msg
@@ -3324,7 +3346,7 @@ class S3SurveyTranslateModel(S3Model):
                 (request.application, code)
             try:
                 strings = read_dict(lang_fileName)
-            except:
+            except IOError:
                 strings = dict()
             for row in xrange(1, sheetL.nrows):
                 original = sheetL.cell_value(row, 0)
@@ -3386,7 +3408,7 @@ class survey_TranslateDownload(S3Method):
 
         T = current.T
         try:
-           import xlwt
+            import xlwt
         except ImportError:
             r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
 
@@ -3450,8 +3472,8 @@ class survey_TranslateDownload(S3Method):
 
         for text in originalList:
             row += 1
-            original = unicode(text)
-            sheet.write(row, 0, s3_unicode(original))
+            original = s3_unicode(text)
+            sheet.write(row, 0, original)
             if (original in strings):
                 sheet.write(row, 1, s3_unicode(strings[original]))
 
@@ -3561,6 +3583,568 @@ class survey_ExportResponses(S3Method):
         headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
 
         output.seek(0)
+        return output.read()
+
+# -----------------------------------------------------------------------------
+class series_ExportFormatted(S3Method):
+    """
+        Download a Spreadsheet which can be filled-in offline & uploaded
+    """
+
+    # -------------------------------------------------------------------------------------
+    def series_prepare_matrix(self, series_id, series, logo, langDict, justified=False):
+        """
+            Helper function for apply_method
+
+            @param series_id: Series ID
+            @param series: The Record corresponding to series_id
+            @param logo: The logo of the record
+            @param langDict: Dictionary for languages
+            @param justified: Justified or not
+        """
+
+        s3db = current.s3db
+
+        # Get the data
+        # ============
+        # * The sections within the template
+        # * The layout rules for each question
+        # Check that the series_id has been passed in
+        template = s3db.survey_getTemplateFromSeries(series_id)
+        template_id = template.id
+        sectionList = s3db.survey_getAllSectionsForSeries(series_id)
+        title = "%s (%s)" % (series.name, template.name)
+        title = survey_T(title, langDict)
+        layout = []
+        survey_getQstnLayoutRules = s3db.survey_getQstnLayoutRules
+        for section in sectionList:
+            sectionName = survey_T(section["name"], langDict)
+            rules = survey_getQstnLayoutRules(template_id,
+                                                section["section_id"])
+            layoutRules = [sectionName, rules]
+            layout.append(layoutRules)
+        widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
+        layoutBlocks = LayoutBlocks()
+
+        # Store the questions into a matrix based on the layout and the space
+        # required for each question - for example an option question might
+        # need one row for each possible option, and if this is in a layout
+        # then the position needs to be recorded carefully...
+        preliminaryMatrix = getMatrix(title,
+                                      logo,
+                                      layout,
+                                      widgetList,
+                                      False,
+                                      langDict,
+                                      showSectionLabels = False,
+                                      layoutBlocks = layoutBlocks
+                                      )
+
+        if not justified:
+            return preliminaryMatrix
+
+        # Align the questions so that each row takes up the same space.
+        # This is done by storing resize and margin instructions with
+        # each widget that is being printed
+        layoutBlocks.align()
+
+        # Now rebuild the matrix with the spacing for each widget set up so
+        # that the document will be fully justified
+        layoutBlocks = LayoutBlocks()
+        (matrix1, matrix2) = getMatrix(title,
+                                       logo,
+                                       layout,
+                                       widgetList,
+                                       True,
+                                       langDict,
+                                       showSectionLabels = False,
+                                       )
+        return (matrix1, matrix2)
+
+    # -------------------------------------------------------------------------------------
+    def series_export_word(self, widgetList, langDict, title, logo):
+        """
+            Export a Series in RTF Format
+
+            @param widgetList: List of widgets
+            @param langDict: Dictionary for languages
+            @param title: Title of the Document
+            @param logo: Logo for the record
+        """
+
+        output  = StringIO()
+        doc = Document(default_language=Languages.EnglishUK)
+        section = Section()
+        ss = doc.StyleSheet
+
+        ps = ss.ParagraphStyles.Normal.Copy()
+        ps.SetName("NormalGrey")
+        ps.SetShadingPropertySet(ShadingPropertySet(pattern=1,
+                                                    background=Colour("grey light", 224, 224, 224)))
+        ss.ParagraphStyles.append(ps)
+        ps = ss.ParagraphStyles.Normal.Copy()
+        ps.SetName("NormalCentre")
+        ps.SetParagraphPropertySet(ParagraphPropertySet(alignment=3))
+        ss.ParagraphStyles.append(ps)
+
+        doc.Sections.append(section)
+        heading = Paragraph(ss.ParagraphStyles.Heading1)
+
+        if logo:
+            image = Image(logo)
+            heading.append(image)
+
+        heading.append(title)
+        section.append(heading)
+
+        col = [2800, 6500]
+        table = Table(*col)
+        AddRow = table.AddRow
+        sortedwidgetList = sorted(widgetList.values(),
+                                  key = lambda widget: widget.question.posn)
+
+        for widget in sortedwidgetList:
+            line = widget.writeQuestionToRTF(ss, langDict)
+            try:
+                AddRow(*line)
+            except:
+                if DEBUG:
+                    raise
+                pass
+
+        section.append(table)
+        renderer = Renderer()
+        renderer.Write(doc, output)
+        return output
+
+    # -------------------------------------------------------------------------------------
+    def wrap_text(self, sheet, cell, style):
+        """
+            Wrap text for downloading spreadsheet
+
+            @param sheet: The sheet object
+            @param cell: Particular cell
+            @param style: Style for the cell
+        """
+
+        row = cell.row
+        col = cell.col
+        try:
+            text = s3_unicode(cell.text)
+        except UnicodeDecodeError:
+            text = cell.text
+
+        width = 16
+        # Wrap text and calculate the row width and height
+        characters_in_cell = 14.0 # Two less than width
+        twips_per_row = 255 #default row height for 10 point font
+        if cell.merged():
+            try:
+                sheet.write_merge(cell.row,
+                                  cell.row + cell.mergeV,
+                                  cell.col,
+                                  cell.col + cell.mergeH,
+                                  text,
+                                  style
+                                  )
+            except Exception as msg:
+                log = current.log
+                log.error(msg)
+                log.debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                            (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                posn = "%s,%s" % (cell.row, cell.col)
+                if matrix.matrix[posn]:
+                    log.debug(matrix.matrix[posn])
+            rows = math.ceil((len(text) / characters_in_cell) / (1 + cell.mergeH))
+        else:
+            sheet.write(cell.row, cell.col, text, style)
+            rows = math.ceil(len(text) / characters_in_cell)
+
+        COL_WIDTH_MULTIPLIER = 240
+        new_row_height = int(rows * twips_per_row)
+        new_col_width = width * COL_WIDTH_MULTIPLIER
+
+        if sheet.row(row).height < new_row_height:
+            sheet.row(row).height = new_row_height
+        if sheet.col(col).width < new_col_width:
+            sheet.col(col).width = new_col_width
+
+    # -------------------------------------------------------------------------------------
+    def merge_styles(self, list_template, style_list):
+        """
+            Now take the matrix data type and generate a spreadsheet from it
+            Take a list of styles and return a single style object with
+            all the differences from a newly created object added to the
+            resultant style.
+
+            @param list_template: List of Templates
+            @param style_list: Style of the cell
+        """
+
+        import xlwt
+
+        length = len(style_list)
+        if length == 0:
+            final_style = xlwt.XFStyle()
+        elif length == 1:
+            final_style = list_template[style_list[0]]
+        else:
+            zero_style = xlwt.XFStyle()
+            final_style = xlwt.XFStyle()
+            for i in range(0, length):
+                final_style = self.merge_object_diff(final_style,
+                                                     list_template[style_list[i]],
+                                                     zero_style)
+        return final_style
+
+    # -------------------------------------------------------------------------------------
+    def merge_object_diff(self, baseObj, newObj, zeroObj):
+        """
+            Function to copy all the elements in newObj that are different from
+            the zeroObj and place them in the baseObj
+        """
+
+        elementList = newObj.__dict__
+        for (element, value) in elementList.items():
+            try:
+                baseObj.__dict__[element] = self.merge_object_diff(baseObj.__dict__[element],
+                                                                   value,
+                                                                   zeroObj.__dict__[element])
+            except:
+                if zeroObj.__dict__[element] != value:
+                    baseObj.__dict__[element] = value
+        return baseObj
+
+    # -------------------------------------------------------------------------------------
+    def get_style_list(self):
+
+        # Already checked availabitlity of xlwt in the caller function
+        import xlwt
+
+        style_list = {}
+        styleTitle = xlwt.XFStyle()
+        styleHeader = xlwt.XFStyle()
+        styleSubHeader = xlwt.XFStyle()
+        styleSectionHeading = xlwt.XFStyle()
+        styleHint = xlwt.XFStyle()
+        styleText = xlwt.XFStyle()
+        styleInstructions = xlwt.XFStyle()
+        styleBox = xlwt.XFStyle()
+        styleInput = xlwt.XFStyle()
+
+        boxL1 = xlwt.XFStyle()
+        boxL2 = xlwt.XFStyle()
+        boxR1 = xlwt.XFStyle()
+        boxR2 = xlwt.XFStyle()
+        boxT1 = xlwt.XFStyle()
+        boxT2 = xlwt.XFStyle()
+        boxB1 = xlwt.XFStyle()
+        boxB2 = xlwt.XFStyle()
+
+        styleTitle.font.height = 0x0140 # 320 twips, 16 points
+        styleTitle.font.bold = True
+        styleHeader.font.height = 0x00F0 # 240 twips, 12 points
+        styleHeader.font.bold = True
+        styleSubHeader.font.bold = True
+        styleSectionHeading.font.bold = True
+        styleHint.font.height = 160 # 160 twips, 8 points
+        styleHint.font.italic = True
+        styleInstructions.font.height = 0x00B4 # 180 twips, 9 points
+        styleInstructions.font.italic = True
+
+        protection = xlwt.Protection()
+        protection.cell_locked = 1
+        styleHint.protection = protection
+        styleText.protection = protection
+        styleInstructions.protection = protection
+        noProtection = xlwt.Protection()
+        noProtection.cell_locked = 0
+        styleBox.protection = noProtection
+        styleInput.protection = noProtection
+
+        dotted_border = xlwt.Borders.DOTTED
+        borders = xlwt.Borders()
+        borders.left = dotted_border
+        borders.right = dotted_border
+        borders.top = dotted_border
+        borders.bottom = dotted_border
+        styleBox.borders = borders
+        styleInput.borders = borders
+
+        thin_border = xlwt.Borders.THIN
+        medium_border = xlwt.Borders.MEDIUM
+
+        borderT1 = xlwt.Borders()
+        borderT1.top = thin_border
+        borderT2 = xlwt.Borders()
+        borderT2.top = medium_border
+        style_list["boxT1"] = boxT1
+        style_list["boxT2"] = boxT2
+
+        borderL1 = xlwt.Borders()
+        borderL1.left = thin_border
+        boxL1.borders = borderL1
+        borderL2 = xlwt.Borders()
+        borderL2.left = medium_border
+        boxL2.borders = borderL2
+        style_list["boxL1"] = boxL1
+        style_list["boxL2"] = boxL2
+
+        borderR1 = xlwt.Borders()
+        borderR1.right = thin_border
+        boxR1.borders = borderR1
+        borderR2 = xlwt.Borders()
+        borderR2.right = medium_border
+        boxR2.borders = borderR2
+        style_list["boxR1"] = boxR1
+        style_list["boxR2"] = boxR2
+
+        borderB1 = xlwt.Borders()
+        borderB1.bottom = thin_border
+        boxB1.borders = borderB1
+        borderB2 = xlwt.Borders()
+        borderB2.bottom = medium_border
+        boxB2.borders = borderB2
+        style_list["boxB1"] = boxB1
+        style_list["boxB2"] = boxB2
+
+        align_horz_left = xlwt.Alignment.HORZ_LEFT
+        align_vert_top = xlwt.Alignment.VERT_TOP
+        alignBase = xlwt.Alignment()
+        alignBase.horz = align_horz_left
+        alignBase.vert = align_vert_top
+        styleTitle.alignment = alignBase
+        styleHeader.alignment = alignBase
+        style_list["styleTitle"] = styleTitle
+        style_list["styleHeader"] = styleHeader
+
+        alignWrap = xlwt.Alignment()
+        alignWrap.horz = align_horz_left
+        alignWrap.vert = align_vert_top
+        alignWrap.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+        styleSubHeader.alignment = alignWrap
+        styleSectionHeading.alignment = alignWrap
+        styleHint.alignment = alignWrap
+        styleText.alignment = alignWrap
+        styleInstructions.alignment = alignWrap
+        style_list["styleSubHeader"] = styleSubHeader
+        style_list["styleHint"] = styleHint
+        style_list["styleText"] = styleText
+        style_list["styleInstructions"] = styleInstructions
+
+        solid_pattern = xlwt.Pattern.SOLID_PATTERN
+        shadedFill = xlwt.Pattern()
+        shadedFill.pattern = solid_pattern
+        shadedFill.pattern_fore_colour = 0x16 # 25% Grey
+        shadedFill.pattern_back_colour = 0x08 # Black
+        styleInput.pattern = shadedFill
+        style_list["styleInput"] = styleInput
+
+        headingFill = xlwt.Pattern()
+        headingFill.pattern = solid_pattern
+        headingFill.pattern_fore_colour = 0x1F # ice_blue
+        headingFill.pattern_back_colour = 0x08 # Black
+        styleSectionHeading.pattern = headingFill
+        style_list["styleSectionHeading"] = styleSectionHeading
+
+        return style_list
+
+    # -------------------------------------------------------------------------------------
+    def series_export_spreadsheet(self, matrix, matrixAnswers, logo):
+        """
+            Now take the matrix data type and generate a spreadsheet from it
+
+            @param matrix: The matrix of cells
+            @param matrixAnswers: Matrix of Answers
+            @param logo: The logo of the file
+        """
+
+        # Already checked availabitlity of xlwt in the caller function
+        import xlwt
+        import math
+
+        T = current.T
+        book = xlwt.Workbook(encoding="utf-8")
+        sheet1 = book.add_sheet(T("Assessment"))
+        sheetA = book.add_sheet(T("Metadata"))
+        maxCol = 0
+        style_list = self.get_style_list()
+        output = StringIO()
+
+        for cell in matrix.matrix.values():
+            if cell.col + cell.mergeH > 255:
+                current.log.warning("Cell (%s,%s) - (%s,%s) ignored" % \
+                    (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV))
+                continue
+            if cell.col + cell.mergeH > maxCol:
+                maxCol = cell.col + cell.mergeH
+            if cell.joined():
+                continue
+            style = self.merge_styles(style_list, cell.styleList)
+            if (style.alignment.wrap == style.alignment.WRAP_AT_RIGHT):
+                # get all the styles from the joined cells
+                # and merge these styles in.
+                joinedStyles = matrix.joinedElementStyles(cell)
+                joinedStyle =  self.merge_styles(style_list, joinedStyles)
+                try:
+                    self.wrap_text(sheet1, cell, joinedStyle)
+                except:
+                    pass
+            else:
+                if cell.merged():
+                    # get all the styles from the joined cells
+                    # and merge these styles in.
+                    joinedStyles = matrix.joinedElementStyles(cell)
+                    joinedStyle =  self.merge_styles(style_list, joinedStyles)
+                    try:
+                        sheet1.write_merge(cell.row,
+                                           cell.row + cell.mergeV,
+                                           cell.col,
+                                           cell.col + cell.mergeH,
+                                           s3_unicode(cell.text),
+                                           joinedStyle
+                                           )
+                    except Exception as msg:
+                        log = current.log
+                        log.error(msg)
+                        log.debug("row: %s + vert: %s, col: %s + horiz %s" % \
+                                    (cell.row, cell.mergeV, cell.col, cell.mergeH))
+                        posn = "%s,%s" % (cell.row, cell.col)
+                        if matrix.matrix[posn]:
+                            log.debug(matrix.matrix[posn])
+                else:
+                    sheet1.write(cell.row,
+                                 cell.col,
+                                 s3_unicode(cell.text),
+                                 style
+                                 )
+
+        cellWidth = 480 # approximately 2 characters
+        if maxCol > 255:
+            maxCol = 255
+        for col in range(maxCol + 1):
+            sheet1.col(col).width = cellWidth
+
+        sheetA.write(0, 0, "Question Code")
+        sheetA.write(0, 1, "Response Count")
+        sheetA.write(0, 2, "Values")
+        sheetA.write(0, 3, "Cell Address")
+        for cell in matrixAnswers.matrix.values():
+            style = self.merge_styles(style_list, cell.styleList)
+            sheetA.write(cell.row,
+                         cell.col,
+                         s3_unicode(cell.text),
+                         style
+                         )
+
+        if logo != None:
+            sheet1.insert_bitmap(logo, 0, 0)
+
+        sheet1.protect = True
+        sheetA.protect = True
+        for i in range(26):
+            sheetA.col(i).width = 0
+
+        sheetA.write(0, 26,
+                     s3_unicode(T("Please do not remove this sheet")),
+                     style_list["styleHeader"])
+
+        sheetA.col(26).width = 12000
+        book.save(output)
+        return output
+
+    # -------------------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Download a Spreadsheet which can be filled-in offline & uploaded
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        try:
+            import xlwt
+        except ImportError:
+            if r.method == "export_formatted_word":
+                pass
+            else:
+                r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
+
+        series_id = r.id
+        if not series_id:
+            r.error(405, current.error.BAD_METHOD)
+
+        s3db = current.s3db
+        db = current.db
+        table = s3db.survey_series
+        request = current.request
+        post_vars = request.post_vars
+        series = r.record
+
+        if not series.logo:
+            logo = None
+        else:
+            if r.method == "export_format_spreadsheet":
+                ext = "bmp"
+            else:
+                ext = "png"
+            logo = os.path.join(request.folder,
+                                "uploads",
+                                "survey",
+                                "logo",
+                                "%s.%s" % (series.logo, ext)
+                                )
+            if not os.path.exists(logo) or not os.path.isfile(logo):
+                logo = None
+
+        # Get the translation dictionary
+        langDict = dict()
+        lang = post_vars.get("translation_language", None)
+        if lang:
+            if lang == "Default":
+                langDict = dict()
+            else:
+                try:
+                    from gluon.languages import read_dict
+                    lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % \
+                                        (r.application, lang)
+                    langDict = read_dict(lang_fileName)
+                except IOError:
+                    langDict = dict()
+
+        if r.method == "export_formatted_spreadsheet":
+
+            (matrix, matrixAnswers) = self.series_prepare_matrix(series_id,
+                                                                 series,
+                                                                 logo,
+                                                                 langDict,
+                                                                 justified = True
+                                                                 )
+            output = self.series_export_spreadsheet(matrix,
+                                                    matrixAnswers,
+                                                    logo,
+                                                    )
+            filename = "%s.xls" % series.name
+            contentType = ".xls"
+
+        elif r.method == "export_formatted_word":
+
+            template = s3db.survey_getTemplateFromSeries(series_id)
+            template_id = template.id
+            title = "%s (%s)" % (series.name, template.name)
+            title = survey_T(title, langDict)
+            widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
+            output = self.series_export_word(widgetList, langDict, title, logo)
+            filename = "%s.rtf" % series.name
+            contentType = ".rtf"
+
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        output.seek(0)
+        headers = current.response.headers
+        headers["Content-Type"] = contenttype(contentType)
+        headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
         return output.read()
 
 # END =========================================================================
