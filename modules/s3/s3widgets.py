@@ -4205,6 +4205,7 @@ class S3LocationSelector(S3Selector):
                  latlon_mode = "decimal",
                  latlon_mode_toggle = True,
                  show_map = True,
+                 open_map_on_load = False,
                  feature_required = False,
                  lines = False,
                  points = True,
@@ -4231,6 +4232,7 @@ class S3LocationSelector(S3Selector):
             @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
             @param latlon_mode_toggle: allow user to toggle lat/lon input mode
             @param show_map: show a map to select specific points
+            @param open_map_on_load: show map on load
             @param feature_required: map feature is required
             @param lines: use a line draw tool
             @param points: use a point draw tool
@@ -4277,6 +4279,7 @@ class S3LocationSelector(S3Selector):
         else:
             self.feature_required = None
         self.show_map = show_map
+        self.open_map_on_load = show_map and open_map_on_load
 
         self.lines = lines
         self.points = points
@@ -4557,6 +4560,8 @@ class S3LocationSelector(S3Selector):
                    }
         if self.min_bbox:
             options["minBBOX"] = self.min_bbox
+        if self.open_map_on_load:
+            options["openMapOnLoad"] = True
         script = '''$('#%s').locationselector(%s)''' % \
                  (fieldname, json.dumps(options, separators=SEPARATORS))
 
@@ -4845,13 +4850,33 @@ class S3LocationSelector(S3Selector):
             location_dict["d"] = dict(id=lx, b=bounds)
             location_dict[lx] = dict(b=bounds, l=int(lowest_lx[1:]))
         else:
-
-            default_bounds = [config.lon_min,
-                              config.lat_min,
-                              config.lon_max,
-                              config.lat_max
+            fallback = None
+            default_location = config.default_location_id
+            if default_location:
+                query = (gtable.id == default_location)
+                record = db(query).select(gtable.level,
+                                          gtable.lat_min,
+                                          gtable.lon_min,
+                                          gtable.lat_max,
+                                          gtable.lon_max,
+                                          cache=s3db.cache,
+                                          limitby=(0, 1)).first()
+                if record and record.level:
+                    bounds = [record.lon_min,
+                              record.lat_min,
+                              record.lon_max,
+                              record.lat_max,
                               ]
-            location_dict["d"] = dict(b=default_bounds)
+                    if any(bounds):
+                        fallback = {"id": default_location, "b": bounds}
+            if fallback is None:
+                fallback = {"b": [config.lon_min,
+                                  config.lat_min,
+                                  config.lon_max,
+                                  config.lat_max,
+                                  ]
+                            }
+            location_dict["d"] = fallback
 
         if translate:
             for location in locations:

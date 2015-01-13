@@ -747,6 +747,7 @@ def config(settings):
                         field.widget = S3LocationSelector(levels = ("L2",),
                                                           points = True,
                                                           polygons = True,
+                                                          open_map_on_load = True,
                                                           )
                         # Default location to Manhattan
                         db = current.db

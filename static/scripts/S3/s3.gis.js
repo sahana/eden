@@ -139,7 +139,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 S3.hideAlerts('warning');
             }
         });
-        
+
         $.when(layersLoaded(map_id)).then(
             function(status) {
                 // Success:
@@ -261,12 +261,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             lat_max = bbox[3];
         // Ensure a minimal BBOX in case we just have a single data point
         var min_size = minBBOX || 0.05;
-        var delta = (min_size - (lon_max - lon_min)) / 2;
+        var delta = (min_size - Math.abs(lon_max - lon_min)) / 2;
         if (delta > 0) {
             lon_min -= delta;
             lon_max += delta;
         }
-        delta = (min_size - (lat_max - lat_min)) / 2;
+        delta = (min_size - Math.abs(lat_max - lat_min)) / 2;
         if (delta > 0) {
             lat_min -= delta;
             lat_max += delta;
@@ -5249,7 +5249,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     }]
                 }]
             }
-            
+
         });
         toolbar.addButton(printButton);
     };

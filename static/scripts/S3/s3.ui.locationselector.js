@@ -39,20 +39,23 @@
          *                                  'latlon'|'wkt'|'any'
          * @prop {string} latlonMode - (initial) lat/lon input mode ('decimal' or 'dms')
          * @prop {bool} latlonModeToggle - user can toggle latlonMode
+         * @prop {bool} openMapOnLoad - open map on load
          */
         options: {
             hideLx: true,
             reverseLx: false,
-             
+
             locations: null,
             labels: null,
 
             minBBOX: 0.05,
             showLabels: true,
             featureRequired: null,
-             
+
             latlonMode: 'decimal',
-            latlonModeToggle: true
+            latlonModeToggle: true,
+
+            openMapOnLoad: false
         },
 
         /**
@@ -203,7 +206,7 @@
             // Show Lat/Lon Rows (__row1 = tuple themes)
             $(selector + '_lat').val(data.lat)
                                 .latloninput({
-                                    type: 'lat', 
+                                    type: 'lat',
                                     mode: opts.latlonMode
                                 });
             $(selector + '_lat__row').removeClass('hide').show();
@@ -218,12 +221,15 @@
             $(selector + '_lon__row1').removeClass('hide').show();
 
             // Show Map icon
-            $(selector + '_map_icon__row').removeClass('hide').show();
+            var map_icon_row = $(selector + '_map_icon__row').removeClass('hide')
+                                                             .show();
             if (data.lat || data.lon || data.wkt) {
                 // Don't do a Geocode when reading the data
                 this.input.data('manually_geocoded', true);
                 this._showMap();
             } else if (opts.featureRequired) {
+                this._showMap();
+            } else if (opts.openMapOnLoad && map_icon_row.is(':visible') && selector.substring(0, 5) != '#sub_') {
                 this._showMap();
             } else {
                 this._hideMap();
@@ -1318,7 +1324,7 @@
             var selector = '#' + fieldname,
                 data = this.data,
                 featureRequired = this.options.featureRequired;
-                
+
             if (featureRequired) {
                 // Must have latlon or wkt
                 var valid = false;
@@ -1612,7 +1618,7 @@
          * Default options
          */
         options: {
-            
+
             type: 'lat',
             mode: 'decimal',
             labels: {
@@ -1656,7 +1662,7 @@
 
         /**
          * Update a widget option
-         * 
+         *
          * @param {string} key: the option key
          * @param {mixed} value: the new value for the option
          */
@@ -1674,10 +1680,10 @@
         refresh: function() {
 
             this._unbindEvents();
-            
+
             var el = $(this.element),
                 opts = this.options;
-                
+
             this.defaultValue = el.val();
 
             if (!this.input) {
@@ -1686,7 +1692,7 @@
                 // Decimal Input
                 var decimalInput = $('<input type="text" class="dms-input" size="18">').hide();
                 this.decimalInput = decimalInput;
-                
+
                 // DMS Inputs
                 var labels = opts.labels;
                 var degInput = $('<input type="text" class="integer dms-input" size="5">'),
@@ -1707,7 +1713,7 @@
                                           .append(secLabel)
                                           .hide();
                 this.dmsInput = dmsInput;
-                
+
                 this.input = input.append(decimalInput)
                                   .append(dmsInput)
                                   .show();
@@ -1733,10 +1739,10 @@
 
             this._bindEvents();
         },
-        
+
         /**
          * Convert the current value of the real input to DMS
-         * 
+         *
          * @return {object} - properties: d=degrees, m=minutes, s=seconds
          */
         _getDMS: function() {
@@ -1763,17 +1769,17 @@
                     s: s
                     };
         },
-        
+
         /**
          * Mark input fields as invalid, and render an error message
-         * 
+         *
          * @param {jQuery} field - the input field to mark as invalid,
          *                         use 'all' for all input fields
          * @param {string} message - the error message to show, leave
          *                           empty to only mark fields
          */
         _showError: function(field, message) {
-            
+
             if (field == 'all') {
                 // All inputs
                 this.input.find('input').addClass('invalidinput');
@@ -1784,29 +1790,29 @@
                 this.input.append('<div class="error">' + message + '</div>');
             }
         },
-        
+
         /**
          * Remove all error classes and messages
          */
         _removeErrors: function() {
-            
+
             this.input.find('input').removeClass('invalidinput');
             this.input.find('.error').remove();
         },
-        
+
         /**
          * Parse and validate the DMS input
-         * 
+         *
          * @return {string|number} - the value for the real input (decimal)
          */
         _validateDMS: function() {
-            
+
             this._removeErrors();
-            
+
             var type = this.options.type,
                 range,
                 rangeError;
-            
+
             if (type == 'lat') {
                 range = 90;
                 rangeError = i18n.latlon_error.lat;
@@ -1818,7 +1824,7 @@
                 min = this.minInput.val(),
                 sec = this.secInput.val(),
                 errors = [];
-                
+
             if (deg === '' && min === '' && sec === '') {
                 // Removed
                 return '';
@@ -1846,21 +1852,21 @@
             }
             return (deg < 0 ? -1 : 1) * total;
         },
-        
+
         /**
          * Parse and validate the decimal input
-         * 
+         *
          * @return {string|number} - the value for the real input (decimal)
          */
         _validateDecimal: function() {
-            
+
             this._removeErrors();
-            
+
             var type = this.options.type,
                 range,
                 rangeError,
                 formatError = i18n.latlon_error.format;
-            
+
             if (type == 'lat') {
                 range = 90;
                 rangeError = i18n.latlon_error.lat;
@@ -1868,7 +1874,7 @@
                 range = 180;
                 rangeError = i18n.latlon_error.lon;
             }
-            
+
             var decimal = this.decimalInput.val();
             if (decimal === '') {
                 // Removed
@@ -1883,18 +1889,18 @@
             }
             return decimal;
         },
-        
+
         /**
          * Parser for the decimal input - tries to recognize the input format
          * and convert it into decimal degrees. Supports a variety of DMS formats,
          * as well as explicit direction (N|S|E|W). Simplifies input by allowing
          * copy/paste (which is not easily possible with strict DMS input).
-         * 
+         *
          * @param {string} value: the input value
          * @param {string} mode: 'lat' or 'lon'
          */
         _parse: function(value, mode) {
-            
+
             var directions;
             if (mode == 'lat') {
                 directions = {'N': 1, 'S': -1};
@@ -1949,8 +1955,8 @@
                         symbols.push(null);
                     }
                 }
-                var DEGREES = '°', 
-                    MINUTES = "'", 
+                var DEGREES = '°',
+                    MINUTES = "'",
                     SECONDS = '"',
                     len = numbers.length;
                 if (!len) {
@@ -2027,15 +2033,15 @@
             // Unrecognized format
             return null;
         },
-        
+
         /**
          * Bind event handlers (after refresh)
          */
         _bindEvents: function() {
-            
+
             var self = this,
                 ns = this.namespace;
-            
+
             this.dmsInput.find('input').bind('change' + ns, function() {
                 var value = self._validateDMS();
                 if (value !== null) {
@@ -2044,7 +2050,7 @@
                     $(self.element).val(self.defaultValue).change();
                 }
             });
-            
+
             this.decimalInput.bind('change' + ns, function() {
                 var value = self._validateDecimal();
                 if (value !== null) {
@@ -2054,7 +2060,7 @@
                     $(self.element).val(self.defaultValue).change();
                 }
             });
-            
+
             $(this.element).bind('setvalue' + ns, function() {
                 self.refresh();
             });
@@ -2068,7 +2074,7 @@
         _unbindEvents: function() {
 
             var ns = this.namespace;
-            
+
             if (this.input) {
                 this.input.find('input').unbind(ns);
             }
