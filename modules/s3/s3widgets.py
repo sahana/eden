@@ -1243,13 +1243,27 @@ class S3DateWidget(FormWidget):
 
     def __init__(self,
                  format = None,
-                 past=1440,     # how many months into the past the date can be set to
-                 future=1440    # how many months into the future the date can be set to
+                 past=1440,
+                 future=1440,
+                 start_field = None,
+                 default_interval = None,
                  ):
+
+        """
+            Constructor
+
+            @param format: format of date
+            @param past: how many months into the past the date can be set to
+            @param future: how many months into the future the date can be set to
+            @param start_field: "selector" for start date field
+            @paran default_interval: x months from start date
+        """
 
         self.format = format
         self.past = past
         self.future = future
+        self.start_field = start_field
+        self.default_interval = default_interval
 
     def __call__(self, field, value, **attributes):
 
@@ -1331,6 +1345,10 @@ class S3DateWidget(FormWidget):
         else:
             maxDate = "+0"
 
+        # Set auto updation of end_date based on start_date if start_field attr are set
+        start_field = self.start_field
+        default_interval = self.default_interval
+
         script = \
 '''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
  dateFormat:'%(format)s',
@@ -1344,6 +1362,41 @@ class S3DateWidget(FormWidget):
 
         if script not in jquery_ready: # Prevents loading twice when form has errors
             jquery_ready.append(script)
+
+        if start_field and default_interval:
+
+            T = current.T
+
+            # Setting i18n for labels
+            i18n = '''
+i18n.interval="%(interval_label)s"
+i18n.btn_1_label="%(btn_first_label)s"
+i18n.btn_2_label="%(btn_second_label)s"
+i18n.btn_3_label="%(btn_third_label)s"
+i18n.btn_4_label="%(btn_fourth_label)s"
+i18n.btn_clear="%(btn_clear)s"
+''' % dict(interval_label = T("Interval"),
+           btn_first_label = T("+6 MO"),
+           btn_second_label = T("+1 YR"),
+           btn_third_label = T("+2 YR"),
+           btn_fourth_label = T("+5 YR"),
+           btn_clear = T("Clear"),
+           )
+
+            s3.js_global.append(i18n)
+
+            script = '''
+$('#%(end_selector)s').end_date_interval({
+start_date_selector:"#%(start_selector)s",
+interval:%(interval)d
+})
+''' % dict(end_selector = selector,
+           start_selector = start_field,
+           interval = default_interval,
+           )
+
+            if script not in jquery_ready:
+                jquery_ready.append(script)
 
         return TAG[""](widget, requires = field.requires)
 
