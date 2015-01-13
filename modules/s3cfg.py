@@ -2478,6 +2478,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_id", True)
 
+    def get_hrm_use_address(self):
+        """
+            Whether Human Resources should show address tab
+        """
+        return self.hrm.get("use_address", True)
+
     def get_hrm_use_skills(self):
         """
             Whether Human Resources should use Skills

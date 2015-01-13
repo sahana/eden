@@ -1288,6 +1288,10 @@ def config(settings):
     # Custom label for Organisations in HR module
     #settings.hrm.organisation_label = "National Society / Branch"
     settings.hrm.organisation_label = "Organization"
+    # Uncomment to disable the use of HR ID Tab
+    settings.hrm.use_id = False
+    # Uncomment to disable the use of HR Address Tab
+    settings.hrm.use_address = False
 
     hrm_human_resource_list_fields = [
         "id",

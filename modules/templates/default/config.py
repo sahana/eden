@@ -612,6 +612,8 @@ def config(settings):
     #settings.hrm.use_education = True
     # Uncomment to disable the use of HR ID Tab
     #settings.hrm.use_id = False
+    # Uncomment to disable the use of HR Address Tab
+    #settings.hrm.use_address = False
     # Uncomment to disable the use of HR Skills
     #settings.hrm.use_skills = False
     # Uncomment to enable tracking of staff salaries

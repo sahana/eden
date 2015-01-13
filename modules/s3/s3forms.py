@@ -2851,6 +2851,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                   upload = s3.download_url,
                                   readonly=readonly,
                                   table_name=subform_name,
+                                  separator = ":",
                                   submit = False,
                                   buttons = [])
         subform = subform[0]
