@@ -20,7 +20,7 @@ $(function (){
 
             url = S3.Ap.concat('/project/member.s3json');
             type = 'PUT';
-            if (task_id<=curl.length) {
+            if (task_id<curl.length) {
                 url += '?task_id=' + curl[task_id];
             }
             data_json = {'$_project_member':[{'$k_task_id':{'@resource':'project_task',
