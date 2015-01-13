@@ -2401,7 +2401,9 @@ class S3HRSkillModel(S3Model):
                              label = T("Date Received")
                              ),
                      s3_date("end_date",
-                             # @ToDo: Automation based on deployment_settings, e.g.: date received + 6/12 months
+                             # @ToDo: Change implicit default to explicit default with interval of 12 months
+                             start_field = "hrm_credential_start_date",
+                             default_interval = 12,
                              label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
