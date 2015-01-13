@@ -515,18 +515,13 @@ def config(settings):
                 fields = [("", "location_id"),
                           ],
                 ),
-            #S3SQLInlineComponent(
-                #"address",
-                #label = T("Address"),
-                #multiple = False,
-                ## This is just Text - put into the Comments box for now
-                ## Ultimately should go into location_id$addr_street
-                #fields = [("", "comments")],
-            #),
             S3SQLInlineComponent(
                 "facility",
                 label = T("Main Facility"),
                 fields = ["name",
+                          "phone1",
+                          "phone2",
+                          "email",
                           "location_id",
                           ],
                 layout = FacilitySubFormLayout,
@@ -534,27 +529,6 @@ def config(settings):
                             "options": True,
                            },
                 multiple = False,
-            ),
-            "phone",
-            S3SQLInlineComponent(
-                "contact",
-                name = "phone2",
-                label = T("Phone2"),
-                multiple = False,
-                fields = [("", "value")],
-                filterby = dict(field = "contact_method",
-                                options = "WORK_PHONE"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "contact",
-                name = "email",
-                label = T("Email"),
-                multiple = False,
-                fields = [("", "value")],
-                filterby = dict(field = "contact_method",
-                                options = "EMAIL"
-                                )
             ),
             "website",
             S3SQLInlineComponent(
