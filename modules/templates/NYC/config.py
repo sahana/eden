@@ -112,6 +112,8 @@ def config(settings):
     #settings.gis.check_within_parent_boundaries = False
     # GeoNames username
     settings.gis.geonames_username = "eden_nyc"
+    # Uncomment to modify the Simplify Tolerance
+    settings.gis.simplify_tolerance = 0.001
 
     # Uncomment to show created_by/modified_by using Names not Emails
     settings.ui.auth_user_represent = "name"
@@ -322,9 +324,16 @@ def config(settings):
                             ),
             ]
 
-        current.s3db.configure(tablename,
-                               filter_widgets = filter_widgets,
-                               )
+        s3db = current.s3db
+
+        s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       )
+
+        field = s3db.org_facility.main_facility
+        field.readable = field.writable = True
+        crud_form = s3db.get_config(tablename, "crud_form")
+        crud_form.insert(-2, "main_facility")
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 

@@ -721,6 +721,50 @@ class S3SQLCustomForm(S3SQLForm):
     """ Custom SQL Form """
 
     # -------------------------------------------------------------------------
+    def __len__(self):
+        """
+            Support len(crud_form)
+        """
+
+        return len(self.elements)
+
+    # -------------------------------------------------------------------------
+    def insert(self, index, element):
+        """
+            S.insert(index, object) -- insert object before index
+        """
+
+        if not element:
+            return
+        if isinstance(element, S3SQLFormElement):
+            self.elements.insert(index, element)
+        elif isinstance(element, str):
+            self.elements.insert(index, S3SQLField(element))
+        elif isinstance(element, tuple):
+            l = len(element)
+            if l > 1:
+                label, selector = element[:2]
+                widget = element[2] if l > 2 else DEFAULT
+            else:
+                selector = element[0]
+                label = widget = DEFAULT
+            self.elements.insert(index, S3SQLField(selector, label=label, widget=widget))
+        else:
+            msg = "Invalid form element: %s" % str(element)
+            if current.deployment_settings.get_base_debug():
+                raise SyntaxError(msg)
+            else:
+                current.log.error(msg)
+
+    # -------------------------------------------------------------------------
+    def append(self, element):
+        """
+            S.append(object) -- append object to the end of the sequence
+        """
+
+        self.insert(len(self), element)
+
+    # -------------------------------------------------------------------------
     # Rendering/Processing
     # -------------------------------------------------------------------------
     def __call__(self,
