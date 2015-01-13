@@ -1121,7 +1121,7 @@
                     // Check that the row contains data
                     var inputs = row.find('input, select, textarea'),
                         input;
-                    for (var j=0, numfields=inputs.length; j < numfields; i++) {
+                    for (var j=0, numfields=inputs.length; j < numfields; j++) {
                         input = $(inputs[j]);
                         if ((input.attr('type') != 'checkbox' && input.val()) || input.prop('checked')) {
                             empty = false;
