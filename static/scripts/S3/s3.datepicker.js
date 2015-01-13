@@ -119,8 +119,8 @@ S3.start_end_date = function(start_field, end_field) {
             default_interval = this.default_interval;
 
             element.datepicker('option',{
-                yearRange:'c-100:c+100',
-                showButtonPanel:true,
+                yearRange: 'c-100:c+100',
+                showButtonPanel: true
             }).one('click', function() {
                 $(this).focus()
             });
