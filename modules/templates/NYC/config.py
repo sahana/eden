@@ -112,6 +112,8 @@ def config(settings):
     #settings.gis.check_within_parent_boundaries = False
     # GeoNames username
     settings.gis.geonames_username = "eden_nyc"
+    # Uncomment to modify the Simplify Tolerance
+    settings.gis.simplify_tolerance = 0.001
 
     # Uncomment to show created_by/modified_by using Names not Emails
     settings.ui.auth_user_represent = "name"
