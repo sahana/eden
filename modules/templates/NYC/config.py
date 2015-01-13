@@ -322,9 +322,16 @@ def config(settings):
                             ),
             ]
 
-        current.s3db.configure(tablename,
-                               filter_widgets = filter_widgets,
-                               )
+        s3db = current.s3db
+
+        s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       )
+
+        field = s3db.org_facility.main_facility
+        field.readable = field.writable = True
+        crud_form = s3db.get_config(tablename, "crud_form")
+        crud_form.insert(-2, "main_facility")
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
