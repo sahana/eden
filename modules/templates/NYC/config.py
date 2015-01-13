@@ -909,6 +909,8 @@ def config(settings):
     # Only show Private Contacts Tab (Public is done via Basic Details tab)
     settings.pr.contacts_tabs = ("private",)
 
+    POC = T("Org PoC")
+
     # -------------------------------------------------------------------------
     # Persons
     def customise_pr_person_controller(**attr):
@@ -939,21 +941,26 @@ def config(settings):
 
                 if not r.component:
                     hr_fields = ["organisation_id",
+                                 "org_contact",
                                  "job_title_id",
                                  "site_id",
                                  ]
+                    htable = s3db.hrm_human_resource
+                    field = htable.org_contact
+                    field.readable = field.writable = True
+                    field.label = POC
                     if r.method in ("create", "update"):
                         get_vars = r.get_vars
                         # Context from a Profile page?"
                         organisation_id = get_vars.get("(organisation)", None)
                         if organisation_id:
-                            field = s3db.hrm_human_resource.organisation_id
+                            field = htable.organisation_id
                             field.default = organisation_id
                             field.readable = field.writable = False
                             hr_fields.remove("organisation_id")
                         site_id = get_vars.get("(site)", None)
                         if site_id:
-                            field = s3db.hrm_human_resource.site_id
+                            field = htable.site_id
                             field.default = site_id
                             field.readable = field.writable = False
                             hr_fields.remove("site_id")
@@ -996,6 +1003,18 @@ def config(settings):
                                                 fields = [("", "value")],
                                                 filterby = [dict(field = "contact_method",
                                                                  options = "EMAIL"),
+                                                            dict(field = "access",
+                                                                 options = 2),
+                                                            ]
+                                                ),
+                                            S3SQLInlineComponent(
+                                                "contact",
+                                                name = "work_phone",
+                                                label = T("Work Phone"),
+                                                #multiple = True,
+                                                fields = [("", "value")],
+                                                filterby = [dict(field = "contact_method",
+                                                                 options = "WORK_PHONE"),
                                                             dict(field = "access",
                                                                  options = 2),
                                                             ]
@@ -1418,7 +1437,7 @@ def config(settings):
                                         })
         field = s3db.hrm_human_resource.org_contact
         field.readable = field.writable = True
-        field.label = T("Org PoC")
+        field.label = POC
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm("person_id",
