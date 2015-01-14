@@ -24,7 +24,7 @@ auth.override = True
 session.s3.roles.append(ADMIN)
 
 stylesheet_dir = os.path.join(request.folder, "static", "formats", "s3csv", "supply")
-import_dir = os.path.join(request.folder, "private", "templates", "IFRC")
+import_dir = os.path.join(request.folder, "modules", "templates", "IFRC")
 
 import_file = os.path.join(import_dir, "supply_item_category_ifrc_standard.csv")
 stylesheet = os.path.join(stylesheet_dir, "item_category_ifrc_standard.xsl")
