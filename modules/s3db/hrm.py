@@ -3087,15 +3087,14 @@ class S3HRSkillModel(S3Model):
                           _title="%s|%s" % (T("Competency Rating"),
                                             T("Level of competency this person has with this skill.")))
         if current.deployment_settings.get_hrm_skill_types():
-            s3.js_global.append('''i18n.no_ratings="%s"''' % T("No Ratings for Skill Type"))
             script = \
 '''$.filterOptionsS3({
  'trigger':'skill_id',
  'target':'competency_id',
  'lookupResource':'competency',
  'lookupURL':S3.Ap.concat('/%s/skill_competencies/'),
- 'msgNoRecords':i18n.no_ratings
-})''' % controller
+ 'msgNoRecords':'%s'
+})''' % (controller, T("No Ratings for Skill Type"))
             comment = TAG[""](comment,
                               S3ScriptItem(script=script))
 

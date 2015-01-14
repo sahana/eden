@@ -9035,10 +9035,9 @@ class S3Map(S3Method):
             widget_id = "default_map"
 
         gis = current.gis
-        s3db = current.s3db
         tablename = self.tablename
 
-        ftable = s3db.gis_layer_feature
+        ftable = current.s3db.gis_layer_feature
 
         def lookup_layer(prefix, name):
             query = (ftable.controller == prefix) & \
@@ -9063,14 +9062,6 @@ class S3Map(S3Method):
             prefix, name = tablename.split("_", 1)
             layer_id = lookup_layer(prefix, name)
 
-        marker_fn = s3db.get_config(tablename, "marker_fn")
-        if marker_fn:
-            # Per-feature markers added in get_location_data()
-            marker = None
-        else:
-            # Single Marker for the layer
-            marker = gis.get_marker(prefix, name)
-
         url = URL(extension="geojson", args=None)
 
         # @ToDo: Support maps with multiple layers (Dashboards)
@@ -9083,7 +9074,6 @@ class S3Map(S3Method):
                               "url"       : url,
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
-                              "marker"    : marker
                               }]
         settings = current.deployment_settings
         catalogue_layers = settings.get_gis_widget_catalogue_layers()
