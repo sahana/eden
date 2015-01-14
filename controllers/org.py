@@ -124,7 +124,7 @@ def site():
 def sites_for_org():
     """
         Used to provide the list of Sites for an Organisation
-        - used in User Registration
+        - used in User Registration & Assets
     """
 
     try:
@@ -132,23 +132,28 @@ def sites_for_org():
     except:
         result = current.xml.json_message(False, 400, "No Org provided!")
     else:
-        stable = s3db.org_site
-        if settings.get_org_branches():
-            # Find all branches for this Organisation
-            btable = s3db.org_organisation_branch
-            query = (btable.organisation_id == org) & \
-                    (btable.deleted != True)
-            rows = db(query).select(btable.branch_id)
-            org_ids = [row.branch_id for row in rows] + [org]
-            query = (stable.organisation_id.belongs(org_ids)) & \
-                    (stable.deleted != True)
+        try:
+            org = int(org)
+        except:
+            result = current.xml.json_message(False, 400, "Invalid Org provided!")
         else:
-            query = (stable.organisation_id == org) & \
-                    (stable.deleted != True)
-        rows = db(query).select(stable.site_id,
-                                stable.name,
-                                orderby=stable.name)
-        result = rows.json()
+            stable = s3db.org_site
+            if settings.get_org_branches():
+                # Find all branches for this Organisation
+                btable = s3db.org_organisation_branch
+                query = (btable.organisation_id == org) & \
+                        (btable.deleted != True)
+                rows = db(query).select(btable.branch_id)
+                org_ids = [row.branch_id for row in rows] + [org]
+                query = (stable.organisation_id.belongs(org_ids)) & \
+                        (stable.deleted != True)
+            else:
+                query = (stable.organisation_id == org) & \
+                        (stable.deleted != True)
+            rows = db(query).select(stable.site_id,
+                                    stable.name,
+                                    orderby=stable.name)
+            result = rows.json()
     finally:
         response.headers["Content-Type"] = "application/json"
         return result

@@ -196,8 +196,8 @@ class S3AssetModel(S3Model):
                                                  #required=True
                                               ),
                                      required = True,
-                                     script = '''
-$.filterOptionsS3({
+                                     script = \
+'''$.filterOptionsS3({
  'trigger':'organisation_id',
  'target':'site_id',
  'lookupResource':'site',
