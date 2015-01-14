@@ -472,12 +472,6 @@ def config(settings):
                 restricted = True,
                 #module_type = 10
             )),
-        ("irs", Storage(
-                name_nice = T("Incidents"),
-                #description = "Incident Reporting System",
-                restricted = True,
-                #module_type = 10
-            )),
         ("member", Storage(
                name_nice = T("Members"),
                #description = "Membership Management System",

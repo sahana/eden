@@ -93,9 +93,9 @@ class S3MainMenu(default.S3MainMenu):
             homepage("vulnerability")(
                 MM("Map", c="vulnerability", f="index"),
             ),
-            homepage("event", "irs")(
+            homepage("event")(
                 MM("Events", c="event", f="event"),
-                MM("Incident Reports", c="irs", f="ireport"),
+                MM("Incident Reports", c="event", f="incident_report"),
             ),
             homepage("deploy", name="RDRT", f="mission", m="summary",
                      vars={"~.status__belongs": "2"})(
@@ -655,35 +655,25 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def irs():
-        """ IRS Incident Reporting """
+    def event():
+        """ Event Management """
 
         return M()(
                     M("Events", c="event", f="event")(
                         M("Create", m="create"),
                     ),
-                    M("Incident Reports", c="irs", f="ireport")(
+                    M("Event Types", c="event", f="event_type")(
                         M("Create", m="create"),
-                        M("Open Incidents", vars={"open": 1}),
-                        M("Map", m="map"),
-                        M("Timeline", args="timeline"),
-                        M("Report", m="report")
+                        #M("Import", m="import", p="create"),
                     ),
-                    M("Incident Categories", c="irs", f="icategory",
-                      check=current.auth.s3_has_role(current.session.s3.system_roles.ADMIN))(
+                    M("Incident Reports", c="event", f="incident_report", m="summary")(
                         M("Create", m="create"),
                     ),
-                    M("Reports", c="irs", f="ireport",  m="report")(
-                        M("Incidents", m="report"),
+                    M("Incident Types", c="event", f="incident_type")(
+                        M("Create", m="create"),
+                        #M("Import", m="import", p="create"),
                     ),
                 )
-
-    # -------------------------------------------------------------------------
-    def event(self):
-        """ Event Management """
-
-        # Same as IRS
-        return self.irs()
 
     # -------------------------------------------------------------------------
     @staticmethod
