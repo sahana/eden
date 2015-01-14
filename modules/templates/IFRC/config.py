@@ -192,6 +192,8 @@ def config(settings):
     # Formstyle
     settings.ui.formstyle = "table"
     settings.ui.filter_formstyle = "table_inline"
+    # Uncomment to disable responsive behavior of datatables
+    settings.ui.datatables_responsive = False
 
     settings.gis.map_height = 600
     settings.gis.map_width = 869
