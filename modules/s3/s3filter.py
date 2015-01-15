@@ -951,6 +951,7 @@ class S3LocationFilter(S3FilterWidget):
             # Add one widget per level
             first = True
             hide = True
+            s3 = current.response.s3
             for level in levels:
                 # Dummy field
                 name = "%s-%s" % (base_name, level)
@@ -962,21 +963,35 @@ class S3LocationFilter(S3FilterWidget):
                 # Unique ID/name
                 attr["_id"] = "%s-%s" % (base_id, level)
                 attr["_name"] = name
-                # Find relevant values to pre-populate the widget
-                _values = values.get("%s$%s__%s" % (fname, level, operator))
                 w = S3MultiSelectWidget(filter = opts.get("filter", "auto"),
                                         header = opts.get("header", False),
                                         selectedList = opts.get("selectedList", 3),
                                         noneSelectedText = T("Select %(location)s") % \
                                                              dict(location=levels[level]["label"]))
                 if first:
+                    # Visible Multiselect Widget added to the page
                     attr["_class"] = _class
-                elif hide:
-                    # Hide dropdowns other than first
-                    _class = "%s hide" % _class
-                    attr["_class"] = _class
-                    hide = False
-                widget = w(dummy_field, _values, **attr)
+                    # Find relevant values to pre-populate the widget
+                    _values = values.get("%s$%s__%s" % (fname, level, operator))
+                    widget = w(dummy_field, _values, **attr)
+                else:
+                    # Hidden, empty dropdown added to the page, whose options and multiselect will be activated when the higher level is selected
+                    if hide:
+                        _class = "%s hide" % _class
+                        attr["_class"] = _class
+                        hide = False
+                    # Store the current jquery_ready
+                    jquery_ready = s3.jquery_ready
+                    # Build the widget with the MultiSelect activation script
+                    s3.jquery_ready = []
+                    widget = w(dummy_field, {}, **attr)
+                    # Extract the MultiSelect activation script
+                    script = s3.jquery_ready[0]
+                    # Restore jquery_ready
+                    s3.jquery_ready = jquery_ready
+                    # Wrap the script & reinsert
+                    script = '''S3.%s=function(){%s}''' % (name.replace("-", "_"), script)
+                    s3.js_global.append(script)
                 w_append(widget)
                 first = False
 
@@ -1045,47 +1060,47 @@ class S3LocationFilter(S3FilterWidget):
                         o[v] = name_l10n.get(v, v)
                     else:
                         o.append(v)
-            if inject_hierarchy:
-                if i == 0:
-                    h = hierarchy[_level]
-                    if v not in h:
-                        h[v] = {}
-                    parent = v
-                elif i == 1:
-                    h = hierarchy[_level][parent]
-                    if v not in h:
-                        h[v] = {}
-                    grandparent = parent
-                    parent = v
-                elif i == 2:
-                    h = hierarchy[_level][grandparent][parent]
-                    if v not in h:
-                        h[v] = {}
-                    greatgrandparent = grandparent
-                    grandparent = parent
-                    parent = v
-                elif i == 3:
-                    h = hierarchy[_level][greatgrandparent][grandparent][parent]
-                    if v not in h:
-                        h[v] = {}
-                    greatgreatgrandparent = greatgrandparent
-                    greatgrandparent = grandparent
-                    grandparent = parent
-                    parent = v
-                elif i == 4:
-                    h = hierarchy[_level][greatgreatgrandparent][greatgrandparent][grandparent][parent]
-                    if v not in h:
-                        h[v] = {}
-                    greatgreatgreatgrandparent = greatgreatgrandparent
-                    greatgreatgrandparent = greatgrandparent
-                    greatgrandparent = grandparent
-                    grandparent = parent
-                    parent = v
-                elif i == 5:
-                    h = hierarchy[_level][greatgreatgreatgrandparent][greatgreatgrandparent][greatgrandparent][grandparent][parent]
-                    if v not in h:
-                        h[v] = {}
-                i += 1
+                if inject_hierarchy:
+                    if i == 0:
+                        h = hierarchy[_level]
+                        if v not in h:
+                            h[v] = {}
+                        parent = v
+                    elif i == 1:
+                        h = hierarchy[_level][parent]
+                        if v not in h:
+                            h[v] = {}
+                        grandparent = parent
+                        parent = v
+                    elif i == 2:
+                        h = hierarchy[_level][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                        greatgrandparent = grandparent
+                        grandparent = parent
+                        parent = v
+                    elif i == 3:
+                        h = hierarchy[_level][greatgrandparent][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                        greatgreatgrandparent = greatgrandparent
+                        greatgrandparent = grandparent
+                        grandparent = parent
+                        parent = v
+                    elif i == 4:
+                        h = hierarchy[_level][greatgreatgrandparent][greatgrandparent][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                        greatgreatgreatgrandparent = greatgreatgrandparent
+                        greatgreatgrandparent = greatgrandparent
+                        greatgrandparent = grandparent
+                        grandparent = parent
+                        parent = v
+                    elif i == 5:
+                        h = hierarchy[_level][greatgreatgreatgrandparent][greatgreatgrandparent][greatgrandparent][grandparent][parent]
+                        if v not in h:
+                            h[v] = {}
+                    i += 1
 
     # -------------------------------------------------------------------------
     def _options(self, resource, inject_hierarchy=True, values=None):
