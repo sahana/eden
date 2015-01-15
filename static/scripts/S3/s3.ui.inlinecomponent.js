@@ -124,9 +124,9 @@
                 // Check add-row for defaults
                 var $row = $(this),
                     defaults = false;
-                $row.find('input, select').each(function() {
+                $row.find('input[type!="hidden"], select').each(function() {
                     var $this = $(this);
-                    if ($this.val() && $this.attr('type') != 'checkbox' && !$this.hasClass('location-selector')) {
+                    if ($this.val() && $this.attr('type') != 'checkbox') {
                         defaults = true;
                     }
                 });
