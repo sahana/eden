@@ -126,7 +126,7 @@
                     defaults = false;
                 $row.find('input, select').each(function() {
                     var $this = $(this);
-                    if ($this.val() && $this.attr('type') != 'checkbox') {
+                    if ($this.val() && $this.attr('type') != 'checkbox' && !$this.hasClass('location-selector')) {
                         defaults = true;
                     }
                 });
