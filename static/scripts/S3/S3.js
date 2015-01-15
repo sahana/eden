@@ -283,11 +283,11 @@ S3.redraw = function() {
 $.widget('custom.iconselectmenu', $.ui.selectmenu, {
     _renderItem: function(ul, item) {
         var li = $('<li>', {text: item.label} );
- 
+
         if (item.disabled) {
             li.addClass('ui-state-disabled');
         }
- 
+
         var element = item.element;
         var _class = item.element.attr('data-class');
         if (_class) {
@@ -300,7 +300,7 @@ $.widget('custom.iconselectmenu', $.ui.selectmenu, {
             'class': _class
         })
           .appendTo(li);
- 
+
         return li.appendTo(ul);
     }
 });
@@ -618,7 +618,7 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
             url += '&rid=' + curl[4];
         }
     }
-    
+
     if ($map.length==0 || popup=='True') {
         url += '&popup=1';
         S3.openPopup(url, true);
@@ -632,7 +632,7 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
                     'display': ''
                 });
             }
-            else {  
+            else {
                 closeMap.css({
                     'display': 'none'
                 });
@@ -645,18 +645,18 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
                 'display': 'none'
             });
         };
-        
+
         if ($iframe_map.length==0) {
             // 1st iframe to be loaded in 'map'
             var iframe = $("<iframe id='iframe-map' data-feature='" + feature_id + "' style='border-style:none' width='100%' height='" + iframe_height + "' src='" + url + "' />"),
                 closelink = $("<a class='button tiny' id='close-iframe-map'>" + i18n.close_map + "</a>");
-                
+
             closelink.bind('click', closeMap);
             // Display Map
             $map.slideDown('medium');
             $map.append(iframe);
             $map.append($('<div style="margin-bottom:10px" />').append(closelink));
-        }   
+        }
         else {
             fid = $iframe_map.attr('data-feature');
             if (fid==feature_id) {
@@ -1229,13 +1229,22 @@ S3.openPopup = function(url, center) {
                 triggerField = checkboxesWidget;
             }
         }
-        if (triggerField.length == 1 && !triggerField.hasClass('checkboxes-widget-s3')) {
-            triggerValue = triggerField.val();
-        } else if (triggerField.hasClass('checkboxes-widget-s3')) {
+        if (triggerField.hasClass('checkboxes-widget-s3')) {
             triggerValue = new Array();
             triggerField.find('input:checked').each(function() {
                 triggerValue.push($(this).val());
             });
+        } else if (triggerField.hasClass('s3-hierarchy-input')) {
+            triggerValue = '';
+            var value = triggerField.val();
+            if (value) {
+                value = JSON.parse(value);
+                if (value.length) {
+                    triggerValue = value[0];
+                }
+            }
+        } else if (triggerField.length == 1) {
+            triggerValue = triggerField.val();
         }
         return [triggerField, triggerValue];
     };
@@ -1300,16 +1309,6 @@ S3.openPopup = function(url, center) {
             targetField,
             targetForm;
 
-        if (!triggerSelector) {
-            return;
-        } else {
-            triggerField = $(triggerSelector);
-            if (!triggerField.length) {
-                return;
-            }
-            triggerForm = triggerField.closest('form');
-        }
-
         if (!targetSelector) {
             return;
         } else {
@@ -1320,6 +1319,16 @@ S3.openPopup = function(url, center) {
             targetForm = targetField.closest('form');
         }
 
+        if (!triggerSelector) {
+            return;
+        } else {
+            // Trigger must be in the same form as target
+            triggerField = targetForm.find(triggerSelector);
+            if (!triggerField.length) {
+                return;
+            }
+        }
+
         // Initial event-less update of the target(s)
         $(triggerSelector).last().each(function() {
             var trigger = $(this),
@@ -1327,7 +1336,7 @@ S3.openPopup = function(url, center) {
             if (settings.scope == 'row') {
                 $scope = trigger.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {
-                $scope = triggerForm;
+                $scope = targetForm;
             }
             var triggerData = getTriggerData(trigger),
                 target = $scope.find(targetSelector);
@@ -1335,12 +1344,12 @@ S3.openPopup = function(url, center) {
         });
 
         // Change-event for the trigger fires trigger-event for the target
-        // form, delegated to triggerForm so it happens also for dynamically
+        // form, delegated to targetForm so it happens also for dynamically
         // inserted triggers (e.g. inline forms)
         var changeEventName = 'change.s3options',
             triggerEventName = 'triggerUpdate.' + triggerName;
-        triggerForm.undelegate(triggerSelector, changeEventName)
-                   .delegate(triggerSelector, changeEventName, function() {
+        targetForm.undelegate(triggerSelector, changeEventName)
+                  .delegate(triggerSelector, changeEventName, function() {
             var triggerData = getTriggerData($(this));
             targetForm.trigger(triggerEventName, triggerData);
         });
@@ -1352,7 +1361,7 @@ S3.openPopup = function(url, center) {
             if (settings.scope == 'row') {
                 $scope = triggerField.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {
-                $scope = triggerForm;
+                $scope = targetForm;
             }
             // Update all targets within scope
             var target = $scope.find(targetSelector);

@@ -6308,7 +6308,6 @@ class S3HierarchyWidget(FormWidget):
         widget = DIV(INPUT(_type = "hidden",
                            _multiple = "multiple",
                            _name = field.name,
-                           _id = selector,
                            _class = "s3-hierarchy-input",
                            requires = self.parse),
                      DIV(h.html("%s-tree" % widget_id),
