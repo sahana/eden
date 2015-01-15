@@ -451,6 +451,8 @@ def newsfeed():
         nappend((T("Contact"), contact_field))
     nappend((T("Description"), "body"))
 
+    # @todo: allow configuration (?)
+    filter_formstyle = settings.get_ui_formstyle()
     s3db.configure("cms_post",
                    # We could use a custom Advanced widget
                    #filter_advanced = False,

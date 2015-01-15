@@ -1888,11 +1888,16 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         });
 
         // Options Menu Toggle on mobile
-        $('#menu-options-toggle').on('click', function(e) {
+        $('#menu-options-toggle,#list-filter-toggle').on('click', function(e) {
             e.stopPropagation();
             var $this = $(this);
             var status = $this.data('status'),
+                menu;
+            if (this.id == '#menu-options-toggle') {
                 menu = $('#menu-options');
+            } else {
+                menu = $('#list-filter');
+            }
             if (status == 'off') {
                 menu.hide().removeClass('hide-for-small').slideDown(400, function() {
                     $this.data('status', 'on').text($this.data('on'));

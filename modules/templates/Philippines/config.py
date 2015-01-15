@@ -12,8 +12,8 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_NOT_EMPTY
 
-from s3 import FS, IS_LOCATION, IS_ONE_OF, S3DateTime, S3LocationSelector, S3Represent,
-               S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget,
+from s3 import FS, IS_LOCATION, IS_ONE_OF, S3DateTime, S3LocationSelector, S3Represent, \
+               S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget, \
                s3_auth_user_represent_name, s3_avatar_represent
 
 datetime_represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)

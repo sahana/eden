@@ -24,7 +24,13 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Pre-Populate
     settings.base.prepopulate = ("EVASS", "default/users")
-
+    # Pre-Populate options, for use in 000_config.py e.g. 
+    #   settings.base.prepopulate = "template:demo" => Demo install
+    #   settings.base.prepopulate = "template:prod" => Production install
+    settings.base.prepopulate_options = {"mandatory": "EVASS",
+                                         "demo": "default/users",
+                                         "prod": None,
+                                         }
     settings.base.system_name = T("EVASS - Sahana Eden for Italy")
     settings.base.system_name_short = T("Sahana Eden for Italy")
 
