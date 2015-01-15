@@ -10,7 +10,7 @@
 # It contains the configuration settings to run the smoke tests
 
 # Setting the depth till where URLs will be parsed
-${MAXDEPTH}  2
+${MAXDEPTH}  3
 # Follow external links
 ${EXT LINKS}  ${False}
 ${PAGE LOAD TIMEOUT}  0.25
@@ -21,7 +21,7 @@ ${START URL}  ${BASE URL}
 # ignore other modules, just set the Root URL to that module
 ${ROOT URL}  ${BASE URL}
 # All the URLs containing these will be ignored eg: default/index
-@{DO NOT FOLLOW}  _language=  logout  appadmin  delete  .pdf
+@{DO NOT FOLLOW}  _language=  logout  appadmin  delete  .pdf  clean
 
 *** Settings ***
 Resource  ../../resources/main.txt
