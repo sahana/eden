@@ -1780,7 +1780,10 @@ class S3EmbedComponentWidget(FormWidget):
                            )
 
         url = "/%s/%s/%s/" % (appname, prefix, resourcename)
-        if callable(formstyle):
+        callable_formstyle = callable(formstyle)
+        tuple_rows = callable_formstyle and \
+                     isinstance(formstyle("","","",""), tuple)
+        if callable_formstyle and not tuple_rows:
             controls = formstyle("select_from_registry_row",
                                  "",
                                  controls,
@@ -1798,7 +1801,7 @@ class S3EmbedComponentWidget(FormWidget):
         else:
             # Legacy
             # @todo: deprecate
-            controls = TR(TD(select_components, _class="w2p_fw"),
+            controls = TR(TD(controls, _class="w2p_fw"),
                           TD(),
                           _id="select_from_registry_row",
                           _class=_class,
@@ -1824,7 +1827,7 @@ class S3EmbedComponentWidget(FormWidget):
                                           fieldname=autocomplete,
                                           link_filter=self.link_filter,
                                           post_process=select)
-            if callable(formstyle):
+            if callable_formstyle and not tuple_rows:
                 selector = formstyle("component_autocomplete_row",
                                      LABEL("%s: " % ac_field.label,
                                            _class="hide",
@@ -1863,7 +1866,7 @@ class S3EmbedComponentWidget(FormWidget):
                           )
             hidden_input = INPUT(_id=real_input, _class="hide")
 
-            if callable(formstyle):
+            if callable_formstyle and not tuple_rows:
                 selector = formstyle("component_autocomplete_row",
                                      label,
                                      TAG[""](widget, hidden_input),
@@ -1909,7 +1912,7 @@ class S3EmbedComponentWidget(FormWidget):
         formrows = TAG[""](formrows)
 
         # Divider
-        if callable(formstyle):
+        if callable_formstyle and not tuple_rows:
             divider = formstyle("", "", DIV(_class="subheading"), "")
             divider.add_class("box_bottom embedded")
         else:
