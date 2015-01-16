@@ -379,6 +379,10 @@ def location():
 
         if r.interactive and not r.component:
 
+            # Set the minimum end_date to the same as the start_date
+            s3.jquery_ready.append(
+'''S3.start_end_date('gis_location_start_date','gis_location_end_date')''')
+
             # Restrict access to Polygons to just MapAdmins
             if settings.get_security_map() and not s3_has_role(MAP_ADMIN):
                 table.gis_feature_type.writable = table.gis_feature_type.readable = False

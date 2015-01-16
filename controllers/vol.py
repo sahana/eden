@@ -549,6 +549,12 @@ def person():
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
+
+            elif r.component_name == "identity":
+                # Set the minimum valid_until to the same as the valid_from
+                s3.jquery_ready.append(
+'''S3.start_end_date('pr_identity_valid_from','pr_identity_valid_until')''')
+
             elif r.component_name == "asset":
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline

@@ -4071,13 +4071,11 @@ class S3InventoryAdjustModel(S3Model):
                            #widget = S3InvBinWidget("inv_adj_item")
                            ),
                      # Organisation that owned this item before
-                     organisation_id(name = "old_owner_org_id",
-                                     label = T("Current Owned By (Organization/Branch)"),
+                     organisation_id(label = T("Current Owned By (Organization/Branch)"),
                                      ondelete = "SET NULL",
-                                     writable = False),
+                                     ),
                      # Organisation that owns this item now
-                     organisation_id(name = "new_owner_org_id",
-                                     label = T("Transfer Ownership To (Organization/Branch)"),
+                     organisation_id(label = T("Transfer Ownership To (Organization/Branch)"),
                                      ondelete = "SET NULL"),
                      adj_id(),
                      s3_comments(),

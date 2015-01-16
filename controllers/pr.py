@@ -8,35 +8,6 @@ module = request.controller
 resourcename = request.function
 
 # -----------------------------------------------------------------------------
-# Options Menu (available in all Functions' Views)
-def s3_menu_postp():
-    # @todo: rewrite this for new framework
-    menu_selected = []
-    group_id = s3base.s3_get_last_record_id("pr_group")
-    if group_id:
-        group = s3db.pr_group
-        query = (group.id == group_id)
-        record = db(query).select(group.id, group.name, limitby=(0, 1)).first()
-        if record:
-            name = record.name
-            menu_selected.append(["%s: %s" % (T("Group"), name), False,
-                                  URL(f="group",
-                                      args=[record.id])])
-    person_id = s3base.s3_get_last_record_id("pr_person")
-    if person_id:
-        person = s3db.pr_person
-        query = (person.id == person_id)
-        record = db(query).select(person.id, limitby=(0, 1)).first()
-        if record:
-            name = s3db.pr_person_id().represent(record.id)
-            menu_selected.append(["%s: %s" % (T("Person"), name), False,
-                                  URL(f="person",
-                                      args=[record.id])])
-    if menu_selected:
-        menu_selected = [T("Open recent"), True, None, menu_selected]
-        response.menu_options.append(menu_selected)
-
-# -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
