@@ -9,42 +9,6 @@ if not settings.has_module(module):
     raise HTTP(404, body="Module disabled: %s" % module)
 
 # -----------------------------------------------------------------------------
-def s3_menu_postp():
-    # @todo: rewrite this for new framework
-    menu_selected = []
-    body_id = s3base.s3_get_last_record_id("dvi_body")
-    if body_id:
-        body = s3db.dvi_body
-        query = (body.id == body_id)
-        record = db(query).select(body.id, body.pe_label,
-                                  limitby=(0,1)).first()
-        if record:
-            label = record.pe_label
-            response.menu_options[-3][-1].append(
-                [T("Candidate Matches for Body %(label)s") % dict(label=label),
-                 False, URL(f="person",
-                            vars=dict(match=record.id))]
-            )
-            menu_selected.append(
-                ["%s: %s" % (T("Body"), label),
-                 False, URL(f="body", args=[record.id])]
-            )
-    person_id = s3base.s3_get_last_record_id("pr_person")
-    if person_id:
-        person = s3db.pr_person
-        query = (person.id == person_id)
-        record = db(query).select(person.id, limitby=(0, 1)).first()
-        if record:
-            name = s3db.pr_person_id().represent(record.id)
-            menu_selected.append(
-                ["%s: %s" % (T("Person"), name),
-                 False, URL(f="person", args=[record.id])]
-            )
-    if menu_selected:
-        menu_selected = [T("Open recent"), True, None, menu_selected]
-        response.menu_options.append(menu_selected)
-
-# -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
 
