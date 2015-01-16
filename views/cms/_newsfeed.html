@@ -3,7 +3,7 @@
  <div id='list-filter' class='medium-4 large-3 columns hide-for-small side-filter'>
   {{=list_filter_form}}
  </div>
- <div class='medium-8 large-9 columns'>
+ <div class='large-6 medium-7 small-12 columns end'>
   <div class='row'>
    {{if current.auth.s3_has_permission("update", "cms_post"):}}
    <a id='cms_post_create' href='/{{=appname}}/cms/newsfeed/create.popup?refresh=datalist' class='btn btn-primary main-add s3_modal' role='button' title='{{=T("Add New Information")}}'>
