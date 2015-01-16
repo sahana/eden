@@ -1191,6 +1191,7 @@ def s3_date(name="date", **attr):
             future = x months
             start_field = "selector" for start field
             default_interval = x months from start date
+            default_explicit = Bool for explicit default
 
         start_field and default_interval should be given together
 
@@ -1215,6 +1216,12 @@ def s3_date(name="date", **attr):
         del attr["start_field"]
     else:
         start_field = None
+
+    if "default_explicit" in attr:
+        default_explicit = attr["default_explicit"]
+        del attr["default_explicit"]
+    else:
+        default_explicit = None
 
     if "default_interval" in attr:
         default_interval = attr["default_interval"]
@@ -1319,22 +1326,26 @@ def s3_date(name="date", **attr):
         if past is None and future is None:
             attr["widget"] = S3DateWidget(start_field = start_field,
                                           default_interval = default_interval,
+                                          default_explicit = default_explicit,
                                           )
         elif past is None:
             attr["widget"] = S3DateWidget(future = future,
                                           start_field = start_field,
                                           default_interval = default_interval,
+                                          default_explicit = default_explicit,
                                           )
         elif future is None:
             attr["widget"] = S3DateWidget(past = past,
                                           start_field = start_field,
                                           default_interval = default_interval,
+                                          default_explicit = default_explicit,
                                           )
         else:
             attr["widget"] = S3DateWidget(past = past,
                                           future = future,
                                           start_field = start_field,
                                           default_interval = default_interval,
+                                          default_explicit = default_explicit,
                                           )
 
     f = S3ReusableField(name, "date", **attr)

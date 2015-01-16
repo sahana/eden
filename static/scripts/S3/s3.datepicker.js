@@ -141,6 +141,10 @@ S3.start_end_date = function(start_field, end_field) {
             select_end_date = element.datepicker('getDate');
 
             if (select_end_date == null) {
+                // Explicit Default if allowed
+                if (options.default_explicit) {
+                    self._end_date_automate(default_interval);
+                }
                 start_element.change(function() {
                     interval = self.interval;
 
@@ -220,7 +224,6 @@ S3.start_end_date = function(start_field, end_field) {
             self = this;
 
             // Default to default interval if end field is selected while its empty (i.e explicit default)
-            // @Todo: Make an option for implicit default (i.e On ready end Date is one year after start one)
             select_end_date = element.datepicker('getDate');
             if (select_end_date == null) {
                 self.interval = default_interval;

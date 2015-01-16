@@ -2401,9 +2401,9 @@ class S3HRSkillModel(S3Model):
                              label = T("Date Received")
                              ),
                      s3_date("end_date",
-                             # @ToDo: Change implicit default to explicit default with interval of 12 months
                              start_field = "hrm_credential_start_date",
                              default_interval = 12,
+                             default_explicit = True,
                              label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
@@ -6085,6 +6085,8 @@ def hrm_credential_controller():
         current.session.error = current.T("Access denied")
         redirect(URL(f="index"))
 
+    s3 = current.response.s3
+
     def prep(r):
         table = r.table
         if r.method in ("create", "create.popup", "update", "update.popup"):
@@ -6098,7 +6100,17 @@ def hrm_credential_controller():
             table.person_id.comment = None
             table.person_id.writable = False
         return True
-    current.response.s3.prep = prep
+    s3.prep = prep
+
+    def postp(r,output):
+        if r.interactive:
+            if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('hrm_credential_start_date','hrm_credential_end_date')''')
+
+        return output
+    s3.postp = postp
 
     return current.rest_controller("hrm", "credential",
                                    # @ToDo: Create these if-required
