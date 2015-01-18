@@ -165,6 +165,8 @@ class S3HRModel(S3Model):
                                  ),
                      *s3_meta_fields())
 
+        label = T("Create a New Department")
+        tooltip = T("If you don't see the Department in the list, you can add a new one by clicking link 'Create Department' ")
         label_create = T("Create Department")
         crud_strings[tablename] = Storage(
             label_create = label_create,
@@ -193,7 +195,9 @@ class S3HRModel(S3Model):
             sortby = "name",
             comment = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
                                         f="department",
-                                        label=label_create),
+                                        label=label_create,
+                                        title=label,
+                                        tooltip=tooltip),
             )
 
         configure("hrm_department",
@@ -450,17 +454,10 @@ class S3HRModel(S3Model):
                                           readable = False,
                                           writable = False,
                                           ),
-                     Field("org_contact", "boolean",
-                           label = T("Organization Contact"),
-                           represent = s3_yes_no_represent,
-                           readable = False,
-                           writable = False,
-                           ),
                      Field("site_contact", "boolean",
                            label = T("Facility Contact"),
-                           represent = s3_yes_no_represent,
-                           #represent = lambda opt: \
-                            #(T("No"), T("Yes"))[opt == True],
+                           represent = lambda opt: \
+                            (T("No"), T("Yes"))[opt == True],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2401,9 +2398,7 @@ class S3HRSkillModel(S3Model):
                              label = T("Date Received")
                              ),
                      s3_date("end_date",
-                             # @ToDo: Change implicit default to explicit default with interval of 12 months
-                             start_field = "hrm_credential_start_date",
-                             default_interval = 12,
+                             # @ToDo: Automation based on deployment_settings, e.g.: date received + 6/12 months
                              label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
@@ -3087,16 +3082,15 @@ class S3HRSkillModel(S3Model):
                           _title="%s|%s" % (T("Competency Rating"),
                                             T("Level of competency this person has with this skill.")))
         if current.deployment_settings.get_hrm_skill_types():
-            script = \
+            s3.js_global.append('''i18n.no_ratings="%s"''' % T("No Ratings for Skill Type"))
+            s3.jquery_ready.append(
 '''$.filterOptionsS3({
  'trigger':'skill_id',
  'target':'competency_id',
  'lookupResource':'competency',
  'lookupURL':S3.Ap.concat('/%s/skill_competencies/'),
- 'msgNoRecords':'%s'
-})''' % (controller, T("No Ratings for Skill Type"))
-            comment = TAG[""](comment,
-                              S3ScriptItem(script=script))
+ 'msgNoRecords':i18n.no_ratings
+})''' % controller)
 
         return comment
 
@@ -5591,7 +5585,8 @@ def hrm_training_organisation(row):
     return current.messages["NONE"]
 
 # =============================================================================
-def hrm_rheader(r, tabs=[], profile=False):
+def hrm_rheader(r, tabs=[],
+                profile=False):
     """ Resource headers for component views """
 
     if r.representation != "html":
@@ -5782,11 +5777,6 @@ def hrm_rheader(r, tabs=[], profile=False):
         else:
             id_tab = None
 
-        if settings.get_hrm_use_address():
-            address_tab = (T("Address"), "address")
-        else:
-            address_tab = None
-
         if settings.get_hrm_salary():
             salary_tab = (T("Salary"), "salary")
         else:
@@ -5826,7 +5816,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     (T("Staff/Volunteer Record"), record_method),
                     id_tab,
                     description_tab,
-                    address_tab,
+                    (T("Address"), "address"),
                     ]
             contacts_tabs = settings.get_pr_contacts_tabs()
             if "all" in contacts_tabs:
@@ -5850,7 +5840,7 @@ def hrm_rheader(r, tabs=[], profile=False):
             tabs = [(T("Person Details"), None),
                     id_tab,
                     description_tab,
-                    address_tab,
+                    (T("Address"), "address"),
                     ]
             contacts_tabs = settings.get_pr_contacts_tabs()
             if "all" in contacts_tabs:
@@ -5884,7 +5874,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     (hr_record, record_method),
                     id_tab,
                     description_tab,
-                    address_tab,
+                    (T("Address"), "address"),
                     ]
             contacts_tabs = settings.get_pr_contacts_tabs()
             if "all" in contacts_tabs:
