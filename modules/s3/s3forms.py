@@ -2395,6 +2395,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         action_rows.append(edit_row)
 
         # Add-row
+        inline_open_add = ""
         insertable = get_config(tablename, "insertable")
         if insertable is None:
             insertable = True
@@ -2402,7 +2403,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
             insertable = has_permission("create", tablename)
         if insertable:
             _class = "add-row inline-form"
+            explicit_add = options.explicit_add
             if not multiple:
+                explicit_add = False
                 if has_rows:
                     # Add Rows not relevant
                     _class = "%s hide" % _class
@@ -2410,7 +2413,19 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     # Mark to client-side JS that we should always validate
                     _class = "%s single" % _class
             if required and not has_rows:
+                explicit_add = False
                 _class = "%s required" % _class
+            # Explicit open-action for add-row (optional)
+            if explicit_add:
+                # Hide add-row for explicit open-action
+                _class = "%s hide" % _class
+                if explicit_add is True:
+                    label = current.T("Add another")
+                else:
+                    label = explicit_add
+                inline_open_add = A(label,
+                                    _class="inline-open-add action-lnk",
+                                    )
             has_rows = True
             add_row = self._render_item(table, None, fields,
                                         editable=True,
@@ -2477,6 +2492,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
         output = DIV(INPUT(**attr),
                      hidden,
                      widget,
+                     inline_open_add,
                      _id = self._formname(separator="-"),
                      _field = real_input,
                      _class = "inline-component",

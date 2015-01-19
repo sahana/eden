@@ -597,6 +597,23 @@ def config(settings):
                                 options = "FACEBOOK"
                                 )
             ),
+            S3SQLInlineComponent(
+                "facility",
+                name = "other_facilities",
+                label = T("Other Facilities"),
+                fields = ["name",
+                          "phone1",
+                          "phone2",
+                          "email",
+                          "location_id",
+                          ],
+                layout = FacilitySubFormLayout,
+                filterby = {"field": "main_facility",
+                            "options": False,
+                           },
+                multiple = True,
+                explicit_add = T("Add Facility"),
+            ),
             "comments",
             postprocess = pr_contact_postprocess,
         )
@@ -664,9 +681,9 @@ def config(settings):
             else:
                 result = True
 
-            if r.interactive:
+            if r.interactive or r.representation == "json":
                 if r.component_name == "facility" or not r.component:
-                    if r.method in (None, "create", "update"):
+                    if r.method in (None, "create", "update", "validate"):
                         from s3 import S3LocationSelector
                         table = s3db.org_facility
                         field = table.location_id

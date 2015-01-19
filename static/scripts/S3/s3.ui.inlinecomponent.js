@@ -230,19 +230,38 @@
 
                 var errorClass = formname + '_error',
                     target,
-                    msg = '<div class="error">' + message + '</div>';
-
+                    msg = '<div class="error">' + message + '</div>',
+                    colspan = function(t) {
+                        var columns = $(t + '> td'),
+                            total = 0;
+                        for (var i, len = columns.len, width; i<len; i++) {
+                            width = columns[i].attr('colspan');
+                            if (width) {
+                                total += parseInt(width);
+                            } else {
+                                total += 1;
+                            }
+                        }
+                        return total;
+                    },
+                    rowname = function() {
+                        if ('none' == rowindex) {
+                            return '#add-row-' + formname;
+                        } else {
+                            return '#edit-row-' + formname;
+                        }
+                    };
                 if (null === fieldname) {
                     // Append error message to the whole subform
-                    if ('none' == rowindex) {
-                        target = '#add-row-' + formname;
-                    } else {
-                        target = '#edit-row-' + formname;
-                    }
-                    msg = $('<tr><td colspan="' + $(target + '> td').length + '">' + msg + '</td></tr>');
+                    target = rowname();
+                    msg = $('<tr><td colspan="' + colspan(target) + '">' + msg + '</td></tr>');
                 } else {
                     // Append error message to subform field
                     target = '#sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_' + rowindex;
+                    if ($(target).is('[type="hidden"]')) {
+                        target = rowname();
+                        msg = '<tr><td colspan="' + colspan(target) + '">' + msg + '</td></tr>';
+                    }
                     msg = $(msg);
                 }
                 msg.addClass(errorClass).hide().insertAfter(target);
@@ -814,6 +833,10 @@
             var row_data = this._collectData(data, 'none');
             if (null === row_data) {
                 // Data collection failed (e.g. client-side validation error)
+                if (multiple) {
+                    throbber.addClass('hide');
+                    add_button.removeClass('hide');
+                }
                 return false;
             }
 
@@ -910,12 +933,19 @@
                     // Unmark changed
                     $('#add-row-' + formname).removeClass('changed');
 
+                    // Hide the add-row if explicit open-action available
+                    $(this.element).find('.inline-open-add').each(function() {
+                        $('#add-row-' + formname).hide();
+                        $(this).show();
+                    });
+
                     // Render new read row and append to container
                     var read_row = this._renderReadRow(formname, newindex, items);
 
                     // Append read-row
                     this._appendReadRow(formname, read_row);
                     this._showHeaders();
+
                 }
             }
 
@@ -941,9 +971,9 @@
             var formname = this.formname;
             var rowname = formname + '-' + rowindex;
 
-            var rdy = $('#rdy-' + formname + '-0'),
+            var rdy_button = $('#rdy-' + formname + '-0'),
                 multiple;
-            if (rdy.length) {
+            if (rdy_button.length) {
                 multiple = true;
             } else {
                 // Only one row can exist & this must be updated during form submission
@@ -951,8 +981,8 @@
             }
 
             if (multiple) {
-                // Hide rdy, show throbber
-                rdy.addClass('hide');
+                // Hide rdy_button, show throbber
+                rdy_button.addClass('hide');
                 var throbber = $('#throbber-' + formname + '-0');
                 throbber.removeClass('hide');
 
@@ -965,6 +995,10 @@
             var row_data = this._collectData(data, '0');
             if (null === row_data) {
                 // Data collection failed (e.g. client-side validation error)
+                if (multiple) {
+                    throbber.addClass('hide');
+                    rdy_button.removeClass('hide');
+                }
                 return false;
             }
 
@@ -1042,9 +1076,9 @@
                 }
 
                 if (multiple) {
-                    // Hide throbber, enable rdy
-                    rdy.removeClass('hide');
+                    // Hide throbber, enable rdy_button
                     throbber.addClass('hide');
+                    rdy_button.removeClass('hide');
                 }
 
                 return (success);
@@ -1434,6 +1468,13 @@
                   .bind('change' + ns, {widget: this}, this._multiselectOnChange);
             }
 
+            // Explicit open-action to reveal the add-row
+            el.find('.inline-open-add').bind('click' + ns, function(e) {
+                e.preventDefault();
+                $('#add-row-' + self.formname).removeClass('hide').show();
+                $(this).hide();
+            });
+
             return true;
         },
 
@@ -1459,6 +1500,9 @@
             el.find('.add-row,.edit-row').each(function() {
                 $(this).find('input,textarea,select').unbind(ns);
             });
+
+            // Remove open-action event handler
+            el.find('.inline-open-add').unbind(ns);
 
             // Remove all delegations
             el.undelegate(ns);

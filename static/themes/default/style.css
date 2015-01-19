@@ -44,6 +44,12 @@
   border: 1px solid #CCC;
 }
 
+.widget-container #list-btn-add {
+  margin-bottom: 0;
+  position: relative;
+  top: 1.0rem;
+}
+
 /* Links should ALWAYS be unvisited */
 #content a.help:link {
   color: #fff;
@@ -114,6 +120,12 @@ form .action-lnk {
 }
 form table.embeddedComponent {
   border-collapse: separate;
+}
+form .inline-open-add {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  margin-left: 0;
+  margin-top: -1.25rem;
 }
 form.auth_login #submit_record__row {
   white-space: pre;
@@ -619,11 +631,6 @@ table.dataTable .selected-action {
   padding: 0.5em;
 }
 
-.widget-container #list-btn-add {
-    margin-bottom: 0;
-    position: relative;
-    top: 1.0rem;
-}
 #summary-tabs {
   margin-top: 10px;
 }

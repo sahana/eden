@@ -30,6 +30,12 @@
   border: 1px solid #CCC;
 }
 
+.widget-container #list-btn-add {
+  margin-bottom: 0;
+  position: relative;
+  top: 1.0rem;
+}
+
 /* Links should ALWAYS be unvisited */
 #content a.help:link {
   color: #fff;
@@ -100,6 +106,12 @@ form .action-lnk {
 }
 form table.embeddedComponent {
   border-collapse: separate;
+}
+form .inline-open-add {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  margin-left: 0;
+  margin-top: -1.25rem;
 }
 form.auth_login #submit_record__row {
   white-space: pre;
@@ -174,7 +186,7 @@ select {
   max-width: 100%;
 }
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
-  width: 500px !important;
+  width: 20rem !important;
 }
 
 .item-container .controls {
