@@ -1633,6 +1633,7 @@ class S3SurveySeriesModel(S3Model):
                                   ),
                           s3_date("end_date",
                                   label = T("End Date"),
+                                  start_field = "survey_series_start_date",
                                   ),
                           #self.super_link("source_id", "doc_source_entity"),
                           *s3_meta_fields())

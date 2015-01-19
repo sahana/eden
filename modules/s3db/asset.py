@@ -935,9 +935,9 @@ class S3AssetTelephoneModel(S3Model):
         self.define_table(tablename,
                           self.asset_asset_id(empty = False),
                           s3_date(label = T("Start Date")),
-                          # @ToDo: Validation to ensure not before Start Date
                           s3_date("end_date",
                                   label = T("End Date"),
+                                  start_field = "asset_telephone_usage_date",
                                   ),
                           Field("units_used", "double", # 'usage' is a reserved word in MySQL
                                 label = T("Usage"),

@@ -185,10 +185,11 @@ class S3ProjectModel(S3Model):
                      self.project_status_id(),
                      # NB There is additional client-side validation for start/end date in the Controller
                      s3_date("start_date",
-                             label = T("Start Date")
+                             label = T("Start Date"),
                              ),
                      s3_date("end_date",
-                             label = T("End Date")
+                             label = T("End Date"),
+                             start_field = "project_project_start_date",
                              ),
                      # Free-text field with no validation (used by OCHA template currently)
                      Field("duration",
@@ -829,6 +830,7 @@ class S3ProjectActivityModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "project_activity_date",
                              ),
                      # Which contact is this?
                      # Implementing Org should be a human_resource_id
@@ -1706,6 +1708,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                      s3_date("end_date",
                              #empty = False,
                              label = T("End Date"),
+                             start_field = "project_beneficiary_date",
                              ),
                      Field("year", "list:integer",
                            compute = lambda row: \
@@ -2260,6 +2263,7 @@ class S3ProjectCampaignModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "project_campaign_response_summary_date"
                              #empty = False,
                              ),
                      s3_comments(),

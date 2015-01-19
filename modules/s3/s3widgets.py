@@ -1322,7 +1322,6 @@ class S3DateWidget(FormWidget):
 
         widget = INPUT(**attr)
         widget.add_class("date")
-
         if "_id" in attr:
             selector = attr["_id"]
         else:
@@ -1353,10 +1352,20 @@ class S3DateWidget(FormWidget):
         else:
             maxDate = "+0"
 
-        # Set auto updation of end_date based on start_date if start_field attr are set
         start_field = self.start_field
-        default_interval = self.default_interval
 
+        if start_field:
+            # Set the minimum end_date to the same as the start_date
+            start_end_date_script = \
+'''S3.start_end_date('%(start_field)s', '%(selector)s')''' % \
+                dict(start_field = start_field, # Field selector for start_date field
+                     selector = selector)       # Field selector for end_date_field
+
+            if start_end_date_script not in jquery_ready:                     # Prevents loading twice when form has errors
+                jquery_ready.append(start_end_date_script)
+
+        # Set auto updation of end_date based on start_date if start_field attr are set
+        default_interval = self.default_interval
         script = \
 '''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
  dateFormat:'%(format)s',
@@ -1511,6 +1520,17 @@ class S3DateTimeWidget(FormWidget):
         s3 = current.response.s3
         jquery_ready = s3.jquery_ready
         language = current.session.s3.language
+        start_field = opts.get("start_field", None)
+
+        # Set the minimum end_date to the same as the start_date
+        start_end_date_script = \
+'''S3.start_end_date('%(start_field)s', '%(selector)s')''' % \
+            dict(start_field = start_field, # Field selector for start_date field
+                 selector = selector)       # Field selector for end_date_field
+
+        if start_end_date_script not in jquery_ready: # Prevents loading twice when form has errors
+            jquery_ready.append(start_end_date_script)
+
         if language in settings.date_formats:
             # Localise if we have configured a Date Format and we have a jQueryUI options file
             # Do we have a suitable locale file?

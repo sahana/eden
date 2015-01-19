@@ -216,6 +216,7 @@ class S3EventModel(S3Model):
                                  ),
                      s3_datetime("end_date",
                                  label = T("End Date"),
+                                 start_field = "event_event_start_date",
                                  represent = "date",
                                  widget = "date",
                                  ),

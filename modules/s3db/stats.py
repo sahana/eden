@@ -149,6 +149,7 @@ class S3StatsModel(S3Model):
                      s3_date(),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "stats_data_date",
                              ),
                      )
 
@@ -474,6 +475,7 @@ class S3StatsDemographicModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "stats_demographic_aggregate_date",
                              ),
                      # Sum is used by Vulnerability as a fallback if we have no data at this level
                      Field("sum", "double",
