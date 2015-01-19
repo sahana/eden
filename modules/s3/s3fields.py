@@ -1191,6 +1191,7 @@ def s3_date(name="date", **attr):
             future = x months
             start_field = "selector" for start field
             default_interval = x months from start date
+            default_explicit = Bool for explicit default
 
         start_field and default_interval should be given together
 
@@ -1209,18 +1210,6 @@ def s3_date(name="date", **attr):
         del attr["future"]
     else:
         future = None
-
-    if "start_field" in attr:
-        start_field = attr["start_field"]
-        del attr["start_field"]
-    else:
-        start_field = None
-
-    if "default_interval" in attr:
-        default_interval = attr["default_interval"]
-        del attr["default_interval"]
-    else:
-        default_interval = None
 
     if "default" in attr and attr["default"] == "now":
         attr["default"] = current.request.utcnow
@@ -1315,27 +1304,30 @@ def s3_date(name="date", **attr):
         else:
             # Default
             attr["requires"] = IS_EMPTY_OR(requires)
+
     if "widget" not in attr:
-        if past is None and future is None:
-            attr["widget"] = S3DateWidget(start_field = start_field,
-                                          default_interval = default_interval,
-                                          )
-        elif past is None:
-            attr["widget"] = S3DateWidget(future = future,
-                                          start_field = start_field,
-                                          default_interval = default_interval,
-                                          )
-        elif future is None:
-            attr["widget"] = S3DateWidget(past = past,
-                                          start_field = start_field,
-                                          default_interval = default_interval,
-                                          )
-        else:
-            attr["widget"] = S3DateWidget(past = past,
-                                          future = future,
-                                          start_field = start_field,
-                                          default_interval = default_interval,
-                                          )
+        # Widget Options
+        widget_option = {}
+
+        if "start_field" in attr:
+            widget_option["start_field"] = attr["start_field"]
+            del attr["start_field"]
+
+        if "default_interval" in attr:
+            widget_option["default_interval"] = attr["default_interval"]
+            del attr["default_interval"]
+
+        if "default_explicit" in attr:
+            widget_option["default_explicit"] = attr["default_explicit"]
+            del attr["default_explicit"]
+
+        if future:
+            widget_option["future"] = future
+
+        if past:
+            widget_option["past"] = past
+
+        attr["widget"] = S3DateWidget(**widget_option)
 
     f = S3ReusableField(name, "date", **attr)
     return f()

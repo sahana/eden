@@ -1252,6 +1252,7 @@ class S3DateWidget(FormWidget):
                  future=1440,
                  start_field = None,
                  default_interval = None,
+                 default_explicit = False,
                  ):
 
         """
@@ -1262,6 +1263,7 @@ class S3DateWidget(FormWidget):
             @param future: how many months into the future the date can be set to
             @param start_field: "selector" for start date field
             @paran default_interval: x months from start date
+            @param default_explicit: bool for explicit default
         """
 
         self.format = format
@@ -1269,6 +1271,7 @@ class S3DateWidget(FormWidget):
         self.future = future
         self.start_field = start_field
         self.default_interval = default_interval
+        self.default_explicit = default_explicit
 
     def __call__(self, field, value, **attributes):
 
@@ -1394,10 +1397,12 @@ i18n.btn_clear="%(btn_clear)s"
 $('#%(end_selector)s').end_date_interval({
 start_date_selector:"#%(start_selector)s",
 interval:%(interval)d
+%(default_explicit)s
 })
 ''' % dict(end_selector = selector,
            start_selector = start_field,
            interval = default_interval,
+           default_explicit = ",default_explicit:true" if self.default_explicit else "",
            )
 
             if script not in jquery_ready:
