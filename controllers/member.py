@@ -110,7 +110,7 @@ def person():
     set_method("pr", "person",
                method = "cv",
                # @ToDo: Allow Members to have a CV without enabling HRM?
-               action = s3db.hrm_cv)
+               action = s3db.hrm_CV)
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: \

@@ -42,10 +42,11 @@ def update_check(settings):
     app_path = request.folder
 
     template = settings.get_template()
+    location = settings.get_template_location()
     gr_path = os.path.join(app_path, "requirements.txt")
-    tr_path = os.path.join(app_path, "private", "templates", template, "requirements.txt")
+    tr_path = os.path.join(app_path, location, "templates", template, "requirements.txt")
     or_path = os.path.join(app_path, "optional_requirements.txt")
-    tor_path = os.path.join(app_path, "private", "templates", template, "optional_requirements.txt")
+    tor_path = os.path.join(app_path, location, "templates", template, "optional_requirements.txt")
 
     global_dep = parse_requirements(gr_path)
     template_dep = parse_requirements(tr_path)
@@ -133,7 +134,7 @@ def update_check(settings):
     # - 000_config.py (machine-specific settings)
     # - rest are run in-place
     #
-    template_folder = os.path.join(app_path, "private", "templates")
+    template_folder = os.path.join(app_path, "modules", "templates")
 
     template_files = {
         # source : destination
@@ -158,7 +159,7 @@ def update_check(settings):
                         # the database is compromised
                         import uuid
                         hmac_key = uuid.uuid4()
-                        line = 'deployment_settings.auth.hmac_key = "%s"' % hmac_key
+                        line = 'settings.auth.hmac_key = "%s"' % hmac_key
                     output.write(line)
                 output.close()
                 input.close()

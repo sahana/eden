@@ -5,7 +5,7 @@
    This file parses messages using functions defined in in the template's
    parser.py
 
-   @copyright: 2012-14 (c) Sahana Software Foundation
+   @copyright: 2012-15 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person
@@ -83,7 +83,7 @@ class S3Parsing(object):
 
         # Load the Parser template for this deployment
         template = current.deployment_settings.get_msg_parser()
-        module_name = "applications.%s.private.templates.%s.parser" \
+        module_name = "applications.%s.modules.templates.%s.parser" \
             % (current.request.application, template)
         __import__(module_name)
         mymodule = sys.modules[module_name]

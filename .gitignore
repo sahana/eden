@@ -10,7 +10,6 @@
 /sessions/*
 /uploads/*
 /static/cache/*
-/static/fonts/*.ttf
 /static/scripts/tools/compiler.jar
 /tests/unit/*.pdf
 .DS_Store

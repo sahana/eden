@@ -2,7 +2,7 @@
 
 """ Resource Import Tools
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -3630,9 +3630,16 @@ class S3BulkImporter(object):
                 (csvPath, csvFile) = os.path.split(csvFileName)
                 if csvPath != "":
                     path = os.path.join(request.folder,
-                                        "private",
+                                        "modules",
                                         "templates",
                                         csvPath)
+                    # @todo: deprecate this block once migration completed
+                    if not os.path.exists(path):
+                        # Non-standard location (legacy template)?
+                        path = os.path.join(current.request.folder,
+                                            "private",
+                                            "templates",
+                                            csvPath)
                 csv = os.path.join(path, csvFile)
 
             xslFileName = details[3].strip('" ')
@@ -3679,9 +3686,16 @@ class S3BulkImporter(object):
                 (csvPath, csvFile) = os.path.split(fileName)
                 if csvPath != "":
                     path = os.path.join(current.request.folder,
-                                        "private",
+                                        "modules",
                                         "templates",
                                         csvPath)
+                    # @todo: deprecate this block once migration completed
+                    if not os.path.exists(path):
+                        # Non-standard location (legacy template)?
+                        path = os.path.join(current.request.folder,
+                                            "private",
+                                            "templates",
+                                            csvPath)
                 csv = os.path.join(path, csvFile)
         extraArgs = None
         if len(details) >= 4:

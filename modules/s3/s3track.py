@@ -2,7 +2,7 @@
 
 """ Simple Generic Location Tracking System
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -786,7 +786,7 @@ class S3CheckInMethod(S3Method):
                 #value = tracker.get_location(_fields=["id"],
                 #                             as_rows=True).first().id
                 value = None # We always want to create a new Location, not update the existing one
-                widget = S3LocationSelector()(field, value)
+                widget = S3LocationSelector(show_latlon = True)(field, value)
 
                 row = formstyle("%s__row" % _id, label, widget, comment)
                 if tuple_rows:

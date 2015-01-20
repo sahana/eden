@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -86,6 +86,7 @@ class S3Config(Storage):
                     #"tet": "",
                     "th": "%d/%m/%Y",
                     #"tl": "",
+                    "tr": "%d.%m.%Y",
                     #"ur": "",
                     "vi": "%d/%m/%Y",
                     "zh-cn": "%Y-%m-%d",
@@ -93,6 +94,7 @@ class S3Config(Storage):
                     }
 
     def __init__(self):
+        self.asset = Storage()
         self.auth = Storage()
         self.auth.email_domains = []
         self.base = Storage()
@@ -130,6 +132,8 @@ class S3Config(Storage):
         self.vulnerability = Storage()
         self.transport = Storage()
 
+        self._debug = None
+
     # -------------------------------------------------------------------------
     # Template
     def get_template(self):
@@ -139,14 +143,102 @@ class S3Config(Storage):
         """
         return self.base.get("template", "default")
 
+    def get_template_location(self):
+
+        return self.base.get("template_location", "modules")
+
     def exec_template(self, path):
         """
-            Execute the template
+            Legacy function, retained for backwards-compatibility with
+            existing 000_config.py instances => modern 000_config.py
+            should just call settings.import_template()
+
+            @todo: deprecate
         """
-        from gluon.fileutils import read_file
-        from gluon.restricted import restricted
-        code = read_file(path)
-        restricted(code, layer=path)
+        self.import_template()
+
+    def check_debug(self):
+        """
+            (Lazy) check debug mode and activate the respective settings
+        """
+
+        debug = self._debug
+        base_debug = bool(self.get_base_debug())
+
+        # Modify settings only if self.base.debug has changed
+        if debug is None or debug != base_debug:
+            self._debug = base_debug
+            debug = base_debug or \
+                    current.request.get_vars.get("debug", False)
+            from gluon.custom_import import track_changes
+            s3 = current.response.s3
+            if debug:
+                s3.debug = True
+                track_changes(True)
+            else:
+                s3.debug = False
+                track_changes(False)
+
+    def import_template(self, config="config"):
+        """
+            Import and invoke the template config (new module pattern)
+
+            @param config: name of the config-module
+
+            @todo: rewrite all config.py's with module pattern
+            @todo: remove fallback when migration complete (+giving some
+                   time for downstream projects to adapt)
+        """
+
+        name = self.get_template()
+        package = "templates.%s" % name
+
+        self.check_debug()
+
+        template = None
+        try:
+            # Import the template
+            template = getattr(__import__(package, fromlist=[config]), config)
+        except ImportError:
+            # Legacy template in "private"?
+            self.execute_template(name)
+        else:
+            template.config(self)
+            # Store location in response.s3 for compiled views
+            current.response.s3.template_location = "modules"
+        return template
+
+    def execute_template(self, name):
+        """
+            Fallback for legacy templates - execute config.py
+        """
+
+        import os
+
+        location = "private"
+        path = os.path.join(current.request.folder,
+                            location,
+                            "templates",
+                            name,
+                            "config.py")
+
+        if os.path.exists(path):
+            # Old-style config.py => deprecation warning (S3Log not available yet)
+            import sys
+            print >> sys.stderr, "%s/config.py: script pattern deprecated." % name
+            # Remember the non-standard location
+            # (need to be in response.s3 for compiled views)
+            current.response.s3.template_location = self.base.template_location = location
+            # Execute config.py
+            from gluon.fileutils import read_file
+            from gluon.restricted import restricted
+            code = read_file(path)
+            restricted(code, layer=path)
+        else:
+            # Nonexistent template
+            # => could be ignored here, but would crash later anyway,
+            #    so exit early with a clear error message
+            raise RuntimeError("Template not found: %s" % name)
 
     # -------------------------------------------------------------------------
     # Theme
@@ -864,7 +956,7 @@ class S3Config(Storage):
         """
             Display Lat/Lon form fields when selecting Locations
         """
-        return self.gis.get("latlon_selector", True)
+        return self.gis.get("latlon_selector", False)
 
     def get_gis_layer_metadata(self):
         """
@@ -1126,6 +1218,14 @@ class S3Config(Storage):
         """
         return self.gis.get("lookup_code", False)
 
+    def get_gis_popup_location_link(self):
+        """
+            Whether a Pop-up Window should open on clicking
+            Location represent links
+            - Default: Map opens in a div
+        """
+        return self.gis.get("popup_location_link", False)
+
     # -------------------------------------------------------------------------
     # L10N Settings
     def get_L10n_default_language(self):
@@ -1159,6 +1259,7 @@ class S3Config(Storage):
                                                        #("ta", "தமிழ்"),               # Tamil
                                                        #("th", "ภาษาไทย"),        # Thai
                                                        ("tl", "Tagalog"),
+                                                       ("tr", "Türkçe"),
                                                        ("ur", "اردو"),
                                                        ("vi", "Tiếng Việt"),
                                                        ]))
@@ -1269,6 +1370,13 @@ class S3Config(Storage):
             Whether to use Alternate Location names
         """
         return self.L10n.get("name_alt_gis_location", False)
+
+    def get_L10n_translate_org_organisation(self):
+        """
+            Whether to translate Organisation names/acronyms
+        """
+        return self.L10n.get("translate_org_organisation", False)
+
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
@@ -1696,6 +1804,12 @@ class S3Config(Storage):
         """
         return self.msg.get("max_send_retries", 9)
 
+    def get_msg_basestation_code_unique(self):
+        """
+            Validate for Unique Basestations Codes
+        """
+        return self.msg.get("basestation_code_unique", False)
+
     # -------------------------------------------------------------------------
     # Mail settings
     def get_mail_server(self):
@@ -1857,6 +1971,15 @@ class S3Config(Storage):
     # Modules
 
     # -------------------------------------------------------------------------
+    # Asset: Asset Management
+    #
+    def get_asset_telephones(self):
+        """
+            Whether Assets should include a specific type for Telephones
+        """
+        return self.asset.get("telephones", False)
+
+    # -------------------------------------------------------------------------
     # CAP: Common Alerting Protocol
     #
     def get_cap_identifier_prefix(self):
@@ -2015,6 +2138,12 @@ class S3Config(Storage):
             Whether to show Events in News Feed
         """
         return self.cms.get("show_events", False)
+
+    def get_cms_show_attachments(self):
+        """
+            Whether to show Attachments (such as Sources) in News Feed
+        """
+        return self.cms.get("show_attachments", True)
 
     def get_cms_show_links(self):
         """
@@ -2349,6 +2478,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_id", True)
 
+    def get_hrm_use_address(self):
+        """
+            Whether Human Resources should show address tab
+        """
+        return self.hrm.get("use_address", True)
+
     def get_hrm_use_skills(self):
         """
             Whether Human Resources should use Skills
@@ -2482,6 +2617,12 @@ class S3Config(Storage):
 
     def get_inv_recv_shortname(self):
         return self.inv.get("recv_shortname", "GRN")
+
+    def get_inv_warehouse_code_unique(self):
+        """
+            Validate for Unique Warehouse Codes
+        """
+        return self.inv.get("warehouse_code_unique", False)
 
     # -------------------------------------------------------------------------
     # IRS
@@ -2804,6 +2945,12 @@ class S3Config(Storage):
             Use Activity Types in Activities & Projects
         """
         return self.project.get("activity_types", False)
+
+    def get_project_activity_filter_year(self):
+        """
+            Filter according to Year in Activities
+        """
+        return self.project.get("activity_filter_year", False)
 
     def get_project_codes(self):
         """

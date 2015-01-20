@@ -2,7 +2,7 @@
 
 """ Sahana Eden Event Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -39,7 +39,7 @@ __all__ = ("S3EventModel",
            "S3EventCMSModel",
            "S3EventHRModel",
            "S3EventImpactModel",
-           "S3EventIReportModel",
+           #"S3EventIReportModel",
            "S3EventMapModel",
            "S3EventOrganisationModel",
            #"S3EventRequestModel",
@@ -188,6 +188,7 @@ class S3EventModel(S3Model):
                      Field("name",      # Name could be a code
                            length = 64,   # Mayon compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      event_type_id(),
                      self.org_organisation_id(
@@ -960,7 +961,7 @@ class S3IncidentReportModel(S3Model):
                           #self.event_incident_id(ondelete = "CASCADE"),
                           s3_datetime(),
                           Field("name", notnull=True,
-                                label = T("Name"),
+                                label = T("Title"),
                                 ),
                           self.event_incident_type_id(),
                           self.gis_location_id(),

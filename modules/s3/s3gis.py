@@ -5,7 +5,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{shapely}} <http://trac.gispython.org/lab/wiki/Shapely>}
 
-    @copyright: (c) 2010-2014 Sahana Software Foundation
+    @copyright: (c) 2010-2015 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1372,14 +1372,9 @@ class GIS(object):
                 if user.site_id:
                     # Add the user account's Site to the list
                     # (Will take lower-priority than Org/Personal)
-                    stable = s3db.org_site
-                    site = db(stable.site_id == user.site_id).select(stable.pe_id,
-                                                                     limitby=(0, 1)
-                                                                     ).first()
-                    try:
-                        pes.append(site.pe_id)
-                    except:
-                        current.log.warning("Unable to find Site %s" % user.site_id)
+                    site_pe_id = s3db.pr_get_pe_id("org_site", user.site_id)
+                    if site_pe_id:
+                        pes.append(site_pe_id)
 
                 if user.org_group_id:
                     # Add the user account's Org Group to the list
@@ -2252,6 +2247,9 @@ class GIS(object):
         """
             Returns the locations for an XML export
             - used by GIS.get_location_data() and S3PivotTable.geojson()
+
+            @ToDo: Support multiple locations for a single resource
+                   (e.g. a Project wworking in multiple Communities)
         """
 
         db = current.db
@@ -2643,6 +2641,8 @@ class GIS(object):
                 #if custom:
                 #    # Add geoJSONs
                 #elif join:
+                # @ToDo: Support records with multiple locations
+                #        (e.g. an Org with multiple Facs)
                 if join:
                     for row in rows:
                         _location = row["gis_location"]
@@ -2768,18 +2768,6 @@ class GIS(object):
             @requires:
                 PhantomJS http://phantomjs.org
                 Selenium https://pypi.python.org/pypi/selenium
-
-            @ToDo: print.css
-
-            OpenLayers.DOTS_PER_INCH = 72
-            Pixels at 72 dpi:
-            Letter = 612 x 792
-            A4 = 595 x 842
-            A3 = 842 x 1191
-            A2 = 1191 x 1684
-            A1 = 1684 x 2384
-            A0 = 2384 x 3375
-            @ToDo: Allow a 1cm border?
         """
 
         # @ToDo: allow selection of map_id
@@ -2812,7 +2800,8 @@ class GIS(object):
         os.chdir(cachepath)
 
         #driver = webdriver.PhantomJS()
-        driver = WebDriver()
+        # Disable Proxy for Win32 Network Latency issue
+        driver = WebDriver(service_args=["--proxy-type=none"])
 
         # Change back for other parts
         os.chdir(cwd)
@@ -2823,6 +2812,9 @@ class GIS(object):
             height = settings.get_gis_map_height()
         if width is None:
             width = settings.get_gis_map_width()
+        # For Screenshots
+        #height = 410
+        #width = 820
         driver.set_window_size(width + 5, height + 20)
 
         # Load the homepage
@@ -2848,18 +2840,21 @@ class GIS(object):
         driver.get(url)
 
         # Wait for map to load (including it's layers)
+        # Alternative approach: https://raw.githubusercontent.com/ariya/phantomjs/master/examples/waitfor.js
         def map_loaded(driver):
             test = '''return S3.gis.maps['%s'].s3.loaded''' % map_id
             try:
-                return driver.execute_script(test)
-            except WebDriverException:
-                return False
+                result = driver.execute_script(test)
+            except WebDriverException, e:
+                result = False
+            return result
 
         try:
-            WebDriverWait(driver, 10).until(map_loaded)
+            # Wait for up to 100s (large screenshots take a long time for layers to load)
+            WebDriverWait(driver, 100).until(map_loaded)
         except TimeoutException, e:
             driver.quit()
-            current.log.error(e)
+            current.log.error("Timeout: %s" % e)
             return None
 
         # Save the Output
@@ -2879,7 +2874,7 @@ class GIS(object):
         #                        "width": width,
         #                        "height": height
         #                        }
-        #driver.page.render(filename, {"format": "jpeg", "quality": "90"})
+        #driver.page.render(filename, {"format": "jpeg", "quality": "100"})
 
         script = '''
 var page = this;
@@ -2888,7 +2883,7 @@ page.clipRect = {top: 10,
                  width: %(width)s,
                  height: %(height)s
                  };
-page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
+page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     dict(width = width,
                          height = height,
                          filename = filename,
@@ -2897,7 +2892,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
             result = driver.execute_phantomjs(script)
         except WebDriverException, e:
             driver.quit()
-            current.log.error(e)
+            current.log.error("WebDriver crashed: %s" % e)
             return None
 
         driver.quit()
@@ -6029,6 +6024,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
                  clear_layers = None,
                  nav = None,
                  print_control = None,
+                 print_mode = False,
                  save = False,
                  search = False,
                  mouse_position = None,
@@ -6165,6 +6161,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '90'});''' % \
                    clear_layers = clear_layers,
                    nav = nav,
                    print_control = print_control,
+                   print_mode = print_mode,
                    save = save,
                    search = search,
                    mouse_position = mouse_position,
@@ -6221,6 +6218,8 @@ class MAP(DIV):
         _class = "map_wrapper"
         if opts.get("window"):
             _class = "%s fullscreen" % _class
+        if opts.get("print_mode"):
+            _class = "%s print" % _class
         self.attributes = {"_class": _class,
                            "_id": map_id,
                            }
@@ -6547,7 +6546,9 @@ class MAP(DIV):
                 #                  "subTitle": string        # subTitle for the Printed Map (optional)
                 #                  }
                 options["print"] = True
-                i18n["gis_print"] = T("Take a screenshot of the map which can be printed")
+                i18n["gis_print"] = T("Print")
+                i18n["gis_paper_size"] = T("Paper Size")
+                i18n["gis_print_tip"] = T("Take a screenshot of the map which can be printed")
 
             # Show Save control?
             # e.g. removed within S3LocationSelector[Widget]
@@ -7484,8 +7485,15 @@ class Layer(object):
             if styled:
                 style = row.get("gis_style", None)
                 if style:
-                    if style.style:
-                        record["style"] = style.style
+                    style_dict = style.style
+                    if isinstance(style_dict, basestring):
+                        # Matryoshka?
+                        try:
+                            style_dict = json.loads(style_dict)
+                        except ValueError:
+                            pass
+                    if style_dict:
+                        record["style"] = style_dict
                     else:
                         record["style"] = None
                         marker = row.get("gis_marker", None)
@@ -9027,10 +9035,9 @@ class S3Map(S3Method):
             widget_id = "default_map"
 
         gis = current.gis
-        s3db = current.s3db
         tablename = self.tablename
 
-        ftable = s3db.gis_layer_feature
+        ftable = current.s3db.gis_layer_feature
 
         def lookup_layer(prefix, name):
             query = (ftable.controller == prefix) & \
@@ -9055,14 +9062,6 @@ class S3Map(S3Method):
             prefix, name = tablename.split("_", 1)
             layer_id = lookup_layer(prefix, name)
 
-        marker_fn = s3db.get_config(tablename, "marker_fn")
-        if marker_fn:
-            # Per-feature markers added in get_location_data()
-            marker = None
-        else:
-            # Single Marker for the layer
-            marker = gis.get_marker(prefix, name)
-
         url = URL(extension="geojson", args=None)
 
         # @ToDo: Support maps with multiple layers (Dashboards)
@@ -9075,7 +9074,6 @@ class S3Map(S3Method):
                               "url"       : url,
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
-                              "marker"    : marker
                               }]
         settings = current.deployment_settings
         catalogue_layers = settings.get_gis_widget_catalogue_layers()

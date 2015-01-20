@@ -1,0 +1,65 @@
+{{if (request.controller != "cms") or (request.function not in ("series", "page")):}}
+<div class="row sahana-help">
+ <div class="large-12 columns">
+  <h3 class="row-title">Need help? Sahana is here</h3>
+  <div class="row">
+   <div class="large-3 medium-6 columns">
+    <a href="/{{=appname}}/default/video"><img src="/{{=appname}}/static/themes/CRMT/img/help/thumb-tutorials.jpg" alt="Watch video tutorials" width="260" height="130"><figcaption>Watch video tutorials</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://lacrmt.sahanafoundation.org/eden/static/themes/CRMT/SahanaUserManual.pdf"><img src="/{{=appname}}/static/themes/CRMT/img/help/thumb-manual.jpg" alt="Read the user manual" width="260" height="130"><figcaption>Read the user manual</figcaption></a>
+   </div>
+   <div class="large-3 medium-6 columns">
+    <a href="mailto:help@sahanafoundation.org?subject=LA training request"><img src="/{{=appname}}/static/themes/CRMT/img/help/thumb-training.jpg" alt="Schedule a training" width="260" height="130"><figcaption>Schedule a training</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <div class="help-links">
+     <a class="button" href="mailto:help@sahanafoundation.org?subject=LA resilience help" target="_blank"><i class="fi-mail"></i>help@sahanafoundation.org</a>
+     <a class="button" href="tel:+12132614250"><i class="fi-telephone"></i>+1 (213) 261-4250</a>
+     <figcaption>Contact us</figcaption>
+    </div>
+   </div>        
+  </div>
+ </div>
+</div>
+{{pass}}
+{{if (request.controller == "default") and (request.function == "index"):}}
+<div class="row home-partners">
+ <div class="large-12 columns">
+  <h3 class="row-title">Visit our partners</h3>
+  <div class="row">
+   <div class="large-3 medium-6 columns">
+    <a href="http://laresilience.org" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/la-resilience.jpg" alt="LA Resilience" width="260" height="100"><figcaption>Learn more about resilience, coalitions, partners, and resources.</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://publichealth.lacounty.gov" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/public-health.jpg" alt="LA County Department of Public Health" width="260" height="100"><figcaption>Get health tips, prevent disease, and support overall well-being.</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://www.rand.org" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/rand.jpg" alt="Rand" width="260" height="100"><figcaption>Understand public policy through research and analysis.</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://hss.semel.ucla.edu" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/ucla.jpg" alt="UCLA" width="260" height="100"><figcaption>Improve community wellness and resilience, including mental health.</figcaption></a>
+   </div>        
+  </div>        
+  <div class="row">
+   <div class="large-3 medium-6 columns">
+    <a href="http://www.llu.edu/public-health/ophp/" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/loma-linda.jpg" alt="Loma Linda University" width="260" height="100"><figcaption>Organize disaster preparedness planning and training sessions.</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://www.communitypartners.org" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/community-partners.jpg" alt="Community Partners" width="260" height="100"><figcaption>Accelerate your ideas with expert guidance and services.</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://www.enla.org" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/enla.jpg" alt="ENLA" width="260" height="100"><figcaption>Access assistance following emergencies and disasters.</figcaption></a>
+   </div>        
+   <div class="large-3 medium-6 columns">
+    <a href="http://www.usgs.gov" target="_blank"><img src="/{{=appname}}/static/themes/CRMT/img/logos/usgs.jpg" alt="USGS" width="260" height="100"><figcaption>Browse top science stories to understand the changing world.</figcaption></a>
+   </div>        
+  </div>
+</div>
+</div>
+{{pass}}
+<footer class="row sahana-footer">
+ <div class="large-12 columns">
+  <h6 class="credits"><a href="http://sahanafoundation.org" target="_blank">Sahana</a> is proudly open source. <a href="https://github.com/flavour/eden" target="_blank">Check us out on Github!</a></h6>
+ </div>
+</footer>

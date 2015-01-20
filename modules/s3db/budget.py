@@ -2,7 +2,7 @@
 
 """ Sahana Eden Budget Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1304,7 +1304,9 @@ class S3BudgetAllocationModel(S3Model):
                                   label = T("Start Date")
                                   ),
                           s3_date("end_date",
-                                  label = T("End Date")
+                                  label = T("End Date"),
+                                  start_field = "budget_allocation_start_date",
+                                  default_interval = 12,
                                   ),
                           Field("unit_cost", "double",
                                 default = 0.00,

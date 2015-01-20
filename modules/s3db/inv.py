@@ -2,7 +2,7 @@
 
 """ Sahana Eden Inventory Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -104,7 +104,6 @@ class S3WarehouseModel(S3Model):
     def model(self):
 
         T = current.T
-        #db = current.db
         messages = current.messages
         NONE = messages["NONE"]
         #add_components = self.add_components
@@ -170,6 +169,13 @@ class S3WarehouseModel(S3Model):
         # ---------------------------------------------------------------------
         # Warehouses
         #
+
+        if current.deployment_settings.get_inv_warehouse_code_unique():
+            db = current.db
+            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "inv_warehouse.code"))
+        else:
+            code_unique = None
+
         tablename = "inv_warehouse"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
@@ -182,10 +188,7 @@ class S3WarehouseModel(S3Model):
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),
                            represent = lambda v: v or NONE,
-                           # Deployments that don't wants warehouse codes can hide them
-                           #readable=False,
-                           #writable=False,
-                           # @ToDo: Deployment Setting to add validator to make these unique
+                           requires = code_unique,
                            ),
                      self.org_organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
@@ -234,52 +237,59 @@ class S3WarehouseModel(S3Model):
             msg_record_deleted = T("Warehouse deleted"),
             msg_list_empty = T("No Warehouses currently registered"))
 
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+
+        list_fields = ["name",
+                       "organisation_id",   # Filtered in Component views
+                       #"type",
+                       ]
+
+        text_fields = ["name",
+                       "code",
+                       "comments",
+                       "organisation_id$name",
+                       "organisation_id$acronym",
+                       ]
+
+        #report_fields = ["name",
+        #                 "organisation_id",
+        #                 ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            list_fields.append(lfield)
+            #report_fields.append(lfield)
+            text_fields.append(lfield)
+
+        list_fields += [#(T("Address"), "location_id$addr_street"),
+                        "phone1",
+                        "email",
+                        ]
+
         # Filter widgets
         filter_widgets = [
-                S3TextFilter(["name",
-                              "code",
-                              "comments",
-                              "organisation_id$name",
-                              "organisation_id$acronym",
-                              "location_id$name",
-                              "location_id$L1",
-                              "location_id$L2",
-                              ],
-                             label=T("Name"),
-                             _class="filter-search",
+            S3TextFilter(text_fields,
+                         label = T("Search"),
+                         #_class="filter-search",
+                         ),
+            S3OptionsFilter("organisation_id",
+                            #hidden=True,
+                            #label=T("Organization"),
+                            # Doesn't support l10n
+                            #represent="%(name)s",
+                            ),
+            S3LocationFilter("location_id",
+                             #hidden=True,
+                             #label=T("Location"),
+                             levels=levels,
                              ),
-                S3OptionsFilter("organisation_id",
-                                label=T("Organization"),
-                                represent="%(name)s",
-                                widget="multiselect",
-                                cols=3,
-                                #hidden=True,
-                                ),
-                S3LocationFilter("location_id",
-                                 label=T("Location"),
-                                 levels=["L0", "L1", "L2"],
-                                 widget="multiselect",
-                                 cols=3,
-                                 #hidden=True,
-                                 ),
-                ]
+            ]
 
         configure(tablename,
                   deduplicate = self.inv_warehouse_duplicate,
-                  filter_widgets=filter_widgets,
-                  list_fields=["id",
-                               "name",
-                               "organisation_id",   # Filtered in Component views
-                               #"type",
-                               #(T("Address"), "location_id$addr_street"),
-                               (messages.COUNTRY, "location_id$L0"),
-                               "location_id$L1",
-                               "location_id$L2",
-                               "location_id$L3",
-                               #"location_id$L4",
-                               "phone1",
-                               "email"
-                               ],
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   onaccept = self.inv_warehouse_onaccept,
                   realm_components = ("contact_emergency",
                                       "physical_description",
@@ -2010,7 +2020,8 @@ $.filterOptionsS3({
                 tracktable.pack_value.readable = True
 
         def prep(r):
-            # Default to the Search tab in the location selector
+            # Default to the Search tab in the S3LocationSelectorWidget if still-used
+            # @ToDo: Port this functionality to S3LocationSelector
             s3.gis.tab = "search"
             record = db(sendtable.id == r.id).select(sendtable.status,
                                                      sendtable.req_ref,
@@ -2022,10 +2033,10 @@ $.filterOptionsS3({
                     # Now that the shipment has been sent,
                     # lock the record so that it can't be meddled with
                     s3db.configure("inv_send",
-                                   create=False,
-                                   listadd=False,
-                                   editable=False,
-                                   deletable=False,
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
                                    )
 
             if r.component:
@@ -2138,7 +2149,7 @@ $.filterOptionsS3({
                         crud_strings.title_update = \
                         crud_strings.title_display = T("Review Incoming Shipment to Receive")
             else:
-                if r.id and request.get_vars.get("received", None):
+                if r.id and request.get_vars.get("received"):
                     # "received" must not propagate:
                     del request.get_vars["received"]
                     # Set the items to being received

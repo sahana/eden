@@ -2,7 +2,7 @@
 
 """ Sahana Eden Deployments Model
 
-    @copyright: 2011-2014 (c) Sahana Software Foundation
+    @copyright: 2011-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -411,6 +411,8 @@ class S3DeploymentModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "deploy_assignment_start_date",
+                             default_interval = 12,
                              ),
                      *s3_meta_fields())
 
@@ -702,6 +704,7 @@ class S3DeploymentAlertModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
 
         add_components = self.add_components
         configure = self.configure
@@ -730,7 +733,7 @@ class S3DeploymentAlertModel(S3Model):
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity"),
                      mission_id(
-                        requires = IS_ONE_OF(current.db,
+                        requires = IS_ONE_OF(db,
                                              "deploy_mission.id",
                                              S3Represent(lookup="deploy_mission"),
                                              filterby="status",

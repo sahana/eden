@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -84,20 +84,25 @@ class S3Migration(object):
         where TABLE_NAME = 'module_resourcename';
 
         @ToDo: Function to ensure that roles match those in prepop
-        @ToDo: Function to dos elective additional prepop
+        @ToDo: Function to do selective additional prepop
     """
 
     def __init__(self):
 
         request = current.request
 
-        # Load s3cfg
-        name = "applications.%s.modules.s3cfg" % request.application
-        s3cfg = __import__(name)
-        for item in name.split(".")[1:]:
-            # Remove the dot
-            s3cfg = getattr(s3cfg, item)
+        # Load s3cfg => but why do this so complicated?
+        #name = "applications.%s.modules.s3cfg" % request.application
+        #s3cfg = __import__(name)
+        #for item in name.split(".")[1:]:
+            ## Remove the dot
+            #s3cfg = getattr(s3cfg, item)
+        #settings = s3cfg.S3Config()
+
+        # Can use normal import here since executed in web2py environment:
+        import s3cfg
         settings = s3cfg.S3Config()
+
         # Pass into template
         current.deployment_settings = settings
 
@@ -105,20 +110,28 @@ class S3Migration(object):
         model = "%s/models/000_config.py" % request.folder
         code = getcfs(model, model, None)
         response = current.response
-        response.s3 = Storage() # Needed as some Templates look at this & we don't wish to crash
-        environment = build_environment(request, response,
-                                        current.session)
+
+        # Needed as some Templates look at this & we don't wish to crash:
+        response.s3 = Storage()
+
+        # Global variables for 000_config.py
+        environment = build_environment(request, response, current.session)
         environment["settings"] = settings
+        # Some (older) 000_config.py also use "deployment_settings":
+        environment["deployment_settings"] = settings
+        # For backwards-compatibility with older 000_config.py:
         def template_path():
-            " Return the path of the Template config.py to load "
-            path = os.path.join(request.folder,
-                                "private", "templates",
-                                settings.get_template(),
-                                "config.py")
-            return path
+            # When you see this warning, you should update 000_config.py
+            # See: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Templates/Migration#Changesin000_config.py
+            print "template_path() is deprecated, please update 000_config.py"
+            # Return just any valid path to make sure the path-check succeeds,
+            # => modern S3Config will find the template itself
+            return request.folder
         environment["template_path"] = template_path
         environment["os"] = os
         environment["Storage"] = Storage
+
+        # Execute 000_config.py
         restricted(code, environment, layer=model)
 
         self.db_engine = settings.get_database_type()
@@ -713,9 +726,9 @@ class S3Migration(object):
                      fieldname_new,
                      attributes_to_copy=None):
         """
-            Rename a field, while keeping the other properties of the field the same. 
+            Rename a field, while keeping the other properties of the field the same.
             If there are some indexes on that table, these will be recreated and other constraints will remain unchanged too.
-            
+
             @param tablename          : name of the table in which the field is renamed
             @param fieldname_old      : name of the original field before renaming
             @param fieldname_new      : name of the field after renaming
@@ -727,7 +740,7 @@ class S3Migration(object):
 
         if db_engine == "sqlite":
             self._add_renamed_fields(db, tablename, fieldname_old, fieldname_new, attributes_to_copy)
-            self._copy_field(db, tablename, fieldname_old, fieldname_new)     
+            self._copy_field(db, tablename, fieldname_old, fieldname_new)
             sql = "SELECT sql FROM sqlite_master WHERE type='index' AND tbl_name='%s' ORDER BY name;" % \
                 tablename
             list_index = db.executesql(sql)
@@ -763,7 +776,7 @@ class S3Migration(object):
         """
             Rename a table.
             If any fields reference that table, they will be handled too.
-            
+
             @param tablename_old : name of the original table before renaming
             @param tablename_new : name of the table after renaming
         """
@@ -783,10 +796,10 @@ class S3Migration(object):
                                 table_old_id_field,
                                 tablename_old):
         """
-            This method handles the migration in which a new table with a column for the 
-            values they'll get from the list field is made and maybe some empty columns to be filled in later. 
+            This method handles the migration in which a new table with a column for the
+            values they'll get from the list field is made and maybe some empty columns to be filled in later.
             That new table has a foreign key reference back to the original table.
-            Then for each value in the list field for each record in the original table, 
+            Then for each value in the list field for each record in the original table,
             they create one record in the new table that points back to the original record.
 
             @param tablename_new      : name of the new table to which the list field needs to migrated
@@ -829,7 +842,7 @@ class S3Migration(object):
         """
             Update the values of an existing field according to the mappings given through the mapping_function
             - currently unused
-            
+
             @param db               : database instance
             @param tablename        : name of the original table in which the new unique field id added
             @param field_to_update  : name of the field to be updated according to the mapping
@@ -855,15 +868,15 @@ class S3Migration(object):
                 row_id = row["id"]
             changed_value = mapping_function.mapping(row)
             dict_update[field_to_update] = changed_value
-            db(table["id"] == row_id).update(**dict_update)    
+            db(table["id"] == row_id).update(**dict_update)
 
     # -------------------------------------------------------------------------
     @staticmethod
     def _map_type_list_field(old_type):
         """
-            This function maps the list type into individual field type which can contain 
+            This function maps the list type into individual field type which can contain
             the individual values of the list.
-            
+
             Mappings
             - list:reference <table> --> refererence <table>
             - list:integer           --> integer
@@ -887,7 +900,7 @@ class S3Migration(object):
         """
             This function creates the new table which is used in the list_field_to_reference migration.
             That new table has a foreign key reference back to the original table.
-            
+
             @param tablename          : name of the new table to which the list field needs to migrated
             @param new_list_field     : name of the field in the new table which will hold the content of the list field
             @param list_field_name    : name of the list field in the original table
@@ -913,9 +926,9 @@ class S3Migration(object):
                             tablename_old):
         """
             This function is used in the list_field_to_reference migration.
-            For each value in the list field for each record in the original table, 
+            For each value in the list field for each record in the original table,
             they create one record in the new table that points back to the original record.
-            
+
             @param tablename_new      : name of the new table to which the list field needs to migrated
             @param new_list_field     : name of the field in the new table which will hold the content of the list field
             @param list_field_name    : name of the list field in the original table
@@ -984,7 +997,7 @@ class S3Migration(object):
         """
             Map the web2py type into SQL type
             Used when writing SQL queries to change the properties of a field
-            
+
             Mappings:
             string   -->   Varchar
         """
@@ -998,7 +1011,7 @@ class S3Migration(object):
     @staticmethod
     def _add_new_fields(db, new_unique_field, tablename):
         """
-            This function adds a new _unique_ field into the table, while keeping all the rest of 
+            This function adds a new _unique_ field into the table, while keeping all the rest of
             the properties of the table unchanged
 
             @param db : database instance
@@ -1021,7 +1034,7 @@ class S3Migration(object):
                             list_of_tables):
         """
             This field adds tables to the temp_db from the global db
-            these might be used for the running queries or validating values. 
+            these might be used for the running queries or validating values.
         """
 
         for tablename in list_of_tables:

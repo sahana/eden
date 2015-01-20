@@ -13,20 +13,30 @@ def maintenance(period="daily"):
         - these are read from the template
     """
 
-    mod = "applications.%s.private.templates.%s.maintenance as maintenance" % \
-                    (appname, settings.get_template())
-    try:
-        exec("import %s" % mod)
-    except ImportError, e:
-        # No Custom Maintenance available, use the default
-        exec("import applications.%s.private.templates.default.maintenance as maintenance" % appname)
+    maintenance = None
+    result = "NotImplementedError"
 
-    if period == "daily":
-        result = maintenance.Daily()()
-    else:
-        result = "NotImplementedError"
+    template = settings.get_template()
+    if template != "default":
+        # Try import maintenance routine from template
+        package = "applications.%s.%s.templates.%s" % \
+                  (appname, settings.get_template_location(), template)
+        name = "maintenance"
+        try:
+            maintenance = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
+            pass
+    if maintenance is None:
+        try:
+            # Fallback to default maintenance routine
+            from templates.default import maintenance
+        except ImportError:
+            pass
+    if maintenance is not None:
+        if period == "daily":
+            result = maintenance.Daily()()
+        db.commit()
 
-    db.commit()
     return result
 
 tasks["maintenance"] = maintenance

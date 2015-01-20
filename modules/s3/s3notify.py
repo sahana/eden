@@ -2,7 +2,7 @@
 
 """ S3 Notifications
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,6 +34,7 @@ import urlparse
 import urllib2
 from urllib import urlencode
 from uuid import uuid4
+import string
 
 try:
     from cStringIO import StringIO # Faster, where available
@@ -392,7 +393,8 @@ class S3Notifications(object):
             if method == "EMAIL" and email_format:
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
             if theme != "default":
-                path = join("private", "templates", theme, "views", "msg")
+                location = settings.get_template_location()
+                path = join(location, "templates", theme, "views", "msg")
                 template = get_template(path, filenames)
             if template is None:
                 path = join("views", "msg")

@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: (c) 2010-2014 Sahana Software Foundation
+    @copyright: (c) 2010-2015 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -920,19 +920,22 @@ def s3_yes_no_represent(value):
 def s3_include_debug_css():
     """
         Generates html to include the css listed in
-            /private/templates/<template>/css.cfg
+            /modules/templates/<template>/css.cfg
     """
 
     request = current.request
     folder = request.folder
     appname = request.application
-    theme = current.deployment_settings.get_theme()
 
-    css_cfg = "%s/private/templates/%s/css.cfg" % (folder, theme)
+    settings = current.deployment_settings
+    theme = settings.get_theme()
+    location = settings.get_template_location()
+
+    css_cfg = "%s/%s/templates/%s/css.cfg" % (folder, location, theme)
     try:
         f = open(css_cfg, "r")
     except:
-        raise HTTP(500, "Theme configuration file missing: private/templates/%s/css.cfg" % theme)
+        raise HTTP(500, "Theme configuration file missing: %s/templates/%s/css.cfg" % (location, theme))
     files = f.readlines()
     files = files[:-1]
     include = ""
@@ -1776,7 +1779,8 @@ class S3CustomController(object):
     def _view(cls, theme, name):
 
         view = os.path.join(current.request.folder,
-                            "private", "templates", theme, "views", name)
+                            current.deployment_settings.get_template_location(),
+                            "templates", theme, "views", name)
         try:
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")
@@ -1983,12 +1987,6 @@ class S3TypeConverter(object):
 
         if isinstance(b, basestring):
             return b
-        if isinstance(b, datetime.date):
-            raise TypeError # @todo: implement
-        if isinstance(b, datetime.datetime):
-            raise TypeError # @todo: implement
-        if isinstance(b, datetime.time):
-            raise TypeError # @todo: implement
         return str(b)
 
     # -------------------------------------------------------------------------

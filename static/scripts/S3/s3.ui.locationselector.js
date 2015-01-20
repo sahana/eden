@@ -1,7 +1,7 @@
 /**
  * jQuery UI LocationSelector Widget
  *
- * @copyright 2014 (c) Sahana Software Foundation
+ * @copyright 2015 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -35,6 +35,11 @@
          *                          used to determine automatic zoom level for
          *                          single-point locations
          * @prop {bool} showLabels - show labels on inputs
+         * @prop {string} featureRequired - type of map feature that is required,
+         *                                  'latlon'|'wkt'|'any'
+         * @prop {string} latlonMode - (initial) lat/lon input mode ('decimal' or 'dms')
+         * @prop {bool} latlonModeToggle - user can toggle latlonMode
+         * @prop {bool} openMapOnLoad - open map on load
          */
         options: {
             hideLx: true,
@@ -44,7 +49,13 @@
             labels: null,
 
             minBBOX: 0.05,
-            showLabels: true
+            showLabels: true,
+            featureRequired: null,
+
+            latlonMode: 'decimal',
+            latlonModeToggle: true,
+
+            openMapOnLoad: false
         },
 
         /**
@@ -109,7 +120,8 @@
             // Render the widget
             this._renderWidget();
 
-            var selector = '#' + this.fieldname;
+            var selector = '#' + this.fieldname,
+                opts = this.options;
 
             // Should we use the Geocoder?
             if ($(selector + '_geocode button').length) {
@@ -191,11 +203,33 @@
             $(selector + '_postcode__row').removeClass('hide').show();
             $(selector + '_postcode__row1').removeClass('hide').show();
 
+            // Show Lat/Lon Rows (__row1 = tuple themes)
+            $(selector + '_lat').val(data.lat)
+                                .latloninput({
+                                    type: 'lat',
+                                    mode: opts.latlonMode
+                                });
+            $(selector + '_lat__row').removeClass('hide').show();
+            $(selector + '_lat__row1').removeClass('hide').show();
+
+            $(selector + '_lon').val(data.lon)
+                                .latloninput({
+                                    type: 'lon',
+                                    mode: opts.latlonMode
+                                });
+            $(selector + '_lon__row').removeClass('hide').show();
+            $(selector + '_lon__row1').removeClass('hide').show();
+
             // Show Map icon
-            $(selector + '_map_icon__row').removeClass('hide').show();
+            var map_icon_row = $(selector + '_map_icon__row').removeClass('hide')
+                                                             .show();
             if (data.lat || data.lon || data.wkt) {
                 // Don't do a Geocode when reading the data
                 this.input.data('manually_geocoded', true);
+                this._showMap();
+            } else if (opts.featureRequired) {
+                this._showMap();
+            } else if (opts.openMapOnLoad && map_icon_row.is(':visible') && selector.substring(0, 5) != '#sub_') {
                 this._showMap();
             } else {
                 this._hideMap();
@@ -232,16 +266,22 @@
             if (formRow.is('.control-group, .form-row')) {
                 // Bootstrap/Foundation formstyle:
                 // Move the visible rows underneath the real (hidden) one
-                var L1Row = $(selector + '_L1__row');
-                var L2Row = $(selector + '_L2__row');
-                var L3Row = $(selector + '_L3__row');
-                var L4Row = $(selector + '_L4__row');
-                var L5Row = $(selector + '_L5__row');
-                var addressRow = $(selector + '_address__row');
+                var L1Row = $(selector + '_L1__row'),
+                    L2Row = $(selector + '_L2__row'),
+                    L3Row = $(selector + '_L3__row'),
+                    L4Row = $(selector + '_L4__row'),
+                    L5Row = $(selector + '_L5__row'),
+                    addressRow = $(selector + '_address__row'),
+                    latRow = $(selector + '_lat__row'),
+                    lonRow = $(selector + '_lon__row'),
+                    latlonToggleRow = $(selector + '_latlon_toggle__row');
                 if (reverseLx) {
                     formRow.hide()
                            .after(mapWrapper)
                            .after(mapIconRow)
+                           .after(latlonToggleRow)
+                           .after(lonRow)
+                           .after(latRow)
                            .after(L0Row)
                            .after(L1Row)
                            .after(L2Row)
@@ -255,6 +295,9 @@
                     formRow.hide()
                            .after(mapWrapper)
                            .after(mapIconRow)
+                           .after(latlonToggleRow)
+                           .after(lonRow)
+                           .after(latRow)
                            .after(postcodeRow)
                            .after(addressRow)
                            .after(L5Row)
@@ -266,6 +309,7 @@
                            .after(errorWrapper);
                 }
             } else if (formRow.parent().is('.inline-form')) {
+                // @todo: reverseLx?
                 formRow.show();
             } else {
                 // Other formstyle:
@@ -318,7 +362,7 @@
                 }
             } else {
                 // Read the selected value from the dropdown
-                id = parseInt(dropdown.val());
+                id = parseInt(dropdown.val(), 10);
             }
 
             // Update hierarchy labels
@@ -554,6 +598,10 @@
             // Write data dict back to real input
             this._serialize();
 
+            // Update lat/lon inputs
+            $(selector + '_lat').val(data.lat).trigger('setvalue');
+            $(selector + '_lon').val(data.lon).trigger('setvalue');
+
             if (this.fieldname.slice(0, 4) == 'sub_') {
                 // This is an S3SQLInlineComponent => trigger change event
                 this.input.change();
@@ -577,7 +625,7 @@
                 if (dropdown.length) {
                     value = dropdown.val();
                     if (value) {
-                        data['L' + level] = parseInt(value);
+                        data['L' + level] = parseInt(value, 10);
                     } else {
                         data['L' + level] = null;
                     }
@@ -822,7 +870,7 @@
                         // Update data dict + serialize
                         data.lat = parseFloat(lat);
                         data.lon = parseFloat(lon);
-                        self._serialize();
+                        self._collectData();
 
                         // If Map Showing then add/move Point
                         var gis = S3.gis;
@@ -940,6 +988,64 @@
         },
 
         /**
+         * Response to direct (manual) Lat/Lon input
+         */
+        _latlonInput: function() {
+
+            var fieldname = this.fieldname,
+                data = this.data;
+
+            var selector = '#' + fieldname;
+
+            // Read the input data
+            var lat = $(selector + '_lat').val(),
+                lon = $(selector + '_lon').val();
+
+            if (!lat && !lon) {
+                // Data removed => reset
+                data.lat = null;
+                data.lon = null;
+                if (!data.wkt) {
+                    this.input.data('manually_geocoded', false);
+                }
+            } else {
+                if (!lat) {
+                    lat = 0;
+                } else {
+                    lat = parseFloat(lat);
+                }
+                if (!lon) {
+                    lon = 0;
+                } else {
+                    lon = parseFloat(lon);
+                }
+                data.lat = lat;
+                data.lon = lon;
+                data.wkt = null;
+                this.input.data('manually_geocoded', true);
+            }
+            this._serialize();
+
+            // Remove all map features, add the new point + recenter/zoom map
+            var gis = S3.gis;
+            if (gis.maps) {
+                var map = gis.maps['location_selector_' + fieldname];
+                if (map) {
+                    var draftLayer = map.s3.draftLayer;
+                    draftLayer.removeAllFeatures();
+                    if (data.lat !== null && data.lon !== null) {
+                        var geometry = new OpenLayers.Geometry.Point(data.lon, data.lat);
+                        geometry.transform(gis.proj4326, map.getProjectionObject());
+                        var feature = new OpenLayers.Feature.Vector(geometry);
+                        draftLayer.addFeatures([feature]);
+                        map.s3.lastDraftFeature = feature;
+                    }
+                    this._zoomMap();
+                }
+            }
+        },
+
+        /**
          * Show the Map
          * - this doesn't imply that a specific location is to be created
          * - that only happens if a Point is created on the Map
@@ -1014,6 +1120,7 @@
                         }
                         // Display this feature
                         map.s3.draftLayer.addFeatures([feature]);
+                        map.s3.lastDraftFeature = feature;
                     }
 
                     // Does the map have controls to add new features?
@@ -1028,7 +1135,6 @@
                     if (control) {
                         // Watch for new features being selected, so that we can
                         // store the Lat/Lon/WKT (callback function for the map)
-                        // @todo: make this callback specific for this map
                         map.s3.pointPlaced = function(feature) {
 
                             // Hide any Geocoder messages
@@ -1119,10 +1225,12 @@
                         map.s3.draftLayer.removeAllFeatures();
 
                         // Reset Lat/Lon/WKT
+                        // @todo: reset lat/lon only if we do not have Lat/Lon inputs
                         data.lat = null;
                         data.lon = null;
                         data.wkt = null;
 
+                        // @todo: reset lat/lon only if both is null
                         this.input.data('manually_geocoded', false);
 
                         // Write back to real input
@@ -1159,7 +1267,7 @@
 
                     if (lat && lon) {
                         // Minimal bbox and padding will be added inside S3.gis.zoomBounds
-                        bounds = [lon, lat, lon, lat];
+                        bounds = OpenLayers.Bounds.fromArray([lon, lat, lon, lat]);
                     } else if (wkt) {
                         var vector = new OpenLayers.Feature.Vector(OpenLayers.Geometry.fromWKT(wkt));
                         bounds = vector.geometry.getBounds();
@@ -1186,9 +1294,11 @@
                                 }
                             }
                         }
+                        if (bounds) {
+                            bounds = OpenLayers.Bounds.fromArray(bounds);
+                        }
                     }
                     if (bounds) {
-                        bounds = OpenLayers.Bounds.fromArray(bounds);
                         S3.gis.zoomBounds(map, bounds, this.options.minBBOX);
                     }
                 }
@@ -1202,9 +1312,8 @@
          * @returns {bool} - whether widget input is valid or not
          *
          * @todo: skip if widget is invisible
-         * @todo: needs a different trigger in inline-forms (see _bindEvents)
          */
-        _submitForm: function() {
+        _validate: function() {
 
             var fieldname = this.fieldname;
 
@@ -1213,11 +1322,42 @@
 
             // Do we have a value to submit?
             var selector = '#' + fieldname,
-                current_value = this.data.id,
+                data = this.data,
+                featureRequired = this.options.featureRequired;
+
+            if (featureRequired) {
+                // Must have latlon or wkt
+                var valid = false;
+                switch (featureRequired) {
+                    case 'latlon':
+                        valid = data.lat || data.lon;
+                        break;
+                    case 'wkt':
+                        valid = data.wkt;
+                        break;
+                    default:
+                        // Any map feature is valid
+                        valid = data.lat || data.lon || data.wkt;
+                        break;
+                }
+                if (!valid) {
+                    S3.fieldError(selector + '_map_icon', i18n.map_feature_required);
+                    return false;
+                }
+            }
+
+            var current_value = data.id,
                 suffix = ['address', 'L5', 'L4', 'L3', 'L2', 'L1', 'L0'],
                 i,
                 s,
-                f;
+                f,
+                visible = function(field) {
+                    if (field.hasClass('multiselect')) {
+                        return field.next('button.ui-multiselect').is(':visible');
+                    } else {
+                        return field.is(':visible');
+                    }
+                };
 
             if (current_value) {
                 if (!hierarchyLocations[current_value]) {
@@ -1225,18 +1365,17 @@
                     return true;
                 }
                 var current_level = hierarchyLocations[current_value].l;
-                // Is a higher-level required? If so, then prevent submission
+                // Is a lower level required? If so, then prevent submission
                 for (i = 0; i < 6 - current_level; i++) {
                     s = selector + '_' + suffix[i];
                     f = $(s);
-                    if (f.length && f.hasClass('required') && f.is(':visible')) {
+                    if (f.length && f.hasClass('required') && visible(f)) {
                         S3.fieldError(s, i18n.enter_value);
                         return false;
                     }
                 }
                 return true;
             } else {
-                var data = this.data;
                 if (data.lat || data.lon || data.wkt || data.address || data.postcode) {
                     // Specific location => ok
                     return true;
@@ -1245,7 +1384,7 @@
                 for (i = 0; i < 7; i++) {
                     s = selector + '_' + suffix[i];
                     f = $(s);
-                    if (f.length && f.hasClass('required') && f.is(':visible')) {
+                    if (f.length && f.hasClass('required') && visible(f)) {
                         S3.fieldError(s, i18n.enter_value);
                         return false;
                     }
@@ -1343,7 +1482,8 @@
                           selector + '_L4,' +
                           selector + '_L5,' +
                           selector + '_address,' +
-                          selector + '_postcode';
+                          selector + '_postcode,' +
+                          selector + '_map_icon';
             }
             $(element).siblings('.error').remove();
         },
@@ -1353,9 +1493,11 @@
          */
         _bindEvents: function() {
 
-            var selector = '#' + this.fieldname,
+            var fieldname = this.fieldname,
                 ns = this.namespace,
                 self = this;
+
+            var selector = '#' + fieldname;
 
             $(selector + '_L0').bind('change' + ns, function() {
                 self._removeErrors(this);
@@ -1393,14 +1535,45 @@
                     self._collectData();
                 }
             });
-
-            // @todo: must use a different trigger in inline-forms
-            this.input.closest('form').bind('submit' + ns + this.id, function(e) {
-                e.preventDefault();
-                if (self._submitForm()) {
-                    self.input.closest('form').unbind(ns + self.id).submit();
-                }
+            $(selector + '_lat,' +
+              selector + '_lon').bind('change' + ns, function() {
+                self._latlonInput();
             });
+            $(selector + '_latlon_toggle').bind('click' + ns, function() {
+                var mode = $(this).data('mode') || self.options.latlonMode,
+                    label;
+                if (mode == 'dms') {
+                    mode = 'decimal';
+                    label = i18n.latlon_mode.dms;
+                } else {
+                    mode = 'dms';
+                    label = i18n.latlon_mode.decimal;
+                }
+                $(selector + '_lat').latloninput('option', {mode: mode});
+                $(selector + '_lon').latloninput('option', {mode: mode});
+                $(this).html(label)
+                       .data('mode', mode);
+            });
+
+            if (fieldname.substring(0, 4) == 'sub_') {
+                // Inline form
+                var inlineForm = this.input.closest('.inline-form');
+                inlineForm.bind('validate' + ns + this.id, function(e) {
+                    if (!self._validate()) {
+                        e.preventDefault();
+                    }
+                });
+            } else {
+                // Regular form field
+                var form = this.input.closest('form');
+                form.bind('submit' + ns + this.id, function(e) {
+                    e.preventDefault();
+                    if (self._validate()) {
+                        form.unbind(ns + self.id).submit();
+                    }
+                });
+            }
+
             return true;
         },
 
@@ -1420,10 +1593,492 @@
               selector + '_L5,' +
               selector + '_address,' +
               selector + '_postcode,' +
-              selector + '_map_icon').unbind(ns);
+              selector + '_map_icon,' +
+              selector + '_latlon_toggle').unbind(ns);
 
             this.input.next('.error_wrapper').unbind(ns);
             this.input.closest('form').unbind(ns + self.id);
+
+            return true;
+        }
+    });
+})(jQuery);
+
+(function($, undefined) {
+
+    "use strict";
+    var latloninputID = 0;
+
+    /**
+     * Lat/Lon input widget
+     */
+    $.widget('s3.latloninput', {
+
+        /**
+         * Default options
+         */
+        options: {
+
+            type: 'lat',
+            mode: 'decimal',
+            labels: {
+                deg: '°',
+                min: "'",
+                sec: '"'
+            }
+        },
+
+        /**
+         * Create the widget
+         */
+        _create: function() {
+
+            var el = $(this.element);
+
+            this.id = latloninputID;
+            latloninputID += 1;
+
+            // Namespace for events
+            this.namespace = '.latloninput';
+        },
+
+        /**
+         * Update the widget options
+         */
+        _init: function() {
+
+            $(this.element).hide();
+            this.refresh();
+        },
+
+        /**
+         * Remove generated elements & reset other changes
+         */
+        _destroy: function() {
+
+            $(this.element).show();
+            $.Widget.prototype.destroy.call(this);
+        },
+
+        /**
+         * Update a widget option
+         *
+         * @param {string} key: the option key
+         * @param {mixed} value: the new value for the option
+         */
+        _setOption: function(key, value) {
+
+            this._super(key, value);
+            if (key == 'mode') {
+                this.refresh();
+            }
+        },
+
+        /**
+         * Redraw contents
+         */
+        refresh: function() {
+
+            this._unbindEvents();
+
+            var el = $(this.element),
+                opts = this.options;
+
+            this.defaultValue = el.val();
+
+            if (!this.input) {
+                var input = $('<div>').hide().insertAfter(el);
+
+                // Decimal Input
+                var decimalInput = $('<input type="text" class="dms-input" size="18">').hide();
+                this.decimalInput = decimalInput;
+
+                // DMS Inputs
+                var labels = opts.labels;
+                var degInput = $('<input type="text" class="integer dms-input" size="5">'),
+                    degLabel = $('<span class="dms-label">' + labels.deg + '</span>'),
+                    minInput = $('<input type="text" class="integer dms-input" size="5">'),
+                    minLabel = $('<span class="dms-label">' + labels.min + '</span>'),
+                    secInput = $('<input type="text" class="double dms-input" size="8">'),
+                    secLabel = $('<span class="dms-label">' + labels.sec + '</span>');
+                this.degInput = degInput;
+                this.minInput = minInput;
+                this.secInput = secInput;
+
+                var dmsInput = $('<span>').append(degInput)
+                                          .append(degLabel)
+                                          .append(minInput)
+                                          .append(minLabel)
+                                          .append(secInput)
+                                          .append(secLabel)
+                                          .hide();
+                this.dmsInput = dmsInput;
+
+                this.input = input.append(decimalInput)
+                                  .append(dmsInput)
+                                  .show();
+            }
+
+            this._removeErrors();
+            if (opts.mode == 'dms') {
+                // Refresh value
+                var dms = this._getDMS();
+                this.degInput.val(dms.d);
+                this.minInput.val(dms.m);
+                this.secInput.val(dms.s);
+                // Toggle inputs
+                this.decimalInput.hide();
+                this.dmsInput.show();
+            } else {
+                // Refresh value
+                this.decimalInput.val(el.val());
+                // Toggle inputs
+                this.dmsInput.hide();
+                this.decimalInput.show();
+            }
+
+            this._bindEvents();
+        },
+
+        /**
+         * Convert the current value of the real input to DMS
+         *
+         * @return {object} - properties: d=degrees, m=minutes, s=seconds
+         */
+        _getDMS: function() {
+
+            var value = $(this.element).val();
+            if (isNaN(parseFloat(value)) || !isFinite(value)) {
+                return {d: '', m: '', s: ''};
+            }
+            var d = Math.abs(value),
+                m = (d - parseInt(d, 10)) * 60;
+            // Stop integer values of m from being approximated
+            if (Math.abs(m - Math.round(m)) < 1e-10) {
+                m = Math.round(m);
+                s = 0;
+            } else {
+                var s = (m - parseInt(m, 10)) * 60;
+                // Stop integer values of s from being approximated
+                if (Math.abs(s - Math.round(s)) < 1e-10) {
+                    s = Math.round(s);
+                }
+            }
+            return {d: parseInt(value, 10),
+                    m: parseInt(m, 10),
+                    s: s
+                    };
+        },
+
+        /**
+         * Mark input fields as invalid, and render an error message
+         *
+         * @param {jQuery} field - the input field to mark as invalid,
+         *                         use 'all' for all input fields
+         * @param {string} message - the error message to show, leave
+         *                           empty to only mark fields
+         */
+        _showError: function(field, message) {
+
+            if (field == 'all') {
+                // All inputs
+                this.input.find('input').addClass('invalidinput');
+            } else if (field) {
+                field.addClass('invalidinput');
+            }
+            if (message) {
+                this.input.append('<div class="error">' + message + '</div>');
+            }
+        },
+
+        /**
+         * Remove all error classes and messages
+         */
+        _removeErrors: function() {
+
+            this.input.find('input').removeClass('invalidinput');
+            this.input.find('.error').remove();
+        },
+
+        /**
+         * Parse and validate the DMS input
+         *
+         * @return {string|number} - the value for the real input (decimal)
+         */
+        _validateDMS: function() {
+
+            this._removeErrors();
+
+            var type = this.options.type,
+                range,
+                rangeError;
+
+            if (type == 'lat') {
+                range = 90;
+                rangeError = i18n.latlon_error.lat;
+            } else {
+                range = 180;
+                rangeError = i18n.latlon_error.lon;
+            }
+            var deg = this.degInput.val(),
+                min = this.minInput.val(),
+                sec = this.secInput.val(),
+                errors = [];
+
+            if (deg === '' && min === '' && sec === '') {
+                // Removed
+                return '';
+            }
+            deg = parseInt(deg, 10) || 0;
+            min = parseInt(min, 10) || 0;
+            sec = parseFloat(sec) || 0;
+
+            if (Math.abs(min) >= 60) {
+                this._showError(this.minInput);
+                errors.push(i18n.latlon_error.min);
+            }
+            if (Math.abs(sec) >= 60) {
+                this._showError(this.secInput);
+                errors.push(i18n.latlon_error.sec);
+            }
+            var total = Math.abs(deg) + min / 60 + sec / 3600;
+            if (!errors.length && total > range || deg > range) {
+                this._showError('all');
+                errors.push(rangeError);
+            }
+            if (errors.length) {
+                this._showError(null, errors.join(', '));
+                return null;
+            }
+            return (deg < 0 ? -1 : 1) * total;
+        },
+
+        /**
+         * Parse and validate the decimal input
+         *
+         * @return {string|number} - the value for the real input (decimal)
+         */
+        _validateDecimal: function() {
+
+            this._removeErrors();
+
+            var type = this.options.type,
+                range,
+                rangeError,
+                formatError = i18n.latlon_error.format;
+
+            if (type == 'lat') {
+                range = 90;
+                rangeError = i18n.latlon_error.lat;
+            } else {
+                range = 180;
+                rangeError = i18n.latlon_error.lon;
+            }
+
+            var decimal = this.decimalInput.val();
+            if (decimal === '') {
+                // Removed
+                return '';
+            }
+            decimal = this._parse(decimal, type);
+            if (decimal === null) {
+                this._showError(this.decimalInput, formatError);
+            } else if (Math.abs(decimal) > range) {
+                this._showError(this.decimalInput, rangeError);
+                decimal = null;
+            }
+            return decimal;
+        },
+
+        /**
+         * Parser for the decimal input - tries to recognize the input format
+         * and convert it into decimal degrees. Supports a variety of DMS formats,
+         * as well as explicit direction (N|S|E|W). Simplifies input by allowing
+         * copy/paste (which is not easily possible with strict DMS input).
+         *
+         * @param {string} value: the input value
+         * @param {string} mode: 'lat' or 'lon'
+         */
+        _parse: function(value, mode) {
+
+            var directions;
+            if (mode == 'lat') {
+                directions = {'N': 1, 'S': -1};
+            } else {
+                directions = {'E': 1, 'W': -1};
+            }
+            var DEG_REGEX = /^([NSEW]{0,1})\s*([-+]?\d+[.,]?\d*)\s*°?\s*([NSEW])?\s*$/,
+                DMS_REGEX = /^([NSEW]{0,1})\s*([-+]?\d+[.,]?\d*)?\s*([°'"]{0,1})\s*:?\s*([-+]?\d+[.,]?\d*)?\s*(['"]{0,1})\s*:?\s*([-+]?\d+[.,]?\d*)?\s*(['"]{0,1})\s*([NSEW])?\s*$/,
+                match,
+                direction,
+                degrees = 0,
+                minutes = 0,
+                seconds = 0;
+
+            if (value.match(DEG_REGEX)) {
+                // Decimal format
+                match = value.replace(DEG_REGEX, "$1|$2|$3").split('|');
+                direction = match[0] || match[2];
+                if (direction) {
+                    direction = directions[direction];
+                }
+                degrees = parseFloat(match[1]);
+                // Ignore direction if number is negative
+                if (direction && Math.abs(degrees) != degrees) {
+                    direction = null;
+                }
+                if (direction) {
+                    degrees *= direction;
+                }
+                return degrees;
+
+            } else if (value.match(DMS_REGEX)) {
+                // DMS format
+                match = value.replace(DMS_REGEX, "$1|$2|$3|$4|$5|$6|$7|$8").split('|');
+                direction = match[0] || match[7];
+                if (direction) {
+                    direction = directions[direction];
+                }
+                var numbers = [],
+                    symbols = [],
+                    n,
+                    s,
+                    i;
+                for (i = 1; i < 6; i += 2) {
+                    n = match[i];
+                    s = match[i + 1];
+                    if (s) {
+                        numbers.push(parseFloat(n) || 0);
+                        symbols.push(s);
+                    } else if (n) {
+                        numbers.push(parseFloat(n));
+                        symbols.push(null);
+                    }
+                }
+                var DEGREES = '°',
+                    MINUTES = "'",
+                    SECONDS = '"',
+                    len = numbers.length;
+                if (!len) {
+                    // No number - invalid!
+                    return null;
+                } else {
+                    // Keep only the leading number as signed number
+                    for (i=1; i<len; i++) {
+                        numbers[i] = Math.abs(numbers[i]);
+                    }
+                    // Ignore direction if the leading number is negative
+                    n = numbers[0];
+                    if (Math.abs(n) != n) {
+                        direction = 1;
+                    }
+                    if (len == 1) {
+                        // Single number - decide by symbol
+                        s = symbols[0];
+                        if (s == SECONDS) {
+                            seconds = numbers[0];
+                        } else if (s == MINUTES) {
+                            minutes = numbers[0];
+                        } else if (!s || s == DEGREES) {
+                            // Should have matched DEG_REGEX?
+                            degrees = numbers[0];
+                        }
+                    } else if (len == 2) {
+                        // Two numbers - try to figure out what is what
+                        var s0 = symbols[0],
+                            s1 = symbols[1];
+                        if (s0 == DEGREES) {
+                            degrees = numbers[0];
+                            if (s1 == SECONDS) {
+                                seconds = numbers[1];
+                            } else if (s1 == MINUTES || !s1) {
+                                minutes = numbers[1];
+                            }
+                        } else if (!s0) {
+                            if (s1 == SECONDS) {
+                                minutes = numbers[0];
+                                seconds = numbers[1];
+                            } else if (s1 == MINUTES || !s1) {
+                                degrees = numbers[0];
+                                minutes = numbers[1];
+                            }
+                        } else if (s0 == MINUTES && (!s1 || s1 == SECONDS)) {
+                            minutes = numbers[0];
+                            seconds = numbers[1];
+                        } else {
+                            // Unrecognized format
+                            return null;
+                        }
+                    } else {
+                        // Three numbers - verify symbols and order
+                        if ((!symbols[0] || symbols[0] == DEGREES) &&
+                            (!symbols[1] || symbols[1] == MINUTES) &&
+                            (!symbols[2] || symbols[2] == SECONDS)) {
+                            degrees = numbers[0];
+                            minutes = numbers[1];
+                            seconds = numbers[2];
+                        } else {
+                            // Unrecognized format
+                            return null;
+                        }
+                    }
+                    // Compute total and hemisphere
+                    var decimal = degrees + minutes / 60 + seconds / 3600;
+                    if (direction) {
+                        decimal *= direction;
+                    }
+                    return decimal;
+                }
+            }
+            // Unrecognized format
+            return null;
+        },
+
+        /**
+         * Bind event handlers (after refresh)
+         */
+        _bindEvents: function() {
+
+            var self = this,
+                ns = this.namespace;
+
+            this.dmsInput.find('input').bind('change' + ns, function() {
+                var value = self._validateDMS();
+                if (value !== null) {
+                    $(self.element).val(value).change();
+                } else {
+                    $(self.element).val(self.defaultValue).change();
+                }
+            });
+
+            this.decimalInput.bind('change' + ns, function() {
+                var value = self._validateDecimal();
+                if (value !== null) {
+                    $(self.element).val(value).change();
+                    self.decimalInput.val(value);
+                } else {
+                    $(self.element).val(self.defaultValue).change();
+                }
+            });
+
+            $(this.element).bind('setvalue' + ns, function() {
+                self.refresh();
+            });
+
+            return true;
+        },
+
+        /**
+         * Unbind events (before refresh)
+         */
+        _unbindEvents: function() {
+
+            var ns = this.namespace;
+
+            if (this.input) {
+                this.input.find('input').unbind(ns);
+            }
+            $(this.element).unbind(ns);
 
             return true;
         }

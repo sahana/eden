@@ -2,7 +2,7 @@
 
 """ Sahana Eden Project Model
 
-    @copyright: 2011-2014 (c) Sahana Software Foundation
+    @copyright: 2011-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -51,6 +51,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectTaskIReportModel",
            "project_ActivityRepresent",
            "project_activity_year_options",
+           "project_ckeditor",
            "project_rheader",
            "project_task_controller",
            "project_theme_help_fields",
@@ -62,7 +63,7 @@ __all__ = ("S3ProjectModel",
            "project_project_filters",
            "project_project_list_layout",
            "project_task_list_layout",
-           "project_ckeditor",
+           "project_TaskRepresent",
            )
 
 import datetime
@@ -187,7 +188,9 @@ class S3ProjectModel(S3Model):
                              label = T("Start Date")
                              ),
                      s3_date("end_date",
-                             label = T("End Date")
+                             label = T("End Date"),
+                             start_field = "project_project_start_date",
+                             default_interval = 12,
                              ),
                      # Free-text field with no validation (used by OCHA template currently)
                      Field("duration",
@@ -807,6 +810,7 @@ class S3ProjectActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Activity
         #
+
         tablename = "project_activity"
         define_table(tablename,
                      # Instance
@@ -828,6 +832,8 @@ class S3ProjectActivityModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "project_activity_date",
+                             default_interval = 12,
                              ),
                      # Which contact is this?
                      # Implementing Org should be a human_resource_id
@@ -949,16 +955,17 @@ class S3ProjectActivityModel(S3Model):
                                     # Doesn't support translation
                                     #represent = "%(name)s",
                                     ))
-        # @ToDo: deployment_setting
-        filter_widgets.append(
-            S3OptionsFilter("year",
-                            label = T("Year"),
-                            #operator = "anyof",
-                            #options = lambda: \
-                            #    self.stats_year_options("project_activity"),
-                            options = project_activity_year_options,
-                            ),
-            )
+
+        if settings.get_project_activity_filter_year():
+            filter_widgets.append(
+                S3OptionsFilter("year",
+                                label = T("Year"),
+                                #operator = "anyof",
+                                #options = lambda: \
+                                #    self.stats_year_options("project_activity"),
+                                options = project_activity_year_options,
+                                ),
+                )
 
         if use_projects and settings.get_project_mode_drr():
             rappend(("project_id$hazard_project.hazard_id"))
@@ -1661,6 +1668,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         #
         # @ToDo: Split project_id & project_location_id to separate Link Tables
         #
+
         tablename = "project_beneficiary"
         define_table(tablename,
                      # Instance
@@ -1704,6 +1712,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                      s3_date("end_date",
                              #empty = False,
                              label = T("End Date"),
+                             start_field = "project_beneficiary_date",
+                             default_interval = 12,
                              ),
                      Field("year", "list:integer",
                            compute = lambda row: \
@@ -2258,6 +2268,8 @@ class S3ProjectCampaignModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "project_campaign_response_summary_date",
+                             default_interval = 1,
                              #empty = False,
                              ),
                      s3_comments(),

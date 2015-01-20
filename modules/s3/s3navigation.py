@@ -2,7 +2,7 @@
 
 """ S3 Navigation Module
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -254,15 +254,65 @@ class S3NavigationItem(object):
         self.check = check
 
         # Set the renderer (override with set_layout())
+        renderer = None
         if layout is not None:
-            # Custom renderer
-            self.renderer = layout
-        elif hasattr(self.__class__, "layout"):
-            # Class default layout
-            self.renderer = self.layout
+            # Custom layout for this particular instance
+            renderer = layout
+        elif hasattr(self.__class__, "OVERRIDE"):
+            # Theme layout
+            renderer = self.get_layout(self.OVERRIDE)
+        if renderer is None and hasattr(self.__class__, "layout"):
+            # Default layout
+            renderer = self.layout
+        self.renderer = renderer
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_layout(name):
+        """
+            Check whether the current theme has a custom layout for this
+            class, and if so, store it in current.layouts
+
+            @param: the name of the custom layout
+            @return: the layout or None if not present
+        """
+
+        if hasattr(current, "layouts"):
+            layouts = current.layouts
         else:
-            # No renderer
-            self.renderer = None
+            layouts = {}
+        if layouts is False:
+            return None
+        if name in layouts:
+            return layouts[name]
+
+        # Try to find custom layout in theme
+        application = current.request.application
+        settings = current.deployment_settings
+        theme = settings.get_theme()
+        template_location = settings.get_template_location()
+        package = "applications.%s.%s.templates.%s.layouts" % \
+                  (application, template_location, theme)
+        try:
+            override = getattr(__import__(package, fromlist=[name]), name)
+        except ImportError:
+            # No layouts in theme - no point to try again
+            current.layouts = False
+            return None
+        except AttributeError:
+            override = None
+
+        if override and \
+           hasattr(override, "layout") and \
+           type(override.layout) == type(lambda:None):
+            layout = override.layout
+        else:
+            layout = None
+
+        layouts[name] = layout
+        current.layouts = layouts
+
+        return layout
 
     # -------------------------------------------------------------------------
     def clone(self):

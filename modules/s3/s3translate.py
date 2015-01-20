@@ -2,7 +2,7 @@
 
 """ Translation API
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -67,7 +67,7 @@ class TranslateAPI:
             files, modules and strings individually
         """
 
-        core_modules = ["auth", "default", "errors", "appadmin"]
+        core_modules = ("auth", "default", "errors", "appadmin")
 
         def __init__(self):
 
@@ -189,10 +189,6 @@ class TranslateGetFiles:
             self.d = d
             self.modlist = modlist
 
-            # Directories which are not required to be searched
-            self.rest_dirs = ["languages", "docs", "tests",
-                              "test", ".git", "uploads", "private"]
-
         # ---------------------------------------------------------------------
         @staticmethod
         def get_module_list(dir):
@@ -224,13 +220,19 @@ class TranslateGetFiles:
                 Recursive function to group Eden files into respective modules
             """
 
-            appname = current.request.application
-
             path = os.path
             currentDir = path.abspath(currentDir)
             base_dir = path.basename(currentDir)
 
-            if base_dir in self.rest_dirs:
+            if base_dir in (".git", 
+                            "docs",
+                            "languages",
+                            "private",
+                            "templates", # Added separately
+                            "tests",
+                            "uploads",
+                            ):
+                # Skip
                 return
 
             # If current directory is '/views', set vflag
@@ -260,7 +262,11 @@ class TranslateGetFiles:
 
                     # Categorize file as "special" as it contains strings
                     # belonging to various modules
-                    elif f in ("s3menus.py", "s3cfg.py", "000_config.py", "config.py"):
+                    elif f in ("s3menus.py",
+                               "s3cfg.py",
+                               "000_config.py",
+                               "config.py",
+                               "menus.py"):
                         base = "special"
                     else:
                         # Remove extension ('.py')
@@ -814,7 +820,7 @@ class TranslateReadFiles:
             path = os.path
             # If all templates flag is set we look in all templates' tasks.cfg file
             if all_template_flag:
-                template_dir = path.join(base_dir, "private", "templates")
+                template_dir = path.join(base_dir, "modules", "templates")
                 files = os.listdir(template_dir)
                 # template_list will have the list of all templates
                 for f in files:
@@ -831,7 +837,7 @@ class TranslateReadFiles:
             S = Strings()
             read_csv = S.read_csv
             for template in template_list:
-                pth = path.join(base_dir, "private", "templates", template)
+                pth = path.join(base_dir, "modules", "templates", template)
                 if path.exists(path.join(pth, "tasks.cfg")) == False:
                     continue
                 bi.load_descriptor(pth)
@@ -1002,17 +1008,17 @@ class Strings:
 
             if all_template_flag == 1:
                 # Select All Templates
-                A.grp.group_files(os.path.join(request.folder, "private", "templates"))
+                A.grp.group_files(os.path.join(request.folder, "modules", "templates"))
             else:
                 # A specific template is selected
-                template_folder = os.path.join(request.folder, "private", "templates", settings.get_template())
+                template_folder = os.path.join(request.folder, "modules", "templates", settings.get_template())
                 A.grp.group_files(template_folder)
             R = TranslateReadFiles()
 
             # Select Modules
 
             # Core Modules are always included
-            core_modules = ["auth", "default"]
+            core_modules = ("auth", "default")
             for mod in core_modules:
                 modlist.append(mod)
 
@@ -1126,7 +1132,7 @@ class Strings:
             # Quote all the elements while writing
             transWriter = csv.writer(f, delimiter=" ",
                                      quotechar='"', quoting = csv.QUOTE_ALL)
-            transWriter.writerow(["location", "source", "target"])
+            transWriter.writerow(("location", "source", "target"))
             for row in data:
                 transWriter.writerow(row)
 

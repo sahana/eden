@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -719,7 +719,7 @@ class S3Merge(S3Method):
                 #inp = widgets.upload.widget(field, value,
                                             #download_url=download_url, **attr)
         elif field.widget:
-            if isinstance(field.widget, (S3LocationSelector, S3LocationSelectorWidget)):
+            if isinstance(field.widget, S3LocationSelectorWidget):
                 # Workaround - location selector does not support
                 # renaming of the fields => switch to dropdown
                 level = None

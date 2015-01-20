@@ -30,6 +30,12 @@
   border: 1px solid #CCC;
 }
 
+.widget-container #list-btn-add {
+  margin-bottom: 0;
+  position: relative;
+  top: 1.0rem;
+}
+
 /* Links should ALWAYS be unvisited */
 #content a.help:link {
   color: #fff;
@@ -100,6 +106,12 @@ form .action-lnk {
 }
 form table.embeddedComponent {
   border-collapse: separate;
+}
+form .inline-open-add {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  margin-left: 0;
+  margin-top: -1.25rem;
 }
 form.auth_login #submit_record__row {
   white-space: pre;
@@ -173,8 +185,8 @@ select {
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date) {
-  width: 500px !important;
+.form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
+  width: 20rem !important;
 }
 
 .item-container .controls {
@@ -210,6 +222,7 @@ select {
 .inline-tooltip .stickytip,
 .inline-tooltip .ajaxtip {
   display: block;
+  margin-top: 10px;
   padding: 0;
   width: 60px;
 }
@@ -594,6 +607,11 @@ table.dataTable .selected-action {
   border-color: #ADA6A0;
 }
 
+#list-btn-add {
+  float: right;
+  margin-right: 1.0rem;
+}
+
 /* Summary tabs */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
@@ -661,7 +679,12 @@ input.date.hasDatepicker {
   padding: 0.3em;
 }
 
-/* Miscellaneous */
+/* Iframe Map (Location Represent links) */
+#close-iframe-map {
+  padding: 7px;
+  margin-top: 5px;
+}
+
 /* Homepage hacks */
 #login_form,
 #register_form,
@@ -670,7 +693,8 @@ input.date.hasDatepicker {
 }
 
 .button-home {
-  width: 135px;
+  width: 205px;
+  height: 45px;
   padding-left: 1rem;
   padding-right: 1rem;
 }

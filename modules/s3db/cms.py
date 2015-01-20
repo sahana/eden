@@ -2,7 +2,7 @@
 
 """ Sahana Eden Content Management System Model
 
-    @copyright: 2012-2014 (c) Sahana Software Foundation
+    @copyright: 2012-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1088,7 +1088,7 @@ class S3CMS(S3Method):
         request = current.request
         module = request.controller
         resource = request.function
-        
+
         return self.resource_content(module, resource, widget_id)
 
     # -------------------------------------------------------------------------
@@ -1205,7 +1205,9 @@ def cms_customise_post_fields():
     if org_group_field:
         lappend(org_group_field)
 
-    lappend("document.file")
+    if settings.get_cms_show_attachments():
+        lappend("document.file")
+
     if settings.get_cms_show_links():
         lappend("document.url")
 
@@ -1256,7 +1258,7 @@ S3.redraw_fns.push('tagit')''' % (URL(c="cms", f="tag",
                    )
 
     return table
-    
+
 # =============================================================================
 def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     """
@@ -1304,7 +1306,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                     ]
     else:
         subtitle = []
-        
+
     for event_resource in ["event", "incident"]:
         label = record["event_post.%s_id" % event_resource]
         if label and label != NONE:
@@ -1357,7 +1359,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
 
     person = ""
     contact_field = settings.get_cms_person()
-    if contact_field == "created_by": 
+    if contact_field == "created_by":
         author_id = raw["cms_post.created_by"]
         person = record["cms_post.created_by"]
 
@@ -1605,15 +1607,15 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     if links:
         if not isinstance(links, list):
             links = [links]
-        link_list = DIV()
+        link_list = DIV(_class="media card-links")
         for link in links:
-            link_item = DIV(A(I(_class="icon-globe"),
-                              " ",
-                              link,
-                              _href=link,
-                              _target="_blank",
-                              ),
-                            )
+            link_item = A(I(_class="icon-globe"),
+                          " ",
+                          link,
+                          _href=link,
+                          _target="_blank",
+                          _class="card-link",
+                          )
             link_list.append(link_item)
     else:
         link_list = ""
@@ -1642,7 +1644,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             card_label = TAG[""](I(_class="icon icon-%s" % icon),
                                  series_title)
         # Type cards
-        if series == "Alert": 
+        if series == "Alert":
             # Apply additional highlighting for Alerts
             item_class = "%s disaster" % item_class
 

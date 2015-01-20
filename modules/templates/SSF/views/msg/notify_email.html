@@ -1,0 +1,14 @@
+{{title="%s: %s" % (systemname_short, current.T("Task Notifications"))}}
+{{=XML(title)}}
+{{="=" * len(title)}}
+{{=XML(config)}}
+{{if new is not None:}}
+{{for record in new_records:}}
+{{="-" * 80}}
+{{for label, value in record:}}
+  {{=XML(label)}}: {{=XML(value)}}{{pass}}{{pass}}{{pass}}
+{{if upd is not None:}}
+{{for record in upd_records:}}
+{{="-" * 80}}
+{{for label, value in record:}}
+  {{=XML(label)}}: {{=XML(value)}}{{pass}}{{pass}}{{pass}}

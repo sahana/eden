@@ -2,7 +2,7 @@
 
 """ Sahana Eden GUI Layouts (HTML Renderers)
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -31,11 +31,11 @@
 """
 
 __all__ = ("S3MainMenuDefaultLayout",
+           "MM",
            "S3OptionsMenuDefaultLayout",
+           "M",
            "S3MenuSeparatorDefaultLayout",
-           "S3MainMenuLayout", "MM",
-           "S3OptionsMenuLayout", "M",
-           "S3MenuSeparatorLayout", "SEP",
+           "SEP",
            "S3BreadcrumbsLayout",
            "S3AddResourceLink",
            "homepage",
@@ -48,6 +48,10 @@ from s3theme import NAV, SECTION
 # =============================================================================
 class S3MainMenuDefaultLayout(S3NavigationItem):
     """ Application Main Menu Layout """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3MainMenuLayout"
 
     @staticmethod
     def layout(item):
@@ -113,7 +117,7 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         # Submenu item
                         if isinstance(item.label, dict):
                             if "id" in item.label:
-                                return S3MainMenuLayout.checkbox_item(item)
+                                return S3MainMenuDefaultLayout.checkbox_item(item)
                             elif "name" in item.label:
                                 label = item.label["name"]
                             else:
@@ -212,6 +216,10 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
 class S3OptionsMenuDefaultLayout(S3NavigationItem):
     """ Controller Options Menu Layout """
 
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3OptionsMenuLayout"
+
     @staticmethod
     def layout(item):
         """ Layout Method (Item Renderer) """
@@ -228,6 +236,12 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
             if item.parent is not None:
                 if item.enabled and item.authorized:
 
+                    attr = dict(_id = item.attr._id)
+                    if item.attr._onclick:
+                        attr["_onclick"] = item.attr._onclick
+                    else:
+                        attr["_href"] = item.url()
+
                     if item.components:
                         # Submenu
                         _class = ""
@@ -235,8 +249,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                             _class = "active"
 
                         section = [LI(A(item.label,
-                                        _href=item.url(),
-                                        _id=item.attr._id,
+                                        **attr
                                         ),
                                       _class="heading %s" % _class,
                                       ),
@@ -255,8 +268,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                             _class = ""
 
                         return LI(A(item.label,
-                                    _href=item.url(),
-                                    _id=item.attr._id,
+                                    **attr
                                     ),
                                   _class=_class,
                                   )
@@ -272,6 +284,10 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
 class S3MenuSeparatorDefaultLayout(S3NavigationItem):
     """ Simple menu separator """
 
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3MenuSeparatorLayout"
+
     @staticmethod
     def layout(item):
         """ Layout Method (Item Renderer) """
@@ -284,32 +300,9 @@ class S3MenuSeparatorDefaultLayout(S3NavigationItem):
 # =============================================================================
 # Import menu layouts from template (if present)
 #
-S3MainMenuLayout = S3MainMenuDefaultLayout
-S3OptionsMenuLayout = S3OptionsMenuDefaultLayout
-S3MenuSeparatorLayout = S3MenuSeparatorDefaultLayout
-
-application = current.request.application
-theme = current.deployment_settings.get_theme()
-
-layouts = "applications.%s.private.templates.%s.layouts" % (application, theme)
-try:
-    exec("import %s as deployment_layouts" % layouts)
-except:
-    pass
-else:
-    if "S3MainMenuLayout" in deployment_layouts.__dict__:
-        S3MainMenuLayout = deployment_layouts.S3MainMenuLayout
-    if "S3OptionsMenuLayout" in deployment_layouts.__dict__:
-        S3OptionsMenuLayout = deployment_layouts.S3OptionsMenuLayout
-    if "S3MenuSeparatorLayout" in deployment_layouts.__dict__:
-        S3MenuSeparatorLayout = deployment_layouts.S3MenuSeparatorLayout
-
-# =============================================================================
-# Shortcuts for menu construction
-#
-M = S3OptionsMenuLayout
-MM = S3MainMenuLayout
-SEP = S3MenuSeparatorLayout
+MM = S3MainMenuDefaultLayout
+M = S3OptionsMenuDefaultLayout
+SEP = S3MenuSeparatorDefaultLayout
 
 # =============================================================================
 class S3BreadcrumbsLayout(S3NavigationItem):
@@ -327,6 +320,84 @@ class S3BreadcrumbsLayout(S3NavigationItem):
             else:
                 _class = "ancestor"
             return LI(A(item.label, _href=item.url(), _class=_class))
+
+# =============================================================================
+class S3HomepageMenuLayout(S3NavigationItem):
+    """
+        Layout for homepage menu
+
+        @todo: better design, robust/responsive CSS, utilize Foundation!
+    """
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized and not item.opts.always_display:
+            item.enabled = False
+            item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = True
+            item.visible = True
+
+        if item.enabled and item.visible:
+            items = item.render_components()
+            if item.parent is None:
+                # Top level (menu box)
+                arrow = "/%s/static/img/arrow_blue_right.png" % current.request.application
+                components = []
+                append = components.append
+                number_of_links = 0
+                for submenu in items:
+                    append(submenu)
+                    if item.opts.arrows:
+                        append(DIV(IMG(_src=arrow), _class="div_arrow"))
+                    number_of_links += len(submenu.elements("a"))
+
+                if not number_of_links:
+                    # Hide the entire menu if it doesn't contain any links
+                    return None
+                elif item.label:
+                    components.insert(0, H3(item.label))
+                if item.opts.arrows:
+                    # Remove the last arrow
+                    components = components[:-1]
+                menu = DIV(TAG[""](components),
+                           _id = item.attr._id,
+                           _class = item.attr._class,
+                           )
+                menu.add_class("menu_box")
+                return menu
+            else:
+                if item.components:
+                    # Branch node (submenu, menu div)
+                    _class = item.attr._class
+                    if not _class:
+                        _class = "menu_div"
+                    return DIV(H3(item.label),
+                               TAG[""](items),
+                               _id = item.attr._id,
+                               _class=_class,
+                               )
+                else:
+                    # Leaf node (menu item)
+                    if item.opts.icon:
+                        # Icon-type item
+                        return A(IMG(_src=item.opts.icon),
+                                 _href=item.url(),
+                                 _title=item.label,
+                                 )
+                    else:
+                        # Button-type item
+                        return A(DIV(item.label,
+                                     _class="menu-btn-r",
+                                     ),
+                                 _class="menu-btn-l",
+                                 _href=item.url(),
+                                 )
+        else:
+            return None
 
 # =============================================================================
 class S3AddResourceLink(S3NavigationItem):
@@ -445,7 +516,7 @@ def homepage(module=None, *match, **attr):
     settings = current.deployment_settings
     all_modules = settings.modules
 
-    layout = S3MainMenuLayout
+    layout = S3MainMenuDefaultLayout
     c = [module] + list(match)
 
     if "name" in attr:

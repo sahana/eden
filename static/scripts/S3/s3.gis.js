@@ -143,15 +143,31 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         $.when(layersLoaded(map_id)).then(
             function(status) {
                 // Success:
+                s3_debug(status);
                 // - check that Tiles are Loaded
                 $.when(tilesLoaded(S3.gis.maps[map_id].baseLayer)).then(
                     function(status) {
                         // Success
+                        s3_debug(status);
                         // Hide Throbber
                         hideThrobber(null, map);
                         // Set a flag to show that we've completed loading
                         // - used by gis.get_screenshot()
-                        map.s3.loaded = true;
+                        // NB: Even after all tiles are loaded, they may still
+                        //     be in the drawing queue hence invisible - wait
+                        //     until the tile manager has unqueued them all
+                        setTimeout(function drawing() {
+                            try {
+                                if (map.tileManager.tileQueue[map.id].length) {
+                                    setTimeout(drawing, 250);
+                                } else {
+                                    map.s3.loaded = true;
+                                }
+                            } catch(e) {
+                                // What? No tile queue? Well, then we have to... :/
+                                setTimeout(function() {map.s3.loaded = true}, 50000);
+                            }
+                        }, 1);
                     },
                     function(status) {
                         // Failed
@@ -188,7 +204,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         // Test every half-second
         setTimeout(function working() {
             if (layers_loading.length == 0) {
-                dfd.resolve('loaded');
+                dfd.resolve('Layers loaded');
             } else if (dfd.state() === 'pending') {
                 // Notify progress
                 dfd.notify('waiting for Layers to load...');
@@ -207,25 +223,27 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
      * Check that all Layer Tiles are Loaded
      */
     var tilesLoaded = function(layer) {
+
         if (undefined == layer.numLoadingTiles) {
             return true;
         }
 
         var dfd = new jQuery.Deferred();
 
-        // Test every half-second
-        setTimeout(function working() {
+        // NB: numLoadingTiles is incremented/decremented individually per each
+        //     asynchronously loading tile - thus it is 0 both before /and/ after
+        //     tile loading, and sometimes even in between when loading is very
+        //     fast - so we must wait for loadend before checking, otherwise the
+        //     dfd will be resolved instantly with not a single tile loaded yet ;)
+        layer.events.register('loadend', '', function() {
             if (layer.numLoadingTiles == 0) {
-                dfd.resolve('loaded');
+                dfd.resolve('Tiles loaded');
             } else if (dfd.state() === 'pending') {
-                // Notify progress
-                dfd.notify('waiting for Tiles to load...');
-                // Loop
-                setTimeout(working, 250);
+                dfd.reject('Tile loading failed');
             } else {
                 // Failed!?
             }
-        }, 1);
+        });
 
         // Return the Promise so caller can't change the Deferred
         return dfd.promise();
@@ -243,12 +261,12 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             lat_max = bbox[3];
         // Ensure a minimal BBOX in case we just have a single data point
         var min_size = minBBOX || 0.05;
-        var delta = (min_size - (lon_max - lon_min)) / 2;
+        var delta = (min_size - Math.abs(lon_max - lon_min)) / 2;
         if (delta > 0) {
             lon_min -= delta;
             lon_max += delta;
         }
-        delta = (min_size - (lat_max - lat_min)) / 2;
+        delta = (min_size - Math.abs(lat_max - lat_min)) / 2;
         if (delta > 0) {
             lat_min -= delta;
             lat_max += delta;
@@ -3591,6 +3609,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                     contents += '<li>' + name + '</li>';
                 }
             }
+            popup_url = null;
             contents += '</ul>';
             contents += "<div align='center'><a href='javascript:S3.gis.zoomToSelectedFeature(" + "\"" + map_id + "\", " + centerPoint.lon + "," + centerPoint.lat + ", 3)'>" + i18n.gis_zoomin + '</a></div>';
         } else {
@@ -5146,25 +5165,91 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Print button on Toolbar to save a screenshot
     var addPrintButton = function(toolbar) {
         // Toolbar Button
+        var map = toolbar.map;
+        var map_id = map.s3.id;
         var printButton = new Ext.Button({
             iconCls: 'print',
-            tooltip: i18n.gis_print,
-            handler: function() {
-                // Save the configuration to a temporary config
-                var config_id = saveConfig(toolbar.map, true);
-                // Take the screenshot
-                var url = S3.Ap.concat('/gis/screenshot/') + config_id;
-                window.open(url);
-                /*$.ajaxS3({
-                    //async: false,
-                    url: url,
-                    //dataType : 'json',
-                    success: function(data, status) {
-                        // Open the screenshot in a new tab
-
-                    }
-                });*/
+            tooltip: i18n.gis_print_tip,
+            menu: {
+                xtype: 'menu',
+                plain: true,
+                items: [{
+                    xtype: 'form',
+                    bodyPadding: 5,
+                    items: [{
+                        xtype: 'combo',
+                        allowBlank: false,
+                        displayField: 'label',
+                        fieldLabel: i18n.gis_paper_size,
+                        getListParent: function() {
+                            return this.el.up('.x-menu');
+                        },
+                        hiddenName: 'size',
+                        id: map_id + '_paper_size',
+                        lazyInit: false,
+                        mode: 'local',
+                        selectOnFocus: true,
+                        store: new Ext.data.ArrayStore({
+                            id: 0,
+                            fields: [
+                                'size',
+                                'label'
+                            ],
+                            // @ToDo: Make configurable
+                            data: [
+                                   ['Letter', 'Letter (2550 x 3300)'], // 612 x 792 @ 72ppi
+                                   ['A4', 'A4 (2480 x 3508)'],         // 595 x 842 @ 72ppi
+                                   ['A3', 'A3 (3508 x 4962)'],         // 842 x 1191 @ 72ppi
+                                   ['A2', 'A2 (4962 x 7017)'],         // 1191 x 1684 @ 72ppi
+                                   ['A1', 'A1 (7017 x 9933)'],         // 1684 x 2384 @ 72ppi
+                                   ['A0', 'A0 (9933 x 14061)']         // 2384 x 3375 @ 72ppi
+                                   ]
+                        }),
+                        triggerAction: 'all',
+                        typeAhead: true,
+                        // @ToDo: Make configurable
+                        value: 'Letter',
+                        valueField: 'size'
+                    }, {
+                        xtype: 'button',
+                        text: i18n.gis_print,
+                        handler: function() {
+                            // Save the configuration to a temporary config
+                            // Modify the zoom so that the viewport covers the same area
+                            var size = $('#x-form-el-' + map_id + '_paper_size input[name="size"]').val();
+                            if (size == 'Letter') {
+                                var height = 2550; // 612 for 72ppi
+                                var width = 3300;  // 792 for 72ppi
+                            } else if (size == 'A4') {
+                                var height = 2480; // 595 for 72ppi
+                                var width = 3508;  // 842 for 72ppi
+                            } else if (size == 'A3') {
+                                var height = 3508; // 842 for 72ppi
+                                var width = 4962;  // 1191 for 72ppi
+                            } else if (size == 'A2') {
+                                var height = 4962; // 1191 for 72ppi
+                                var width = 7017;  // 1684 for 72ppi
+                            } else if (size == 'A1') {
+                                var height = 7017; // 1684 for 72ppi
+                                var width = 9933;  // 2384 for 72ppi
+                            } else if (size == 'A0') {
+                                var height = 9933; // 2384 for 72ppi
+                                var width = 14061; // 3375 for 72ppi
+                            }
+                            var extent = map.getExtent();
+                            var viewSize = new OpenLayers.Size(width, height);
+                            var idealResolution = Math.max( extent.getWidth()  / viewSize.w,
+                                                            extent.getHeight() / viewSize.h );
+                            var zoom = map.baseLayer.getZoomForResolution(idealResolution);
+                            var config_id = saveConfig(map, true, zoom);
+                            // Take the screenshot
+                            var url = S3.Ap.concat('/gis/screenshot/' + config_id + '?size=' + size);
+                            window.open(url);
+                        }
+                    }]
+                }]
             }
+
         });
         toolbar.addButton(printButton);
     };
@@ -5299,7 +5384,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     };
 
     // Save the Config (used by both Toolbar & Floating DIV)
-    var saveConfig = function(map, temp) {
+    var saveConfig = function(map, temp, zoom) {
         var s3 = map.s3;
         var map_id = s3.id;
         // Show Throbber
@@ -5314,7 +5399,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var json_data = {
             lat: state.lat,
             lon: state.lon,
-            zoom: state.zoom,
+            zoom: zoom || state.zoom,
             layers: layersStr,
             plugins: pluginsStr
         }

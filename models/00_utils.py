@@ -51,30 +51,36 @@ S3OptionsMenu = default_menus.S3OptionsMenu
 
 current.menu = Storage(options=None, override={})
 if auth.permission.format in ("html"):
+
     menus = None
     theme = settings.get_theme()
+    location = settings.get_template_location()
+    package = "applications.%s.%s.templates.%%s.menus" % (appname, location)
     if theme != "default":
-        # If there is a custom Theme, then attempot to load a custom menu from it
-        menus = "applications.%s.private.templates.%s.menus" % \
-                (appname, theme)
+        # Custom theme => try loading menus from theme
+        menus = package % theme
     else:
         template = settings.get_template()
         if template != "default":
-            # If there is a custom Template, then attempt to load a custom menu from it
-            menus = "applications.%s.private.templates.%s.menus" % \
-                    (appname, template)
+            # Custom template => try loading menus from template
+            menus = package % template
+
     if menus:
         try:
-            exec("import %s as deployment_menus" % menus)
+            deployment_menus = __import__(menus,
+                                          fromlist=["S3MainMenu",
+                                                    "S3OptionsMenu",
+                                                    ],
+                                          )
         except ImportError:
             pass
         else:
-            if "S3MainMenu" in deployment_menus.__dict__:
+            if hasattr(deployment_menus, "S3MainMenu"):
                 S3MainMenu = deployment_menus.S3MainMenu
-
-            if "S3OptionsMenu" in deployment_menus.__dict__:
+            if hasattr(deployment_menus, "S3OptionsMenu"):
                 S3OptionsMenu = deployment_menus.S3OptionsMenu
 
+    # Instantiate main menu
     main = S3MainMenu.menu()
 else:
     main = None

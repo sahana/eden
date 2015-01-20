@@ -35,8 +35,9 @@ if theme != "default":
                  #"timeplot.html",
                  "update.html",
                  ]:
-        if exists(join(folder, "private", "templates", theme, "views", "_%s" % view)):
-            views[view] = "../private/templates/%s/views/_%s" % (theme, view)
+        location = current.deployment_settings.get_template_location()
+        if exists(join(folder, location, "templates", theme, "views", "_%s" % view)):
+            views[view] = "../%s/templates/%s/views/_%s" % (location, theme, view)
 
 def apath(path="", r=None):
     """

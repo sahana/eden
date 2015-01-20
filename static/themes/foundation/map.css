@@ -6,6 +6,9 @@
     border: none;
     margin-bottom: 0;
 }
+.map_wrapper table tr:nth-of-type(2n) {
+    background-color: inherit;
+}
 .map_wrapper table tr th,
 .map_wrapper table tr td {
     color: inherit;
@@ -15,6 +18,12 @@
 .map_wrapper input[type="text"],
 .map_wrapper input[type="checkbox"],
 .map_wrapper input[type="radio"] {
+    margin: 0;
+    padding: 0;
+}
+.x-form-element input[type="text"] {
+    display: inline;
+    font-size: inherit;
     margin: 0;
     padding: 0;
 }

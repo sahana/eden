@@ -2,7 +2,7 @@
 
 """ Sahana Eden Menu Structure and Layout
 
-    @copyright: 2011-2014 (c) Sahana Software Foundation
+    @copyright: 2011-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -465,9 +465,16 @@ class S3OptionsMenu(object):
         """ ASSET Controller """
 
         ADMIN = current.session.s3.system_roles.ADMIN
+        telephones = lambda i: current.deployment_settings.get_asset_telephones()
 
         return M(c="asset")(
                     M("Assets", f="asset", m="summary")(
+                        M("Create", m="create"),
+                        #M("Map", m="map"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Telephones", f="telephone", m="summary",
+                      check=telephones)(
                         M("Create", m="create"),
                         #M("Map", m="map"),
                         M("Import", m="import", p="create"),
@@ -612,6 +619,25 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def dc():
+        """ Data Collection Tool """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="dc")(
+                    M("Templates", f="template")(
+                        M("Create", m="create"),
+                    ),
+                    M("Questions", f="question")(
+                        M("Create", m="create"),
+                    ),
+                    M("Data Collections", f="collection")(
+                        M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def delphi():
         """ DELPHI / Delphi Decision Maker """
 
@@ -680,7 +706,7 @@ class S3OptionsMenu(object):
                     M("Cases",
                       c="disease", f="case", m="summary")(
                         M("Create", m="create"),
-                        M("Watch List", m="summary", 
+                        M("Watch List", m="summary",
                           vars={"~.monitoring_level__belongs": "OBSERVATION,DIAGNOSTICS"}),
                     ),
                     M("Contact Tracing",
@@ -1413,7 +1439,7 @@ class S3OptionsMenu(object):
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
-                        M("Create Organization", m="create"),
+                        M("Create", m="create"),
                         M("Import", m="import")
                     ),
                     M("Offices", f="office")(
@@ -1620,15 +1646,26 @@ class S3OptionsMenu(object):
         """ REQ / Request Management """
 
         ADMIN = current.session.s3.system_roles.ADMIN
-
         settings = current.deployment_settings
+        types = settings.get_req_req_type()
+        if len(types) == 1:
+            t = types[0]
+            if t == "Stock":
+                create_menu = M("Create", m="create", vars={"type": 1})
+            elif t == "People":
+                create_menu = M("Create", m="create", vars={"type": 2})
+            else:
+                create_menu = M("Create", m="create")
+        else:
+            create_menu = M("Create", m="create")
+
         use_commit = lambda i: settings.get_req_use_commit()
-        req_items = lambda i: "Stock" in settings.get_req_req_type()
-        req_skills = lambda i: "People" in settings.get_req_req_type()
+        req_items = lambda i: "Stock" in types
+        req_skills = lambda i: "People" in types
 
         return M(c="req")(
                     M("Requests", f="req")(
-                        M("Create", m="create"),
+                        create_menu,
                         M("List Recurring Requests", f="req_template"),
                         M("Map", m="map"),
                         M("Report", m="report"),

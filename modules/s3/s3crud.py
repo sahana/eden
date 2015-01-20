@@ -7,7 +7,7 @@
     @requires: U{B{I{gluon}} <http://web2py.com>}
     @requires: U{B{I{lxml}} <http://codespeak.net/lxml>}
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1028,15 +1028,47 @@ class S3CRUD(S3Method):
 
         elif r.http == "DELETE" or \
              r.representation == "json" and r.http == "POST" and record_id:
-            # Delete the records and return a JSON message
-            numrows = self.resource.delete(format=r.representation)
+
+            numrows = None
+            resource = self.resource
+
+            recursive = r.get_vars.get("recursive", False)
+            if recursive and recursive.lower() in ("1", "true"):
+                # Try recursive deletion of the whole hierarchy branch
+                # => falls back to normal delete if no hierarchy configured
+                from s3hierarchy import S3Hierarchy
+                h = S3Hierarchy(resource.tablename)
+                if h.config:
+                    node_ids = None
+                    pkey = h.pkey
+                    if str(pkey) == str(resource._id):
+                        node_ids = [record_id]
+                    else:
+                        # Need to lookup the hierarchy node key
+                        query = (resource._id == record_id)
+                        row = current.db(query).select(pkey,
+                                                       limitby=(0, 1)).first()
+                        if row:
+                            node_ids = [row[pkey]]
+                    numrows = h.delete(node_ids) if node_ids else 0
+                    if not numrows:
+                        # Cascade failed, do not fall back
+                        # @todo: propagate the original error
+                        resource.error = current.T("Deletion failed")
+                        numrows = 0
+
+            if numrows is None:
+                # Delete the records and return a JSON message
+                numrows = self.resource.delete(format=r.representation)
+
             if numrows > 1:
                 message = "%s %s" % (numrows, current.T("records deleted"))
             elif numrows == 1:
                 message = self.crud_string(self.tablename,
                                            "msg_record_deleted")
             else:
-                r.error(404, self.resource.error, next=r.url(method=""))
+                r.error(404, resource.error, next=r.url(method=""))
+
             item = current.xml.json_message(message=message)
             current.response.view = "xml.html"
             output.update(item=item)
@@ -2100,7 +2132,9 @@ class S3CRUD(S3Method):
                 widget = field.widget
                 if isinstance(widget, S3Selector):
                     # Use widget-validator instead of field-validator
-                    value, error = widget.validate(value)
+                    value, error = widget.validate(value,
+                                                   requires=field.requires,
+                                                   )
                     validated["value"] = widget.serialize(value)
                     # Use widget-represent instead of standard represent
                     widget_represent = widget.represent

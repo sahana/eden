@@ -25,8 +25,7 @@ echo "=========================="
 # matplotlib, lxml take a lot of time to build. So, installing from binaries
 # numpy installed by default
 # apt-get install numpy
-apt-get install python-matplotlib python-lxml -q
-
+apt-get install python-matplotlib python-lxml python-shapely -q
 
 python tests/travis/generate_requirements_file.py tests/travis requirements.txt optional_requirements.txt
 pip install -q -r tests/travis/generated_requirements.txt
@@ -42,7 +41,7 @@ cp -r . ../../web2py/applications/eden
 cd ../../web2py/applications/eden
 chown -R ${USER} .
 
-cp private/templates/000_config.py models/000_config.py
+cp modules/templates/000_config.py models/000_config.py
 
 sed -ie 's|EDITING_CONFIG_FILE = False|EDITING_CONFIG_FILE = True|' models/000_config.py
 sed -ie 's|\#settings.base.prepopulate = ("default", "default/users")|settings.base.prepopulate = ("default", "default/users")|' models/000_config.py

@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1189,6 +1189,11 @@ def s3_date(name="date", **attr):
             default == "now" (in addition to usual meanings)
             past = x months
             future = x months
+            start_field = "selector" for start field
+            default_interval = x months from start date
+            default_explicit = Bool for explicit default
+
+        start_field and default_interval should be given together
 
         @ToDo: Different default field name in case we need to start supporting
                Oracle, where 'date' is a reserved word
@@ -1199,6 +1204,7 @@ def s3_date(name="date", **attr):
         del attr["past"]
     else:
         past = None
+
     if "future" in attr:
         future = attr["future"]
         del attr["future"]
@@ -1298,15 +1304,30 @@ def s3_date(name="date", **attr):
         else:
             # Default
             attr["requires"] = IS_EMPTY_OR(requires)
+
     if "widget" not in attr:
-        if past is None and future is None:
-            attr["widget"] = S3DateWidget()
-        elif past is None:
-            attr["widget"] = S3DateWidget(future=future)
-        elif future is None:
-            attr["widget"] = S3DateWidget(past=past)
-        else:
-            attr["widget"] = S3DateWidget(past=past, future=future)
+        # Widget Options
+        widget_option = {}
+
+        if "start_field" in attr:
+            widget_option["start_field"] = attr["start_field"]
+            del attr["start_field"]
+
+        if "default_interval" in attr:
+            widget_option["default_interval"] = attr["default_interval"]
+            del attr["default_interval"]
+
+        if "default_explicit" in attr:
+            widget_option["default_explicit"] = attr["default_explicit"]
+            del attr["default_explicit"]
+
+        if future:
+            widget_option["future"] = future
+
+        if past:
+            widget_option["past"] = past
+
+        attr["widget"] = S3DateWidget(**widget_option)
 
     f = S3ReusableField(name, "date", **attr)
     return f()

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Members Model
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -128,6 +128,7 @@ class S3MembersModel(S3Model):
         # ---------------------------------------------------------------------
         # Members
         #
+
         tablename = "member_membership"
         define_table(tablename,
                      organisation_id(
@@ -153,6 +154,8 @@ class S3MembersModel(S3Model):
                               ),
                       s3_date("end_date",
                               label = T("Date resigned"),
+                              start_field = "member_membership_start_date",
+                              default_interval = 12,
                               ),
                       Field("membership_fee", "double",
                             label = T("Membership Fee"),

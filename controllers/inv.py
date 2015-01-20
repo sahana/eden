@@ -375,9 +375,9 @@ def warehouse():
     csv_stylesheet = "%s.xsl" % resourcename
 
     output = s3_rest_controller(module, resourcename,
-                                hide_filter = {"inv_item": False,
-                                               "_default": True,
-                                              },
+                                #hide_filter = {"inv_item": False,
+                                #               "_default": True,
+                                #               },
                                 # Extra fields for CSV uploads:
                                 #csv_extra_fields = [
                                 #         dict(label="Organisation",

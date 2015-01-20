@@ -2,7 +2,7 @@
 
 """ S3 RESTful API
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1878,10 +1878,12 @@ class S3Method(object):
         exists = os.path.exists
         join = os.path.join
 
-        theme = current.deployment_settings.get_theme()
+        settings = current.deployment_settings
+        theme = settings.get_theme()
+        location = settings.get_template_location()
         if theme != "default":
             # See if there is a Custom View for this Theme
-            view = join(folder, "private", "templates", theme, "views",
+            view = join(folder, location, "templates", theme, "views",
                         "%s_%s_%s" % (prefix, r.name, default))
             if exists(view):
                 # There is a view specific to this page
@@ -1894,7 +1896,7 @@ class S3Method(object):
                 else:
                     subfolder = ""
                     _default = default
-                if exists(join(folder, "private", "templates", theme, "views",
+                if exists(join(folder, location, "templates", theme, "views",
                                subfolder, "_%s" % _default)):
                     # There is a general view for this page type
                     # NB This should not include {{extend layout.html}}
@@ -1902,9 +1904,10 @@ class S3Method(object):
                         subfolder = "%s/" % subfolder
                     # Pass this mapping to the View
                     current.response.s3.views[default] = \
-                        "../private/templates/%s/views/%s_%s" % (theme,
-                                                                 subfolder,
-                                                                 _default)
+                        "../%s/templates/%s/views/%s_%s" % (location,
+                                                            theme,
+                                                            subfolder,
+                                                            _default)
 
         if r.component:
             view = "%s_%s_%s" % (r.name, r.component_name, default)

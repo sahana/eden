@@ -1,0 +1,48 @@
+{{extend "layout.html"}}{{theme=response.s3.theme}}
+<div class='row home-intro'>
+ <h1 class='intro-hed'><span class='highlight'>{{=T("Sahana strengthens")}}</span><br><span class='highlight'>{{=T("disaster resilience") }}</span></h1>
+ <h4 class='intro-dek'><span class='highlight'>{{=T("Visualize your risks and resources")}},</span><br><span class='highlight'>{{=T("infrastructure and activities")}}</span></h4>
+ <a class='button large alert' href='/{{=appname}}/gis/index'>{{=T("Make a map")}}</a>
+</div>
+<div class='row home-levers'>
+ <div class='large-12 columns'>
+  <a class='button secondary small right' href='/{{=appname}}/cms/post/create'>{{=T("Share your story")}}</a>
+  <h2 class='row-title'>{{=T("Build your community's resilience")}}</h2>
+  <div class='row'>
+   <div class='large-3 medium-6 columns'>
+    <a href='/{{=appname}}/cms/post/datalist?$filter=tag_post.tag_id$name eq Education'><strong><span class='number'>1</span>{{=T("Education")}}</strong><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/resilience-education.jpg' alt='{{=T("Disaster Resilience Education")}}' width='260' height='150' /><figcaption>&ldquo;{{=T("Our community billboard gets over 30 postings per week!")}}&rdquo;</figcaption></a>
+   </div>        
+   <div class='large-3 medium-6 columns'>
+    <a href='/{{=appname}}/cms/post/datalist?$filter=tag_post.tag_id$name eq Partnerships'><strong><span class='number'>2</span>{{=T("Partnerships")}}</strong><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/resilience-partnerships.jpg' alt='{{=T("Disaster Resilience Partnerships")}}' width='260' height='150' /><figcaption>&ldquo;{{=T("Our schools, clinics, ports, and shops have all gotten to know each other.")}}&rdquo;</figcaption></a>
+   </div>
+   <div class='large-3 medium-6 columns'>
+    <a href='/{{=appname}}/cms/post/datalist?$filter=tag_post.tag_id$name eq Engagement'><strong><span class='number'>3</span>{{=T("Engagement")}}</strong><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/resilience-engagement.jpg' alt='{{=T("Disaster Resilience Engagement")}}' width='260' height='150' /><figcaption>&ldquo;{{=T("We've identified the people in our community who need special help.")}}&rdquo;</figcaption></a>
+   </div>        
+   <div class='large-3 medium-6 columns'>
+    <a href='/{{=appname}}/cms/post/datalist?$filter=tag_post.tag_id$name eq Self-sufficiency'><strong><span class='number'>4</span>{{=T("Self-sufficiency")}}</strong><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/resilience-self-sufficiency.jpg' alt='{{=T("Disaster Resilience Self-sufficiency")}}' width='260' height='150' /><figcaption>&ldquo;{{=T("We're holding monthly first aid trainings and CERT workshops.")}}&rdquo;</figcaption></a>
+   </div>        
+  </div>
+ </div>
+</div>
+<div class='row home-actions'>
+ <div class='medium-12 large-7 columns home-steps'>
+  <h2 class='row-title'><img class='steps-check' src='/{{=appname}}/static/themes/{{=theme}}/img/home/steps-check.png' alt='steps-check' width='54' height='46'>{{=T("Get it done")}}</h2>
+  <h5 class='diagram'>
+   <progress class='bar' id='progress-bar' min='1' max='100' value='0'></progress>
+   <a class='first' href='/{{=appname}}/gis/index'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-risks.png' alt='{{=T("See your risks")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("See your %(br)s risks") % dict(br = "<br>"))}}</a>
+   <a class='second' href='/{{=appname}}/gis/index?config={{=config_id}}'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-community.png' alt='{{=T("Know your community")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Know your %(br)s community") % dict(br = "<br>"))}}</a>
+   <a class='third' href='/{{=appname}}/org/organisation/summary'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-partners.png' alt='{{=T("Find new partners")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Find new %(br)s partners") % dict(br = "<br>"))}}</a>
+   <a class='fourth' href='/{{=appname}}/gis/config/datalist?~.pe_id__belongs={{=auth.user and auth.user.pe_id}}'><img src='/{{=appname}}/static/themes/{{=theme}}/img/home/step-maps.png' alt='{{=T("Share your maps")}}' width='100' height='100' /><i class='dot'></i>{{=XML(T("Share your %(br)s maps") % dict(br = "<br>"))}}</a>
+  </h5>
+ </div>     
+ <div class='medium-12 large-4 large-offset-1 columns home-activities'>
+  <h6>{{=T("Latest Activities")}}</h6>
+  <ul class='lined ellipsis'>
+  {{for a in latest_activities:}}
+   <li><a href='/{{=appname}}/project/activity/{{=a.id}}/read'>{{=a.name}} <small class='location'>{{=a.org_group}}, <time datetime='{{=a.date_iso}}'>{{=a.date}}</time></small></a></li>
+  {{pass}}
+  </ul>        
+  <a class='button tiny' href='/{{=appname}}/project/activity/summary'>{{=T("See all %(total)s") % dict(total=total_activities)}}</a>
+  <a class='button tiny secondary' href='/{{=appname}}/project/activity/create'>{{=T("Add Activity")}}</a>
+ </div>
+</div>

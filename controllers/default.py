@@ -69,45 +69,52 @@ def index():
     auth.configure_user_fields()
 
     page = request.args(0)
+    custom = None
     if page:
-        # Go to a custom page
-        # Arg 1 = function in /private/templates/<template>/controllers.py
-        # other Args & Vars passed through
-        controller = "applications.%s.private.templates.%s.controllers" % \
-                            (appname, settings.get_template())
+        # Go to a custom page,
+        # - args[0] = name of the class in /modules/templates/<template>/controllers.py
+        # - other args & vars passed through
+        template = settings.get_template()
+        location = settings.get_template_location()
+        package = "applications.%s.%s.templates.%s" % \
+                    (appname, location, template)
+        name = "controllers"
         try:
-            exec("import %s as custom" % controller)
-        except ImportError:
+            custom = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
             # No Custom Page available, continue with the default
-            page = "private/templates/%s/controllers.py" % \
-                        settings.get_template()
+            page = "%s/templates/%s/controllers.py" % (location, template)
             current.log.warning("File not loadable",
                                 "%s, %s" % (page, sys.exc_info()[1]))
         else:
             if "." in page:
-                # Remove extension
+                # Remove format extension
                 page = page.split(".", 1)[0]
-            if page in custom.__dict__:
-                exec ("output = custom.%s()()" % page)
-                return output
+            if hasattr(custom, page):
+                controller = getattr(custom, page)()
             elif page != "login":
                 raise(HTTP(404, "Function not found: %s()" % page))
             else:
-                output = custom.index()()
-                return output
+                controller = custom.index()
+            output = controller()
+            return output
+
     elif settings.get_template() != "default":
         # Try a Custom Homepage
-        controller = "applications.%s.private.templates.%s.controllers" % \
-                            (appname, settings.get_template())
+        package = "applications.%s.%s.templates.%s" % \
+                    (appname,
+                     settings.get_template_location(),
+                     settings.get_template())
+        name = "controllers"
         try:
-            exec("import %s as custom" % controller)
-        except ImportError:
+            custom = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
             # No Custom Page available, continue with the default
             # @ToDo: cache this result in session
             current.log.warning("Custom homepage cannot be loaded",
                                 sys.exc_info()[1])
         else:
-            if "index" in custom.__dict__:
+            if hasattr(custom, "index"):
                 output = custom.index()()
                 return output
 
@@ -137,76 +144,41 @@ def index():
     else:
         SHELTERS = ""
 
-    # Menu Boxes
-    menu_btns = [#div, label, app, function
-                 ["facility", T("Facilities"), "org", "facility"],
-                 ["facility", T("Hospitals"), "hms", "hospital"],
-                 ["facility", T("Offices"), "org", "office"],
-                 ["facility", SHELTERS, "cr", "shelter"],
-                 ["facility", T("Warehouses"), "inv", "warehouse"],
-                 ["sit", T("Staff"), "hrm", "staff"],
-                 ["sit", T("Volunteers"), "vol", "volunteer"],
-                 ["sit", T("Incidents"), "irs", "ireport"],
-                 ["sit", T("Assessments"), "survey", "series"],
-                 ["sit", T("Assets"), "asset", "asset"],
-                 ["sit", T("Inventory Items"), "inv", "inv_item"],
-                 #["dec", T("Gap Map"), "project", "gap_map"],
-                 #["dec", T("Gap Report"), "project", "gap_report"],
-                 ["dec", T("Requests"), "req", "req"],
-                 ["res", T("Projects"), "project", "project"],
-                 ["res", T("Commitments"), "req", "commit"],
-                 ["res", T("Sent Shipments"), "inv", "send"],
-                 ["res", T("Received Shipments"), "inv", "recv"],
-                ]
+    # Menu boxes
+    from s3layouts import S3HomepageMenuLayout as HM
 
-    # Change to (Mitigation)/Preparedness/Response/Recovery?
-    menu_divs = {"facility": DIV(H3(T("Facilities")),
-                                 _id = "facility_box",
-                                 _class = "menu_box",
-                                 ),
-                 "sit": DIV(H3(T("Situation")),
-                            _id = "menu_div_sit",
-                            _class = "menu_div",
-                            ),
-                 "dec": DIV(H3(T("Decision")),
-                            _id = "menu_div_dec",
-                            _class = "menu_div",
-                            ),
-                 "res": DIV(H3(T("Response")),
-                            _id = "menu_div_res",
-                            _class = "menu_div",
-                            ),
-                 }
+    sit_dec_res_box = HM(_class="fleft swidth", arrows=True)(
+        HM("Situation")(
+            HM("Staff", c="hrm", f="staff", t="hrm_human_resource"),
+            HM("Volunteers", c="vol", f="volunteer", t="hrm_human_resource"),
+            HM("Incidents", c="event", f="incident_report"),
+            HM("Assessments", c="survey", f="series"),
+            HM("Assets", c="asset", f="asset"),
+            HM("Inventory Items", c="inv", f="inv_item"),
+        ),
+        HM("Decision")(
+            #HM("Gap Map", c="project", f="gap_map"),
+            #HM("Gap Report", c="project", f="gap_report"),
+            HM("Requests", c="req", f="req"),
+        ),
+        HM("Response")(
+            HM("Projects", c="project", f="project"),
+            HM("Commitments", c="req", f="commit"),
+            HM("Sent Shipments", c="inv", f="send"),
+            HM("Received Shipments", c="inv", f="recv"),
+        ),
+    )
 
-    for div, label, app, function in menu_btns:
-        if has_module(app):
-            # @ToDo: Also check permissions (e.g. for anonymous users)
-            menu_divs[div].append(A(DIV(label,
-                                        _class = "menu-btn-r"),
-                                    _class = "menu-btn-l",
-                                    _href = URL(app, function)
-                                    )
-                                 )
-
-    div_arrow = DIV(IMG(_src = "/%s/static/img/arrow_blue_right.png" % \
-                                 appname),
-                    _class = "div_arrow")
-    sit_dec_res_box = DIV(menu_divs["sit"],
-                          div_arrow,
-                          menu_divs["dec"],
-                          div_arrow,
-                          menu_divs["res"],
-                          _id = "sit_dec_res_box",
-                          _class = "menu_box fleft swidth"
-                     #div_additional,
-                    )
-    facility_box  = menu_divs["facility"]
-    facility_box.append(A(IMG(_src = "/%s/static/img/map_icon_128.png" % \
-                                       appname),
-                          _href = URL(c="gis", f="index"),
-                          _title = T("Map")
-                          )
-                        )
+    facility_box = HM("Facilities", _id="facility_box")(
+        HM("Facilities", c="org", f="facility"),
+        HM("Hospitals", c="hms", f="hospital"),
+        HM("Offices", c="org", f="office"),
+        HM(SHELTERS, c="cr", f="shelter"),
+        HM("Warehouses", c="inv", f="warehouse"),
+        HM("Map", c="gis", f="index",
+           icon="/%s/static/img/map_icon_128.png" % appname,
+           ),
+    )
 
     # Check logged in AND permissions
     roles = session.s3.roles
@@ -575,8 +547,12 @@ def user():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "user.html")
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
+                            "templates",
+                            settings.get_template(),
+                            "views",
+                            "user.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
@@ -951,8 +927,12 @@ def about():
     response.title = T("About")
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "about.html")
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
+                            "templates",
+                            settings.get_template(),
+                            "views",
+                            "about.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
@@ -1049,8 +1029,12 @@ def help():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "help.html")
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
+                            "templates",
+                            settings.get_template(),
+                            "views",
+                            "help.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
@@ -1068,8 +1052,12 @@ def privacy():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "privacy.html")
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
+                            "templates",
+                            settings.get_template(),
+                            "views",
+                            "privacy.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
@@ -1087,8 +1075,12 @@ def tos():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "tos.html")
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
+                            "templates",
+                            settings.get_template(),
+                            "views",
+                            "tos.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
@@ -1106,8 +1098,12 @@ def video():
 
     if settings.get_template() != "default":
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            settings.get_template(), "views", "video.html")
+        view = os.path.join(request.folder,
+                            settings.get_template_location(),
+                            "templates",
+                            settings.get_template(),
+                            "views",
+                            "video.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode
@@ -1158,22 +1154,28 @@ def contact():
 
     template = settings.get_template()
     if template != "default":
-        # Try a Custom Page
-        controller = "applications.%s.private.templates.%s.controllers" % \
-                            (appname, template)
+        # Try a Custom Controller
+        location = settings.get_template_location()
+        package = "applications.%s.%s.templates.%s" % \
+                    (appname, location, template)
+        name = "controllers"
         try:
-            exec("import %s as custom" % controller) in globals(), locals()
-        except ImportError, e:
+            custom = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
             # No Custom Page available, try a custom view
             pass
         else:
-            if "contact" in custom.__dict__:
-                output = custom.contact()()
-                return output
+            if hasattr(custom, "contact"):
+                controller = getattr(custom, "contact")()
+                return controller()
 
         # Try a Custom View
-        view = os.path.join(request.folder, "private", "templates",
-                            template, "views", "contact.html")
+        view = os.path.join(request.folder,
+                            location,
+                            "templates",
+                            template,
+                            "views",
+                            "contact.html")
         if os.path.exists(view):
             try:
                 # Pass view as file not str to work in compiled mode

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Stats Model
 
-    @copyright: 2012-14 (c) Sahana Software Foundation
+    @copyright: 2012-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -146,7 +146,8 @@ class S3StatsModel(S3Model):
                            # IS_FLOAT_AMOUNT.represent(v, precision=2),
                            ),
                      # @ToDo: This will need to be a datetime for some usecases
-                     s3_date(),
+                     s3_date(label = T("Start Date"),
+                             ),
                      s3_date("end_date",
                              label = T("End Date"),
                              ),
@@ -256,6 +257,7 @@ class S3StatsDemographicModel(S3Model):
                      # Instance
                      super_link("parameter_id", "stats_parameter"),
                      Field("name",
+                           requires = IS_NOT_EMPTY(),
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                     else NONE,

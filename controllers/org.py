@@ -60,6 +60,19 @@ def group_membership_status():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def group_person():
+    """ REST controller for options.s3json lookups """
+
+    s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def group_person_status():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def region():
     """ RESTful CRUD controller """
 
@@ -111,7 +124,7 @@ def site():
 def sites_for_org():
     """
         Used to provide the list of Sites for an Organisation
-        - used in User Registration
+        - used in User Registration & Assets
     """
 
     try:
@@ -119,23 +132,28 @@ def sites_for_org():
     except:
         result = current.xml.json_message(False, 400, "No Org provided!")
     else:
-        stable = s3db.org_site
-        if settings.get_org_branches():
-            # Find all branches for this Organisation
-            btable = s3db.org_organisation_branch
-            query = (btable.organisation_id == org) & \
-                    (btable.deleted != True)
-            rows = db(query).select(btable.branch_id)
-            org_ids = [row.branch_id for row in rows] + [org]
-            query = (stable.organisation_id.belongs(org_ids)) & \
-                    (stable.deleted != True)
+        try:
+            org = int(org)
+        except:
+            result = current.xml.json_message(False, 400, "Invalid Org provided!")
         else:
-            query = (stable.organisation_id == org) & \
-                    (stable.deleted != True)
-        rows = db(query).select(stable.site_id,
-                                stable.name,
-                                orderby=stable.name)
-        result = rows.json()
+            stable = s3db.org_site
+            if settings.get_org_branches():
+                # Find all branches for this Organisation
+                btable = s3db.org_organisation_branch
+                query = (btable.organisation_id == org) & \
+                        (btable.deleted != True)
+                rows = db(query).select(btable.branch_id)
+                org_ids = [row.branch_id for row in rows] + [org]
+                query = (stable.organisation_id.belongs(org_ids)) & \
+                        (stable.deleted != True)
+            else:
+                query = (stable.organisation_id == org) & \
+                        (stable.deleted != True)
+            rows = db(query).select(stable.site_id,
+                                    stable.name,
+                                    orderby=stable.name)
+            result = rows.json()
     finally:
         response.headers["Content-Type"] = "application/json"
         return result
@@ -227,7 +245,7 @@ def room():
         field.readable = field.writable = True
         return True
     s3.prep = prep
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -317,7 +335,7 @@ def resource():
 
         return True
     s3.prep = prep
-    
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

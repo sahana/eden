@@ -2,7 +2,7 @@
 
 """ Sahana Eden Vehicle Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -52,10 +52,10 @@ class S3VehicleModel(S3Model):
         T = current.T
         db = current.db
 
-        asset_id = self.asset_asset_id
-
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        float_represent = IS_FLOAT_AMOUNT.represent
+        int_represent = IS_INT_AMOUNT.represent
 
         # ---------------------------------------------------------------------
         # Vehicle Types
@@ -74,6 +74,48 @@ class S3VehicleModel(S3Model):
                      #      readable = hierarchical_vehicle_types,
                      #      writable = hierarchical_vehicle_types,
                      #      ),
+                     Field("vehicle_height", "double",
+                           label = T("Vehicle Height (m)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           ),
+                     Field("vehicle_weight", "double",
+                           comment = T("Gross Vehicle Weight Rating (GVWR)"),
+                           label = T("Vehicle Weight (kg)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           ),
+                     Field("weight", "double",
+                           label = T("Payload Weight (kg)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" %
+                                                  (T("Payload Weight"),
+                                                   T("Gross Vehicle Weight Rating (GVWR) minus Curb Weight")
+                                                   )
+                                         ),
+                           ),
+                     Field("length", "double",
+                           label = T("Payload Length (m)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           ),
+                     Field("width", "double",
+                           label = T("Payload Width (m)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           ),
+                     Field("height", "double",
+                           label = T("Payload Height (m)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           ),
+                     Field("volume", "double",
+                           label = T("Payload Volume (m3)"),
+                           represent = lambda v: \
+                                       float_represent(v, precision=2),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -100,13 +142,14 @@ class S3VehicleModel(S3Model):
                                           ondelete = "RESTRICT",
                                           represent = type_represent,
                                           requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db, "event_vehicle_type.id",
+                                                        IS_ONE_OF(db, "vehicle_vehicle_type.id",
                                                                   type_represent,
-                                                                  orderby="event_vehicle_type.code",
+                                                                  orderby="vehicle_vehicle_type.code",
                                                                   sort=True)),
                                           sortby = "code",
-                                          #widget = event_type_widget,
-                                          #comment = event_type_comment,
+                                          # Allow changing by whether hierarchical or not
+                                          #widget = vehicle_type_widget,
+                                          #comment = vehicle_type_comment,
                                           )
 
         # ---------------------------------------------------------------------
@@ -115,7 +158,7 @@ class S3VehicleModel(S3Model):
         #
         tablename = "vehicle_vehicle"
         define_table(tablename,
-                     asset_id(),
+                     self.asset_asset_id(),
                      vehicle_type_id(),
                      Field("name",
                            comment = T("e.g. License Plate"),
@@ -126,14 +169,12 @@ class S3VehicleModel(S3Model):
                            ),
                      Field("mileage", "integer",
                            label = T("Current Mileage"),
-                           represent = lambda v, row=None: \
-                            IS_INT_AMOUNT.represent(v),
+                           represent = lambda v: int_represent(v),
                            ),
                      Field("service_mileage", "integer",
                            comment = T("Mileage"),
                            label = T("Service Due"),
-                           represent = lambda v, row=None: \
-                            IS_INT_AMOUNT.represent(v),
+                           represent = lambda v: int_represent(v),
                            ),
                      s3_date("service_date",
                              label = T("Service Due"),

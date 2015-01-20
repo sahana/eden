@@ -1,4 +1,4 @@
-{{extend 'layout.html'}}
+{{extend "layout.html"}}
 {{=BEAUTIFY(response._vars)}}
 <button onclick="document.location='{{=URL(a="admin", c="default", f="design", args=appname)}}'">admin</button>
 <button onclick="$('#request').slideToggle()">request</button>
@@ -7,4 +7,4 @@
 <div class='hide' id="request"><h2>request</h2>{{=BEAUTIFY(request)}}</div>
 <div class='hide' id="session"><h2>session</h2>{{=BEAUTIFY(session)}}</div>
 <div class='hide' id="response"><h2>response</h2>{{=BEAUTIFY(response)}}</div>
-<script>$('.hide').hide();</script>
+<script>$('.hide').hide()</script>

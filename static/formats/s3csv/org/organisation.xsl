@@ -4,38 +4,41 @@
     xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Organisation - CSV Import Stylesheet
+        Organisation - CSV Import Stylesheet
 
-         CSV fields:
-         Organisation............org_organisation (the root organisation name)
-         Branch..................org_organisation (the branch name)
-         SubBranch...............org_organisation (the sub-branch name)
-         SubSubBranch............org_organisation (the sub-sub-branch name)
-         ...and so forth (indefinite depth)
+        CSV fields:
+        Organisation............org_organisation (the root organisation name)
+        Branch..................org_organisation (the branch name)
+        SubBranch...............org_organisation (the sub-branch name)
+        SubSubBranch............org_organisation (the sub-sub-branch name)
+        ...and so forth (indefinite depth)
             => only specify what applies, leave all subsequent levels empty,
                e.g. the root organisation has only "Organisation", no "Branch"
 
-         Acronym.................org_organisation.acronym
-         Type....................org_organisation$organisation_type_id or org_organisation_type.parent
-         SubType.................org_organisation$organisation_type_id or org_organisation_type.parent
-         SubSubType..............org_organisation$organisation_type_id
-         Sectors.................org_sector_organisation$sector_id
-         Services................org_service_organisation$service_id
+        Acronym.................org_organisation.acronym
+        Name L10n:XX............org_organisation_name.name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
+        Acronym L10n:XX.........org_organisation_name.acronym_10n (Language = XX in column name, acronym_10n = cell in row. Multiple allowed)
+        Type....................org_organisation$organisation_type_id or org_organisation_type.parent
+        SubType.................org_organisation$organisation_type_id or org_organisation_type.parent
+        SubSubType..............org_organisation$organisation_type_id
+        Sectors.................org_sector_organisation$sector_id
+        Services................org_service_organisation$service_id
          OR
-         Service.................org_organisation$service_id or org_service.parent
-         SubService..............org_organisation$service_id or org_service.parent
-         SubSubService...........org_organisation$service_id or org_service.parent
-         Groups..................org_group_membership$group_id
-         Region..................org_organisation.region_id
-         Country.................org_organisation.country (ISO Code)
-         Website.................org_organisation.website
-         Phone...................org_organisation.phone
-         Phone2..................pr_contact.value
-         Facebook................pr_contact.value
-         Twitter.................pr_contact.value
-         Logo....................org_organisation.logo
-         Comments................org_organisation.comments
-         Approved................org_organisation.approved_by
+        Service.................org_organisation$service_id or org_service.parent
+        SubService..............org_organisation$service_id or org_service.parent
+        SubSubService...........org_organisation$service_id or org_service.parent
+        Groups..................org_group_membership$group_id
+        Region..................org_organisation.region_id
+        Country.................org_organisation.country (ISO Code)
+        Website.................org_organisation.website
+        Phone...................org_organisation.phone
+        Phone2..................pr_contact.value
+        Facebook................pr_contact.value
+        Twitter.................pr_contact.value
+        Logo....................org_organisation.logo
+        KV:XX...................org_organisation_tag Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+        Comments................org_organisation.comments
+        Approved................org_organisation.approved_by
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -241,7 +244,9 @@
                 </xsl:if>
             
                 <xsl:if test="col[@field='Acronym']!=''">
-                    <data field="acronym"><xsl:value-of select="col[@field='Acronym']"/></data>
+                    <data field="acronym">
+                        <xsl:value-of select="col[@field='Acronym']"/>
+                    </data>
                 </xsl:if>
             
                 <!-- Link to Organisation Type -->
@@ -324,37 +329,66 @@
                 </xsl:if>
                 
                 <xsl:if test="col[@field='Website']!=''">
-                    <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
+                    <data field="website">
+                        <xsl:value-of select="col[@field='Website']"/>
+                    </data>
                 </xsl:if>
                 
                 <xsl:if test="col[@field='Phone']!=''">
-                    <data field="phone"><xsl:value-of select="col[@field='Phone']"/></data>
+                    <data field="phone">
+                        <xsl:value-of select="col[@field='Phone']"/>
+                    </data>
                 </xsl:if>
                 
                 <xsl:if test="col[@field='Phone2']!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">WORK_PHONE</data>
-                        <data field="value"><xsl:value-of select="col[@field='Phone2']"/></data>
+                        <data field="value">
+                            <xsl:value-of select="col[@field='Phone2']"/>
+                        </data>
                     </resource>
                 </xsl:if>
                 
                 <xsl:if test="col[@field='Facebook']!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">FACEBOOK</data>
-                        <data field="value"><xsl:value-of select="col[@field='Facebook']"/></data>
+                        <data field="value">
+                            <xsl:value-of select="col[@field='Facebook']"/>
+                        </data>
                     </resource>
                 </xsl:if>
                 
                 <xsl:if test="col[@field='Twitter']!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">TWITTER</data>
-                        <data field="value"><xsl:value-of select="col[@field='Twitter']"/></data>
+                        <data field="value">
+                            <xsl:value-of select="col[@field='Twitter']"/>
+                        </data>
                     </resource>
                 </xsl:if>
                 
                 <xsl:if test="col[@field='Comments']!=''">
-                    <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+                    <data field="comments">
+                        <xsl:value-of select="col[@field='Comments']"/>
+                    </data>
                 </xsl:if>
+
+                <!-- L10n -->
+                <xsl:for-each select="col[starts-with(@field, 'Name L10n')]">
+                    <xsl:variable name="Lang" select="normalize-space(substring-after(@field, ':'))"/>
+                    <xsl:variable name="acronym" select="concat('Acronym L10n:', $Lang)"/>
+                    <xsl:variable name="Acronym">
+                        <xsl:value-of select="../col[@field=$acronym]"/>
+                    </xsl:variable>
+                    <xsl:call-template name="L10n">
+                        <xsl:with-param name="Lang">
+                            <xsl:value-of select="$Lang"/>
+                        </xsl:with-param>
+                        <xsl:with-param name="Acronym">
+                            <xsl:value-of select="$Acronym"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:for-each>
 
                 <!-- Org Groups -->
                 <xsl:if test="$Groups!=''">
@@ -397,9 +431,45 @@
                         </xsl:attribute>-->
                     </data>
                 </xsl:if>
+
+                <!-- Arbitrary Tags -->
+                <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                    <xsl:call-template name="KeyValue"/>
+                </xsl:for-each>
+
             </xsl:if>
         </resource>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_organisation_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L10n">
+        <xsl:param name="Acronym"/>
+        <xsl:param name="Lang"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_organisation_name">
+                <data field="language"><xsl:value-of select="$Lang"/></data>
+                <data field="name_l10n"><xsl:value-of select="$Value"/></data>
+                <data field="acronym_l10n">
+                    <xsl:value-of select="$Acronym"/>
+                </data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -495,7 +565,9 @@
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="concat('Region:', col[@field='Region'])"/>
                 </xsl:attribute>
-                <data field="name"><xsl:value-of select="col[@field='Region']"/></data>
+                <data field="name">
+                    <xsl:value-of select="col[@field='Region']"/>
+                </data>
             </resource>
         </xsl:if>
     </xsl:template>
@@ -511,7 +583,9 @@
                 <resource name="org_group_membership">
                     <reference field="group_id" resource="org_group">
                         <resource name="org_group">
-                            <data field="name"><xsl:value-of select="$item"/></data>
+                            <data field="name">
+                                <xsl:value-of select="$item"/>
+                            </data>
                         </resource>
                     </reference>
                 </resource>
@@ -521,7 +595,9 @@
                 <resource name="org_sector_organisation">
                     <reference field="sector_id" resource="org_sector">
                         <resource name="org_sector">
-                            <data field="abrv"><xsl:value-of select="$item"/></data>
+                            <data field="abrv">
+                                <xsl:value-of select="$item"/>
+                            </data>
                         </resource>
                     </reference>
                 </resource>
@@ -531,7 +607,9 @@
                 <resource name="org_service_organisation">
                     <reference field="service_id" resource="org_service">
                         <resource name="org_service">
-                            <data field="name"><xsl:value-of select="$item"/></data>
+                            <data field="name">
+                                <xsl:value-of select="$item"/>
+                            </data>
                         </resource>
                     </reference>
                 </resource>

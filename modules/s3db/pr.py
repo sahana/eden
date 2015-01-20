@@ -2,7 +2,7 @@
 
 """ Sahana Eden Person Registry Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -792,16 +792,17 @@ class S3PersonModel(S3Model):
                      Field("first_name", notnull=True,
                            length=64, # Mayon Compatibility
                            #default = "?" if current.auth.permission.format != "html" else "",
+                           label = T("First Name"),
                            # NB Not possible to have an IS_NAME() validator here
                            # http://eden.sahanafoundation.org/ticket/834
                            requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
                            comment =  DIV(_class="tooltip",
                                           _title="%s|%s" % (T("First Name"),
                                                         T("The first or only name of the person (mandatory)."))),
-                           label = T("First Name")),
+                           ),
                      Field("middle_name", length=64, # Mayon Compatibility
-                           represent = lambda v: v or NONE,
                            label = T("Middle Name"),
+                           represent = lambda v: v or NONE,
                            ),
                      Field("last_name", length=64, # Mayon Compatibility
                            label = T("Last Name"),
@@ -809,7 +810,8 @@ class S3PersonModel(S3Model):
                            requires = last_name_validate,
                            ),
                      Field("initials", length=8,
-                           label = T("Initials")),
+                           label = T("Initials"),
+                           ),
                      Field("preferred_name", length=64, # Mayon Compatibility
                            label = T("Preferred Name"),
                            comment = DIV(_class="tooltip",
@@ -844,9 +846,8 @@ class S3PersonModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PERSON = messages.ADD_PERSON
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("Create a Person"),
+            label_create = messages.ADD_PERSON,
             title_display = T("Person Details"),
             title_list = T("Persons"),
             title_update = T("Edit Person Details"),
@@ -1031,6 +1032,8 @@ class S3PersonModel(S3Model):
                        hrm_salary = "person_id",
                        # Organisation Memberships
                        member_membership = "person_id",
+                       # Organisation Group Association
+                       org_group_person = "person_id",
                        # Education history
                        pr_education = "person_id",
                        # Group Memberships
@@ -2192,6 +2195,7 @@ class S3ContactModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      Field("name",
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("relationship",
                            label = T("Relationship"),
@@ -2872,6 +2876,8 @@ class S3PersonIdentityModel(S3Model):
                                   ),
                           s3_date("valid_until",
                                   label = T("Valid Until"),
+                                  start_field = "pr_identity_valid_from",
+                                  default_interval = 12,
                                   ),
                           Field("country_code", length=4,
                                 label = T("Country Code"),

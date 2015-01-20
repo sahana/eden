@@ -1139,11 +1139,13 @@ S3.search = {};
                 if (undefined === gis.maps[map_id]) {
                     // Instantiate the map (can't be done when the DIV is hidden)
                     var options = gis.options[map_id];
-                    gis.show_map(map_id, options);
-                    // Get the current Filters
-                    var queries = getCurrentFilters($('#' + form));
-                    // Load the layer
-                    gis.refreshLayer('search_results', queries);
+                    if (undefined != options) {
+                        gis.show_map(map_id, options);
+                        // Get the current Filters
+                        var queries = getCurrentFilters($('#' + form));
+                        // Load the layer
+                        gis.refreshLayer('search_results', queries);
+                    }
                 }
             }
         }
@@ -1171,11 +1173,15 @@ S3.search = {};
      */
     var hierarchical_location_change = function(widget) {
         var name = widget.name;
+        var base = name.slice(0, -1);
+        var level = parseInt(name.slice(-1));
         var $widget = $('#' + name);
         var values = $widget.val();
         if (values) {
             // Show the next widget down
-            $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect').show();
+            var fn = base.replace(/-/g, '_') + (level + 1);
+            S3[fn]();
+            $('#' + base + (level + 1)).next('.ui-multiselect').show();
         } else {
             // Hide the next widget down
             var next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
@@ -1203,8 +1209,6 @@ S3.search = {};
                 }
             }
         }
-        var base = name.slice(0, -1);
-        var level = parseInt(name.slice(-1));
         var hierarchy = S3.location_filter_hierarchy;
         if (S3.location_name_l10n != undefined) {
             var translate = true;

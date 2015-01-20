@@ -224,6 +224,7 @@
             this.input.val(JSON.stringify(new_selected));
             this._updateButtonText(selected_ids);
             if (changed) {
+                this.input.change();
                 $(this.element).trigger('select.s3hierarchy');
             }
             return true;

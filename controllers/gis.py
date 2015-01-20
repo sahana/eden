@@ -87,22 +87,24 @@ def map_viewing_client():
     if print_mode:
         collapsed = True
         mouse_position = False
-        save = False
+        print_mode = True
         toolbar = False
         zoomcontrol = False
     else:
         collapsed = False
         mouse_position = None # Use deployment_settings
-        save = settings.get_gis_save()
+        print_mode = False
         toolbar = True
         zoomcontrol = None
 
+    save = settings.get_gis_save()
     map = define_map(window = True,
                      toolbar = toolbar,
                      collapsed = collapsed,
                      closable = False,
                      maximizable = False,
                      mouse_position = mouse_position,
+                     print_mode = print_mode,
                      save = save,
                      zoomcontrol = zoomcontrol,
                      )
@@ -119,6 +121,7 @@ def define_map(height = None,
                collapsed = False,
                maximizable = True,
                mouse_position = None,
+               print_mode = False,
                save = False,
                zoomcontrol = None,
                ):
@@ -255,6 +258,7 @@ def define_map(height = None,
                        feature_resources = feature_resources,
                        legend = legend,
                        mouse_position = mouse_position,
+                       print_mode = print_mode,
                        save = save,
                        search = search,
                        toolbar = toolbar,
@@ -1236,8 +1240,7 @@ def config():
                             form_vars = Storage(config_id = config_id,
                                                 layer_id = layer_id,
                                                 )
-                            form_vars.style = json.dumps(layer["style"],
-                                                         separators=SEPARATORS)
+                            form_vars.style = layer["style"]
                             # Update or Insert?
                             stable = s3db.gis_style
                             query = (stable.config_id == config_id) & \
@@ -2925,6 +2928,9 @@ def display_feature():
     feature_id = request.args[0]
 
     table = s3db.gis_location
+    ftable = s3db.gis_layer_feature
+    stable = s3db.gis_style
+    gtable = s3db.gis_config
 
     # Check user is authorised to access record
     if not s3_has_permission("read", table, feature_id):
@@ -2963,20 +2969,49 @@ def display_feature():
     # zoom = config.zoom + 2
     bounds = gis.get_bounds(features=[feature])
 
-    response.view = "gis/iframe.html"
-    map = gis.show_map(
-        features = [feature.wkt],
-        lat = lat,
-        lon = lon,
-        #zoom = zoom,
-        bbox = bounds,
-        window = False,
-        closable = False,
-        collapsed = True,
-        width=640,
-        height=480,
-    )
+    options = {"lat": lat,
+               "lon": lon,
+               #"zoom": zoom,
+               "bbox": bounds,
+               "window": False,
+               "closable": False,
+               "collapsed": True,
+               }
+    # Layers
+    controller = get_vars.controller
+    function = get_vars.function
+    # Record id
+    rid = get_vars.rid
+    query = ((ftable.controller == controller) & \
+             (ftable.function == function) & \
+             (ftable.layer_id == stable.layer_id) & \
+             # Marker not specific to a record
+             (stable.record_id == None) & \
+             # Marker available to all or 'Default' Profile
+             ((stable.config_id == None) | ((stable.config_id == gtable.id) & \
+                                            (gtable.name == "Default")))
+             )
+    rows = db(query).select(ftable.layer_id).first()
+    if rows:
+        feature_opts = {"name": T("Represent"),
+                        "id": "resource_represent",
+                        "active": True,
+                        "layer_id": rows.layer_id}
+        if rid:
+            feature_opts["filter"] = "~.id=%s" % rid
+        options["feature_resources"] = [feature_opts]
+    else:
+        options["features"] = [feature.wkt]
 
+    # Add Width & Height if opened in Window
+    if get_vars.popup == "1":
+        options["width"] = 640
+        options["height"] = 480
+    else:
+        options["height"] = settings.get_gis_map_selector_height()
+
+    response.view = "gis/iframe.html"
+    map = gis.show_map(**options)
     return dict(map=map)
 
 # -----------------------------------------------------------------------------
@@ -3706,8 +3741,43 @@ def screenshot():
 
     config_id = request.args(0) or 1
 
-    filename = gis.get_screenshot(config_id)
-    redirect(URL(c="static", f="cache",
-                 args=["jpg", filename]))
+    # If passed a size, set the Pixels for 300ppi
+    size = get_vars.get("size")
+    if size == "Letter":
+        height = 2550 # 612 for 72ppi
+        width = 3300  # 792 for 72ppi
+    elif size == "A4":
+        height = 2480 # 595 for 72ppi
+        width = 3508  # 842 for 72ppi
+    elif size == "A3":
+        height = 3508 # 842 for 72ppi
+        width = 4962  # 1191 for 72ppi
+    elif size == "A2":
+        height = 4962 # 1191 for 72ppi
+        width = 7017  # 1684 for 72ppi
+    elif size == "A1":
+        height = 7017 # 1684 for 72ppi
+        width =  9933 # 2384 for 72ppi
+    elif size == "A0":
+        height = 9933 # 2384 for 72ppi
+        width =  14061 # 3375 for 72ppi
+    else:
+        height = get_vars.get("height")
+        try:
+            height = int(height)
+        except (ValueError, TypeError):
+            height = 2480
+        width = get_vars.get("width")
+        try:
+            width = int(width)
+        except (ValueError, TypeError):
+            width = 3508
+
+    filename = gis.get_screenshot(config_id, height=height, width=width)
+    if filename:
+        redirect(URL(c="static", f="cache",
+                     args=["jpg", filename]))
+    else:
+        raise HTTP(500, "Screenshot not taken")
 
 # END =========================================================================

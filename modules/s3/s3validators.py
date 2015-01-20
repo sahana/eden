@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: (c) 2010-2014 Sahana Software Foundation
+    @copyright: (c) 2010-2015 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -3037,6 +3037,25 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         if zero and not self.zero is None and not self.multiple:
             items.insert(0, ("", self.zero))
         return items
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def represent(cls, code):
+        """
+            Represent a language code by language name
+
+            @param code: the language code
+        """
+
+        l10n_languages = current.deployment_settings.get_L10n_languages()
+        if code in l10n_languages:
+            name = l10n_languages[code]
+        else:
+            all_languages = dict(cls.language_codes())
+            name = all_languages.get(code)
+            if name is None:
+                name = current.messages.UNKNOWN_OPT
+        return name
 
     # -------------------------------------------------------------------------
     @staticmethod

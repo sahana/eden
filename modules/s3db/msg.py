@@ -2,7 +2,7 @@
 
 """ Sahana Eden Messaging Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -1426,11 +1426,15 @@ class S3SMSOutboundModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # SMS Outbound Gateway
         # - select which gateway is in active use for which Organisation/Branch
         #
+
+        country_code = settings.get_L10n_default_country_code()
+
         tablename = "msg_sms_outbound_gateway"
         define_table(tablename,
                      self.msg_channel_id(
@@ -1451,9 +1455,9 @@ class S3SMSOutboundModel(S3Model):
                      self.org_organisation_id(),
                      # @ToDo: Allow selection of different gateways based on destination Location
                      #self.gis_location_id(),
-                     # @ToDo: Allow addition of relevant country code (currently in deployment_settings)
-                     #Field("default_country_code", "integer",
-                     #      default = 44),
+                     Field("default_country_code", "integer",
+                           default = country_code,
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -2207,37 +2211,38 @@ class S3BaseStationModel(S3Model):
 
         T = current.T
 
-        define_table = self.define_table
-
         # ---------------------------------------------------------------------
         # Base Stations (Cell Towers)
         #
+
+        if current.deployment_settings.get_msg_basestation_code_unique():
+            db = current.db
+            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "msg_basestation.code"))
+        else:
+            code_unique = None
+
         tablename = "msg_basestation"
-        define_table(tablename,
-                     self.super_link("site_id", "org_site"),
-                     Field("name", notnull=True,
-                           length=64, # Mayon Compatibility
-                           label = T("Name"),
-                           ),
-                     Field("code", length=10, # Mayon compatibility
-                           label = T("Code"),
-                           # Deployments that don't wants site codes can hide them
-                           #readable = False,
-                           #writable = False,
-                           # @ToDo: Deployment Setting to add validator to make these unique
-                           ),
-                     self.org_organisation_id(
-                            label = T("Operator"),
-                            #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
-                            requires = self.org_organisation_requires(required=True,
-                                                                    updateable=True),
-                            ),
-                     self.gis_location_id(),
-                     s3_comments(),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          self.super_link("site_id", "org_site"),
+                          Field("name", notnull=True,
+                                length=64, # Mayon Compatibility
+                                label = T("Name"),
+                                ),
+                          Field("code", length=10, # Mayon compatibility
+                                label = T("Code"),
+                                requires = code_unique,
+                                ),
+                          self.org_organisation_id(
+                                 label = T("Operator"),
+                                 requires = self.org_organisation_requires(required=True,
+                                                                           updateable=True),
+                                 #widget=S3OrganisationAutocompleteWidget(default_from_profile=True),
+                                 ),
+                          self.gis_location_id(),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD strings
-        ADD_BASE = T("Create Base Station")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create=T("Create Base Station"),
             title_display=T("Base Station Details"),

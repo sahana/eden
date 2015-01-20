@@ -1,7 +1,7 @@
 /**
  * jQuery UI HierarchicalCRUD Widget for S3HierarchyCRUD
  *
- * @copyright 2014 (c) Sahana Software Foundation
+ * @copyright 2015 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+
@@ -48,12 +48,12 @@
         _create: function() {
 
             var el = $(this.element);
-            
+
             this.treeID = el.attr('id') + '-tree';
 
             this.id = hierarchicalcrudID;
             hierarchicalcrudID += 1;
-            
+
         },
 
         /**
@@ -62,10 +62,10 @@
         _init: function() {
 
             var el = $(this.element);
-            
+
             // The tree
             this.tree = el.find('.s3-hierarchy-tree');
-            
+
             this.refresh();
         },
 
@@ -120,6 +120,7 @@
                             },
                             'edit': {
                                 label: self.options.editLabel,
+                                // @todo: check permission and disable if forbidden
                                 action: function(obj) {
                                     self._editNode($node);
                                 }
@@ -127,7 +128,10 @@
                             'delete': {
                                 label: self.options.deleteLabel,
                                 separator_after: true,
-                                _disabled: true
+                                // @todo: check permission and disable if forbidden
+                                action: function(obj) {
+                                    self._deleteNode($node);
+                                }
                             },
                             'add': {
                                 label: self.options.addLabel,
@@ -151,7 +155,7 @@
          * @param {jQuery} node - the node object (li element)
          */
         _openNode: function(node) {
-            
+
             var openURL = this.options.openURL,
                 id = node.id;
             if (!openURL || !id) {
@@ -204,6 +208,7 @@
                                     text: child.label,
                                     li_attr: {
                                         // HTML attributes of the new node
+                                        // @todo: CRUD permissions
                                         rel: 'leaf'
                                     }
                                 });
@@ -225,7 +230,7 @@
          * @param {jQuery} node - the node object (li element)
          */
         _editNode: function(node) {
-            
+
             var editURL = this.options.editURL,
                 id = node.id;
             if (!editURL || !id) {
@@ -274,13 +279,62 @@
         },
 
         /**
+         * Ajax-delete a node (recursively, including all child nodes)
+         *
+         * @todo: option to disallow deletion of root node
+         *
+         * @param {jQuery} node - the node to delete
+         */
+        _deleteNode: function(node) {
+
+            // Confirmation dialog
+            if (!confirm(i18n.delete_confirmation)) {
+                return false;
+            }
+
+            var deleteURL = this.options.deleteURL,
+                id = node.id,
+                tree = this.tree,
+                self = this;
+            if (!deleteURL || !id) {
+                return;
+            }
+            var record_id = parseInt(id.split('-').pop());
+            if (record_id) {
+                var url = deleteURL.replace('[id]', record_id)
+                                   .replace('%5Bid%5D', record_id)
+                                   .split('?')[0];
+                url += '?recursive=1';
+                $.ajaxS3({
+                    type: 'POST',
+                    url: url,
+                    data: {},
+                    dataType: 'JSON',
+                    // gets moved to .done() inside .ajaxS3
+                    success: function(data) {
+                        tree.jstree('delete_node', node);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        var msg = jqXHR.responseText;
+                        if (msg[0] == "{") {
+                            try {
+                                msg = JSON.parse(jqXHR.responseText)
+                                S3.showAlert(msg.message, 'error');
+                            } catch(e) {}
+                        }
+                    }
+                });
+            }
+        },
+
+        /**
          * Open an iframe overlay as jQuery dialog, used by _addNode and _editNode
          *
          * @param {jQuery} dialog - the dialog
          * @param {string} title - the dialog title
          */
         _openPopup: function(dialog, title) {
-            
+
             dialog.dialog({
                 // add a close listener to prevent adding multiple divs to the document
                 close: function(event, ui) {

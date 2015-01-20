@@ -2,7 +2,7 @@
 
 """ Sahana Eden Guided Tour Model
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -25,6 +25,8 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @todo: update for new template path modules/template
 """
 
 __all__ = ("S3GuidedTourModel",
@@ -68,7 +70,9 @@ class S3GuidedTourModel(S3Model):
         define_table(tablename,
                      Field("name",
                            represent=lambda v: v or NONE,
-                           label=T("Display name")),
+                           label=T("Display name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("code",
                            length=255,
                            notnull=True,
@@ -129,7 +133,7 @@ class S3GuidedTourModel(S3Model):
         #
         tablename = "tour_details"
         define_table(tablename,
-                     tour_config_id(),
+                     tour_config_id(empty = False),
                      Field("posn", "integer",
                            default=0,
                            label=T("Position in tour")),
@@ -193,7 +197,9 @@ class S3GuidedTourModel(S3Model):
         tablename = "tour_user"
         define_table(tablename,
                      person_id(label = T("Person"),
-                               ondelete="CASCADE"),
+                               ondelete="CASCADE",
+                               empty = False,
+                               ),
                      tour_config_id(),
                      Field("place",
                            represent=lambda v: v or NONE,

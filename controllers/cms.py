@@ -451,6 +451,8 @@ def newsfeed():
         nappend((T("Contact"), contact_field))
     nappend((T("Description"), "body"))
 
+    # @todo: allow configuration (?)
+    filter_formstyle = settings.get_ui_formstyle()
     s3db.configure("cms_post",
                    # We could use a custom Advanced widget
                    #filter_advanced = False,
@@ -572,14 +574,16 @@ def newsfeed():
                                              ))
             if contact_field == "person_id":
                 cappend("person_id")
-            # @ToDo: deployment_setting for attachments
-            cappend(S3SQLInlineComponent("document",
-                                         name = "file",
-                                         label = T("Files"),
-                                         fields = [("", "file"),
-                                                   #"comments",
-                                                   ],
-                                         ))
+
+            if settings.get_cms_show_attachments():
+                cappend(S3SQLInlineComponent("document",
+                                             name = "file",
+                                             label = T("Files"),
+                                             fields = [("", "file"),
+                                                       #"comments",
+                                                       ],
+                                             ))
+
             if settings.get_cms_show_links():
                 cappend(S3SQLInlineComponent("document",
                                              name = "url",

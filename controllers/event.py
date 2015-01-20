@@ -158,6 +158,36 @@ def incident_report():
         RESTful CRUD controller
     """
 
+    def prep(r):
+        if r.http == "GET":
+            if r.method in ("create", "create.popup"):
+                # Lat/Lon from Feature?
+                # @ToDo: S3PoIWidget() instead to pickup the passed Lat/Lon/WKT
+                field = r.table.location_id
+                lat = get_vars.get("lat", None)
+                if lat is not None:
+                    lon = get_vars.get("lon", None)
+                    if lon is not None:
+                        form_vars = Storage(lat = float(lat),
+                                            lon = float(lon),
+                                            )
+                        form = Storage(vars=form_vars)
+                        s3db.gis_location_onvalidation(form)
+                        id = s3db.gis_location.insert(**form_vars)
+                        field.default = id
+                # WKT from Feature?
+                wkt = get_vars.get("wkt", None)
+                if wkt is not None:
+                    form_vars = Storage(wkt = wkt,
+                                        )
+                    form = Storage(vars = form_vars)
+                    s3db.gis_location_onvalidation(form)
+                    id = s3db.gis_location.insert(**form_vars)
+                    field.default = id
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

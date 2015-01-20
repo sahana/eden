@@ -9,7 +9,7 @@
     Messages get sent to the Outbox (& Log)
     From there, the Scheduler tasks collect them & send them
 
-    @copyright: 2009-2014 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -157,14 +157,21 @@ class S3Msg(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def sanitise_phone(phone):
+    def sanitise_phone(phone, channel_id=None):
         """
             Strip out unnecessary characters from the string:
             +()- & space
         """
 
         settings = current.deployment_settings
-        default_country_code = settings.get_L10n_default_country_code()
+        table = current.s3db.msg_sms_outbound_gateway
+
+        if channel_id:
+            row = current.db(table.channel_id == channel_id) \
+                         .select(limitby=(0, 1)).first()
+            default_country_code = row["msg_sms_outbound_gateway.default_country_code"]
+        else:
+            default_country_code = settings.get_L10n_default_country_code()
 
         clean = phone.translate(IDENTITYTRANS, NOTPHONECHARS)
 
@@ -456,6 +463,11 @@ class S3Msg(object):
         db = current.db
         s3db = current.s3db
 
+        lookup_org = False
+        channels = {}
+        outgoing_sms_handler = None
+        channel_id = None
+
         if contact_method == "SMS":
             # Read all enabled Gateways
             # - we assume there are relatively few & we may need to decide which to use based on the message's organisation
@@ -482,7 +494,6 @@ class S3Msg(object):
                 org_branches = current.deployment_settings.get_org_branches()
                 if org_branches:
                     org_parents = s3db.org_parents
-                channels = {}
                 for row in rows:
                     channels[row["msg_sms_outbound_gateway.organisation_id"]] = \
                         dict(outgoing_sms_handler = row["msg_channel.instance_type"],
@@ -501,7 +512,11 @@ class S3Msg(object):
                               outbox_id,
                               message_id,
                               organisation_id = None,
-                              contact_method = contact_method):
+                              contact_method = contact_method,
+                              channel_id = channel_id,
+                              outgoing_sms_handler = outgoing_sms_handler,
+                              lookup_org = lookup_org,
+                              channels = channels):
             """
                 Helper method to send messages by pe_id
 
@@ -612,37 +627,38 @@ class S3Msg(object):
         if not rows:
             return
 
-        htable = s3db.hrm_human_resource
-        otable = db.org_organisation
-        ptable = db.pr_person
+        htable = s3db.table("hrm_human_resource")
+        otable = s3db.org_organisation
+        ptable = s3db.pr_person
         gtable = s3db.pr_group
         mtable = db.pr_group_membership
 
         # Left joins for multi-recipient lookups
-        gleft = [mtable.on((mtable.group_id == gtable.id) &
-                           (mtable.person_id != None) &
+        gleft = [mtable.on((mtable.group_id == gtable.id) & \
+                           (mtable.person_id != None) & \
                            (mtable.deleted != True)),
-                 ptable.on((ptable.id == mtable.person_id) &
+                 ptable.on((ptable.id == mtable.person_id) & \
                            (ptable.deleted != True))
                  ]
 
-        oleft = [htable.on((htable.organisation_id == otable.id) &
-                           (htable.person_id != None) &
-                           (htable.deleted != True)),
-                 ptable.on((ptable.id == htable.person_id) &
-                           (ptable.deleted != True))
-                 ]
-
-        atable = s3db.table("deploy_alert", None)
-        if atable:
-            ltable = db.deploy_alert_recipient
-            aleft = [ltable.on(ltable.alert_id == atable.id),
-                     htable.on((htable.id == ltable.human_resource_id) &
-                               (htable.person_id != None) &
+        if htable:
+            oleft = [htable.on((htable.organisation_id == otable.id) & \
+                               (htable.person_id != None) & \
                                (htable.deleted != True)),
-                     ptable.on((ptable.id == htable.person_id) &
-                               (ptable.deleted != True))
+                     ptable.on((ptable.id == htable.person_id) & \
+                               (ptable.deleted != True)),
                      ]
+
+            atable = s3db.table("deploy_alert")
+            if atable:
+                ltable = db.deploy_alert_recipient
+                aleft = [ltable.on(ltable.alert_id == atable.id),
+                         htable.on((htable.id == ltable.human_resource_id) & \
+                                   (htable.person_id != None) & \
+                                   (htable.deleted != True)),
+                         ptable.on((ptable.id == htable.person_id) & \
+                                   (ptable.deleted != True))
+                         ]
 
         # chainrun: used to fire process_outbox again,
         # when messages are sent to groups or organisations
@@ -679,7 +695,19 @@ class S3Msg(object):
             pe_id = row.pe_id
             message_id = row.message_id
 
-            if entity_type == "pr_group":
+            if entity_type == "pr_person":
+                # Send the message to this person
+                try:
+                    status = dispatch_to_pe_id(pe_id,
+                                               subject,
+                                               message,
+                                               row.id,
+                                               message_id,
+                                               organisation_id)
+                except:
+                    status = False
+
+            elif entity_type == "pr_group":
                 # Re-queue the message for each member in the group
                 gquery = (gtable.pe_id == pe_id)
                 recipients = db(gquery).select(ptable.pe_id, left=gleft)
@@ -694,22 +722,7 @@ class S3Msg(object):
                     chainrun = True
                 status = True
 
-            elif entity_type == "deploy_alert":
-                # Re-queue the message for each HR in the group
-                aquery = (atable.pe_id == pe_id)
-                recipients = db(aquery).select(ptable.pe_id, left=aleft)
-                pe_ids = set(r.pe_id for r in recipients)
-                pe_ids.discard(None)
-                if pe_ids:
-                    for pe_id in pe_ids:
-                        outbox.insert(message_id=message_id,
-                                      pe_id=pe_id,
-                                      contact_method=contact_method,
-                                      system_generated=True)
-                    chainrun = True
-                status = True
-
-            elif entity_type == "org_organisation":
+            elif htable and entity_type == "org_organisation":
                 # Re-queue the message for each HR in the organisation
                 oquery = (otable.pe_id == pe_id)
                 recipients = db(oquery).select(ptable.pe_id, left=oleft)
@@ -724,17 +737,21 @@ class S3Msg(object):
                     chainrun = True
                 status = True
 
-            elif entity_type == "pr_person":
-                # Send the message to this person
-                try:
-                    status = dispatch_to_pe_id(pe_id,
-                                               subject,
-                                               message,
-                                               row.id,
-                                               message_id,
-                                               organisation_id)
-                except:
-                    status = False
+            elif atable and entity_type == "deploy_alert":
+                # Re-queue the message for each HR in the group
+                aquery = (atable.pe_id == pe_id)
+                recipients = db(aquery).select(ptable.pe_id, left=aleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      contact_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
+                status = True
+
             else:
                 # Unsupported entity type
                 row.update_record(status = 4) # Invalid
@@ -946,6 +963,7 @@ class S3Msg(object):
             sms_api = db(table.channel_id == channel_id).select(limitby=(0, 1)
                                                                 ).first()
         else:
+            # @ToDo: Check for Organisation-specific Gateway
             sms_api = db(table.enabled == True).select(limitby=(0, 1)).first()
         if not sms_api:
             return False
@@ -956,7 +974,7 @@ class S3Msg(object):
         for p in parts:
             post_data[p.split("=")[0]] = p.split("=")[1]
 
-        mobile = self.sanitise_phone(mobile)
+        mobile = self.sanitise_phone(mobile, channel_id)
 
         # To send non-ASCII characters in UTF-8 encoding, we'd need
         # to hex-encode the text and activate unicode=1, but this
@@ -1024,7 +1042,7 @@ class S3Msg(object):
             - needs to have the cron/sms_handler_modem.py script running
         """
 
-        mobile = self.sanitise_phone(mobile)
+        mobile = self.sanitise_phone(mobile, channel_id)
 
         # Add '+' before country code
         mobile = "+%s" % mobile
@@ -1057,7 +1075,7 @@ class S3Msg(object):
         if not settings:
             return False
 
-        mobile = self.sanitise_phone(mobile)
+        mobile = self.sanitise_phone(mobile, channel_id)
 
         to = "%s@%s" % (mobile,
                         settings.address)
@@ -1103,7 +1121,7 @@ class S3Msg(object):
             return
 
         if network == "SMS":
-            recipient = self.sanitise_phone(recipient)
+            recipient = self.sanitise_phone(recipient, channel_id)
 
         try:
             s3db.msg_tropo_scratch.insert(row_id = row_id,

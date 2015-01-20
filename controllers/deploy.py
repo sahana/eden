@@ -262,7 +262,7 @@ def assignment():
                 if hr:
                     get_vars = {"mission_id": r.record.mission_id,
                                 }
-                    
+
                     if popup:
                         method = "create.popup"
                         refresh = get_vars.get("refresh", None)
@@ -567,7 +567,7 @@ def email_inbox():
                                     label = T("Attachments"),
                                     fields = ["document_id",
                                               ],
-                                    ),                                                                
+                                    ),
                                 )
 
     s3db.configure(tablename,
@@ -703,6 +703,17 @@ def email_channel():
     s3.postp = postp
 
     return s3_rest_controller("msg")
+
+# =============================================================================
+def alert_recipient():
+    """
+        RESTful CRUD controller for options.s3json lookups
+        - needed for adding recipients
+    """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
 
 # =============================================================================
 # Messaging
