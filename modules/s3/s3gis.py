@@ -1372,14 +1372,9 @@ class GIS(object):
                 if user.site_id:
                     # Add the user account's Site to the list
                     # (Will take lower-priority than Org/Personal)
-                    stable = s3db.org_site
-                    site = db(stable.site_id == user.site_id).select(stable.pe_id,
-                                                                     limitby=(0, 1)
-                                                                     ).first()
-                    try:
-                        pes.append(site.pe_id)
-                    except:
-                        current.log.warning("Unable to find Site %s" % user.site_id)
+                    site_pe_id = s3db.pr_get_pe_id("org_site", user.site_id)
+                    if site_pe_id:
+                        pes.append(site_pe_id)
 
                 if user.org_group_id:
                     # Add the user account's Org Group to the list
