@@ -251,8 +251,8 @@ def address():
                 s3db.pr_address.pe_id.default = pe_id
 
         else:
-            field = s3db.pr_contact.pe_id
-            if r.method in ("create", "create.popup"):
+            field = s3db.pr_address.pe_id
+            if r.method == "create":
                 pe_id = get_vars.get("~.pe_id", None)
                 if pe_id:
                     # Coming from Profile page

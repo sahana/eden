@@ -1300,6 +1300,9 @@ def config(settings):
 
             if controller == "deploy":
 
+                resource = r.resource
+                get_config = resource.get_config
+
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
                 subsets = (("Computer", "Computer Skills", "Add Computer Skills"),
@@ -1307,7 +1310,7 @@ def config(settings):
                            )
                 widgets = []
                 append_widget = widgets.append
-                profile_widgets = r.resource.get_config("profile_widgets")
+                profile_widgets = get_config("profile_widgets")
                 while profile_widgets:
                     widget = profile_widgets.pop(0)
                     if widget["tablename"] == "hrm_competency":
@@ -1326,24 +1329,56 @@ def config(settings):
                     else:
                         append_widget(widget)
 
+                # Remove unneeded filters widgets
+                filters = []
+                append_widget = filters.append
+                filter_widgets = get_config("filter_widgets")
+                while filter_widgets:
+                    widget = filter_widgets.pop(0)
+                    if widget.field not in ("location_id",
+                                            "site_id",
+                                            "group_membership.group_id",
+                                            ):
+                        append_widget(widget)
+
+                # Add gender-filter
+                from s3 import S3OptionsFilter
+                gender_opts = dict(s3db.pr_gender_opts)
+                del gender_opts[1]
+                append_widget(S3OptionsFilter("person_id$gender",
+                                              options = gender_opts,
+                                              cols = 2,
+                                              hidden = True,
+                                              ))
+
                 # Custom list fields for RDRT
                 phone_label = settings.get_ui_label_mobile_phone()
                 list_fields = ["person_id",
+                               (T("Sectors"), "credential.job_title_id"),
+                               # @todo: Languages?
+                               # @todo: Skills?
+                               (T("Trainings"), "training.course_id"),
                                "organisation_id$root_organisation",
                                "type",
                                "job_title_id",
+                               # @todo: Education?
                                (T("Email"), "email.value"),
                                (phone_label, "phone.value"),
+                               (T("Address"), "person_id$address.location_id"),
+                               "person_id$date_of_birth",
                                "person_id$gender",
+                               "person_id$person_details.nationality",
                                (T("Passport Number"), "person_id$passport.value"),
+                               (T("Passport Issuer"), "person_id$passport.ia_name"),
+                               (T("Passport Date"), "person_id$passport.valid_from"),
                                (T("Passport Expires"), "person_id$passport.valid_until"),
-                               (T("Sectors"), "credential.job_title_id"),
-                               (T("Trainings"), "training.course_id"),
-                               # @todo: Languages (once implemented)
+                               # @todo: Emergency Contacts
+                               "person_id$physical_description.blood_type",
                                ]
-                r.resource.configure(list_fields = list_fields,
-                                     profile_widgets = widgets,
-                                     )
+                resource.configure(filter_widgets = filters,
+                                   list_fields = list_fields,
+                                   profile_widgets = widgets,
+                                   )
             return True
         s3.prep = custom_prep
 
@@ -1901,7 +1936,7 @@ def config(settings):
 
         T = current.T
         from s3 import S3FixedOptionsWidget
-        
+
         ptewidget = S3FixedOptionsWidget(("Primary",
                                           "Intermediate",
                                           "Advanced",
@@ -2879,5 +2914,5 @@ def config(settings):
 
     settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
 
-    
+
 # END =========================================================================
