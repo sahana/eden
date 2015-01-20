@@ -251,6 +251,7 @@ class DataCollectionModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
 
         crud_strings = current.response.s3.crud_strings
 
@@ -266,10 +267,10 @@ class DataCollectionModel(S3Model):
                      self.dc_template_id(),
                      s3_date(default = "now"),
                      self.gis_location_id(),
-                     # @todo: default to user root-org
-                     self.org_organisation_id(),
-                     # @todo: default to logged-in user
-                     self.pr_person_id(),
+                     self.org_organisation_id(default = auth.root_org(),
+                                              ),
+                     self.pr_person_id(default = auth.s3_logged_in_person(),
+                                       ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -297,10 +298,7 @@ class DataCollectionModel(S3Model):
             msg_record_deleted = T("Data Collection deleted"),
             msg_list_empty = T("No Data Collections currently registered"))
 
-        # @todo: representation including template name, location and date
-        represent = S3Represent(lookup=tablename,
-                                fields=["date"],
-                                )
+        represent = collection_CollectionRepresent(lookup=tablename)
 
         # Reusable field
         collection_id = S3ReusableField("collection_id", "reference %s" % tablename,
@@ -407,5 +405,74 @@ def dc_rheader(r, tabs=None):
         rheader = ""
 
     return rheader
+
+class collection_CollectionRepresent(S3Represent):
+    """
+        Representation of Collections by Template Name, Location and Date
+
+    """
+
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for dc_collection, does a
+            left join with the dc_template and gis_location.
+
+            @param values: dc_collection ID
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.dc_collection
+        ptable = s3db.dc_template
+        mtable = s3db.gis_location
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+            limitby = (0, 1)
+        else:
+            query = (key.belongs(values))
+            limitby = (0, count)
+
+        left_template = ptable.on(table.template_id == ptable.id)
+        left_location = mtable.on(table.location_id == mtable.id)
+
+        left = [left_template, left_location]
+
+        fields = ["dc_collection.id",
+                  "gis_location.name",
+                  "dc_template.name",
+                  "dc_collection.date"
+                  ]
+
+        rows = db(query).select(*fields,
+                                left = left,
+                                limitby = limitby
+                                )
+
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row for a particular dc_collection
+
+            @param row: dc_collection Row
+        """
+
+        try:
+            if row.gis_location.name:
+                return "%s, %s, %s" % (row.dc_template.name,
+                                       row.gis_location.name,
+                                       row.dc_collection.date,
+                                      )
+            else:
+                return "%s %s" % (row.dc_template.name,
+                                  row.dc_collection.date,
+                                  )
+        except:
+            return current.messages.UNKNOWN_OPT
 
 # END =========================================================================
