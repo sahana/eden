@@ -1301,10 +1301,11 @@ class S3BudgetAllocationModel(S3Model):
                                           ),
                           # @ToDo: s3_datetime
                           s3_date("start_date",
-                                  label = T("Start Date")
+                                  label = T("Start Date"),
                                   ),
                           s3_date("end_date",
-                                  label = T("End Date")
+                                  label = T("End Date"),
+                                  start_field = "budget_allocation_start_date",
                                   ),
                           Field("unit_cost", "double",
                                 default = 0.00,

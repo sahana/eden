@@ -2876,6 +2876,7 @@ class S3PersonIdentityModel(S3Model):
                                   ),
                           s3_date("valid_until",
                                   label = T("Valid Until"),
+                                  start_field = "pr_identity_valid_from",
                                   ),
                           Field("country_code", length=4,
                                 label = T("Country Code"),

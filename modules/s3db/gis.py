@@ -242,6 +242,7 @@ class S3LocationModel(S3Model):
                     ),
             s3_date("end_date",
                     label = T("End Date"),
+                    start_field = "gis_location_start_date",
                     ),
             s3_comments(),
             Field("L5",

@@ -1343,6 +1343,7 @@ def s3_datetime(name="date", **attr):
             widget = "date" (in addition to usual meanings)
             past = x hours
             future = x hours
+            start_field = "selector" for start field
 
         @ToDo: Different default field name in case we need to start supporting
                Oracle, where 'date' is a reserved word
@@ -1359,6 +1360,12 @@ def s3_datetime(name="date", **attr):
     else:
         future = None
 
+    if "start_field" in attr:
+        start_field = attr["start_field"]
+        del attr["start_field"]
+    else:
+        start_field = None
+
     if "default" in attr and attr["default"] == "now":
         attr["default"] = current.request.utcnow
     if "label" not in attr:
@@ -1372,16 +1379,19 @@ def s3_datetime(name="date", **attr):
 
     if "widget" not in attr:
         if past is None and future is None:
-            attr["widget"] = S3DateTimeWidget()
+            attr["widget"] = S3DateTimeWidget(start_field = start_field)
         elif past is None:
-            attr["widget"] = S3DateTimeWidget(future=future)
+            attr["widget"] = S3DateTimeWidget(future = future,
+                                              start_field = start_field)
         elif future is None:
-            attr["widget"] = S3DateTimeWidget(past=past)
+            attr["widget"] = S3DateTimeWidget(past = past,
+                                              start_field = start_field)
         else:
-            attr["widget"] = S3DateTimeWidget(past=past, future=future)
+            attr["widget"] = S3DateTimeWidget(past = past, future = future,
+                                              start_field = start_field)
     elif attr["widget"] == "date":
         if past is None and future is None:
-            attr["widget"] = S3DateWidget()
+            attr["widget"] = S3DateWidget(start_field = start_field)
             requires = IS_DATE(
                     format=current.deployment_settings.get_L10n_date_format()
                 )
@@ -1390,7 +1400,8 @@ def s3_datetime(name="date", **attr):
             current_month = now.month
             if past is None:
                 future = int(round(future/744.0, 0))
-                attr["widget"] = S3DateWidget(future=future)
+                attr["widget"] = S3DateWidget(future = future,
+                                              start_field = start_field)
                 future_month = now.month + future
                 if future_month <= 12:
                     max = now.replace(month=future_month)
@@ -1432,7 +1443,8 @@ def s3_datetime(name="date", **attr):
             else:
                 future = int(round(future/744.0, 0))
                 past = int(round(past/744.0, 0))
-                attr["widget"] = S3DateWidget(past=past, future=future)
+                attr["widget"] = S3DateWidget(past = past, future = future,
+                                              start_field = start_field)
                 future_month = now.month + future
                 if future_month <= 12:
                     max = now.replace(month=future_month)
