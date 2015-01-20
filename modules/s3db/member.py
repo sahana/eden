@@ -153,6 +153,7 @@ class S3MembersModel(S3Model):
                               ),
                       s3_date("end_date",
                               label = T("Date resigned"),
+                              start_field = "member_membership_start_date",
                               ),
                       Field("membership_fee", "double",
                             label = T("Membership Fee"),
