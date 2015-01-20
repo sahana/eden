@@ -240,22 +240,14 @@ def project():
     def postp(r, output):
 
         if r.interactive:
-
             if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('project_project_start_date','project_project_end_date')''')
+
                 if mode_task:
                     read_url = URL(args=["[id]", "task"])
                     update_url = URL(args=["[id]", "task"])
                     s3_action_buttons(r,
                                       read_url=read_url,
                                       update_url=update_url)
-
-            elif r.component_name == "beneficiary":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
 
             if r.component_name == "task" and r.component_id:
                 # Put Comments in rfooter
@@ -547,15 +539,6 @@ def activity():
                     doc_table.location_id.readable = doc_table.location_id.writable = False
         return True
     s3.prep = prep
-
-    def postp(r, output):
-        if r.interactive:
-            if not r.component:
-                s3.jquery_ready.append(
-'''S3.start_end_date('project_activity_date','project_activity_end_date')''')
-
-        return output
-    s3.postp = postp
 
     return s3_rest_controller(csv_template = "activity",
                               hide_filter = False,

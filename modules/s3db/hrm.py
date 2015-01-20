@@ -435,6 +435,7 @@ class S3HRModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "hrm_human_resource_start_date",
                              ),
                      # Current status
                      Field("status", "integer",
@@ -842,6 +843,7 @@ class S3HRModel(S3Model):
                      s3_date(label = T("Start Date")),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "hrm_job_title_human_resource_date",
                              ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1498,8 +1500,8 @@ class S3HRSalaryModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
-                             widget = S3DateTimeWidget(hide_time=True,
-                                                       set_max="hrm_salary_start_date",
+                             widget = S3DateTimeWidget(hide_time = True,
+                                                       set_max = "hrm_salary_start_date",
                                                        ),
                              ),
                      Field("monthly_amount", "double",
@@ -2540,6 +2542,7 @@ class S3HRSkillModel(S3Model):
                                  ),
                      s3_datetime("end_date",
                                  label = T("End Date"),
+                                 start_field = "hrm_training_event_start_date",
                                  ),
                      Field("hours", "integer",
                            label = T("Hours"),
@@ -2659,6 +2662,7 @@ class S3HRSkillModel(S3Model):
                      s3_datetime(),
                      s3_datetime("end_date",
                                  label = T("End Date"),
+                                 start_field = "hrm_training_date",
                                  ),
                      Field("hours", "integer",
                            label = T("Hours"),
@@ -3879,6 +3883,7 @@ class S3HRExperienceModel(S3Model):
                                   ),
                           s3_date("end_date",
                                   label = T("End Date"),
+                                  start_field = "hrm_experience_start_date",
                                   ),
                           Field("hours", "double",
                                 label = T("Hours"),
@@ -7257,14 +7262,11 @@ def hrm_training_event_controller():
         return True
     s3.prep = prep
 
-    def postp(r, output):
-        if r.interactive:
-            if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
+#    def postp(r, output):
+#        if r.interactive:
+
             # @ToDo: Restore once the other part is working
-            #elif r.component_name == "participant" and \
+            # if r.component_name == "participant" and \
             #     isinstance(output, dict):
             #    showadd_btn = output.get("showadd_btn", None)
             #    if showadd_btn:
@@ -7279,8 +7281,8 @@ def hrm_training_event_controller():
             #                                                  vars={"~.training_event_id":r.id}),
             #                                        )
             #        output["showadd_btn"] = TAG[""](showadd_btn, import_btn)
-        return output
-    s3.postp = postp
+#        return output
+#    s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
                                      rheader = hrm_rheader)

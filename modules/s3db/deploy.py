@@ -411,6 +411,7 @@ class S3DeploymentModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "deploy_assignment_start_date",
                              ),
                      *s3_meta_fields())
 

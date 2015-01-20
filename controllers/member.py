@@ -71,14 +71,6 @@ def membership():
         return True
     s3.prep = prep
 
-    def postp(r, output):
-        if r.interactive and r.component is None:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
-        return output
-    s3.postp = postp
-
     return s3_rest_controller(rheader = s3db.member_rheader)
 
 # =============================================================================
@@ -194,10 +186,7 @@ def person():
                                                 name="label_list_button",
                                                 _href=URL(c="member", f="membership"),
                                                 _id="list-btn")
-            elif r.component_name == "membership":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
+
         return output
     s3.postp = postp
 

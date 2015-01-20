@@ -176,9 +176,7 @@ def staff():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
+
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules and \
                    auth.permission.has_permission("update", c="hrm", f="compose"):
@@ -276,21 +274,6 @@ def profile():
             # Disable non-interactive & import
             return False
     s3.prep = prep
-
-    # CRUD post-process
-    def postp(r, output):
-        if r.interactive and r.component:
-            if r.component_name == "human_resource":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-            if r.component_name == "experience":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-
-        return output
-    s3.postp = postp
 
     output = s3_rest_controller("pr", "person",
                                 rheader = s3db.hrm_rheader,
