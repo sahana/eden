@@ -25,8 +25,7 @@ echo "=========================="
 # matplotlib, lxml take a lot of time to build. So, installing from binaries
 # numpy installed by default
 # apt-get install numpy
-apt-get install python-matplotlib python-lxml -q
-
+apt-get install python-matplotlib python-lxml python-shapely -q
 
 python tests/travis/generate_requirements_file.py tests/travis requirements.txt optional_requirements.txt
 pip install -q -r tests/travis/generated_requirements.txt

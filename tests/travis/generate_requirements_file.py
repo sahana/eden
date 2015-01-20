@@ -9,7 +9,7 @@ from sys import argv
 # pyrtf not working with pip
 
 # packages not to be installed
-exclude = ("numpy", "matplotlib", "lxml", "PyRTF", "PIL", "GDAL")
+exclude = ("numpy", "matplotlib", "lxml", "PyRTF", "PIL", "GDAL", "Shapely")
 
 # the output requirements file
 gen_req_file = open("%s/generated_requirements.txt" % argv[1], "w")
