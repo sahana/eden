@@ -938,6 +938,8 @@ class S3AssetTelephoneModel(S3Model):
                           # @ToDo: Validation to ensure not before Start Date
                           s3_date("end_date",
                                   label = T("End Date"),
+                                  start_field = "asset_telephone_usage_date",
+                                  default_interval = 1,
                                   ),
                           Field("units_used", "double", # 'usage' is a reserved word in MySQL
                                 label = T("Usage"),

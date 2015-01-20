@@ -188,7 +188,9 @@ class S3ProjectModel(S3Model):
                              label = T("Start Date")
                              ),
                      s3_date("end_date",
-                             label = T("End Date")
+                             label = T("End Date"),
+                             start_field = "project_project_start_date",
+                             default_interval = 12,
                              ),
                      # Free-text field with no validation (used by OCHA template currently)
                      Field("duration",
@@ -808,6 +810,7 @@ class S3ProjectActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Project Activity
         #
+
         tablename = "project_activity"
         define_table(tablename,
                      # Instance
@@ -829,6 +832,8 @@ class S3ProjectActivityModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "project_activity_date",
+                             default_interval = 12,
                              ),
                      # Which contact is this?
                      # Implementing Org should be a human_resource_id
@@ -1663,6 +1668,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         #
         # @ToDo: Split project_id & project_location_id to separate Link Tables
         #
+
         tablename = "project_beneficiary"
         define_table(tablename,
                      # Instance
@@ -1706,6 +1712,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                      s3_date("end_date",
                              #empty = False,
                              label = T("End Date"),
+                             start_field = "project_beneficiary_date",
+                             default_interval = 12,
                              ),
                      Field("year", "list:integer",
                            compute = lambda row: \
@@ -2260,6 +2268,8 @@ class S3ProjectCampaignModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "project_campaign_response_summary_date",
+                             default_interval = 1,
                              #empty = False,
                              ),
                      s3_comments(),

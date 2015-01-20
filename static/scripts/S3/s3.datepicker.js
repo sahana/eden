@@ -99,7 +99,8 @@ S3.start_end_date = function(start_field, end_field) {
          */
         _init: function() {
 
-            var default_interval,
+            var select_start_date,
+                default_interval,
                 select_end_date,
                 start_element,
                 start_month,
@@ -135,7 +136,10 @@ S3.start_end_date = function(start_field, end_field) {
             }
 
             element.unbind(self.namespace).on('click' + self.namespace, function() {
-                self._inputclick();
+                select_start_date = start_element.datepicker('getDate');
+                if (select_start_date != null) {
+                    self._inputclick();
+                }
             });
 
             select_end_date = element.datepicker('getDate');

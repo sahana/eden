@@ -1235,6 +1235,8 @@ class S3SupplyDistributionModel(S3Model):
                      s3_date("end_date",
                              #empty = False,
                              label = T("End Date"),
+                             start_field = "supply_distribution_date",
+                             default_interval = 12,
                              ),
                      #self.stats_source_id(),
                      Field.Method("year", self.supply_distribution_year),

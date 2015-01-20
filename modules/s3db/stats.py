@@ -146,7 +146,8 @@ class S3StatsModel(S3Model):
                            # IS_FLOAT_AMOUNT.represent(v, precision=2),
                            ),
                      # @ToDo: This will need to be a datetime for some usecases
-                     s3_date(),
+                     s3_date(label = T("Start Date"),
+                             ),
                      s3_date("end_date",
                              label = T("End Date"),
                              ),

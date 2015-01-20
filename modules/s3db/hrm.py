@@ -435,6 +435,8 @@ class S3HRModel(S3Model):
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             start_field = "hrm_human_resource_start_date",
+                             default_interval = 12,
                              ),
                      # Current status
                      Field("status", "integer",
@@ -3879,6 +3881,8 @@ class S3HRExperienceModel(S3Model):
                                   ),
                           s3_date("end_date",
                                   label = T("End Date"),
+                                  start_field = "hrm_experience_start_date",
+                                  default_interval = 12,
                                   ),
                           Field("hours", "double",
                                 label = T("Hours"),
