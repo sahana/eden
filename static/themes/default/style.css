@@ -169,6 +169,12 @@ input[type="time"],
 input[type="url"],
 select {
   width: auto !important;
+  max-width: 100%;
+}
+
+textarea {
+  resize: both;
+  max-width: 100%;
 }
 
 /* Form and Item containers */
@@ -189,6 +195,10 @@ select {
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
+}
+.form-container .controls:not(.columns),
+.item-container .controls:not(.columns) {
+  width: 100%;
 }
 
 .form-container form select,
@@ -236,9 +246,12 @@ select {
 .inline-tooltip .stickytip,
 .inline-tooltip .ajaxtip {
   display: block;
-  margin-top: 10px;
   padding: 0;
   width: 60px;
+}
+.inline-tooltip .s3_add_resource_link {
+  display: inline-block;
+  margin: -3px 0 -3px 5px;
 }
 
 /* Rheader */
