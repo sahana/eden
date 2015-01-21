@@ -43,15 +43,6 @@ def template():
                                        field.represent,
                                        left=left)
 
-            # Hide create form when no further questions can be added
-            if r.method != "update":
-                count = qtable.id.count()
-                row = db(query).select(count,
-                                       left=left,
-                                       limitby=(0, 1)).first()
-                if not row or not row[count]:
-                    r.component.link.configure(insertable=False)
-
         return True
     s3.prep = prep
 
