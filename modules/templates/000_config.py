@@ -65,6 +65,8 @@ settings.base.migrate = True
 # ?debug=1
 settings.base.debug = False
 
+# Uncomment this to make the tests repeatable.
+#settings.base.allow_repeatability = True
 # Uncomment this to prevent automated test runs from remote
 # settings.base.allow_testing = False
 
