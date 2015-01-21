@@ -5,4 +5,5 @@ Suite Setup  Start Testing If Template Is SSF
 *** Keywords ***
 Start Testing If Template Is SSF
     [Documentation]  Run the test suite for SSF template
-    Run Keyword If  "${TEMPLATE}"!='SSF'  Fatal Error  msg=Suite only for SSF template
+    ${Template List}=  Create List  SSF
+    Run On Templates  ${Template List} 

@@ -4,6 +4,8 @@ Documentation       Keywords for UI widgets
 *** Variables ***
 
 *** Keywords ***
+
+#Resource: widegts.txt; Keyword: Select From MultiSelect
 Open MultiSelect
     [Arguments]  ${selector}
     [Documentation]  Opens the jQuery UI MultiSelect Menu for _selector_
@@ -12,6 +14,7 @@ Open MultiSelect
     Return From Keyword If  ${active} == ${true}  # already open
     Click Button  jquery=#${selector} + button.ui-multiselect
 
+#Resource: widegts.txt; Keyword: Select From MultiSelect
 Close MultiSelect
     [Arguments]  ${selector}
     [Documentation]  Closes the jQuery UI MultiSelect Menu for _selector_
@@ -20,6 +23,7 @@ Close MultiSelect
     Return From Keyword If  ${active} == ${false}  # already closed
     Click Button  jquery=#${selector} + button.ui-multiselect
 
+#Testsuite:hrm; Testcase:Finding Staff By Organization
 Select From MultiSelect
     [Arguments]  ${selector}  ${label}
     [Documentation]  Selects option _label_ from the jQuery UI MultiSelect Menu for _selector_
@@ -29,7 +33,8 @@ Select From MultiSelect
                ...                 .each(function(){if (!$(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
     Should Be True  ${count} >= ${1}  Option not found: "${label}"
     Close MultiSelect  ${selector}
-    
+
+#Usage similar to the keyword: Select From Multiselect
 Deselect From MultiSelect
     [Arguments]  ${selector}  ${label}
     [Documentation]  De-selects option _label_ from the jQuery UI MultiSelect Menu for _selector_
@@ -40,6 +45,7 @@ Deselect From MultiSelect
     Should Be True  ${count} >= ${1}  Option not found: "${label}"
     Close MultiSelect  ${selector}
 
+#Usage similar to the keyword: Select From Multiselect
 Select All From MultiSelect
     [Arguments]  ${selector}
     [Documentation]  Selects all options from the jQuery UI MultiSelect Menu for _selector_
@@ -48,6 +54,7 @@ Select All From MultiSelect
                ...                 .each(function(){if (!$(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
     Close MultiSelect  ${selector}
 
+#Usage similar to the keyword: Select From Multiselect
 Deselect All From MultiSelect
     [Arguments]  ${selector}
     [Documentation]  De-selects all options from the jQuery UI MultiSelect Menu for _selector_
