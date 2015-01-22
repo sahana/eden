@@ -219,6 +219,7 @@
 'Add Asset': 'Dodaj sredstvo',
 'Add Asset Log Entry - Change Label': 'Dodaj stavku zapisnika sredstava - promijeni oznaku',
 'Add Availability': 'Dodaj dostupnost',
+'Add Award': 'Dodaj nagradu',
 'Add Baseline': 'Dodaj referentnu tačku',
 'Add Baseline Type': 'Dodaj tip referentne tačke',
 'Add Bed Type': 'Dodaj vrstu ležaja',

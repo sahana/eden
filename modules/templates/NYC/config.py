@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import A, URL, TR, TD
 from gluon.storage import Storage
 
-from s3 import s3_fullname, S3SQLInlineLink, S3SQLSubFormLayout
+from s3 import s3_fullname, S3Represent, S3SQLInlineLink, S3SQLSubFormLayout
 
 def config(settings):
     """
@@ -101,12 +101,18 @@ def config(settings):
     #                                           }
     settings.auth.registration_link_user_to_default = "staff"
 
+    # Record Approval
+    settings.auth.record_approval = True
+    settings.auth.record_approval_required_for = ("org_organisation",)
+
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # Enable this to have Open links in IFrames open a full page in a new tab
     settings.ui.iframe_opens_full = True
     settings.ui.label_attachments = "Media"
     settings.ui.update_label = "Edit"
+    # Uncomment to show created_by/modified_by using Names not Emails
+    settings.ui.auth_user_represent = "name"
 
     # Uncomment to disable checking that LatLons are within boundaries of their parent
     #settings.gis.check_within_parent_boundaries = False
@@ -115,12 +121,8 @@ def config(settings):
     # Uncomment to modify the Simplify Tolerance
     settings.gis.simplify_tolerance = 0.001
 
-    # Uncomment to show created_by/modified_by using Names not Emails
-    settings.ui.auth_user_represent = "name"
-
-    # Record Approval
-    settings.auth.record_approval = True
-    settings.auth.record_approval_required_for = ("org_organisation",)
+    # Uncomment to turn off enforcement of E.123 international phone number notation
+    settings.msg.require_international_phone_numbers = False
 
     # -------------------------------------------------------------------------
     # Audit
@@ -163,6 +165,47 @@ def config(settings):
     settings.cms.show_tags = True
     # Uncomment to show post Titles in Newsfeed
     settings.cms.show_titles = True
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            table = r.table
+
+            # Simple Location Represent
+            table.location_id.represent = S3Represent(lookup="gis_location")
+
+            # Only needed once we start having multiple types
+            # We only use a single type so hard-code it
+            #table.series_id.readable = table.series_id.writable = False
+            #if not r.record:
+            #    stable = current.s3db.cms_series
+            #    row = current.db(stable.name == "News").select(stable.id,
+            #                                                   limitby=(0, 1)
+            #                                                   ).first()
+            #    try:
+            #        table.series_id.default = row.id
+            #    except:
+            #        # Prepop not done
+            #        # Undo the readable/writable so as not to mask the error
+            #        table.series_id.readable = table.series_id.writable = True
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
     # Inventory Management
@@ -1347,6 +1390,14 @@ def config(settings):
     ]
 
     # -------------------------------------------------------------------------
+    def customise_hrm_competency_resource(r, tablename):
+
+        field = current.s3db.hrm_competency.organisation_id
+        field.readable = field.writable = False
+
+    settings.customise_hrm_competency_resource = customise_hrm_competency_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         s3 = current.response.s3
@@ -1439,12 +1490,6 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
-        """
-            Customise hrm_human_resource resource (in facility,
-            human_resource, organisation & person controllers)
-                - runs after controller customisation
-                - but runs before prep
-        """
 
         s3db = current.s3db
         # We need a group-component for pr_person here to embed

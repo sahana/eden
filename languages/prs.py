@@ -92,6 +92,7 @@
 'Add Activity Type to Project Location': 'نوع فعالیت را در موقعیت پروژه اضافه کنید',
 'Add Address': 'آدرس را اضافه نمایید',
 'Add Affiliation': 'ارتباط را اضافه نمایید',
+'Add Award': 'جایزه را اضافه نمایید',
 'Add all organizations which are involved in different roles in this project': 'تمام موسسه هایی که به نقش های مختلف درین پروژه شامل بوده اند را اضافه نمایید',
 'Add Annual Budget': 'بودجه سالیانه جدید',
 'Add Appraisal': 'ارزیابی را اضافه نمایید',

@@ -2260,7 +2260,7 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Skill"),
+            label_create = T("Add Skill"),
             title_display = T("Skill Details"),
             title_list = T("Skills"),
             title_update = T("Edit Skill"),
@@ -3974,7 +3974,7 @@ class S3HRAwardModel(S3Model):
                        deduplicate = self.award_type_duplicate,
                        )
 
-        ADD_AWARD_TYPE = T("Add Award Type")
+        ADD_AWARD_TYPE = T("Create Award Type")
         award_type_represent = hrm_OrgSpecificTypeRepresent(lookup="hrm_award_type")
 
         # =====================================================================
@@ -6443,7 +6443,7 @@ def hrm_human_resource_controller(extra_filter=None):
             # Configure widgets
             # @todo: put into separate function
             contacts_widget = dict(label = "Contacts",
-                                   label_create = "Create Contact",
+                                   label_create = "Add Contact",
                                    tablename = "pr_contact",
                                    type = "datalist",
                                    filter = FS("pe_id") == pe_id,
@@ -6463,7 +6463,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                   )
             credentials_widget = dict(# @ToDo: deployment_setting for Labels
                                       label = "Sectors",
-                                      label_create = "Create Sector",
+                                      label_create = "Add Sector",
                                       type = "datalist",
                                       tablename = "hrm_credential",
                                       filter = FS("person_id") == person_id,
@@ -6472,7 +6472,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       #list_layout = hrm_credential_list_layout,
                                       )
             skills_widget = dict(label = "Skills",
-                                 label_create = "Create Skill",
+                                 label_create = "Add Skill",
                                  type = "datalist",
                                  tablename = "hrm_competency",
                                  filter = FS("person_id") == person_id,
@@ -7369,7 +7369,7 @@ class hrm_CV(S3Method):
                     profile_widgets.append(form)
             if vol and settings.get_hrm_use_awards():
                 awards_widget = dict(label = "Awards",
-                                     label_create = "Create Award",
+                                     label_create = "Add Award",
                                      type = "datatable",
                                      actions = dt_row_actions("award"),
                                      tablename = "vol_volunteer_award",
@@ -7426,7 +7426,7 @@ class hrm_CV(S3Method):
                 profile_widgets.append(training_widget)
             if settings.get_hrm_use_skills():
                 skills_widget = dict(label = "Skills",
-                                     label_create = "Create Skill",
+                                     label_create = "Add Skill",
                                      type = "datatable",
                                      actions = dt_row_actions("competency"),
                                      tablename = "hrm_competency",
@@ -7585,7 +7585,7 @@ class hrm_Record(S3Method):
                 if teams == "Teams":
                     label_create = "Add Team"
                 elif teams == "Groups":
-                    label_create = "Create Group"
+                    label_create = "Add Group"
                 teams_widget = dict(label = teams,
                                     label_create = label_create,
                                     type = "datatable",

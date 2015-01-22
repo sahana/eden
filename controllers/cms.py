@@ -415,8 +415,13 @@ def newsfeed():
                                    hidden = hidden,
                                    ))
 
+    notify_fields = [(T("Date"), "date"),
+                     (T("Location"), "location_id"),
+                     ]
+
     len_series = db(stable.deleted == False).count()
     if len_series > 3:
+        notify_fields.insert(0, (T("Type"), "series_id"))
         # Multiselect widget
         finsert(1, S3OptionsFilter("series_id",
                                    label = T("Filter by Type"),
@@ -426,6 +431,7 @@ def newsfeed():
                                    ))
                       
     elif len_series > 1:
+        notify_fields.insert(0, (T("Type"), "series_id"))
         # Checkboxes
         finsert(1, S3OptionsFilter("series_id",
                                    label = T("Filter by Type"),
@@ -435,13 +441,9 @@ def newsfeed():
                                    hidden = hidden,
                                    ))
     else:
-        # No Widget
+        # No Widget or notify_field
         pass
 
-    notify_fields = [(T("Type"), "series_id"),
-                     (T("Date"), "date"),
-                     (T("Location"), "location_id"),
-                     ]
     nappend = notify_fields.append
     if org_field:
         nappend((T("Organization"), org_field))
@@ -475,8 +477,26 @@ def newsfeed():
             s3db.cms_customise_post_fields()
 
         if r.interactive:
-            field = table.series_id
-            field.label = T("Type")
+            if len_series > 1:
+                refresh = get_vars.get("refresh", None)
+                if refresh == "datalist":
+                    # We must be coming from the News Feed page so can change the type on-the-fly
+                    field = table.series_id
+                    field.label = T("Type")
+                    field.readable = field.writable = True
+            else:
+                field = table.series_id
+                row = db(stable.deleted == False).select(stable.id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+                try:
+                    field.default = row.id
+                except:
+                    # Prepop not done: expose field to show error
+                    field.label = T("Type")
+                    field.readable = field.writable = True
+                else:
+                    field.readable = field.writable = False
 
             if r.method == "read":
                 # Restore the label for the Location
@@ -495,11 +515,6 @@ def newsfeed():
                 #                               not_filter_opts = ("Alert",),
                 #                               )
 
-            refresh = get_vars.get("refresh", None)
-            if refresh == "datalist":
-                # We must be coming from the News Feed page so can change the type on-the-fly
-                field.readable = field.writable = True
-            #field.requires = field.requires.other
             #field = table.name
             #field.readable = field.writable = False
             #field = table.title
@@ -663,6 +678,7 @@ def newsfeed():
                 # Hide side menu
                 current.menu.options = None
                 response.view = s3base.S3CRUD._view(r, "cms/newsfeed.html")
+
         return output
     s3.postp = postp
 

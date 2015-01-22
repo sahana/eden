@@ -98,6 +98,7 @@
 'Add all organizations which are involved in different roles in this project': 'यस परियोजनामा फरक-फरक भूमिका निभाउने संस्थाहरू राख्नुहोस्',
 'Add Annual Budget': 'नयाँ वार्षिक बजेट',
 'Add Appraisal': 'मुल्यङकन राख्नुहोस् ',
+'Add Award': 'पुरस्कार राख्नुहोस् ',
 'Add Beneficiaries': 'भागिदारहरू राख्नुहोस् ',
 'Add Branch Organization': 'शाखा संघ राख्नुहोस् ',
 'Add Certificate for Course': 'पाठ्यक्रम प्रमाणपत्र राख्नुहोस् ',

@@ -94,6 +94,7 @@
 'Add all organizations which are involved in different roles in this project': 'اضافه کړی ټولی موسسی کومی چی په مختلفو دندو د پروژی بوخت دی',
 'Add Annual Budget': 'نوی کلنی بودیجه',
 'Add Appraisal': 'اضافه کړی ارزیابی',
+'Add Award': 'اضافه کړی انعام',
 'Add Beneficiaries': 'اضافه کړی ګټه',
 'Add Branch Organization': 'اضافه کړی د موسسی څانګه',
 'Add Certificate for Course': 'اضافه کړی د کورس شهادت نامه',

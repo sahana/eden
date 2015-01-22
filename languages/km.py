@@ -154,6 +154,7 @@
 'Add Affiliation': 'បន្ថែម​សម្ព័ន្ធភាព',
 'Add Annual Budget': 'ថវិកាថ្មី​ប្រចាំឆ្នាំ',
 'Add Appraisal': 'បន្ថែម​ការ​វាយ​តម្លៃ',
+'Add Award': 'បន្ថែម​ពានរង្វាន់',
 'Add Beneficiaries': 'បន្ថែម​អ្នក​ទទួល​ផល',
 'Add Branch Organization': 'បន្ថែម​សាខា​របស់​អង្គការ',
 'Add Certificate for Course': 'បន្ថែម​វិញ្ញាបនបត្រ​បញ្ជាក់វគ្គសិក្សា',
