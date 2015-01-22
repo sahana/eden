@@ -5,8 +5,9 @@ from robot.libraries.BuiltIn import BuiltIn
 import requests
 import sqlite3
 from base64 import b64encode
-from subprocess import call
 import subprocess
+import os
+import re
 
 
 class edentest_robot(object):
@@ -42,8 +43,8 @@ class edentest_robot(object):
         # Create the headers
         b64_auth_string = b64encode("%s:%s" % (self.admin_email, self.admin_password))
         headers = {
-            "content-type" : "application/json",
-            "Authorization" : "Basic %s" % b64_auth_string
+            "content-type": "application/json",
+            "Authorization": "Basic %s" % b64_auth_string
             }
 
         # Send the response and get the response
@@ -79,76 +80,137 @@ class edentest_robot(object):
 
         return output
 
-    def switch_to_temp_database(self, db_type, is_repeatable):
+    def switch_to_temp_database(self, db_info, is_repeatable):
         """
         The function creates a copy of the the current databsase,
         so that it can be restored at teardown.
-        @param db_type: database type
+        @param db_info: Information regarding the databse like
+                        database type, database name, hostname & port number.
         @param is_repeatable: True if repeatable, false otherwise
         """
+        db = db_info[0].split(":")
+        db_type = db[0]
 
         if is_repeatable:
             if db_type == "sqlite":
+                source = os.path.join("applications", "eden",
+                                      "databases", "storage.db")
+                destination = os.path.join("applications", "eden",
+                                           "databases", "storage_temp.db")
+
                 # Create a copy of the database.
-                call(['cp', 'applications/eden/databases/storage.db',
-                      'applications/eden/databases/storage_temp.db'])
+                subprocess.call(["cp", source, destination])
 
             elif db_type == "postgres":
+
+                db_username = re.sub('/', '', db[1])
+                db_host = db[2].split("@")[1]
+                db_port = db[3].split("/")[0]
+                db_name = db[3].split("/")[1]
+
                 # Get the version of postgres
-                pg_version = subprocess.check_output(['psql', '-V', '-q']).split()[2]
+                temp1 = subprocess.check_output(["psql", "-V",
+                                                "-q"]).split()[2].split(".")[0]
+                temp2 = subprocess.check_output(["psql", "-V",
+                                                "-q"]).split()[2].split(".")[1]
+                pg_version = float(("%s%s%s") % (temp1, ".", temp2))
+
                 # Query to terminate the connection with database.
                 if (pg_version >= 9.2):
-                    query = "SELECT pg_terminate_backend(pg_stat_activity.pid) \
-                              FROM pg_stat_activity \
-                              WHERE pg_stat_activity.datname = 'sahana' \
-                              AND pid <> pg_backend_pid();"
+                    process = "pid"
+
                 else:
-                    query = "SELECT pg_terminate_backend(pg_stat_activity.procpid) \
-                              FROM pg_stat_activity \
-                              WHERE pg_stat_activity.datname = 'sahana' \
-                              AND procpid <> pg_backend_pid();"
+                    process = "procpid"
+
+                killconn_query = ("SELECT pg_terminate_backend(pg_stat_activity.%s) \
+                                   FROM pg_stat_activity \
+                                   WHERE pg_stat_activity.datname = '%s' \
+                                   AND %s <> pg_backend_pid();"
+                                  ) % (process, db_name, process)
 
                 # Terminate the connection.
-                call(['psql', '-q', '-c', query, '-U', 'postgres'])
+                subprocess.call(['psql', '-h', db_host, '-p', db_port,
+                                 '-c', killconn_query, '-U', db_username])
+
+                temp_db = "sahana_temp"
+                copydb_query = ("CREATE DATABASE %s \
+                                 TEMPLATE %s;") % (temp_db, db_name)
 
                 # Creates a copy of the database.
-                call(['createdb', '-U', 'postgres',
-                      '-T', 'sahana', 'sahana_temp'])
+                subprocess.call(['psql', '-h', db_host, '-p', db_port,
+                                 '-c', copydb_query, '-U', db_username])
 
-    def switch_to_original_database(self, db_type, is_repeatable):
+    def switch_to_original_database(self, db_info, is_repeatable):
         """
-        The function removes the modified database
-        and restore it back to the original.
-        @param db_type: database type
+        The function creates a copy of the the current databsase,
+        so that it can be restored at teardown.
+        @param db_info: Information regarding the databse like
+                        database type, database name, hostname & port number.
         @param is_repeatable: True if repeatable, false otherwise
         """
+
+        db = db_info[0].split(":")
+        db_type = db[0]
+
         if is_repeatable:
             if db_type == "sqlite":
+
                 # Removes the modified database.
-                call(['rm', 'applications/eden/databases/storage.db'])
+                db_path = os.path.join("applications", "eden",
+                                       "databases", "storage.db")
+                subprocess.call(['rm', db_path])
+
                 # Restore the original database.
-                call(['mv', 'applications/eden/databases/storage_temp.db',
-                      'applications/eden/databases/storage.db'])
+                tempdb_path = os.path.join("applications", "eden",
+                                           "databases", "storage_temp.db")
+                orgndb_path = os.path.join("applications", "eden",
+                                           "databases", "storage.db")
+                subprocess.call(['mv', tempdb_path, orgndb_path])
 
             elif db_type == "postgres":
-                pg_version = subprocess.check_output(['psql', '-V', '-q']).split()[2]
 
+                db_username = re.sub('/', '', db[1])
+                db_host = db[2].split("@")[1]
+                db_port = db[3].split("/")[0]
+                db_name = db[3].split("/")[1]
+
+                # Get the version of postgres
+                temp1 = subprocess.check_output(["psql", "-V",
+                                                "-q"]).split()[2].split(".")[0]
+                temp2 = subprocess.check_output(["psql", "-V",
+                                                "-q"]).split()[2].split(".")[1]
+                pg_version = float(temp1 + "." + temp2)
+
+                # Query to terminate the connection with database.
                 if (pg_version >= 9.2):
-                    query = "SELECT pg_terminate_backend(pg_stat_activity.pid) \
-                              FROM pg_stat_activity \
-                              WHERE pg_stat_activity.datname = 'sahana' \
-                              AND pid <> pg_backend_pid();"
+                    process = "pid"
+
                 else:
-                    query = "SELECT pg_terminate_backend(pg_stat_activity.procpid) \
-                              FROM pg_stat_activity \
-                              WHERE pg_stat_activity.datname = 'sahana' \
-                              AND procpid <> pg_backend_pid();"
+                    process = "procpid"
+
+                killconn_query = ("SELECT pg_terminate_backend(pg_stat_activity.%s) \
+                                   FROM pg_stat_activity \
+                                   WHERE pg_stat_activity.datname = '%s' \
+                                   AND %s <> pg_backend_pid();"
+                                  ) % (process, db_name, process)
+
                 # Terminate the connection.
-                call(['psql', '-q', '-c', query, '-U', 'postgres'])
+                subprocess.call(['psql', '-h', db_host, '-p', db_port,
+                                 '-c', killconn_query, '-U', db_username])
+
                 # Drops the modified database.
-                call(['dropdb', 'sahana', '-U', 'postgres'])
+                dropdb_query = ("DROP DATABASE %s;") % db_name
+                subprocess.call(['psql', '-h', db_host, '-p', db_port,
+                                 '-c', dropdb_query, '-U', db_username])
+
                 # Restores the original database.
-                call(['createdb', '-U', 'postgres',
-                      '-T', 'sahana_temp', 'sahana'])
+                temp_db = "sahana_temp"
+                createdb_query = ("CREATE DATABASE %s \
+                                   TEMPLATE %s;") % (db_name, temp_db)
+                subprocess.call(['psql', '-h', db_host, '-p', db_port,
+                                 '-c', createdb_query, '-U', db_username])
+
                 # Drops the database copy.
-                call(['dropdb', 'sahana_temp', '-U', 'postgres'])
+                dropdb_final = ("DROP DATABASE %s;") % temp_db
+                subprocess.call(['psql', '-h', db_host, '-p', db_port,
+                                 '-c', dropdb_final, '-U', db_username])
