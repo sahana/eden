@@ -91,7 +91,7 @@ class edentest_robot(object):
             if db_type == "sqlite":
                 # Create a copy of the database.
                 call(['cp', 'applications/eden/databases/storage.db',
-                    'applications/eden/databases/storage_temp.db'])
+                      'applications/eden/databases/storage_temp.db'])
 
             elif db_type == "postgres":
                 # Get the version of postgres
@@ -99,18 +99,21 @@ class edentest_robot(object):
                 # Query to terminate the connection with database.
                 if (pg_version >= 9.2):
                     query = "SELECT pg_terminate_backend(pg_stat_activity.pid) \
-                              FROM pg_stat_activity WHERE pg_stat_activity.datname = 'sahana' \
+                              FROM pg_stat_activity \
+                              WHERE pg_stat_activity.datname = 'sahana' \
                               AND pid <> pg_backend_pid();"
                 else:
                     query = "SELECT pg_terminate_backend(pg_stat_activity.procpid) \
-                              FROM pg_stat_activity WHERE pg_stat_activity.datname = 'sahana' \
+                              FROM pg_stat_activity \
+                              WHERE pg_stat_activity.datname = 'sahana' \
                               AND procpid <> pg_backend_pid();"
 
                 # Terminate the connection.
-                call(['psql', '-q', '-c', query,'-U','postgres'])
+                call(['psql', '-q', '-c', query, '-U', 'postgres'])
 
                 # Creates a copy of the database.
-                call(['createdb', '-U', 'postgres', '-T', 'sahana', 'sahana_temp'])
+                call(['createdb', '-U', 'postgres',
+                      '-T', 'sahana', 'sahana_temp'])
 
     def switch_to_original_database(self, db_type, is_repeatable):
         """
@@ -124,25 +127,28 @@ class edentest_robot(object):
                 # Removes the modified database.
                 call(['rm', 'applications/eden/databases/storage.db'])
                 # Restore the original database.
-                call(['mv','applications/eden/databases/storage_temp.db',
-                    'applications/eden/databases/storage.db'])
+                call(['mv', 'applications/eden/databases/storage_temp.db',
+                      'applications/eden/databases/storage.db'])
 
             elif db_type == "postgres":
                 pg_version = subprocess.check_output(['psql', '-V', '-q']).split()[2]
 
                 if (pg_version >= 9.2):
                     query = "SELECT pg_terminate_backend(pg_stat_activity.pid) \
-                              FROM pg_stat_activity WHERE pg_stat_activity.datname = 'sahana' \
+                              FROM pg_stat_activity \
+                              WHERE pg_stat_activity.datname = 'sahana' \
                               AND pid <> pg_backend_pid();"
                 else:
                     query = "SELECT pg_terminate_backend(pg_stat_activity.procpid) \
-                              FROM pg_stat_activity WHERE pg_stat_activity.datname = 'sahana' \
+                              FROM pg_stat_activity \
+                              WHERE pg_stat_activity.datname = 'sahana' \
                               AND procpid <> pg_backend_pid();"
                 # Terminate the connection.
-                call(['psql', '-q', '-c', query,'-U','postgres'])
+                call(['psql', '-q', '-c', query, '-U', 'postgres'])
                 # Drops the modified database.
                 call(['dropdb', 'sahana', '-U', 'postgres'])
                 # Restores the original database.
-                call(['createdb', '-U', 'postgres', '-T', 'sahana_temp', 'sahana'])
+                call(['createdb', '-U', 'postgres',
+                      '-T', 'sahana_temp', 'sahana'])
                 # Drops the database copy.
                 call(['dropdb', 'sahana_temp', '-U', 'postgres'])
