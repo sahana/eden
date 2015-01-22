@@ -2264,6 +2264,7 @@ class GIS(object):
             if geojson:
                 # Do the Simplify & GeoJSON direct from the DB
                 # @ToDo: Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
+                #        - needs this merging: https://github.com/web2py/web2py/pull/597
                 rows = db(query).select(table.id,
                                         gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
                 for row in rows:
@@ -2350,6 +2351,7 @@ class GIS(object):
                                                            # @ToDo: Deprecate
                                                            ftable.popup_fields,
                                                            ftable.individual,
+                                                           ftable.points,
                                                            ftable.trackable,
                                                            limitby=(0, 1)
                                                            ).first()
@@ -2363,9 +2365,10 @@ class GIS(object):
                     (ftable.function == function)
             layers = db(query).select(ftable.layer_id,
                                       ftable.attr_fields,
-                                      ftable.popup_fields, # @ToDo: Deprecate
+                                      ftable.popup_fields,  # @ToDo: Deprecate
                                       ftable.style_default, # @ToDo: Rename as no longer really 'style'
                                       ftable.individual,
+                                      ftable.points,
                                       ftable.trackable,
                                       )
             if len(layers) > 1:
@@ -2395,11 +2398,13 @@ class GIS(object):
                 #        - see S3Report.geojson()
                 attr_fields = layer.attr_fields or []
             individual = layer.individual
+            points = layer.points
             trackable = layer.trackable
         else:
             if not popup_fields:
                 popup_fields = ["name"]
             individual = False
+            points = False
             trackable = False
 
         table = resource.table
@@ -2628,7 +2633,7 @@ class GIS(object):
                     # Can't display this resource on the Map
                     return None
 
-            if geojson:
+            if geojson and not points:
                 geojsons[tablename] = GIS.get_locations(table, query, join, geojson)
             # @ToDo: Support Polygons in KML, GPX & GeoRSS
             #else:

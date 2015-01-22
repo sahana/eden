@@ -19,6 +19,7 @@
          Attributes...........comma-sep list..Layer Attributes (Fields to put in feature attributes to use for Popup Format &/or Style)
          Default..............boolean.........Layer Default
          Individual...........boolean.........Layer Individual
+         Points...............boolean.........Layer Points
          Trackable............boolean.........Layer Trackable
          Site.................boolean.........Layer Site (use Site for location)
          Style................string..........Style Style
@@ -103,6 +104,9 @@
             </xsl:if>
             <xsl:if test="col[@field='Individual']">
                 <data field="individual"><xsl:value-of select="col[@field='Individual']"/></data>
+            </xsl:if>
+            <xsl:if test="col[@field='Points']">
+                <data field="points"><xsl:value-of select="col[@field='Points']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Trackable']">
                 <data field="trackable"><xsl:value-of select="col[@field='Trackable']"/></data>
