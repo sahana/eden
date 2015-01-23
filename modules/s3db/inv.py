@@ -4074,7 +4074,8 @@ class S3InventoryAdjustModel(S3Model):
                      organisation_id(name = "old_owner_org_id",
                                      label = T("Current Owned By (Organization/Branch)"),
                                      ondelete = "SET NULL",
-                                     writable = False),
+                                     writable = False,
+                                     comment = None),
                      # Organisation that owns this item now
                      organisation_id(name = "new_owner_org_id",
                                      label = T("Transfer Ownership To (Organization/Branch)"),
