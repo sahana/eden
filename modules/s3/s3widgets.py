@@ -4258,7 +4258,7 @@ class S3LocationSelector(S3Selector):
 
     def __init__(self,
                  levels = None,
-                 optional = None,
+                 required_levels = None,
                  hide_lx = True,
                  reverse_lx = False,
                  show_address = False,
@@ -4284,8 +4284,8 @@ class S3LocationSelector(S3Selector):
 
             @param levels: list or tuple of hierarchy levels (names) to expose,
                            in order (e.g. ("L0", "L1", "L2"))
-            @param optional: list or tuple of (additional) optional hierarchy levels,
-                             in order (e.g. ("L3", "L4"))
+            @param required_levels: list or tuple of required hierarchy levels (if empty,
+                                    only the highest selectable Lx will be required)
             @param hide_lx: hide Lx selectors until higher level has been selected
             @param reverse_lx: render Lx selectors in the order usually used by
                                street Addresses (lowest level first), and below the
@@ -4314,7 +4314,7 @@ class S3LocationSelector(S3Selector):
 
         self._initlx = True
         self._levels = levels
-        self._optional = optional
+        self._required_levels = required_levels
 
         self._load_levels = None
 
@@ -4381,7 +4381,7 @@ class S3LocationSelector(S3Selector):
             for level in levels:
                 if level not in lx:
                     lx.append(level)
-            for level in self.optional:
+            for level in self.required_levels:
                 if level not in lx:
                     lx.append(level)
             levels = self._levels = lx
@@ -4390,16 +4390,16 @@ class S3LocationSelector(S3Selector):
 
     # -------------------------------------------------------------------------
     @property
-    def optional(self):
-        """ Lx-levels to treat as optional """
+    def required_levels(self):
+        """ Lx-levels to treat as required """
 
-        levels = self._optional
+        levels = self._required_levels
         if self._initlx:
             if levels is None:
                 levels = set()
             elif not isinstance(levels, (list, tuple)):
                 levels = [levels]
-            self._optional = levels
+            self._required_levels = levels
         return levels
 
     # -------------------------------------------------------------------------
@@ -5112,7 +5112,7 @@ class S3LocationSelector(S3Selector):
         hidden = True
 
         T = current.T
-        optional = self.optional
+        required_levels = self.required_levels
         for level in levels:
 
             _id = "%s_%s" % (fieldname, level)
@@ -5127,12 +5127,14 @@ class S3LocationSelector(S3Selector):
                             )
 
             # Mark as required?
-            if required and level not in optional:
+            if required or level in required_levels:
                 widget.add_class("required")
                 label = s3_required_label(label)
 
-                if ("L%s" % (int(level[1:]) + 1)) not in levels:
-                    # This is the highest level which is required
+                if required and ("L%s" % (int(level[1:]) - 1)) not in levels:
+                    # This is the highest level, treat subsequent levels
+                    # as optional unless they are explicitly configured
+                    # as required
                     required = False
 
             # Throbber

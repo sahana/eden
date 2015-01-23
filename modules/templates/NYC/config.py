@@ -511,8 +511,7 @@ def config(settings):
                 # Create form: Default
                 rss_import = None
 
-        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L2", "L3"),
-                                                                               optional="L4",
+        s3db.org_organisation_location.location_id.widget = S3LocationSelector(levels=("L2", "L3", "L4"),
                                                                                show_map=False,
                                                                                labels=False,
                                                                                )
