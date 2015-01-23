@@ -35,7 +35,7 @@ __all__ = ("GIS",
            "S3ImportPOI",
            )
 
-import datetime         # Needed for Feed Refresh checks
+import datetime         # Needed for Feed Refresh checks & web2py version check
 import os
 import re
 import sys
@@ -80,6 +80,7 @@ try:
 except ImportError:
     # old web2py
     from gluon.dal import Rows
+from gluon.fileutils import parse_version
 from gluon.languages import lazyT, regex_translate
 from gluon.storage import Storage
 
@@ -2263,10 +2264,16 @@ class GIS(object):
         if settings.get_gis_spatialdb():
             if geojson:
                 # Do the Simplify & GeoJSON direct from the DB
-                # @ToDo: Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
-                #        - needs this merging: https://github.com/web2py/web2py/pull/597
-                rows = db(query).select(table.id,
-                                        gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
+                web2py_installed_datetime = web2py_installed_version[4] # datetime_index = 4
+                if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
+                    # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
+                    rows = db(query).select(table.id,
+                                            gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                else:
+                    # Use http://www.postgis.org/docs/ST_Simplify.html
+                    rows = db(query).select(table.id,
+                                            gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
                 for row in rows:
                     output[row[tablename].id] = row.geojson
             else:
