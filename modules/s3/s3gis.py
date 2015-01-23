@@ -7616,13 +7616,13 @@ class Layer(object):
 
         def setup_folder(self, output):
             if self.dir:
-                output["dir"] = self.dir
+                output["dir"] = s3_unicode(current.T(self.dir))
 
         def setup_folder_and_visibility(self, output):
             if not self.visible:
                 output["visibility"] = False
             if self.dir:
-                output["dir"] = self.dir
+                output["dir"] = s3_unicode(current.T(self.dir))
 
         def setup_folder_visibility_and_opacity(self, output):
             if not self.visible:
@@ -7630,7 +7630,7 @@ class Layer(object):
             if self.opacity != 1:
                 output["opacity"] = "%.1f" % self.opacity
             if self.dir:
-                output["dir"] = self.dir
+                output["dir"] = s3_unicode(current.T(self.dir))
 
         # ---------------------------------------------------------------------
         @staticmethod

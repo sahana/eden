@@ -69,9 +69,11 @@ Mongolia,Volunteer Super Editor,mn_super@example.com,eden,"vol_super",Mongolian 
 Myanmar,Volunteer Data Entry,mm_dataentry@example.com,eden,"vol_data_entry",Myanmar Red Cross Society,
 Myanmar,Volunteer Editor,mm_editor@example.com,eden,"vol_editor",Myanmar Red Cross Society,
 Myanmar,Volunteer Super Editor,mm_super@example.com,eden,"vol_super",Myanmar Red Cross Society,
+Nepal,Member Super Editor,np_member_super@example.com,eden,"member_super",Nepal Red Cross Society,ne
 Nepal,Volunteer Data Entry,np_dataentry@example.com,eden,"vol_data_entry",Nepal Red Cross Society,ne
 Nepal,Volunteer Editor,np_editor@example.com,eden,"vol_editor",Nepal Red Cross Society,ne
 Nepal,Volunteer Super Editor,np_super@example.com,eden,"vol_super",Nepal Red Cross Society,ne
+Nepal,Warehouse Super Editor,np_inv_super@example.com,eden,"inv_super",Nepal Red Cross Society,ne
 Philippines,Volunteer Data Entry,ph_dataentry@example.com,eden,"vol_data_entry",Philippine Red Cross,
 Philippines,Volunteer Editor,ph_editor@example.com,eden,"vol_editor",Philippine Red Cross,
 Philippines,Volunteer Super Editor,ph_super@example.com,eden,"vol_super",Philippine Red Cross,

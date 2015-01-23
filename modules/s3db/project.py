@@ -1851,7 +1851,7 @@ class S3ProjectBeneficiaryModel(S3Model):
             comment = S3AddResourceLink(c="project", f="beneficiary",
                                         title=ADD_BNF,
                                         tooltip=\
-                T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+                T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiaries'.")),
             )
 
         self.add_components(tablename,

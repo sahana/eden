@@ -104,7 +104,7 @@ class S3MembersModel(S3Model):
             msg_record_deleted = T("Membership Type deleted"),
             msg_list_empty = T("No membership types currently registered"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         membership_type_id = S3ReusableField("membership_type_id", "reference %s" % tablename,
                                              label = T("Type"),
                                              ondelete = "SET NULL",
@@ -184,23 +184,6 @@ class S3MembersModel(S3Model):
             msg_record_deleted = T("Member deleted"),
             msg_list_empty = T("No Members currently registered"))
 
-        def member_type_opts():
-            """
-                Provide the options for the Membership Type search filter
-            """
-            ttable = self.member_membership_type
-
-            if root_org:
-                query = (ttable.deleted == False) & \
-                        ((ttable.organisation_id == root_org) | \
-                         (ttable.organisation_id == None))
-            else:
-                query = (ttable.deleted == False) & \
-                        (ttable.organisation_id == None)
-
-            rows = db(query).select(ttable.id, ttable.name)
-            return dict((row.id, row.name) for row in rows)
-
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
@@ -256,7 +239,6 @@ class S3MembersModel(S3Model):
             org_filter,
             S3OptionsFilter("membership_type_id",
                             cols = 3,
-                            options = member_type_opts,
                             hidden = True,
                             ),
             S3OptionsFilter("paid",

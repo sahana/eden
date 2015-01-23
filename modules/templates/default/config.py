@@ -632,6 +632,8 @@ def config(settings):
     #settings.inv.facility_label = "Facility"
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
+    # Uncomment to have Warehouse Types be Organisation-dependent
+    #settings.inv.org_dependent_warehouse_types = True
     # Uncomment to call Stock Adjustments, 'Stock Counts'
     #settings.inv.stock_count = True
     # Use the term 'Order' instead of 'Shipment'

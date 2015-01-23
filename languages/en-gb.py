@@ -29,6 +29,7 @@
 'Certificate Catalog': 'Certificate Catalogue',
 'Certifying Organization': 'Certifying Organisation',
 'Commitment Canceled': 'Commitment Cancelled',
+'Community Mobilization': 'Community Mobilisation',
 'Community Organization': 'Community Organisation',
 'Competency Rating Catalog': 'Competency Rating Catalogue',
 'Configure resources to synchronize, update methods and policies': 'Configure resources to synchronise, update methods and policies',

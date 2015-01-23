@@ -2519,6 +2519,12 @@ class S3Config(Storage):
         """
         return self.inv.get("direct_stock_edits", False)
 
+    def get_inv_org_dependent_warehouse_types(self):
+        """
+            Whether Warehouse Types vary by Organisation
+        """
+        return self.inv.get("org_dependent_warehouse_types", False)
+
     def get_inv_send_show_mode_of_transport(self):
         """
             Show mode of transport on Sent Shipments

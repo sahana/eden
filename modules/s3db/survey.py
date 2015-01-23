@@ -1600,18 +1600,20 @@ class S3SurveySeriesModel(S3Model):
                          2: T("Closed"),
                          }
 
-        # @ToDo: i18n labels
         tablename = "survey_series"
         self.define_table(tablename,
                           Field("name", length=120,
                                 default = "",
+                                label = T("Name"),
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           Field("description", "text", length=500,
                                 default = "",
+                                label = T("Description"),
                                 ),
                           Field("status", "integer",
                                 default = 1,
+                                label = T("Status"),
                                 represent = lambda index: series_status[index],
                                 requires = IS_IN_SET(series_status,
                                                      zero = None),
@@ -1624,9 +1626,11 @@ class S3SurveySeriesModel(S3Model):
                           organisation_id(widget = org_widget),
                           Field("logo", length=512,
                                 default = ""
+                                label = T("Logo"),
                                 ),
                           Field("language", length=8,
                                 default = "en",
+                                label = T("Language"),
                                 ),
                           s3_date("start_date",
                                   label = T("Start Date"),

@@ -234,6 +234,7 @@ class S3AssetModel(S3Model):
                              ),
                      Field("purchase_price", "double",
                            #default = 0.00,
+                           label = T("Purchase Price"),
                            represent = lambda v, row=None: \
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
                            ),

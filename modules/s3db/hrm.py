@@ -239,21 +239,20 @@ class S3HRModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True,
                            length=64,    # Mayon compatibility
-                           label=T("Name")),
-                     # Only included in order to be able to set
-                     # realm_entity to filter appropriately
+                           label = T("Name"),
+                           ),
                      organisation_id(default = root_org if org_dependent_job_titles else None,
                                      readable = is_admin if org_dependent_job_titles else False,
                                      writable = is_admin if org_dependent_job_titles else False,
                                      ),
                      Field("type", "integer",
                            default = hrm_type_default,
+                           label = T("Type"),
                            readable = hrm_types,
                            writable = hrm_types,
-                           requires = IS_IN_SET(hrm_type_opts),
                            represent = lambda opt: \
-                           hrm_type_opts.get(opt, UNKNOWN_OPT),
-                           label=T("Type"),
+                            hrm_type_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(hrm_type_opts),
                            ),
                      s3_comments(label=T("Description"),
                                  comment=None),
@@ -261,7 +260,7 @@ class S3HRModel(S3Model):
 
         if group == "volunteer":
             label = T("Volunteer Role")
-            label_create = T("Add Volunteer Role")
+            label_create = T("Create Volunteer Role")
             tooltip = T("The volunteer's role")
             crud_strings[tablename] = Storage(
                 label_create = label_create,
@@ -2185,6 +2184,7 @@ class S3HRSkillModel(S3Model):
                      Field("name",
                            length=64, # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("priority", "integer",
                            default = 1,
@@ -2194,7 +2194,7 @@ class S3HRSkillModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority"),
                                                            T("Priority from 1 to 9. 1 is most preferred.")))
-                            ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
