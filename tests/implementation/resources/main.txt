@@ -33,7 +33,7 @@ Start Testing
     ${DB INFO}=  Get From Dictionary  ${deployment settings}  database_string
     ${TEMPLATE}=  Get From Dictionary  ${deployment settings}  template
     ${REPEATABILITY}=  Get From Dictionary  ${deployment settings}  base_allow_repeatability
-    Switch To Temp Database  ${DB INFO}  ${REPEATABILITY}
+    Copy Database  ${DB INFO}  ${REPEATABILITY}
     Set Global variable  ${DB INFO}
     Set Global Variable  ${REPEATABILITY}
     Set Global Variable  ${TEMPLATE}
@@ -43,6 +43,6 @@ Start Testing
 
 End Testing
     [Documentation]  Ends the test
-    Switch To Original Database  ${DB INFO}  ${REPEATABILITY}
+    Restore Original Database  ${DB INFO}  ${REPEATABILITY}
     Logout From Eden
     Close Browser

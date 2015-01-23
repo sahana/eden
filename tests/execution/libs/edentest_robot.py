@@ -9,7 +9,6 @@ import subprocess
 import os
 import re
 
-
 class edentest_robot(object):
 
     def __init__(self, server, appname, admin_email, admin_password):
@@ -80,7 +79,7 @@ class edentest_robot(object):
 
         return output
 
-    def switch_to_temp_database(self, db_info, is_repeatable):
+    def copy_database(self, db_info, is_repeatable):
         """
         The function creates a copy of the the current databsase,
         so that it can be restored at teardown.
@@ -104,9 +103,11 @@ class edentest_robot(object):
             elif db_type == "postgres":
 
                 db_username = re.sub("/", "", db[1])
+                db_password = db[2].split("@")[0]
                 db_host = db[2].split("@")[1]
                 db_port = db[3].split("/")[0]
                 db_name = db[3].split("/")[1]
+                os.environ["PGPASSWORD"] = db_password
 
                 # Get the version of postgres
                 version_command = subprocess.check_output(["psql", "-V", "-q"])
@@ -139,7 +140,7 @@ class edentest_robot(object):
                 subprocess.call(["psql", "-h", db_host, "-p", db_port,
                                  "-c", copydb_query, "-U", db_username])
 
-    def switch_to_original_database(self, db_info, is_repeatable):
+    def restore_original_database(self, db_info, is_repeatable):
         """
         The function creates a copy of the the current databsase,
         so that it can be restored at teardown.
@@ -152,6 +153,7 @@ class edentest_robot(object):
         db_type = db[0]
 
         if is_repeatable:
+
             if db_type == "sqlite":
 
                 # Removes the modified database.
@@ -167,11 +169,13 @@ class edentest_robot(object):
                 subprocess.call(["mv", tempdb_path, orgndb_path])
 
             elif db_type == "postgres":
-
+                print "check1"
                 db_username = re.sub("/", "", db[1])
+                db_password = db[2].split("@")[0]
                 db_host = db[2].split("@")[1]
                 db_port = db[3].split("/")[0]
                 db_name = db[3].split("/")[1]
+                os.environ["PGPASSWORD"] = db_password
 
                 # Get the version of postgres
                 version_command = subprocess.check_output(["psql", "-V", "-q"])
@@ -193,7 +197,7 @@ class edentest_robot(object):
                                   ) % (process, db_name, process)
 
                 # Terminate the connection.
-                subprocess.call(["psq", "-h", db_host, "-p", db_port,
+                subprocess.call(["psql", "-h", db_host, "-p", db_port,
                                  "-c", killconn_query, "-U", db_username])
 
                 # Drops the modified database.
