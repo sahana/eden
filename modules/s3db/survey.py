@@ -1625,7 +1625,7 @@ class S3SurveySeriesModel(S3Model):
                           person_id(),
                           organisation_id(widget = org_widget),
                           Field("logo", length=512,
-                                default = ""
+                                default = "",
                                 label = T("Logo"),
                                 ),
                           Field("language", length=8,
