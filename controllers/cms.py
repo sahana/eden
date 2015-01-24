@@ -212,6 +212,15 @@ def post():
         return True
     s3.prep = prep
 
+    def postp(r,output):
+        if r.interactive:
+            if not r.component:
+                # Set the minimum expiry datetime to the same as the start datetime
+                s3.jquery_ready.append(
+'''S3.start_end_date('cms_post_date','cms_post_expiry_datetime')''')
+        return output
+    s3.postp = postp
+
     output = s3_rest_controller(rheader=s3db.cms_rheader)
     return output
 

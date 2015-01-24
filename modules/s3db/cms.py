@@ -208,7 +208,12 @@ class S3ContentModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      s3_datetime(default = "now"),
-                     # @ToDo: Also have a datetime for 'Expires On'
+                     # @ToDo: Automatically expire posts based on their expiry date
+                     s3_datetime("expiry_datetime",
+                                 label = T("Expires On"),
+                                 readable = False,
+                                 writable = False,
+                                 ),
                      Field("expired", "boolean",
                            default = False,
                            label = T("Expired?"),
@@ -256,10 +261,15 @@ class S3ContentModel(S3Model):
         list_fields = ["title",
                        "body",
                        "location_id",
-                       "date",
-                       "expired",
-                       "comments"
+                       "date"
                        ]
+
+        if current.s3db.cms_post.expiry_datetime.readable:
+            list_fields.append("expiry_datetime")
+
+        list_fields.extend(("expired",
+                            "comments"
+                            ))
 
         org_field = settings.get_cms_organisation()
         if org_field == "created_by$organisation_id":
