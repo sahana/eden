@@ -51,4 +51,16 @@
         </description>
     </xsl:template>
 
+    <!-- project_comment -->
+    <xsl:template match="resource[@name='project_comment']" mode="contents">
+        <title>
+            <xsl:value-of select="./reference[@field='task_id']/text()"/>
+        </title>
+        <description>
+            <xsl:value-of select="@created_by"/>
+            <xsl:text>: </xsl:text>
+            <xsl:value-of select="./data[@field='body']/text()"/>
+        </description>
+    </xsl:template>
+    
 </xsl:stylesheet>
