@@ -24,11 +24,6 @@ class InvTests(unittest.TestCase):
         self.location_ids = Storage()
         s3db = current.s3db
 
-
-        #---------------------------------------------------------------------
-
-
-        
     def tearDown(self):
 
         current.db.rollback()
@@ -50,7 +45,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        StatsTests,
+        InvTests,
     )
 
 # END ========================================================================

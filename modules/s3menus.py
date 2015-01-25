@@ -913,7 +913,7 @@ class S3OptionsMenu(object):
                     # Currently not got geocoding support
                     #M("Bulk Uploader", c="doc", f="bulk_upload"),
                     M("Locations", c="gis", f="location")(
-                        M("Create Location", m="create"),
+                        M("Create", m="create"),
                         #M("Create Location Group", m="create", vars={"group": 1}),
                         M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
                         M("Import from OpenStreetMap", m="import_poi",
@@ -1365,12 +1365,12 @@ class S3OptionsMenu(object):
 
         return M(c="member")(
                     M("Members", f="membership", m="summary")(
-                        M("Create Member", m="create"),
+                        M("Create", m="create"),
                         #M("Report", m="report"),
                         M("Import", f="person", m="import"),
                     ),
                     M("Membership Types", f="membership_type")(
-                        M("Create Membership Type", m="create"),
+                        M("Create", m="create"),
                         #M("Import", m="import"),
                     ),
                 )
@@ -1736,7 +1736,6 @@ class S3OptionsMenu(object):
                     M("Detail", f="details", restrict=[ADMIN]),
                     M("User", f="user", restrict=[ADMIN]),
                 )
-
 
     # -------------------------------------------------------------------------
     @staticmethod
