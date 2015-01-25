@@ -6,19 +6,13 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3hierarchy.py
 #
 import unittest
-try:
-    from pydal.objects import Query
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Query
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Query
+
+from lxml import etree
+
+from s3dal import Field, Query
 from s3.s3utils import *
 from s3.s3rest import s3_request
 from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_meta_fields
-from lxml import etree
 
 # =============================================================================
 class S3HierarchyTests(unittest.TestCase):

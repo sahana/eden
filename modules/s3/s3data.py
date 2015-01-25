@@ -38,18 +38,11 @@ import sys
 from itertools import product, islice
 
 from gluon import current
-try:
-    from pydal.objects import Expression
-except ImportError:
-    try:
-        from gluon.dal.objects import Expression
-    except ImportError:
-        # old web2py
-        from gluon.dal import Expression
 from gluon.html import *
 from gluon.storage import Storage
 from gluon.validators import IS_EMPTY_OR, IS_IN_SET
 
+from s3dal import Expression
 from s3utils import s3_flatlist, s3_has_foreign_key, s3_orderby_fields, s3_unicode, S3MarkupStripper, s3_represent_value, s3_set_extension
 from s3validators import IS_NUMBER
 

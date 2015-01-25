@@ -36,17 +36,10 @@ __all__ = ("S3BudgetModel",
            )
 
 from gluon import *
-try:
-    from pydal.objects import Row
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Row
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
+from s3dal import Row
 from s3layouts import S3AddResourceLink
 
 # =============================================================================

@@ -101,19 +101,11 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-try:
-    from pydal.objects import Row
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Row
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
+from s3dal import Row
 from s3layouts import S3AddResourceLink
 
 OU = 1 # role type which indicates hierarchy, see role_types

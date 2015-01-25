@@ -39,20 +39,10 @@ from gluon import *
 #from gluon import current
 #from gluon.html import *
 #from gluon.validators import *
-try:
-    from pydal import SQLCustomType, Field
-    from pydal.objects import Query
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal import SQLCustomType
-        from gluon.dal.objects import Query
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
+from s3dal import Query, SQLCustomType
 from s3navigation import S3ScriptItem
 from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME

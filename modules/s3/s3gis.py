@@ -75,19 +75,11 @@ from gluon import *
 #from gluon import current
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
-try:
-    from pydal.objects import Rows
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Rows
-    except ImportError:
-        # old web2py
-        from gluon.dal import Rows
 from gluon.fileutils import parse_version
 from gluon.languages import lazyT, regex_translate
 from gluon.storage import Storage
 
+from s3dal import Rows
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable

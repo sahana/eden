@@ -100,7 +100,6 @@ except ImportError:
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
-#from gluon.dal import Field
 #from gluon.html import *
 #from gluon.http import HTTP
 #from gluon.validators import *

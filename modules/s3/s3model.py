@@ -30,15 +30,6 @@
 __all__ = ("S3Model",)
 
 from gluon import *
-try:
-    from pydal.objects import Table
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Table
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Table
 # Here are dependencies listed for reference:
 #from gluon import current
 #from gluon.dal import Field
@@ -46,6 +37,7 @@ except ImportError:
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3dal import Table
 from s3navigation import S3ScriptItem
 from s3resource import S3Resource
 from s3validators import IS_ONE_OF

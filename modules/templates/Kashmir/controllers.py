@@ -51,7 +51,7 @@ class index(S3CustomController):
         # Contact Form
         request_email = settings.get_frontpage("request_email")
         if request_email:
-            from gluon.dal import Field
+            from s3dal import Field
             from gluon.validators import IS_NOT_EMPTY
             from gluon.sqlhtml import SQLFORM
             fields = [Field("name",

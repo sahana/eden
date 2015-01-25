@@ -394,7 +394,7 @@ def config(settings):
 
         if r.representation == "geojson":
             # Add Virtual field to allow colour-coding by age
-            from gluon.dal import Field
+            from s3dal import Field
             table.age = Field.Method("age", cms_post_age)
 
     settings.customise_cms_post_resource = customise_cms_post_resource

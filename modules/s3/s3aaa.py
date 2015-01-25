@@ -57,20 +57,12 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-try:
-    from pydal.objects import Row, Rows, Query, Table
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Row, Rows, Query, Table
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
+from s3dal import Row, Rows, Query, Table
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method

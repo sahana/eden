@@ -83,18 +83,10 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-try:
-    from pydal.objects import Row
-except ImportError:
-    # older web2py
-    try:
-        from gluon.dal.objects import Row
-    except ImportError:
-        # even older web2py
-        from gluon.dal import Row
 from gluon.storage import Storage
-from ..s3 import *
 
+from ..s3 import *
+from s3dal import Row
 from s3chart import S3Chart
 from s3survey import survey_question_type, \
                      survey_analysis_type, \
