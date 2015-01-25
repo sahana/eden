@@ -102,10 +102,14 @@ except ImportError:
 
 from gluon import *
 try:
-    from gluon.dal.objects import Row
+    from pydal.objects import Row
 except ImportError:
-    # old web2py
-    from gluon.dal import Row
+    # older web2py
+    try:
+        from gluon.dal.objects import Row
+    except ImportError:
+        # even older web2py
+        from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 

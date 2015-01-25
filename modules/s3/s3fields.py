@@ -37,15 +37,19 @@ from uuid import uuid4
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
-#from gluon.dal import Field
 #from gluon.html import *
 #from gluon.validators import *
 try:
-    from gluon.dal import SQLCustomType
-    from gluon.dal.objects import Query
+    from pydal import SQLCustomType, Field
+    from pydal.objects import Query
 except ImportError:
-    # old web2py
-    from gluon.dal import Query, SQLCustomType
+    # older web2py
+    try:
+        from gluon.dal import SQLCustomType
+        from gluon.dal.objects import Query
+    except ImportError:
+        # even older web2py
+        from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 from gluon.languages import lazyT
 

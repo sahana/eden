@@ -58,10 +58,14 @@ except:
 
 from gluon import *
 try:
-    from gluon.dal.objects import Row, Rows, Query, Table
+    from pydal.objects import Row, Rows, Query, Table
 except ImportError:
-    # old web2py
-    from gluon.dal import Row, Rows, Query, Table
+    # older web2py
+    try:
+        from gluon.dal.objects import Row, Rows, Query, Table
+    except ImportError:
+        # even older web2py
+        from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id

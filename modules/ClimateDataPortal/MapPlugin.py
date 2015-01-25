@@ -14,10 +14,14 @@ except ImportError:
 
 from gluon import current
 try:
-    from gluon.dal.objects import Expression
+    from pydal.objects import Expression
 except ImportError:
-    # old web2py
-    from gluon.dal import Expression
+    # older web2py
+    try:
+        from gluon.dal.objects import Expression
+    except ImportError:
+        # even older web2py
+        from gluon.dal import Expression
 
 from Cache import *
 from DSL.Units import MeaninglessUnitsException

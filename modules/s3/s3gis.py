@@ -76,10 +76,14 @@ from gluon import *
 #from gluon.html import *
 #from gluon.http import HTTP, redirect
 try:
-    from gluon.dal.objects import Rows
+    from pydal.objects import Rows
 except ImportError:
-    # old web2py
-    from gluon.dal import Rows
+    # older web2py
+    try:
+        from gluon.dal.objects import Rows
+    except ImportError:
+        # old web2py
+        from gluon.dal import Rows
 from gluon.languages import lazyT, regex_translate
 from gluon.storage import Storage
 

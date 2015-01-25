@@ -7,10 +7,14 @@
 #
 import unittest
 try:
-    from gluon.dal.objects import Query
+    from pydal.objects import Query
 except ImportError:
-    # old web2py
-    from gluon.dal import Query
+    # older web2py
+    try:
+        from gluon.dal.objects import Query
+    except ImportError:
+        # even older web2py
+        from gluon.dal import Query
 from s3.s3utils import *
 from s3.s3rest import s3_request
 from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_meta_fields

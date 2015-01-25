@@ -30,7 +30,11 @@
 """
 
 from gluon import *
-from gluon.dal import Field
+try:
+    from pydal import Field
+except ImportError:
+    # older web2py
+    from gluon.dal import Field
 #from gluon.html import BUTTON
 from gluon.storage import Storage
 

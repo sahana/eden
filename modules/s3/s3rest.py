@@ -53,7 +53,6 @@ except ImportError:
 
 from gluon import *
 # Here are dependencies listed for reference:
-#from gluon.dal import Field
 #from gluon.globals import current
 #from gluon.html import A, DIV, URL
 #from gluon.http import HTTP, redirect
