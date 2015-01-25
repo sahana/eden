@@ -1855,7 +1855,7 @@ class S3ProjectBeneficiaryModel(S3Model):
             comment = S3AddResourceLink(c="project", f="beneficiary",
                                         title=ADD_BNF,
                                         tooltip=\
-                T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiary'.")),
+                T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiaries'.")),
             )
 
         self.add_components(tablename,
@@ -4749,9 +4749,9 @@ class S3ProjectTaskModel(S3Model):
 
         role_id = S3ReusableField("role_id", "reference %s" % tablename,
                                   ondelete = "CASCADE",
-                                  requires = IS_ONE_OF(db,
-                                                       "project_role.id",
-                                                       represent),
+                                  requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                                   "project_role.id",
+                                                                   represent)),
                                   represent = represent,
                                   )
 
@@ -4766,9 +4766,8 @@ class S3ProjectTaskModel(S3Model):
                      person_id(label = T("Member"),
                                default = auth.s3_logged_in_person(),
                                widget = SQLFORM.widgets.options.widget),
-                     role_id(label=T("Role"),
-                             empty = False),
-                     task_id(empty = False,
+                     role_id(label=T("Role")),
+                     task_id(empty = False, 
                              ondelete = "CASCADE"),
                      *s3_meta_fields())
 

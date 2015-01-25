@@ -1076,15 +1076,24 @@ Thank you"""
         labels, required = s3_mark_required(utable)
 
         formstyle = deployment_settings.get_ui_formstyle()
+        REGISTER = T("Register")
+        buttons = [INPUT(_type="submit", _value=REGISTER),
+                   A(T("Login"),
+                     _href=URL(f="user", args="login"),
+                     _id="login-btn",
+                     _class="action-lnk",
+                     ),
+                   ]
         current.response.form_label_separator = ""
         form = SQLFORM(utable,
                        hidden = dict(_next=request.vars._next),
                        labels = labels,
                        separator = "",
                        showid = settings.showid,
-                       submit_button = T("Register"),
+                       submit_button = REGISTER,
                        delete_label = messages.delete_label,
                        formstyle = formstyle,
+                       buttons = buttons,
                        )
 
         # Identify form for CSS & JS Validation
@@ -1093,23 +1102,6 @@ Thank you"""
         if js_validation:
             # Client-side Validation
             self.s3_register_validation()
-
-        login_link = A(T("Login"),
-                       _href=URL(f="user", args="login"),
-                       _id="login-btn",
-                       _class="action-lnk",
-                       )
-
-        # @ToDo: Probe formstyle rather than hardcode options here
-        formstyle_name = deployment_settings.ui.get("formstyle")
-        bootstrap = formstyle_name == "bootstrap"
-        foundation = formstyle_name == "foundation"
-        if bootstrap:
-            form[0][-1].append(login_link)
-        elif foundation:
-            form[0][-1][0][1].append(login_link)
-        else:
-            form[0][-1][0].append(login_link)
 
         # Insert a Password-confirmation field
         for i, row in enumerate(form[0].components):

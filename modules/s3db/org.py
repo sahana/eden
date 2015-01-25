@@ -3962,9 +3962,10 @@ class S3OfficeModel(S3Model):
                                 tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Office Type'.")),
                             )
 
-        configure(tablename,
-                  deduplicate = self.office_type_duplicate,
-                  )
+        # Not needed until we make Office Types organisation-dependent & hence remove the unique=True
+        #configure(tablename,
+        #          deduplicate = self.office_type_duplicate,
+        #          )
 
         # Components
         add_components(tablename,

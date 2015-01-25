@@ -1223,6 +1223,10 @@ class S3OptionsMenu(object):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
+                    M("Warehouse Types", c="inv", f="warehouse_type",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
                     M("Requests", c="req", f="req")(
                         M("Create", m="create"),
                         M("Requested Items", f="req_item"),

@@ -390,6 +390,14 @@ def warehouse():
     return output
 
 # -----------------------------------------------------------------------------
+def warehouse_type():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def supplier():
     """
         Filtered version of the organisation() REST controller

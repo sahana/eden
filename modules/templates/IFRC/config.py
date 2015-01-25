@@ -280,6 +280,7 @@ def config(settings):
     ARCS = "Afghan Red Crescent Society"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
+    NRCS = "Nepal Red Cross Society"
     PMI = "Indonesian Red Cross Society (Pelang Merah Indonesia)"
     PRC = "Philippine Red Cross"
     VNRC = "Viet Nam Red Cross"
@@ -1569,6 +1570,10 @@ def config(settings):
         if root_org == "Australian Red Cross":
             # AusRC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
+        if root_org != NRCS:
+            # Only Nepal RCS use Warehouse Types
+            field = current.s3db.inv_warehouse.warehouse_type_id
+            field.readable = field.writable = False
 
     settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
@@ -1608,12 +1613,8 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_member_membership_controller(**attr):
 
+        s3db = current.s3db
         tablename = "member_membership"
-
-        root_org = current.auth.root_org_name()
-        vnrc = False
-        if root_org == VNRC:
-            vnrc = True
 
         # Default Filter
         from s3 import s3_set_default_filter
@@ -1621,17 +1622,19 @@ def config(settings):
                               user_org_and_children_default_filter,
                               tablename = tablename)
 
-        # @ToDo: If these NS start using Membership module
-        #s3db = current.s3db
-        #
         # Special cases for different NS
-        #root_org = current.auth.root_org_name()
-        #if root_org == ARCS:
-        #    settings.L10n.mandatory_lastname = False
-        #elif root_org == VNRC:
-        #    settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-        #    # Remove link to download Template
-        #    attr["csv_template"] = "hide"
+        root_org = current.auth.root_org_name()
+        nrcs = vnrc = False
+        if root_org == ARCS:
+            settings.L10n.mandatory_lastname = False
+        elif root_org == NRCS:
+            nrcs = True
+            s3db.member_membership.membership_paid.label = T("Membership Approved")
+        elif root_org == VNRC:
+            vnrc = True
+            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
+            # Remove link to download Template
+            attr["csv_template"] = "hide"
 
         s3 = current.response.s3
 
@@ -1652,13 +1655,28 @@ def config(settings):
                     )
 
             # Set the NS filter as Visible so that the default filter works
-            filter_widgets = current.s3db.get_config(tablename, "filter_widgets")
+            filter_widgets = s3db.get_config(tablename, "filter_widgets")
             for widget in filter_widgets:
                 if widget.field == "organisation_id":
                     widget.opts.hidden = False
                     break
 
-            if vnrc:
+            if nrcs:
+                # Remove the Paid Filter (they use 'Approved' instead)
+                filter_widgets = r.resource.get_config("filter_widgets")
+                if filter_widgets:
+                    found = False
+                    index = 0
+                    for filter_widget in filter_widgets:
+                        if filter_widget.field == "paid":
+                            found = True
+                            break
+                        index += 1
+                    if found:
+                        filter_widgets.pop(index)
+
+            elif vnrc:
+                # Modify the Paid Filter
                 table = r.table
                 from gluon import Field
                 table["paid"] = Field.Method("paid", member_membership_paid)
@@ -2874,6 +2892,7 @@ def config(settings):
     #settings.inv.collapse_tabs = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     settings.inv.direct_stock_edits = True
+    settings.inv.org_dependent_warehouse_types = True
 
     # -----------------------------------------------------------------------------
     # Request Management

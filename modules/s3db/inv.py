@@ -98,80 +98,103 @@ SEPARATORS = (",", ":")
 class S3WarehouseModel(S3Model):
 
     names = ("inv_warehouse",
-             #"inv_warehouse_type",
+             "inv_warehouse_type",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
+        auth = current.auth
         messages = current.messages
         NONE = messages["NONE"]
-        #add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        settings = current.deployment_settings
         super_link = self.super_link
+
+        organisation_id = self.org_organisation_id
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
+
+        root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
 
         # ---------------------------------------------------------------------
         # Warehouse Types
         #
-        # tablename = "inv_warehouse_type"
-        # define_table(tablename,
-        #              Field("name", length=128,
-        #                    notnull=True, unique=True,
-        #                    label=T("Name")),
-        #              s3_comments(),
-        #              *s3_meta_fields())
+        org_dependent_wh_types = settings.get_inv_org_dependent_warehouse_types()
+
+        tablename = "inv_warehouse_type"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True,
+                           label = T("Name"),
+                           ),
+                     organisation_id(default = root_org if org_dependent_wh_types else None,
+                                     readable = is_admin if org_dependent_wh_types else False,
+                                     writable = is_admin if org_dependent_wh_types else False,
+                                     ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
-        #crud_strings[tablename] = Storage(
-        #    label_create = T("Add Warehouse Type"),
-        #    title_display = T("Warehouse Type Details"),
-        #    title_list = T("Warehouse Types"),
-        #    title_update = T("Edit Warehouse Type"),
-        #    label_list_button = T("List Warehouse Types"),
-        #    label_delete_button = T("Delete Warehouse Type"),
-        #    msg_record_created = T("Warehouse Type added"),
-        #    msg_record_modified = T("Warehouse Type updated"),
-        #    msg_record_deleted = T("Warehouse Type deleted"),
-        #    msg_list_empty = T("No Warehouse Types currently registered"))
+        ADD_WAREHOUSE_TYPE = T("Create Warehouse Type")
+        crud_strings[tablename] = Storage(
+           label_create = ADD_WAREHOUSE_TYPE,
+           title_display = T("Warehouse Type Details"),
+           title_list = T("Warehouse Types"),
+           title_update = T("Edit Warehouse Type"),
+           label_list_button = T("List Warehouse Types"),
+           label_delete_button = T("Delete Warehouse Type"),
+           msg_record_created = T("Warehouse Type added"),
+           msg_record_modified = T("Warehouse Type updated"),
+           msg_record_deleted = T("Warehouse Type deleted"),
+           msg_list_empty = T("No Warehouse Types currently registered"))
 
-        #represent = S3Represent(lookup=tablename, translate=True)
+        represent = S3Represent(lookup=tablename, translate=True)
 
-        #warehouse_type_id = S3ReusableField("warehouse_type_id", "reference %s" % tablename,
-        #                        label = T("Warehouse Type"),
-        #                        ondelete = "SET NULL",
-        #                        represent = represent,
-        #                        requires = IS_EMPTY_OR(
-        #                                    IS_ONE_OF(db, "inv_warehouse_type.id",
-        #                                              represent,
-        #                                              sort=True
-        #                                              )),
-        #                        sortby = "name",
-        #                        comment = S3AddResourceLink(c="inv",
-        #                                    f="warehouse_type",
-        #                                    label=T("Add Warehouse Type"),
-        #                                    title=T("Warehouse Type"),
-        #                                    tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Warehouse Type'.")),
-        #                        )
+        warehouse_type_id = S3ReusableField("warehouse_type_id", "reference %s" % tablename,
+                               label = T("Warehouse Type"),
+                               ondelete = "SET NULL",
+                               represent = represent,
+                               requires = IS_EMPTY_OR(
+                                           IS_ONE_OF(db, "inv_warehouse_type.id",
+                                                     represent,
+                                                     filterby="organisation_id",
+                                                     filter_opts=filter_opts,
+                                                     sort=True
+                                                     )),
+                               sortby = "name",
+                               comment = S3AddResourceLink(c="inv",
+                                           f="warehouse_type",
+                                           label=ADD_WAREHOUSE_TYPE,
+                                           title=T("Warehouse Type"),
+                                           tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Warehouse Type'.")),
+                               )
 
-        #configure(tablename,
-        #          deduplicate = self.inv_warehouse_type_duplicate,
-        #          )
+        configure(tablename,
+                  deduplicate = self.inv_warehouse_type_duplicate,
+                  )
 
         # Tags as component of Warehouse Types
-        #add_components(tablename,
-        #               inv_warehouse_type_tag={"name": "tag",
-        #                                       "joinby": "warehouse_type_id",
-        #                                      }
-        #              )
+        #self.add_components(tablename,
+        #                    inv_warehouse_type_tag={"name": "tag",
+        #                                            "joinby": "warehouse_type_id",
+        #                                            }
+        #                    )
 
         # ---------------------------------------------------------------------
         # Warehouses
         #
 
-        if current.deployment_settings.get_inv_warehouse_code_unique():
-            db = current.db
+        if settings.get_inv_warehouse_code_unique():
             code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "inv_warehouse.code"))
         else:
             code_unique = None
@@ -190,10 +213,10 @@ class S3WarehouseModel(S3Model):
                            represent = lambda v: v or NONE,
                            requires = code_unique,
                            ),
-                     self.org_organisation_id(
+                     organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
                         ),
-                     #warehouse_type_id(),
+                     warehouse_type_id(),
                      self.gis_location_id(),
                      Field("phone1", label = T("Phone 1"),
                            represent = lambda v: v or NONE,
@@ -242,7 +265,7 @@ class S3WarehouseModel(S3Model):
 
         list_fields = ["name",
                        "organisation_id",   # Filtered in Component views
-                       #"type",
+                       "warehouse_type_id",
                        ]
 
         text_fields = ["name",
@@ -318,18 +341,27 @@ class S3WarehouseModel(S3Model):
         return dict()
 
     # -------------------------------------------------------------------------
-    #@staticmethod
-    #def inv_warehouse_type_duplicate(item):
-    #    """ Import item de-duplication """
+    @staticmethod
+    def inv_warehouse_type_duplicate(item):
+        """
+            Import item de-duplication
 
-    #    name = item.data.get("name")
-    #    table = item.table
-    #    query = (table.name.lower() == name.lower())
-    #    duplicate = current.db(query).select(table.id,
-    #                                         limitby=(0, 1)).first()
-    #    if duplicate:
-    #        item.id = duplicate.id
-    #        item.method = item.METHOD.UPDATE
+            @param item: the S3ImportItem instance
+        """
+
+        data = item.data
+        name = data.get("name", None)
+        org = data.get("organisation_id", None)
+
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        if org:
+            query  = query & (table.organisation_id == org)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -344,15 +376,20 @@ class S3WarehouseModel(S3Model):
     @staticmethod
     def inv_warehouse_duplicate(item):
         """
-            Import item deduplication, match by name
-                (Adding location_id doesn't seem to be a good idea)
+            Import item deduplication, match by name and organisation
+                (Adding location_id doesn't seem to be a good idea - see office_duplicate)
 
             @param item: the S3ImportItem instance
         """
 
-        name = item.data.get("name")
+        data = item.data
+        name = data.get("name", None)
+        org = data.get("organisation_id", None)
+
         table = item.table
         query = (table.name.lower() == name.lower())
+        if org:
+            query  = query & (table.organisation_id == org)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -565,12 +602,12 @@ $.filterOptionsS3({
                           hidden = True,
                          ),
             S3DateFilter("purchase_date",
-                         label=T("Purchase date"),
+                         label=T("Purchase Date"),
                          comment=T("Include only items purchased within the specified dates."),
                          hidden = True,
                         ),
             S3DateFilter("other_date",
-                         label=T("Expiry date"),
+                         label=T("Expiry Date"),
                          comment=T("Include only items that expire within the specified dates."),
                          hidden = True,
                         ),

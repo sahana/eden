@@ -648,9 +648,7 @@ def config(settings):
 
         query = (mtable.task_id == task_id) & \
                 (mtable.deleted == False) & \
-                (mtable.person_id == user) & \
-                (rtable.deleted == False) & \
-                (rtable.id == mtable.role_id)
+                (mtable.person_id == user)
 
         user_role = db(query).select(mtable.id,
                                      mtable.uuid).first()
@@ -660,17 +658,6 @@ def config(settings):
 
         if user_role:
             data["id"] = str(user_role.id)
-
-        # Need UUID to insert via 's3json'
-        # UUID of 'Watching' Role
-        query = (rtable.role == "Watching") & \
-                (rtable.deleted == False)
-        role = db(query).select(rtable.uuid).first()
-        try:
-            data["role_uuid"] = role.uuid
-        except:
-            data["role_uuid"] = "null"
-            current.log.error("Task Roles not prepopulated")
 
         return data
 
@@ -724,6 +711,20 @@ def config(settings):
                 interest = TD(button)
 
         return interest
+
+    # -----------------------------------------------------------------------------
+    def custom_project_task_create_onaccept(form):
+        """
+            - Subscribe author to updates
+            - Add author as a Member
+        """
+
+        user = current.auth.s3_logged_in_person()
+        task_id = form.vars.id
+        current.s3db.project_member.insert(task_id=task_id,
+                                           person_id=user)
+        sub = TaskSubscriptions()
+        sub.add_task_subscription(str(task_id))
 
     # -----------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -851,6 +852,7 @@ def config(settings):
             get_config = s3db.get_config
             list_fields = get_config(tablename, "list_fields")
             filter_widgets = get_config(tablename, "filter_widgets")
+            create_onaccept = get_config(tablename, "create_onaccept")
             # Remove 'Assigned to' field
             list_fields.remove("pe_id")
             custom_filter_widgets = [widget for widget in filter_widgets \
@@ -858,6 +860,8 @@ def config(settings):
             s3db.configure(tablename,
                            crud_form = crud_form,
                            filter_widgets = custom_filter_widgets,
+                           create_onaccept = [create_onaccept,\
+                                              custom_project_task_create_onaccept]
                            )
 
     settings.customise_project_task_resource = customise_project_task_resource
@@ -868,29 +872,21 @@ def config(settings):
             After DB I/O for Task Comments
             - Add User as a Member of the task
         """
-        s3db = current.s3db
-        db = current.db
         user = current.auth.s3_logged_in_person()
-        rtable = s3db.project_role
-        mtable = s3db.project_member
+        mtable = current.s3db.project_member
         task_id = current.request.args[0]
 
         if user:
             query = (mtable.person_id == user) & \
                     (mtable.task_id == task_id)
-            member = db(query).select(mtable.role_id, limitby=(0, 1))
+            member = current.db(query).select(mtable.role_id, limitby=(0, 1))
             if not member:
-                query = (rtable.role == "Watching") & \
-                        (rtable.deleted == False)
-                role = db(query).select(rtable.id, limitby=(0, 1))
-                if role:
-                    # Add User as a Member
-                    mtable.insert(task_id=task_id,
-                                  person_id=user,
-                                  role_id=role[0].id)
-                    # Subscribe user to task updates
-                    sub = TaskSubscriptions()
-                    sub.add_task_subscription(task_id)
+                # Add User as a Member
+                mtable.insert(task_id=task_id,
+                              person_id=user)
+                # Subscribe user to task updates
+                sub = TaskSubscriptions()
+                sub.add_task_subscription(task_id)
 
     # -----------------------------------------------------------------------------
     def customise_project_comment_resource(r, tablename):
@@ -939,6 +935,22 @@ def config(settings):
 
     settings.customise_project_comment_resource = customise_project_comment_resource
 
+    # -----------------------------------------------------------------------------
+    def customise_project_comment_controller(**attr):
+    
+        s3 = current.response.s3
+
+        # Custom Prep
+        def custom_prep(r):
+            if r.representation in ("rss", "msg"):
+                return True
+            return False
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_project_comment_controller = customise_project_comment_controller
+    
     # -----------------------------------------------------------------------------
     def customise_delphi_problem_controller(**attr):
 

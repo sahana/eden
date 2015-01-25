@@ -452,6 +452,50 @@ def config(settings):
     settings.customise_org_facility_controller = customise_org_facility_controller
 
     # -------------------------------------------------------------------------
+    def org_organisation_postprocess(form):
+
+        # If the user selects a Borough (L3) for Area Served, then add all Zipcodes in instead
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+        organisation_id = form_vars.id
+        table = s3db.org_organisation_location
+        gtable = db.gis_location
+        query = (table.organisation_id == organisation_id) & \
+                (table.deleted == False) & \
+                (gtable.id == table.location_id) & \
+                (gtable.level == "L3")
+        locations = db(query).select(gtable.id)
+        if locations:
+            boroughs = [row.id for row in locations]
+            zipcodes = []
+            query = (gtable.deleted == False) & \
+                    (gtable.level == "L4")
+            for b in boroughs:
+                q = query & (gtable.path.like("%/" + str(b) + "/%"))
+                children = db(q).select(gtable.id)
+                zipcodes += [row.id for row in children]
+            query = (table.organisation_id == organisation_id) & \
+                    (table.deleted == False) & \
+                    (gtable.id == table.location_id) & \
+                    (gtable.level == "L4")
+            existing = db(query).select(gtable.id)
+            existing_zipcodes = [row.id for row in existing]
+            for z in zipcodes:
+                if z not in existing_zipcodes:
+                    table.insert(organisation_id=organisation_id,
+                                 location_id=z,
+                                 )
+
+            # Cleanup
+            query = (table.organisation_id == organisation_id) & \
+                    (table.location_id.belongs(boroughs))
+            db(query).delete()
+
+        # Handle the RSS Subscriptions
+        pr_contact_postprocess(form)
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         from gluon.html import DIV, INPUT
@@ -658,7 +702,7 @@ def config(settings):
                 explicit_add = T("Add Facility"),
             ),
             "comments",
-            postprocess = pr_contact_postprocess,
+            postprocess = org_organisation_postprocess,
         )
 
         from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter#, S3HierarchyFilter
