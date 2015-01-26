@@ -6798,15 +6798,15 @@ def hrm_person_controller(**attr):
     if "all" in contacts_tabs:
         set_method("pr", "person",
                    method = "contacts",
-                   action = s3db.pr_contacts)
+                   action = s3db.pr_Contacts)
     if "public" in contacts_tabs:
         set_method("pr", "person",
                    method = "public_contacts",
-                   action = s3db.pr_contacts)
+                   action = s3db.pr_Contacts)
     if "private" in contacts_tabs:
         set_method("pr", "person",
                    method = "private_contacts",
-                   action = s3db.pr_contacts)
+                   action = s3db.pr_Contacts)
 
     # Custom Method for CV
     set_method("pr", "person",
@@ -7051,12 +7051,6 @@ def hrm_person_controller(**attr):
                                   s3db.org_site_represent,
                                   filterby="organisation_id",
                                   filter_opts=(session.s3.hrm.org,)))
-            elif method == "private_contacts":
-                # Flag to pass into s3db.pr_contacts()
-                s3.pr_contacts = 1
-            elif method == "public_contacts":
-                # Flag to pass into s3db.pr_contacts()
-                s3.pr_contacts = 2
 
             resource = r.resource
             if mode is not None:

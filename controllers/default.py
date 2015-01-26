@@ -624,7 +624,7 @@ def person():
     # Custom Method for Contacts
     set_method("pr", "person",
                method="contacts",
-               action=s3db.pr_contacts)
+               action=s3db.pr_Contacts)
 
     #if settings.has_module("asset"):
     #    # Assets as component of people

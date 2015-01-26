@@ -134,9 +134,9 @@ def staff():
                     #                                  title=T("Add New Site"),
                     #                                 )
 
-                    # Hide status field 
+                    # Hide status field
                     table.status.writable = table.status.readable = False
-                    
+
                     # Assume staff only between 16-81
                     s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972,
                                                                        future=-192)
@@ -222,7 +222,7 @@ def profile():
     # Custom Method for Contacts
     s3db.set_method("pr", resourcename,
                     method = "contacts",
-                    action = s3db.pr_contacts)
+                    action = s3db.pr_Contacts)
 
     if settings.has_module("asset"):
         # Assets as component of people
@@ -382,7 +382,7 @@ def group_membership():
                                 csv_template="group_membership",
                                 csv_stylesheet=("hrm", "group_membership.xsl"),
                                 )
-    return output 
+    return output
 
 # =============================================================================
 # Jobs

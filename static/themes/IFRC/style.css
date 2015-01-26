@@ -453,3 +453,28 @@ button.alert-send-btn:enabled {
 #summary-sections #table-container {
     margin-bottom: 20px
 }
+
+.pr-contacts-wrapper h2 {
+    margin-top: 8px;
+}
+.pr-contact-data,
+.pr-emergency-data,
+.pr-contact-actions {
+    display: inline-block;
+}
+.pr-contacts h3,
+.pr-emergency-contacts .pr-emergency-contact,
+.pr-contacts .pr-contact {
+  margin-top: 12px;
+  padding-bottom: 0 !important;
+}
+.pr-contacts .pr-contact-subtitle {
+    font-size: small;
+    font-style: italic;
+    color: #7f7f7f;
+}
+.pr-contact-data,
+.pr-emergency-data {
+    width: 400px;
+    vertical-align: top;
+}

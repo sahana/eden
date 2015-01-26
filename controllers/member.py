@@ -104,7 +104,7 @@ def person():
     set_method = s3db.set_method
     set_method("pr", resourcename,
                method = "contacts",
-               action = s3db.pr_contacts)
+               action = s3db.pr_Contacts)
 
     # Custom Method for CV
     set_method("pr", "person",

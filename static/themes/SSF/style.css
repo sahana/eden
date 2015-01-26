@@ -42,3 +42,16 @@
     background-image: url(../../img/sunflower_spin_throbber.gif);
     background-repeat: no-repeat;
 }
+.row.pr-contact {
+    margin-left: 0;
+}
+.pr-contact-data,
+.pr-emergency-data {
+    width: 480px;
+}
+.pr-contact-data,
+.pr-emergency-data,
+.pr-contact-actions {
+    display: inline-block;
+    vertical-align: top;
+}

@@ -706,6 +706,23 @@ input.date.hasDatepicker {
   padding: 0.3em;
 }
 
+/* pr_Contacts widgets */
+.pr-contacts-wrapper .pr-contact,
+.pr-contacts-wrapper .pr-emergency-contact {
+  padding: 0.5rem;
+}
+
+.pr-contacts h3 {
+  padding-bottom: 0 !important;
+}
+.pr-contacts .pr-contact-subtitle {
+  font-size: 0.8rem;
+  font-style: italic;
+}
+.pr-contacts .pr-contact-actions {
+  margin-bottom: 0.5rem;
+}
+
 /* Iframe Map (Location Represent links) */
 #close-iframe-map {
   padding: 7px;

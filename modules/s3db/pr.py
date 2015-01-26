@@ -54,7 +54,7 @@ __all__ = ("S3PersonEntity",
            "pr_url_represent",
            "pr_rheader",
            # Custom Resource Methods
-           "pr_contacts",
+           "pr_Contacts",
            # Hierarchy Manipulation
            "pr_update_affiliations",
            "pr_add_affiliation",
@@ -4908,6 +4908,291 @@ def pr_rheader(r, tabs=[]):
 # Custom Resource Methods
 # =============================================================================
 #
+class pr_Contacts(S3Method):
+    """ Custom Method to edit person contacts """
+
+    """ Priority Order of Contact Methods """
+    PRIORITY = {"SMS": 1,
+                "EMAIL": 2,
+                "WORK_PHONE": 3,
+                "HOME_PHONE": 4,
+                "SKYPE": 5,
+                "RADIO": 6,
+                "TWITTER": 7,
+                "FACEBOOK": 8,
+                "FAX": 9,
+                "OTHER": 10,
+                "IRC": 11,
+                "GITHUB": 12,
+                "LINKEDIN": 13,
+                "BLOG": 14,
+                }
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
+        """
+
+        if r.http != "GET":
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        record = r.record
+        if not record:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Permission to create new contacts?
+        allow_create = current.auth.s3_has_permission("update", "pr_person",
+                                                      record_id = record.id,
+                                                      )
+
+        # Single widget - hardcode the ID
+        widget_id = "pr-contacts"
+
+        # Render the subforms
+        pe_id = record.pe_id
+        contents = DIV(_id = widget_id,
+                       _class = "pr-contacts-wrapper medium-8 small-12 columns",
+                       )
+        contacts = self.contacts(pe_id,
+                                 allow_create=allow_create,
+                                 method=r.method,
+                                 )
+        if contacts:
+            contents.append(contacts)
+        emergency = self.emergency(pe_id,
+                                   allow_create=allow_create,
+                                   )
+        if emergency:
+            contents.append(emergency)
+
+        # Add the javascript
+        response = current.response
+        s3 = response.s3
+        if s3.debug:
+            s3.scripts.append(URL(c="static", f="scripts",
+                                  args=["S3", "s3.ui.contacts.js"]))
+        else:
+            s3.scripts.append(URL(c="static", f="scripts",
+                                  args=["S3", "s3.ui.contacts.min.js"]))
+
+        # Widget options
+        T = current.T
+        if r.method == "private_contacts":
+            access = 1
+        elif r.method == "public_contacts":
+            access = 2
+        else:
+            access = None
+        widget_opts = {"controller": r.controller,
+                       "personID": record.id,
+                       "access": access,
+                       "cancelButtonText": str(T("Cancel")),
+                       }
+
+        # Apply widget
+        script = '''$("#%s").personcontacts(%s)''' % \
+                 (widget_id, json.dumps(widget_opts))
+        s3.jquery_ready.append(script)
+
+        # Custom View
+        response.view = "pr/contacts.html"
+
+        return {"contents": contents, "title": T("Contacts")}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def action_buttons(table, record_id):
+        """ Action buttons for contact rows """
+
+        T = current.T
+        has_permission = current.auth.s3_has_permission
+
+        if has_permission("update", table, record_id=record_id):
+            edit_btn = A(T("Edit"), _class="edit-btn action-btn fright")
+        else:
+            edit_btn = SPAN()
+        if has_permission("delete", table, record_id=record_id):
+            delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
+        else:
+            delete_btn = SPAN()
+        return DIV(delete_btn,
+                   edit_btn,
+                   DIV(_class="inline-throbber", _style="display:none"),
+                   _class="pr-contact-actions medium-3 columns",
+                   )
+
+    # -------------------------------------------------------------------------
+    def contacts(self, method, pe_id, allow_create=False):
+        """
+            Contact Information Subform
+
+            @param method: the request method ("contacts", "private_contacts"
+                           or "public_contacts")
+            @param pe_id: the pe_id
+            @param allow_create: allow adding of new contacts
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        resource = s3db.resource("pr_contact",
+                                 filter = FS("pe_id") == pe_id)
+
+        # Filter by access
+        if method != "contacts":
+            if method == "private_contacts":
+                access = FS("access") == 1
+            else:
+                access = FS("access") == 2
+            resource.add_filter(access)
+
+        # Retrieve the rows
+        fields = ["id",
+                  "contact_description",
+                  "value",
+                  "contact_method",
+                  "comments",
+                  ]
+        rows = resource.select(fields).rows
+
+        # Group by contact method and sort by priority
+        from itertools import groupby
+        groups = []
+        append = groups.append
+        method = lambda row: row["pr_contact.contact_method"]
+        for key, group in groupby(rows, method):
+            groups.append((key, list(group)))
+        PRIORITY = self.PRIORITY
+        groups.sort(key = lambda item: PRIORITY.get(item[0], 99))
+
+        # Start the form
+        form = DIV(H2(T("Contacts")), _class="pr-contacts")
+
+        # Add-button
+        table = resource.table
+        if allow_create and current.auth.s3_has_permission("create", table):
+            add_btn = DIV(A(T("Add"),
+                            _class="contact-add-btn action-btn",
+                            ),
+                          DIV(_class="throbber hide"),
+                          )
+            form.append(add_btn)
+
+        # Contact information by contact method
+        opts = current.msg.CONTACT_OPTS
+        action_buttons = self.action_buttons
+        for method, contacts in groups:
+
+            # Subtitle
+            form.append(H3(opts[method]))
+
+            # Individual Rows
+            for contact in contacts:
+
+                contact_id = contact["pr_contact.id"]
+                value = contact["pr_contact.value"]
+                description = contact["pr_contact.contact_description"] or ""
+
+                inline_edit_hint = T("Click to edit")
+                title = SPAN(value,
+                             _title = inline_edit_hint,
+                             _class = "pr-contact-value",
+                             )
+                if description:
+                    title = TAG[""](SPAN(description,
+                                         _title = inline_edit_hint,
+                                         _class = "pr-contact-description"),
+                                    ", ",
+                                    title,
+                                    )
+                comments = contact["pr_contact.comments"] or ""
+
+                actions = action_buttons(table, contact_id)
+                form.append(DIV(DIV(DIV(title,
+                                        _class="pr-contact-title",
+                                        ),
+                                    DIV(SPAN(comments,
+                                             _title = inline_edit_hint,
+                                             _class = "pr-contact-comments"),
+                                        _class = "pr-contact-subtitle",
+                                        ),
+                                    _class = "pr-contact-data medium-9 columns",
+                                    ),
+                                actions,
+                                data = {
+                                    "id": contact_id,
+                                    "value": value,
+                                    "description": description,
+                                    "comments": comments,
+                                },
+                                _class="pr-contact row",
+                                ))
+        return form
+
+    # -------------------------------------------------------------------------
+    def emergency(self, pe_id, allow_create=False):
+        """
+            Emergency Contact Information SubForm
+
+            @param pe_id: the pe_id
+            @param allow_create: allow adding of new contacts
+
+            @todo: make inline-editable this one too
+        """
+
+        if not current.deployment_settings.get_pr_show_emergency_contacts():
+            return None
+
+        T = current.T
+        s3db = current.s3db
+
+        # Retrieve the rows
+        resource = s3db.resource("pr_contact_emergency",
+                                 filter = FS("pe_id") == pe_id)
+        table = resource.table
+        fields = [f for f in ("name",
+                              "relationship",
+                              "address",
+                              "phone",
+                              )
+                    if table[f].readable]
+        fields.insert(0, "id")
+        rows = resource.select(fields).rows
+
+        # Start the form
+        form = DIV(H2(T("Emergency Contacts")),
+                   _class="pr-emergency-contacts",
+                   )
+
+        # Add-button
+        if allow_create and current.auth.s3_has_permission("create", table):
+            add_btn = DIV(A(T("Add"),
+                            _class="contact-add-btn action-btn",
+                            ),
+                          DIV(_class="throbber hide"),
+                          )
+            form.append(add_btn)
+
+        # Individual rows
+        readable_fields = fields[1:]
+        for row in rows:
+            data = (row["pr_contact_emergency.%s" % f] or ""
+                    for f in readable_fields)
+            record_id = row["pr_contact_emergency.id"]
+            form.append(DIV(DIV(", ".join(data),
+                                _class="pr-emergency-data medium-9 columns",
+                                ),
+                            self.action_buttons(table, record_id),
+                            data = {"id": record_id,
+                                    },
+                            _class="pr-emergency-contact row",
+                            ))
+        return form
+
+# =============================================================================
 def pr_contacts(r, **attr):
     """
         Custom Method to provide the details for the Person's Contacts Tab:
@@ -4915,6 +5200,9 @@ def pr_contacts(r, **attr):
             Addresses (pr_address)
             Contacts (pr_contact)
             Emergency Contacts
+
+        @todo: deprecated, replaced by pr_Contacts, retained as reference
+               (until address-support re-implemented in pr_Contacts)
     """
 
     from itertools import groupby

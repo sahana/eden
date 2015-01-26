@@ -43,7 +43,7 @@ def person():
     # Custom Method for Contacts
     s3db.set_method("pr", "person",
                     method = "contacts",
-                    action = s3db.pr_contacts)
+                    action = s3db.pr_Contacts)
 
     def prep(r):
 

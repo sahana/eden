@@ -49,11 +49,11 @@ def volunteer():
     s3.filter = FS("type") == 2
 
     vol_experience = settings.get_hrm_vol_experience()
-    
+
     def prep(r):
         resource = r.resource
         get_config = resource.get_config
-        
+
         # CRUD String
         s3.crud_strings[resource.tablename] = s3.crud_strings["hrm_volunteer"]
 
@@ -64,7 +64,7 @@ def volunteer():
         # Volunteers use home address
         location_id = table.location_id
         location_id.label = T("Home Address")
-        
+
         # Configure list_fields
         if r.representation == "xls":
             # Split person_id into first/middle/last to
@@ -98,7 +98,7 @@ def volunteer():
                 list_fields.insert(3, (T("Active?"), "details.active"))
             # Add Programme to List Fields
             list_fields.insert(6, "person_id$hours.programme_id")
-            
+
             # Add active and programme to Report Options
             report_fields = report_options.rows
             report_fields.append("person_id$hours.programme_id")
@@ -115,13 +115,13 @@ def volunteer():
         filter_widgets = \
             s3db.hrm_human_resource_filters(resource_type="volunteer",
                                             hrm_type_opts=s3db.hrm_type_opts)
-                                
+
         # Reconfigure
         resource.configure(list_fields = list_fields,
                            filter_widgets = filter_widgets,
                            report_options = report_options,
                            )
-                    
+
         if r.interactive:
             if r.id:
                 if r.method not in ("profile", "delete"):
@@ -141,7 +141,7 @@ def volunteer():
                     redirect(URL(f="person",
                                  args="import",
                                  vars={"group": "volunteer"}))
-                                
+
                 elif not r.component and r.method != "delete":
                     # Configure AddPersonWidget
                     table.person_id.widget = S3AddPersonWidget2(controller="vol")
@@ -258,7 +258,7 @@ def person():
     # Custom Method for Contacts
     set_method("pr", resourcename,
                method = "contacts",
-               action = s3db.pr_contacts)
+               action = s3db.pr_Contacts)
 
     # Custom Method for CV
     set_method("pr", resourcename,
