@@ -1296,7 +1296,6 @@ class S3BudgetAllocationModel(S3Model):
                                           writable = True,
                                           represent = self.budget_CostItemRepresent(),
                                           ),
-                          # @ToDo: s3_datetime
                           s3_date("start_date",
                                   label = T("Start Date")
                                   ),
