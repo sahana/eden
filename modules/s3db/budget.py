@@ -1317,6 +1317,8 @@ class S3BudgetAllocationModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
+        current.s3db.budget_allocation.id.represent = budget_AllocationRepresent(lookup = "budget_allocation")
+
         self.configure(tablename,
                        deduplicate = self.budget_allocation_duplicate,
                        timeplot_options = {
@@ -1803,5 +1805,69 @@ def budget_rheader(r):
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     return rheader
-    
+
+class budget_AllocationRepresent(S3Represent):
+    """
+        Representation of Budget_allocation by Budget_Id (Start_Date, End_Date, Daily_Cost)
+    """
+
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method for Budget_allocation id
+
+            @param key: Key for Budget_allocation table
+            @param values: Budget_allocation IDs
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = self.table
+        ptable = s3db.budget_budget
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+            limitby = (0, 1)
+        else:
+            query = (key.belongs(values))
+            limitby = (0, count)
+
+        left = ptable.on(table.budget_id == ptable.id)
+
+        fields = ["budget_allocation.id",
+                  "budget_allocation.budget_id",
+                  "budget_allocation.start_date",
+                  "budget_allocation.end_date",
+                  "budget_allocation.daily_cost",
+                  "budget_budget.name"
+                  ]
+
+        rows = db(query).select(*fields,
+                                left = left,
+                                limitby = limitby
+                                )
+
+        self.queries += 1
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row for a particular budget_allocation
+
+            @param row: budget_allocation Row
+        """
+
+        try:
+            budget = "%s " % (row.budget_budget.name)
+            if row.budget_allocation.start_date or row.budget_allocation.end_date or row.budget_allocation.daily_cost:
+                budget += "(%s, %s, %s)" % (row.budget_allocation.start_date if row.budget_allocation.start_date else "",
+                                            row.budget_allocation.end_date if row.budget_allocation.end_date else "",
+                                            row.budget_allocation.daily_cost if row.budget_allocation.daily_cost else "0.0" if row.budget_allocation.daily_cost == 0.0 else ""
+                                            )
+            return budget
+        except:
+            return current.messages.UNKNOWN_OPT
+
 # END =========================================================================

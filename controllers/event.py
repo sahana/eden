@@ -91,6 +91,30 @@ def incident_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def site():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def asset():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def human_resource():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def incident():
     """
         RESTful CRUD controller

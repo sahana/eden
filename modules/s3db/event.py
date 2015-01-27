@@ -1525,7 +1525,6 @@ class S3EventAssetModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Assets
-        # @ToDo: Search Widget
 
         tablename = "event_asset"
         self.define_table(tablename,
@@ -1557,6 +1556,20 @@ class S3EventAssetModel(S3Model):
             msg_record_deleted = T("Asset removed"),
             msg_list_empty = T("No Assets currently registered in this incident"))
 
+        list_fields = [#"incident_id", # Not being dropped in component view
+                       "asset_id",
+                       "status",
+                       ]
+
+        filter_widgets = [S3TextFilter(["asset_id$number",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("status",
+                                          hidden = True,
+                                          ),
+                          ]
+
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
                                         "asset_id",
@@ -1570,20 +1583,19 @@ class S3EventAssetModel(S3Model):
                                                                        ],
                                                              ),
                                         )
+
+            # @ToDo: Add Filter Widgets for Budget
+            list_fields.extend(((T("Budget"), "allocation.id"),
+                                ))
+
         else:
             crud_form = None
 
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.event_asset_duplicate,
-                       list_fields = [#"incident_id", # Not being dropped in component view
-                                      "asset_id",
-                                      "status",
-                                      "allocation.budget_id",
-                                      "allocation.start_date",
-                                      "allocation.end_date",
-                                      "allocation.daily_cost",
-                                      ],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
                        super_entity = "budget_cost_item",
                        )
 
@@ -1687,7 +1699,6 @@ class S3EventHRModel(S3Model):
         # ---------------------------------------------------------------------
         # Staff/Volunteers
         # @ToDo: Use Positions, not individual HRs
-        # @ToDo: Search Widget
 
         tablename = "event_human_resource"
         self.define_table(tablename,
@@ -1723,6 +1734,22 @@ class S3EventHRModel(S3Model):
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this incident"))
 
+        list_fields = [#"incident_id", # Not being dropped in component view
+                       "human_resource_id",
+                       "status",
+                       ]
+
+        filter_widgets = [S3TextFilter(["human_resource_id$job_title_id$name",
+                                        "human_resource_id$type",
+                                        "human_resource_id$organisation_id$name",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("status",
+                                          hidden = True,
+                                          ),
+                          ]
+
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
                                         "human_resource_id",
@@ -1736,20 +1763,19 @@ class S3EventHRModel(S3Model):
                                                                        ],
                                                              ),
                                         )
+
+            # @ToDo: Add Filter Widgets for Budget
+            list_fields.extend(((T("Budget"), "allocation.id"),
+                                ))
+
         else:
             crud_form = None
 
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.event_human_resource_duplicate,
-                       list_fields = [#"incident_id", # Not being dropped in component view
-                                      "human_resource_id",
-                                      "status",
-                                      "allocation.budget_id",
-                                      "allocation.start_date",
-                                      "allocation.end_date",
-                                      "allocation.daily_cost",
-                                      ],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
                        super_entity = "budget_cost_item",
                        )
 
@@ -1973,7 +1999,6 @@ class S3EventSiteModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Facilities
-        # @ToDo: Filter Widgets
         tablename = "event_site"
         self.define_table(tablename,
                           # Instance table
@@ -2017,6 +2042,20 @@ class S3EventSiteModel(S3Model):
             msg_record_deleted = T("Facility removed"),
             msg_list_empty = T("No Facilities currently registered in this incident"))
 
+        list_fields = [#"incident_id", # Not being dropped in component view
+                       "site_id",
+                       "status",
+                       ]
+
+        filter_widgets = [S3TextFilter(["site_id$name",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("status",
+                                          hidden = True,
+                                          ),
+                          ]
+
         if current.deployment_settings.has_module("budget"):
             crud_form = S3SQLCustomForm("incident_id",
                                         "site_id",
@@ -2030,20 +2069,19 @@ class S3EventSiteModel(S3Model):
                                                                        ],
                                                              ),
                                         )
+
+            # @ToDo: Add Filter Widgets for Budget
+            list_fields.extend(((T("Budget"), "allocation.id"),
+                                ))
+
         else:
             crud_form = None
 
         self.configure(tablename,
                        crud_form = crud_form,
                        deduplicate = self.event_site_duplicate,
-                       list_fields = [#"incident_id", # Not being dropped in component view
-                                      "site_id",
-                                      "status",
-                                      "allocation.budget_id",
-                                      "allocation.start_date",
-                                      "allocation.end_date",
-                                      "allocation.daily_cost",
-                                      ],
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
                        super_entity = "budget_cost_item",
                        )
 
