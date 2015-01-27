@@ -5025,7 +5025,7 @@ class pr_Contacts(S3Method):
                    )
 
     # -------------------------------------------------------------------------
-    def contacts(self, method, pe_id, allow_create=False):
+    def contacts(self, pe_id, allow_create=False, method="contacts"):
         """
             Contact Information Subform
 
