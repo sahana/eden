@@ -131,6 +131,7 @@ class S3Config(Storage):
         self.ui = Storage()
         self.vulnerability = Storage()
         self.transport = Storage()
+        self.xforms = Storage()
 
         self._debug = None
 
@@ -3273,6 +3274,34 @@ class S3Config(Storage):
             Whether Seaport code is unique
         """
         return self.transport.get("seaport_code_unique", False)
+
+    # -------------------------------------------------------------------------
+    # XForms
+    #
+    def get_xforms_resources(self):
+        """
+            A list of xform resources
+
+            Item formats:
+                "tablename"
+                ("Title", "tablename")
+                ("Title", "tablename", options)
+
+            Format for options:
+                {c=controller,         ...use this controller for form handling
+                 f=function,           ...use this function for form handling
+                 vars=vars,            ...add these vars to the download URL
+                 title=title_field,    ...use this field in template for form title
+                 public=public_flag,   ...check this field whether the template is
+                                          public or not (must be boolean)
+                 }
+
+            Example:
+                settings.xforms.resources = [("Request", "req_req")]
+
+            @todo: move this documentation to the wiki?
+        """
+        return self.xforms.get("resources", None)
 
     # -------------------------------------------------------------------------
     # Frontpage Options

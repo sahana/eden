@@ -838,6 +838,11 @@ def config(settings):
     #                                 title = T("Introduction"),
     #                                 video_id = "HR-FtR2XkBU"),]
 
+    # -----------------------------------------------------------------------------
+    # XForms
+    # Configure xform resources (example)
+    #settings.xforms.resources = [("Request", "req_req")]
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled

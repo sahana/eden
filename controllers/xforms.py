@@ -330,6 +330,28 @@ def formList():
     return xml
 
 # -----------------------------------------------------------------------------
+def formlist():
+    """
+        Download list of available XForms (new framework)
+
+        @todo: rename into formList to match ODK Collect default
+               (once framework complete)
+    """
+
+    from s3 import S3XForms
+    xforms = S3XForms.formlist()
+    if not xforms:
+        raise HTTP(404, "No XForms configured on this server.")
+
+    formlist = TAG.forms()
+    for url, title in xforms:
+        formlist.append(TAG.form(title, _url=url))
+
+    response.headers["Content-Type"] = "text/xml"
+    response.view = "xforms/formlist.xml"
+    return {"formlist": formlist}
+
+# -----------------------------------------------------------------------------
 def submission():
     """
         Allows for submission of Xforms by ODK Collect

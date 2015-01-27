@@ -68,9 +68,20 @@ class DataCollectionTemplateModel(S3Model):
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
+                     # Whether to show this template in the form list
+                     # (required since form list can't use authorization)
+                     Field("public", "boolean",
+                           default = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
+        self.configure(tablename,
+                       xform = {"collection": "dc_collection",
+                                "questions": "question",
+                                "answers": "answer",
+                                },
+                       )
         # Represent
         represent = S3Represent(lookup=tablename)
 
