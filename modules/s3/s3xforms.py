@@ -108,15 +108,15 @@ class S3XForms(S3Method):
                 try:
                     resource = s3db.resource(tablename)
                 except AttributeError:
-                    # @todo: issue a config-warning here? (nonexistent resource)
+                    current.log.warning("XForms: non-existent resource %s" % tablename)
                     continue
 
                 if title is None:
                     title = " ".join(w.capitalize() for w in resource.name.split("_"))
 
                 # Options can override target controller/function and URL vars
-                c = options.get("c", resource.prefix)
-                f = options.get("f", resource.name)
+                c = options.get("c", "xforms")
+                f = options.get("f", "forms")
                 url_vars = options.get("vars", {})
 
                 config = resource.get_config("xform")
@@ -140,13 +140,18 @@ class S3XForms(S3Method):
                         rows = current.db(query).select(table._id,
                                                         table[title_field],
                                                         )
+                        native = c == "xforms"
                         for row in rows:
-                            url = URL(c=c,
-                                      f=f,
-                                      args=[row[table._id], "xform.xhtml"],
+                            if native:
+                                args = [tablename, row[table._id]]
+                            else:
+                                args = [row[table._id], "xform.xhtml"]
+                            url = URL(c = c,
+                                      f = f,
+                                      args = args,
                                       vars = url_vars,
-                                      host=True,
-                                      extension="",
+                                      host = True,
+                                      extension = "",
                                       )
                             xforms.append((url, row[title_field]))
                     else:
@@ -154,11 +159,16 @@ class S3XForms(S3Method):
                         continue
                 else:
                     # Introspective XForm
-                    url = URL(c=c, f=f,
-                              args=["xform.xhtml"],
+                    if c == "xforms":
+                        args = [tablename]
+                    else:
+                        args = ["xform.xhtml"]
+                    url = URL(c = c,
+                              f = f,
+                              args = args,
                               vars = url_vars,
-                              host=True,
-                              extension="",
+                              host = True,
+                              extension = "",
                               )
                     xforms.append((url, title))
 
@@ -255,6 +265,8 @@ class S3XFormsWidget(object):
 
         strings = self._strings
         if string:
+            if hasattr(string, "flatten"):
+                string = string.flatten()
             strings[ref] = string
         elif key in strings:
             del strings[ref]
@@ -329,26 +341,37 @@ class S3XFormsOptionsWidget(S3XFormsWidget):
         if not hasattr(requires, "options"):
             return TAG["input"](self.label(), **attr)
 
-        items = [self.label(), self.hint()]
+        items = [self.label(), self.hint()] + self.items(requires.options())
+        return TAG["select1"](items, **attr)
 
-        options = requires.options()
+    # -------------------------------------------------------------------------
+    def items(self, options):
+        """
+            Render the items for the selector
+
+            @param options: the options, list of tuples (value, text)
+        """
+
+        items = []
         setstr = self.setstr
         getstr = self.getstr
         for index, option in enumerate(options):
 
-            optref = "option%s" % index
-
             value, text = option
-            setstr(optref, text)
+            key = "option%s" % index
+            if hasattr(text, "m") or hasattr(text, "flatten"):
+                setstr(key, text)
+                text = getstr("label", key)
+            else:
+                text = TAG["label"](text)
 
-            items.append(TAG["item"](getstr("label", optref),
+            items.append(TAG["item"](text,
                                      TAG["value"](value),
                                      ))
-
-        return TAG["select1"](items, **attr)
+        return items
 
 # =============================================================================
-class S3XFormsMultipleOptionsWidget(S3XFormsWidget):
+class S3XFormsMultipleOptionsWidget(S3XFormsOptionsWidget):
     """ Multiple Options Widget for XForms """
 
     def widget(self, field, attr):
@@ -358,22 +381,7 @@ class S3XFormsMultipleOptionsWidget(S3XFormsWidget):
         if not hasattr(requires, "options"):
             return TAG["input"](self.label(), **attr)
 
-        items = [self.label(), self.hint()]
-
-        options = requires.options()
-        setstr = self.setstr
-        getstr = self.getstr
-        for index, option in enumerate(options):
-
-            value, text = option
-
-            key = "option%s" % index
-            setstr(key, text)
-
-            items.append(TAG["item"](getstr("label", key),
-                                     TAG["value"](value),
-                                     ))
-
+        items = [self.label(), self.hint()] + self.items(requires.options())
         return TAG["select"](items, **attr)
 
 # =============================================================================
@@ -802,7 +810,7 @@ class S3XFormsForm(object):
         for field in self._fields:
             append(field.model)
 
-        return TAG["instance"](nodes, _id=self.name)
+        return TAG["instance"](TAG[self.name](nodes), _id=self.name)
 
     # -------------------------------------------------------------------------
     def _bindings(self):
@@ -868,11 +876,10 @@ class S3XFormsForm(object):
         if self.translate and strings:
             append_translation = translations.append
 
-            languages = current.response.s3.l10n_languages.keys()
-            # Backwards-compability (probably not needed anymore):
-            #if "eng" not in languages:
-                #languages.append("eng")
-            for language in current.response.s3.l10n_languages.keys():
+            languages = [l for l in current.response.s3.l10n_languages
+                           if l != "en"]
+            languages.insert(0, "en")
+            for language in languages:
                 translation = TAG["translation"](_lang=language)
                 append_string = translation.append
                 for key, string in strings.items():
@@ -884,6 +891,6 @@ class S3XFormsForm(object):
                 if len(translation):
                     append_translation(translation)
 
-        return translations
+        return TAG["itext"](translations)
 
 # END =========================================================================
