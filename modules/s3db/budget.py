@@ -1806,5 +1806,5 @@ def budget_rheader(r):
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     return rheader
-    
+
 # END =========================================================================
