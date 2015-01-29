@@ -106,7 +106,7 @@ class S3SituationModel(S3Model):
         # Components
         self.add_components(tablename,
                             # Presence
-                            sit_presence=self.super_key("sit_trackable"),
+                            sit_presence = self.super_key("sit_trackable"),
                             )
 
         # ---------------------------------------------------------------------
