@@ -744,6 +744,17 @@ def config(settings):
             msg_record_created = None,
             msg_record_deleted = None
         )
+
+        get_config = s3db.get_config
+
+        if r.interactive or r.representation == "aadata":
+            # Remove "Assigned to" field from table
+            list_fields = get_config(tablename, "list_fields")
+            try:
+                list_fields.remove("pe_id")
+            except ValueError:
+                pass
+
         if r.interactive:
             trimmed_task = False
             get_vars = r.get_vars
@@ -847,21 +858,19 @@ def config(settings):
                                                                fields = [("", "project_id")],
                                                                multiple = False,
                                                                ))
-            
-            crud_form = S3SQLCustomForm(*crud_fields)
-            get_config = s3db.get_config
-            list_fields = get_config(tablename, "list_fields")
+
+            # Remove filter for "Assigned to"
             filter_widgets = get_config(tablename, "filter_widgets")
+            custom_filter_widgets = [widget for widget in filter_widgets
+                                            if widget.field != "pe_id"]
+
             create_onaccept = get_config(tablename, "create_onaccept")
-            # Remove 'Assigned to' field
-            list_fields.remove("pe_id")
-            custom_filter_widgets = [widget for widget in filter_widgets \
-                                                if "pe_id" not in widget.field ]
             s3db.configure(tablename,
-                           crud_form = crud_form,
+                           crud_form = S3SQLCustomForm(*crud_fields),
                            filter_widgets = custom_filter_widgets,
-                           create_onaccept = [create_onaccept,\
-                                              custom_project_task_create_onaccept]
+                           create_onaccept = [create_onaccept,
+                                              custom_project_task_create_onaccept,
+                                              ],
                            )
 
     settings.customise_project_task_resource = customise_project_task_resource
@@ -937,7 +946,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     def customise_project_comment_controller(**attr):
-    
+
         s3 = current.response.s3
 
         # Custom Prep
@@ -950,7 +959,7 @@ def config(settings):
         return attr
 
     settings.customise_project_comment_controller = customise_project_comment_controller
-    
+
     # -----------------------------------------------------------------------------
     def customise_delphi_problem_controller(**attr):
 
@@ -1157,9 +1166,9 @@ def config(settings):
             @param format: the contents format ("text" or "html")
         """
         rows = data["rows"]
- 
+
         if format == "text":
-            
+
             created_on_selector = resource.prefix_selector("created_on")
             created_on_colname = None
             as_utc = current.xml.as_utc
@@ -1167,8 +1176,8 @@ def config(settings):
             last_check_time = meta_data["last_check_time"]
             rfields = data["rfields"]
             output = {}
-            new, upd = [], [] 
-            
+            new, upd = [], []
+
             # Standard text format
             labels = []
             append = labels.append
@@ -1241,7 +1250,7 @@ def config(settings):
                 append(comment_container)
                 append(BR())
             output = {"body": DIV(*elements)}
-        
+
         config_url = settings.get_base_public_url() + URL(c="default",
                                                           f="index",
                                                           args=["subscriptions"])
@@ -1406,7 +1415,7 @@ class TaskSubscriptions(object):
                      ]
         self.rfilter = "comment.task_id__belongs"
         # Remove comments created by the user
-        self.exclude = ["comment.created_by__ne", str(current.auth.user.id)] 
+        self.exclude = ["comment.created_by__ne", str(current.auth.user.id)]
         # Get current subscription settings resp. from defaults
         self.subscription = self.get_subscription()
         subscription = self.subscription
