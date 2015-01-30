@@ -756,6 +756,10 @@ class S3Importer(S3Method):
                                 for k, v in options:
                                     if k == str(data):
                                         value = v
+                                        break
+                                if hasattr(value, "m"):
+                                    # Don't translate - XSLT expects English
+                                    value = value.m
                     elif value is None:
                         continue
                     self.csv_extra_data[label] = value
@@ -1811,7 +1815,7 @@ class S3ImportItem(object):
             table = s3db.table(tablename)
             if table is None:
                 self.error = current.ERROR.BAD_RESOURCE
-                element.set(ERROR, str(self.error))
+                element.set(ERROR, s3_unicode(self.error))
                 return False
 
         self.table = table
@@ -1830,7 +1834,7 @@ class S3ImportItem(object):
             self.error = current.ERROR.VALIDATION_ERROR
             self.accepted = False
             if not element.get(ERROR, False):
-                element.set(ERROR, str(self.error))
+                element.set(ERROR, s3_unicode(self.error))
             return False
 
         self.data = data
@@ -2174,7 +2178,7 @@ class S3ImportItem(object):
                 parent.error = VALIDATION_ERROR
                 element = parent.element
                 if not element.get(ATTRIBUTE.error, False):
-                    element.set(ATTRIBUTE.error, str(parent.error))
+                    element.set(ATTRIBUTE.error, s3_unicode(parent.error))
 
             return ignore_errors
 
@@ -3346,7 +3350,7 @@ class S3ImportJob():
                 element = item.element
                 if element is not None:
                     if not element.get(ATTRIBUTE.error, False):
-                        element.set(ATTRIBUTE.error, str(self.error))
+                        element.set(ATTRIBUTE.error, s3_unicode(self.error))
                     if not logged:
                         self.error_tree.append(deepcopy(element))
 
