@@ -1243,12 +1243,12 @@ def config(settings):
 
         arcs = False
         vnrc = False
+        root_org = current.auth.root_org_name()
         if root_org == VNRC:
             settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
 
         if controller == "vol":
             # Special cases for different NS
-            root_org = current.auth.root_org_name()
             if root_org == ARCS:
                 arcs = True
                 settings.L10n.mandatory_lastname = False
