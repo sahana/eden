@@ -1243,6 +1243,9 @@ def config(settings):
 
         arcs = False
         vnrc = False
+        if root_org == VNRC:
+            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
+
         if controller == "vol":
             # Special cases for different NS
             root_org = current.auth.root_org_name()
@@ -1256,7 +1259,6 @@ def config(settings):
                 settings.hrm.vol_active = vol_active
             elif root_org == VNRC:
                 vnrc = True
-                settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
                 # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
                 settings.org.regions = False
         #elif vnrc:
