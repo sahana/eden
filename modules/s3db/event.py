@@ -144,6 +144,12 @@ class S3EventModel(S3Model):
             #                        _title="%s|%s" % (T("Event Type"),
             #                                          AUTOCOMPLETE_HELP))
 
+        filter_widgets = [S3TextFilter(["name",
+                                        ],
+                                       label = T("Search"),
+                                       )
+                          ]
+
         crud_strings[tablename] = Storage(
             label_create = T("Create Event Type"),
             title_display = T("Event Type Details"),
@@ -175,6 +181,7 @@ class S3EventModel(S3Model):
         configure(tablename,
                   deduplicate = self.event_type_duplicate,
                   hierarchy = hierarchy,
+                  filter_widgets = filter_widgets,
                   )
 
         # ---------------------------------------------------------------------
@@ -265,37 +272,47 @@ class S3EventModel(S3Model):
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
+        filter_widgets = [S3TextFilter(["name",
+                                        ],
+                                       label = T("Search"),
+                                       )
+                          ]
+
         if hierarchical_event_types:
-            filter_widgets = [S3HierarchyFilter("event_type_id",
-                                                label = T("Type"),
-                                                #multiple = False,
-                                                ),
-                              ]
+            filter_widgets.append(S3HierarchyFilter("event_type_id",
+                                                    label = T("Type"),
+                                                    #multiple = False,
+                                                    )
+                                  )
         else:
-            filter_widgets = [S3OptionsFilter("event_type_id",
-                                              label = T("Type"),
-                                              multiple = False,
-                                              #options = lambda: \
-                                              #  get_s3_filter_opts("event_event_type",
-                                              #                     translate = True)
-                                              ),
-                              ]
+            filter_widgets.append(S3OptionsFilter("event_type_id",
+                                                  label = T("Type"),
+                                                  multiple = False,
+                                                  #options = lambda: \
+                                                  #  get_s3_filter_opts("event_event_type",
+                                                  #                     translate = True)
+                                                  )
+                                  )
+
 
         filter_widgets.extend((S3LocationFilter("event_location.location_id",
                                                 levels = levels,
                                                 label = T("Location"),
+                                                hidden = True,
                                                 ),
                                # @ToDo: Filter for any event which starts or ends within a date range
                                S3DateFilter("start_date",
-                                            label = None,
+                                            label = T("Date"),
                                             hide_time = True,
-                                            input_labels = {"ge": "From", "le": "To"}
+                                            hidden = True,
                                             ),
                                ))
 
         report_fields = ["event_type_id",
                          ]
+
         rappend = report_fields.append
+
         for level in levels:
             rappend("event_location.location_id$%s" % level)
         rappend((T("Year"), "year"))
@@ -322,7 +339,7 @@ class S3EventModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "name",
-                                 "event_type_id$name",
+                                 (T("Type"), "event_type_id$name"),
                                  (T("Location"), "location.name"),
                                  "start_date",
                                  "exercise",
