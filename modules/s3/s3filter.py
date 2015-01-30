@@ -1638,7 +1638,8 @@ class S3OptionsFilter(S3FilterWidget):
                             #query = accessible_query("read", ktable)
                         #query &= (key_field == field)
 
-                        query = (key_field == field)
+                        query = accessible_query("read", ktable) & \
+                                (key_field == field)
                         joins = rfield.join
                         for tname in joins:
                             query &= joins[tname]

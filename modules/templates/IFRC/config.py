@@ -163,10 +163,9 @@ def config(settings):
             ltable = db.org_organisation_organisation_type
             query = (ltable.organisation_id == row.id) & \
                     (ltable.organisation_type_id == ottable.id)
-            row = db(query).select(ottable.name,
-                                   limitby=(0, 1)
-                                   ).first()
-            if row and row.name != "Red Cross / Red Crescent":
+            otype = db(query).select(ottable.name,
+                                     limitby=(0, 1)).first()
+            if otype and otype.name != "Red Cross / Red Crescent":
                 use_user_organisation = True
 
         # Groups are owned by the user's organisation

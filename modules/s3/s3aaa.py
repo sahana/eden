@@ -2835,6 +2835,7 @@ $.filterOptionsS3({
             if hr_id:
                 record["id"] = hr_id
                 s3db.update_super(htable, record)
+                self.s3_set_record_owner(htable, hr_id)
                 s3db.onaccept(htablename, record, method="create")
 
         return hr_id
@@ -2893,6 +2894,10 @@ $.filterOptionsS3({
                              owned_by_user=user_id,
                              )
             member_id = mtable.insert(**record)
+            if member_id:
+                record["id"] = member_id
+                self.s3_set_record_owner(mtable, member_id)
+                s3db.onaccept(mtablename, record, method="create")
 
         return member_id
 
