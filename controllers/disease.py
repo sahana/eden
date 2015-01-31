@@ -47,7 +47,7 @@ def case():
            r.component_name == "exposure":
             field = r.component.table.tracing_id
             field.readable = field.writable = False
-            
+
         if r.interactive:
             field = r.table.person_id
             field.requires = IS_ADD_PERSON_WIDGET2()
