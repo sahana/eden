@@ -45,41 +45,8 @@ def scenario():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=scenario_rheader)
+    output = s3_rest_controller(rheader = s3db.scenario_rheader)
     return output
-
-# -----------------------------------------------------------------------------
-def scenario_rheader(r, tabs=[]):
-    """ Resource headers for component views """
-
-    rheader = None
-
-    if r.representation == "html":
-
-        if r.name == "scenario":
-            # Scenario Controller
-            tabs = [(T("Scenario Details"), None)]
-            if settings.has_module("hrm"):
-                tabs.append((T("Human Resources"), "human_resource"))
-            if settings.has_module("asset"):
-                tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Organizations"), "organisation"))
-            tabs.append((T("Facilities"), "site"))
-            if settings.has_module("project"):
-                tabs.append((T("Tasks"), "task"))
-            tabs.append((T("Map Profile"), "config"))
-
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            record = r.record
-            if record:
-                rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
-                                       record.name),
-                                    TR(TH("%s: " % T("Comments")),
-                                       record.comments),
-                                    ), rheader_tabs)
-
-    return rheader
 
 # -----------------------------------------------------------------------------
 def person():

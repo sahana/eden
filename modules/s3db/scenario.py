@@ -34,6 +34,7 @@ __all__ = ("S3ScenarioModel",
            "S3ScenarioOrganisationModel",
            "S3ScenarioSiteModel",
            "S3ScenarioTaskModel",
+           "scenario_rheader",
            )
 
 from gluon import *
@@ -167,6 +168,18 @@ class S3ScenarioModel(S3Model):
                                       #                                current.messages.AUTOCOMPLETE_HELP))
                                     )
 
+        filter_widgets = [
+            S3TextFilter("name",
+                         label = T("Search")),
+            S3OptionsFilter("incident_type_id",
+                            label = T("Incident Type")),
+            ]
+
+        self.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       list_fields = ["name", "incident_type_id"],
+                       )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -248,7 +261,7 @@ class S3ScenarioAssetModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3ScenarioHRModel(S3Model):
@@ -266,6 +279,7 @@ class S3ScenarioHRModel(S3Model):
         # Staff/Volunteers
         # @ToDo: Use Positions, not individual HRs (Typed resources?)
         # @ToDo: Search Widget
+
         tablename = "scenario_human_resource"
         self.define_table(tablename,
                           self.scenario_scenario_id(),
@@ -287,7 +301,7 @@ class S3ScenarioHRModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3ScenarioMapModel(S3Model):
@@ -368,7 +382,7 @@ class S3ScenarioOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3ScenarioSiteModel(S3Model):
@@ -407,7 +421,7 @@ class S3ScenarioSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
 
 # =============================================================================
 class S3ScenarioTaskModel(S3Model):
@@ -449,6 +463,42 @@ class S3ScenarioTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
+        return dict()
+
+# -----------------------------------------------------------------------------
+def scenario_rheader(r, tabs=[]):
+    """ Resource headers for component views """
+
+    rheader = None
+
+    if r.representation == "html":
+
+        if r.name == "scenario":
+            # Scenario Controller
+
+            T = current.T
+            settings = current.deployment_settings
+            tabs = [(T("Scenario Details"), None)]
+            if settings.has_module("hrm"):
+                tabs.append((T("Human Resources"), "human_resource"))
+            if settings.has_module("asset"):
+                tabs.append((T("Assets"), "asset"))
+            tabs.append((T("Organizations"), "organisation"))
+            tabs.append((T("Facilities"), "site"))
+            if settings.has_module("project"):
+                tabs.append((T("Tasks"), "task"))
+            tabs.append((T("Map Profile"), "config"))
+
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            record = r.record
+            if record:
+                rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
+                                       record.name),
+                                    TR(TH("%s: " % T("Comments")),
+                                       record.comments),
+                                    ), rheader_tabs)
+
+    return rheader
 
 # END =========================================================================
