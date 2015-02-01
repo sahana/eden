@@ -3710,7 +3710,7 @@ class S3Resource(object):
 
                 try:
                     rfield = rfields[iSortCol]
-                except KeyError:
+                except IndexError:
                     # iSortCol specifies a non-existent column, i.e.
                     # iSortCol_x>=numcols => ignore
                     columns.append(Storage(field=None))

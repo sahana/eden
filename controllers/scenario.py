@@ -39,9 +39,9 @@ def scenario():
             if r.component.name != "config":
                 s3.crud.submit_button = T("Assign")
                 s3.crud_labels["DELETE"] = T("Remove")
-            if r.component_name == "site":
-                field = db.scenario_site
-                field.readable = field.writable = True
+        if r.component_name == "site":
+            field = db.scenario_site.site_id
+            field.readable = field.writable = True
         return True
     s3.prep = prep
 
