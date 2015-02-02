@@ -218,6 +218,7 @@ class S3EventModel(S3Model):
                                  label = T("End Date"),
                                  represent = "date",
                                  widget = "date",
+                                 set_min = "event_event_start_date",
                                  ),
                      Field.Method("year", self.event_event_year),
                      Field("closed", "boolean",

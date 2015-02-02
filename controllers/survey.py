@@ -264,9 +264,6 @@ def series():
         if request.ajax == True and r.method == "read":
             return output["item"]
         if not r.component:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('survey_series_start_date','survey_series_end_date')''')
             s3db.survey_serieslist_dataTable_post(r)
 
         elif r.component_name == "complete":
