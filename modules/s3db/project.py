@@ -4759,7 +4759,7 @@ class S3ProjectTaskModel(S3Model):
                                default = auth.s3_logged_in_person(),
                                widget = SQLFORM.widgets.options.widget),
                      role_id(label=T("Role")),
-                     task_id(empty = False, 
+                     task_id(empty = False,
                              ondelete = "CASCADE"),
                      *s3_meta_fields())
 
@@ -6273,6 +6273,7 @@ def project_task_controller():
                            "location_id",
                            "date_due",
                            "pe_id",
+                           "status",
                            #"organisation_id$logo",
                            "modified_by",
                            ]
@@ -6654,7 +6655,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
         vars = {"refresh": list_id,
                 "record": record_id,
                 }
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="project", f="project",
                                args=[record_id, "update.popup"]
                                ),
@@ -6664,7 +6665,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        _title=current.response.s3.crud_strings.project_project.label_delete_button,
                        )
@@ -6676,7 +6677,7 @@ def project_project_list_layout(list_id, item_id, resource, rfields, record,
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon icon-%s" % icon),
+    item = DIV(DIV(ICON(icon),
                    SPAN(A(name,
                           _href =  URL(c="project", f="project",
                                        args=[record_id, "profile"])),
@@ -6752,11 +6753,11 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
 
     if priority in (1, 2):
         # Urgent / High
-        priority_icon = DIV(I(" ", _class="icon-exclamation"),
+        priority_icon = DIV(ICON("exclamation"),
                             _class="task_priority")
     elif priority == 4:
         # Low
-        priority_icon = DIV(I(" ", _class ="icon-arrow-down"),
+        priority_icon = DIV(ICON("arrow-down"),
                             _class="task_priority")
     else:
         priority_icon = ""
@@ -6767,8 +6768,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                           12: "#C6C6C6",
                           }
     active_statuses = current.s3db.project_task_active_statuses
-    status_icon  = DIV(I(" ", _class="icon-check%s" %
-                         ("-empty" if status in active_statuses else "" )),
+    status_icon  = DIV(ICON("active" if status in active_statuses else "inactive"),
                        _class="task_status",
                        _style="background-color:%s" % (status_icon_colour.get(status, "none"))
                        )
@@ -6800,7 +6800,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     permit = current.auth.s3_has_permission
     table = current.db.project_task
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="project", f="task",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -6812,7 +6812,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        _title=current.response.s3.crud_strings.project_task.label_delete_button,
                        )
@@ -6820,7 +6820,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
         delete_btn = ""
 
     if source_url:
-        source_btn =  A(I(" ", _class="icon icon-link"),
+        source_btn =  A(ICON("link"),
                        _title=source_url,
                        _href=source_url,
                        _target="_blank"
@@ -6835,7 +6835,7 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon icon-%s" % icon),
+    item = DIV(DIV(ICON(icon),
                    SPAN(location, _class="location-title"),
                    SPAN(date_due, _class="date-title"),
                    edit_bar,

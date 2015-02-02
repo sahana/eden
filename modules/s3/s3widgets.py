@@ -7620,6 +7620,7 @@ class ICON(I):
     icons = {
         "font-awesome": {
             "_base": "icon",
+            "active": "icon-check",
             "add": "icon-plus",
             "arrow-down": "icon-arrow-down",
             "bar-chart": "icon-bar-chart",
@@ -7641,6 +7642,7 @@ class ICON(I):
             "fullscreen": "icon-fullscreen",
             "globe": "icon-globe",
             "home": "icon-home",
+            "inactive": "icon-check-empty",
             "link": "icon-link",
             "list": "icon-list",
             "map-marker": "icon-map-marker",
@@ -7656,6 +7658,7 @@ class ICON(I):
             "table": "icon-table",
             "tag": "icon-tag",
             "tags": "icon-tags",
+            "tasks": "icon-tasks",
             "time": "icon-time",
             "trash": "icon-trash",
             "truck": "icon-truck",
@@ -7668,6 +7671,7 @@ class ICON(I):
         # @todo: integrate
         #"font-awesome4": {
             #"_base": "fa",
+            #"active": "fa-check",
             #"add": "fa-plus",
             #"arrow-down": "fa-arrow-down",
             #"bar-chart": "fa-bar-chart",
@@ -7689,6 +7693,7 @@ class ICON(I):
             #"fullscreen": "fa-fullscreen",
             #"globe": "fa-globe",
             #"home": "fa-home",
+            #"inactive": "fa-check-empty",
             #"link": "fa-link",
             #"list": "fa-list",
             #"map-marker": "fa-map-marker",
@@ -7704,6 +7709,7 @@ class ICON(I):
             #"table": "fa-table",
             #"tag": "fa-tag",
             #"tags": "fa-tags",
+            #"tasks": "fa-tasks",
             #"time": "fa-time",
             #"trash": "fa-trash",
             #"truck": "fa-truck",
@@ -7714,6 +7720,7 @@ class ICON(I):
             #"zoomout": "fa-zoomout",
         #},
         "foundation": {
+            "active": "fi-check",
             "add": "fi-plus",
             "arrow-down": "fi-arrow-down",
             "bar-chart": "fi-graph-bar",
@@ -7733,6 +7740,7 @@ class ICON(I):
             "fullscreen": "fi-arrows-out",
             "globe": "fi-map",
             "home": "fi-home",
+            "inactive": "fi-x",
             "link": "fi-link",
             "list": "fi-list",
             "map-marker": "fi-marker",
@@ -7747,6 +7755,7 @@ class ICON(I):
             "table": "fi-list-thumbnails",
             "tag": "fi-price-tag",
             "tags": "fi-pricetag-multiple",
+            "tasks": "fi-clipboard-notes",
             "time": "fi-clock",
             "trash": "fi-trash",
             "user": "fi-torso",
