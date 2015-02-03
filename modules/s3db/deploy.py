@@ -384,6 +384,8 @@ class S3DeploymentModel(S3Model):
                                        label = T(hr_label)),
                      Field("active", "boolean",
                            default = True,
+                           label = T("Roster Status"),
+                           represent = lambda opt: T("active") if opt else T("inactive"),
                            ),
                      *s3_meta_fields())
 
@@ -1236,7 +1238,7 @@ def deploy_mission_response_count(row):
         return 0
 
 # =============================================================================
-def deploy_member_filter():
+def deploy_member_filter(status=False):
     """
         Filter widgets for members (hrm_human_resource), used in
         custom methods for member selection, e.g. deploy_apply
@@ -1251,14 +1253,12 @@ def deploy_member_filter():
                             label=T("Name"),
                             ),
                S3OptionsFilter("organisation_id",
-                               widget="multiselect",
                                filter=True,
                                hidden=True,
                                ),
                S3OptionsFilter("credential.job_title_id",
                                # @ToDo: Label setting
                                label = T("Sector"),
-                               widget="multiselect",
                                hidden=True,
                                ),
                ]
@@ -1274,6 +1274,22 @@ def deploy_member_filter():
                                               widget="multiselect",
                                               filter=True,
                                               ))
+    if status:
+        # Additional filter for roster status (default=active), allows
+        # to explicitly include inactive roster members when selecting
+        # alert recipients (only used there)
+        widgets.insert(1, S3OptionsFilter("application.active",
+                                          cols = 2,
+                                          default = True,
+                                          # Don't hide otherwise default
+                                          # doesn't apply:
+                                          #hidden = False,
+                                          label = T("Status"),
+                                          options = {"True": T("active"),
+                                                     "False": T("inactive"),
+                                                     },
+                                          ))
+
     return widgets
 
 # =============================================================================
@@ -1665,7 +1681,7 @@ def deploy_alert_select_recipients(r, **attr):
     s3db = current.s3db
 
     response = current.response
-    member_query = FS("application.active") == True
+    member_query = FS("application.active") != None
 
     if r.http == "POST":
 
@@ -1718,12 +1734,17 @@ def deploy_alert_select_recipients(r, **attr):
                                      dict(number=added)
 
     get_vars = r.get_vars or {}
+    representation = r.representation
     settings = current.deployment_settings
     resource = s3db.resource("hrm_human_resource",
                              filter=member_query, vars=r.get_vars)
 
-    # Filter widgets
-    filter_widgets = deploy_member_filter()
+    # Filter widgets (including roster status)
+    filter_widgets = deploy_member_filter(status=True)
+    if filter_widgets and representation == "html":
+        # Apply filter defaults
+        resource.configure(filter_widgets = filter_widgets)
+        S3FilterForm.apply_filter_defaults(r, resource)
 
     # List fields
     list_fields = ["id",
@@ -1763,7 +1784,7 @@ def deploy_alert_select_recipients(r, **attr):
     # Bulk actions
     dt_bulk_actions = [(T("Select as Recipients"), "select")]
 
-    if r.representation == "html":
+    if representation == "html":
         # Page load
         resource.configure(deletable = False)
 
@@ -1829,7 +1850,7 @@ def deploy_alert_select_recipients(r, **attr):
         response.view = "list_filter.html"
         return output
 
-    elif r.representation == "aadata":
+    elif representation == "aadata":
         # Ajax refresh
         if "draw" in get_vars:
             echo = int(get_vars.draw)
@@ -2133,7 +2154,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         self.avgrat = {}
         self.deployed = set()
         self.appraisals = {}
-        
+
         self.use_regions = current.deployment_settings.get_org_regions()
 
     # -------------------------------------------------------------------------
@@ -2156,7 +2177,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
             htable = s3db.hrm_human_resource
             number_of_recipients = htable.id.count()
-            
+
             rtable = s3db.deploy_alert_recipient
             alert_id = rtable.alert_id
 
@@ -2173,7 +2194,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 fields = [alert_id, number_of_recipients]
                 left = [htable.on(htable.id==rtable.human_resource_id)]
                 groupby = [alert_id]
-                
+
             query = (alert_id.belongs(record_ids)) & \
                     (rtable.deleted != True)
             rows = current.db(query).select(left=left,
