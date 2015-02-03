@@ -1278,8 +1278,9 @@ def config(settings):
                                           record_id=status_id):
             # Make inline-editable
             roster_status = A(roster_status,
-                              _id="rdrt-roster-status",
-                              data = {"status": active}
+                              data = {"status": active},
+                              _id = "rdrt-roster-status",
+                              _title = T("Click to edit"),
                               )
             s3 = current.response.s3
             script = "/%s/static/themes/IFRC/js/rdrt.js" % r.application
