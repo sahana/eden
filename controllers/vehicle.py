@@ -80,6 +80,9 @@ def vehicle():
                                       title=T("Vehicle Type"),
                                       tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
 
+    # Use this controller for options.json rather than looking for one called 'asset'
+    table.organisation_id.comment[0].vars = dict(parent="vehicle")
+
     # Only select from vehicles
     field.widget = None # We want a simple dropdown
     ctable = s3db.supply_item_category

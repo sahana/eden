@@ -430,9 +430,11 @@ def skill():
     """ Skills Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -442,9 +444,11 @@ def skill_type():
     """ Skill Types Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -454,9 +458,11 @@ def competency_rating():
     """ Competency Rating for Skill Types Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -466,9 +472,11 @@ def skill_provision():
     """ Skill Provisions Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -478,9 +486,11 @@ def course():
     """ Courses Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
@@ -493,9 +503,11 @@ def course_certificate():
     """ Courses to Certificates Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -523,9 +535,11 @@ def certificate_skill():
     """ Certificates to Skills Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -650,9 +664,11 @@ def staff_level():
     """ Staff Levels Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -661,9 +677,11 @@ def salary_grade():
     """ Salary Grade Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -675,9 +693,11 @@ def insurance():
     """ Insurance Information Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -689,9 +709,11 @@ def award_type():
     """ Award Type Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -700,9 +722,11 @@ def award():
     """ Awards Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -714,9 +738,11 @@ def disciplinary_type():
     """ Disciplinary Type Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output
@@ -725,9 +751,11 @@ def disciplinary_action():
     """ Disciplinary Action Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     output = s3_rest_controller()
     return output

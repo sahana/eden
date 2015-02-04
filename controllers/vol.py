@@ -718,9 +718,11 @@ def skill():
     """ Skills Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
                               csv_template=("hrm", "skill"),
@@ -732,9 +734,11 @@ def skill_type():
     """ Skill Types Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -743,9 +747,11 @@ def competency_rating():
     """ Competency Rating for Skill Types Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
                               csv_template=("hrm", "competency_rating"),
@@ -757,9 +763,11 @@ def skill_provision():
     """ Skill Provisions Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -768,9 +776,11 @@ def course():
     """ Courses Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
@@ -786,9 +796,11 @@ def course_certificate():
     """ Courses to Certificates Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -818,9 +830,11 @@ def certificate_skill():
     """ Certificates to Skills Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -915,14 +929,13 @@ def programme():
     """ Volunteer Programmes controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
 
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_programme)
 
     def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
         if r.component_name == "person":
             s3db.configure("hrm_programme_hours",
                            list_fields=["person_id",
@@ -948,9 +961,11 @@ def programme_hours():
     """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
                               csv_stylesheet=("hrm", "programme_hours.xsl"),

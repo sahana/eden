@@ -106,7 +106,8 @@ def item_pack():
     """ RESTful CRUD controller """
 
     s3db.configure("supply_item_pack",
-                   listadd=False)
+                   listadd = False,
+                   )
 
     return s3_rest_controller()
 
