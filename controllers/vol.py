@@ -181,7 +181,9 @@ def volunteer():
 
             # Configure action buttons
             s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-            if "msg" in settings.modules:
+            if "msg" in settings.modules and \
+               settings.get_hrm_compose_button() and \
+               auth.permission.has_permission("update", c="hrm", f="compose"):
                 # @ToDo: Remove this now that we have it in Events?
                 s3.actions.append({
                         "url": URL(f="compose",

@@ -1,4 +1,4 @@
-/* Hide L3 Row (L2 pretends to be L3) */
+/* Hide L3 Row (L2 pretends to be L3)
 #cms_post_location_id_L3__row,
 #org_facility_location_id_L3__row,
 #sub_defaultfacility_defaultfacility_i_location_id_edit_none_L3__row,
@@ -8,7 +8,8 @@
 #sub_other_facilitiesfacility_other_facilitiesfacility_i_location_id_edit_none_L3__row,
 #sub_other_facilitiesfacility_other_facilitiesfacility_i_location_id_edit_0_L3__row {
     display: none !important;
-}
+} */
+
 #sub_defaultfacility_defaultfacility_i_location_id_edit_0_map_wrapper {
     min-width: 600px;
 }

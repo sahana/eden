@@ -313,6 +313,7 @@ class register():
         else:
             s3.scripts.append("/%s/static/scripts/jquery.pstrength.2.1.0.min.js" % appname)
             s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % appname)
+        # @ToDo: s3_unicode if site being used with i18n
         s3.jquery_ready.append("".join(('''
 $('.auth_register').validate({
  errorClass:'req',
@@ -377,15 +378,12 @@ def register_onaccept(form):
     """ Tasks to be performed after a new user registers """
 
     # Process Custom Fields
-    vars = form.request_vars
-    position = vars.get("position", "")
-    reason = vars.get("reason", "")
-    id = form.vars.id
+    req_vars = form.request_vars
+    position = req_vars.get("position", "")
+    reason = req_vars.get("reason", "")
     db = current.db
     table = db.auth_user
-    db(table.id == form.vars.id).update(
-                                    comments = "%s | %s" % (position, reason)
-                                )
+    db(table.id == form.vars.id).update(comments = "%s | %s" % (position, reason))
 
 # =============================================================================
 class contact():

@@ -23,5 +23,25 @@
    <a id='show-intro' class='tiny secondary button'>Back to Intro</a>
   </div>
   {{pass}}
- </div>  
+ </div>
 </div>
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+ </div>
+<div class='small-12 columns'>
+ <div class='row'>
+  <div id='map' class='small-12 columns'></div>
+ </div>
+ <div class='row'>
+  <div class='small-12 columns'>
+  </div>
+ </div>
+ <div class='row'>
+  {{try:}}{{items = items}}
+   <div id='table-container' class='small-12 columns'>
+    {{=items}}
+   </div>
+  {{except:}}{{pass}}
+ </div>
+</div>
+{{include "dataTables.html"}}

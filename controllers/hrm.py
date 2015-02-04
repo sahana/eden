@@ -181,6 +181,7 @@ def staff():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules and \
+                   settings.get_hrm_compose_button() and \
                    auth.permission.has_permission("update", c="hrm", f="compose"):
                     # @ToDo: Remove this now that we have it in Events?
                     s3.actions.append(

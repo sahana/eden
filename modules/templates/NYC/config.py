@@ -360,11 +360,11 @@ def config(settings):
             S3OptionsFilter("organisation_id",
                             ),
             S3LocationFilter("location_id",
-                             levels = ("L2", "L4"),
+                             levels = ("L2", "L3", "L4"),
                              ),
-            S3OptionsFilter("site_org_group.group_id",
-                            represent = "%(name)s",
-                            ),
+            #S3OptionsFilter("site_org_group.group_id",
+            #                represent = "%(name)s",
+            #                ),
             ]
 
         s3db = current.s3db
@@ -453,18 +453,51 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def org_organisation_postprocess(form):
+        """
+            If the user selects the City (L2), or Borough (L3) for Area Served,
+            then add all Zipcodes in instead
+        """
 
-        # If the user selects a Borough (L3) for Area Served, then add all Zipcodes in instead
         db = current.db
         s3db = current.s3db
         form_vars = form.vars
         organisation_id = form_vars.id
         table = s3db.org_organisation_location
         gtable = db.gis_location
-        query = (table.organisation_id == organisation_id) & \
-                (table.deleted == False) & \
-                (gtable.id == table.location_id) & \
-                (gtable.level == "L3")
+        lquery = (table.organisation_id == organisation_id) & \
+                 (table.deleted == False) & \
+                 (gtable.id == table.location_id)
+        # City
+        query = lquery & (gtable.level == "L2")
+        city = db(query).select(gtable.id,
+                                limitby=(0, 1)
+                                ).first()
+        if city:
+            city = city.id
+            query = (gtable.deleted == False) & \
+                    (gtable.level == "L4") & \
+                    (gtable.path.like("%/" + str(city) + "/%"))
+            children = db(query).select(gtable.id)
+            zipcodes = [row.id for row in children]
+            query = (table.organisation_id == organisation_id) & \
+                    (table.deleted == False) & \
+                    (gtable.id == table.location_id) & \
+                    (gtable.level == "L4")
+            existing = db(query).select(gtable.id)
+            existing_zipcodes = [row.id for row in existing]
+            for z in zipcodes:
+                if z not in existing_zipcodes:
+                    table.insert(organisation_id=organisation_id,
+                                 location_id=z,
+                                 )
+
+            # Cleanup
+            query = (table.organisation_id == organisation_id) & \
+                    (table.location_id == city)
+            db(query).delete()
+
+        # Boroughs
+        query = lquery & (gtable.level == "L3")
         locations = db(query).select(gtable.id)
         if locations:
             boroughs = [row.id for row in locations]
@@ -718,12 +751,12 @@ def config(settings):
                             ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),
-                             levels = ("L2", "L4"),
+                             levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
             S3LocationFilter("organisation_location.location_id",
                              label = T("Areas Served"),
-                             levels = ("L2", "L4"),
+                             levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
             S3OptionsFilter("service_organisation.service_id",
@@ -1387,7 +1420,9 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Human Resource Management
-    # Uncomment to chage the label for 'Staff'
+    # Uncomment to disable the 'Send Message' action button
+    settings.hrm.compose_button = False
+    # Uncomment to change the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
     # Uncomment to allow Staff & Volunteers to be registered without an email address
     settings.hrm.email_required = False
@@ -1486,7 +1521,7 @@ def config(settings):
                                         ),
                         S3LocationFilter("location_id",
                                          label = T("Location"),
-                                         levels = ("L2", "L4"),
+                                         levels = ("L2", "L3", "L4"),
                                          #hidden = True,
                                          ),
                         S3OptionsFilter("group_membership.group_id",
@@ -1716,7 +1751,7 @@ def config(settings):
                     #                ),
                     S3LocationFilter("location.location_id",
                                      label = T("Location"),
-                                     levels = ("L2", "L4"),
+                                     levels = ("L2", "L3", "L4"),
                                      #hidden = True,
                                      ),
                     # @ToDo: Widget to handle Start & End in 1!

@@ -6753,6 +6753,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       read_url = read_url,
                                       update_url = update_url)
                 if "msg" in settings.modules and \
+                   settings.get_hrm_compose_button() and \
                    current.auth.permission.has_permission("update",
                                                           c="hrm",
                                                           f="compose"):

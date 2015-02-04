@@ -192,7 +192,6 @@ class S3MainMenu(object):
 
         auth = current.auth
         logged_in = auth.is_logged_in()
-        self_registration = current.deployment_settings.get_security_self_registration()
 
         if not logged_in:
             request = current.request
@@ -202,14 +201,22 @@ class S3MainMenu(object):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
+            self_registration = current.deployment_settings.get_security_self_registration()
+            if self_registration == "index":
+                register = MM("Register", c="default", f="index", m="register",
+                               vars=dict(_next=login_next),
+                               check=self_registration)
+            else:
+                register = MM("Register", m="register",
+                               vars=dict(_next=login_next),
+                               check=self_registration)
+
             menu_auth = MM("Login", c="default", f="user", m="login",
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
                             MM("Login", m="login",
                                vars=dict(_next=login_next)),
-                            MM("Register", m="register",
-                               vars=dict(_next=login_next),
-                               check=self_registration),
+                            register,
                             MM("Lost Password", m="retrieve_password")
                         )
         else:

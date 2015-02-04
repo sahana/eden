@@ -400,7 +400,7 @@ def organisation():
                         dt_pagination="true",
                         )
     elif representation == "aadata":
-        draw = request.get_vars.get("draw")
+        draw = get_vars.get("draw")
         if draw:
             draw = int(draw)
         items = dt.json(totalrows,
@@ -1010,8 +1010,7 @@ def about():
         xlwt_version = xlwt.__VERSION__
     except:
         xlwt_version = T("Not installed or incorrectly configured.")
-    return dict(
-                python_version=python_version,
+    return dict(python_version=python_version,
                 sahana_version=sahana_version,
                 web2py_version=web2py_version,
                 sqlite_version=sqlite_version,

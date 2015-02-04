@@ -50,9 +50,12 @@ class S3MainMenu(default.S3MainMenu):
                restrict=[AUTHENTICATED])(
             ),
             MM("News", c="cms", f="newsfeed", args="datalist",
-               icon="icon-news"),
+               icon="icon-news",
+               restrict=[AUTHENTICATED]),
             MM("Map", c="gis", f="index",
-               icon="icon-map"),
+               icon="icon-map",
+               restrict=[AUTHENTICATED]
+               ),
         ]
 
 # =============================================================================

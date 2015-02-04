@@ -2329,6 +2329,13 @@ class S3Config(Storage):
         """
         return self.hrm.get("org_required", True)
 
+    def get_hrm_compose_button(self):
+        """
+            If set to True then HRM dataTables have a 'Send Message' button
+                if the messaging module is enabled & users have the permission to access hrm/compose
+        """
+        return self.hrm.get("compose_button", True)
+
     def get_hrm_deletable(self):
         """
             If set to True then HRM records are deletable rather than just being able to be marked as obsolete
