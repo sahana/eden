@@ -21,6 +21,12 @@
         }
 
         var url = S3.Ap.concat('/', module, '/', resourcename, '/search_ac.json?field=', fieldname);
+        if (filter) {
+            url += '&' + filter;
+        }
+        if (link) {
+            url += '&link=' + link;
+        }
 
         var real_input = $('#' + input);
         // Bootstrap overrides .hide :/
@@ -46,13 +52,6 @@
         }
 
         var throbber = $('#' + dummy + '_throbber');
-
-        if (filter) {
-            url += '&' + filter;
-        }
-        if (link) {
-            url += '&link=' + link;
-        }
 
         // Optional args
         if (delay == 'undefined') {

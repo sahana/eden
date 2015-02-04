@@ -320,7 +320,6 @@ def dojs(dogis = False, warnings = True):
     # Single scripts
     for filename in ("add_person",
                      "cap",
-                     "embed_component",
                      "gis",
                      "gis.feature_crud",
                      "gis.fullscreen",
@@ -334,6 +333,7 @@ def dojs(dogis = False, warnings = True):
                      "select_person",
                      "timeline",
                      "ui.contacts",
+                     "ui.embeddedcomponent",
                      "ui.locationselector",
                      ):
         print "Compressing s3.%s.js" % filename

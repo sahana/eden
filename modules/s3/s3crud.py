@@ -58,7 +58,7 @@ from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
 from s3utils import s3_unicode, s3_validate, s3_represent_value, s3_set_extension
-from s3widgets import S3EmbedComponentWidget, S3Selector, ICON
+from s3widgets import S3EmbeddedComponentWidget, S3Selector, ICON
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -2763,7 +2763,7 @@ class S3CRUD(S3Method):
     def _embed_component(self, resource, record=None):
         """
             Renders the right key constraint in a link table as
-            S3EmbedComponentWidget and stores the postprocess hook.
+            S3EmbeddedComponentWidget and stores the postprocess hook.
 
             @param resource: the link table resource
         """
@@ -2772,31 +2772,35 @@ class S3CRUD(S3Method):
 
         component = resource.linked
         if component is not None and component.actuate == "embed":
-            attr = Storage(link=resource.tablename,
-                           component=component.tablename)
+
+            ctablename = component.tablename
+            attr = {"link": resource.tablename,
+                    "component": ctablename,
+                    }
+
             autocomplete = component.autocomplete
             if autocomplete and autocomplete in component.table:
-                attr.update(autocomplete=autocomplete)
+                attr["autocomplete"] = autocomplete
+
             if record is not None:
-                link_filter = "%s.%s.%s.%s.%s" % (
-                                resource.tablename,
-                                component.lkey,
-                                record,
-                                component.rkey,
-                                component.fkey)
-                attr.update(link_filter=link_filter)
+                attr["link_filter"] = "%s.%s.%s.%s.%s" % (
+                                      resource.tablename,
+                                      component.lkey,
+                                      record,
+                                      component.rkey,
+                                      component.fkey)
+
             rkey = component.rkey
             if rkey in resource.table:
                 field = resource.table[rkey]
-                attr.update(widget=field.widget)
-                # @todo: accept custom widgets
-                field.widget = S3EmbedComponentWidget(**attr)
+                field.widget = S3EmbeddedComponentWidget(**attr)
                 field.comment = None
-            postprocess = lambda form, key=rkey, component=attr.component: \
-                                 self._postprocess_embedded(form,
-                                    key=key, component=component)
 
+            callback = self._postprocess_embedded
+            postprocess = lambda form, key=rkey, component=ctablename: \
+                                 callback(form, key=key, component=component)
             link = Storage(postprocess=postprocess)
+
         return link
 
     # -------------------------------------------------------------------------
@@ -2804,7 +2808,7 @@ class S3CRUD(S3Method):
                               component=None,
                               key=None):
         """
-            Post-processes a form with an S3EmbedComponentWidget and
+            Post-processes a form with an S3EmbeddedComponentWidget and
             created/updates the component record.
 
             @param form: the form
