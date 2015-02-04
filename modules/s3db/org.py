@@ -939,6 +939,12 @@ class S3OrganisationModel(S3Model):
         if search_l10n:
             query |= (FS("name.name_l10n").lower().like(value + "%")) | \
                      (FS("name.acronym_l10n").lower().like(value + "%"))
+
+        if "link" in _vars:
+            link_filter = S3EmbeddedComponentWidget.link_filter(table, _vars.link)
+            if link_filter:
+                query &= link_filter
+
         resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
