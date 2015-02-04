@@ -394,7 +394,7 @@ def department():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -411,7 +411,7 @@ def job_title():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -432,7 +432,7 @@ def skill():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -446,7 +446,7 @@ def skill_type():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -460,7 +460,7 @@ def competency_rating():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -474,7 +474,7 @@ def skill_provision():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -488,7 +488,7 @@ def course():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -505,7 +505,7 @@ def course_certificate():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -519,7 +519,7 @@ def certificate():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -537,7 +537,7 @@ def certificate_skill():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -666,7 +666,7 @@ def staff_level():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -679,7 +679,7 @@ def salary_grade():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -695,7 +695,7 @@ def insurance():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -711,7 +711,7 @@ def award_type():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -724,7 +724,7 @@ def award():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -740,7 +740,7 @@ def disciplinary_type():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -753,7 +753,7 @@ def disciplinary_action():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
