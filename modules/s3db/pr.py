@@ -6665,7 +6665,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
 
     addr_street = raw["gis_location.addr_street"] or ""
     if addr_street:
-        addr_street = P(I(_class="icon-home"),
+        addr_street = P(ICON("home"),
                         " ",
                         SPAN(addr_street),
                         " ",
@@ -6674,7 +6674,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
 
     addr_postcode = raw["gis_location.addr_postcode"] or ""
     if addr_postcode:
-        addr_postcode = P(I(_class="icon-envelope-alt"),
+        addr_postcode = P(ICON("mail"),
                           " ",
                           SPAN(addr_postcode),
                           " ",
@@ -6687,7 +6687,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
             locations.append(l)
     if len(locations):
         location = " | ".join(locations)
-        location = P(I(_class="icon-globe"),
+        location = P(ICON("globe"),
                      " ",
                      SPAN(location),
                      " ",
@@ -6700,7 +6700,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = current.s3db.pr_address
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="pr", f="address",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -6711,7 +6711,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -6722,7 +6722,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"), # Placeholder only
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
@@ -6772,7 +6772,7 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = current.s3db.pr_contact
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="pr", f="contact",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -6783,7 +6783,7 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -6796,7 +6796,7 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     if contact_method in("SMS", "HOME_PHONE", "WORK_PHONE"):
         icon = "phone"
     elif contact_method == "EMAIL":
-        icon = "envelope-alt"
+        icon = "mail"
     elif contact_method == "SKYPE":
         icon = "skype"
     elif contact_method == "FACEBOOK":
@@ -6808,15 +6808,15 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     elif contact_method == "RSS":
         icon = "rss"
     else:
-        icon = "circle"
+        icon = "other"
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"), # Placeholder only
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(DIV(DIV(P(I(_class="icon-%s" % icon),
+               DIV(DIV(DIV(P(ICON(icon),
                              " ",
                              SPAN(value),
                              " ",
@@ -6884,7 +6884,7 @@ def pr_filter_list_layout(list_id, item_id, resource, rfields, record):
                    SPAN(T("%(resource)s Filter") % \
                         dict(resource=resource_name),
                         _class="card-title"),
-                    DIV(A(I(" ", _class="icon icon-trash"),
+                    DIV(A(ICON("delete"),
                           _title=T("Delete this Filter"),
                           _class="dl-item-delete"),
                         _class="edit-bar fright"),
@@ -6918,8 +6918,7 @@ def filter_actions(resource, url, filters):
     actions = []
     append = actions.append
     tablename = resource.tablename
-    filter_actions = current.s3db.get_config(tablename,
-                                             "filter_actions")
+    filter_actions = current.s3db.get_config(tablename, "filter_actions")
     if filter_actions:
         controller, fn = tablename.split("_", 1)
         for action in filter_actions:
@@ -6933,8 +6932,7 @@ def filter_actions(resource, url, filters):
             e = action.get("format", None)
             link = URL(c=c, f=f, args=args, extension=e,
                        vars=filters)
-            append(A(I(" ", _class="icon icon-%s" % \
-                                action.get("icon", "circle")),
+            append(A(ICON(action.get("icon", "other")),
                      _title=T(action.get("label", "Open")),
                      _href=link))
     else:
@@ -6942,19 +6940,19 @@ def filter_actions(resource, url, filters):
         links = summary_urls(resource, url, filters)
         if links:
             if "map" in links:
-                append(A(I(" ", _class="icon icon-globe"),
+                append(A(ICON("globe"),
                          _title=T("Open Map"),
                          _href=links["map"]))
             if "table" in links:
-                append(A(I(" ", _class="icon icon-table"),
+                append(A(ICON("table"),
                          _title=T("Open Table"),
                          _href=links["table"]))
             if "chart" in links:
-                append(A(I(" ", _class="icon icon-bar-chart"),
+                append(A(ICON("bar-chart"),
                          _title=T("Open Chart"),
                          _href=links["chart"]))
             if "report" in links:
-                append(A(I(" ", _class="icon icon-bar-chart"),
+                append(A(ICON("bar-chart"),
                          _title=T("Open Report"),
                          _href=links["report"]))
 

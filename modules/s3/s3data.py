@@ -1150,7 +1150,7 @@ class S3DataListLayout(object):
         """
 
         #DIV(
-            #I(_class="icon"),
+            #ICON("icon"),
             #SPAN(" %s" % title, _class="card-title"),
             #toolbox,
             #_class="card-header",

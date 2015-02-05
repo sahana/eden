@@ -91,9 +91,6 @@
     margin-bottom: 0.5rem;
     box-shadow: 0 1px 1px #aaaaa7;
 }
-.card-holder-home .dl-row {
-    border: 0;
-}
 .card-holder-home .dl-row.even,
 .card-holder-home .dl-row.odd,
 .card-holder-home .dl-row.even .dl-item,

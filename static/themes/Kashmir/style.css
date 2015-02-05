@@ -709,6 +709,14 @@ input.date.hasDatepicker {
   margin-bottom: 0.5rem;
 }
 
+/* Data Lists */
+.dl .card_1_line {
+  height: auto;
+}
+.dl .dl-row {
+  border: 0;
+}
+
 /* Iframe Map (Location Represent links) */
 #close-iframe-map {
   padding: 7px;
