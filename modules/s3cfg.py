@@ -2353,6 +2353,13 @@ class S3Config(Storage):
         """
         return self.hrm.get("org_required", True)
 
+    def get_hrm_multiple_orgs(self):
+        """
+            True: Human Resources are being managed across multiple Organisations
+            False: Human Resources are only being manage internally within a single Organisation with no Branches
+        """
+        return self.hrm.get("multiple_orgs", True)
+    
     def get_hrm_compose_button(self):
         """
             If set to True then HRM dataTables have a 'Send Message' button

@@ -565,6 +565,8 @@ def config(settings):
     #settings.hrm.email_required = False
     # Uncomment to allow Staff & Volunteers to be registered without an Organisation
     #settings.hrm.org_required = False
+    # Uncomment to if their are only Staff & Volunteers from a single Organisation with no Branches
+    #settings.hrm.multiple_orgs = False
     # Uncomment to disable the 'Send Message' action button
     #settings.hrm.compose_button = False
     # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
