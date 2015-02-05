@@ -20,6 +20,7 @@ ANONYMOUS,Anonymous,,gis,layer_wms,,READ,,any,
 ANONYMOUS,Anonymous,,gis,layer_xyz,,READ,,any,
 ANONYMOUS,Anonymous,,org,,,READ,,any,
 ANONYMOUS,Anonymous,,org,organisation,,READ,,any,
+ANONYMOUS,Anonymous,,,,org_group,READ,,any,
 ANONYMOUS,Anonymous,,,,org_organisation,READ,,any,
 ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE|UPDATE,,Allow new users to create orgs during registration 
 ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,Allow new users to create orgs during registration 

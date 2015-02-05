@@ -179,8 +179,13 @@ class network():
         display_length = int(get_vars.pageLength) if get_vars.pageLength else 10
         limit = 4 * display_length
 
-        list_fields = ["id", "name"]
-        default_orderby = orderby = "org_organisation.name asc"
+        list_fields = ("id",
+                       "name",
+                       "mission",
+                       "website",
+                       "meetings",
+                       )
+        default_orderby = orderby = "org_group.name asc"
         if representation == "aadata":
             query, orderby, left = resource.datatable_filter(list_fields, get_vars)
             if orderby is None:
