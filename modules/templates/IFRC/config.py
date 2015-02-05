@@ -1679,11 +1679,21 @@ def config(settings):
     def member_membership_paid(row):
         """
             Simplified variant of the original function in s3db/member.py,
-            with just "paid" and "unpaid" as possible values
+            with just "paid"/"unpaid"/"exempted" as possible values
         """
+
+        T = current.T
 
         if hasattr(row, "member_membership"):
             row = row.member_membership
+
+        try:
+            exempted = row.fee_exemption
+        except AttributeError:
+            exempted = False
+        if exempted:
+            return T("exempted")
+
         try:
             start_date = row.start_date
         except AttributeError:
@@ -1693,17 +1703,18 @@ def config(settings):
         except AttributeError:
             paid_date = None
         if start_date:
-            T = current.T
-            PAID = T("paid")
-            UNPAID = T("unpaid")
             now = current.request.utcnow.date()
             if not paid_date:
-                due = datetime.date(start_date.year + 1, start_date.month, start_date.day)
+                due = datetime.date(start_date.year + 1,
+                                    start_date.month,
+                                    start_date.day)
             else:
-                due = datetime.date(paid_date.year, start_date.month, start_date.day)
+                due = datetime.date(paid_date.year,
+                                    start_date.month,
+                                    start_date.day)
                 if due < paid_date:
                     due = datetime.date(paid_date.year + 1, due.month, due.day)
-            result = PAID if now < due else UNPAID
+            result = T("paid") if now < due else T("unpaid")
         else:
             result = current.messages["NONE"]
         return result
@@ -1780,6 +1791,7 @@ def config(settings):
                 table["paid"] = Field.Method("paid", member_membership_paid)
                 filter_options = {T("paid"): T("paid"),
                                   T("unpaid"): T("unpaid"),
+                                  T("exempted"): T("exempted"),
                                   }
                 filter_widgets = r.resource.get_config("filter_widgets")
                 if filter_widgets:
@@ -2589,6 +2601,10 @@ def config(settings):
                     ctable = s3db.hrm_competency
                     # Hide confirming organisation (defaults to VNRC)
                     ctable.organisation_id.readable = False
+
+                elif component_name == "membership":
+                    field = s3db.member_membership.fee_exemption
+                    field.readable = field.writable = True
 
             return True
         s3.prep = custom_prep

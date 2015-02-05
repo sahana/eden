@@ -163,6 +163,13 @@ class S3MembersModel(S3Model):
                       s3_date("membership_paid",
                               label = T("Membership Paid"),
                               ),
+                      Field("fee_exemption", "boolean",
+                            label = T("Exempted from Membership Fee"),
+                            default = False,
+                            # Expose in templates as needed:
+                            readable = False,
+                            writable = False,
+                            ),
                       # Location (from pr_address component)
                       self.gis_location_id(readable = False,
                                            writable = False,
@@ -247,6 +254,7 @@ class S3MembersModel(S3Model):
                             options = {T("paid"):    T("paid"),
                                        T("overdue"): T("overdue"),
                                        T("expired"): T("expired"),
+                                       #T("exempted"): T("exempted"),
                                        },
                             hidden = True,
                             ),
@@ -274,6 +282,7 @@ class S3MembersModel(S3Model):
                   deduplicate = self.member_duplicate,
                   extra_fields = ("start_date",
                                   "membership_paid",
+                                  "fee_exemption",
                                   ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
@@ -330,7 +339,7 @@ class S3MembersModel(S3Model):
                                            },
                                           ),
                             )
-                      
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -346,6 +355,15 @@ class S3MembersModel(S3Model):
             @ToDo: Formula should come from the deployment_template
         """
 
+        T = current.T
+
+        #try:
+        #    exempted = row["member_membership.fee_exemption"]
+        #except AttributeError:
+        #    exempted = False
+        #if excempted:
+        #    return T("exempted")
+
         try:
             start_date = row["member_membership.start_date"]
         except AttributeError:
@@ -359,7 +377,6 @@ class S3MembersModel(S3Model):
 
         if start_date:
 
-            T = current.T
             PAID = T("paid")
             OVERDUE = T("overdue")
             LAPSED = T("expired")
@@ -401,7 +418,7 @@ class S3MembersModel(S3Model):
                 return OVERDUE
 
         return current.messages["NONE"]
-        
+
     # ---------------------------------------------------------------------
     @staticmethod
     def member_onaccept(form):
@@ -579,5 +596,5 @@ def member_rheader(r, tabs=[]):
                       )
 
     return rheader
-    
+
 # END =========================================================================
