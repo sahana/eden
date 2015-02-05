@@ -2605,7 +2605,33 @@ def config(settings):
                 elif component_name == "membership":
                     field = s3db.member_membership.fee_exemption
                     field.readable = field.writable = True
-
+                    PROGRAMMES = T("Programmes")
+                    from s3 import S3SQLCustomForm, S3SQLInlineLink
+                    crud_form = S3SQLCustomForm("organisation_id",
+                                                "code",
+                                                "membership_type_id",
+                                                "start_date",
+                                                "end_date",
+                                                "membership_fee",
+                                                "membership_paid",
+                                                "fee_exemption",
+                                                S3SQLInlineLink("programme",
+                                                                field="programme_id",
+                                                                label=PROGRAMMES,
+                                                                ),
+                                                )
+                    list_fields = ["organisation_id",
+                                   "membership_type_id",
+                                   "start_date",
+                                   (T("Paid"), "paid"),
+                                   (T("Email"), "email.value"),
+                                   (T("Phone"), "phone.value"),
+                                   (PROGRAMMES, "membership_programme.programme_id"),
+                                   ]
+                    s3db.configure("member_membership",
+                                   crud_form = crud_form,
+                                   list_fields = list_fields,
+                                   )
             return True
         s3.prep = custom_prep
 

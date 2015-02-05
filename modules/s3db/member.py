@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3MembersModel",
+           "S3MemberProgrammeModel",
            "member_rheader"
            )
 
@@ -128,7 +129,6 @@ class S3MembersModel(S3Model):
         # ---------------------------------------------------------------------
         # Members
         #
-
         tablename = "member_membership"
         define_table(tablename,
                      organisation_id(
@@ -338,12 +338,26 @@ class S3MembersModel(S3Model):
                                                          ),
                                            },
                                           ),
+                            hrm_programme = {"link": "member_membership_programme",
+                                             "joinby": "membership_id",
+                                             "key": "programme_id",
+                                             },
                             )
+
+        represent = S3Represent(lookup=tablename, fields=["code"])
+        membership_id = S3ReusableField("membership_id", "reference %s" % tablename,
+                                        label = T("Member"),
+                                        ondelete = "CASCADE",
+                                        represent = represent,
+                                        requires = IS_ONE_OF(db, "member_membership.id",
+                                                             represent,
+                                                             ),
+                                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(member_membership_id = membership_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -533,6 +547,29 @@ class S3MembersModel(S3Model):
         if row:
             item.id = row.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3MemberProgrammeModel(S3Model):
+    """ Member Programmes Model """
+
+    names = ("member_membership_programme",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Link between members and programmes
+        #
+        tablename = "member_membership_programme"
+        self.define_table(tablename,
+                          self.hrm_programme_id(),
+                          self.member_membership_id(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 def member_rheader(r, tabs=[]):
