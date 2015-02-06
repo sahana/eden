@@ -2137,7 +2137,7 @@ class GIS(object):
 
             # @ToDo: Support optional Category (make this a generic filter?)
 
-            bbox = get_bounds_from_radius(lat, lon, radius)
+            bbox = self.get_bounds_from_radius(lat, lon, radius)
 
             # shortcut
             locations = db.gis_location

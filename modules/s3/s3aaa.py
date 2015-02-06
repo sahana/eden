@@ -999,6 +999,7 @@ Thank you"""
                         closestpoint = location
 
             s3tracker = S3Tracker()
+            person_id = self.s3_logged_in_person()
             if closestpoint == 0 and deployment_settings.get_auth_create_unknown_locations():
                 # There wasn't any near-by location, so create one
                 newpoint = {"lat": userlat,
@@ -1007,12 +1008,12 @@ Thank you"""
                             }
                 closestpoint = current.s3db.gis_location.insert(**newpoint)
                 s3tracker(db.pr_person,
-                          self.user.id).set_location(closestpoint,
-                                                     timestmp=request.utcnow)
-            else:
+                          person_id).set_location(closestpoint,
+                                                  timestmp=request.utcnow)
+            elif closestpoint != 0:
                 s3tracker(db.pr_person,
-                          self.user.id).set_location(closestpoint.id,
-                                                     timestmp=request.utcnow)
+                          person_id).set_location(closestpoint,
+                                                  timestmp=request.utcnow)
 
     # -------------------------------------------------------------------------
     def register(self,
