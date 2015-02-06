@@ -1902,7 +1902,7 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             var $this = $(this);
             var status = $this.data('status'),
                 menu;
-            if (this.id == '#menu-options-toggle') {
+            if (this.id == 'menu-options-toggle') {
                 menu = $('#menu-options');
             } else {
                 menu = $('#list-filter');

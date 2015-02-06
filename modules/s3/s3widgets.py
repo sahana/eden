@@ -5458,12 +5458,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Initialize the values dict
         if values is None:
             values = {}
-        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific"):
+        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific", "parent"):
             if key not in values:
                 values[key] = None
 
         values["id"] = record_id
-        values["parent"] = None
 
         if not record_id:
             return values
