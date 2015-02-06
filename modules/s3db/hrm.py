@@ -4127,6 +4127,7 @@ class S3HRProgrammeModel(S3Model):
 
     names = ("hrm_programme",
              "hrm_programme_hours",
+             "hrm_programme_id",
              )
 
     def model(self):

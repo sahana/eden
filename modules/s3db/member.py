@@ -45,6 +45,7 @@ class S3MembersModel(S3Model):
 
     names = ("member_membership_type",
              "member_membership",
+             "member_membership_id",
              )
 
     def model(self):
