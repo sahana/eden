@@ -245,47 +245,87 @@ class contact(S3CustomController):
 
         request = current.request
         response = current.response
+        s3 = response.s3
+        settings = current.deployment_settings
 
         if request.env.request_method == "POST":
             # Processs Form
             vars = request.post_vars
-            result = current.msg.send_email(
-                    to=current.deployment_settings.get_mail_approver(),
-                    subject=vars.subject,
-                    message=vars.message,
-                    reply_to=vars.address,
-                )
+            result = current.msg.send_email(to=settings.get_mail_approver(),
+                                            subject=vars.subject,
+                                            message=vars.message,
+                                            reply_to=vars.address,
+                                            )
             if result:
                 response.confirmation = "Thankyou for your message - we'll be in touch shortly"
 
-        #T = current.T
+        T = current.T
 
-        form = DIV(
-                H1("Contact Us"),
-                P("You can leave a message using the contact form below."),
-                FORM(TABLE(
-                        TR(LABEL("Your name:",
-                              SPAN(" *", _class="req"),
-                              _for="name")),
-                        TR(INPUT(_name="name", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Your e-mail address:",
-                              SPAN(" *", _class="req"),
-                              _for="address")),
-                        TR(INPUT(_name="address", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Subject:",
-                              SPAN(" *", _class="req"),
-                              _for="subject")),
-                        TR(INPUT(_name="subject", _type="text", _size=62, _maxlength="255")),
-                        TR(LABEL("Message:",
-                              SPAN(" *", _class="req"),
-                              _for="name")),
-                        TR(TEXTAREA(_name="message", _class="resizable", _rows=5, _cols=62)),
-                        TR(INPUT(_type="submit", _value="Send e-mail")),
-                        ),
-                    _id="mailform"
-                    )
+        # Allow editing of page content from browser using CMS module
+        if settings.has_module("cms"):
+            ADMIN = current.auth.get_system_roles().ADMIN in \
+                    current.session.s3.roles
+            s3db = current.s3db
+            table = s3db.cms_post
+            ltable = s3db.cms_post_module
+            module = "default"
+            resource = "contact"
+            query = (ltable.module == module) & \
+                    ((ltable.resource == None) | \
+                     (ltable.resource == resource)) & \
+                    (ltable.post_id == table.id) & \
+                    (table.deleted != True)
+            item = current.db(query).select(table.id,
+                                            table.body,
+                                            limitby=(0, 1)).first()
+            if item:
+                if ADMIN:
+                    item = DIV(XML(item.body),
+                               BR(),
+                               A(T("Edit"),
+                                 _href=URL(c="cms", f="post",
+                                           args=[item.id, "update"]),
+                                 _class="action-btn"))
+                else:
+                    item = DIV(XML(item.body))
+            elif ADMIN:
+                if s3.crud.formstyle == "bootstrap":
+                    _class = "btn"
+                else:
+                    _class = "action-btn"
+                item = A(T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module": module,
+                                         "resource": resource
+                                         }),
+                         _class="%s cms-edit" % _class)
+            else:
+                item = ""
+        else:
+            item = ""
+
+        form = FORM(TABLE(
+                    TR(LABEL("Your name:",
+                          SPAN(" *", _class="req"),
+                          _for="name")),
+                    TR(INPUT(_name="name", _type="text", _size=62, _maxlength="255")),
+                    TR(LABEL("Your e-mail address:",
+                          SPAN(" *", _class="req"),
+                          _for="address")),
+                    TR(INPUT(_name="address", _type="text", _size=62, _maxlength="255")),
+                    TR(LABEL("Subject:",
+                          SPAN(" *", _class="req"),
+                          _for="subject")),
+                    TR(INPUT(_name="subject", _type="text", _size=62, _maxlength="255")),
+                    TR(LABEL("Message:",
+                          SPAN(" *", _class="req"),
+                          _for="name")),
+                    TR(TEXTAREA(_name="message", _class="resizable", _rows=5, _cols=62)),
+                    TR(INPUT(_type="submit", _value="Send e-mail")),
+                    ),
+                _id="mailform"
                 )
-        s3 = response.s3
+
         if s3.cdn:
             if s3.debug:
                 s3.scripts.append("http://ajax.aspnetcdn.com/ajax/jquery.validate/1.9/jquery.validate.js")
@@ -297,6 +337,8 @@ class contact(S3CustomController):
                 s3.scripts.append("/%s/static/scripts/jquery.validate.js" % request.application)
             else:
                 s3.scripts.append("/%s/static/scripts/jquery.validate.min.js" % request.application)
+
+        # @ToDo: Move to static with i18n
         s3.jquery_ready.append(
 '''$('#mailform').validate({
  errorClass:'req',
@@ -366,7 +408,9 @@ class contact(S3CustomController):
 
         response.title = "Contact | NYC:Prepared"
         self._view(THEME, "contact.html")
-        return dict(form=form)
+        return dict(form=form,
+                    item=item,
+                    )
 
 # =============================================================================
 class register(S3CustomController):
@@ -374,10 +418,55 @@ class register(S3CustomController):
 
     def __call__(self):
 
-        form = current.auth.register()
+        auth = current.auth
+        response = current.response
 
-        current.response.title = "Register | NYC Prepared"
+        # Allow editing of page content from browser using CMS module
+        ADMIN = auth.get_system_roles().ADMIN in \
+                current.session.s3.roles
+        s3db = current.s3db
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        module = "default"
+        resource = "register"
+        query = (ltable.module == module) & \
+                ((ltable.resource == None) | \
+                 (ltable.resource == resource)) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = current.db(query).select(table.id,
+                                        table.body,
+                                        limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item = DIV(XML(item.body),
+                           BR(),
+                           A(current.T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[item.id, "update"]),
+                             _class="action-btn"))
+            else:
+                item = DIV(XML(item.body))
+        elif ADMIN:
+            if response.s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item = A(current.T("Edit"),
+                     _href=URL(c="cms", f="post", args="create",
+                               vars={"module": module,
+                                     "resource": resource
+                                     }),
+                     _class="%s cms-edit" % _class)
+        else:
+            item = ""
+
+        form = auth.register()
+
+        response.title = "Register | NYC Prepared"
         self._view(THEME, "register.html")
-        return dict(form=form)
+        return dict(form=form,
+                    item=item,
+                    )
 
 # END =========================================================================# END =========================================================================
