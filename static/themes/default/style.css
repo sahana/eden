@@ -198,7 +198,7 @@ textarea {
 }
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
-  width: 100%;
+  max-width: 100%;
 }
 
 .form-container form select,
