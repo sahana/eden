@@ -249,7 +249,7 @@ class S3DeploymentModel(S3Model):
                            type = "datalist",
                            tablename = "doc_document",
                            context = ("~.doc_id", "doc_id"),
-                           icon = "paper-clip",
+                           icon = "attachment",
                            # Default renderer:
                            #list_layout = s3db.doc_document_list_layouts,
                            )

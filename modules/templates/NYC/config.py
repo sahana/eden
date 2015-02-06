@@ -58,6 +58,14 @@ def config(settings):
     # Uncomment to disable responsive behavior of datatables
     # - Disabled until tested
     settings.ui.datatables_responsive = False
+    # Custom icon classes
+    settings.ui.custom_icons = {
+        "alert": "icon-alert",
+        "event": "icon-event",
+        "incident": "icon-incident",
+        "news": "icon-news",
+    }
+
     # PDF to Letter
     settings.base.paper_size = T("Letter")
 

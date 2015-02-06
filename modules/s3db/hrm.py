@@ -6505,7 +6505,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                type = "datalist",
                                tablename = "doc_document",
                                filter = FS("doc_id") == record.doc_id,
-                               icon = "paper-clip",
+                               icon = "attachment",
                                # Default renderer:
                                #list_layout = s3db.doc_document_list_layout,
                                )
