@@ -48,17 +48,11 @@ class S3MainMenu(default.S3MainMenu):
 
         main_menu = MM()(
 
-            # Modules-menu, align-left
             cls.menu_modules(),
-
-            # Service menus, align-right
-            # Note: always define right-hand items in reverse order!
-            cls.menu_help(right=True),
             cls.menu_lang(right=True),
-            cls.menu_auth(right=True),
-            cls.menu_admin(right=True),
-            cls.menu_gis(right=True)
+            cls.menu_auth(),
         )
+
         return main_menu
 
     # -------------------------------------------------------------------------
@@ -72,15 +66,45 @@ class S3MainMenu(default.S3MainMenu):
         deployment_filter = {"sector.name" : "None,Deployment"}
 
         return [
-            homepage(),
-            homepage("hrm", name=T("Contributors")),
+            MM("Home", c="default", f="index"),
+            MM("Contributors", c="pr", f="person"),
             MM("Deployments", c="project", f="project",
-                vars=deployment_filter),
+               vars=deployment_filter, 
+               tags="deployment"),
             MM("Projects", c="project", f="project",
-                vars=project_filter),
+               vars=project_filter,
+               tags="project"),
             MM("Tasks", c="project", f="task"),
-            homepage("org", name=T("Disaster Organisations")),
+            MM("Disaster Organisations", c="org", f="organisation"),
         ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_auth(cls, **attr):
+        """ Auth Menu """
+
+        auth = current.auth
+        user_id = auth.s3_logged_in_person()
+        menu_auth = None
+
+        if not user_id:
+            menu_auth = MM("Login", c="default", f="user", m="login", right=True)
+        else:
+            # Logged-in
+            user = auth.user
+            options =[MM("Edit Profile", c="pr", f="person", args=[user_id]),
+                      MM("Details", c="default", f="user", m="profile"),
+                      MM("Notification Settings", c="default", f="index", 
+                         m="subscriptions"),
+                      MM("Change Password", c="default", f="user", 
+                         m="change_password"),
+                      MM("Logout", c="default", f="user", m="logout"),
+                      ]
+            if auth.s3_has_role("ADMIN"):
+                options.insert(0, MM("Admin", c="admin", f="user"))
+                options.insert(1, SEP())
+            menu_auth = MM(user.email, right=True)(*options)
+        return menu_auth
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
@@ -103,23 +127,39 @@ class S3OptionsMenu(default.S3OptionsMenu):
         any current or future controller prefix (e.g. by using an
         underscore prefix).
     """
-
+    
     def project(self):
-        """ Project module """
+        """ Project Options Menu """
 
-        # Hide the options menu
-        return None
+        project_filter = {"sector.name" : "None,Project"}
+        return M(c="project")(
+                   M("Projects", c="project", f="project", vars=project_filter)(
+                       M("Create", m="create"),
+                       M("Map", m="map", vars=project_filter),
+                       M("Import", m="import"),
+                    ),
+                )
 
-    def org(self):
-        """ Org module """
+    def task(self):
+        """ Task Options Menu """
 
-        # Hide the options menu
-        return None
+        return M(c="project")(
+                   M("Tasks", f="task")(
+                       M("Create", m="create"),
+                       M("Import", m="import"),
+                   ),
+                )
 
-    def pr(self):
-        """ Person Registry module """
+    def deployment(self):
+        """ Deployments Options Menu """
 
-        # Hide the options menu
-        return None
-
+        deployment_filter = {"sector.name" : "None,Deployment"}
+        return M(c="project")(
+                   M("Deployments", c="project", f="project", vars=deployment_filter)(
+                       M("Create", m="create", vars=deployment_filter),
+                       M("Map", m="map", vars=deployment_filter),
+                       M("Import", m="import"),
+                   ),
+                )
+  
 # END =========================================================================

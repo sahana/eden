@@ -13,6 +13,7 @@ from gluon.validators import IS_IN_SET
 from gluon.html import *
 
 from s3 import *
+from menus import S3OptionsMenu
 
 def config(settings):
     """
@@ -24,38 +25,33 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("SSF", "default/users")
-
-    # Theme
+    settings.base.prepopulate = ("SSF", "default/users")    
+    # Base settings
+    settings.base.system_name = T("Sahana Sunflower: A Community Portal")
+    settings.base.system_name_short = T("Sahana Sunflower")
     settings.base.theme = "SSF"
-    settings.ui.formstyle_row = "bootstrap"
-    settings.ui.formstyle = "bootstrap"
-    settings.ui.filter_formstyle = "table_inline"
 
-    # Uncomment to disable responsive behavior of datatables
-    # - Disabled until tested
-    settings.ui.datatables_responsive = False
-
+    # UI 
+    settings.ui.custom_icons = {
+        "watch": "icon-eye-open",
+        "unwatch": "icon-eye-close",
+        "rss": "icon-rss-sign",
+        "deploy": "icon-rocket",
+        "contribute": "icon-lightbulb",
+    }
+    
     # Message
     settings.msg.notify_email_format = "text"
 
-    # Should users be allowed to register themselves?
-    settings.security.self_registration = True
+    # Auth settings
     settings.auth.registration_requires_verification = True
     settings.auth.registration_requires_approval = False
-
     # Uncomment this to set the opt in default to True
     settings.auth.opt_in_default = True
     # Uncomment this to default the Organisation during registration
     settings.auth.registration_organisation_default = "Sahana Software Foundation"
-
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     settings.auth.always_notify_approver = True
-
-    # Base settings
-    settings.base.system_name = T("Sahana Sunflower: A Community Portal")
-    settings.base.system_name_short = T("Sahana Sunflower")
-
     # Assign the new users the permission to read.
     settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
                                         }
@@ -122,6 +118,8 @@ def config(settings):
 
     # Use 'soft' deletes
     settings.security.archive_not_delete = True
+    # Should users be allowed to register themselves?
+    settings.security.self_registration = True
 
     # AAA Settings
 
@@ -280,6 +278,10 @@ def config(settings):
                     is_deployment = True
 
                 if is_deployment:
+                    # Change the Side-Menu
+                    menu = current.menu
+                    menu.options = S3OptionsMenu("deployment").menu
+                    menu.main.select("deployment")
                     # Change the CRUD strings and labels
                     s3db[tablename].name.label = T("Deployment Name")
                     s3.crud_strings[tablename] = Storage(
@@ -301,6 +303,8 @@ def config(settings):
                                     r.function,
                                     method = "deployment",
                                     action = deployment_page)
+                else:
+                     current.menu.main.select("project")
 
                 if not r.component:
                     # Viewing project/deployment's Basic Details
@@ -472,6 +476,7 @@ def config(settings):
         s3db = current.s3db
         auth = current.auth
         s3 = response.s3
+        current.menu.options = S3OptionsMenu("task").menu
 
         def task_rheader(r):
 
@@ -692,17 +697,17 @@ def config(settings):
         else:
             _id = data["id"]
             if _id == "null":
-                icon_class = "icon-eye-open"
+                icon = ICON("watch")
                 label = WATCH
             else:
-                icon_class = "icon-eye-close"
+                icon = ICON("unwatch")
                 label = UNWATCH
 
-            button = A(I(_class=icon_class),
+            button = A(icon,
                        SPAN(label),
                        data = data,
                        _id="assign-role",
-                       _class="btn btn-default")
+                       _class="button action-btn")
             if as_div:
                 interest = DIV(BR(),
                                button,
