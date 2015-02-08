@@ -1,0 +1,4 @@
+Template,Section,Posn,Method,Rules
+Viet Nam DANA-1,Background Information,1,1,"[[{'heading': 'Template 1  EARLY NOTIFICATION REPORT'}], [{'heading': 'This Early Notification Report should be completed and submitted to'}], [{'heading': 'the CCSFC within 12 hours after the occurrence of a disaster.'}], ['DANAT1-1'], [{'heading': 'Cluster'}]]"
+Viet Nam DANA-1,Part-1,2,1,"[[{'heading': 'HUMANS IMPACT'}], ['DANAT1-6-'], [{'heading': 'SHELTER'}], ['DANAT1-7-'], [{'heading': 'TELECOMMUNICATION'}], ['DANAT1-8-'], [{'heading': 'LOGISTICS'}], ['DANAT1-9-'], [{'heading': 'Possible needs for external assistance'}]]"
+Viet Nam DANA-1,Part-2,3,1,"[[{'heading': 'HUMAN PROTECTION'}], ['DANAT1-10-'], [{'heading': 'SHELTER'}], ['DANAT1-11'], [{'heading': 'WATER, SANITATION and HYGIENE'}], [{'heading': 'FOOD SECURITY, NUTRITION and FOOD AID'}], ['DANAT1-12-'], [{'heading': 'HEALTH'}], ['DANAT1-13'], [{'heading': 'LOGISTICS'}], ['DANAT1-14'], ['DANAT1-5'], [{'heading': 'Signature'}]]"

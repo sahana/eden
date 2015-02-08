@@ -67,11 +67,11 @@ you can use the generic selector below, but it's slower:
 .icon-event,
 .icon-incident,
 .icon-map,
-.icon-news,
 .icon-plan,
 .icon-project,
 .icon-report,
-.icon-training_material {
+.icon-training_material,
+.icon-updates {
     font-family: 'DRMP';
     speak: none;
     font-style: normal;
@@ -145,9 +145,6 @@ you can use the generic selector below, but it's slower:
 .icon-map:before {
     content: "\79";
 }
-.icon-news:before {
-    content: "\71";
-}
 .icon-plan:before {
     content: "\74";
 }
@@ -159,6 +156,9 @@ you can use the generic selector below, but it's slower:
 }
 .icon-training_material:before {
     content: "\77";
+}
+.icon-updates:before {
+    content: "\71";
 }
 /*
 .icon-alert-dark:before {
@@ -209,7 +209,13 @@ you can use the generic selector below, but it's slower:
 */
 
 /* Update Cards */
-.card-header .icon {
+.card-header .icon-activity,
+.card-header .icon-alert,
+.card-header .icon-assessment,
+.card-header .icon-incident, 
+.card-header .icon-plan,
+.card-header .icon-report,
+.card-header .icon-training_material {
     font-size: 14px;
     display: inline-block;
     color: #413b3b;
@@ -217,33 +223,13 @@ you can use the generic selector below, but it's slower:
     width: 16px;
 }
 
-/* Icons coming from font-awesome */
+/* Icons still coming from font-awesome */
 
 /* Contact */
 .icon-contact:before {
-    /* icon-group */
     content: "\f0c0";
-}
-/* Offer */
-.icon-offer:before {
-    /* icon-truck */
-    content: "\f0d1";
-}
-/* Request */
-.icon-request:before {
-    /* icon-flag */
-    content: "\f024";
 }
 /* Resource */
 .icon-resource:before {
-    /* icon-truck */
     content: "\f0d1";
-}
-.icon-caret-down:before {
-  /* Used for filter forms, profile update form and AddPersonWidget2 deduplicator */
-  content: "\f0d7";
-}
-.icon-caret-up:before {
-  /* Used for filter forms and profile update form */
-  content: "\f0d8";
 }

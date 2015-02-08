@@ -1,0 +1,23 @@
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div id='rheader'>
+{{try:}}
+ {{=XML(rheader)}}
+ </div>
+ <div id='component'>
+{{except:}}
+</div>
+<div>
+{{pass}}
+<div class='form-container'>
+{{try:}}{{=form}}{{except:}}{{pass}}
+</div>
+<div id='map'></div>
+<div id='table-container'>
+{{try:}}{{=search_tabs}}{{except:}}{{pass}}
+{{try:}}{{=list_formats}}{{except:}}{{pass}}
+{{try:}}{{=items}}{{except:}}{{pass}}
+</div>
+{{try:}}{{=add_btn}}{{except:}}{{pass}}
+</div>
+{{try:}}{{=dashboard}}{{except:}}{{pass}}
+{{include "dataTables.html"}}

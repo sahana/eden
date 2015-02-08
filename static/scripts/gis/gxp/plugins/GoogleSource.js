@@ -8,7 +8,7 @@
 
 /**
  * @requires plugins/LayerSource.js
- * @require OpenLayers/Layer/Google/v3.js
+ * requires OpenLayers/Layer/Google/v3.js
  */
 
 /** api: (define)
@@ -100,13 +100,6 @@ gxp.plugins.GoogleSource = Ext.extend(gxp.plugins.LayerSource, {
      */
     terrainAbstract: "Show street map with terrain",
 
-    /** api: config[otherParams]
-     *  ``String``
-     *  Additional parameters to be sent to Google,
-     *  default is "sensor=false"
-     */
-    otherParams: "sensor=false",
-
     constructor: function(config) {
         this.config = config;
         gxp.plugins.GoogleSource.superclass.constructor.apply(this, arguments);
@@ -118,7 +111,6 @@ gxp.plugins.GoogleSource = Ext.extend(gxp.plugins.LayerSource, {
      */
     createStore: function() {
         gxp.plugins.GoogleSource.loader.onLoad({
-            otherParams: this.otherParams,
             timeout: this.timeout,
             callback: this.syncCreateStore,
             errback: function() {
@@ -316,13 +308,13 @@ gxp.plugins.GoogleSource.loader = new (Ext.extend(Ext.util.Observable, {
                     version: 3.3,
                     nocss: "true",
                     callback: "gxp.plugins.GoogleSource.loader.onScriptLoad",
-                    other_params: options.otherParams
+                    other_params: "sensor=false"
                 }]
             })
         };
         
         var script = document.createElement("script");
-        script.src = "//www.google.com/jsapi?" + Ext.urlEncode(params);
+        script.src = "http://www.google.com/jsapi?" + Ext.urlEncode(params);
 
         // cancel loading if monitor is not ready within timeout
         var errback = options.errback || Ext.emptyFn;

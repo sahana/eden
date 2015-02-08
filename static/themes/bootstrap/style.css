@@ -72,7 +72,6 @@ input[class*="span"],
 select[class*="span"],
 textarea[class*="span"] {
     width: auto;
-    display: inline-block /*don't wrap help-block*/
 }
 
 /* Web2Py styles Inputs as x-large, which don't match other form inputs */
@@ -112,12 +111,7 @@ div.dl {
 .dl-2-cols {
     margin-left: 0;
 }
-.dl-2-cols.dl-col-0,
-.dl-3-cols.dl-col-0,
-.dl-3-cols.dl-col-1,
-.dl-4-cols.dl-col-0,
-.dl-4-cols.dl-col-1,
-.dl-4-cols.dl-col-2 {
+.dl-col-0 {
     margin-right: 8px;
 }
 
@@ -125,15 +119,22 @@ div.dl {
     margin-bottom: 0;
 }
 
-/* Need short form for Modals */
-.ui-datepicker-trigger {
+/* Need long form to override widgets.css on margin */
+.form-container form button.ui-datepicker-trigger {
     background-image: url(../../img/bootstrap/calendar.gif);
-    background-color: transparent;
     margin-left: 10px;
 }
-/* Need long form to override widgets.css on normal button margin */
-.form-container form button.ui-datepicker-trigger {
-    margin-left: 10px;
+
+/* Match .btn.btn-primary */
+.delete-btn {
+    background-color: #006DCC;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-radius: 4px 4px 4px 4px;
+    color: #FFFFFF;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
+    padding: 4px 12px;
 }
 
 /* Push down below Nav  */
@@ -164,9 +165,7 @@ div.dl {
     -moz-box-shadow: 0 1px 1px #aaaaa7;
     -webkit-box-shadow: 0 1px 1px #aaaaa7;
     box-shadow: 0 1px 1px #aaaaa7;
-    margin-top: 10px;
-    /* restore Bootstrap default to override widgets.css */
-    padding: 8px 35px 8px 14px;
+    margin-top: -22px;
 }
 
 a.btn.btn-primary.main-add {
@@ -174,12 +173,6 @@ a.btn.btn-primary.main-add {
     float: right;
     position: relative;
     top: 24px;
-}
-
-/* GeoNames Search Results */
-.x-combo-list h1 {
-    font: 12px tahoma,arial,helvetica,sans-serif;
-    margin: 0;
 }
 
 /* Add button on Updates page & Disaster selection screen */
@@ -194,7 +187,6 @@ a i.icon.icon-plus-sign.big-add:hover {
 }
 
 #popup.cf .form-horizontal {
-    margin-top: 10px;
     margin-left: -10px;
     padding-left: 0;
 }
@@ -203,7 +195,7 @@ a i.icon.icon-plus-sign.big-add:hover {
     content: "x";
 }
 
-.ui-dialog-titlebar.ui-widget-header {
+.ui-dialog-titlebar {
     text-align: center;
     background-image: -webkit-gradient(linear,50% 0,50% 100%,color-stop(0%,#f9f9fa),color-stop(100%,#e0e2e8)) !important;
     background-image: -webkit-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
@@ -211,97 +203,26 @@ a i.icon.icon-plus-sign.big-add:hover {
     background-image: -o-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
     background-image: -ms-linear-gradient(top,#f9f9fa,#e0e2e8) !important;
     background-image: linear-gradient(top,#f9f9fa,#e0e2e8) !important;
-    border-bottom-right-radius: 0;
-    border-top: none;
-    border-left: none;
-    border-right: none;
 }
 
-/* in widgets.css
 .ui-dialog {
-	width: 750px !important;
-	padding: 0;
-} */
-
-.popup .form-container form.form-horizontal {
-    border: none;
-    box-shadow: none;
+	width: 600px !important;
 }
 
-/* Page Elements */
-.form-container form.form-horizontal,
-#datalist-filter-form,
-#datatable-filter-form,
-#summary-filter-form,
-#summary-sections,
-#datatable_wrapper,
-#pivottable,
-.thumbnail {  
+/* Forms */
+form.form-horizontal {  
     background-color: #fff;
-    border-radius: 4px;
-    border: 1px solid #9e9b9b;
-    -moz-box-shadow: 0 -1px 3px #d7d7d6;
-    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
-    box-shadow: 0 -1px 3px #d7d7d6;
-    -moz-box-shadow: 0 1px 1px #aaaaa7;
-    -webkit-box-shadow: 0 1px 1px #aaaaa7;
-    box-shadow: 0 1px 1px #aaaaa7;
-}
-
-div.form-container {
-    margin-bottom: 0;
-}
-
-div.form-container form.form-horizontal,
-form#datalist-filter-form,
-form#datatable-filter-form {
-    padding: 15px 5px 0 9px;
-}
-
-#list-filter {
-    margin-bottom: 0;
-}
-
-#summary-tabs {
-    margin-top: 10px;
-}
-
-#summary-tab-headers .ui-tabs-nav {
-    border: none;
-    margin: 0 10px;
-}
-
-#summary-tab-headers a {
-    border-color: #b2b2b2;
-}
-
-#summary-tab-headers .ui-tabs-active a {
-    border-bottom: 1px solid white;
-}
-
-#summary-tab-headers li {
-    margin-right: 5px;
     box-shadow: none;
+    border-radius: 5px;
+    box-shadow: none;
+    padding-top: 7px;
+    padding-left: 9px;
 }
-
-#summary-tabs.ui-widget-content {
-    background: none;
-    border: none;
-}
-
-/* Fit Summary Map Inside Summary Section */
-#summary-sections .x-panel-body {
-    border: none;
-    border-radius: 4px;
-}
-
-/*
-What is this for? Breaks pop-up
 form.form-horizontal.pr_person,
 form.form-horizontal.org_resource,
 form.form-horizontal.project_project {
     border: 1px solid #b2b2b2;
-}*/
+}
 
 .form-container form fieldset {
     border: none;
@@ -310,99 +231,65 @@ form.form-horizontal.project_project {
 
 /* Override Bootstrap */
 .form-horizontal .control-group {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
 }
 .form-horizontal .control-label {
     font-weight: bold;
+    padding-top: 0;
 }
-body.rtl .form-horizontal .control-label {
-    float: right;
-}
+
 .form-container .tooltip {
     margin-top: 4px;
 }
 
-.form-horizontal div.controls .help-block {
-    display: inline-block;
-    margin-left: 5px;
-    margin-top: 5px;
+.form-container .help-block div {
+    position: relative;
+    top: -8px;
+    margin-bottom: -12px;
 }
 
-.s3_add_resource_link {
-    float: left;
-    margin: 8px 0 -8px 5px;
-}
-
-.form-container div.tooltip  {
-    float: left;
-    margin: 10px 0 -10px 5px;
-    background: url("../../img/help_on.gif") no-repeat scroll;
-    width: 20px;
-}
-
-/* Don't apply if s3.cancel=True */
-#submit_record__row.form-actions {
+#submit_record__row {
     background: none;
     border-top: none;
     padding-bottom: none;
     width: 220px;
-    margin-top: -18px;
+    margin-top: -15px;
     margin-bottom: -24px;
     margin-left: -18px;
     margin-right: -15px;
 }
 
-a.cancel-form-btn,
 #submit_record__row .btn-primary {
     padding: 5px 20px;
-    margin-left: 10px;
-    float: left;
-}
-
-a.cancel-form-btn {
-    margin-left: 40px;
-    margin-top: 6px;
-    text-decoration: none;
+    margin-left: 240px;
+    margin-right: 240px;
 }
 
 #delete-btn, 
 #edit-btn.btn.btn-primary,
 #show-add-btn {
-    padding: 2px 8px;
+    padding: 1px 6px;
+    font-size: 10.5px;
     -webkit-border-radius: 3px;
        -moz-border-radius: 3px;
             border-radius: 3px;
 }
 
-/* Match .btn.btn-primary */
-a.cancel-form-btn,
-.action-btn,
-a.delete-btn {
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    border-width: 1px;
-    border-radius: 4px;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-    line-height: 20px;
+a.action-btn {
     display: inline-block;
     *display: inline;
     padding: 1px 6px;
     margin-bottom: 0;
     *margin-left: .3em;
+    margin-right: -2px;
     font-size: 10.5px;
     line-height: 20px;
     *line-height: 20px;
+    color: #333333;
+    text-align: center;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     vertical-align: middle;
     cursor: pointer;
-}
-.action-btn i.icon,
-a.delete-btn i.icon {
-    font-size: 13px;
-}
-
-.action-btn {
-    text-align: center;
-    color: #333333;
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     background-color: #f5f5f5;
     *background-color: #e6e6e6;
     background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
@@ -411,8 +298,14 @@ a.delete-btn i.icon {
     background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
     background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
     background-repeat: repeat-x;
+    border: 1px solid #bbbbbb;
     *border: 0;
+    border-color: #e6e6e6 #e6e6e6 #bfbfbf;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
     border-bottom-color: #a2a2a2;
+    -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
     *zoom: 1;
@@ -420,9 +313,8 @@ a.delete-btn i.icon {
      -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
-
-.action-btn:hover,
-.action-btn:focus {
+ 
+a.action-btn:hover {
     color: #333333;
     text-decoration: none;
     background-color: #e6e6e6;
@@ -435,26 +327,11 @@ a.delete-btn i.icon {
           transition: background-position 0.1s linear;
 }
 
-a.cancel-form-btn,
-a.delete-btn,
 #delete-btn {
     color: #ffffff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-color: #da4f49;
     *background-color: #bd362f;
-}
-
-a.cancel-form-btn:hover,
-a.delete-btn:hover,
-#delete-btn:hover{
-    color: #ffffff;
-    background-color: #bd362f;
-    *background-color: #a9302a;
-}
-
-a.cancel-form-btn,
-#delete-btn {
-    font-size: 13px;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-image: -moz-linear-gradient(top, #ee5f5b, #bd362f);
     background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#bd362f));
     background-image: -webkit-linear-gradient(top, #ee5f5b, #bd362f);
@@ -467,22 +344,27 @@ a.cancel-form-btn,
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 
+#delete-btn:hover{
+    color: #ffffff;
+    background-color: #bd362f;
+    *background-color: #a9302a;
+}
+
+.ui-datepicker-trigger {
+    margin-left: 10px;
+}
+
 /* Required Fields */
-/* Better solution will be to use inline 'Optional' hints:
-http://www.usabilitycounts.com/2009/11/18/form-design-and-the-fallacy-of-the-required-field/
-http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ */
-.req_key {
+b.red {
     position: absolute;
     z-index: 1;
-    margin: 7px 0 0 7px;
+    margin-top: 5px;
+    margin-left: 7px;
     font-size: 12px;
-}
-#component .req_key {
-    margin-top: 25px;
 }
 
 #last_update {
-    color: #d35400;
+    color: #D35400;
 }
 
 #markDuplicate {
@@ -494,14 +376,14 @@ http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ 
 }
 
 /* Location Selector */
-form.form-horizontal .map_wrapper {
+form.form-horizontal #map_panel {
     margin-left: 30px;	
     margin-bottom: 10px;
 }
 
 /* Help Tooltips */
 .cluetip-default{
-    background-color: #fff;
+    background-color: #ffffff;
     border: 1px solid #ccc;
     border: 1px solid rgba(0, 0, 0, 0.2);
     -webkit-border-radius: 6px;
@@ -548,6 +430,8 @@ form.form-horizontal .map_wrapper {
 table.embeddedComponent {
     border: 0;
     display: inline-block;
+    margin-bottom: 10px;
+    margin-top: 1px;
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -562,17 +446,18 @@ form table.embeddedComponent td {
     border: none;
 }
 
-table.embeddedComponent td {
+table.embeddedComponent .edit-row td,
+table.embeddedComponent .read-row td {
     /* Hide the table */
     border-bottom: none;
     padding: 0;
-    vertical-align: top;
 }
 
 table.embeddedComponent .add-row td {
-    padding: 0 10px 0 0;
+    /* Hide the table */
+    border-bottom: none;
+    padding: 0 5px 0 0;
 }
-
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);
 }
@@ -666,12 +551,13 @@ label.ui-corner-all {
 label.ui-corner-all span {
     position: relative;
     top: 5px;
+    left: 10px;
     font-size: 12px;
 }
 
 .ui-widget-header {
-    border-color: #bbb;
-    margin-bottom: 0;
+    border-color: #BBBBBB;
+    margin-bottom: 0px;
     background: none;
     font-weight: normal;
 }
@@ -679,32 +565,13 @@ label.ui-corner-all span {
 .ui-widget-header .ui-icon-check,
 .ui-widget-header .ui-icon-closethick { 
     background: none;
-    height: 0;
-    width: 0;
-}
-
-.ui-multiselect-filter input {
-    width: 160px;
-    margin: 0;
-}
-
-.ui-widget-header.ui-corner-all.ui-multiselect-header.ui-helper-clearfix.ui-multiselect-hasfilter {
-    border: none;
-}
-
-.ui-multiselect-menu .ui-multiselect-checkboxes label {
-    margin-left: 0;
-    padding: 0 5px 6px 5px !important;
-}
-
-.ui-multiselect-checkboxes label.ui-state-hover {
-    border: 1px solid #aaa;
+    height: 0px;
+    width: 0px;
 }
 
 /* Responsive styling */
 .ui-multiselect-menu.ui-widget.ui-widget-content.ui-corner-all {
     width: 15% !important;
-    min-width: 200px;
 }
 /* Portrait tablet to landscape and desktop */
 @media (min-width: 768px) and (max-width: 979px) {
@@ -732,7 +599,6 @@ label.ui-corner-all span {
 		overflow: hidden;
 	}
 	#auth_user_email,
-	#auth_user_mobile,
 	#auth_user_language,
 	#auth_user_password,
 	#auth_user_password_two {
@@ -740,37 +606,58 @@ label.ui-corner-all span {
 	    width: auto;
 	}
 	#auth_user_email__label,
-	#auth_user_mobile__label,
 	#auth_user_password__label	{
 		font-size: 11px;
 	}
 }
 
 /* DataTable Styling */
-#summary-sections #table {
+
+#datatable.dataTable.display {
+    background-color: #fff;
     margin-top: 10px;
 }
 
 #datatable_wrapper {
-    padding-top:10px;
+    background: rgba(255,255,255,1);
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	-moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    border: 1px solid #9e9b9b;
+    -moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
+    border: 1px solid #b2b2b2;
+    border-radius: 5px;
 }
 
 #datatable_filter label {
     position: relative;
     padding-right: 25px;
+    margin-bottom: -37px;
     font-weight: bold;
-    margin-left: 10px;
-    margin-bottom: -5px;
+    margin-top: 7px;
+    margin-left: 13px;
 }
 
-.dataTables_info {
-    /*
+#datatable_length label select {
+    width: 75px;
+}
+
+#datatable_length label {
+    font-size: 12px;
+    margin-bottom: -1px;
     position: relative;
-    top: 9px;
-    margin-right: 15px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 15px;
+    top: 17px;
+}
+
+#datatable_info.dataTables_info {
     font-size: 12px;
     padding-right: 15px;
     color: #D35400;
@@ -778,56 +665,23 @@ label.ui-corner-all span {
     position: relative;
     padding-top: 5px;
     top: 11px;
-    */
 }
 
-.dataTables_length label select {
-    width: auto;
-    margin-bottom: 0;
-}
-
-.dataTables_info,
-.dataTables_length {
-    float: left !important;
-    font-size: 12px;
-    margin: 0 0 0 20px;
-}
-
-.dataTables_length label {
-    font-size: 12px;
-}
-
-.dataTables_info {
-    margin: 5px 30px 0px 5px;
-}
-
-.dataTables_wrapper {
-    clear: none;
-}
-
-.dt-export-options {
-    margin-right: 5px;
-    font-size: 12px;
-    padding: 0;
-    position: relative;
-    z-index: 1;
-}
-
-.dataTable thead tr {
+#datatable thead tr {
     border: none;
 }
 
-.dataTable tbody tr.odd {
+#datatable tbody tr.odd {
     background-color: #eeeeed;
     padding-top: 5px;
 }
 
-.dataTable tbody tr.odd td.sorting_1 {
+#datatable tbody tr.odd td.sorting_1 {
     background-color: rgba(51, 151, 219, 0.35);
     color: #222220;
 }
 
-. tbody tr.even td.sorting_1 {
+#datatable tbody tr.even td.sorting_1 {
     background-color: rgba(51, 151, 219, 0.17);
     color: #222220;
 }
@@ -836,7 +690,7 @@ label.ui-corner-all span {
 #table-container tr.odd td {
     border: 1px solid #d9d8d8;
     border-left: none;
-    padding: 7px 0 7px 5px;
+    padding: 10px 10px 10px 7px;
     font-size: 13px;
 }
 
@@ -846,11 +700,11 @@ label.ui-corner-all span {
     font-size: 13px;
 }
 
-.dataTables_paginate {
-    margin: 5px 20px 0 0;
+#datatable_paginate {
+    margin-top: 15px;
 }
 
-.dataTables_paginate span a.paginate_button {
+#datatable_paginate span a.paginate_button {
     background-color: #fff;
     border: 1px solid #b7b7b7;
     border-radius: 4px;
@@ -859,16 +713,16 @@ label.ui-corner-all span {
     
 }
 
-.dataTables_paginate span a.paginate_active {
+#datatable_paginate span a.paginate_active {
     background: #b0cee6;
     font-size: 13px;
     color: #666;
 }
 
-.dataTables_paginate .previous.paginate_button,
-.dataTables_paginate .first.paginate_button,
-.dataTables_paginate .paginate_button,
-.dataTables_paginate .next.paginate_button  {
+#datatable_previous.previous.paginate_button,
+#datatable_first.first.paginate_button,
+#datatable_last.last.paginate_button,
+#datatable_next.next.paginate_button  {
     background-color: #fff;
     border: 1px solid #b7b7b7;
     border-radius: 4px;
@@ -876,15 +730,20 @@ label.ui-corner-all span {
     color: #666;
 }
 
-#datatable_wrapper {
-    padding-bottom: 40px;
+#datatable_wrapper div.dataTables_info {
+    position: relative;
+    top: 9px;
+    margin-right: 15px;
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 15px;
 }
 
-/* Login, Registration & Profile screens */
+/* Login & Registration Screens */
 #home div.form-container form {
     margin-left: auto;
     margin-right: auto;
-    width: 470px;
+    width: 450px;
     padding: 20px;
     background-color: #fff;
     margin-bottom: 20px;
@@ -904,35 +763,27 @@ label.ui-corner-all span {
     margin-right: auto;
 }
 
+#submit_record__row td.w2p_fw {
+    padding-top: 15px;
+    padding-left: 12px;
+}
+
 /* Login page */
-.auth_login .control-label {
-    width: 80px;
-}
-
-.auth_login .controls {
-    margin-left: 90px;
-    white-space: pre;
-}
-
 #auth_user_email,
+#auth_user_language,
 #auth_user_password,
 #auth_user_password_two {
+    /*width: 100%;*/
     width: 300px;
+    margin-left: 10px;
+    margin-bottom: 10px;
 }
 
-#auth_user_remember__row label {
-    margin-left: 28px;
+#auth_user_remember__row td.w2p_fw div label {
+    width: 80%;
+    margin-left: 30px;
     margin-top: -19px;
-}
-
-.form-container .auth_login #submit_record__row .btn-primary {
-    margin-left: -70px;
-    margin-right: 0;
-}
-
-.dropdown-menu #register-btn {
-    /* Layout on page needs fixing */
-    display: none;
+    margin-bottom: 10px;
 }
 
 #email__error,
@@ -947,74 +798,6 @@ label.ui-corner-all span {
     background-color: #f2dedd;
 }
 
-.dropdown-menu input.btn {
-    /* Make appear on same row */
-    position: relative;
-    left: 150px;
-    top: -58px;
-}
-@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-    /* IE 10 */
-    .dropdown-menu form {
-        height: 100px;
-    }
-    .dropdown-menu input.btn {
-        left: 268px;
-    }
-}
-
-
-/* Registration Page */
-.auth_change_password .control-label,
-.auth_reset_password .control-label,
-.auth_register .control-label {
-    width: 140px;
-}
-
-.auth_change_password .controls,
-.auth_reset_password .controls,
-.auth_register .controls {
-    margin-left: 150px;
-}
-
-.auth_change_password #submit_record__row .btn-primary,
-.auth_register #submit_record__row .btn-primary {
-    margin-left: -10px;
-    margin-right: 0;
-}
-
-#auth_user_first_name,
-#auth_user_last_name,
-#auth_user_home,
-#auth_user_mobile,
-#auth_user_language,
-#auth_user_organisation_id,
-#auth_user_org_group_id,
-#auth_user_utc_offset {
-    width: 300px;
-}
-
-.password-min-char {
-    font-size: 12px;
-}
-
-#password-strength {
-    margin-left: 5px;
-    padding-left: 5px;
-}
-
-.password-strength-bar {
-    color: #2d2d2c;
-    padding-left: 12px;
-    border-radius: 3px;
-}
-
-.auth_change_password #submit_record__row .btn-primary,
-.auth_reset_password #submit_record__row .btn-primary {
-    margin-left: 10px;
-}
-
-/* Other pages */
 #acronym__error,
 #body__error,
 #name__error,
@@ -1035,25 +818,73 @@ label.ui-corner-all span {
     width: 277px !important;
 }
 
-/.toggle-div {
-    cursor: pointer;
+#submit_record__row td.w2p_fw input.btn.btn-primary {
+    margin-right: 30px;
+    width: auto;
+    margin-bottom: 1px;
+    margin-left: 19px;
 }
-.toggle-text i {
-    margin-right: 5px;
+a#register-btn.action-lnk {
+    margin-left: -1px;
+}
+#submit_record__row td.w2p_fw {
+    padding-top: 5px;
+    padding-left: 10px;
+    position: relative;
+    left: -17px;
 }
 
-* Contacts Page */
-#pr_person_sub_human_resourcehuman_resource__label {
-    /* Hide the colon */
-    display: none;
+/* Registration Screen */
+
+#auth_user_first_name,
+#auth_user_last_name,
+#auth_user_utc_offset {
+    /*width: 100%;*/
+    width: 300px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+#auth_user_organisation_id__label {
+    width: 100px;
+}
+
+#auth_user_organisation_id {
+    margin-left: 10px;
+    width: 300px;
+}
+
+#auth_user_utc_offset__row td.w2p_fc div.tooltip {
+    margin-left: 15px;
+}
+
+span.password-min-char {
+    font-size: 12px;
+}
+
+div#password-strength {
+    margin-left: 5px;
+    padding-left: 5px;
+}
+
+span.password-strength-bar {
+    color: #2d2d2c;
+    padding-left: 12px;
+    border-radius: 3px;
+}
+
+div.toggle-div {
+    cursor: pointer;
+}
+span.toggle-text i {
+    margin-right: 5px;
 }
 
 /* Throbber */
 /* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
 .throbber,
 .layer_throbber,
-.map_loader
-{
+.map_loader {
     background-image: url(../../img/bootstrap/ajax-loader.gif);
 }
 .throbber,
@@ -1065,14 +896,13 @@ label.ui-corner-all span {
 }
 
 /* Embed Widget */
-/* Override no-longer needed
 .box_top,
 .box_middle,
 .box_bottom {
    border-left: none;
    border-right: none;
    background: none;
-}*/
+}
 
 .form-horizontal .control-group.box_top,
 .form-horizontal .control-group.box_middle,
@@ -1080,24 +910,15 @@ label.ui-corner-all span {
     max-width: 500px;
 }
 
-.box_top .control-label {
-    background-color: #ffffff;
+.box_top label.control-label {
+    background-color: white;
+    margin-left: 50px;
     margin-top: -20px;
-    padding: 0 10px;
-    width: auto;
+    padding-right: 10px;
+    width: 110px;
 }
 
-/* Report / Pivot Table */
-.pt-form {
-    background-color: white !important;
-    border: none !important;
-    margin-bottom: 0;
-}
-
-#charts {
-    padding: 0 20px;
-}
-
-.pt-form-container {
-    margin-bottom: 0;
-}
+/*
+[id$=full_name__row].box_middle {
+    margin-top: -15px;
+} */

@@ -1,17 +1,9 @@
 @charset "UTF-8";
 
-.pull-left {
-    float: left;
-}
-
 /* Profile Page */
 
 .profile-header {
     padding-bottom: 20px;
-}
-
-.profile-header .pull-left img {
-    margin-right: 10px;
 }
 
 .profile-header-label{
@@ -96,19 +88,6 @@ h4.profile-sub-header {
     border-left-style: none;
 }
 
-.card-holder .card-actions {
-    float: left;
-    font-size: 13px;
-}
-
-.card-holder .card-actions .card-action {
-    vertical-align: middle;
-}
-
-.card-holder .card-actions .card-action:last-child {
-    margin-right: 30px;
-}
-
 .card-holder .dl-header {
     display: none;
 }
@@ -118,35 +97,21 @@ h4.profile-sub-header {
     background-color: #faf6ea !important;
 }
 
-.dl-item p a {
-    /* revert to standard */
-    color:#0065A6;
-    text-decoration:none;
-}
-
-div.media {
-    position: relative;
-}
-
 img.media-object {
     border-radius: 4px;
     margin-bottom: 20px;
 }
 
 div.media a.pull-left img.media-object {
-    position: absolute;
+    float: left;
+    margin-right: 10px;
 }
 
 .media-heading {
     margin-bottom: 8px;
 }
 .media-body {
-    margin-left: 40px;
-    margin-top: 6px;
-    margin-bottom: 6px;
-}
-.profile-data {
-    margin-top: 6px;
+    margin-bottom: 8px;
 }
 .profile-data-label{
     font: 11px "Helvetica Neue", Arial, sans-serif;
@@ -179,84 +144,32 @@ div.media a.pull-left img.media-object {
     vertical-align: text-top;
 }
 
-.edit-bar .icon-edit,
-.edit-bar .icon-envelope-alt,
-.edit-bar .icon-file-alt,
-.edit-bar .icon-paperclip,
-.edit-bar .icon-search,
-.edit-bar .icon-trash {
-/*     color: #999; */
+.icon.icon-edit,
+.icon.icon-remove-sign {
+    color: #999;
     padding-left: 2px;
     margin-right: 4px;
 }
-.edit-bar .icon-edit:hover,
-.edit-bar .icon-envelope-alt:hover,
-.edit-bar .icon-file-alt:hover,
-.edit-bar .icon-paperclip:hover,
-.edit-bar .icon-search:hover {
-    /* Color doesn't work with Images, only with Fonts */
-    color: #0095fe;
-    text-decoration: none;
-}
-.edit-bar .icon-trash:hover {
-    /* Color doesn't work with Images, only with Fonts */
-    color: #E74C3C;
-}
-.icon-edit:before,
-.icon-file-alt:before,
-.icon-trash:before {
-    /* Override font-awesome icons */
-    content: none;
-}
 
-.icon-file-alt {
-    background: url(img/file.png) no-repeat;
-}
-.icon-edit {
+.icon.icon-edit {
     background: url(img/pencil.png) no-repeat;
 }
-.icon-search {
-    background: url(img/magnifier.png) no-repeat;
-}
-.icon-trash {
+
+.icon.icon-remove-sign {
     background: url(img/trashbin.png) no-repeat;
 }
 
-.icon-deploy,
-.icon-deployed {
-    margin-left: 2px;
-    margin-right: 4px;
-    background: url(img/deploy.png) no-repeat;
-}
-.icon-deploy {
-    background-position: -14px 0;
-}
-.icon-deployed {
-    background-position: 0 0;
+.icon.icon-edit:hover {
+    color: #0095fe;
+    text-decoration: none;
 }
 
-.icon-sent,
-.icon-unsent {
-    margin-right: 4px;
-    background: url(img/deploy.png) no-repeat;
-}
-.icon-unsent {
-    background-position: -28px 0;
-}
-.icon-sent {
-    background-position: 0 0;
+.icon.icon-remove-sign:hover {
+    color: #E74C3C;
 }
 
 .profile-add-btn {
     float: right;
     margin-top: 6px;
     margin-right: 6px;
-}
-
-.alert-status {
-    padding-left: 20px;
-}
-
-.mission-comments {
-    white-space: pre-wrap;
 }

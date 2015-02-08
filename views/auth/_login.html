@@ -1,10 +1,14 @@
+{{if self_registration:}}
+{{login_form[0][-1][1].append(A(T("Register for Account"), _href=URL(f="user", args="register"), _id="register-btn", _class="action-lnk"))}}
+{{pass}}
+{{login_form[0][-1][1].append(A(T("Lost Password"), _href=URL(f="user", args="retrieve_password"), _class="action-lnk"))}}
 <div class='form-container'>
 {{=login_form}}
-{{if s3db.msg_facebook_login():}}
+{{if auth.settings.facebook:}}
 <a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='{{=T("Login using Facebook account")}}'>
 <span>{{=T("Login with Facebook")}}</span>
 </a>{{pass}}
-{{if settings.get_auth_google():}}
+{{if auth.settings.google:}}
 <a class='zocial google' href='{{=URL(f="google", args="login")}}' title='{{=T("Login using Google account")}}'>
 <span>{{=T("Login with Google")}}</span>
 </a>{{pass}}

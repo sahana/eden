@@ -1,0 +1,11 @@
+"Name","Description","URL","Layers","Folder","Enabled","Visible","Base","Transparent","Opacity","Format","Queryable","LegendURL","Tiled","Map"
+"Topography","SRTMv4","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:SRTMv4","Topography","False","False","False","True",0.8,"image/png","False",,,
+"GADMv1","GADM Base Layer: L0-L2 Boundaries, Polygon fill, Labels","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:gadm1_base",,"False","False","True",,,"image/jpeg","False",,,
+"Admin Boundaries","GADM Overlay: L0-L2 Boundaries, Labels, No Polygon fill","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:gadm1_overlays","Admin Boundaries","False","False","False","True",,"image/png","False",,,
+"L2 Boundaries","GADM L2 Overlay: Boundaries, Labels, No Polygon fill","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:gadm1_lev2","Admin Boundaries","False","False","False","True",,"image/png","True",,,
+"L1 Boundaries","GADM L1 Overlay: Boundaries, Labels, No Polygon fill","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:gadm1_lev1","Admin Boundaries","False","False","False","True",,"image/png","True",,,
+"Country Boundaries","GADM L0 Overlay: Boundaries, Labels, No Polygon fill","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:gadm1_lev0","Admin Boundaries","False","False","False","True",,"image/png","False",,,
+"Country Boundaries","GADM L0 Base Layer: Boundaries, Polygon fill, No Labels","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:gadm1_lev0_base",,"False","False","True",,,"image/jpeg","False",,,
+"Population Density 2010 (Persons per km2)","GPWv3","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:populationDensity","Population","True","False","False","True",0.8,"image/png","False","/static/img/gis/GPWv3.png",,
+"Rainfall - last 1 day (mm)","TRMM","http://rmsgeo.aidiq.com/proxy/service?","TRMM_3B42_V6_DAILY","Weather","True","False","False","True",0.4,"image/png","False","/static/img/gis/TRMM_3B42_V6_DAILY.png",,
+"Rainfall - last 10 days accumulated (mm)","TRMM","http://rmsgeo.aidiq.com/proxy/service?","TRMM_3B42_V6_10_DAY","Weather","True","False","False","True",0.4,"image/png","False","/static/img/gis/TRMM_3B42_V6_10_DAY.png",,

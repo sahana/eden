@@ -1,0 +1,134 @@
+@charset "UTF-8";
+
+/* --------------------------------------------------------------
+   reset.css
+   * Resets default browser CSS.
+-------------------------------------------------------------- */
+
+html {
+    margin:0;
+    padding:0;
+    border:0;
+}
+
+body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, code,
+del, dfn, em, img, q, dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, dialog, figure, footer, header,
+hgroup, nav, section {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+textarea, input, button, select {
+    font-size: 100%;
+    font: inherit;
+}
+
+/* This helps to make newer HTML5 elements behave like DIVs in older browers */
+article, aside, details, figcaption, figure, dialog,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+
+/* Line-height should always be unitless! */
+body {
+    line-height: 1.5;
+    background: white;
+}
+
+/* Tables still need 'cellspacing="0"' in the markup. */
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: auto;
+}
+/* float:none prevents the span-x classes from breaking table-cell display */
+caption, th, td {
+    text-align: left;
+    font-weight: normal;
+    float:none !important;
+}
+table, th, td {
+    vertical-align: middle;
+}
+
+/* Remove possible quote marks (") from <q>, <blockquote>. */
+blockquote:before, blockquote:after, q:before, q:after {
+    content: '';
+}
+blockquote, q {
+    quotes: "" "";
+}
+
+/* Remove annoying border on linked images. */
+a img {
+    border: none;
+}
+
+/* Remember to define your own focus styles! */
+:focus {
+    outline: 1;
+}
+
+/* Neutralize styling: Elements with a vertical margin */
+h1, h2, h3, h4, h5, h6, p, pre,
+blockquote, ul, ol, dl,
+address {
+    margin: 0 0 1em 0;
+}
+
+/* Apply left margin: Only to the few elements that need it */
+dd, blockquote {
+    margin-left: 1em;
+}
+
+fieldset {
+    border: none;
+}
+input, select, textarea {
+    font-size: 100%;
+}
+
+/* normalize monospace sizing
+ * en.wikipedia.org/wiki/MediaWiki_talk:Common.css/Archive_11#Teletype_style_fix_for_Chrome
+ */
+pre, code, kbd, samp {
+    font-family: monospace, sans-serif;
+}
+pre {
+     padding: 15px;
+     /* www.pathf.com/blogs/2008/05/formatting-quoted-code-in-blog-posts-css21-white-space-pre-wrap/ */
+     white-space: pre; /* CSS2 */
+     white-space: pre-wrap; /* CSS 2.1 */
+     white-space: pre-line; /* CSS 3 (and 2.1 as well, actually) */
+     word-wrap: break-word; /* IE */
+}
+
+textarea {
+    overflow: auto;  /* thnx ivannikolic! www.sitepoint.com/blogs/2010/08/20/ie-remove-textarea-scrollbars/ */
+}
+/* always force a scrollbar in non-IE */
+html {
+    overflow-y: scroll;
+}
+
+/* make buttons play nice in IE:
+   www.viget.com/inspire/styling-the-button-element-in-internet-explorer/ */
+button {
+    width: auto;
+    overflow: visible;
+}
+
+/* bicubic resizing for non-native sized IMG:
+   code.flickr.com/blog/2008/11/12/on-ui-quality-the-little-things-client-side-image-resizing/ */
+.ext-ie7 img {
+    -ms-interpolation-mode: bicubic;
+}

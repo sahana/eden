@@ -44,12 +44,6 @@ gxp.plugins.Playback = Ext.extend(gxp.plugins.Tool, {
      */    
     looped: false,
     
-    /** api: config[playbackMode]
-     *  ``String``
-     *  One of: 'track', 'cumulative', or 'ranged'
-     */
-    playbackMode: 'track',
-    
     /** api: config[menuText]
      *  ``String``
      *  Text for Playback menu item (i18n).
@@ -80,45 +74,23 @@ gxp.plugins.Playback = Ext.extend(gxp.plugins.Tool, {
     constructor: function(config) {
         gxp.plugins.Playback.superclass.constructor.apply(this, arguments);
     },
-
-    init: function(target) {
-        target.on('saved', function() {
-            if (this.output) {
-                this.output[0].optionsWindow.optionsPanel.readOnly = false;
-            }
-        }, this, {single: true});
-        gxp.plugins.Playback.superclass.init.call(this, target);
-    },
-
     /** private: method[addOutput]
      *  :arg config: ``Object``
      */
     addOutput: function(config){
         delete this._ready;
-        OpenLayers.Control.DimensionManager.prototype.maxFrameDelay = 
-            (this.target.tests && this.target.tests.dropFrames) ? 10 : NaN;
         config = Ext.applyIf(config || this.outputConfig || {}, {
             xtype: 'gxp_playbacktoolbar',
             mapPanel:this.target.mapPanel,
             playbackMode:this.playbackMode,
-            prebuffer: this.target.prebuffer,
-            maxframes: this.target.maxframes,
             looped:this.looped,
             autoPlay:this.autoStart,
             optionsWindow: new Ext.Window({
                 title: gxp.PlaybackOptionsPanel.prototype.titleText,
                 width: 350,
-                height: 400,
+                height: 425,
                 layout: 'fit',
-                items: [{xtype: 'gxp_playbackoptions', readOnly: (!this.target.isAuthorized() || !(this.target.id || this.target.mapID)), listeners: {
-                    'save': function(cmp) {
-                        this.target.on('saved', function() {
-                            cmp.ownerCt.close();
-                        }, this, {single: true});
-                        this.target.save();
-                    },
-                    scope: this
-                }}],
+                items: [{xtype: 'gxp_playbackoptions'}],
                 closeable: true,
                 closeAction: 'hide',
                 renderTo: Ext.getBody(),
@@ -166,7 +138,7 @@ gxp.plugins.Playback = Ext.extend(gxp.plugins.Tool, {
     /** api: method[setTime]
      *  :arg time: {Date}
      *  :return: {Boolean} - true if the time could be set to the supplied value
-     *          false if the time is outside the current range of the DimManager
+     *          false if the time is outside the current range of the TimeManager
      *          control.
      *          
      *  Set the time represented by the playback toolbar programatically
@@ -190,45 +162,32 @@ gxp.plugins.Playback = Ext.extend(gxp.plugins.Tool, {
                 playbackMode : toolbar.playbackMode
             });
             if(control) {
-                var dimModel = control.modelCache || control.model;
                 config.outputConfig.controlConfig = {
-                    model: {
-                        dimension: dimModel.dimension || control.dimension,
-                        values: dimModel.values,
-                        range: dimModel.range
-                    },
-                    animationRange : control.animationRange,
-                    timeStep : control.timeStep,
-                    timeUnits : (control.timeUnits) ? control.timeUnits : undefined,
+                    range : control.range, //(control.fixedRange) ? control.range : undefined,
+                    step : control.step,
+                    units : (control.units) ? control.units : undefined,
                     loop : control.loop,
-                    snapToList : control.snapToList,
-                    dimension : dimModel.dimension || control.dimension
+                    snapToIntervals : control.snapToIntervals
                 };
-                if(control.agents.length > 1) {
-                    var agents = control.agents;
+                if(control.timeAgents.length > 1) {
+                    var agents = control.timeAgents;
                     var agentConfigs = [];
                     for(var i = 0; i < agents.length; i++) {
                         var agentConfig = {
-                            type : agents[i].CLASS_NAME.split("Agent.")[1],
-                            tickMode : agents[i].tickMode,
+                            type : agents[i].CLASS_NAME.split("TimeAgent.")[1],
+                            rangeMode : agents[i].rangeMode,
                             rangeInterval : agents[i].rangeInterval,
-                            values : agents[i].values,
+                            intervals : agents[i].intervals,
                             layers : []
                         };
                         for(var j = 0; j < agents[i].layers.length; j++) {
-                            var layerRec = this.target.mapPanel.layers.getByLayer(agents[i].layers[j]);
+                            var layerRec = app.mapPanel.layers.getByLayer(agents[i].layers[j]);
                             var layerConfig = this.target.layerSources[layerRec.get('source')].getConfigForRecord(layerRec);
-                            //don't need or want to serialize the whole capabilities info, just get the stuff we need
-                            agentConfig.layers.push({
-                                source: layerConfig.source,
-                                title: layerConfig.title,
-                                name: layerConfig.name,
-                                styles: (layerConfig.styles) ? layerConfig.styles : undefined
-                            });
+                            agentConfig.layers.push(layerConfig);
                         }
                         agentConfigs.push(agentConfig);
                     }
-                    config.outputConfig.controlConfig.agents = agentConfigs;
+                    config.outputConfig.controlConfig.timeAgents = agentConfigs;
                 }
             }
             //get rid of 2 instantiated objects that will cause problems

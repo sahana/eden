@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-""" Disaster Victim Identification, Controllers """
+"""
+    Disaster Victim Identification, Controllers
+
+    @author: nursix
+"""
 
 module = request.controller
 resourcename = request.function
@@ -12,7 +16,7 @@ if not settings.has_module(module):
 def s3_menu_postp():
     # @todo: rewrite this for new framework
     menu_selected = []
-    body_id = s3base.s3_get_last_record_id("dvi_body")
+    body_id = s3mgr.get_session("dvi", "body")
     if body_id:
         body = s3db.dvi_body
         query = (body.id == body_id)
@@ -29,7 +33,7 @@ def s3_menu_postp():
                 ["%s: %s" % (T("Body"), label),
                  False, URL(f="body", args=[record.id])]
             )
-    person_id = s3base.s3_get_last_record_id("pr_person")
+    person_id = s3mgr.get_session("pr", "person")
     if person_id:
         person = s3db.pr_person
         query = (person.id == person_id)
@@ -53,32 +57,23 @@ def index():
     except:
         module_name = T("Disaster Victim Identification")
 
-    btable = s3db.dvi_body
+    table = s3db.dvi_body
+    total = db(table.deleted == False).count()
+
     itable = s3db.dvi_identification
+    query = (table.deleted == False) & \
+            (itable.pe_id == table.pe_id) & \
+            (itable.deleted == False) & \
+            (itable.status == 3)
+    identified = db(query).count()
 
-    query = (btable.deleted == False)
-    left = itable.on(itable.pe_id == btable.pe_id)
-    body_count = btable.id.count()
-    rows = db(query).select(body_count,
-                            itable.status,
-                            left=left,
-                            groupby=itable.status)
-    numbers = {None: 0}
-    for row in rows:
-        numbers[row[itable.status]] = row[body_count]
-    total = sum(numbers.values())
-
-    dvi_id_status = dict(s3db.dvi_id_status)
-    dvi_id_status[None] = T("unidentified")
-    statistics = []
-    for status in dvi_id_status:
-        count = numbers.get(status) or 0
-        statistics.append((str(dvi_id_status[status]), count))
+    status = [[str(T("identified")), int(identified)],
+              [str(T("unidentified")), int(total-identified)]]
 
     response.title = module_name
     return dict(module_name=module_name,
                 total=total,
-                status=json.dumps(statistics))
+                status=json.dumps(status))
 
 # -----------------------------------------------------------------------------
 def recreq():
@@ -104,11 +99,11 @@ def morgue():
     """ Morgue Registry """
 
     morgue_tabs = [(T("Morgue Details"), ""),
-                   (T("Bodies"), "body"),
-                   ]
+                   (T("Bodies"), "body")]
 
-    rheader = S3ResourceHeader([[(T("Morgue"), "name")]
-                                ], tabs=morgue_tabs)
+    rheader = S3ResourceHeader([
+                    [(T("Morgue"), "name")]
+              ], tabs=morgue_tabs)
 
     # Pre-processor
     def prep(r):
@@ -131,6 +126,20 @@ def body():
     gender_opts = s3db.pr_gender_opts
     gender_opts[1] = T("unknown")
 
+    btable = s3db.dvi_body
+    itable = s3db.dvi_identification
+
+    status = request.get_vars.get("status", None)
+    if status == "unidentified":
+        query = (itable.deleted == False) & \
+                (itable.status == 3)
+        ids = db(query).select(itable.pe_id)
+        ids = [i.pe_id for i in ids]
+        if ids:
+            s3.filter = (~(btable.pe_id.belongs(ids)))
+
+    s3db.configure("dvi_body", main="pe_label", extra="gender")
+
     ntable = s3db.pr_note
     ntable.status.readable = False
     ntable.status.writable = False
@@ -141,16 +150,15 @@ def body():
                 (T("Physical Description"), "physical_description"),
                 (T("Effects Inventory"), "effects"),
                 (T("Journal"), "note"),
-                (T("Identification"), "identification"),
-                ]
+                (T("Identification"), "identification")]
 
-    rheader = S3ResourceHeader([[(T("ID Tag Number"), "pe_label")],
-                                ["gender"],
-                                ["age_group"],
-                                ],
-                                tabs=dvi_tabs)
-
-    return s3_rest_controller(rheader=rheader)
+    rheader = S3ResourceHeader([
+                    [(T("ID Tag Number"), "pe_label")],
+                    ["gender"],
+                    ["age_group"],
+                ], tabs=dvi_tabs)
+    output = s3_rest_controller(rheader=rheader)
+    return output
 
 # -----------------------------------------------------------------------------
 def person():
@@ -165,26 +173,24 @@ def person():
         msg_no_match = T("No Persons currently reported missing"))
 
     s3db.configure("pr_group_membership",
-                   list_fields = ["id",
-                                  "group_id",
-                                  "group_head",
-                                  "comments"
-                                  ],
-                   )
+                    list_fields=["id",
+                                 "group_id",
+                                 "group_head",
+                                 "description"
+                                ])
 
     s3db.configure("pr_person",
-                   deletable = False,
-                   editable = False,
-                   listadd = False,
-                   list_fields = ["id",
-                                  "first_name",
-                                  "middle_name",
-                                  "last_name",
-                                  "picture",
-                                  "gender",
-                                  "age_group"
-                                  ],
-                   )
+                    listadd=False,
+                    editable=False,
+                    deletable=False,
+                    list_fields=["id",
+                                 "first_name",
+                                 "middle_name",
+                                 "last_name",
+                                 "picture",
+                                 "gender",
+                                 "age_group"
+                                ])
 
     def prep(r):
         if not r.id and not r.method and not r.component:
@@ -213,7 +219,8 @@ def person():
     if len(request.args) == 0:
         s3.filter = (db.pr_person.missing == True)
 
-    mpr_tabs = [(T("Missing Report"), "missing_report"),
+    mpr_tabs = [
+                (T("Missing Report"), "missing_report"),
                 (T("Person Details"), None),
                 (T("Physical Description"), "physical_description"),
                 (T("Images"), "image"),
@@ -221,15 +228,14 @@ def person():
                 (T("Address"), "address"),
                 (T("Contact Data"), "contact"),
                 (T("Journal"), "note"),
-                ]
+               ]
 
     rheader = lambda r: s3db.pr_rheader(r, tabs=mpr_tabs)
 
     output = s3_rest_controller("pr", "person",
-                                main = "first_name",
-                                extra = "last_name",
-                                rheader = rheader,
-                                )
+                                main="first_name",
+                                extra="last_name",
+                                rheader=rheader)
     return output
 
 # -------------------------------------------------------------------------

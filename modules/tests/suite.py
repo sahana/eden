@@ -27,13 +27,12 @@ from tests.volunteer import *
 from tests.helpers import *
 from tests.event import *
 from tests.irs import *
-from tests.person import *
 
 def loadAllTests():
 
-    # Run the file modules/templates/<current_template>/tests.py to get tests list.
+    # Run the file private/templates/<current_template>/tests.py to get tests list.
     path = os.path.join(request.folder,
-                        "modules", "templates",
+                        "private", "templates",
                         settings.get_template(),
                         "tests.py")
     if os.path.exists(path):
@@ -41,7 +40,7 @@ def loadAllTests():
     else:
         # Fallback to the default template tests.
         path = os.path.join(request.folder,
-                            "modules", "templates",
+                            "private", "templates",
                             "default",
                             "tests.py")
         settings.exec_template(path)

@@ -1,0 +1,8 @@
+"role"," description","controller","function","table","oacl","uacl","org","hidden","system","protected","uid"
+"STAFF","Role for Staff of the main organisation","project",,,"ALL","ALL",,,,,"STAFF"
+"STAFF","Role for Staff of the main organisation",,,"project_project","READ","READ","all",,,,
+"STAFF","Role for Staff of the main organisation",,,"project_activity","READ","READ",,,,,
+"STAFF","Role for Staff of the main organisation",,,"project_milestone","READ","READ",,,,,
+"STAFF","Role for Staff of the main organisation","default","project",,"READ|UPDATE","READ|CREATE|UPDATE",,,,,
+"STAFF","Role for Staff of the main organisation","project","project",,"READ|UPDATE","READ|CREATE|UPDATE",,,,,
+"STAFF","Role for Staff of the main organisation","project","time",,"READ|CREATE","READ|UPDATE|DELETE",,,,,

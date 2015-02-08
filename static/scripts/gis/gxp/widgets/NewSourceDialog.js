@@ -44,7 +44,7 @@ gxp.NewSourceDialog = Ext.extend(Ext.Panel, {
      *  ``String``
      *  Message to display when an invalid URL is entered (i18n).
      */
-    invalidURLText: "Enter a valid URL to a WMS/TMS/REST endpoint (e.g. http://example.com/geoserver/wms)",
+    invalidURLText: "Enter a valid URL to a WMS endpoint (e.g. http://example.com/geoserver/wms)",
 
     /** api: config[contactingServerText]
      *  ``String``
@@ -64,8 +64,8 @@ gxp.NewSourceDialog = Ext.extend(Ext.Panel, {
     error: null,
 
     /** api: event[urlselected]
-     *  Fired with a reference to this instance, the URL that the user
-     *  provided and the type of service  as a parameters when the form is submitted.
+     *  Fired with a reference to this instance and the URL that the user
+     *  provided as a parameters when the form is submitted.
      */     
      
     /** private: method[initComponent]
@@ -79,43 +79,18 @@ gxp.NewSourceDialog = Ext.extend(Ext.Panel, {
             allowBlank: false,
             width: 240,
             msgTarget: "under",
-            validator: this.urlValidator.createDelegate(this),
-            listeners: {
-                specialkey: function(f, e) {
-                    if (e.getKey() === e.ENTER) {
-                        this.addServer();
-                    }
-                },
-                scope: this
-            }
+            validator: this.urlValidator.createDelegate(this)
         });
 
         this.form = new Ext.form.FormPanel({
-            items: [{
-                xtype: 'combo',
-                width: 240,
-                name: 'type',
-                fieldLabel: "Type",
-                value: 'WMS',
-                mode: 'local',
-                triggerAction: 'all',
-                store: [
-                    ['WMS', 'Web Map Service (WMS)'], 
-                    ['TMS', 'Tiled Map Service (TMS)'],
-                    ['REST', 'ArcGIS REST Service (REST)']    
-                ]
-            }, this.urlTextField],
+            items: [
+                this.urlTextField
+            ],
             border: false,
             labelWidth: 30,
             bodyStyle: "padding: 5px",
             autoWidth: true,
-            autoHeight: true,
-            listeners: {
-                afterrender: function() {
-                    this.urlTextField.focus(false, true);
-                },
-                scope: this
-            }
+            autoHeight: true
         });
 
         this.bbar = [
@@ -128,7 +103,13 @@ gxp.NewSourceDialog = Ext.extend(Ext.Panel, {
             new Ext.Button({
                 text: this.addServerText,
                 iconCls: "add",
-                handler: this.addServer,
+                handler: function() {
+                    // Clear validation before trying again.
+                    this.error = null;
+                    if (this.urlTextField.validate()) {
+                        this.fireEvent("urlselected", this, this.urlTextField.getValue());
+                    }
+                },
                 scope: this
             })
         ];
@@ -157,17 +138,6 @@ gxp.NewSourceDialog = Ext.extend(Ext.Panel, {
             this.addSource(url, this.hide, failure, this);
         }, this);
 
-    },
-    
-    /** private: method[addServer]
-     */
-    addServer: function() {
-        // Clear validation before trying again.
-        this.error = null;
-        if (this.urlTextField.validate()) {
-            this.fireEvent("urlselected", this, this.urlTextField.getValue(),
-                this.form.getForm().findField('type').getValue());
-        }
     },
     
     /** API: method[reset]

@@ -24,8 +24,6 @@
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
-    <!-- ****************************************************************** -->
-    <!-- Indexes for faster processing -->
     <xsl:key name="skill" match="row" use="col[@field='Skill']"/>
     <xsl:key name="competency" match="row" use="col[@field='Competency']"/>
 

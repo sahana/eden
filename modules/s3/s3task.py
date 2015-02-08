@@ -17,7 +17,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2011-15 (c) Sahana Software Foundation
+    @copyright: 2011-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -42,7 +42,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3Task",)
+__all__ = ["S3Task"]
 
 import datetime
 
@@ -57,7 +57,7 @@ except ImportError:
 from gluon import current, HTTP, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3utils import S3DateTime
+from s3utils import s3_debug, S3DateTime
 from s3validators import IS_TIME_INTERVAL_WIDGET, IS_UTC_DATETIME
 from s3widgets import S3DateTimeWidget, S3TimeIntervalWidget
 
@@ -88,8 +88,8 @@ class S3Task(object):
     def configure_tasktable_crud(self,
                                  task=None,
                                  function=None,
-                                 args=None,
-                                 vars=None,
+                                 args=[],
+                                 vars={},
                                  period = 3600, # seconds, so 1 hour
                                  ):
         """
@@ -102,11 +102,6 @@ class S3Task(object):
             @param vars: the function named arguments
         """
 
-        if args is None:
-            args = []
-        if vars is None:
-            vars = {}
-
         T = current.T
         NONE = current.messages["NONE"]
         UNLIMITED = T("unlimited")
@@ -116,27 +111,23 @@ class S3Task(object):
 
         table.uuid.readable = table.uuid.writable = False
 
-        table.prevent_drift.readable = table.prevent_drift.writable = False
-
         table.sync_output.readable = table.sync_output.writable = False
 
         table.times_failed.readable = False
 
         field = table.start_time
-        field.represent = lambda dt: \
-            S3DateTime.datetime_represent(dt, utc=True)
+        field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
         field.widget = S3DateTimeWidget(past=0)
         field.requires = IS_UTC_DATETIME(
-                format=current.deployment_settings.get_L10n_datetime_format()
+                    format=current.deployment_settings.get_L10n_datetime_format()
                 )
 
         field = table.stop_time
-        field.represent = lambda dt: \
-            S3DateTime.datetime_represent(dt, utc=True)
+        field.represent = lambda dt: S3DateTime.datetime_represent(dt, utc=True)
         field.widget = S3DateTimeWidget(past=0)
         field.requires = IS_EMPTY_OR(
                             IS_UTC_DATETIME(
-                format=current.deployment_settings.get_L10n_datetime_format()
+                    format=current.deployment_settings.get_L10n_datetime_format()
                 ))
 
         if not task:
@@ -196,30 +187,31 @@ class S3Task(object):
         table.status.readable = table.status.writable = False
         table.next_run_time.readable = table.next_run_time.writable = False
         table.times_run.readable = table.times_run.writable = False
-        table.assigned_worker_name.readable = \
-            table.assigned_worker_name.writable = False
+        table.assigned_worker_name.readable = table.assigned_worker_name.writable = False
 
         current.s3db.configure(tablename,
-                               list_fields = ["id",
-                                              "enabled",
-                                              "start_time",
-                                              "repeats",
-                                              "period",
-                                              (T("Last run"), "last_run_time"),
-                                              (T("Last status"), "status"),
-                                              (T("Next run"), "next_run_time"),
-                                              "stop_time"
-                                              ],
-                               )
+                               list_fields=["id",
+                                            "enabled",
+                                            "start_time",
+                                            "repeats",
+                                            "period",
+                                            (T("Last run"), "last_run_time"),
+                                            (T("Last status"), "status"),
+                                            (T("Next run"), "next_run_time"),
+                                            "stop_time"
+                                            ])
 
         response = current.response
         if response:
             response.s3.crud_strings[tablename] = Storage(
-                label_create = T("Create Job"),
+                title_create = T("Add Job"),
                 title_display = T("Scheduled Jobs"),
                 title_list = T("Job Schedule"),
                 title_update = T("Edit Job"),
+                #title_search = T("Search for Job"),
+                subtitle_create = T("Add Job"),
                 label_list_button = T("List Jobs"),
+                label_create_button = T("Add Job"),
                 msg_record_created = T("Job added"),
                 msg_record_modified = T("Job updated"),
                 msg_record_deleted = T("Job deleted"),
@@ -231,7 +223,7 @@ class S3Task(object):
     # -------------------------------------------------------------------------
     # API Function run within the main flow of the application
     # -------------------------------------------------------------------------
-    def async(self, task, args=None, vars=None, timeout=300):
+    def async(self, task, args=[], vars={}, timeout=300):
         """
             Wrapper to call an asynchronous task.
             - run from the main request
@@ -243,11 +235,6 @@ class S3Task(object):
             @param timeout: The length of time available for the task to complete
                             - default 300s (5 mins)
         """
-        
-        if args is None:
-            args = []
-        if vars is None:
-            vars = {}
 
         # Check that task is defined
         tasks = current.response.s3.tasks
@@ -266,9 +253,7 @@ class S3Task(object):
                 elif isinstance(arg, basestring):
                     _args.append("%s" % str(json.dumps(arg)))
                 else:
-                    error = "Unhandled arg type: %s" % arg
-                    current.log.error(error)
-                    raise HTTP(501, error)
+                    raise HTTP(501, "Unhandled arg type")
             args = ",".join(_args)
             _vars = ",".join(["%s=%s" % (str(var),
                                          str(vars[var])) for var in vars])
@@ -300,8 +285,8 @@ class S3Task(object):
     # -------------------------------------------------------------------------
     def schedule_task(self,
                       task,
-                      args=None, # args to pass to the task
-                      vars=None, # vars to pass to the task
+                      args=[], # args to pass to the task
+                      vars={}, # vars to pass to the task
                       function_name=None,
                       start_time=None,
                       next_run_time=None,
@@ -311,8 +296,7 @@ class S3Task(object):
                       timeout=None,
                       enabled=None, # None = Enabled
                       group_name=None,
-                      ignore_duplicate=False,
-                      sync_output=0):
+                      ignore_duplicate=False):
         """
             Schedule a task in web2py Scheduler
 
@@ -329,13 +313,7 @@ class S3Task(object):
             @param enabled: enabled flag for the scheduled task
             @param group_name: group_name for the scheduled task
             @param ignore_duplicate: disable or enable duplicate checking
-            @param sync_output: sync output every n seconds (0 = disable sync)
         """
-
-        if args is None:
-            args = []
-        if vars is None:
-            vars = {}
 
         kwargs = {}
 
@@ -378,11 +356,8 @@ class S3Task(object):
 
         if not ignore_duplicate and self._duplicate_task_exists(task, args, vars):
             # if duplicate task exists, do not insert a new one
-            current.log.warning("Duplicate Task, Not Inserted", value=task)
+            s3_debug("Duplicate Task, Not Inserted", value=task)
             return False
-
-        if sync_output != 0:
-            kwargs["sync_output"] = sync_output
 
         auth = current.auth
         if auth.is_logged_in():

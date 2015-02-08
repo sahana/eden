@@ -5,10 +5,23 @@
     <!-- **********************************************************************
          Item Categories - CSV Import Stylesheet
 
-         - use for import to supply/item_category resource
+         2011-06-20 / Michael Howden <michael AT aidiq DOT com>
 
+         - use for import to supply/item_category resource
+         - example raw URL usage:
+           Let URLpath be the URL to Sahana Eden appliation
+           Let Resource be supply/item_category/create
+           Let Type be s3csv
+           Let CSVPath be the path on the server to the CSV file to be imported
+           Let XSLPath be the path on the server to the XSL transform file
+           Then in the browser type:
+
+           URLpath/Resource.Type?filename=CSVPath&transform=XSLPath
+
+           You can add a third argument &ignore_errors
          CSV fields:
          Organisation....................organisation.name
+         Acronym.........................organisation.acronym
          Catalog.........................supply_catalog.name
          GROUP_CODE......................code
          GROUP_DESCRIPTION...............name
@@ -29,6 +42,7 @@
 
     <!-- The Organisation (hardcoded here) -->
     <xsl:variable name="OrgName">International Federation of Red Cross and Red Crescent Societies</xsl:variable>
+    <xsl:variable name="OrgAcronym">IFRC</xsl:variable>
 
     <!-- The Catalog (hardcoded here) -->
     <xsl:variable name="CatalogName">IFRC Standard Catalog</xsl:variable>
@@ -40,13 +54,15 @@
         <s3xml>
 			<xsl:for-each select="//row[generate-id(.)=generate-id(key('catalogs', col[@field='Catalog'])[1])]">
 			    <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+			    <xsl:variable name="OrgAcronym" select="col[@field='Acronym']/text()"/>
 			    <xsl:variable name="CatalogName" select="col[@field='Catalog']/text()"/>
 
 	            <resource name="org_organisation">
 	                <xsl:attribute name="tuid">
-	                    <xsl:value-of select="$OrgName"/>
+	                    <xsl:value-of select="$OrgAcronym"/>
 	                </xsl:attribute>
 	                <data field="name"><xsl:value-of select="$OrgName"/></data>
+	                <data field="acronym"><xsl:value-of select="$OrgAcronym"/></data>
 	            </resource>
 
 	            <resource name="supply_catalog">

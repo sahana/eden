@@ -70,7 +70,7 @@ GeoExt.LayerLegend = Ext.extend(Ext.Container, {
         }
     },
 
-    /** private: method[getLabel]
+    /** private: method[getText]
      *  :returns: ``String``
      *
      *  Get the label text of the legend.

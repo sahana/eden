@@ -1,0 +1,79 @@
+{{extend "layout.html"}}
+<style>body{background:none;}</style>
+<div id='myCarousel' class='carousel slide'>
+ <ol class='carousel-indicators'>
+  <li data-target='#myCarousel' data-slide-to='0' class='active'></li>
+  <li data-target='#myCarousel' data-slide-to='1'></li>
+ </ol>
+ <div class='carousel-inner'>
+  <div class='active item'><img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/image1.jpg' alt='' /></div>
+  <div class='item'><img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/image2.jpg' alt='' /></div>
+ </div>
+ <div class='carousel-caption'>
+  <h1>{{=T("Eastern Mediterranean Disaster Risk Management Information System")}}<br></h1>
+  <p>{{=T("Improving disaster preparedness, response and monitoring in Greece and Cyprus.")}}</p>
+  {{if not auth.is_logged_in():}}
+  <a href='/{{=appname}}/default/user/login?_next=/{{=appname}}/default/index/updates' class='btn btn-custom btn-login'><i class='icon-signin'></i> {{=T("LOGIN")}} </a></p>{{pass}}
+ </div>
+</div>
+<section id='homepage-about'>
+ <div class='container'>
+  <div class='row'>
+   <div class='span4 first_stl'>
+    <div>
+     <!--<img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/413751-circle1.png' class='img-circle home-circle-img'>-->
+    </div>
+    <h2>{{=T("Prepare")}}</h2>
+    <p class='quote mb4'>Share information about your organisation, projects and resources with other Disaster Management Stakeholders in Greece and Cyprus.</p>
+   </div>
+   <div class='span4 stl'>
+    <div>
+     <!--<img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/482470-circle1.png' class='img-circle home-circle-img'>-->
+    </div>
+    <h2>{{=T("Respond")}}</h2>
+    <p class='quote mb4'>Receive alerts, share incident updates and assessments about current disasters and coordinate your response activities.</p>		
+   </div>			
+   <div class='span4 stl'>
+    <div>
+     <!--<img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/442014-circle1.png' class='img-circle home-circle-img'>-->
+    </div>
+    <h2>{{=T("Monitor")}}</h2>
+    <p class='quote mb4'>Monitor all disaster information from specific disasters, stakeholders or regions. </p>
+   </div>
+  </div>
+ </div>	
+</section>
+<section id='what-they-do' class='st'>
+ <div class='container'>
+  <div class='row'>
+   <div class='span6'>
+    <h2><i class='icon-bookmark-empty'></i> {{=T("What we do")}}</h2>
+    <p>All Stakeholders engaged in disaster risk management work in Greece and Cyprus can use the Disaster Risk Management Information System (DRMIS) to share information to better plan and coordinate their activities.</p>
+   </div>
+   <div class='span6'>
+    <br /> <!--this is just temporary until we decide what actually goes here-->
+    <br />
+    <img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/map_gr_cy.png'>
+   </div>
+  </div>
+ </div>
+</section>
+{{if auth.is_logged_in():}}
+<section id='homepage-layer' class='st'>
+ <div class='container'>   
+  <div class='row'>
+   <div class='span6'>
+    <a href='/{{=appname}}/default/index/updates'>
+     <h2><i class='icon-calendar'></i> {{=T("Latest Events")}}</h2>
+    </a>
+    {{=events}}
+   </div>
+   <div class='span6'>
+    <a href='/{{=appname}}/default/index/updates'>
+     <h2><i class='icon-bullhorn'></i> {{=T("Latest Updates")}}</h2>
+    </a>
+    {{=news}}
+   </div>
+  </div>  
+ </div>
+</section>{{pass}}

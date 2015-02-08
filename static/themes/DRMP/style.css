@@ -1,9 +1,5 @@
 /* Stuff which is DRMP-specific */
 
-body {
-    padding-top: 90px;
-}
-
 .navbar .brand {
     width: 200px;
     text-shadow: none;
@@ -17,14 +13,6 @@ a.brand img{
     width: 60px;
     position: relative;
     top: -13px;
-}
-
-div.navbar .nav > li > a {
-    padding: 1.5em;
-}
-
-#homepage-about h2 {
-    word-spacing: 61px;
 }
 
 .export_xls {
@@ -55,6 +43,10 @@ div.navbar .nav > li > a {
 }
 
 /* Contacts Page */
+.form-container #pr_person_sub_human_resourcehuman_resource__label {
+    /* Hide the colon */
+    display: none;
+}
 
 /* Adjust Field Widths to match Titles/Data */
 #sub_human_resourcehuman_resource_human_resourcehuman_resource_i_organisation_id_edit_none {

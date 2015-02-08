@@ -12,9 +12,9 @@
          KV:XX................................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
-    <xsl:import href="../commons.xsl"/>
-
     <xsl:output method="xml"/>
+
+    <xsl:include href="../commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">

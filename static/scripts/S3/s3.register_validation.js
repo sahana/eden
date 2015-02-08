@@ -10,6 +10,12 @@ var s3_register_validation = function() {
     });
 
     // Read options
+    if (S3.password_position == 1) {
+        var password_position = 'first';
+    } else {
+        var password_position = 'last';
+    }
+
     if (S3.auth_registration_mobile_phone_mandatory) {
         var mobile_phone_mandatory = true;
     } else {
@@ -35,8 +41,8 @@ var s3_register_validation = function() {
 
     if (undefined != S3.whitelists) {
         // Check for Whitelists
-        $('.auth_register #auth_user_email').blur(function() {
-            var email = $('.auth_register #auth_user_email').val();
+        $('#regform #auth_user_email').blur(function() {
+            var email = $('#regform #auth_user_email').val();
             var domain = email.split('@')[1];
             if (undefined != S3.whitelists[domain]) {
                 $('#auth_user_organisation_id').val(S3.whitelists[domain]);
@@ -46,12 +52,8 @@ var s3_register_validation = function() {
         })
     }
 
-    var email_row = $('#auth_user_email__row');
-    var div_style = email_row.hasClass('control-group') // Bootstrap
-                     || email_row.hasClass('form-row'); // Foundation
-
     // Validate signup form on keyup and submit
-    $('.auth_register').validate({
+    $('#regform').validate({
         errorClass: 'req',
         rules: {
             first_name: {
@@ -74,7 +76,7 @@ var s3_register_validation = function() {
             },
             password_two: {
                 required: true,
-                equalTo: '.auth_register .password:first'
+                equalTo: '.password:' + password_position
             },
             tos: {
                 required: terms_of_service_required
@@ -97,15 +99,10 @@ var s3_register_validation = function() {
             tos: i18n.tos_required
         },
         errorPlacement: function(error, element) {
-            if (div_style) {
-                // Bootstrap/Foundation
-                // Place immediately after widget
-                error.appendTo(element.parent())
-            } else {
-                // Default/DRRPP
-                // Place in comment
-                error.appendTo(element.parent().next())
-            }
+            // Standard/DRRPP Formstyles: Place in Comment
+            error.appendTo(element.parent().next())
+            // Bootstrap Formstyle
+            //error.appendTo(element.parent().next())
         },
         submitHandler: function(form) {
             form.submit()
@@ -113,7 +110,7 @@ var s3_register_validation = function() {
     });
 
     // Password Strength indicator
-    $('.auth_register .password:first').pstrength({
+    $('.password:' + password_position).pstrength({
         'minChar': S3.password_min_length,
         'minCharText': i18n.password_min_chars,
 		'verdicts':	[i18n.weak, i18n.normal, i18n.medium, i18n.strong, i18n.very_strong]

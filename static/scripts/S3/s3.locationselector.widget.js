@@ -3,8 +3,7 @@
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
  *
- * @ToDo: Support more than 1/page by not using fixed ids but varying with fieldname
- *        - see locationselector.widget2
+ * @ToDo: Support more than 1/page by not using fixed ids but varying with fieldname (see locationselector.widget2)
  */
 
 // Document.onReady
@@ -51,6 +50,9 @@ function s3_gis_locationselector_onReady() {
 
         // Set initial Autocompletes
         s3_gis_autocompletes();
+
+        // Setup converter for latitude and longitude fields
+        s3_gis_lat_lon_converter();
 
         // Listen for Events & take appropriate Actions
 
@@ -133,75 +135,36 @@ function s3_gis_locationselector_onReady() {
     }
 
     // Map Popup
-    var mapButton = $('#gis_location_map-btn');
+    var mapButton = Ext.get('gis_location_map-btn');
     if (mapButton) {
-        var map_id = mapButton.attr('map');
-        // Find the map
-        if (undefined == map_id) {
-            map_id = 'default_map';
-        }
-        /**
-         * Check that Map JS is Loaded
-         */
-        var jsLoaded = function() {
-            var dfd = new jQuery.Deferred();
-
-            // Test every half-second
-            setTimeout(function working() {
-                if (S3.gis.maps != undefined) {
-                    dfd.resolve('loaded');
-                } else if (dfd.state() === 'pending') {
-                    // Notify progress
-                    dfd.notify('waiting for JS to load...');
-                    // Loop
-                    setTimeout(working, 500);
-                } else {
-                    // Failed!?
-                }
-            }, 1);
-
-            // Return the Promise so caller can't change the Deferred
-            return dfd.promise();
-        };
-
-        // Check if Maps JS is Loaded
-        $.when(jsLoaded()).then(
-            function(status) {
-                // Success: Instantiate Maps
-                var map = S3.gis.maps[map_id];
-
-                // Point Placed callback
-                map.s3.pointPlaced = function(feature) {
-                    var centerPoint = feature.geometry.getBounds().getCenterLonLat();
-                    centerPoint.transform(map.getProjectionObject(), S3.gis.proj4326);
-                    $('#gis_location_lon').val(centerPoint.lon);
-                    $('#gis_location_lat').val(centerPoint.lat);
-                    $('#gis_location_wkt').val('');
-                };
-
-                mapButton.click(function() {
-                    map.s3.mapWin.show();
-                    if (map.s3.polygonButton) {
-                        var wkt = $('#gis_location_wkt').val();
-                        if (!wkt) {
-                            // Enable the crosshair on the Map Selector
-                            $('.olMapViewport').addClass('crosshair');
-                            // Enable the Control
-                            map.s3.polygonButton.control.activate();
-                        }
-                    } else {
-                        var lat = $('#gis_location_lat').val();
-                        var lon = $('#gis_location_lon').val();
-                        if (!lat || !lon) {
-                            // Enable the crosshair on the Map Selector
-                            $('.olMapViewport').addClass('crosshair');
-                            // Enable the Control
-                            map.s3.pointButton.control.activate();
-                        }
-                    }
-                });
+        mapButton.on('click', function() {
+            // Find the map
+            var map_button = $('#gis_location_map-btn');
+            var map_id = map_button.attr('map');
+            if (undefined == map_id) {
+                map_id = 'default_map';
             }
-        );
+            var map = S3.gis.maps[map_id];
+            map.s3.mapWin.show();
+            if (map.s3.polygonButton) {
+                var wkt = $('#gis_location_wkt').val();
+                if (!wkt) {
+                    // Enable the crosshair on the Map Selector
+                    $('.olMapViewport').addClass('crosshair');
+                    // Enable the Control
+                    map.s3.polygonButton.control.activate();
+                }
+            } else {
+                var lat = $('#gis_location_lat').val();
+                var lon = $('#gis_location_lon').val();
+                if (!lat || !lon) {
+                    // Enable the crosshair on the Map Selector
+                    $('.olMapViewport').addClass('crosshair');
+                    // Enable the Control
+                    map.s3.pointButton.control.activate();
+                }
+            }
+        });
     }
 }
 
@@ -244,6 +207,7 @@ function s3_gis_autocomplete(level) {
                 });
             },
             search: function(event, ui) {
+                dummy_input.hide();
                 throbber.removeClass('hide').show();
                 // Wipe the existing ID so that update forms can change the values to new ones
                 real_input.val('');
@@ -251,12 +215,11 @@ function s3_gis_autocomplete(level) {
             },
             response: function(event, ui, content) {
                 throbber.hide();
+                dummy_input.show();
                 return content;
             },
             focus: function(event, ui) {
-                if (ui.item.id) {
-                    dummy_input.val(ui.item.name);
-                }
+                dummy_input.val(ui.item.name);
                 return false;
             },
             select: function(event, ui) {
@@ -274,8 +237,9 @@ function s3_gis_autocomplete(level) {
                     s3_gis_autocomplete(parseInt(item.level.replace('L', ''), 10) + 1);
                 } else {
                     // No matching results
-                    //dummy_input.val('');
-                    real_input.val('').change();
+                    dummy_input.val('');
+                    real_input.val('')
+                              .change();
                 }
                 return false;
             }
@@ -323,6 +287,7 @@ function s3_gis_autocomplete_search() {
                 });
             },
             search: function(event, ui) {
+                dummy_input.hide();
                 throbber.removeClass('hide').show();
                 // Hide the Select Button
                 $('#gis_location_search_select-btn').hide();
@@ -330,12 +295,11 @@ function s3_gis_autocomplete_search() {
             },
             response: function(event, ui, content) {
                 throbber.hide();
+                dummy_input.show();
                 return content;
             },
             focus: function(event, ui) {
-                if (ui.item.id) {
-                    dummy_input.val(ui.item.name);
-                }
+                dummy_input.val(ui.item.name);
                 return false;
             },
             select: function(event, ui) {
@@ -396,13 +360,13 @@ function s3_gis_ac_set_source(level) {
     var source;
     if (parent) {
         // Filter on parent
-        source = S3.gis.url + '/search_ac?loc_select=1&level=L' + level + '&parent=' + parent;
+        source = S3.gis.url + '/search_ac?field=name&loc_select=1&level=L' + level + '&parent=' + parent;
     } else if (grandparent) {
         // Filter on children (slower)
-        source = S3.gis.url + '/search_ac?loc_select=1&level=L' + level + '&children=' + grandparent;
+        source = S3.gis.url + '/search_ac?field=name&loc_select=1&level=L' + level + '&children=' + grandparent;
     } else {
         // No Filter possible beyond Level
-        source = S3.gis.url + '/search_ac?loc_select=1&level=L' + level;
+        source = S3.gis.url + '/search_ac?field=name&loc_select=1&level=L' + level;
     }
     return source;
 }
@@ -413,7 +377,7 @@ function s3_gis_ac_set_search_source() {
     // @ToDo: Read Hierarchical Filters
 
     // Search all specific locations
-    var source = S3.gis.url + '/search_ac?loc_select=1&field2=addr_street&level=nullnone';
+    var source = S3.gis.url + '/search_ac?field=name&loc_select=1&field2=addr_street&level=nullnone';
 
     return source;
 }
@@ -510,6 +474,186 @@ function s3_gis_ac_search_selected(location) {
         // Display the Select Button
         $('#gis_location_search_select-btn').removeClass('hide').show();
     }
+}
+
+function s3_gis_lat_lon_converter() {
+    // Set up the lat_lon converter
+    var nanError = i18n.gis_only_numbers,
+        rangeError = i18n.gis_range_error;
+
+    function isNum(n) {
+      return !isNaN(parseFloat(n)) && isFinite(n);
+    }
+
+    function get_wrap(e) {
+        return e.parents('.gis_coord_wrap').eq(0);
+    }
+
+    function set($e) {
+        return function (v) {
+            // clear and focus or set a field
+            $e.val(v||'');
+            if (typeof(v) == 'undefined') $e.focus();
+        };
+    }
+
+    function get_dms(dec) {
+        var d = Math.abs(dec),
+            m = (d - parseInt(d, 10)) * 60;
+
+        // Stop integer values of m from being approximated
+        if (Math.abs(m - Math.round(m)) < 1e-10) {
+            m = Math.round(m);
+            s = 0;
+        } else {
+            var s = (m - parseInt(m, 10)) * 60;
+
+            // Stop integer values of s from being approximated
+            if (Math.abs(s - Math.round(s)) < 1e-10)
+                s = Math.round(s);
+        }
+
+        return { d: parseInt(dec, 10),
+                 m: parseInt(m, 10),
+                 s: s
+               };
+    }
+
+    function get_float(d, m, s) {
+        return (d < 0 ? -1 : 1) * 
+                (Math.abs(d) +
+                 m / 60 +
+                 s / 3600);
+    }
+
+    function to_decimal(wrap) {
+
+        var d = $('.degrees', wrap).val() || 0,
+            m = $('.minutes', wrap).val() || 0,
+            s = $('.seconds', wrap).val() || 0,
+
+            set_d = set($('.degrees', wrap)),
+            set_m = set($('.minutes', wrap)),
+            set_s = set($('.seconds', wrap)),
+            set_dec = set($('.decimal', wrap)),
+
+            isLat = $('.decimal', wrap).attr('id') == 'gis_location_lat';
+
+        // validate degrees
+        if (!isNum(d)) {
+            alert(nanError.degrees);
+            set_d();
+            return;
+        }
+
+        d = Number(d);
+        if (Math.abs(d) > (isLat ? 90 : 180)) {
+            alert(rangeError.degrees[isLat? 'lat' : 'lon']);
+            set_d();
+            return;
+        }
+
+        // validate minutes
+        if (!isNum(m)) {
+            alert(nanError.minutes);
+            set_m();
+            return;
+        }
+
+        m = Math.abs(m);
+        if (m > 60) {
+            alert(rangeError.minutes);
+            set_m();
+            return;
+        }
+
+        // validate seconds
+        if (!isNum(s)) {
+            alert(nanError.seconds);
+            set_s();
+            return;
+        }
+
+        s = Math.abs(s);
+        if (s >= 60) {
+            alert(rangeError.seconds);
+            set_s();
+            return;
+        }
+
+        // Normalize all the values
+        // Degrees and Minutes as integers
+        var decimal = get_float(d, m, s);
+
+        if (Math.abs(decimal) > (isLat ? 90 : 180)) {
+            alert(rangeError.decimal[isLat? 'lat' : 'lon']);
+            return;
+        }
+
+        var dms = get_dms(decimal);
+
+        set_dec('' + decimal);
+        set_d(dms.d || '0');
+        set_m(dms.m || '0');
+        set_s(dms.s || '0');
+    }
+
+    $('.gis_coord_dms input').blur(function () {
+        to_decimal(get_wrap($(this)));
+    }).keypress(function(e) {
+        if (e.which == 13) e.preventDefault();
+    });
+
+    function to_dms(wrap) {
+        var field = $('.decimal', wrap),
+            dec = field.val(),
+            isLat = $('.decimal', wrap).attr('id') == 'gis_location_lat';
+        if (dec === '') return;
+        if (!isNum(dec)) {
+            alert(nanError.decimal);
+            field.val('').focus();
+            return;
+        }
+        dec = Number(dec);
+        if (Math.abs(dec) > (isLat ? 90 : 180)) {
+            alert(rangeError.decimal[isLat? 'lat' : 'lon']);
+            field.focus();
+            return;
+        }
+        var dms = get_dms(dec);
+        $('.degrees', wrap).val(dms.d || '0');
+        $('.minutes', wrap).val(dms.m || '0');
+        $('.seconds', wrap).val(dms.s || '0');
+    }
+
+    $('.gis_coord_decimal input').blur(function () {
+        to_dms(get_wrap($(this)));
+    }).keypress(function(e) {
+        if (e.which == 13) e.preventDefault();
+    });
+
+    $('.gis_coord_switch_dms').click(function (evt) {
+        $('.gis_coord_dms').show();
+        $('.gis_coord_decimal').hide();
+        $('.gis_coord_wrap').each(function () {
+            to_dms($(this));
+        });
+        evt.preventDefault();
+    });
+
+    $('.gis_coord_switch_decimal').click(function (evt) {
+        $('.gis_coord_decimal').show();
+        $('.gis_coord_dms').hide();
+        $('.gis_coord_wrap').each(function () {
+            to_decimal($(this));
+        });
+        evt.preventDefault();
+    });
+
+    // Initially fill up the dms boxes
+    $('.gis_coord_wrap').each(function () {
+        to_dms($(this));
+    });
 }
 
 function s3_gis_search_hierarchy(location_id, recursive, last) {

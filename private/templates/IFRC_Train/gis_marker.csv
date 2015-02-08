@@ -1,0 +1,5 @@
+Name,Height,Width,Image
+"mobile_phone",40,40,"gis_marker.image.Telecommunications_Mobile_Phone.png"
+"sos",40,40,"gis_marker.image.SOS.png"
+"thanks",40,39,"gis_marker.image.Volunteer.png"
+"water",40,40,"gis_marker.image.WASH_Water_Source.png"

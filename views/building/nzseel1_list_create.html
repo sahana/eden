@@ -1,0 +1,243 @@
+{{extend "layout.html"}}
+{{include "_list_create.html"}}
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function() {
+    // Hide detail fields
+    $("#building_nzseel1_construction_type_other__row1").hide();
+    $("#building_nzseel1_construction_type_other__row").hide();
+    $("#building_nzseel1_primary_occupancy_other__row1").hide();
+    $("#building_nzseel1_primary_occupancy_other__row").hide();
+    $("#building_nzseel1_other_details__row1").hide();
+    $("#building_nzseel1_other_details__row").hide();
+    $("#building_nzseel1_barricades_details__row1").hide();
+    $("#building_nzseel1_barricades_details__row").hide();
+    $("#building_nzseel1_detailed_structural__row1").hide();
+    $("#building_nzseel1_detailed_structural__row").hide();
+    $("#building_nzseel1_detailed_geotechnical__row1").hide();
+    $("#building_nzseel1_detailed_geotechnical__row").hide();
+    $("#building_nzseel1_detailed_other__row1").hide();
+    $("#building_nzseel1_detailed_other__row").hide();
+    $("#building_nzseel1_detailed_other_details__row1").hide();
+    $("#building_nzseel1_detailed_other_details__row").hide();
+
+    // Set the L1 to Christchurch
+    //$('#gis_location_L1').val(247);
+    // Hide the Search button
+    $('#gis_location_search-btn').hide();
+
+    // Open up the 'Add New Location' form
+    $('#gis_location_add-btn').click();
+    // Hide the Cancel button
+    $('#gis_location_cancel-btn').hide();
+
+    // Change the label of the Name field
+    $('#gis_location_name_label > label').html('{{=T("Building Name")}}: ');
+
+    // Open up the GPS coordinates fields
+    //$('#gis_location_advanced_checkbox').attr('checked', true);
+    $('#gis_location_advanced_div').hide();
+    $('#gis_location_lat_label').removeClass('hide').show();
+    $('#gis_location_lat_row').removeClass('hide').show();
+    $('#gis_location_lon_label').removeClass('hide').show();
+    $('#gis_location_lon_row').removeClass('hide').show();
+
+    // Triage form
+    var triage_checkbox = 'Triage form?<br><input type="checkbox" value="on" id="triage" class="boolean"> (Hides optional fields)';
+    $('#list-add > h3').after(triage_checkbox);
+    $('#triage').change(function() {
+		if ($('#triage:checked').val() !== undefined) {
+            // Checked: hide the optional fields
+            $("#building_nzseel1_organisation_id__row1").hide();
+            $("#building_nzseel1_organisation_id__row").hide();
+            $("#building_nzseel1_area__row1").hide();
+            $("#building_nzseel1_area__row").hide();
+            $("#building_nzseel1_prupi__row1").hide();
+            $("#building_nzseel1_prupi__row").hide();
+            $("#building_nzseel1_gisratingid__row1").hide();
+            $("#building_nzseel1_gisratingid__row").hide();
+            $("#building_nzseel1_stories_above__row1").hide();
+            $("#building_nzseel1_stories_above__row").hide();
+            $("#building_nzseel1_stories_below__row1").hide();
+            $("#building_nzseel1_stories_below__row").hide();
+            $("#building_nzseel1_footprint__row1").hide();
+            $("#building_nzseel1_footprint__row").hide();
+            $("#building_nzseel1_year_built__row1").hide();
+            $("#building_nzseel1_year_built__row").hide();
+            $("#building_nzseel1_residential_units__row1").hide();
+            $("#building_nzseel1_residential_units__row").hide();
+            $("#building_nzseel1_photo__row1").hide();
+            $("#building_nzseel1_photo__row").hide();
+            $("#building_nzseel1_construction_type__row1").hide();
+            $("#building_nzseel1_construction_type__row").hide();
+            $("#building_nzseel1_construction_type_other__row1").hide();
+            $("#building_nzseel1_construction_type_other__row").hide();
+            $("#building_nzseel1_primary_occupancy__row1").hide();
+            $("#building_nzseel1_primary_occupancy__row").hide();
+            $("#building_nzseel1_primary_occupancy_other__row1").hide();
+            $("#building_nzseel1_primary_occupancy_other__row").hide();
+            $("#building_nzseel1_collapse__row1").hide();
+            $("#building_nzseel1_collapse__row").hide();
+            $("#building_nzseel1_leaning__row1").hide();
+            $("#building_nzseel1_leaning__row").hide();
+            $("#building_nzseel1_structural__row1").hide();
+            $("#building_nzseel1_structural__row").hide();
+            $("#building_nzseel1_falling__row1").hide();
+            $("#building_nzseel1_falling__row").hide();
+            $("#building_nzseel1_slips__row1").hide();
+            $("#building_nzseel1_slips__row").hide();
+            $("#building_nzseel1_neighbour__row1").hide();
+            $("#building_nzseel1_neighbour__row").hide();
+            $("#building_nzseel1_other__row1").hide();
+            $("#building_nzseel1_other__row").hide();
+            $("#building_nzseel1_other_details__row1").hide();
+            $("#building_nzseel1_other_details__row").hide();
+            $("#building_nzseel1_action_comments__row1").hide();
+            $("#building_nzseel1_action_comments__row").hide();
+            $("#building_nzseel1_restrictions__row1").hide();
+            $("#building_nzseel1_restrictions__row").hide();
+            $('#gis_location_postcode_label').hide();
+            $('#gis_location_postcode_row').hide();
+            $('#gis_location_lat_label').hide();
+            $('#gis_location_lat_row').hide();
+            $('#gis_location_lon_label').hide();
+            $('#gis_location_lon_row').hide();
+        } else {
+            // Unchecked: show the optional fields
+            $("#building_nzseel1_organisation_id__row1").show();
+            $("#building_nzseel1_organisation_id__row").show();
+            $("#building_nzseel1_area__row1").show();
+            $("#building_nzseel1_area__row").show();
+            $("#building_nzseel1_prupi__row1").show();
+            $("#building_nzseel1_prupi__row").show();
+            $("#building_nzseel1_gisratingid__row1").show();
+            $("#building_nzseel1_gisratingid__row").show();
+            $("#building_nzseel1_stories_above__row1").show();
+            $("#building_nzseel1_stories_above__row").show();
+            $("#building_nzseel1_stories_below__row1").show();
+            $("#building_nzseel1_stories_below__row").show();
+            $("#building_nzseel1_footprint__row1").show();
+            $("#building_nzseel1_footprint__row").show();
+            $("#building_nzseel1_year_built__row1").show();
+            $("#building_nzseel1_year_built__row").show();
+            $("#building_nzseel1_residential_units__row1").show();
+            $("#building_nzseel1_residential_units__row").show();
+            $("#building_nzseel1_photo__row1").show();
+            $("#building_nzseel1_photo__row").show();
+            $("#building_nzseel1_construction_type__row1").show();
+            $("#building_nzseel1_construction_type__row").show();
+            $("#building_nzseel1_construction_type_other__row1").show();
+            $("#building_nzseel1_construction_type_other__row").show();
+            $("#building_nzseel1_primary_occupancy__row1").show();
+            $("#building_nzseel1_primary_occupancy__row").show();
+            $("#building_nzseel1_primary_occupancy_other__row1").show();
+            $("#building_nzseel1_primary_occupancy_other__row").show();
+            $("#building_nzseel1_collapse__row1").show();
+            $("#building_nzseel1_collapse__row").show();
+            $("#building_nzseel1_leaning__row1").show();
+            $("#building_nzseel1_leaning__row").show();
+            $("#building_nzseel1_structural__row1").show();
+            $("#building_nzseel1_structural__row").show();
+            $("#building_nzseel1_falling__row1").show();
+            $("#building_nzseel1_falling__row").show();
+            $("#building_nzseel1_slips__row1").show();
+            $("#building_nzseel1_slips__row").show();
+            $("#building_nzseel1_neighbour__row1").show();
+            $("#building_nzseel1_neighbour__row").show();
+            $("#building_nzseel1_other__row1").show();
+            $("#building_nzseel1_other__row").show();
+            $("#building_nzseel1_other_details__row1").show();
+            $("#building_nzseel1_other_details__row").show();
+            $("#building_nzseel1_action_comments__row1").show();
+            $("#building_nzseel1_action_comments__row").show();
+            $("#building_nzseel1_restrictions__row1").show();
+            $("#building_nzseel1_restrictions__row").show();
+            $('#gis_location_postcode_label').show();
+            $('#gis_location_postcode_row').show();
+            $('#gis_location_lat_label').show();
+            $('#gis_location_lat_row').show();
+            $('#gis_location_lon_label').show();
+            $('#gis_location_lon_row').show();
+        }
+	})
+    
+    // Detail fields
+    $("#building_nzseel1_construction_type").change(function() {
+		if ($('#building_nzseel1_construction_type').val() == "99") {
+            // Other: show the detail field
+            $("#building_nzseel1_construction_type_other__row1").show();
+            $("#building_nzseel1_construction_type_other__row").show();
+        } else {
+            // Not Other: hide the detail field
+            $("#building_nzseel1_construction_type_other__row1").hide();
+            $("#building_nzseel1_construction_type_other__row").hide();
+        }
+    })
+    $("#building_nzseel1_primary_occupancy").change(function() {
+		if ($('#building_nzseel1_primary_occupancy').val() == "99") {
+            // Other: show the detail field
+            $("#building_nzseel1_primary_occupancy_other__row1").show();
+            $("#building_nzseel1_primary_occupancy_other__row").show();
+        } else {
+            // Not Other: hide the detail field
+            $("#building_nzseel1_primary_occupancy_other__row1").hide();
+            $("#building_nzseel1_primary_occupancy_other__row").hide();
+        }
+    })
+    $("#building_nzseel1_other").change(function() {
+		if ($('#building_nzseel1_other').val() !== "") {
+            // Selected: show the detail fields
+            $("#building_nzseel1_other_details__row1").show();
+            $("#building_nzseel1_other_details__row").show();
+        } else {
+            // Blanked: hide the detail fields
+            $("#building_nzseel1_other_details__row1").hide();
+            $("#building_nzseel1_other_details__row").hide();
+        }
+    })
+    $("#building_nzseel1_barricades").change(function() {
+		if ($('#building_nzseel1_barricades:checked').val() !== undefined) {
+            // Checked: show the detail fields
+            $("#building_nzseel1_barricades_details__row1").show();
+            $("#building_nzseel1_barricades_details__row").show();
+        } else {
+            // Unchecked: hide the detail fields
+            $("#building_nzseel1_barricades_details__row1").hide();
+            $("#building_nzseel1_barricades_details__row").hide();
+        }
+    })
+    $("#building_nzseel1_detailed_evaluation").change(function() {
+		if ($('#building_nzseel1_detailed_evaluation:checked').val() !== undefined) {
+            // Checked: show the detail fields
+            $("#building_nzseel1_detailed_structural__row1").show();
+            $("#building_nzseel1_detailed_structural__row").show();
+            $("#building_nzseel1_detailed_geotechnical__row1").show();
+            $("#building_nzseel1_detailed_geotechnical__row").show();
+            $("#building_nzseel1_detailed_other__row1").show();
+            $("#building_nzseel1_detailed_other__row").show();
+            $("#building_nzseel1_detailed_other_details__row1").show();
+            $("#building_nzseel1_detailed_other_details__row").show();
+        } else {
+            // Unchecked: hide the detail fields
+            $("#building_nzseel1_detailed_structural__row1").hide();
+            $("#building_nzseel1_detailed_structural__row").hide();
+            $("#building_nzseel1_detailed_geotechnical__row1").hide();
+            $("#building_nzseel1_detailed_geotechnical__row").hide();
+            $("#building_nzseel1_detailed_other__row1").hide();
+            $("#building_nzseel1_detailed_other__row").hide();
+            $("#building_nzseel1_detailed_other_details__row1").hide();
+            $("#building_nzseel1_detailed_other_details__row").hide();
+        }
+    })
+    $("#building_nzseel1_detailed_other").change(function() {
+		if ($('#building_nzseel1_detailed_other:checked').val() !== undefined) {
+            // Checked: show the detail fields
+            $("#building_nzseel1_detailed_other_details__row1").show();
+            $("#building_nzseel1_detailed_other_details__row").show();
+        } else {
+            // Unchecked: hide the detail fields
+            $("#building_nzseel1_detailed_other_details__row1").hide();
+            $("#building_nzseel1_detailed_other_details__row").hide();
+        }
+    })
+});
+//]]></script>

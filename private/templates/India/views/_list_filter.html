@@ -1,0 +1,54 @@
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div id='rheader'>
+{{try:}}{{=XML(rheader)}}
+</div>
+<div id='component'>
+{{except:}}
+</div>
+<div>
+{{pass}}
+<div id='map'></div>
+<div id='list-btn-add'>
+{{try:}}{{=showadd_btn}}{{hide_listadd=True}}
+{{except:}}{{hide_listadd=False}}{{pass}}
+</div>
+<div id='list-add'>
+{{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+{{try:}}{{=addheader}}{{except:}}{{pass}}
+{{include "key.html"}}
+<div class='form-container'>
+{{try:}}{{=form}}{{except:}}{{pass}}
+</div>
+</div>
+{{try:}}{{if list_filter_form:}}
+<div id='list-filter' class='form-container'>
+{{=list_filter_form}}
+</div>
+{{pass}}
+{{except:}}{{pass}}
+{{try:}}{{ltype=list_type}}{{except:}}{{ltype="datatable"}}{{pass}}
+{{try:}}{{items = items}}
+{{if ltype == "datalist":}}
+<div id='dl-container row'>
+{{=items}}
+</div>
+{{else:}}
+<div id='table-container'>
+{{=items}}
+</div>
+{{pass}}
+{{except:}}{{pass}}
+</div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
+{{if ltype == "datalist":}}
+{{include "dataLists.html"}}
+{{else:}}
+{{include "dataTables.html"}}
+{{pass}}
+{{if r.http == "POST" or not hide_listadd:}}
+{{script = '''$('#list-add').show()
+$('#show-add-btn').hide()'''}}
+{{else:}}
+{{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
+ $('#show-add-btn').hide()})'''}}
+{{pass}}{{s3.jquery_ready.append(script)}}

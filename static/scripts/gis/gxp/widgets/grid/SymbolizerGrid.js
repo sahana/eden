@@ -8,7 +8,7 @@
 
 /**
  * @requires widgets/tree/SymbolizerLoader.js
- * @require GeoExt/widgets/FeatureRenderer.js
+ * @requires GeoExt/widgets/FeatureRenderer.js
  */
 
 /** api: (define)

@@ -1,0 +1,2 @@
+"Name","Description","URL","Layers","Folder","Config","Enabled","Visible","Base","Transparent","Opacity","Format","Queryable","LegendURL","Tiled","Map"
+"Sucos unsafe water sources","Timor Leste L3","http://rmsgeo.aidiq.com/geoserver/gwc/service/wms","ifrc:tl_unsafe_water","TL","TL","True","False","False","True",0.8,"image/png","True","http://rmsgeo.aidiq.com/geoserver/wms?VERSION=1.1.1&REQUEST=GetLegendGraphic&TRANSPARENT=TRUE&EXCEPTIONS=application/vnd.ogc.se_xml&LAYER=ifrc:Sucos_unsafe_water_sources&FORMAT=image/png&STYLE=Sucos_unsafe_water_simple",,

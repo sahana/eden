@@ -2,9 +2,11 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         RSS Base Template for Sahana Eden
+         RSS Base Templates for S3XRC
 
-         Copyright (c) 2010-13 Sahana Software Foundation
+         Version 0.1 / 2010-06-17 / by nursix
+
+         Copyright (c) 2010 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -37,9 +39,7 @@
         <xsl:variable name="resource_url">
             <xsl:call-template name="resource_url"/>
         </xsl:variable>
-        <rss version="2.0"
-             xmlns:dc="http://purl.org/dc/elements/1.1/"
-             xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#">
+        <rss version="2.0">
             <channel>
                 <xsl:call-template name="channel_header">
                     <xsl:with-param name="resource_url" select="$resource_url"/>
@@ -56,7 +56,6 @@
                 </xsl:variable>
                 <xsl:value-of select="$target"/>
                 <xsl:apply-templates select=".//resource[@name=$target]" mode="item">
-                    <xsl:sort select="@modified_on" order="descending"/>
                     <xsl:with-param name="resource_url" select="$resource_url"/>
                 </xsl:apply-templates>
             </channel>

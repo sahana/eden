@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -29,9 +29,6 @@ Ext.namespace("GeoExt.data");
  *          to the ``OpenLayers.Layer.WMS`` constructor.
  *          ``layerParams`` is an optional set of parameters to pass into the
  *          ``OpenLayers.Layer.WMS`` constructor.
- *          ``rawAttribution`` a ``boolean``. If true, the reader does not
- *          generate attribution markup, but a full attribution object.
- *          Defaults to false.
  *      :param recordType: ``Array | Ext.data.Record`` An array of field
  *          configuration objects or a record object.  Default is
  *          :class:`GeoExt.data.LayerRecord` with the following fields:
@@ -202,9 +199,7 @@ Ext.extend(GeoExt.data.WMSCapabilitiesReader, Ext.data.DataReader, {
                     }
                     options = {
                         attribution: layer.attribution ?
-                            (this.meta.rawAttribution ?
-                                layer.attribution :
-                                this.attributionMarkup(layer.attribution)) :
+                            this.attributionMarkup(layer.attribution) :
                             undefined,
                         minScale: layer.minScale,
                         maxScale: layer.maxScale
@@ -252,8 +247,6 @@ Ext.extend(GeoExt.data.WMSCapabilitiesReader, Ext.data.DataReader, {
         
         if (attribution.logo){
             markup.push("<img class='"+this.attributionCls+"-image' "
-                        + "width='" + attribution.logo.width + "' "
-                        + "height='" + attribution.logo.height + "' "
                         + "src='" + attribution.logo.href + "' />");
         }
         

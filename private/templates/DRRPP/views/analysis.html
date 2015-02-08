@@ -1,0 +1,47 @@
+{{extend "layout.html"}}
+<div class='body-content-wrapper grid_12 alpha omega'>
+ <div class='body-label-wrapper grid_12'>
+  <span class='icon body-icon icon-doc'></span>
+  <span class='body-label-text label-text'><h2>Project Analysis</h2></span>
+ </div>
+ <div class='line grid_12 alpha omega'></div>
+<div id='page_project_analysis'>
+  <div id='project_analysis_matrix' class='page_column'>
+    <div class='subtitle'>Matrix Reports</div>
+    <p>Cross examine different project data and filter criteria.</p>
+    <p>
+      {{=A(IMG(_src="/%s/static/themes/DRRPP/img/matrix_img.png" % appname),
+           _href=URL(c="project", f="project", args=["report"]),
+           _title="Project Matrix Report")}}
+    </p>
+    <p>
+      {{=A(T("Go to matrix analysis"), _href=URL(c="project", f="project", args=["report"]))}}
+    </p>
+</div>
+<div id='project_analysis_graph' class='page_column'>
+    <div class='subtitle'>Graphs</div>
+    <p>Develop your customised bar chart to identify gaps and find trends in the implementation of DRR Projects.</p>
+    <p>
+      {{=A(IMG(_src="/%s/static/themes/DRRPP/img/graph_img.png" % appname),
+           _href=URL(c="project", f="project", args=["report"],
+                     vars=dict(chart="breakdown:rows")),
+          _title="Project Graphs")}}
+    </p>
+    <p>
+      {{=A(T("Go to graph analysis"), _href=URL(c="project", f="project", args=["report"], vars=dict(chart="breakdown:rows")))}}
+    </p>
+  </div>
+  <div id='project_analysis_map' class='page_column'>
+    <div class='subtitle'>Maps</div>
+    <p>Develop maps which show the types of DRR Projects being implemented by different organizations and compare this with geographical risk mapping data.</p>
+    <p>
+      {{=A(IMG(_src="/%s/static/themes/DRRPP/img/map_img.png" % appname),
+           _href=URL(c="project", f="location", args=["map"]),
+           _title="Project Map")}}
+    </p>
+    <p>
+      {{=A(T("Go to map analysis"), _href=URL(c="project", f="location", args=["map"]))}}
+    </p>
+  </div>
+</div>
+</div>

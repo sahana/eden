@@ -8,10 +8,8 @@
 
 /**
  * @requires plugins/Tool.js
- * @requires plugins/FeatureEditorGrid.js
- * @require GeoExt/widgets/Popup.js
- * @require OpenLayers/Control/WMSGetFeatureInfo.js
- * @require OpenLayers/Format/WMSGetFeatureInfo.js
+ * requires OpenLayers/Control/WMSGetFeatureInfo.js
+ * requires OpenLayers/Format/WMSGetFeatureInfo.js
  */
 
 /** api: (define)
@@ -58,11 +56,6 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
      */
     popupTitle: "Feature Info",
     
-    /** api: config[text]
-     *  ``String`` Text for the GetFeatureInfo button (i18n).
-     */
-    buttonText: "Identify",
-    
     /** api: config[format]
      *  ``String`` Either "html" or "grid". If set to "grid", GML will be
      *  requested from the server and displayed in an Ext.PropertyGrid.
@@ -103,7 +96,6 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
         var actions = gxp.plugins.WMSGetFeatureInfo.superclass.addActions.call(this, [{
             tooltip: this.infoActionTip,
             iconCls: "gxp-icon-getfeatureinfo",
-            buttonText: this.buttonText,
             toggleGroup: this.toggleGroup,
             enableToggle: true,
             allowDepress: true,
@@ -157,16 +149,18 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
                     vendorParams: vendorParams,
                     eventListeners: {
                         getfeatureinfo: function(evt) {
-                            var title = x.get("title") || x.get("name");
-                            if (infoFormat == "text/html") {
-                                var match = evt.text.match(/<body[^>]*>([\s\S]*)<\/body>/);
-                                if (match && !match[1].match(/^\s*$/)) {
-                                    this.displayPopup(evt, title, match[1]);
+                            if (evt.features && evt.features.length > 0) {
+                                var title = x.get("title") || x.get("name");
+                                if (infoFormat == "text/html") {
+                                    var match = evt.text.match(/<body[^>]*>([\s\S]*)<\/body>/);
+                                    if (match && !match[1].match(/^\s*$/)) {
+                                        this.displayPopup(evt, title, match[1]);
+                                    }
+                                } else if (infoFormat == "text/plain") {
+                                    this.displayPopup(evt, title, '<pre>' + evt.text + '</pre>');
+                                } else {
+                                    this.displayPopup(evt, title);
                                 }
-                            } else if (infoFormat == "text/plain") {
-                                this.displayPopup(evt, title, '<pre>' + evt.text + '</pre>');
-                            } else if (evt.features && evt.features.length > 0) {
-                                this.displayPopup(evt, title, null,  x.get("getFeatureInfo"));
                             }
                         },
                         scope: this
@@ -195,10 +189,10 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
      *     reporting the info to the user
      * :arg text: ``String`` Body text.
      */
-    displayPopup: function(evt, title, text, featureinfo) {
+    displayPopup: function(evt, title, text) {
         var popup;
         var popupKey = evt.xy.x + "." + evt.xy.y;
-        featureinfo = featureinfo || {};
+
         if (!(popupKey in this.popupCache)) {
             popup = this.addOutput({
                 xtype: "gx_popup",
@@ -216,15 +210,15 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
                     autoHeight: true,
                     autoWidth: true,
                     collapsible: true
+                },
+                listeners: {
+                    close: (function(key) {
+                        return function(panel){
+                            delete this.popupCache[key];
+                        };
+                    })(popupKey),
+                    scope: this
                 }
-            });
-            popup.on({                    
-                close: (function(key) {
-                    return function(panel){
-                        delete this.popupCache[key];
-                    };
-                })(popupKey),
-                scope: this
             });
             this.popupCache[popupKey] = popup;
         } else {
@@ -237,17 +231,14 @@ gxp.plugins.WMSGetFeatureInfo = Ext.extend(gxp.plugins.Tool, {
             for (var i=0,ii=features.length; i<ii; ++i) {
                 feature = features[i];
                 config.push(Ext.apply({
-                    xtype: "gxp_editorgrid",
-                    readOnly: true,
+                    xtype: "propertygrid",
                     listeners: {
-                        'beforeedit': function (e) {
-                            return false;
-                        }
+                        'beforeedit': function (e) { 
+                            return false; 
+                        } 
                     },
                     title: feature.fid ? feature.fid : title,
-                    feature: feature,
-                    fields: featureinfo.fields,
-                    propertyNames: featureinfo.propertyNames
+                    source: feature.attributes
                 }, this.itemConfig));
             }
         } else if (text) {

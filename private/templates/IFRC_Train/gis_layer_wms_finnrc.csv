@@ -1,0 +1,9 @@
+"Name","Description","URL","Layers","Folder","Config","Enabled","Visible","Base","Transparent","Opacity","Format","Queryable","LegendURL","Tiled","Map"
+"Kuntarajat","Finland - Boundaries, zoom 3-30","http://rmsgeo.aidiq.com/proxy/service?","kuntarajat",,"FI","True","False","False","True",,"image/png","False",,,
+"Maastokarttarasteri","Finland - Medium resolution streetmap, zoom 11-23","http://rmsgeo.aidiq.com/proxy/service?","maastokartta",,"FI","True","False","True","False",,"image/jpeg","False",,,
+"Ortokuva (väri/mustavalko)","Finland - Aerial Imagery, zoom 29-32","http://rmsgeo.aidiq.com/proxy/service?","ortokuva",,"FI","True","False","True","False",,"image/jpeg","False",,,
+"Ortokuva (vääräväri)","Finland - Aerial Imagery (colorised), zoom 29-32","http://rmsgeo.aidiq.com/proxy/service?","ortokuva_vaaravari",,"FI","True","False","True","False",,"image/jpeg","False",,,
+"Peruskarttarasteri","Finland - Hiking map, zoom 23-30","http://rmsgeo.aidiq.com/proxy/service?","peruskartta",,"FI","True","False","True","False",,"image/jpeg","False",,,
+"Taustakarttarasteri","Finland - High resolution streetmap, zoom 3-32","http://rmsgeo.aidiq.com/proxy/service?","taustakartta",,"FI","True","False","True","False",,"image/jpeg","False",,,
+"Vinovalovarjoste","Finland - hillshading, zoom 18-32","http://rmsgeo.aidiq.com/proxy/service?","vino",,"FI","True","False","True","False",,"image/jpeg","False",,,
+"Yleiskarttarasteri","Finland - Low resolution streetmap, zoom 2-12","http://rmsgeo.aidiq.com/proxy/service?","yleiskartta",,"FI","True","False","True","False",,"image/jpeg","False",,,

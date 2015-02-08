@@ -1,0 +1,3 @@
+Group,Name,Description,Criteria
+Public,"What is the most important feature to add to this tool?","There are many different features that we could add to this tool, but we have limited resources to implement them. Which are the most important?","Maybe think about Quick Wins."
+Public,"Improving the Forum Discussion in Delphi","We are working to make the Forum Discussion satisfy the needs of the user such that threading of comments have a better flow.","Offer single solutions so they can be discussed and voted on."

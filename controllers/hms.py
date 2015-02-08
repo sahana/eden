@@ -21,7 +21,7 @@ def s3_menu_postp():
         newreq = dict()
     selreq = {"req.hospital_id__ne":"NONE"}
     menu_selected = []
-    hospital_id = s3base.s3_get_last_record_id("hms_hospital")
+    hospital_id = s3mgr.get_session("hms", "hospital")
     if hospital_id:
         hospital = s3db.hms_hospital
         query = (hospital.id == hospital_id)
@@ -88,7 +88,14 @@ def hospital():
                     s3db.inv_prep(r)
 
                 elif r.component.name == "human_resource":
-                    s3db.org_site_staff_config(r)
+                    # Filter out people which are already staff for this hospital
+                    s3base.s3_filter_staff(r)
+                    # Make it clear that this is for adding new staff, not assigning existing
+                    s3.crud_strings.hrm_human_resource.label_create_button = T("Add New Staff Member")
+                    # Cascade the organisation_id from the hospital to the staff
+                    field = s3db.hrm_human_resource.organisation_id
+                    field.default = r.record.organisation_id
+                    field.writable = False
 
                 elif r.component.name == "req":
                     if r.method != "update" and r.method != "read":
@@ -253,19 +260,16 @@ def hospital():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=s3db.hms_hospital_rheader)
+    output = s3_rest_controller(rheader=s3db.hms_hospital_rheader,
+                                hide_filter=False,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
 def incoming():
-    """
-        Incoming Shipments for Sites
+    """ Incoming Shipments """
 
-        Used from Requests rheader when looking at Transport Status
-    """
-
-    # @ToDo: Create this function!
-    return s3db.inv_incoming()
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():

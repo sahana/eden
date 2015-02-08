@@ -1,0 +1,58 @@
+@charset "UTF-8";
+
+/* Main Navigation (S3MainMenu or modules menu) */
+
+.navbar .nav > li > a.home > img {
+    width: 29px;
+    height: 30px;
+}
+.navbar .nav > li > a.home  {
+    padding: 8px 5px;
+}
+.navbar .nav > li > a  {
+    padding: 12px;
+    font-size: 18px;
+    height: 22px;
+}
+
+.dropdown-menu.community-data-menu {
+    width: 284px;
+}
+
+.dropdown-menu > li > a  {
+    display: inline-block;
+}
+.dropdown-menu > li > a:first-child {
+    width: 185px;
+}
+.dropdown-menu > li > a.create  {
+    float: right;
+}
+
+.dropdown-menu.community-data-menu {
+    width: 284px;
+}
+
+/* Login Form */
+.dropdown-menu form {
+    height: 90px;
+}
+.dropdown-menu .checkbox {
+    /* Override Bootstrap on IE */
+    padding-left: 0;
+}
+.dropdown-menu input.btn {
+    /* Make appear on same row */
+    position: relative;
+    left: 250px;
+    top: -45px;
+}
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    /* IE 10 */
+    .dropdown-menu form {
+        height: 100px;
+    }
+    .dropdown-menu input.btn {
+        left: 268px;
+    }
+}

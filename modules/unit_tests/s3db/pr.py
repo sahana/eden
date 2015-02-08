@@ -11,7 +11,7 @@ import datetime
 from gluon import *
 from gluon.storage import Storage
 
-from lxml import etree
+from s3db.pr import S3SavedSearch
 
 # =============================================================================
 class PRTests(unittest.TestCase):
@@ -440,164 +440,61 @@ class PersonDeduplicateTests(unittest.TestCase):
         self.person_id = None
 
 # =============================================================================
-class ContactValidationTests(unittest.TestCase):
-    """ Test validation of mobile phone numbers in pr_contact_onvalidation """
-
+class SavedSearchTests(unittest.TestCase):
+    """
+        Test the saved search validation and save functions
+    """
     # -------------------------------------------------------------------------
     def setUp(self):
+        s3db = current.s3db
 
-        current.auth.override = True
+        ptable = s3db.pr_person
+        stable = s3db.pr_saved_search
 
-        self.current_setting = current.deployment_settings \
-                                      .get_msg_require_international_phone_numbers()
-        
+        person = Storage(
+            first_name = "Test",
+            last_name = "SavedSearch",
+        )
+        person_id = ptable.insert(**person)
+        person.update(id=person_id)
+        s3db.update_super(ptable, person)
+
+        self.person_id = person_id
+        self.pe_id = s3db.pr_get_pe_id(ptable, person_id)
+
+    # -------------------------------------------------------------------------
+    def testOnValidation(self):
+        f = S3SavedSearch.pr_saved_search_onvalidation
+
+    # -------------------------------------------------------------------------
+    def testFriendlyQuery(self):
+        app = current.request.application
+        f = S3SavedSearch.friendly_string_from_field_query
+
+        result = f(
+            "org_organisation",
+            "/%s/org/organisation/search?organisation.country__belongs=NZ" % app,
+        )
+        self.assertEqual(
+            "Home Country=New Zealand",
+            result,
+        )
+
+        result = f(
+            "org_organisation",
+            "/%s/org/organisation/search?parent.acronym%%7Cparent.name%%7Cacronym%%7Cname__like=%%2Atest%%2A" % app,
+        )
+        self.assertEqual(
+            "Acronym|Name|Acronym|Name=*test*",
+            result,
+        )
+
     # -------------------------------------------------------------------------
     def tearDown(self):
-
-        settings = current.deployment_settings
-        current.deployment_settings \
-               .msg.require_international_phone_numbers = self.current_setting
-
         current.db.rollback()
-        current.auth.override = False
+        self.pe_id = None
+        self.person_id = None
 
-    # -------------------------------------------------------------------------
-    def testMobilePhoneNumberValidationStandard(self):
-        """ Test that validator for mobile phone number is applied """
-
-        current.deployment_settings \
-               .msg.require_international_phone_numbers = False
-        
-        from s3db.pr import S3ContactModel
-        onvalidation = S3ContactModel.pr_contact_onvalidation
-
-        form = Storage(
-            vars = Storage(
-                contact_method = "SMS",
-            )
-        )
-
-        # valid
-        form.errors = Storage()
-        form.vars.value = "0368172634"
-        onvalidation(form)
-        self.assertEqual(form.vars.value, "0368172634")
-        self.assertFalse("value" in form.errors)
-
-        # invalid
-        form.errors = Storage()
-        form.vars.value = "036-ASBKD"
-        onvalidation(form)
-        self.assertEqual(form.vars.value, "036-ASBKD")
-        self.assertTrue("value" in form.errors)
-
-    # -------------------------------------------------------------------------
-    def testMobilePhoneNumberValidationInternational(self):
-        """ Test that validator for mobile phone number is applied """
-
-        current.deployment_settings \
-               .msg.require_international_phone_numbers = True
-               
-        from s3db.pr import S3ContactModel
-        onvalidation = S3ContactModel.pr_contact_onvalidation
-
-        form = Storage(
-            vars = Storage(
-                contact_method = "SMS",
-            )
-        )
-
-        # valid
-        form.errors = Storage()
-        form.vars.value = "+46-73-3847589"
-        onvalidation(form)
-        self.assertEqual(form.vars.value, "+46733847589")
-        self.assertFalse("value" in form.errors)
-
-        # invalid
-        form.errors = Storage()
-        form.vars.value = "0368172634"
-        onvalidation(form)
-        self.assertEqual(form.vars.value, "0368172634")
-        self.assertTrue("value" in form.errors)
-
-    # -------------------------------------------------------------------------
-    def testMobilePhoneNumberImportValidationStandard(self):
-        """ Test that validator for mobile phone number is applied during import """
-
-        s3db = current.s3db
-        current.deployment_settings \
-               .msg.require_international_phone_numbers = False
-               
-        xmlstr = """
-<s3xml>
-    <resource name="pr_person" uuid="CONTACTVALIDATORTESTPERSON1">
-        <data field="first_name">ContactValidatorTestPerson1</data>
-        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT1">
-            <data field="contact_method">SMS</data>
-            <data field="value">0368172634</data>
-        </resource>
-        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT2">
-            <data field="contact_method">SMS</data>
-            <data field="value">036-ASBKD</data>
-        </resource>
-    </resource>
-</s3xml>"""
-
-        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-
-        resource = s3db.resource("pr_person")
-        result = resource.import_xml(xmltree, ignore_errors=True)
-
-        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT1")
-        self.assertEqual(resource.count(), 1)
-        row = resource.select(["value"], as_rows=True).first()
-        self.assertNotEqual(row, None)
-        self.assertEqual(row.value, "0368172634")
-
-        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT2")
-        self.assertEqual(resource.count(), 0)
-        row = resource.select(["value"], as_rows=True).first()
-        self.assertEqual(row, None)
-    
-    # -------------------------------------------------------------------------
-    def testMobilePhoneNumberImportValidationInternational(self):
-        """ Test that validator for mobile phone number is applied during import """
-
-        s3db = current.s3db
-        current.deployment_settings \
-               .msg.require_international_phone_numbers = True
-
-        xmlstr = """
-<s3xml>
-    <resource name="pr_person" uuid="CONTACTVALIDATORTESTPERSON2">
-        <data field="first_name">ContactValidatorTestPerson2</data>
-        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT1">
-            <data field="contact_method">SMS</data>
-            <data field="value">0368172634</data>
-        </resource>
-        <resource name="pr_contact" uuid="VALIDATORTESTCONTACT2">
-            <data field="contact_method">SMS</data>
-            <data field="value">+46-73-3847589</data>
-        </resource>
-    </resource>
-</s3xml>"""
-
-        xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-
-        resource = s3db.resource("pr_person")
-        result = resource.import_xml(xmltree, ignore_errors=True)
-
-        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT1")
-        self.assertEqual(resource.count(), 0)
-        row = resource.select(["value"], as_rows=True).first()
-        self.assertEqual(row, None)
-
-        resource = s3db.resource("pr_contact", uid="VALIDATORTESTCONTACT2")
-        self.assertEqual(resource.count(), 1)
-        row = resource.select(["value"], as_rows=True).first()
-        self.assertNotEqual(row, None)
-        self.assertEqual(row.value, "+46733847589")
 
 # =============================================================================
 def run_suite(*test_classes):
@@ -617,7 +514,7 @@ if __name__ == "__main__":
     run_suite(
         PRTests,
         PersonDeduplicateTests,
-        ContactValidationTests,
+        SavedSearchTests,
     )
 
 # END ========================================================================

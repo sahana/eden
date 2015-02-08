@@ -1,0 +1,12 @@
+{{extend "layout.html"}}
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{if list_filter_form:}}
+<div id='list-filter' class='form-container'>
+{{=list_filter_form}}
+</div>
+{{pass}}
+{{except:}}{{pass}}
+<div id='dl-container'>
+{{=items}}
+</div>
+{{include "dataLists.html"}}

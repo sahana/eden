@@ -8,7 +8,7 @@
 
 /**
  * @requires plugins/LayerSource.js
- * @require OpenLayers/Layer/Bing.js
+ * requires OpenLayers/Layer/Bing.js
  */
 
 /** api: (define)

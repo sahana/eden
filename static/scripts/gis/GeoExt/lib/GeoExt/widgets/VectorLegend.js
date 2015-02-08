@@ -480,8 +480,6 @@ GeoExt.VectorLegend = Ext.extend(GeoExt.LayerLegend, {
             delete symbolizerCopy['graphicWidth'];
             delete symbolizerCopy['graphicXOffset'];
             delete symbolizerCopy['graphicYOffset'];
-            //delete symbolizerCopy['graphicZIndex'];
-            //delete symbolizerCopy['zIndex'];
             // end Add
             symbolizers = [symbolizerCopy];
         } else {

@@ -629,7 +629,6 @@
             <data field="pack_value"><xsl:value-of select="$unit_value"/></data>
             <xsl:if test="$recv">
                 <data field="quantity">0</data>
-                <data field="item_source_no"></data>
             </xsl:if>
             <!-- Uncomment for testing purposes
                  Can help with the error:

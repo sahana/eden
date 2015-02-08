@@ -8,10 +8,10 @@
 
 /**
  * @requires plugins/Tool.js
- * @require GeoExt/widgets/tree/LayerNode.js
- * @require GeoExt/widgets/tree/TreeNodeUIEventMixin.js
- * @require GeoExt/widgets/tree/LayerContainer.js
- * @require GeoExt/widgets/tree/LayerLoader.js
+ * requires GeoExt/widgets/tree/LayerNode.js
+ * requires GeoExt/widgets/tree/TreeNodeUIEventMixin.js
+ * requires GeoExt/widgets/tree/LayerContainer.js
+ * requires GeoExt/widgets/tree/LayerLoader.js
  */
 
 /** api: (define)
@@ -62,11 +62,9 @@ gxp.plugins.LayerTree = Ext.extend(gxp.plugins.Tool, {
     /** api: config[groups]
      *  ``Object`` The groups to show in the layer tree. Keys are group names,
      *  and values are either group titles or an object with ``title`` and
-     *  ``exclusive`` properties. ``exclusive``, if Boolean, means that nodes
-     *  will have radio buttons instead of checkboxes, so only one layer of the
-     *  group can be active at a time. If String, ``exclusive`` can be used to
-     *  create exclusive sets of layers among several groups, by assigning the
-     *  same string to each group. Optional, the default is
+     *  ``exclusive`` properties. ``exclusive`` means that nodes will have
+     *  radio buttons instead of checkboxes, so only one layer of the group can
+     *  be active at a time. Optional, the default is
      *
      *  .. code-block:: javascript
      *
@@ -119,13 +117,7 @@ gxp.plugins.LayerTree = Ext.extend(gxp.plugins.Tool, {
      */
     addOutput: function(config) {
         config = Ext.apply(this.createOutputConfig(), config || {});
-        var output = gxp.plugins.LayerTree.superclass.addOutput.call(this, config);
-        output.on({
-            contextmenu: this.handleTreeContextMenu,
-            beforemovenode: this.handleBeforeMoveNode,
-            scope: this
-        });
-        return output;
+        return gxp.plugins.LayerTree.superclass.addOutput.call(this, config);
     },
     
     /** private: method[createOutputConfig]
@@ -138,29 +130,21 @@ gxp.plugins.LayerTree = Ext.extend(gxp.plugins.Tool, {
             isTarget: false,
             allowDrop: false
         });
-
-        var baseAttrs;
-        if (this.initialConfig.loader && this.initialConfig.loader.baseAttrs) {
-            baseAttrs = this.initialConfig.loader.baseAttrs;
-        }
         
         var defaultGroup = this.defaultGroup,
             plugin = this,
-            groupConfig,
-            exclusive;
+            groupConfig;
         for (var group in this.groups) {
             groupConfig = typeof this.groups[group] == "string" ?
                 {title: this.groups[group]} : this.groups[group];
-            exclusive = groupConfig.exclusive;
             treeRoot.appendChild(new GeoExt.tree.LayerContainer(Ext.apply({
                 text: groupConfig.title,
                 iconCls: "gxp-folder",
                 expanded: true,
                 group: group == this.defaultGroup ? undefined : group,
                 loader: new GeoExt.tree.LayerLoader({
-                    baseAttrs: exclusive ?
-                        Ext.apply({checkedGroup: Ext.isString(exclusive) ? exclusive : group}, baseAttrs) :
-                        baseAttrs,
+                    baseAttrs: groupConfig.exclusive ?
+                        {checkedGroup: group} : undefined,
                     store: this.target.mapPanel.layers,
                     filter: (function(group) {
                         return function(record) {
@@ -196,6 +180,11 @@ gxp.plugins.LayerTree = Ext.extend(gxp.plugins.Tool, {
                     scope: this
                 }
             }),
+            listeners: {
+                contextmenu: this.handleTreeContextMenu,
+                beforemovenode: this.handleBeforeMoveNode,                
+                scope: this
+            },
             contextMenu: new Ext.menu.Menu({
                 items: []
             })
@@ -215,8 +204,8 @@ gxp.plugins.LayerTree = Ext.extend(gxp.plugins.Tool, {
                 return r.getLayer() === layer;
             }));
             if (record) {
-                attr.qtip = record.get('abstract');
-                if (!record.get("queryable") && !attr.iconCls) {
+                attr.qtip = record.get('name');
+                if (!record.get("queryable")) {
                     attr.iconCls = "gxp-tree-rasterlayer-icon";
                 }
                 if (record.get("fixed")) {

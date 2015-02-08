@@ -1,6 +1,6 @@
 {{extend "layout.html"}}
 <div id='message'>
-	{{try:}}<h1>{{=title}}</h1>{{except:}}{{pass}}{{try:}}
+	<h1>{{=title}}</h1>
 	<p style='font-size:1.2em'>{{=message}}</p>
-	<img src={{=image_src}}>{{except:}}{{pass}}
+	<img src={{=image_src}}>
 </div>

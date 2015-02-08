@@ -46,18 +46,21 @@
 //	console.log("Needs OpenLayers.");
 //}
 
+
 // Композитный слой tiles
 OpenLayers.Layer.OWMComposite = OpenLayers.Class(OpenLayers.Layer.WMS, {
 
-initialize:function(layer,name, params) {
+initialize:function(layer,name, params)
+{
 	this.l = layer;
 
 	if(params == undefined) { 
 		params = {isBaseLayer: false, opacity: 0.6}
 	}
 	params.attribution = 'Forecast layers from <a href="http://openweathermap.org/wiki/Models/GDPRS">Environment Canada</a>';
+	
 
-    var newArguments = [
+        var newArguments = [
 		name,
 		"http://tile.openweathermap.org/wms",
 		{
@@ -77,12 +80,12 @@ initialize:function(layer,name, params) {
 getURL: function (bounds) {
 	var z=this.map.getZoom();
 
-	this.params.LAYERS = 'GLBETA_' + this.l;
+	this.params.LAYERS = 'GLBETA_'+this.l;
 
 	if(z > 5) {
 		b= this.map.getExtent();
 		if ( isREGETA(b) ) {
-			this.params.LAYERS = 'REGETA_' + this.l;
+			this.params.LAYERS = 'REGETA_'+this.l;
 			if(z > 7) { 
 				if( isLAMARCTICETA(b) )		this.params.LAYERS = 'LAMARCTICETA_'+this.l; 
 				else if( isLAMWESTETA(b) ) 	this.params.LAYERS = 'LAMWESTETA_'+this.l; 
@@ -114,12 +117,13 @@ getURL: function (bounds) {
 // Radar compozite wms layer
 
 OpenLayers.Layer.OWMRadar = OpenLayers.Class(OpenLayers.Layer.WMS, {
-initialize:function(name, params) {
+initialize:function(name, params)
+{
 	if(params == undefined) { 
 		params = {isBaseLayer: false, opacity: 0.4}
 	}
 	params.attribution = 'Radar layer from <a href="http://openweathermap.org/wiki/Layer/radar">Environment Canada</a>';
-    var newArguments = [
+        var newArguments = [
 		name,
 		"http://tile.openweathermap.org/wms",
 		{
@@ -156,6 +160,8 @@ getURL: function (bounds) {
 }
 
 });
+
+
 
 //
 // WMS
@@ -243,26 +249,26 @@ OpenLayers.Format.OWMWeather = OpenLayers.Class(OpenLayers.Format, {
 
 	read: function(obj) {
 
-		if (obj.cod !== '200') {
+		if(obj.cod !== '200') {
 			throw new Error(
 				['OWM failure response (',  obj.cod,'): ',obj.message].join('') );
 		}
 
-		if (!obj || !obj.list || !OpenLayers.Util.isArray(obj.list )) {
-            throw new Error('Unexpected OWM response');
+		if(!obj || !obj.list || !OpenLayers.Util.isArray(obj.list )) {
+                        throw new Error('Unexpected OWM response');
 		}
 		var list = obj.list, x, y, point, feature, features = [];
 
 		//console.log('time='+obj.calctime+', cnt='+obj.cnt +', '+ obj.message);
 
-		for (var i=0,l=list.length; i<l; i++) {
+		for(var i=0,l=list.length; i<l; i++) {
 			feature = new OpenLayers.Feature.Vector(
 			new OpenLayers.Geometry.Point(list[i].coord.lon, list[i].coord.lat), 
 			{
-                title: list[i].name,
+                            title: list[i].name,
 			    station: list[i],
-                temp:  Math.round(10*(list[i].main.temp))/10
-            });
+                            temp:  Math.round(10*(list[i].main.temp-273.15))/10
+                        });
 			features.push(feature);
 		}
 		return features;
@@ -274,7 +280,28 @@ OpenLayers.Format.OWMWeather = OpenLayers.Class(OpenLayers.Format, {
 OpenLayers.Layer.Vector.OWMWeather = OpenLayers.Class( OpenLayers.Layer.Vector, {
 	projection: new OpenLayers.Projection("EPSG:4326"),
 	strategies: [new OpenLayers.Strategy.BBOX({resFactor: 1})],
-	units: 'metric',
+/*	protocol: new OpenLayers.Protocol.Script({
+                        url: "http://openweathermap.org/data/2.1/find/city",
+                        params: {
+//				type: 'city',
+				cluster: 'yes',
+				cnt: 200,
+				format: 'json',
+				layer: this		// идиотское решение, но я не понял как иначе достать OpenLayers.Layer.Vector
+                        },
+                        filterToParams: function(filter, params) {
+				if (filter.type === OpenLayers.Filter.Spatial.BBOX) {
+					params.bbox = filter.value.toArray();
+					params.bbox.push(params.layer.map.getZoom());	//магия - добавляю zoom в параметры
+					if (filter.projection) {
+						params.bbox.push(filter.projection.getCode());
+					}
+				}
+				return params;
+			}, 
+                        callbackKey: 'callback',
+                        format: new OpenLayers.Format.OWMWeather()
+                    }), */
 	styleMap: new OpenLayers.StyleMap(
 		new OpenLayers.Style({
 			fontColor: "black",
@@ -289,7 +316,7 @@ OpenLayers.Layer.Vector.OWMWeather = OpenLayers.Class( OpenLayers.Layer.Vector, 
 			labelOutlineWidth: 3,
 			externalGraphic: "${icon}",
 			graphicWidth: 50,
-            label : "${temp}"+ "°"
+                	label : "${temp}"+ "°C"
 			},
 			{
 			context: 
@@ -298,49 +325,49 @@ OpenLayers.Layer.Vector.OWMWeather = OpenLayers.Class( OpenLayers.Layer.Vector, 
 					if (feature.layer) {
                         return feature.layer.options.getIcon(feature.attributes.station);
                     } else {
-                        return  '';
+                        // @ToDo: 1 Feature/layer doesn't have the layer set for some reason
+                        return S3.Ap.concat("/static/img/gis/openlayers/blank.gif")
                     }
 				}
 			}
 			}
 
 		)),
-	initialize: function(name,options) {
+	initialize:function(name,options)
+	{
 
 		if (options == undefined) options =  {}; 
 
-		/*if (options.eventListeners == undefined)
+		if (options.eventListeners == undefined)
 			options.eventListeners = {
 				featureselected:  this.onSelect, 
 				featureunselected: this.onUnselect
-			}*/
-
-		if (options.units == undefined) this.units='metric';
-		else this.units	= options.units;
+			}
 
 		if (options.iconsets == undefined) options.iconsets='main';
 		
 		options.attribution = 'Weather from <a href="http://openweathermap.org/" alt="World Map and worldwide Weather Forecast online">OpenWeatherMap</a>';
 
-		if (options.getIcon == undefined) options.getIcon = this.getIcon;
-		if (options.getPopupHtml == undefined){
+		if (options.getIcon == undefined)	options.getIcon = this.getIcon;
+		if (options.getPopupHtml == undefined)	{
 			options.getPopupHtml = this.getPopupHtml;
 			if (options.popupX == undefined)	options.popupX = 150;
 			if (options.popupY == undefined)	options.popupY = 175;
 		}
 
-        var newArguments = [];
+	        var newArguments = [];
 	        newArguments.push(name, options);
 		OpenLayers.Layer.Vector.prototype.initialize.apply(this,newArguments);	
+
 		this.protocol = new OpenLayers.Protocol.Script({
-            url: 'http://api.openweathermap.org/data/2.5/box/city',
-            params: {cluster: 'yes',
-                     cnt: 200,
-                     format: 'json',
-                     units: this.units,
-                     layer: this		// идиотское решение, но я не понял как иначе достать OpenLayers.Layer.Vector
-                     },
-            filterToParams: function(filter, params) {
+                        url: "http://openweathermap.org/data/2.1/find/city",
+                        params: {
+				cluster: 'yes',
+				cnt: 200,
+				format: 'json',
+				layer: this		// идиотское решение, но я не понял как иначе достать OpenLayers.Layer.Vector
+                        },
+                        filterToParams: function(filter, params) {
 				if (filter.type === OpenLayers.Filter.Spatial.BBOX) {
 					params.bbox = filter.value.toArray();
 					params.bbox.push(params.layer.map.getZoom());	//магия - добавляю zoom в параметры
@@ -350,11 +377,12 @@ OpenLayers.Layer.Vector.OWMWeather = OpenLayers.Class( OpenLayers.Layer.Vector, 
 				}
 				return params;
 			}, 
-            //callbackKey: 'callback',
-            format: new OpenLayers.Format.OWMWeather()
-        });
+                        callbackKey: 'callback',
+                        format: new OpenLayers.Format.OWMWeather()
+                    });
+
 	},
-/*
+
 onPopupClose: function(evt) {
 	var feature = this.feature;
 	if (feature.pois) { // The feature is not destroyed
@@ -384,7 +412,7 @@ onUnselect: function (evt) {
 		feature.popup.destroy();
 		feature.popup = null;
 	}
-},*/
+},
 
 getPopupHtml: function(station) {
 	return GetWeatherPopupHtml(station);
@@ -400,13 +428,6 @@ getIcon: function(station) {
 		var icon = GetWeatherIconDay(station, day);
 		return 'http://openweathermap.org/img/w/' + icon;
 	}
-},
-
-setUnits: function(u) {
-	if( u == 'f')
-		this.units = 'imperial';
-	else
-		this.units = 'metric';
 }
 
 });
@@ -421,42 +442,67 @@ OpenLayers.Format.OWMStations = OpenLayers.Class(OpenLayers.Format, {
 
 	read: function(obj) {
 
-        if(obj.cod !== '200') {
-            throw new Error(['OWM failure response (',  obj.cod,'): ',obj.message].join('') );
-        }
+                    if(obj.cod !== '200') {
+                        throw new Error(
+                            ['OWM failure response (',  obj.cod,'): ',obj.message].join('') );
+                    }
 
-        if(!obj || !obj.list || !OpenLayers.Util.isArray(obj.list )) {
-            throw new Error('Unexpected OWM response');
-        }
-                
-        //console.log('time='+obj.calctime+', cnt='+obj.cnt +', '+ obj.message);
+                    if(!obj || !obj.list || !OpenLayers.Util.isArray(obj.list )) {
+                        throw new Error(
+                            'Unexpected OWM response');
+                    }
 					
-        var list = obj.list, x, y, point,
-            feature, features = [];					
+			//console.log('time='+obj.calctime+', cnt='+obj.cnt +', '+ obj.message);
+					
+                    var list = obj.list, x, y, point,
+					feature, features = [];					
 
-        for(var i=0,l=list.length; i<l; i++) {
-			//list[i].type = list[i].type;
+                    for(var i=0,l=list.length; i<l; i++) {
+//			list[i].type = list[i].type;
 			if(!list[i].main) continue;
 
-            feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(list[i].coord.lon, list[i].coord.lat), 
+                        feature = new OpenLayers.Feature.Vector(new OpenLayers.Geometry.Point(list[i].coord.lon, list[i].coord.lat), 
 			{
-                title: list[i].name,
+                            title: list[i].name,
 			    station: list[i],
 			    stationType: list[i].type,
-                temp:  Math.round(10*(list[i].main.temp))/10
-                });
-            features.push(feature);
-        }
-        return features;
+                            temp:  Math.round(10*(list[i].main.temp-273.15))/10
+                        });
+                        features.push(feature);
+                    }
+                    return features;
 	}
 });
 
 // Vector Class
 OpenLayers.Layer.Vector.OWMStations = OpenLayers.Class( OpenLayers.Layer.Vector, {
 
-    projection: new OpenLayers.Projection("EPSG:4326"),
-    strategies: [new OpenLayers.Strategy.BBOX({resFactor: 1})],
-    styleMap: new OpenLayers.StyleMap(
+		projection: new OpenLayers.Projection("EPSG:4326"),
+                    strategies: [
+				new OpenLayers.Strategy.BBOX({resFactor: 1})],
+/*                    protocol: new OpenLayers.Protocol.Script({
+                        url: "http://openweathermap.org/data/2.1/find/station",
+                        params: {
+//				type: 'station',
+				cluster_distance: 120,
+				cluster: 'yes',
+				format: 'json',
+				layer: this		// идиотское решение, но я не понял как иначе достать OpenLayers.Layer.Vector
+                        },
+                        filterToParams: function(filter, params) {
+				if (filter.type === OpenLayers.Filter.Spatial.BBOX) {
+					params.bbox = filter.value.toArray();
+					params.bbox.push(params.layer.map.getZoom());	//магия - добавляю zoom в параметры
+					if (filter.projection) {
+						params.bbox.push(filter.projection.getCode());
+					}
+				}
+				return params;
+			},
+                        callbackKey: 'callback',
+                        format: new OpenLayers.Format.OWMStations()
+                    }), */
+		styleMap: new OpenLayers.StyleMap(
 		new OpenLayers.Style({
 			fontColor: "black",
 			fontSize: "12px",
@@ -468,7 +514,7 @@ OpenLayers.Layer.Vector.OWMStations = OpenLayers.Class( OpenLayers.Layer.Vector,
 			labelOutlineWidth: 3,
 			externalGraphic: "${icon}",
 			graphicWidth: 25,
-                	label : "${temp}°"
+                	label : "${temp}°C"
 		},{
 			context: 
 			{
@@ -476,66 +522,65 @@ OpenLayers.Layer.Vector.OWMStations = OpenLayers.Class( OpenLayers.Layer.Vector,
 					if (feature.layer) {
                         return feature.layer.options.getIcon(feature.attributes.station);
                     } else {
-                        return '';
+                        // @ToDo: 1 Feature/layer doesn't have the layer set for some reason
+                        return S3.Ap.concat("/static/img/gis/openlayers/blank.gif");
                     }
 				}
 			}
 		}
 		)),
 
-    units: 'metric',
+		initialize:function(name,options)
+		{
+			if (options == undefined) options =  {}; 
 
-    initialize:function(name,options) {
-        if (options == undefined) options =  {}; 
+			if (options.eventListeners == undefined)
+				options.eventListeners = {
+					featureselected:  this.onSelect, 
+					featureunselected: this.onUnselect
+				}
 
-        /*if (options.eventListeners == undefined)
-            options.eventListeners = {
-                featureselected:  this.onSelect, 
-                featureunselected: this.onUnselect
-            }*/
 
-        if (options.units == undefined) this.units='metric';
-        else this.units	= options.units;
+			options.attribution = 'Weather from <a href="http://openweathermap.org/" alt="World Map and worldwide Weather Forecast online">OpenWeatherMap</a>';
+			var newArguments = [];
 
-        options.attribution = 'Weather from <a href="http://openweathermap.org/" alt="World Map and worldwide Weather Forecast online">OpenWeatherMap</a>';
-        var newArguments = [];
+			if (options.getIcon == undefined)	options.getIcon = this.getIcon;
+			if (options.getPopupHtml == undefined)	{
+				options.getPopupHtml = this.getPopupHtml;
+				if (options.popupX == undefined)	options.popupX = 150;
+				if (options.popupY == undefined)	options.popupY = 200;
+			}
 
-        if (options.getIcon == undefined)	options.getIcon = this.getIcon;
-        if (options.getPopupHtml == undefined)	{
-            options.getPopupHtml = this.getPopupHtml;
-            if (options.popupX == undefined)	options.popupX = 150;
-            if (options.popupY == undefined)	options.popupY = 200;
-        }
+			newArguments.push(name, options);
 
-        newArguments.push(name, options);
+			OpenLayers.Layer.Vector.prototype.initialize.apply(this,newArguments);			
 
-        OpenLayers.Layer.Vector.prototype.initialize.apply(this,newArguments);			
+			this.StationPopupHtml =  GetStationPopupHtml;
+			this.protocol = new OpenLayers.Protocol.Script({
+                        url: "http://openweathermap.org/data/2.1/find/station",
+                        params: {
+				cluster_distance: 120,
+				cluster: 'yes',
+				format: 'json',
+				layer: this		// идиотское решение, но я не понял как иначе достать OpenLayers.Layer.Vector
+                        },
+                        filterToParams: function(filter, params) {
+				if (filter.type === OpenLayers.Filter.Spatial.BBOX) {
+					params.bbox = filter.value.toArray();
+					params.bbox.push(params.layer.map.getZoom());	//магия - добавляю zoom в параметры
+					if (filter.projection) {
+						params.bbox.push(filter.projection.getCode());
+					}
+				}
+				return params;
+			},
+                        callbackKey: 'callback',
+                        format: new OpenLayers.Format.OWMStations()
+                    });
 
-        this.StationPopupHtml =  GetStationPopupHtml;
-        this.protocol = new OpenLayers.Protocol.Script({
-            url: 'http://api.openweathermap.org/data/2.5/box/station',
-            params: {
-                cluster_distance: 120,
-                cluster: 'yes',
-                format: 'json',
-                units: this.units,
-                layer: this		// идиотское решение, но я не понял как иначе достать OpenLayers.Layer.Vector
-            },
-            filterToParams: function(filter, params) {
-                if (filter.type === OpenLayers.Filter.Spatial.BBOX) {
-                    params.bbox = filter.value.toArray();
-                    params.bbox.push(params.layer.map.getZoom());	//магия - добавляю zoom в параметры
-                    if (filter.projection) {
-                        params.bbox.push(filter.projection.getCode());
-                    }
-                }
-                return params;
-            },
-            //callbackKey: 'callback',
-            format: new OpenLayers.Format.OWMStations()
-        });
-    },
-/*
+
+		},
+
 onPopupClose: function(evt) {
 	var feature = this.feature;
 	if (feature.pois) { 
@@ -567,14 +612,14 @@ onUnselect: function (evt) {
 		feature.popup.destroy();
 		feature.popup = null;
 	}
-},*/
+},
 
 getPopupHtml: function(station) {
 	return GetStationPopupHtml(station);
 },
 
 getIcon: function(station) {
-    //console.log(feature.layer.options.iconsets);
+//	console.log(feature.layer.options.iconsets);
 	var stationTypeLookup = {
 		1: {externalGraphic: "http://openweathermap.org/img/s/iplane.png"},
 		2: {externalGraphic: "http://openweathermap.org/img/s/istation.png"},
@@ -588,7 +633,8 @@ getIcon: function(station) {
 
 
 
-function GetWeatherIconDay(st, hr) {
+function GetWeatherIconDay(st, hr)
+{
 	if(hr == undefined || hr == 'day' )
 		var day='d';
 	else
@@ -614,7 +660,8 @@ function GetWeatherIconDay(st, hr) {
 
 
 /* Geometry functions */
-function isboundsinrect(bounds, r) {
+function isboundsinrect(bounds, r)
+{
 	var position = new OpenLayers.LonLat(bounds.left, bounds.bottom);
 	position.transform(
 		    new OpenLayers.Projection("EPSG:900913"),
@@ -633,21 +680,24 @@ function isboundsinrect(bounds, r) {
 }
 
 
-function isLAMEASTETA(bounds) {
+function isLAMEASTETA(bounds)
+{
 	var r = [{x:37.990, y:-92.055}, {x:38.718, y:-70.551}, {x:51.323, y:-68.764}, {x:50.421, y:-95.476}];
 	if ( isboundsinrect(bounds, r) ) 
 		return true;
 	return false;
 }
 
-function isLAMWESTETA(bounds) {
+function isLAMWESTETA(bounds)
+{
 	var r = [{x:44.167, y:-130.909}, {x:45.990, y:-108.855}, {x:57.208, y:-108.123}, {x:54.903, y:-136.010}];
 	if ( isboundsinrect(bounds, r) ) 
 		return true;
 	return false;
 }
 
-function isLAMMARITIMEETA(bounds) {
+function isLAMMARITIMEETA(bounds)
+{
 	var r = [{x:40.210, y:-66.554},	{x:44.907, y:-50.824}, {x:54.596, y:-54.152}, {x:49.002, y:-73.506}];
 	if ( isboundsinrect(bounds, r) ) 
 		return true;
@@ -655,35 +705,40 @@ function isLAMMARITIMEETA(bounds) {
 }
 
 
-function isLAMARCTICETA(bounds) {
+function isLAMARCTICETA(bounds)
+{
 	var r = [{x:58.252, y:-77.123}, {x:59.478, y:-56.694}, {x:70.236, y:-55.179}, {x:68.439, y:-85.106}];
 	if ( isboundsinrect(bounds, r) ) 
 		return true;
 	return false;
 }
 
-function isREGETA(bounds) {
+function isREGETA(bounds)
+{
 	var r = [{x:20, y:-163.696}, {x:15, y:-71.801}, {x:66, y:-17}, {x:80, y:-179.9}]
 	if ( isboundsinrect(bounds, r) ) 
 		return true;
 	return false;
 }
 
-function areaOfTriangle(p1, p2, p3) {
+function areaOfTriangle(p1, p2, p3)
+{
 	var p1s = {x: (p1.x-p3.x), y: (p1.y-p3.y)};
 	var p2s = {x: (p2.x-p3.x), y: (p2.y-p3.y)};
 	var s = ( p1s.x*p2s.y - p2s.x*p1s.y )/2.0
 	return Math.abs(s);
 } 
 
-function inTriangle(p0, p1, p2, p3) {
+function inTriangle(p0, p1, p2, p3)
+{
 	var s = areaOfTriangle(p1, p2, p3);
 	var sall = areaOfTriangle(p0, p1, p2) + areaOfTriangle(p0, p1, p3) + areaOfTriangle(p0, p2, p3);
 	if( Math.abs(s - sall) < 0.001 ) return true;
 	return false;
 }
 
-function inRectangle(p, p1, p2, p3, p4) {
+function inRectangle(p, p1, p2, p3, p4)
+{
 	return inTriangle(p, p1, p2, p4) || inTriangle(p, p3, p2, p4);
 }
 
@@ -694,14 +749,14 @@ function inRectangle(p, p1, p2, p3, p4) {
 // 
 
 var WeekDayText = {
-//months: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
-//days: ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
-days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+months: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+days: ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"],
 //days_small: ["вс", "пн", "вт", "ср", "чт", "пт", "сб"]
 days_small: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 }
 
-function GetWeatherText2(st) {
+function GetWeatherText2(st)
+{
 	var txt='';
 	if( st.snow && st.snow['3h'] )
 		txt = 'Snow ' + '( ' + st.snow['3h'] +'мм )'; 
@@ -711,7 +766,8 @@ function GetWeatherText2(st) {
 	return txt;
 }
 
-function GetWeatherIcon2(st, we) {
+function GetWeatherIcon2(st, we)
+{
 	var dt= new Date();
 	var times = SunCalc.getTimes(dt, st.lat, st.lng);
 	if( dt>times.sunrise && dt < times.sunset ) var day='d'; else var day='n';
@@ -734,11 +790,12 @@ function GetWeatherIcon2(st, we) {
 	return img+day+'.png';
 }
 
-function GetWeatherForecastBubleHtml( st, forecast, cnt ) {
+function GetWeatherForecastBubleHtml( st, forecast, cnt )
+{
 var curdate = new Date( (new Date()).getTime()- 280 * 60 * 1000 );
-var temp = Math.round((st.main.temp)*10)/10;
-var temp_min = Math.round((st.main.temp_min)*100)/100;
-var temp_max = Math.round((st.main.temp_max)*100)/100;
+var temp = Math.round((st.main.temp -273)*10)/10;
+var temp_min = Math.round((st.main.temp_min -273)*100)/100;
+var temp_max = Math.round((st.main.temp_max -273)*100)/100;
 var dtat = new Date(st.dt * 1000 );
 //var dt = dtat.toTimeString();
 //var dt = st.dt;
@@ -764,7 +821,7 @@ var h_header =
    </div>\
   </div>\
  </div>\
- <div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °</div>\
+ <div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °C</div>\
  <div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div>\
  <div class="small_val_grey">Wind: '+st.wind.speed+' m/s</div>\
 </div>';
@@ -782,9 +839,9 @@ for(var i = j; i < cnt+j ; i++){
 
 	if( dt>times.sunrise && dt < times.sunset ) var day='d'; else var day='n';
 
-	temp = Math.round(forecast[i].main.temp);
-	temp_min = Math.round((forecast[i].main.temp_min)*100)/100;
-	temp_max = Math.round((forecast[i].main.temp_max)*100)/100;
+	temp = Math.round(forecast[i].main.temp -273);
+	temp_min = Math.round((forecast[i].main.temp_min -273)*100)/100;
+	temp_max = Math.round((forecast[i].main.temp_max -273)*100)/100;
 	dtat = new Date(forecast[i].dt * 1000 );
 	if( curdate  > dtat )	continue;
 	hr = dtat.getHours(); 
@@ -797,10 +854,12 @@ h_o =
  <div title="' + WeekDayText.days[dtat.getDay()] + '">'+WeekDayText.days_small[dtat.getDay()]+'</div>\
  <div title="' + dtat.toString() + '">'+dt+'</div>\
  <img alt="'+GetWeatherText2(forecast[i])+'" src="http://openweathermap.org/img/w/'+GetWeatherIcon2(st, forecast[i])+'"/>\
- <div class="small_val" title="Temperature">'+temp+'°</div>\
+ <div class="small_val" title="Temperature">'+temp+'°C</div>\
  <div class="small_val" title="Ветер">'+forecast[i].wind.speed+' m/s</div>\
  <div class="small_val_grey" title="Давление">'+forecast[i].main.pressure+'</div>\
 </div>'
+//<div style="font-size: small; padding: 0pt 3pt;" title="High Temperature">'+temp_max+'°C</div>\
+//<div style="color: gray; font-size: small; padding: 0pt 3pt;" title="Low Temperature">'+temp_min+'°C</div>\
 
 	h_body = h_body + h_o;
 }
@@ -813,11 +872,12 @@ return h_header + h_body + h_footer;
 //
 // generate html for Weather Popoup window
 //
-function GetWeatherPopupHtml(st) {
+function GetWeatherPopupHtml(st)
+{
 
-var temp = Math.round((st.main.temp)*10)/10;
-var temp_min = Math.round((st.main.temp_min)*10)/10;
-var temp_max = Math.round((st.main.temp_max)*10)/10;
+var temp = Math.round((st.main.temp -273.15)*10)/10;
+var temp_min = Math.round((st.main.temp_min -273.15)*10)/10;
+var temp_max = Math.round((st.main.temp_max -273.15)*10)/10;
 
 if( st.weather.length > 0 ) {
 	var icon_url  = 'http://openweathermap.org/img/w/' + st.weather[0].icon + '.png';
@@ -834,7 +894,7 @@ if( st.weather.length > 0 ) {
 
 
 var html = 
-'<p class="weather_title"><a class="weather_title_link" href="http://openweathermap.org/city/'+st.id+'" target="_top">'+st.name+'</a></p> \
+'<p class="weather_title"><a class="weather_title_link"  href="http://openweathermap.org/city/'+st.id+'">'+st.name+'</a></p> \
 <div class="weather_block">\
  <div class="cur_weather_block" title="'+wdescription+'">\
   <img class="weather_image" alt="'+wdescription+'" src="'+icon_url+'"/>\
@@ -845,7 +905,7 @@ var html =
    </div>\
   </div>\
  </div>\
- <div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °</div>\
+ <div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °C</div>\
  <div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div>\
  <div class="small_val_grey">Wind: '+st.wind.speed+' m/s</div>\
  <div class="small_val_grey">Clouds: '+st.clouds.all+' %</div>\
@@ -856,11 +916,11 @@ return html;
 
 function GetStationPopupHtml(st)
 {
-var temp = Math.round((st.main.temp)*10)/10;
+var temp = Math.round((st.main.temp -273.15)*10)/10;
 var dt = new Date(st.dt * 1000 );
 
 var html_h=
-'<p class="weather_title"><a href="http://openweathermap.org/station/'+st.id+'" target="_top">'+st.name+'</a></p> \
+'<p class="weather_title"><a href="http://openweathermap.org/station/'+st.id+'">'+st.name+'</a></p> \
 <div class="weather_block">\
 	<div class="cur_weather_block" >\
 		<img class="station_image" alt="'+GetWeatherText2(st)+'" src="'+GetStationIcon(st)+'"/>\
@@ -887,7 +947,8 @@ return html_h;
 }
 
 
-function GetStationIcon(st) {
+function GetStationIcon(st)
+{
 	if(st.type == 1)
 		return 'http://openweathermap.org/img/s/iplane.png';
 	return 'http://openweathermap.org/img/s/istation.png';

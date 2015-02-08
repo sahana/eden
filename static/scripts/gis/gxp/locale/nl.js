@@ -11,9 +11,7 @@ GeoExt.Lang.add("nl", {
         untitledText: "Onbekend",
         addLayerSourceErrorText: "Probleem bij het ophalen van de Error WMS GetCapabilities ({msg}).\nControleer de URL en probeer opnieuw.",
         availableLayersText: "Beschikbare kaartlagen",
-        doneText: "Klaar",
-        addFeedActionMenuText: "Add feeds",
-        searchText: "Zoek naar kaartlagen"
+        doneText: "Klaar"
     },
     
     "gxp.plugins.BingSource.prototype": {
@@ -25,9 +23,7 @@ GeoExt.Lang.add("nl", {
 
     "gxp.plugins.FeatureEditor.prototype": {
         createFeatureActionTip: "Maak een nieuw object",
-        editFeatureActionTip: "Wijzig een bestand object",
-        commitTitle: "Wijzingsbeschrijving",
-        commitText: "Voor a.u.b. een beschrijving in voor de wijziging:"
+        editFeatureActionTip: "Wijzig een bestand object"
     },
     
     "gxp.plugins.FeatureGrid.prototype": {
@@ -36,8 +32,8 @@ GeoExt.Lang.add("nl", {
         previousPageTip: "Vorige pagina",
         zoomPageExtentTip: "Zoom naar de uitsnede van de pagina",
         nextPageTip: "Volgende pagina",
-        lastPageTip: "Laatste pagina",
-        totalMsg: "Features {1} to {2} of {0}"
+        nextPageTip: "Laatste pagina",
+        totalMsg: "Totaal: {0} rijen"
     },
 
     "gxp.plugins.GoogleEarth.prototype": {
@@ -63,10 +59,6 @@ GeoExt.Lang.add("nl", {
         rootNodeText: "Kaartlagen",
         overlayNodeText: "Kaart overlays",
         baseNodeText: "Basis Kaarten"
-    },
-
-    "gxp.plugins.LayerManager.prototype": {
-        baseNodeText: "Basis Kaart"
     },
 
     "gxp.plugins.Legend.prototype": {
@@ -96,10 +88,6 @@ GeoExt.Lang.add("nl", {
     },
 
     "gxp.plugins.Measure.prototype": {
-        splitButtonText: "Edit",
-        createFeatureActionText: "Create",
-        editFeatureActionText: "Modify",
-        buttonText: "Meten",
         lengthMenuText: "Lengte",
         areaMenuText: "Oppervlakte",
         lengthTooltip: "Meet lengte",
@@ -121,12 +109,11 @@ GeoExt.Lang.add("nl", {
 
     "gxp.plugins.OSMSource.prototype": {
         title: "OpenStreetMap kaartlagen",
-        mapnikAttribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+        mapnikAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>",
         osmarenderAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>"
     },
 
     "gxp.plugins.Print.prototype": {
-        buttonText:"Afdrukken",
         menuText: "Afdrukken kaart",
         tooltip: "Afdrukken kaart",
         previewText: "Voorvertoning",
@@ -146,7 +133,8 @@ GeoExt.Lang.add("nl", {
         queryActionText: "Bevraag",
         queryMenuText: "Bevraag kaartlaag",
         queryActionTip: "Bevraag de geselecteerde kaartlaag",
-        queryByLocationText: "Query by current map extent",
+        queryByLocationText: "Bevraag middels locatie",
+        currentTextText: "Huidige uitsnede",
         queryByAttributesText: "Bevraag middels attributen",
         queryMsg: "Bevragen...",
         cancelButtonText: "Annuleren",
@@ -160,16 +148,13 @@ GeoExt.Lang.add("nl", {
     },
 
     "gxp.plugins.WMSGetFeatureInfo.prototype": {
-        buttonText:"Identify",
         infoActionTip: "Attribuut-informatie",
         popupTitle: "Attribuut-informatie"
     },
 
     "gxp.plugins.Zoom.prototype": {
-        zoomMenuText: "Zoom Box",
         zoomInMenuText: "Inzoomen",
         zoomOutMenuText: "Uitzoomen",
-        zoomTooltip: "Zoom by dragging a box",
         zoomInTooltip: "Inzoomen",
         zoomOutTooltip: "Uitzoomen"
     },
@@ -277,7 +262,6 @@ GeoExt.Lang.add("nl", {
     },
     
     "gxp.WMSLayerPanel.prototype": {
-        attributionText: "Bronvermelding",
         aboutText: "Informatie",
         titleText: "Titel",
         nameText: "Naam",
@@ -288,19 +272,9 @@ GeoExt.Lang.add("nl", {
         transparentText: "Transparant",
         cacheText: "Cache",
         cacheFieldText: "Gebruik de versie vanuit de cache",
-        stylesText: "Beschikbare Stijlen",
+        stylesText: "Stijlen",
         infoFormatText: "Info formaat",
-        infoFormatEmptyText: "Selecteer een formaat",
-        displayOptionsText: "Weergave opties",
-        queryText: "Begrens d.m.v. query",
-        scaleText: "Bregens d.m.v. schaal",
-        minScaleText: "Minimum schaal",
-        maxScaleText: "Maximum schaal",
-        switchToFilterBuilderText: "Terug naar de querybuilder",
-        cqlPrefixText: "of ",
-        cqlText: "gebruik een CQL filter",
-        singleTileText: "Enkele kaarttegel",
-        singleTileFieldText: "Gebruik 1 kaarttegel"
+        infoFormatEmptyText: "Selecteer een formaat"
     },
 
     "gxp.EmbedMapDialog.prototype": {
@@ -346,16 +320,13 @@ GeoExt.Lang.add("nl", {
         fileLabel: "Data",
         fieldEmptyText: "Kies data archief...",
         uploadText: "Upload",
-        uploadFailedText: "Upload failed",
-        processingUploadText: "Processing upload...",
         waitMsgText: "Bezig met uploaden van de data...",
         invalidFileExtensionText: "Bestandsextensie is een van: ",
         optionsText: "Opties",
         workspaceLabel: "Werkruimte",
         workspaceEmptyText: "Standaard werkruimte",
         dataStoreLabel: "Archief",
-        dataStoreEmptyText: "Create new store",
-        defaultDataStoreEmptyText: "Standaard archief"
+        dataStoreEmptyText: "Standaard archief"
     },
 
     "gxp.NewSourceDialog.prototype": {
@@ -368,23 +339,6 @@ GeoExt.Lang.add("nl", {
 
     "gxp.ScaleOverlay.prototype": { 
         zoomLevelText: "Zoom niveau"
-    },
-
-    "gxp.Viewer.prototype": {
-        saveErrorText: "Problemen bij het opslaan: "
-    },
-
-    "gxp.FeedSourceDialog.prototype": {
-    	feedTypeText: "Bron",
-        addPicasaText: "Picasa Foto's",
-        addYouTubeText: "YouTube video's",
-        addRSSText: "Andere GeoRSS Feed",
-        addFeedText: "Voeg toe aan Map",
-        addTitleText: "Titel",
-        keywordText: "Trefwoord",
-        doneText: "Klaar",
-        titleText: "Voeg Feeds",
-        maxResultsText: "Max Items"
     }
 
 });

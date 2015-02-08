@@ -19,17 +19,13 @@
          L4.....................optional.....Post L4
          L5.....................optional.....Post L5
          Location Name..........optional.....Post Location (specific)
-         Lat....................float........Latitude of specific location
-         Lon....................float........Longitude of specific location
+         Lat....................float........Latitude of most specific location
+         Lon....................float........Longitude of most specific location
          Comments...............optional.....Post Comments
-         Organisation...........optional.....Post Organisation
-         Contact................optional.....Post Contact (email or Tel#)
          Author.................optional.....Post created_by (email)
          Date...................optional.....Post date (datetime)
          Attachment.............optional.....doc_document (URL to remote server to download)
          Events.................optional.....Comma-separated list of Events to tag the Post to
-         Incident...............optional.....Incident to link the Post to
-         Incident Type..........optional.....Incident Type to link the Post to
          Roles..................optional.....Post Roles (not yet implemented)
 
     *********************************************************************** -->
@@ -95,47 +91,13 @@
                          col[@field='L3'], '/',
                          col[@field='L4'], '/',
                          col[@field='L5'], '/',
-                         col[@field='Location Name'], '/',
-                         col[@field='Lat'], '/',
-                         col[@field='Lon'])"/>
-
-    <xsl:key name="contacts" match="row"
-             use="col[@field='Contact']"/>
-
-    <xsl:key name="incidents" match="row"
-             use="col[@field='Incident']"/>
-
-    <xsl:key name="incident_types" match="row"
-             use="col[@field='Incident Type']"/>
-
-    <xsl:key name="orgs" match="row"
-             use="col[@field='Organisation']"/>
+                         col[@field='Location Name'])"/>
 
     <xsl:key name="series" match="row" use="col[@field='Series']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs',
-                                                                       col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName">
-                        <xsl:value-of select="col[@field='Organisation']/text()"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
-            <!-- Contacts -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('contacts',
-                                                                       col[@field='Contact'])[1])]">
-                <xsl:call-template name="Contact">
-                    <xsl:with-param name="ContactData">
-                        <xsl:value-of select="col[@field='Contact']/text()"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
             <!-- L1 -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('L1',
                                                                    concat(col[contains(
@@ -201,9 +163,7 @@
                                                                           col[@field='L3'], '/',
                                                                           col[@field='L4'], '/',
                                                                           col[@field='L5'], '/',
-                                                                          col[@field='Location Name'], '/',
-                                                                          col[@field='Lat'], '/',
-                                                                          col[@field='Lon']))[1])]">
+                                                                          col[@field='Location Name']))[1])]">
                 <xsl:call-template name="Location"/>
             </xsl:for-each>
 
@@ -211,18 +171,6 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('series',
                                                                    col[@field='Series'])[1])]">
                 <xsl:call-template name="Series"/>
-            </xsl:for-each>
-
-            <!-- Incidents -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('incidents',
-                                                                   col[@field='Incident'])[1])]">
-                <xsl:call-template name="Incident"/>
-            </xsl:for-each>
-
-            <!-- Incident Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('incident_types',
-                                                                   col[@field='Incident Type'])[1])]">
-                <xsl:call-template name="IncidentType"/>
             </xsl:for-each>
 
             <!-- Posts -->
@@ -241,7 +189,6 @@
         </xsl:variable>
 
         <xsl:variable name="Author" select="col[@field='Author']/text()"/>
-        <xsl:variable name="Contact" select="col[@field='Contact']/text()"/>
         <xsl:variable name="Date" select="col[@field='Date']/text()"/>
         <xsl:variable name="Series" select="col[@field='Series']/text()"/>
         <xsl:variable name="Name" select="col[@field='Name']/text()"/>
@@ -249,9 +196,6 @@
         <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
         <xsl:variable name="Module" select="col[@field='Module']/text()"/>
         <xsl:variable name="Resource" select="col[@field='Resource']/text()"/>
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
-        <xsl:variable name="IncidentType" select="col[@field='Incident Type']/text()"/>
 
         <resource name="cms_post">
             <xsl:if test="$Author!=''">
@@ -319,26 +263,6 @@
                 </resource>
             </xsl:if>
 
-            <!-- Link to Organisation -->
-            <xsl:if test="$OrgName!=''">
-                <resource name="cms_post_organisation">
-                    <reference field="organisation_id" resource="org_organisation">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$OrgName"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:if>
-
-            <!-- Link to Contact -->
-            <xsl:if test="$Contact!=''">
-                <reference field="person_id" resource="pr_person">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$Contact"/>
-                    </xsl:attribute>
-                </reference>
-            </xsl:if>
-
             <!-- Link to Location -->
             <xsl:call-template name="LocationReference"/>
 
@@ -359,28 +283,6 @@
                 <xsl:with-param name="arg">event</xsl:with-param>
             </xsl:call-template>
 
-            <!-- Incidents -->
-            <xsl:if test="$Incident!=''">
-                <resource name="event_post" alias="incident_post">
-                    <reference field="incident_id" resource="event_incident">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$Incident"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:if>
-
-            <!-- Incident Types -->
-            <xsl:if test="$IncidentType!=''">
-                <resource name="event_post_incident_type">
-                    <reference field="incident_type_id" resource="event_incident_type">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="$IncidentType"/>
-                        </xsl:attribute>
-                    </reference>
-                </resource>
-            </xsl:if>
-
         </resource>
 
     </xsl:template>
@@ -398,78 +300,7 @@
 
     </xsl:template>
 
-    <!-- ****************************************************************** -->
-    <xsl:template name="Incident">
-        <xsl:variable name="Incident" select="col[@field='Incident']/text()"/>
-
-        <xsl:if test="$Incident!=''">
-            <resource name="event_incident">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Incident"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$Incident"/></data>
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="IncidentType">
-        <xsl:variable name="IncidentType" select="col[@field='Incident Type']/text()"/>
-
-        <xsl:if test="$IncidentType!=''">
-            <resource name="event_incident_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$IncidentType"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$IncidentType"/></data>
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Organisation">
-        <xsl:param name="OrgName"/>
-
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrgName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrgName"/></data>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Contact">
-        <xsl:param name="ContactData"/>
-
-        <resource name="pr_person">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$ContactData"/>
-            </xsl:attribute>
-
-            <xsl:choose>
-                <xsl:when test="contains($ContactData, ' ')">
-                    <data field="first_name">
-                        <xsl:value-of select="substring-before($ContactData, ' ')"/>
-                    </data>
-                    <data field="last_name">
-                        <xsl:value-of select="substring-after($ContactData, ' ')"/>
-                    </data>
-                </xsl:when>
-                <xsl:otherwise>
-                    <data field="first_name">
-                        <xsl:value-of select="$ContactData"/>
-                    </data>
-                </xsl:otherwise>
-            </xsl:choose>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
+     <!-- ****************************************************************** -->
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
@@ -477,7 +308,7 @@
         <xsl:choose>
             <!-- Event list -->
             <xsl:when test="$arg='event'">
-                <resource name="event_post">
+                <resource name="event_event_post">
                     <reference field="event_id" resource="event_event">
                         <resource name="event_event">
                             <data field="name"><xsl:value-of select="$item"/></data>
@@ -536,6 +367,17 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:if>
+                <!-- If this is the import level then add the details -->
+                <xsl:choose>
+                    <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4'] or col[@field='L5'] or col[@field='Location Name']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
 
         </xsl:if>
@@ -599,6 +441,17 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
+                </xsl:choose>
+                <!-- If this is the import level then add the details -->
+                <xsl:choose>
+                    <xsl:when test="col[@field='L3'] or col[@field='L4'] or col[@field='L5'] or col[@field='Location Name']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
                 </xsl:choose>
             </resource>
 
@@ -668,6 +521,17 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
+                </xsl:choose>
+                <!-- If this is the import level then add the details -->
+                <xsl:choose>
+                    <xsl:when test="col[@field='L4'] or col[@field='L5'] or col[@field='Location Name']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
                 </xsl:choose>
             </resource>
 
@@ -746,6 +610,17 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
+                </xsl:choose>
+                <!-- If this is the import level then add the details -->
+                <xsl:choose>
+                    <xsl:when test="col[@field='L5'] or col[@field='Location Name']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
                 </xsl:choose>
             </resource>
 
@@ -834,6 +709,17 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
+                <!-- If this is the import level then add the details -->
+                <xsl:choose>
+                    <xsl:when test="col[@field='Location Name']">
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                            <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                            <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
+                        </xsl:if>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
 
         </xsl:if>
@@ -841,7 +727,7 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Location">
-        <xsl:if test="col[@field='Location Name']!='' or col[@field='Lat']!=''">
+        <xsl:if test="col[@field='Location Name']!=''">
 
             <xsl:variable name="l0">
                 <xsl:call-template name="GetColumnValue">
@@ -854,8 +740,6 @@
             <xsl:variable name="l4" select="col[@field='L4']/text()"/>
             <xsl:variable name="l5" select="col[@field='L5']/text()"/>
             <xsl:variable name="location" select="col[@field='Location Name']/text()"/>
-            <xsl:variable name="lat" select="col[@field='Lat']/text()"/>
-            <xsl:variable name="lon" select="col[@field='Lon']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -878,7 +762,7 @@
             <!-- Create the gis location -->
             <resource name="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Location/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5, '/', $location, '/', $lat, '/', $lon)"/>
+                    <xsl:value-of select="concat('Location/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5, '/', $location)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$location"/></data>
                 <xsl:choose>
@@ -931,9 +815,10 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
-                <xsl:if test="$lat!='' and $lon!=''">
-                    <data field="lat"><xsl:value-of select="$lat"/></data>
-                    <data field="lon"><xsl:value-of select="$lon"/></data>
+                <!-- If this is the import level then add the details -->
+                <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                    <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
+                    <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
                 </xsl:if>
             </resource>
 
@@ -950,8 +835,6 @@
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
         <xsl:variable name="l5" select="col[@field='L5']/text()"/>
         <xsl:variable name="location" select="col[@field='Location Name']/text()"/>
-        <xsl:variable name="lat" select="col[@field='Lat']/text()"/>
-        <xsl:variable name="lon" select="col[@field='Lon']/text()"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -974,10 +857,10 @@
         </xsl:variable>
 
         <xsl:choose>
-            <xsl:when test="$location!='' or $lat!=''">
+            <xsl:when test="$location!=''">
                 <reference field="location_id" resource="gis_location">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('Location/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5, '/', $location, '/', $lat, '/', $lon)"/>
+                        <xsl:value-of select="concat('Location/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5, '/', $location)"/>
                     </xsl:attribute>
                 </reference>
             </xsl:when>

@@ -19,8 +19,6 @@ TABLE = "table"
 ROW = "row"
 COL = "col"
 FIELD = "field"
-TAG = "tag"
-HASHTAG = "hashtag"
 
 # -----------------------------------------------------------------------------
 def xml_encode(s):
@@ -75,37 +73,27 @@ def s3_unicode(s, encoding="utf-8"):
             s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
 
-# -------------------------------------------------------------------------
-def csv2tree(source,
-             delimiter=",",
-             quotechar='"'):
+# -----------------------------------------------------------------------------
+def csv2tree(source, delimiter=",", quotechar='"'):
 
-    # Increase field size to be able to import WKTs
+    # Increase field sixe to ne able to import WKTs
     csv.field_size_limit(2**20 * 100)  # 100 megs
-
-    # Shortcuts
-    SubElement = etree.SubElement
 
     root = etree.Element(TABLE)
 
-    def add_col(row, key, value, hashtags=None):
-
-        col = SubElement(row, COL)
+    def add_col(row, key, value):
+        col = etree.SubElement(row, COL)
         col.set(FIELD, s3_unicode(key))
-        if hashtags:
-            hashtag = hashtags.get(key)
-            if hashtag and hashtag[1:]:
-                col.set(HASHTAG, hashtag)
         if value:
             text = s3_unicode(value).strip()
-            if text[:6].lower() not in ("null", "<null>"):
+            if text.lower() not in ("null", "<null>"):
                 col.text = text
         else:
             col.text = ""
 
     def utf_8_encode(source):
 
-        encodings = ["utf-8-sig", "iso-8859-1"]
+        encodings = ["utf-8", "iso-8859-1"]
         e = encodings[0]
         for line in source:
             if e:
@@ -124,26 +112,13 @@ def csv2tree(source,
                     e = encoding
                     break
 
-    hashtags = {}
-
-    import StringIO
-    if not isinstance(source, StringIO.StringIO):
-        source = utf_8_encode(source)
-    reader = csv.DictReader(source,
+    reader = csv.DictReader(utf_8_encode(source),
                             delimiter=delimiter,
                             quotechar=quotechar)
-
-    for i, r in enumerate(reader):
-        if i == 0:
-            # Auto-detect hashtags
-            items = dict((k, s3_unicode(v.strip()))
-                         for k, v in r.items() if v and v.strip())
-            if all(v[0] == '#' for v in items.values()):
-                hashtags.update(items)
-                continue
-        row = SubElement(root, ROW)
+    for r in reader:
+        row = etree.SubElement(root, ROW)
         for k in r:
-            add_col(row, k, r[k], hashtags=hashtags)
+            add_col(row, k, r[k])
 
     return  etree.ElementTree(root)
 

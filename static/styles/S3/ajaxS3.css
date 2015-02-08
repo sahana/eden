@@ -1,0 +1,55 @@
+.statusbar
+{
+    position: fixed;
+    top: 95px/*bottom: 5px*/;
+    left: 15px;
+    right: 14px;
+    height: 10px;    
+    padding: 5px;
+ 
+    background: #e5ffe5;
+    color: #070;    
+    border: #070 1px solid;
+
+    opacity: .70;    
+    filter: alpha(opacity="70");
+    z-index: 10;
+
+    overflow: hidden;
+    overflow-y: auto; 
+}
+.statusbarhighlight
+{
+    font-weight: bold;
+    background-color: khaki;
+    color: Maroon;
+    border: solid 1px silver;
+}
+.statusbarerror
+{
+    font-weight: bold;
+    background-color: #ffe5e5;
+    color: #c00;
+    border: #c00 1px solid;
+}
+
+.ajax_more {
+	float: right;
+	width: 16px;
+	height: 16px;
+	margin: 0px 2px 2px 0px;
+}
+
+.ajax_more.collapsed {
+	background: url(../../img/icon_blue_plus15px.png) no-repeat left top; 
+}
+
+.ajax_more.expanded {
+	background: url(../../img/icon_blue_minus15px.png) no-repeat left top; 
+}
+
+.ajax_throbber {
+	width: 32px;
+	height: 32px;	
+	background: url(../../img/ajax-loader.gif) no-repeat left top; 
+}

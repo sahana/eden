@@ -1,0 +1,22 @@
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+<div id='rheader'>
+{{try:}}{{=XML(rheader)}}
+ </div>
+ <div id='component'>
+{{except:}}
+</div>
+<div>
+ {{pass}}
+{{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
+<div>
+{{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
+{{try:}}{{=deduplicate}}{{except:}}{{pass}}
+</div>
+<div id='map'></div>
+{{include "last_update.html"}}
+{{include "key.html"}}
+<div class='form-container form-horizontal'>
+{{try:}}{{=form}}{{except:}}{{pass}}
+</div>
+</div>
+{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}

@@ -1,0 +1,10 @@
+Name,Controller,Function,Popup Label,Popup Fields,Filter,Polygons,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
+All Coalitions,org,group,,,,True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Acton & Agua Dulce,org,group,,,"~.name=Acton %26 Agua Dulce",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Culver City,org,group,,,"~.name=Culver City",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Huntington Park,org,group,,,"~.name=Huntington Park",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+La Crescenta-Montrose,org,group,,,"~.name=La Crescenta-Montrose",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Pico-Union,org,group,,,"~.name=Pico-Union",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Pomona,org,group,,,"~.name=Pomona",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Watts,org,group,,,"~.name=Watts",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0
+Wilmington,org,group,,,"~.name=Wilmington",True,"{'fill':'FFFFFF','fillOpacity':0.01,'stroke':'000000'}",0.9,Coalitions,False,True,0,0

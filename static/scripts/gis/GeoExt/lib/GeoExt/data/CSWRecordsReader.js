@@ -94,9 +94,6 @@ Ext.extend(GeoExt.data.CSWRecordsReader, Ext.data.JsonReader, {
         if(typeof data === "string" || data.nodeType) {
             data = this.meta.format.read(data);
         }
-        if (data.success === false) {
-            throw new Ext.data.DataReader.Error("invalid-response", data);
-        }
         var result = GeoExt.data.CSWRecordsReader.superclass.readRecords.call(
             this, data
         );

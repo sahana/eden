@@ -7,9 +7,8 @@
  */
 
 /**
- * @require OpenLayers/Control/DimensionManager.js
- * @require OpenLayers/Dimension/Agent.js
- * @require OpenLayers/Dimension/Agent/WMS.js
+ * requires OpenLayers/Control/TimeManager.js
+ * requires OpenLayers/TimeAgent.js
  * @requires widgets/slider/TimeSlider.js
  */
 
@@ -23,17 +22,17 @@ Ext.namespace("gxp");
 /** api: constructor
  *  .. class:: PlaybackToolbar(config)
  *   
- *      Create a toolbar for showing a series of playback controls.
+ *      Create a panel for showing a ScaleLine control and a combobox for 
+ *      selecting the map scale.
  */
 gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
     
     /** api: config[control]
-     *  ``OpenLayers.Control`` or :class:`OpenLayers.Control.DimensionManager`
+     *  ``OpenLayers.Control`` or :class:`OpenLayers.Control.TimeManager`
      *  The control to configure the playback panel with.
      */
     control: null,
-    dimModel: null,
-    mapPanel: null,
+    viewer: null,
     initialTime:null,
     timeFormat:"l, F d, Y g:i:s A",
     toolbarCls:'x-toolbar gx-overlay-playback', //must use toolbarCls since it is used instead of baseCls in toolbars
@@ -41,7 +40,7 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
     slider:true,
     dynamicRange:false,
     //api config
-    //playback mode is one of: "track","cumulative","ranged"
+    //playback mode is one of: "track","cumulative","ranged",??"decay"??
     playbackMode:"track",
     showIntervals:false,
     labelButtons:false,
@@ -49,12 +48,6 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
     rateAdjuster:false,
     looped:false,
     autoPlay:false,
-    /* should the time slider be aggressive or not */
-    aggressive: null,
-    /* should we prebuffer the time series or not */
-    prebuffer: null,
-    /* how many frames should we prebuffer at maximum */
-    maxframes: null,
     //api config ->timeDisplayConfig:null,
     //api property
     optionsWindow:null,
@@ -97,15 +90,9 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
      */
     initComponent: function() {
         if(!this.playbackActions){
-            this.playbackActions = ["settings","slider","reset","play","fastforward","next","loop"];
+            this.playbackActions = ["settings","slider","reset","play","fastforward","next","loop"]; 
         }
         if(!this.control){
-            this.controlConfig = Ext.applyIf(this.controlConfig || {}, {
-                dimension: 'time',
-                prebuffer: this.prebuffer,
-                maxframes: this.maxframes,
-                autoSync: true
-            });
             this.control = this.buildTimeManager();
         }
         this.control.events.on({
@@ -117,34 +104,7 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
             },
             scope: this
         });
-        if(!this.dimModel){
-            this.dimModel = new OpenLayers.Dimension.Model({
-                dimension: 'time',
-                map: this.mapPanel.map
-            });
-        }
-        this.mapPanel.map.events.on({
-            'zoomend': function() {
-                if (this._prebuffer === true && this.mapPanel.map.zoom !== this.previousZoom) {
-                    this._stopPrebuffer = true;
-                    this.slider.progressEl.hide();
-                    this.mapPanel.map.events.un({'zoomend': arguments.callee, scope: this});
-                }
-                this.previousZoom = this.mapPanel.map.zoom;
-            }, scope: this
-        });
-        this.control.events.on({
-            'prebuffer': function(evt) {
-                this._prebuffer = true;
-                if (this._stopPrebuffer === true) {
-                    this.slider.progressEl.hide();
-                }
-                this.slider.progressEl.setWidth(evt.progress*100 + '%');
-                return (this._stopPrebuffer !== true);
-            },
-            scope: this
-        });
-
+        
         this.availableTools = Ext.applyIf(this.availableTools || {}, this.getAvailableTools());
         
         Ext.applyIf(this,{
@@ -163,7 +123,7 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
              *
              * Listener arguments:
              * toolbar - {gxp.plugin.PlaybackToolbar} This playback toolbar
-             * currentValue - {Number} The current time value represented in the DimensionManager control
+             * currentTime - {Date} The current time represented in the TimeManager control
              *      attached to this toolbar
              */
             "timechange",
@@ -176,9 +136,9 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
              * range - {Array(Date)} The current time range for playback allowed in the
              *      TimeManager control attached to this toolbar
              */
-            "rangemodified"
+            "rangemodified"            
         );
-        gxp.PlaybackToolbar.superclass.initComponent.call(this);
+        gxp.PlaybackToolbar.superclass.initComponent.call(this);        
     },
     /** private: method[destroy]
      *  Destory the component.
@@ -190,7 +150,6 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
             this.control.destroy();
             this.control = null;
         }
-        this.mapPanel = null;
         gxp.PlaybackToolbar.superclass.destroy.call(this);
     },
     /** api: method[setTime]
@@ -198,7 +157,7 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
      *  :return: {Boolean} - true if the time could be set to the supplied value
      *          false if the time is outside the current range of the TimeManager
      *          control.
-     *
+     *          
      *  Set the time represented by the playback toolbar programatically
      */
     setTime: function(time){
@@ -206,32 +165,28 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
         if(timeVal<this.slider.minValue || timeVal>this.slider.maxValue){
             return false;
         }else{
-            this.control.setCurrentValue(timeVal);
+            this.control.setTime(time);
             return true;
         }
     },
     /** api: method[setTimeFormat]
      *  :arg format: {String}
-     *
+     *  
      *  Set the format string used by the time slider tooltip
-     */
+     */    
     setTimeFormat: function(format){
-        if(format){
-            this.timeFormat = format;
-            this.slider.setTimeFormat(format);
-        }
+        this.timeFormat = format;
+        this.slider.setTimeFormat(format);
     },
     /** api: method[setPlaybackMode]
      * :arg mode: {String} one of 'track',
      * 'cumulative', or 'ranged'
-     *
+     *  
      *  Set the playback mode of the control.
      */
     setPlaybackMode: function(mode){
-        if(mode){
-            this.playbackMode = mode;
-            if(this.slider){ this.slider.setPlaybackMode(mode); }
-        }
+        this.playbackMode = mode;
+        this.slider.setPlaybackMode(mode);
     },
 
     /** private: method[buildPlaybackItems] */
@@ -252,30 +207,13 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
         return items;
     },
 
-    getAvailableTools: function(){
+    getAvailableTools: function(){         
         var tools = {
             'slider': {
                 xtype: 'gxp_timeslider',
                 ref: 'slider',
-                listeners: {
-                    'sliderclick': {
-                        fn: function() {
-                            this._stopPrebuffer = true;
-                        },
-                        scope: this
-                    },
-                    'dragstart': {
-                        fn: function() {
-                            this._stopPrebuffer = true;
-                        },
-                        scope: this
-                    }
-                },
-                map: this.mapPanel.map,
                 timeManager: this.control,
-                model: this.dimModel,
-                playbackMode: this.playbackMode,
-                aggressive: this.aggressive
+                playbackMode: this.playbackMode
             },
             'reset': {
                 iconCls: 'gxp-icon-reset',
@@ -372,15 +310,20 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
 
     buildTimeManager:function() {
         this.controlConfig || (this.controlConfig = {});
+        //test for bad range times
+        if(this.controlConfig.range && this.controlConfig.range.length) {
+            for(var i = 0; i < this.controlConfig.range.length; i++) {
+                var dateString = this.controlConfig.range[i];
+                if(dateString.indexOf('T') > -1 && dateString.indexOf('Z') == -1) {
+                    dateString = dateString.substring(0, dateString.indexOf('T'));
+                }
+                this.controlConfig.range[i] = dateString;
+            }
+        }
         // Test for and deal with pre-configured timeAgents & layers
         if(this.controlConfig.timeAgents) {
-            //handle deprecated timeAgents property
-            this.controlConfig.agents = this.controlConfig.timeAgents;
-            delete this.controlConfig.timeAgents;
-        }
-        if(this.controlConfig.agents){
-            for(var i = 0; i < this.controlConfig.agents.length; i++) {
-                var config = this.controlConfig.agents[i];
+            for(var i = 0; i < this.controlConfig.timeAgents.length; i++) {
+                var config = this.controlConfig.timeAgents[i];
                 var agentClass = config.type;
                 var layers = [];
                 //put real layers, not references here
@@ -388,8 +331,8 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
                     //source & name identify different layers, but title & styles
                     //are required to distinguish the same layer added multiple times with a different
                     //style or presentation
-                    var ndx = this.mapPanel.layers.findBy(function(rec) {
-                        return rec.json &&
+                    var ndx = app.mapPanel.layers.findBy(function(rec) {
+                        return rec.json && 
                         rec.json.source == lyrJson.source &&
                         rec.json.title == lyrJson.title &&
                         rec.json.name == lyrJson.name &&
@@ -398,22 +341,15 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
                     });
 
                     if(ndx > -1) {
-                        layers.push(this.mapPanel.layers.getAt(ndx).getLayer());
+                        layers.push(app.mapPanel.layers.getAt(ndx).getLayer());
                     }
-                }, this);
+                });
 
                 config.layers = layers;
-                if(config.rangeMode){
-                    //handle deprecated rangeMode property
-                    config.tickMode = config.rangeMode;
-                    delete config.rangeMode;
-                }
                 delete config.type;
-                if(!config.dimension){ config.dimension = 'time'; }
-                //TODO handle other subclasses of Dimension Agent subclasses
-                var agent = agentClass && OpenLayers.Dimension.Agent[agentClass] ?
-                    new OpenLayers.Dimension.Agent[agentClass](config) : new OpenLayers.Dimension.Agent(config);
-                this.controlConfig.agents[i] = agent;
+                //TODO handle subclasses of TimeAgent subclasses
+                var agent = agentClass ? new OpenLayers.TimeAgent[agentClass](config) : new OpenLayers.TimeAgent(config);
+                this.controlConfig.timeAgents[i] = agent;
             }
         }
         else {
@@ -421,12 +357,12 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
                 Ext.apply(this.controlConfig, {
                     agentOptions : {
                         'WMS' : {
-                            tickMode : 'range',
-                            rangeInterval : this.controlConfig.rangeInterval || undefined
+                            rangeMode : 'range',
+                            rangeInterval : this.rangedPlayInterval
                         },
                         'Vector' : {
-                            tickMode : 'range',
-                            rangeInterval : this.controlConfig.rangeInterval || undefined
+                            rangeMode : 'range',
+                            rangeInterval : this.rangedPlayInterval
                         }
                     }
                 });
@@ -435,19 +371,16 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
                 Ext.apply(this.controlConfig, {
                     agentOptions : {
                         'WMS' : {
-                            tickMode : 'cumulative'
+                            rangeMode : 'cumulative'
                         },
                         'Vector' : {
-                            tickMode : 'cumulative'
+                            rangeMode : 'cumulative'
                         }
                     }
                 });
             }
         }
-        //DON'T DROP FRAMES
-        //this.controlConfig.maxFrameDelay = NaN;
-        if(!this.controlConfig.dimension){ this.controlConfig.dimension = 'time'; }
-        var ctl = this.control = new OpenLayers.Control.DimensionManager(this.controlConfig);
+        var ctl = this.control = new OpenLayers.Control.TimeManager(this.controlConfig);
         ctl.loop = this.looped;
         this.mapPanel.map.addControl(ctl);
         if(ctl.layers) {
@@ -455,11 +388,11 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
         }
         return ctl;
     },
-
-/** BUTTON HANDLERS **/
+    
+/** BUTTON HANDLERS **/    
     forwardToEnd: function(btn){
         var ctl = this.control;
-        ctl.setCurrentValue(ctl.animationRange[(ctl.step < 0) ? 0 : 1]);
+        ctl.setTime(new Date(ctl.range[(ctl.step < 0) ? 0 : 1].getTime()));
     },
     toggleAnimation:function(btn,pressed){
         if(!btn.bound && pressed){
@@ -480,9 +413,9 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
             });
             btn.bound=true;
         }
-
+        
         if(pressed){
-            if(!this.playing){
+            if(!this.control.timer){
                 //don't start playing again if it is already playing
                 this.control.play();
             }
@@ -490,7 +423,7 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
             btn.btnEl.addClass('gxp-icon-pause');
             btn.setTooltip(this.pauseTooltip);
         } else {
-            if(this.playing){
+            if(this.control.timer){
                 //don't stop playing again if it is already stopped
                 this.control.stop();
             }
@@ -498,7 +431,7 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
             btn.btnEl.removeClass('gxp-icon-pause');
             btn.setTooltip(this.playTooltip);
         }
-
+        
         btn.el.removeClass('x-btn-pressed');
         btn.refOwner.btnFastforward.setDisabled(!pressed);
         if(this.labelButtons && btn.text){
@@ -531,15 +464,6 @@ gxp.PlaybackToolbar = Ext.extend(Ext.Toolbar, {
     }
 });
 
-
-gxp.PlaybackToolbar.timeFormats = {
-   'Minutes': 'l, F d, Y g:i A',
-   'Hours': 'l, F d, Y g A',
-   'Days': 'l, F d, Y',
-   'Months': 'F, Y',
-   'Years': 'Y'
-};
-
 /**
  * Static Methods
  */
@@ -547,8 +471,22 @@ gxp.PlaybackToolbar.guessTimeFormat = function(increment){
     if (increment) {
         var resolution = gxp.PlaybackToolbar.smartIntervalFormat(increment).units;
         var format = this.timeFormat;
-        if (gxp.PlaybackToolbar.timeFormats[resolution]) {
-            format = gxp.PlaybackToolbar.timeFormats[resolution];
+        switch (resolution) {
+            case 'Minutes':
+                format = 'l, F d, Y g:i A';
+                break;
+            case 'Hours':
+                format = 'l, F d, Y g A';
+                break;
+            case 'Days':
+                format = 'l, F d, Y';
+                break;
+            case 'Months':
+                format = 'F, Y';
+                break;
+            case 'Years':
+                format = 'Y';
+                break;
         }
         return format;
     }

@@ -1,0 +1,254 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events" y="0.0" x="0.0">
+    <defs>
+        <symbol viewBox="0 -800 278 1050" id=".">
+            <path d="M191 104V0H87V104H191Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="1">
+            <path d="M259 505H102V568Q204 581 235 604T289 709H347V0H259V505Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="0">
+            <path d="M43 343Q43 432 58 500T96 606T151 669T212 701T275 709Q507 709 507 337Q507 162 448 70T275 -23Q161 -23 102 70T43 343ZM417 631T275 631T133 342Q133 50 273 50Q347 50 382 122T417 345Q417 631 275 631Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="3">
+            <path d="M270 632Q194 632 166 591T135 480H47Q52 709 269 709Q370 709 427 657T485 514Q485 406 386 367Q450 345 478 306T506 198Q506 97 441 37T266 -23Q48 -23 32 206H120Q125 129 161 92T269 55Q338 55 377 92T416 197Q416 326 269 326L232 325H221V400Q316 402 355 424T395 511Q395 567 362 599T270 632Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="2">
+            <path d="M50 463Q57 709 284 709Q385 709 448 651T511 501Q511 369 361 287L261 233Q196 198 168 165T133 87H506V0H34Q40 117 81 180T233 307L325 359Q421 414 421 499Q421 556 381 594T281 632Q148 632 138 463H50Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="5">
+            <path d="M476 709V622H181L153 424Q212 467 284 467Q386 467 449 402T513 231Q513 119 445 48T270 -23Q229 -23 195 -14T138 7T97 40T69 76T51 115T40 148T35 174H123Q154 55 268 55Q340 55 381 99T423 219Q423 298 381 343T268 389Q227 389 198 375T138 323H57L110 709H476Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="4">
+            <path d="M327 170H28V263L350 709H415V249H520V170H415V0H327V170ZM327 249V559L105 249H327Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="7">
+            <path d="M520 709V635Q400 475 331 323T232 0H138Q178 175 240 308T429 622H46V709H520Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="6">
+            <path d="M43 323Q43 417 60 488T102 601T163 667T230 701T297 709Q378 709 431 660T498 524H410Q399 575 368 603T291 631Q215 631 175 562T133 362Q191 441 296 441Q391 441 452 378T513 216Q513 112 448 45T281 -23Q43 -23 43 323ZM285 363Q220 363 179 322T138 214Q138 146 179 101T282 55Q343 55 383 98T423 209Q423 280 386 321T285 363Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="9">
+            <path d="M509 363Q509 269 492 198T450 85T389 19T321 -15T254 -23Q173 -23 120 26T53 162H141Q152 111 183 83T260 55Q336 55 376 124T418 324Q352 245 256 245T99 308T38 470Q38 574 103 641T270 709Q509 709 509 363ZM269 632Q208 632 168 588T128 477Q128 406 165 365T266 323T371 365T413 472Q413 541 372 586T269 632Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="8">
+            <path d="M391 373Q513 315 513 196Q513 99 447 38T275 -23T104 38T37 197Q37 315 158 373Q104 407 83 439T62 520Q62 603 121 656T275 709T428 656T488 520Q488 470 467 438T391 373ZM331 631T275 631T186 601T152 519Q152 469 185 439T275 408Q330 408 364 438T398 518Q398 570 365 600ZM341 334T275 334T168 296T127 195T167 94T273 55Q340 55 381 93T423 195Q423 257 382 295Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="L">
+            <path d="M173 729V82H533V0H80V729H173Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 611 1050" id="T">
+            <path d="M354 647V0H261V647H21V729H593V647H354Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="Y">
+            <path d="M387 286V0H294V286L13 729H128L342 374L550 729H661L387 286Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 667 1050" id="X">
+            <path d="M391 374L649 0H534L335 304L135 0H22L280 374L38 729H151L338 443L526 729H637L391 374Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="a">
+            <path d="M65 369Q71 539 275 539Q372 539 422 503T472 396V88Q472 47 517 47Q526 47 535 49V-14Q500 -23 478 -23Q438 -23 418 -5T392 54Q308 -23 214 -23Q135 -23 89 19T42 132Q42 155 46 174T56 207T76 234T99 255T131 270T166 281T208 290T252 297T302 304Q351 310 370 323T389 362V384Q389 422 359 442T272 462Q214 462 184 440T149 369H65ZM232 50Q301 50 345 86T389 165V259Q364 247 314 239T226 225T159 197T129 134T156 72T232 50Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="b">
+            <path d="M54 729H137V453Q194 539 299 539Q403 539 463 465T523 264Q523 134 461 56T295 -23Q188 -23 129 67V0H54V729ZM283 461Q217 461 177 406T137 258T177 111T283 55Q351 55 393 110T436 255Q436 349 395 405T283 461Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 556 1050" id="e">
+            <path d="M513 234H127Q128 162 155 122Q198 54 281 54Q383 54 418 159H502Q486 73 427 25T278 -23Q168 -23 104 51T40 255T105 461T280 539Q354 539 410 502T492 401Q513 346 513 234ZM129 302H423Q424 304 424 308Q424 373 382 417T279 462Q216 462 175 419T129 302Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 222 1050" id="i">
+            <path d="M150 518V-6H67V518H150ZM150 729V624H66V729H150Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 222 1050" id="l">
+            <path d="M152 729V0H68V729H152Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 278 1050" id="t">
+            <path d="M254 524V456H168V97Q168 69 177 60T214 50Q239 50 254 54V-16Q215 -23 186 -23Q137 -23 111 -2T85 60V456H14V524H85V668H168V524H254Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+        <symbol viewBox="0 -800 500 1050" id="x">
+            <path d="M292 271L473 0H376L245 201L112 0H17L202 267L27 524H122L248 334L374 524H468L292 271Z" stroke="black" transform="scale(1,-1)" />
+        </symbol>
+    </defs>
+    <rect opacity="0.35" height="25.1666666667" width="219.992380952" y="22.0" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="25.1666666667" width="219.992380952" y="47.1666666667" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <rect opacity="0.35" height="25.1666666667" width="219.992380952" y="72.3333333333" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="25.1666666667" width="219.992380952" y="97.5" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <rect opacity="0.35" height="25.1666666667" width="219.992380952" y="122.666666667" x="38.9447619048" stroke-width="0" fill="#c1c1c1" />
+    <rect opacity="0.35" height="25.1666666667" width="219.992380952" y="147.833333333" x="38.9447619048" stroke-width="0" fill="#efefef" />
+    <g>
+        <use y="174.0" x="44.2276376759" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="174.0" x="48.4638281521" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="78.5092784112" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="174.0" x="82.7454688874" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="86.9816593636" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="114.909014385" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="174.0" x="119.145204861" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="174.0" x="123.381395337" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="151.308750358" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="174.0" x="155.544940834" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="159.781131311" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="187.708486332" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="174.0" x="191.944676808" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="174.0" x="196.180867284" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="224.108222305" height="8.0" xlink:href="#3" width="4.23619047619" />
+        <use y="174.0" x="228.344412781" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="174.0" x="232.580603258" height="8.0" xlink:href="#0" width="4.23619047619" />
+    </g>
+    <g>
+        <use y="155.286907936" x="259.937142857" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="155.286907936" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="155.286907936" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="155.286907936" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="155.286907936" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="136.956239663" x="259.937142857" height="8.0" xlink:href="#3" width="4.23619047619" />
+        <use y="136.956239663" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="136.956239663" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="136.956239663" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="136.956239663" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="118.625571391" x="259.937142857" height="8.0" xlink:href="#4" width="4.23619047619" />
+        <use y="118.625571391" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="118.625571391" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="118.625571391" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="118.625571391" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="100.294903118" x="259.937142857" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="100.294903118" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="100.294903118" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="100.294903118" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="100.294903118" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="81.9642348453" x="259.937142857" height="8.0" xlink:href="#6" width="4.23619047619" />
+        <use y="81.9642348453" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="81.9642348453" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="81.9642348453" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="81.9642348453" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="63.6335665727" x="259.937142857" height="8.0" xlink:href="#7" width="4.23619047619" />
+        <use y="63.6335665727" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="63.6335665727" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="63.6335665727" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="63.6335665727" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="45.3028983001" x="259.937142857" height="8.0" xlink:href="#8" width="4.23619047619" />
+        <use y="45.3028983001" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="45.3028983001" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="45.3028983001" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="45.3028983001" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="26.9722300274" x="259.937142857" height="8.0" xlink:href="#9" width="4.23619047619" />
+        <use y="26.9722300274" x="264.173333333" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="26.9722300274" x="268.40952381" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="26.9722300274" x="272.645714286" height="8.0" xlink:href="#." width="2.1180952381" />
+        <use y="26.9722300274" x="274.763809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+    </g>
+    <g>
+        <use y="138.717136115" x="21.0" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="138.717136115" x="25.2361904762" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="138.717136115" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="138.717136115" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="102.297576422" x="21.0" height="8.0" xlink:href="#1" width="4.23619047619" />
+        <use y="102.297576422" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="102.297576422" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="102.297576422" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="65.8780167291" x="21.0" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="65.8780167291" x="25.2361904762" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="65.8780167291" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="65.8780167291" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="29.458457036" x="21.0" height="8.0" xlink:href="#2" width="4.23619047619" />
+        <use y="29.458457036" x="25.2361904762" height="8.0" xlink:href="#5" width="4.23619047619" />
+        <use y="29.458457036" x="29.4723809524" height="8.0" xlink:href="#0" width="4.23619047619" />
+        <use y="29.458457036" x="33.7085714286" height="8.0" xlink:href="#0" width="4.23619047619" />
+    </g>
+    <svg maxX="339.113793103" maxY="2657.31185567" width="219.992380952" minY2="125.190441176" maxY2="948.946551724" id="canvas-root" minX="36.9242647059" minY="584.25" viewBox="38.9447619048 22.0 219.992380952 151.0" y="22.0" x="38.9447619048" height="151.0">
+        <g id="data">
+            <circle cy="70.0065563515" cx="201.899421085" r="2" data="Acre" fill="blue" />
+            <circle cy="134.728714661" cx="45.4802432362" r="2" data="Alagoas" fill="blue" />
+            <circle cy="36.2918987801" cx="223.619357656" r="2" data="Amapa" fill="blue" />
+            <circle cy="31.2169645477" cx="213.500981566" r="2" data="Amazonas" fill="blue" />
+            <circle cy="153.230567436" cx="82.8920112131" r="2" data="Bahia" fill="blue" />
+            <circle cy="152.885130329" cx="72.2883220071" r="2" data="Ceara" fill="blue" />
+            <circle cy="106.297576422" cx="175.862904059" r="2" data="Distrito Federal" fill="blue" />
+            <circle cy="100.889271808" cx="206.074684917" r="2" data="Goias" fill="blue" />
+            <circle cy="170.760197079" cx="76.1276274919" r="2" data="Litigated Zone" fill="blue" />
+            <circle cy="117.897206184" cx="156.025047954" r="2" data="Mato Grosso do Sul" fill="blue" />
+            <circle cy="142.646504242" cx="139.352865856" r="2" data="Minas Gerais" fill="blue" />
+            <circle cy="81.9310391455" cx="239.210783547" r="2" data="Mato Grosso" fill="blue" />
+            <circle cy="105.193563887" cx="157.584526838" r="2" data="Maranhao" fill="blue" />
+            <circle cy="160.105983264" cx="55.7139394976" r="2" data="Paraiba" fill="blue" />
+            <circle cy="102.364263975" cx="152.32440813" r="2" data="Parana" fill="blue" />
+            <circle cy="57.5841946278" cx="207.539552341" r="2" data="Para" fill="blue" />
+            <circle cy="141.615032656" cx="122.269322953" r="2" data="Piaui" fill="blue" />
+            <circle cy="157.669047397" cx="56.9541762056" r="2" data="Pernambuco" fill="blue" />
+            <circle cy="136.23445449" cx="108.159395149" r="2" data="Rio de Janeiro" fill="blue" />
+            <circle cy="161.911382185" cx="47.167087558" r="2" data="Rio Grande do Norte" fill="blue" />
+            <circle cy="112.780258048" cx="90.6875218813" r="2" data="Rio Grande do Sul" fill="blue" />
+            <circle cy="67.808381061" cx="247.181283301" r="2" data="Rondonia" fill="blue" />
+            <circle cy="85.7997912961" cx="52.9174429065" r="2" data="Roraima" fill="blue" />
+            <circle cy="84.9192948823" cx="170.038946303" r="2" data="Santa Catarina" fill="blue" />
+            <circle cy="56.475618762" cx="244.537072596" r="2" data="Sao Paulo" fill="blue" />
+            <circle cy="138.457118795" cx="40.3595339956" r="2" data="Sergipe" fill="blue" />
+            <circle cy="97.0366026716" cx="208.934664172" r="2" data="Tocantins" fill="blue" />
+            <line y2="54.9221814167" stroke-width="1" x2="258.937142857" stroke="blue" y1="156.903359777" x1="38.9447619048" fill="blue" />
+        </g>
+        <g id="data2">
+            <circle cy="57.8428331659" cx="193.334777326" r="2" data="Acre" fill="purple" />
+            <circle cy="169.798494431" cx="52.9630742052" r="2" data="Alagoas" fill="purple" />
+            <circle cy="56.4151975899" cx="245.022402409" r="2" data="Amapa" fill="purple" />
+            <circle cy="49.7639996463" cx="208.472564431" r="2" data="Amazonas" fill="purple" />
+            <circle cy="140.134965624" cx="76.7076363995" r="2" data="Bahia" fill="purple" />
+            <circle cy="150.266146034" cx="110.566544355" r="2" data="Ceara" fill="purple" />
+            <circle cy="72.3995403236" cx="162.031004389" r="2" data="Distrito Federal" fill="purple" />
+            <circle cy="56.3372922497" cx="178.774882937" r="2" data="Goias" fill="purple" />
+            <circle cy="156.720614378" cx="72.4876538946" r="2" data="Litigated Zone" fill="purple" />
+            <circle cy="97.7875158812" cx="126.905259175" r="2" data="Mato Grosso do Sul" fill="purple" />
+            <circle cy="103.283938989" cx="94.6436952053" r="2" data="Minas Gerais" fill="purple" />
+            <circle cy="33.2091929353" cx="219.468553866" r="2" data="Mato Grosso" fill="purple" />
+            <circle cy="93.1868775696" cx="182.579012206" r="2" data="Maranhao" fill="purple" />
+            <circle cy="161.40394987" cx="86.1345712997" r="2" data="Paraiba" fill="purple" />
+            <circle cy="100.445462781" cx="120.049975567" r="2" data="Parana" fill="purple" />
+            <circle cy="57.853484415" cx="236.978948557" r="2" data="Para" fill="purple" />
+            <circle cy="117.007543964" cx="133.609944211" r="2" data="Piaui" fill="purple" />
+            <circle cy="161.109668363" cx="70.4878611712" r="2" data="Pernambuco" fill="purple" />
+            <circle cy="123.90871817" cx="102.335437393" r="2" data="Rio de Janeiro" fill="purple" />
+            <circle cy="166.245401462" cx="81.3032149506" r="2" data="Rio Grande do Norte" fill="purple" />
+            <circle cy="131.913109982" cx="104.034091738" r="2" data="Rio Grande do Sul" fill="purple" />
+            <circle cy="30.2832497372" cx="223.031941228" r="2" data="Rondonia" fill="purple" />
+            <circle cy="164.117578163" cx="48.4638281521" r="2" data="Roraima" fill="purple" />
+            <circle cy="86.1475415281" cx="164.578985907" r="2" data="Santa Catarina" fill="purple" />
+            <circle cy="32.7441946271" cx="213.718629472" r="2" data="Sao Paulo" fill="purple" />
+            <circle cy="171.792197659" cx="49.919817591" r="2" data="Sergipe" fill="purple" />
+            <circle cy="55.8495655403" cx="202.382711697" r="2" data="Tocantins" fill="purple" />
+            <line y2="22.3201112541" stroke-width="1" x2="258.937142857" stroke="purple" y1="173.404035974" x1="38.9447619048" />
+        </g>
+    </svg>
+    <rect height="151.0" width="219.992380952" stroke="black" y="22.0" x="38.9447619048" stroke-width="1" fill="none" />
+    <g class="labels">
+        <use y="5.0" x="120.471428571" height="15.0" xlink:href="#T" width="8.72857142857" />
+        <use y="5.0" x="129.2" height="15.0" xlink:href="#i" width="3.17142857143" />
+        <use y="5.0" x="132.371428571" height="15.0" xlink:href="#t" width="3.97142857143" />
+        <use y="5.0" x="136.342857143" height="15.0" xlink:href="#l" width="3.17142857143" />
+        <use y="5.0" x="139.514285714" height="15.0" xlink:href="#e" width="7.94285714286" />
+        <use y="5.0" x="151.742857143" height="15.0" xlink:href="#T" width="8.72857142857" />
+        <use y="5.0" x="160.471428571" height="15.0" xlink:href="#e" width="7.94285714286" />
+        <use y="5.0" x="168.414285714" height="15.0" xlink:href="#x" width="7.14285714286" />
+        <use y="5.0" x="175.557142857" height="15.0" xlink:href="#t" width="3.97142857143" />
+        <use y="185.0" x="132.688571429" height="10.0" xlink:href="#X" width="6.35238095238" />
+        <use y="185.0" x="141.898095238" height="10.0" xlink:href="#L" width="5.29523809524" />
+        <use y="185.0" x="147.193333333" height="10.0" xlink:href="#a" width="5.29523809524" />
+        <use y="185.0" x="152.488571429" height="10.0" xlink:href="#b" width="5.29523809524" />
+        <use y="185.0" x="157.783809524" height="10.0" xlink:href="#e" width="5.29523809524" />
+        <use y="185.0" x="163.079047619" height="10.0" xlink:href="#l" width="2.11428571429" />
+        <g transform="rotate(-90)">
+            <use y="5.0" x="-113.752380952" height="10.0" xlink:href="#Y" width="6.35238095238" />
+            <use y="5.0" x="-104.542857143" height="10.0" xlink:href="#L" width="5.29523809524" />
+            <use y="5.0" x="-99.2476190476" height="10.0" xlink:href="#a" width="5.29523809524" />
+            <use y="5.0" x="-93.9523809524" height="10.0" xlink:href="#b" width="5.29523809524" />
+            <use y="5.0" x="-88.6571428571" height="10.0" xlink:href="#e" width="5.29523809524" />
+            <use y="5.0" x="-83.3619047619" height="10.0" xlink:href="#l" width="2.11428571429" />
+        </g>
+        <g transform="rotate(90,300,0)">
+            <use y="5.0" x="378.6" height="10.0" xlink:href="#Y" width="6.35238095238" />
+            <use y="5.0" x="384.952380952" height="10.0" xlink:href="#2" width="5.29523809524" />
+            <use y="5.0" x="393.104761905" height="10.0" xlink:href="#L" width="5.29523809524" />
+            <use y="5.0" x="398.4" height="10.0" xlink:href="#a" width="5.29523809524" />
+            <use y="5.0" x="403.695238095" height="10.0" xlink:href="#b" width="5.29523809524" />
+            <use y="5.0" x="408.99047619" height="10.0" xlink:href="#e" width="5.29523809524" />
+            <use y="5.0" x="414.285714286" height="10.0" xlink:href="#l" width="2.11428571429" />
+        </g>
+    </g>
+</svg>

@@ -2,7 +2,7 @@
 
 """  Custom UI Widgets used by the survey application
 
-    @copyright: 2011-2015 (c) Sahana Software Foundation
+    @copyright: 2011-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -25,9 +25,9 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @ToDo: Move these classes to modules/s3db/survey.py
 """
+
+import sys
 
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -49,7 +49,6 @@ from s3chart import S3Chart
 
 DEBUG = False
 if DEBUG:
-    import sys
     print >> sys.stderr, "S3Survey: DEBUG MODE"
     def _debug(m):
         print >> sys.stderr, m
@@ -438,7 +437,7 @@ class DataMatrix():
         try:
             self.addElement(cell)
         except Exception as msg:
-            current.log.error(msg)
+            print >> sys.stderr, msg
         return (row + 1 + vertical,
                 col + 1 + horizontal)
 
@@ -672,31 +671,31 @@ class DataMatrixBuilder():
         if "heading" in rules:
             text = rules["heading"]
             if len(parent) == 1:
-                width = min(len(text), matrix.lastCol) + 1
+                width = min(len(text),matrix.lastCol)+1
                 height = 1
                 styleName = "styleSectionHeading"
             else:
                 width = 11
-                height = len(text) / (2 * width) + 1
+                height = len(text)/(2*width) + 1
                 styleName = "styleSubHeader"
             cell = MatrixElement(row, col, text, style = styleName)
-            cell.merge(horizontal = width - 1, vertical = height-1)
+            cell.merge(horizontal = width-1, vertical = height-1)
             try:
                 matrix.addElement(cell)
             except Exception as msg:
-                current.log.error(msg)
+                print >> sys.stderr, msg
                 return (row,col)
             endrow = row + height
             endcol = col + width
             if "hint" in rules:
                 text = rules["hint"]
                 cell = MatrixElement(endrow,startcol,text, style="styleHint")
-                height = int(((len(text) / (2 * width)) * 0.75) + 0.5) + 1
-                cell.merge(horizontal = width - 1, vertical = height - 1)
+                height = int(((len(text)/(2*width))*0.75)+0.5) + 1
+                cell.merge(horizontal=width-1, vertical=height-1)
                 try:
                     matrix.addElement(cell)
                 except Exception as msg:
-                    current.log.error(msg)
+                    print >> sys.stderr, msg
                     return (row,col)
                 endrow = endrow + height
         if "labelLeft" in rules:
@@ -782,7 +781,7 @@ class DataMatrixBuilder():
         try:
             self.matrix.addElement(cell)
         except Exception as msg:
-            current.log.error(msg)
+            print >> sys.stdout,  msg
             return (row,col)
         endrow = row + height
         endcol = col + width
@@ -807,7 +806,7 @@ class DataMatrixBuilder():
                                                        langDict = self.langDict
                                                       )
         except Exception as msg:
-            current.log.error(msg)
+            print >> sys.stderr, msg
             return (row,col)
         #if question["type"] == "Grid":
         if self.boxOpen == False:
@@ -817,15 +816,13 @@ class DataMatrixBuilder():
 # =============================================================================
 def getMatrix(title,
               logo,
+              series,
               layout,
               widgetList,
               secondaryMatrix,
               langDict,
               showSectionLabels=True,
               layoutBlocks=None):
-    """
-    """
-
     matrix = DataMatrix()
     if secondaryMatrix:
         secondaryMatrix = DataMatrix()
@@ -853,23 +850,23 @@ def getMatrix(title,
                                            section,
                                            ["styleHeader"],
                                            len(section)
-                                           )
+                                          )
         (row, col) = builder.processRule(rules, row, col, matrix)
     row = 0
     col = 0
     logoWidth = 0
     if logo != None:
         logoWidth = 6
-        (nextRow,col) = matrix.addCell(row, col, "", [], logoWidth - 1, 1)
+        (nextRow,col) = matrix.addCell(row,col,"",[],logoWidth-1,1)
     titleWidth = max(len(title), matrix.lastCol-logoWidth)
-    (row, col) = matrix.addCell(row, col, title, ["styleTitle"], titleWidth, 1)
+    (row,col) = matrix.addCell(row,col,title,["styleTitle"],titleWidth,1)
     if layoutBlocks != None:
         maxCol = col
         for block in layoutBlocks.contains:
             if block.endPosn[1] > maxCol:
                 maxCol = block.endPosn[1]
-        layoutBlocks.setPosn((0, 0), (row, maxCol))
-    matrix.boxRange(0, 0, matrix.lastRow + 1, matrix.lastCol, 2)
+        layoutBlocks.setPosn((0,0), (row,maxCol))
+    matrix.boxRange(0, 0, matrix.lastRow+1, matrix.lastCol, 2)
     if secondaryMatrix:
         return (matrix, secondaryMatrix)
     else:
@@ -879,49 +876,34 @@ def getMatrix(title,
 # Question Types
 def survey_stringType(question_id = None):
     return S3QuestionTypeStringWidget(question_id)
-
 def survey_textType(question_id = None):
     return S3QuestionTypeTextWidget(question_id)
-
 def survey_numericType(question_id = None):
     return S3QuestionTypeNumericWidget(question_id)
-
 def survey_dateType(question_id = None):
     return S3QuestionTypeDateWidget(question_id)
-
 def survey_timeType(question_id = None):
     return S3QuestionTypeTimeWidget(question_id)
-
 def survey_optionType(question_id = None):
     return S3QuestionTypeOptionWidget(question_id)
-
 def survey_ynType(question_id = None):
     return S3QuestionTypeOptionYNWidget(question_id)
-
 def survey_yndType(question_id = None):
     return S3QuestionTypeOptionYNDWidget(question_id)
-
 def survey_optionOtherType(question_id = None):
     return S3QuestionTypeOptionOtherWidget(question_id)
-
 def survey_multiOptionType(question_id = None):
     return S3QuestionTypeMultiOptionWidget(question_id)
-
 def survey_locationType(question_id = None):
     return S3QuestionTypeLocationWidget(question_id)
-
 def survey_linkType(question_id = None):
     return S3QuestionTypeLinkWidget(question_id)
-
 def survey_ratingType(question_id = None):
     pass
-
 def survey_gridType(question_id = None):
     return S3QuestionTypeGridWidget(question_id)
-
 def survey_gridChildType(question_id = None):
     return S3QuestionTypeGridChildWidget(question_id)
-
 def survey_T(phrase, langDict):
     """
         Function to translate a phrase using the dictionary passed in
@@ -931,22 +913,23 @@ def survey_T(phrase, langDict):
     else:
         return phrase
 
-survey_question_type = {"String": survey_stringType,
-                        "Text": survey_textType,
-                        "Numeric": survey_numericType,
-                        "Date": survey_dateType,
-                        "Time": survey_timeType,
-                        "Option": survey_optionType,
-                        "YesNo": survey_ynType,
-                        "YesNoDontKnow": survey_yndType,
-                        "OptionOther": survey_optionOtherType,
-                        "MultiOption" : survey_multiOptionType,
-                        "Location": survey_locationType,
-                        "Link" : survey_linkType,
-                        #"Rating": survey_ratingType,
-                        "Grid" : survey_gridType,
-                        "GridChild" : survey_gridChildType,
-                        }
+survey_question_type = {
+    "String": survey_stringType,
+    "Text": survey_textType,
+    "Numeric": survey_numericType,
+    "Date": survey_dateType,
+    "Time": survey_timeType,
+    "Option": survey_optionType,
+    "YesNo": survey_ynType,
+    "YesNoDontKnow": survey_yndType,
+    "OptionOther": survey_optionOtherType,
+    "MultiOption" : survey_multiOptionType,
+    "Location": survey_locationType,
+    "Link" : survey_linkType,
+    #"Rating": survey_ratingType,
+    "Grid" : survey_gridType,
+    "GridChild" : survey_gridChildType,
+}
 
 # =============================================================================
 class S3QuestionTypeAbstractWidget(FormWidget):
@@ -998,6 +981,9 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         @ivar field: The field object from metadata table, which can be used
                      by the widget to add additional rules (such as a requires)
                      before setting up the UI when inputing data
+
+        @author: Graeme Foster (graeme at acm dot org)
+
     """
 
     def __init__(self,
@@ -1038,10 +1024,14 @@ class S3QuestionTypeAbstractWidget(FormWidget):
 
         try:
             from xlwt.Utils import rowcol_to_cell
-        except:
-            current.log.error("WARNING: S3Survey: xlwt module needed for XLS export")
-        else:
             self.rowcol_to_cell = rowcol_to_cell
+        except:
+            import sys
+            print >> sys.stderr, "WARNING: S3Survey: xlwt module needed for XLS export"
+
+    # -------------------------------------------------------------------------
+    def setDict(self, langDict):
+        self.langDict = langDict
 
     # -------------------------------------------------------------------------
     def _store_metadata(self, qstn_id=None, update=False):
@@ -1442,8 +1432,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         if error:
             w_code = self.question["code"]
             msg = "Coord Verification Error for widget %s, startPosn:(%s, %s), expected:(%s, %s), observed:(%s, %s)" % (w_code, self.startPosn[1], self.startPosn[0], endrow, endcol, calcrow, calccol)
-            current.log.error(msg)
-
+            print >> sys.stdout, msg
     ######################################################################
     # Functions not fully implemented or used
     ######################################################################
@@ -1492,6 +1481,8 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
 
     def __init__(self,
@@ -1544,6 +1535,8 @@ class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
         Available metadata for this class:
         Help message: A message to help with completing the question
         Length:       The number of characters
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1582,6 +1575,8 @@ class S3QuestionTypeNumericWidget(S3QuestionTypeAbstractWidget):
                       n.   floating point
                       n.n  floating point, the number of decimal places defined
                            by the number of n's that follow the decimal point
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1667,6 +1662,8 @@ class S3QuestionTypeDateWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1798,6 +1795,8 @@ class S3QuestionTypeTimeWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -1827,6 +1826,8 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         Help message: A message to help with completing the question
         Length:       The number of options
         #:            A number one for each option
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2042,6 +2043,8 @@ class S3QuestionTypeOptionYNWidget(S3QuestionTypeOptionWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2067,6 +2070,8 @@ class S3QuestionTypeOptionYNDWidget(S3QuestionTypeOptionWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2096,6 +2101,8 @@ class S3QuestionTypeOptionOtherWidget(S3QuestionTypeOptionWidget):
         Length:       The number of options
         #:            A number one for each option
         Other:        The question type the other option should be
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2121,6 +2128,8 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
 
         Available metadata for this class:
         Help message: A message to help with completing the question
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2157,6 +2166,9 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         Help message: A message to help with completing the question
         Parent:    Indicates which question is used to indicate the parent
                    This is used as a simplified Hierarchy.
+
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2255,6 +2267,8 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         Type: The type of question it really is (another question type)
         Relation: How it relates to the parent question
                   groupby: answers should be grouped by the value of the parent
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2348,6 +2362,8 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         columns:  An array of headings for each data column
         rows:     An array of headings for each data row
         data:     A matrix of widgets for each data cell
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2445,7 +2461,8 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             height += lheight
             if lwidth > width:
                 width = lwidth
-        _debug("%s (%s,%s)" % (self.question["code"], height, width))
+        if DEBUG:
+            print >> sys.stdout, "%s (%s,%s)" % (self.question["code"], height, width)
         self.xlsWidgetSize = (width,height)
         return (height, width)
         
@@ -2647,6 +2664,8 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
 
         Available metadata for this class:
         Type:     The type of question it really is (another question type)
+
+        @author: Graeme Foster (graeme at acm dot org)
     """
     def __init__(self,
                  question_id = None
@@ -2939,33 +2958,32 @@ class S3AbstractAnalysis():
             When a chart is not appropriate then the subclass will override this
             function with a nul function.
         """
-
         if len(self.valueList) == 0:
             return None
-        if series_id is None:
+        if series_id == None:
             return None
-        src = URL(f="completed_chart",
-                  vars={"question_id": self.question_id,
+        src = URL(r=current.request,
+                  f="completed_chart",
+                  vars={"question_id":self.question_id,
                         "series_id" : series_id,
                         "type" : self.type
                         }
-                  )
+                 )
         link = A(current.T("Chart"), _href=src, _target="blank",
                  _class="action-btn")
         return DIV(link, _class="surveyChart%sWidget" % self.type)
 
     # -------------------------------------------------------------------------
     def getChartName(self, series_id):
-        """
-        """
-
         import hashlib
+        request = current.request
         h = hashlib.sha256()
         h.update(self.qstnWidget.question.code)
         encoded_part = h.hexdigest()
-        chartName = "survey_series_%s_%s" % (series_id,
-                                             encoded_part
-                                             )
+        chartName = "survey_series_%s_%s" % \
+                    (series_id,
+                     encoded_part
+                    )
         return chartName
 
     # -------------------------------------------------------------------------
@@ -3171,7 +3189,7 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         try:
             from numpy import array
         except:
-            current.log.error("ERROR: S3Survey requires numpy library installed.")
+            print >> sys.stderr, "ERROR: S3Survey requires numpy library installed."
 
         array = array(self.valueList)
         self.std = array.std()

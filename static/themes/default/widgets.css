@@ -1,12 +1,5 @@
 @charset "UTF-8";
 
-body.ltr {
-    direction: ltr;
-}
-body.rtl div {
-    direction: rtl;
-}
-
 /* Form Layout Styles */
 form label {
     cursor: pointer;
@@ -52,9 +45,6 @@ p.legend em {
 .form-container form input.string,
 .form-container form textarea  {
     width: 500px;
-}
-.form-container form input.date {
-    width: auto;
 }
 #login_form form table,
 #register_form form table {
@@ -118,16 +108,16 @@ label.over {
 
 /* Styling for Inline Components */
 table.embeddedComponent {
-    border: 1px solid #b3b3b3;
+    border: 1px solid #B3B3B3;
 }
 form table.embeddedComponent td {
     padding: 0 5px;
-    border: solid #b3b3b3;
+    border: solid #B3B3B3;
     border-width: 0 0 1px 0;
     text-align: left;
 }
 table.embeddedComponent tr.label-row td {
-    color: #b3b3b3;
+    color: #B3B3B3;
 }
 .form-container form .embeddedComponent input.string,
 .form-container form .embeddedComponent  textarea  {
@@ -195,10 +185,6 @@ table.embeddedComponent tr.label-row td {
     padding: 0;
 }
 
-.ui-tabs .ui-tabs-panel {
-    padding: 2px 5px;
-}
-
 /* ========================================================================= */
 
 textarea.comments {
@@ -209,8 +195,7 @@ textarea.richtext {
 }
 
 /* Used to diplay the list-add with the list-add-btn */
-#list-btn-add,
-.list-btn-add {
+#list-btn-add {
     margin-bottom: 10px;
 /*     float: left; */
 }
@@ -229,13 +214,8 @@ textarea.richtext {
    overflow: auto; */
    /* Bring in line with export formats */
    margin-top: -1px;
-/*    min-width: 640px; */
+   min-width: 640px;
 }
-
-#table-container .empty {
-    margin-left: 10px;
-}
-
 .dataTable thead th {
 /* datatables fixed headers must not be transparent, however those aren't used currently & this removes the Sorting Icons
     background: no-repeat scroll right center #F0F3F4;*/
@@ -243,18 +223,34 @@ textarea.richtext {
     border-bottom: 1px solid black;
 }
 
-.dataTable th,
+#table-container th,
 .fixedHeader th {
     text-align: center;
     border: 1px solid #ccc;
 }
-.dataTable tr.even td,
-.dataTable tr.odd td {
+#table-container th.rtotal {
+    border-left: 2px solid #aaa;
+}
+#table-container tr.even td {
     border: 1px solid #ccc;
     padding: 4px 10px;
 }
+#table-container tr.odd td {
+    border: 1px solid #ccc;
+    padding: 4px 10px;
+}
+#table-container tr.odd td.rtotal,
+#table-container tr.even td.rtotal {
+    border-left: 2px solid #AAAAAA;
+}
+#table-container tr.totals_row {
+    border-top: 2px solid #AAAAAA;
+}
+#table-container td.totals_header {
+    font-weight: bold;
+}
 
-.dt-export-options {
+.list_formats {
     float: right;
     padding-top: 5px;
 }
@@ -265,14 +261,6 @@ textarea.richtext {
     width: 16px;
     float: right;
     background-repeat: no-repeat;
-}
-.export_cap_large {
-    background-image: url(../../img/icon-cap.jpg);
-    height: 36px;
-    width: 99px;
-}
-.export_cap {
-    background-image: url(../../img/cap_16.png);
 }
 .export_have {
     background-image: url(../../img/have_16.png);
@@ -300,9 +288,7 @@ textarea.richtext {
     margin-top: 30px;
 }
 
-/* dataTables Styling
-    @ToDo: Move colours out of widgets.css
- */
+/* dataTables Styling */
 div .dataTable_table {
     /* Scroll the table not the wrapper */
     overflow: auto;
@@ -320,13 +306,13 @@ div .dataTable_table {
 }
 .dataTable tr.level_1{
 	background-color: #999;
-    color: #def;
+    color: #DDEEFF;
 }
 .dataTable tr.level_1 a{
-    color: #def;
+    color: #DDEEFF;
 }
 .dataTable tr.activeRow.level_1 {
-	background-color: #1d70cf;
+	background-color: #1D70CF;
 }
 .dataTable tr.level_2{
 	background-color: #ddd;
@@ -336,7 +322,7 @@ div .dataTable_table {
     color: #248;
 }
 .dataTable tr.activeRow.level_2{
-	background-color: #528dd1;
+	background-color: #528DD1;
 }
 
 .dataTables_filter {
@@ -379,14 +365,14 @@ a.paginate_active {
 
 .dataTable tr.dtalert .action-btn,
 .dataTable tr.dtalert .delete-btn {
-	background-color: #d0d004;
+	background-color: #D0D004;
 	color: #444420;
 }
 .dataTable tr.dtalert .action-btn:hover,
 .dataTable tr.dtalert .delete-btn:hover {
     text-decoration: none;
     color: #222;
-    background-color: #eeed04;
+    background-color: #EEED04;
     border-right: 1px solid #4589ce;
     border-bottom: 1px solid #4589ce;
     border-left: 1px solid #000;
@@ -394,42 +380,42 @@ a.paginate_active {
     padding: 2px 4px 2px 4px;
 }
 .dataTable tr.dtdisable {
-    text-shadow: #ccc 1px 1px 1px;
+    text-shadow: #CCC 1px 1px 1px;
 	color: #888;
 }
-.dataTable tr.even.row_selected td { background-color: #60f6ad; }
-.dataTable tr.even.row_selected td.sorting_1 { background-color: #40fa8d; }
-table.display tr.odd.row_selected td { background-color: #40fa8d; }
-table.display tr.odd.row_selected td.sorting_1 { background-color: #20f0ad; }
+.dataTable tr.even.row_selected td { background-color: #60F6AD; }
+.dataTable tr.even.row_selected td.sorting_1 { background-color: #40FA8D; }
+table.display tr.odd.row_selected td { background-color: #40FA8D; }
+table.display tr.odd.row_selected td.sorting_1 { background-color: #20F0AD; }
 
-.dataTable tr.odd.dtalert { background-color: #ffffc0; }
-.dataTable tr.odd.dtalert td.sorting_1 { background-color: #ffffb0; }
-.dataTable tr.odd.dtalert td.sorting_2 { background-color: #ffffa0; }
-.dataTable tr.odd.dtalert td.sorting_3 { background-color: #ffff90; }
-.dataTable tr.even.dtalert { background-color: #ffffa0; }
-.dataTable tr.even.dtalert td.sorting_1 { background-color: #ffff0; }
-.dataTable tr.even.dtalert td.sorting_2 { background-color: #ffff80; }
-.dataTable tr.even.dtalert td.sorting_3 { background-color: #ffff70; }
+.dataTable tr.odd.dtalert { background-color: #FFFFC0; }
+.dataTable tr.odd.dtalert td.sorting_1 { background-color: #FFFFB0; }
+.dataTable tr.odd.dtalert td.sorting_2 { background-color: #FFFFA0; }
+.dataTable tr.odd.dtalert td.sorting_3 { background-color: #FFFF90; }
+.dataTable tr.even.dtalert { background-color: #FFFFA0; }
+.dataTable tr.even.dtalert td.sorting_1 { background-color: #FFFF90; }
+.dataTable tr.even.dtalert td.sorting_2 { background-color: #FFFF80; }
+.dataTable tr.even.dtalert td.sorting_3 { background-color: #FFFF70; }
 
-.dataTable tr.odd.dtwarning { background-color: #ffd9d9; }
-.dataTable tr.odd.dtwarning td.sorting_1 { background-color: #ffb6b6; }
-.dataTable tr.odd.dtwarning td.sorting_2 {	background-color: #ffa6a6; }
-.dataTable tr.odd.dtwarning td.sorting_3 { background-color: #ff9696; }
-.dataTable tr.even.dtwarning { background-color: #ffa6a6; }
-.dataTable tr.even.dtwarning td.sorting_1 { background-color: #ff8383; }
-.dataTable tr.even.dtwarning td.sorting_2 { background-color: #ff7373; }
-.dataTable tr.even.dtwarning td.sorting_3 { background-color: #ff6363; }
+.dataTable tr.odd.dtwarning { background-color: #FFD9D9; }
+.dataTable tr.odd.dtwarning td.sorting_1 { background-color: #FFB6B6; }
+.dataTable tr.odd.dtwarning td.sorting_2 {	background-color: #FFA6A6; }
+.dataTable tr.odd.dtwarning td.sorting_3 { background-color: #FF9696; }
+.dataTable tr.even.dtwarning { background-color: #FFA6A6; }
+.dataTable tr.even.dtwarning td.sorting_1 { background-color: #FF8383; }
+.dataTable tr.even.dtwarning td.sorting_2 { background-color: #FF7373; }
+.dataTable tr.even.dtwarning td.sorting_3 { background-color: #FF6363; }
 .dataTable tr.dtwarning .action-btn,
 .dataTable tr.dtwarning .delete-btn{
-	background-color: #d07060;
+	background-color: #D07060;
 	color: #431;
-    text-shadow: #fff 0 0 0;
+    text-shadow: #FFF 0px 0px 0px;
 }
 .dataTable tr.dtwarning .action-btn:hover,
 .dataTable tr.dtwarning .delete-btn:hover {
     text-decoration: none;
     color: #fff;
-    background-color: #b37;
+    background-color: #bb3377;
     border-right: 1px solid #4589ce;
     border-bottom: 1px solid #4589ce;
     border-left: 1px solid #000;
@@ -447,7 +433,7 @@ table.display tr.odd.row_selected td.sorting_1 { background-color: #20f0ad; }
 	*cursor: hand;
 }
 .dataTable-btn:hover {
-	background-color: #efefef;
+	background-color: #EFEFEF;
 }
 
 table.importItem {
@@ -485,7 +471,7 @@ div.dl {
 }
 .dl-row.odd,
 .dl-row.odd .dl-item {
-    background-color: #e2e4ff;
+    background-color: #E2E4FF;
 }
 .dl-1-cols {
     /* Wide as possible for display on small screens */
@@ -512,24 +498,6 @@ div.dl {
     clear: left;
 }
 
-/* Cards */
-.card_1_line,
-.card_manylines {
-    font-size: 12px;
-    padding-top: 4px;
-    color: #666;
-    padding-bottom: 2px;
-}
-.card_1_line {
-    height: 14px; /* Height needs to be same with or without contents */
-    margin-bottom: 0;
-    text-overflow: none;
-    overflow: hidden;
-}
-.card_1_line i {
-    margin-right: 5px;
-}
-
 /* Display view */
 .item-container {
     width: 100%;
@@ -554,11 +522,14 @@ ul.ui-autocomplete {
 }
 
 /* Required Field indicator */
-.error,
-.req,
-.req_key {
+.req {
     color: red;
     font-weight: bold;
+}
+
+/* For Key - ugly! */
+.red {
+    color: red;
 }
 
 /* Help Popup */
@@ -570,8 +541,7 @@ ul.ui-autocomplete {
     text-transform: uppercase;
     height: 20px;
     width: 50px;
-    background: none;
-    background: url(../../img/help_off.gif) no-repeat;
+    background-image: url(../../img/help_off.gif);
 }
 .tooltip span,
 .tooltipbody span,
@@ -586,18 +556,17 @@ ul.ui-autocomplete {
     background-color: transparent;
     height: 20px;
     width: 50px;
-    background: url(../../img/help_on.gif) no-repeat;
+    background-image: url(../../img/help_on.gif);
 }
 
 /* Form Popup */
 body.popup {
-    background-color: #fbfbfb;
     min-width: auto;
     height: auto;
 }
 #popup {
-    max-width: 750px;
-    width: 100%;
+    background: #fff;
+    width: 725px;
 }
 .loading {
     background: url(../../img/ajax-loader.gif) center no-repeat !important;
@@ -606,16 +575,15 @@ body.popup {
     /* Form initially hidden until resized to fit modal */
     display: none;
 }
-#popup .form-container {
-    /* Ensure scrollbars are all on the Modal, not inside */
-    overflow: inherit;
-}
-#popup .control-group {
-    padding-right: 20px;
-}
 
 /* Message Flash styles */
-.alert-success {
+#_statusbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 7000;
+}
+.confirmation {
     color: #070;
     font-weight: bold;
     text-align: center;
@@ -630,10 +598,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.alert-success p em {
+.confirmation p em {
     color: #070;
 }
-.alert-error {
+.error {
     color: #c00;
     font-weight: bold;
     text-align: center;
@@ -648,10 +616,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.alert-error p em {
+.error p em {
     color: #c00;
 }
-.alert-info {
+.information {
     color: #748d8e;
     font-weight: bold;
     text-align: center;
@@ -666,10 +634,10 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.alert-info p em {
+.information p em {
     color: #748d8e;
 }
-.alert-warning {
+.warning {
     color: #c00;
     font-weight: bold;
     text-align: center;
@@ -684,22 +652,14 @@ body.popup {
     cursor: pointer;
     clear: left; /* Added to avoid merging with breadcrumbs */
 }
-.alert-warning p em {
+.warning p em {
     color: #c00;
-}
-/* Copy of BootStrap Styling */
-button.close {
-    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
-    border: 0 none;
-    cursor: pointer;
-    padding: 0;
 }
 
 /* Throbber */
-/* Used by Autocompletes, map popups, map toolbar, dropdown widgets , tweets */
+/* Used by Autocompletes, map popups, map toolbar, dropdown widgets */
 .throbber,
 .layer_throbber,
-.s3-twitter-throbber,
 .map_loader {
     background-image: url(../../img/ajax-loader.gif);
     background-repeat: no-repeat;
@@ -718,12 +678,6 @@ button.close {
     display: inline-block;
     margin: 0 0 -11px -24px;
 }
-.s3-twitter-throbber {
-    height: 0px;
-    margin: 66px 0 0 42px;
-    padding: 20px;
-    width: 0px;
-}
 
 /* Resource Header */
 #rheader {
@@ -733,7 +687,6 @@ button.close {
 #rheader td {
     text-align: left;
     padding: 1px 5px 1px 5px;
-    white-space: pre-line;
 }
 #rheader th {
     font-weight: bold;
@@ -763,7 +716,7 @@ span.tab_other {
     padding-right: 3px;
 }
 div.tabs span a {
-    color: #fff;
+    color: #ffffff;
     text-decoration: none;
 }
 /* To overlap component border */
@@ -774,21 +727,21 @@ div.tabs span.tab_here {
     background: #f0f3f4;
     border-width: 2px 2px 0 3px;
     border-style: solid;
-    border-color: #69c;
+    border-color: #6699cc;
     padding: 1px 6px 0 5px;
     margin-right: 5px;
     font-weight: bold;
 }
 form div.tabs span.tab_here {
-    background: #fff;
-    border-bottom: 2px solid #fff;
+    background: #ffffff;
+    border-bottom: 2px solid #ffffff;
 }
 div.tabs span.tab_here a {
-    color: #069;
+    color: #006699;
 }
 span.tab_last a:hover,
 span.tab_other a:hover {
-    color: #fff;
+    color: #ffffff;
     background: transparent;
 }
 span.tab_last:hover,
@@ -797,13 +750,13 @@ span.tab_other:hover {
     border-color: #164b8b;
 }
 span.tab_prev_active {
-    border: 1px solid #69c;
-    color: #069;
+    border: 1px solid #6699cc;
+    color: #006699;
     border-bottom: 0;
 }
 span.tab_next_active {
-    border: 1px solid #69c;
-    color: #069;
+    border: 1px solid #6699cc;
+    color: #006699;
     border-bottom: 0;
 }
 span.tab_prev_inactive {
@@ -818,7 +771,7 @@ span.tab_next_inactive {
 }
 span.tab_prev_active a,
 span.tab_next_active a {
-    color: #069;
+    color: #006699;
     text-decoration: None;
 }
 span.tab_prev_inactive a,
@@ -863,7 +816,7 @@ span.tab_next_inactive a {
     cursor: pointer;
     line-height: 1.5;
     text-decoration: none;
-    color: #fff;
+    color: #ffffff;
     background-color: #3286e2;
     border: 1px solid #4c95e6;
     border-bottom: 2px solid #164b8b;
@@ -876,10 +829,7 @@ span.tab_next_inactive a {
 }
 .action-btn:hover,
 .delete-btn-ajax:hover,
-.delete-btn:hover,
-.action-btn:focus,
-.delete-btn-ajax:focus,
-.delete-btn:focus  {
+.delete-btn:hover {
     text-decoration: none;
     color: #fff;
     background-color: #164b8b;
@@ -902,13 +852,6 @@ span.tab_next_inactive a {
 }
 .action-lnk:first-child {
     margin-left: 0;
-}
-.form-toggle,
-.form-toggle:hover {
-    text-decoration: none;
-}
-.form-toggle i {
-    margin-left: 3px;
 }
 
 .sublabels {
@@ -935,12 +878,8 @@ span.tab_next_inactive a {
     float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -64px -16px;
-    white-space: nowrap;
 }
 .expanded {
-    height: 16px;
-    width: 16px;
-    float: left;
     background-image: url(../../img/jquery-ui/ui-icons_222222_256x240.png);
     background-position: -32px -16px;
     white-space: nowrap;
@@ -950,55 +889,31 @@ span.tab_next_inactive a {
 #select_from_registry_row td {
    padding: 8px;
 }
-
-/* This should be in style.css where-required
 .box_top,
 .box_middle,
 .box_bottom {
    border-left: #bbb 1px solid;
    border-right: #bbb 1px solid;
    background: #F0F3F4;
-}*/
-
-.box_top,
-.box_top_inner {
-   border-top: #bbb 1px solid;
 }
+
 .box_top {
-   padding-top: 8px;
-}
-form table td.box_top_td {
-    padding-top: 8px;
+   border-top: #bbb 1px solid;
+   padding-top: 10px;
 }
 
-.box_top label,
-.box_top_inner label {
-    display: block;
-    /* @ToDo: Move colour out of widgets.css */
-    background-color: #fbfbfb;
-    float: left;
-    margin-top: -6px;
-    margin-left: 50px;
-    padding: 0 10px;
-    width: auto;
-}
-
-.box_bottom { /* For Bootstrap */
+.box_bottom {
    border-bottom: #bbb 1px solid;
-   padding-bottom: 8px;
-}
-form table tr.box_bottom td { /* For regular themes */
-   border-bottom: #bbb 1px solid;
-   padding-bottom: 8px;
+   padding-bottom: 10px;
 }
 
 .form-horizontal .control-group.box_top {
-    margin: 15px 0 0;
+    margin-bottom: 0;
     max-width: 680px;
 }
 
 .form-horizontal .control-group.box_bottom {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     max-width: 680px;
 }
 
@@ -1069,12 +984,6 @@ li input + a {
 #comments div.comment-text li {
     padding: 0;
 }
-#comments div.comment-body {
-    white-space: pre-line;
-}
-#comments div.comment-body p {
-    margin-left: 25px;
-}
 /* Over-ride Ext! */
 #comments em {
     font-style: italic;
@@ -1084,33 +993,32 @@ li input + a {
 }
 #comment-form {
     width: 390px;
-    border: 1px #9c9c9c dashed;
+    border: 1px #9C9C9C dashed;
     padding: 5px;
     margin-top: 5px;
 }
 .avatar {
-    background: none repeat scroll 0 0 #fff;
-    border-bottom: 1px solid #d7d7d7;
-    border-left: 1px solid #f2f2f2;
-    border-right: 1px solid #f2f2f2;
+    background: none repeat scroll 0 0 #FFFFFF;
+    border-bottom: 1px solid #D7D7D7;
+    border-left: 1px solid #F2F2F2;
+    border-right: 1px solid #F2F2F2;
     float: left;
     height: 55px;
     padding: 4px;
     width: 55px;
 }
 
-.rheader-avatar {
+/* HRM RHeader */
+.hrm_avatar {
     float: left;
     clear: right;
     padding-bottom: 5px;
     padding-right: 10px;
 }
-
-/* HRM RHeader */
 .comment-box {
     overflow: hidden;
     padding: 15px 0;
-    background: none repeat scroll 0 0 #fff;
+    background: none repeat scroll 0 0 #FFFFFF;
     display: block;
     overflow: hidden;
     padding: 10px;
@@ -1119,9 +1027,6 @@ li input + a {
 .comment-text {
     padding: 0 0 0 20px;
     float: left;
-}
-.comment-text div {
-    white-space: pre-line;
 }
 .comment-header {
     margin: 0 0 10px 0;
@@ -1139,7 +1044,7 @@ li input + a {
     display: none;
     position: absolute;
     border-style: solid;
-    background-color: #ffc;
+    background-color: #ffffcc;
     padding: 5px;
     margin: 0 20px 0 -50px;
 }
@@ -1160,29 +1065,8 @@ li.ui-draggable-dragging {
     cursor: pointer;
     list-style: none;
     padding: 3px;
-    border: solid 1px #bbb;
-    background: none repeat scroll 0 0 #cfdde7;
-}
-
-.imagecrop-drag {
-    font-weight: bold;
-    text-align: center;
-    padding: 3em 0;
-    margin: 1em 0;
-    color: #555;
-    border: 2px dashed #555;
-    border-radius: 7px;
-    cursor: default;
-}
-
-.imagecrop-drag.hover {
-    border-style: solid;
-    background-color: #F7F8F9;
-}
-
-.imagecrop-btn {
-    display: none;
-    cursor: pointer;
+    border: solid 1px #BBBBBB;
+    background: none repeat scroll 0 0 #CFDDE7;
 }
 
 /* Ext button (e.g. on Bulk Upload form */
@@ -1240,6 +1124,7 @@ ul.x-tree-root-ct {
 }
 
 /* Search Form */
+.search_select_letter_label,
 .s3-grouped-checkboxes-widget-label,
 .s3-groupedopts-label {
     margin: 10px 0 0 7px;
@@ -1248,6 +1133,7 @@ ul.x-tree-root-ct {
     background: url(../../img/icon_blue_plus15px.png) no-repeat;
     cursor: pointer;
 }
+.search_select_letter_label.expanded,
 .s3-grouped-checkboxes-widget-label.expanded,
 .s3-groupedopts-label.expanded {
     height: 16px;
@@ -1255,11 +1141,13 @@ ul.x-tree-root-ct {
     background: url(../../img/icon_blue_minus15px.png) no-repeat;
 }
 
+.search_select_letter_widget,
 .s3-grouped-checkboxes-widget .s3-checkboxes-widget,
 .s3-groupedopts-widget table {
     margin-left: 2em;
 }
 
+.form-container form fieldset .search_select_letter_widget label,
 .form-container form fieldset  .s3-checkboxes-widget label,
 .form-container form fieldset  .s3-groupedopts-widget label {
     white-space: nowrap;
@@ -1307,70 +1195,36 @@ ul.x-tree-root-ct {
 }
 
 .filter-form td,
+.search_form td,
 #filter_options td {
-    border-top: 1px solid #d9d9d9;
+    border-top: 1px solid #D9D9D9;
 }
 .filter-form tr:first-child > td,
+.search_form tr:first-child > td,
 #filter_options tr:first-child > td {
     border-top: 0;
 }
 .filter-form table.s3-checkboxes-widget td,
 .filter-form table.s3-groupedopts-widget td,
+.search_form table.s3-checkboxes-widget td,
+.search_form table.s3searchminmaxwidget td,
 #filter_options table.s3-checkboxes-widget td,
 #filter_options table.s3searchminmaxwidget td {
     border-top: 0;
 }
 
-/* Vertical arrangement of multi-button multi-select filter widgets such as S3LocationFilter */
-.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
-.form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
-    clear: left;
-    float: left;
-    min-width: 220px;
-}
-
-.filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all:first-of-type,
-.form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all:first-of-type {
-    clear: none;
-}
-
-.ui-selectmenu-button,
-.ui-multiselect-menu {
-    min-width: 220px;
-}
-
-/* Don't display the default widget, only the multiselect generated widget is displayed */
-select.multiselect-filter-widget {
-    display: none;
-}
-
-body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
-    clear: right;
-    float: right;
-}
-
-.filter-advanced {
-    text-decoration: none;
-    cursor: pointer;
-}
-.filter-advanced-label {
-    padding-right: 4px;
-}
-
-/* End */
-
 .widget-org-hierarchy-menu {
-    overflow: auto;
-    height: 10em;
-    width: 36em;
-    position: relative;
+    overflow:auto;
+    height:10em;
+    width:36em;
+    position:relative;
 }
 .widget-org-hierarchy-menu .ui-menu {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    overflow: auto;
-    width: 32em;
+    position:absolute;
+    top:0;
+    bottom:0;
+    overflow:auto;
+    width:32em;
 }
 .widget-org-hierarchy-menu .ui-menu a {
     cursor: pointer;
@@ -1394,40 +1248,45 @@ body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     border-bottom: 1px dashed black;
 }
 
-/* Short form for Modals */
-.ui-datepicker-trigger {
-	background-image: url(../../img/calendar.gif);
+table.report td {
+    min-width: 40px;
+    padding-right: 16px;
+    white-space: nowrap;
+}
+table.report .report-cell-value,
+table.report .pt-cell-value {
+    float: left;
+}
+table.report .report-cell-zoom,
+table.report .pt-cell-zoom {
+    width: 16px;
+    height: 16px;
+    float: right;
+    margin-left: 5px;
+    background: url(../../img/silk/magnifier_zoom_in.png) no-repeat top right;
+    cursor: pointer;
+}
+table.report .report-cell-records,
+table.report .pt-cell-records {
+    clear: left;
+}
+table.report .report-cell-zoom.opened,
+table.report .pt-cell-zoom.opened {
+    background-image: url(../../img/silk/magnifier_zoom_out.png);
+}
+
+.form-container form button.ui-datepicker-trigger {
+	background-image: url(../../img/jquery-ui/calendar.gif);
     background-repeat: no-repeat;
     height: 15px;
     width: 16px;
     margin-left: 3px;
     /* Make it not like a button */
     border: 0;
-    /*padding: 0;*/
+    padding: 0;
     -moz-box-sizing: content-box;
     -webkit-box-sizing: content-box;
     box-sizing: content-box;
-}
-/* Long form to override normal button margin */
-.form-container form button.ui-datepicker-trigger {
-    margin-left: 3px;
-}
-
-td .icon {
-    /* Override profile.css */
-    margin-top: 0;
-}
-
-/* S3LocationSelector */
-option.missing {
-    background-color: yellow;
-}
-.dms-label {
-    padding: 4px;
-    font-weight: bold;
-}
-.dms-input.invalidinput {
-    border: solid thin red;
 }
 
 .resizable-textarea .grippie {
@@ -1436,9 +1295,9 @@ option.missing {
     -moz-border-left-colors: none;
     -moz-border-right-colors: none;
     -moz-border-top-colors: none;*/
-    background: url(../../img/grippie.png) no-repeat scroll center 2px #eee;
-    border-color: #ddd;
-    border-right: 1px solid #ddd;
+    background: url(../../img/grippie.png) no-repeat scroll center 2px #EEEEEE;
+    border-color: #DDDDDD;
+    border-right: 1px solid #DDDDDD;
     border-style: solid;
     border-width: 0 1px 1px;
     cursor: s-resize;
@@ -1518,135 +1377,10 @@ div.fm-cancel {
     width: 75px;
 }
 
-/* UI Dialog */
-.ui-dialog .ui-dialog-content {
-    /* Ensure maximal space for iframe within Dialog */
-    padding: 0 !important;
-}
-.ui-dialog {
-    padding: 0;
-    width: 750px !important;
-}
-
-/* UI Multiselect */
-body.ltr label.ui-corner-all span {
-    left: 10px;
-}
-body.rtl label.ui-corner-all span {
-    right: 10px;
-}
-
-/* Hierarchy Widget */
-.s3-hierarchy-tree.jstree {
-    border: 1px solid #ccc;
-    padding: 2px 3px 4px 3px;
-    background: white;
-/*  @todo: make this work - currently overflow:auto conflicts with
-           bootstrap popovers (because they are inside the box and
-           become inaccessible when overflowing)
-*/
-/*  max-height: 360px;
-    overflow-y: auto;*/
-}
-
-/* Saved Filters Page - Inline Editor for Filter Titles */
-form.jeditable-input input {
-    max-width: 400px !important;
-}
-
-.pt-form legend {
-    font-size: 14px;
-    margin-bottom: 0;
-    border: 0 !important;
-}
-button.toggle-text {
-    font-size: 10px !important;
-    margin-left: 12px !important;
-    line-height: 1.0;
-}
-
-/* Action Toolbar */
-.action-bar {
-    color: #8a8989;
-    font-size: 14px;
-    position: relative;
-    top: 4px;
-}
-.action-bar.fleft {
-    margin-right: 8px;
-}
-.action-bar a:hover,
-.action-bar a:visited:hover {
-    color: #ffa500;
-    text-decoration: none;
-}
-
-.maxLength {
-    background-color: #ffcdcd;
-    border: 3px solid #d55b5b;
-}
-
-/* S3SelectWidget() icons */
-.ui-selectmenu-menu .ui-menu.customicons {
-    /* @ToDo: This should be responsive */
-    height: 400px;
-}
-.ui-selectmenu-menu .ui-menu.customicons .ui-menu-item {
-    /* @ToDo: This is suitabel for GIS Markers, but may be too big for other usecases */
-    padding: 1em 0 1em 4em;
-}
-.ui-selectmenu-menu .ui-menu.customicons .ui-menu-item .ui-icon {
-    background-repeat: no-repeat !important;
-    background-position: left top;
-    top: 0.1em;
-}
-
-/* AddPersonWidget2 duplicate results */
-.card > .fleft {
-    margin-right: 10px;
-}
-.media-object {
-    display: block;
-}
-
-/* Req quantity */
-.ajax_more {
-	float: right;
-	width: 16px;
-	height: 16px;
-	margin: 0 2px 2px 0;
-}
-.ajax_more.collapsed {
-	background: url(../../img/icon_blue_plus15px.png) no-repeat left top; 
-}
-.ajax_more.expanded {
-	background: url(../../img/icon_blue_minus15px.png) no-repeat left top; 
-}
-
-/* Simile Timeline */
-.s3-timeline  {
-    height: 400px;
-    border: 1px solid #aaa;
-    font-family: Trebuchet MS,sans-serif;
-    font-size: 85%;
-}
-
 /* Videos Page */
 #video-toc {
     clear: left;
 }
 .video-header {
     padding-top: 50px;
-}
-
-/* Password Widget-Unmask */
-.s3-unmask {
-    margin-left: 10px;
-    cursor: pointer;
-}
-
-/* Tweet Display */
-.s3-twitter-container {
-    width: 350px;
-    height: 130px;
 }

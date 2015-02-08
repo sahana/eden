@@ -58,7 +58,7 @@ gxp.plugins.LayerProperties = Ext.extend(gxp.plugins.Tool, {
         
         if (!this.outputConfig) {
             this.outputConfig = {
-                width: 325,
+                width: 265,
                 autoHeight: true
             };
         }
@@ -102,7 +102,7 @@ gxp.plugins.LayerProperties = Ext.extend(gxp.plugins.Tool, {
         if (panelConfig && panelConfig[xtype]) {
             Ext.apply(config, panelConfig[xtype]);
         }
-        var output = gxp.plugins.LayerProperties.superclass.addOutput.call(this, Ext.apply({
+        return gxp.plugins.LayerProperties.superclass.addOutput.call(this, Ext.apply({
             xtype: xtype,
             authorized: this.target.isAuthorized(),
             layerRecord: record,
@@ -110,19 +110,18 @@ gxp.plugins.LayerProperties = Ext.extend(gxp.plugins.Tool, {
             defaults: {
                 style: "padding: 10px",
                 autoHeight: this.outputConfig.autoHeight
+            },
+            listeners: {
+                added: function(cmp) {
+                    if (!this.outputTarget) {
+                        cmp.on("afterrender", function() {
+                            cmp.ownerCt.ownerCt.center();
+                        }, this, {single: true});
+                    }
+                },
+                scope: this
             }
         }, config));
-        output.on({
-            added: function(cmp) {
-                if (!this.outputTarget) {
-                    cmp.on("afterrender", function() {
-                        cmp.ownerCt.ownerCt.center();
-                    }, this, {single: true});
-                }
-            },
-            scope: this
-        });
-        return output;
     }
         
 });

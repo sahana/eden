@@ -7,8 +7,7 @@
  */
 
 /**
- * @require GeoExt/widgets/form.js
- * @requires plugins/SchemaAnnotations.js
+ * requires GeoExt/widgets/form.js
  */
 
 /** api: (define)
@@ -28,9 +27,6 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
 
     /** api: ptype = gxp_editorgrid */
     ptype: "gxp_editorgrid",
-
-    /** api: xtype = gxp_editorgrid */
-    xtype: "gxp_editorgrid",
 
     /** api: config[feature]
      *  ``OpenLayers.Feature.Vector`` The feature being edited/displayed.
@@ -84,9 +80,9 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
         if (!this.timeFormat) {
             this.timeFormat = Ext.form.TimeField.prototype.format;
         }
-        this.customRenderers = this.customRenderers || {};
-        this.customEditors = this.customEditors || {};
-        var feature = this.feature,
+        var customEditors = {},
+            customRenderers = {},
+            feature = this.feature,
             attributes;
         if (this.fields) {
             // determine the order of attributes
@@ -118,11 +114,6 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
                 }
                 var value = feature.attributes[name];
                 var fieldCfg = GeoExt.form.recordToField(r);
-                var annotations = this.getAnnotationsFromSchema(r);
-                if (annotations && annotations.label) {
-                    this.propertyNames = this.propertyNames || {};
-                    this.propertyNames[name] = annotations.label;
-                }
                 var listeners;
                 if (typeof value == "string") {
                     var format;
@@ -151,7 +142,7 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
                                     }
                                 }
                             };
-                            this.customRenderers[name] = (function() {
+                            customRenderers[name] = (function() {
                                 return function(value) {
                                     //TODO When http://trac.osgeo.org/openlayers/ticket/3131
                                     // is resolved, change the 5 lines below to
@@ -175,7 +166,7 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
                             break;
                     }
                 }
-                this.customEditors[name] = new Ext.grid.GridEditor({
+                customEditors[name] = new Ext.grid.GridEditor({
                     field: Ext.create(fieldCfg),
                     listeners: listeners
                 });
@@ -184,6 +175,8 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
             feature.attributes = attributes;
         }
         this.source = attributes;
+        this.customEditors = customEditors;
+        this.customRenderers = customRenderers;
         var ucExcludeFields = this.excludeFields.length ?
             this.excludeFields.join(",").toUpperCase().split(",") : [];
         this.viewConfig = {
@@ -196,12 +189,10 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
         };
         this.listeners = {
             "beforeedit": function() {
-                return this.featureEditor && this.featureEditor.editing;
+                return this.featureEditor.editing;
             },
             "propertychange": function() {
-                if (this.featureEditor) {
-                    this.featureEditor.setFeatureState(this.featureEditor.getDirtyState());
-                }
+                this.featureEditor.setFeatureState(this.featureEditor.getDirtyState());
             },
             scope: this
         };
@@ -237,10 +228,8 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
      *  Clean up.
      */
     destroy: function() {
-        if (this.featureEditor) {
-            this.featureEditor.un("canceledit", this.onCancelEdit, this);
-            this.featureEditor = null;
-        }
+        this.featureEditor.un("canceledit", this.onCancelEdit, this);
+        this.featureEditor = null;
         gxp.plugins.FeatureEditorGrid.superclass.destroy.call(this);
     },
 
@@ -259,8 +248,4 @@ gxp.plugins.FeatureEditorGrid = Ext.extend(Ext.grid.PropertyGrid, {
 
 });
 
-// use the schema annotations module
-Ext.override(gxp.plugins.FeatureEditorGrid, gxp.plugins.SchemaAnnotations);
-
 Ext.preg(gxp.plugins.FeatureEditorGrid.prototype.ptype, gxp.plugins.FeatureEditorGrid);
-Ext.reg(gxp.plugins.FeatureEditorGrid.prototype.xtype, gxp.plugins.FeatureEditorGrid);

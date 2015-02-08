@@ -1,0 +1,4 @@
+Warehouse,Organization,Category,Category Code,Catalog,Item Code,Item Name,Units,Brand,Model,Year,Pack,Pack Quantity,Weight,Length,Width,Height,Volume,Tracking Number,Bin,Supplier/Donor,Owned By (Organization/Branch),Expiry Date,Quantity,Unit Value,Currency,Comments
+American Red Cross Warehouse,American Red Cross,FO,Food,American Red Cross,FO-001,"MRE (Meal, Ready-to-Eat) Rations",Piece,,,,Box,10,0.25,,,,,,,,American Red Cross,2013-06-30,25000,3.5,USD,
+American Red Cross Warehouse,American Red Cross,SH,Shelter,American Red Cross,SH-001,Blankets,Piece,,,,,,1.25,,,,,,,,American Red Cross,,10000,25,USD,
+American Red Cross Warehouse,American Red Cross,SH,Shelter,American Red Cross,SH-002,Cots,Piece,,,,,,5,,,,,,,,American Red Cross,,10000,5,USD,

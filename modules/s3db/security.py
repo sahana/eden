@@ -2,7 +2,7 @@
 
 """ Sahana Eden Security Model
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-13 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SecurityModel",)
+__all__ = ["S3SecurityModel"]
 
 from gluon import *
 from gluon.storage import Storage
@@ -39,12 +39,11 @@ class S3SecurityModel(S3Model):
     """
     """
 
-    names = ("security_level",
-             "security_zone_type",
+    names = ["security_zone_type",
              "security_zone",
              "security_staff_type",
              "security_staff",
-             )
+             ]
 
     def model(self):
 
@@ -53,105 +52,28 @@ class S3SecurityModel(S3Model):
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        location_id = self.gis_location_id
-
-        # -----------------------------------------------------------
-        # Security Levels
-        # - according to the UN Security Level System (SLS)
-        # http://ictemergency.wfp.org/c/document_library/get_file?uuid=c025cb98-2297-4208-bcc6-76ba02719c02&groupId=10844
-        # http://geonode.wfp.org/layers/geonode:wld_bnd_securitylevel_wfp
-        #
-
-        level_opts = {1: T("Minimal"),
-                      2: T("Low"),
-                      3: T("Moderate"),
-                      4: T("Substantial"),
-                      5: T("High"),
-                      6: T("Extreme"),
-                      }
-
-        tablename = "security_level"
-        define_table(tablename,
-                     location_id(
-                        #label = T("Security Level Area"),
-                        widget = S3LocationSelector(show_map = False),
-                        ),
-                     # Overall Level
-                     Field("level", "integer",
-                           label = T("Security Level"),
-                           represent = lambda v: level_opts.get(v,
-                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(level_opts),
-                           ),
-                     # Categories
-                     Field("armed_conflict", "integer",
-                           label = T("Armed Conflict"),
-                           represent = lambda v: level_opts.get(v,
-                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(level_opts),
-                           ),
-                     Field("terrorism", "integer",
-                           label = T("Terrorism"),
-                           represent = lambda v: level_opts.get(v,
-                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(level_opts),
-                           ),
-                     Field("crime", "integer",
-                           label = T("Crime"),
-                           represent = lambda v: level_opts.get(v,
-                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(level_opts),
-                           ),
-                     Field("civil_unrest", "integer",
-                           label = T("Civil Unrest"),
-                           represent = lambda v: level_opts.get(v,
-                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(level_opts),
-                           ),
-                     Field("hazards", "integer",
-                           label = T("Hazards"),
-                           represent = lambda v: level_opts.get(v,
-                                                current.messages.UNKNOWN_OPT),
-                           requires = IS_IN_SET(level_opts),
-                           comment = T("e.g. earthquakes or floods"),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Classify Area"),
-            title_display = T("Security Level Details"),
-            title_list = T("Security Levels"),
-            title_update = T("Edit Security Level"),
-            title_upload = T("Import Security Levels"),
-            label_list_button = T("List Security Levels"),
-            label_delete_button = T("Delete Security Level"),
-            msg_record_created = T("Security Area classified"),
-            msg_record_modified = T("Security Level updated"),
-            msg_record_deleted = T("Security Level deleted"),
-            msg_list_empty = T("No Security Areas currently classified"))
 
         # -----------------------------------------------------------
         # Security Zone Types
-        #
         tablename = "security_zone_type"
-        define_table(tablename,
-                     Field("name",
-                           label = T("Name"),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name",
+                                   label=T("Name")),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE_TYPE = T("Create Zone Type")
+        ADD_ZONE_TYPE = T("Add Zone Type")
         crud_strings[tablename] = Storage(
-            label_create = ADD_ZONE_TYPE,
+            title_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
+            title_search = T("Search Zone Types"),
             title_upload = T("Import Zone Types"),
+            subtitle_create = T("Add New Zone Type"),
             label_list_button = T("List Zone Types"),
+            label_create_button = T("Add New Zone Type"),
             label_delete_button = T("Delete Zone Type"),
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
@@ -166,42 +88,42 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Zones
-        #
         tablename = "security_zone"
-        define_table(tablename,
-                     Field("name",
-                           label = T("Name"),
-                           ),
-                     Field("zone_type_id", db.security_zone_type,
-                           label = T("Type"),
-                           represent = zone_type_represent,
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "security_zone_type.id",
-                                                  zone_type_represent,
-                                                  sort=True)),
-                           comment = S3AddResourceLink(c="security",
-                                                       f="zone_type",
-                                                       label=ADD_ZONE_TYPE,
-                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
-                           ),
-                     location_id(
-                        widget = S3LocationSelector(catalog_layers = True,
-                                                    points = False,
-                                                    polygons = True,
-                                                    ),
-                     ),
-                     s3_comments(),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name",
+                                   label=T("Name")),
+                             Field("zone_type_id", db.security_zone_type,
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "security_zone_type.id",
+                                                          zone_type_represent,
+                                                          sort=True)),
+                                   represent = zone_type_represent,
+                                   comment = S3AddResourceLink(c="security",
+                                                               f="zone_type",
+                                                               label=ADD_ZONE_TYPE,
+                                                               tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                                   label=T("Type")),
+                             self.gis_location_id(
+                                widget = S3LocationSelectorWidget(
+                                    catalog_layers=True,
+                                    polygon=True
+                                    )
+                                ),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE = T("Create Zone")
+        ADD_ZONE = T("Add Zone")
         crud_strings[tablename] = Storage(
-            label_create = ADD_ZONE,
+            title_create = ADD_ZONE,
             title_display = T("Zone Details"),
             title_list = T("Zones"),
             title_update = T("Edit Zone"),
+            title_search = T("Search Zones"),
             title_upload = T("Import Zones"),
+            subtitle_create = T("Add New Zone"),
             label_list_button = T("List Zones"),
+            label_create_button = T("Add New Zone"),
             label_delete_button = T("Delete Zone"),
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
@@ -212,23 +134,25 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Staff Types
-        #
         tablename = "security_staff_type"
-        define_table(tablename,
-                     Field("name",
-                           label=T("Name")),
-                     s3_comments(),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             Field("name",
+                                   label=T("Name")),
+                             s3_comments(),
+                             *s3_meta_fields())
 
         # CRUD strings
         ADD_STAFF = T("Add Staff Type")
         crud_strings[tablename] = Storage(
-            label_create = ADD_STAFF,
+            title_create = ADD_STAFF,
             title_display = T("Staff Type Details"),
             title_list = T("Staff Types"),
             title_update = T("Edit Staff Type"),
+            title_search = T("Search Staff Types"),
             title_upload = T("Import Staff Types"),
+            subtitle_create = T("Add New Staff Type"),
             label_list_button = T("List Staff Types"),
+            label_create_button = T("Add New Staff Type"),
             label_delete_button = T("Delete Staff Type"),
             msg_record_created = T("Staff Type added"),
             msg_record_modified = T("Staff Type updated"),
@@ -239,52 +163,52 @@ class S3SecurityModel(S3Model):
 
         # -----------------------------------------------------------
         # Security Staff
-        #
         tablename = "security_staff"
-        define_table(tablename,
-                     self.hrm_human_resource_id(),
-                     Field("staff_type_id", "list:reference security_staff_type",
-                           label = T("Type"),
-                           represent = self.security_staff_type_multirepresent,
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "security_staff_type.id",
-                                                  staff_type_represent,
-                                                  sort=True,
-                                                  multiple=True)),
-                           comment = S3AddResourceLink(c="security",
-                                                       f="staff_type",
-                                                       label=ADD_STAFF,
-                                                       tooltip=T("Select a Staff Type from the list or click 'Add Staff Type'")),
-                           ),
-                     Field("zone_id", db.security_zone,
-                           label = T("Zone"),
-                           represent = zone_represent,
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "security_zone.id",
-                                                  zone_represent,
-                                                  sort=True)),
-                           comment = S3AddResourceLink(c="security",
-                                                       f="zone",
-                                                       label=ADD_ZONE,
-                                                       tooltip=T("For wardens, select a Zone from the list or click 'Add Zone'")),
-                           ),
-                     self.super_link("site_id", "org_site",
-                                     label = T("Facility"),
-                                     represent = self.org_site_represent,
-                                     readable = True,
-                                     writable = True,
-                                     ),
-                     s3_comments(),
-                     *s3_meta_fields())
+        table = define_table(tablename,
+                             self.hrm_human_resource_id(),
+                             Field("staff_type_id", "list:reference security_staff_type",
+                                   requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "security_staff_type.id",
+                                                          staff_type_represent,
+                                                          sort=True,
+                                                          multiple=True)),
+                                   represent = self.security_staff_type_multirepresent,
+                                   comment = S3AddResourceLink(c="security",
+                                                               f="staff_type",
+                                                               label=ADD_STAFF,
+                                                               tooltip=T("Select a Staff Type from the list or click 'Add Staff Type'")),
+                                   label=T("Type")),
+                              Field("zone_id", db.security_zone,
+                                    requires = IS_NULL_OR(
+                                                IS_ONE_OF(db, "security_zone.id",
+                                                          zone_represent,
+                                                          sort=True)),
+                                    represent = zone_represent,
+                                    comment = S3AddResourceLink(c="security",
+                                                                f="zone",
+                                                                label=ADD_ZONE,
+                                                                tooltip=T("For wardens, select a Zone from the list or click 'Add Zone'")),
+                                    label=T("Zone")),
+                                  self.super_link("site_id", "org_site",
+                                                  label = T("Facility"),
+                                                  represent=self.org_site_represent,
+                                                  readable=True,
+                                                  writable=True),
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
+        ADD_STAFF = T("Add Security-Related Staff")
         crud_strings[tablename] = Storage(
-            label_create = T("Add Security-Related Staff"),
+            title_create = ADD_STAFF,
             title_display = T("Security-Related Staff Details"),
             title_list = T("Security-Related Staff"),
             title_update = T("Edit Security-Related Staff"),
+            title_search = T("Search Security-Related Staff"),
             title_upload = T("Import Security-Related Staff"),
+            subtitle_create = T("Add New Security-Related Staff"),
             label_list_button = T("List Security-Related Staff"),
+            label_create_button = T("Add New Security-Related Staff"),
             label_delete_button = T("Delete Security-Related Staff"),
             msg_record_created = T("Security-Related Staff added"),
             msg_record_modified = T("Security-Related Staff updated"),
@@ -294,7 +218,7 @@ class S3SecurityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return Storage()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -305,13 +229,14 @@ class S3SecurityModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        table = item.table
-        query = (table.name == item.data.name)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
+        if item.tablename == "security_zone_type":
+            table = item.table
+            query = (table.name == item.data.name)
+            row = current.db(query).select(table.id,
+                                           limitby=(0, 1)).first()
+            if row:
+                item.id = row.id
+                item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod

@@ -1,0 +1,2 @@
+"UUID",Name,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,Symbology,LatMin,LatMax,LonMin,LonMax,Geocoder
+"SITE_DEFAULT",Default,US,California,Los Angeles County,9,34.026689,-118.210315,900913,"CRMT",18.923882,71.365814,-179.141998,179.777466,"True"

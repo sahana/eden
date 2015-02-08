@@ -53,6 +53,7 @@
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
+            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="url2"><xsl:value-of select="col[@field='URL2']"/></data>
             <data field="url3"><xsl:value-of select="col[@field='URL3']"/></data>
@@ -84,7 +85,6 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
         </resource>
 

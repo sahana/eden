@@ -38,9 +38,9 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from gluon import current
-from gluon.storage import Storage
 
-from s3.s3query import FS
+from s3.s3resource import S3FieldSelector
+from s3.s3search import *
 from s3.s3utils import s3_unicode
 from s3.s3widgets import *
 
@@ -273,41 +273,21 @@ class SeleniumUnitTest(Web2UnitTest):
             @param wait_time: The time in seconds to wait for confirmation to appear.
         """
 
+        if current.deployment_settings.get_ui_formstyle() == "bootstrap":
+            confirmation_class = "alert alert-success"
+        else:
+            confirmation_class = "confirmation"
         return WebDriverWait(self.browser, wait_time).until(
-            lambda driver:
-                driver.find_element_by_xpath("//div[@class='alert alert-success']"))
+                    lambda driver:
+                                driver.find_element_by_xpath("//div[@class='%s']" % confirmation_class))
 
     # -------------------------------------------------------------------------
-    def getRows (self, table, data, dbcallback, components):
+    def getRows (self, table, data, dbcallback):
         """
             Get a copy of all the records that match the data passed in
             this can be modified by the callback function
         """
-        def add_component_to_query(self, table, query, details, components):
-            """
-                If possible add the component to the query. This uses the
-                parameter components which is a map keyed on the name of the
-                html control, which will give a list of three elements.
-                The name of the related table, the key field and the field where
-                the data will be added.
 
-                For example see CreatePerson
-                "sub_person_details_marital_status":["pr_person_details",
-                                                     "person_id",
-                                                     "marital_status"
-                                                    ]
-                If the field is not in the components then a warning is written
-
-                see http://eden.sahanafoundation.org/ticket/1475
-            """
-            if details[0] in components:
-                component = components[details[0]]
-                ctable = current.s3db[component[0]]
-                query = query & (table.id == ctable[component[1]])
-                query = query & (ctable[component[2]] == details[1])
-            else:
-                self.reporter("WARNING: Unable to check field %s" % details[0])
-            return query
         # Commit to start a new transaction: if MySQL gets straight the
         # same query straight within the same transaction, it wouldn't
         # even look at the table, but just return the cached response, so
@@ -316,10 +296,7 @@ class SeleniumUnitTest(Web2UnitTest):
 
         query = (table.deleted != True)
         for details in data:
-            if details[0][0:3] == "sub":
-                query = add_component_to_query(self, table, query, details, components)
-            else:
-                query = query & (table[details[0]] == details[1])
+            query = query & (table[details[0]] == details[1])
         rows = current.db(query).select(orderby=~table.id)
         if rows == None:
             rows = []
@@ -378,9 +355,9 @@ class SeleniumUnitTest(Web2UnitTest):
             searchFields = simpleSearch[1].field
             for i in xrange(len(searchFields)):
                 if i == 0:
-                    query = (FS(searchFields[i]).like("%" + key + "%"))
+                    query = (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
                 else:
-                    query |= (FS(searchFields[i]).like("%" + key + "%"))
+                    query |= (S3FieldSelector(searchFields[i]).like("%" + key + "%"))
 
             filters = row_count.get("filters", None)
             if filters is not None:
@@ -493,8 +470,7 @@ class SeleniumUnitTest(Web2UnitTest):
                tablename,
                data,
                success=True,
-               dbcallback=None,
-               components={}
+               dbcallback=None
                ):
         """
             Generic method to create a record from the data passed in
@@ -618,7 +594,7 @@ class SeleniumUnitTest(Web2UnitTest):
             if raw_value:
                 id_data.append([details[0], raw_value])
 
-        result["before"] = self.getRows(table, id_data, dbcallback, components)
+        result["before"] = self.getRows(table, id_data, dbcallback)
 
         # Submit the Form
         submit_btn = browser.find_element_by_css_selector("input[type='submit']")
@@ -649,7 +625,7 @@ class SeleniumUnitTest(Web2UnitTest):
             self.assertFalse(confirm, "Unexpected confirmation of record creation received.\nRecord - %s" % data)
 
         # Database Checks
-        result["after"] = self.getRows(table, id_data, dbcallback, components)
+        result["after"] = self.getRows(table, id_data, dbcallback)
         successMsg = "Records added to database: %s" % id_data
         failMsg = "Records not added to database %s" % id_data
         if success:

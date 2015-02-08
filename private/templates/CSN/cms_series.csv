@@ -1,0 +1,9 @@
+Name,Avatar,Location,Replies,Comments
+Alert,Y,Y,N,
+Incident,Y,Y,N,
+News,N,Y,N,
+SitRep,Y,Y,N,
+Twitter,N,Y,N,
+Update,Y,Y,N,
+Ushahidi,N,Y,N,
+YouTube,N,Y,N,

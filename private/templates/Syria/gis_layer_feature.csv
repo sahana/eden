@@ -1,0 +1,9 @@
+Name,Description,Controller,Function,Symbology,Marker,GPS Marker,Popup Label,Popup Fields,Attributes,Filter,Polygons,Style,Folder,Visible,Enabled,Cluster Threshold,Refresh
+Camps,All Active Camps,cr,shelter,OCHA,shelter,Building,Shelter,"name,population,capacity_night",,~.obsolete=False,,,,False,,
+Health Facilities,All Active Health Facilities,hms,hospital,OCHA,hospital,"Medical Facility",Health Facility,"name",,~.obsolete=False,,,,False,,
+Offices,All Active Offices,org,office,OCHA,office,Building,Office,"name,organisation_id",,~.obsolete=False,,,,False,,
+Projects,,project,location,OCHA,project,,Project,"project_id,location_id",,,,,,False,,,,
+Beneficiaries,,project,beneficiary,OCHA,beneficiary,,Beneficiary,"project_id,location_id",,,,,,False,,,,
+Distributions,,supply,distribution,OCHA,distribution,,Distribution,"project_id,location_id",,,,,,False,,,,
+Assessments,,cms,post,OCHA,assessment,Information,Assessment,body,,~.series_id$name=Assessment&~.expired=False,,,,False,,,,
+Incidents,,cms,post,OCHA,,Danger Area,Incident,"body,date",age,~.series_id$name=Incident&~.expired=False,,"[{'prop':'age','cat':'1','label':'<2 days','externalGraphic':'img/markers/gis_marker.image.DRMP_Incident_Red.png'},{'prop':'age','cat':'2','label':'2-7 days','externalGraphic':'img/markers/gis_marker.image.DRMP_Incident_Yellow.png'},{'prop':'age','cat':'3','label':'>7 days','externalGraphic':'img/markers/gis_marker.image.DRMP_Incident_Green.png'}]",,False,,,

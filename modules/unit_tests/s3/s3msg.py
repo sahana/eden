@@ -3,39 +3,39 @@
 # Msg Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3msg.py
+# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3model.py
 #
 import unittest
 import datetime
 from lxml import etree
 from gluon import *
 from gluon.storage import Storage
-from s3 import *
+from gluon.dal import Row
+from s3.s3resource import *
+from s3.s3fields import s3_meta_fields
 
 # =============================================================================
 class S3OutboxTests(unittest.TestCase):
-    """ Outbox processing tests """
+    """ Outbox processing tests (stub) """
 
     # -------------------------------------------------------------------------
     def setUp(self):
 
         current.auth.override = True
     
-        # Backup normal method
-        self.save_email = current.msg.send_email
+        self.msg = current.msg
+        self.save_email = self.msg.send_email
         xmlstr = """
 <s3xml>
     <resource name="pr_person" uuid="MsgTestPerson1">
-        <data field="first_name">MsgTest</data>
-        <data field="last_name">Person1</data>
+        <data field="first_name">MsgTestPerson1</data>
         <resource name="pr_contact">
             <data field="contact_method">EMAIL</data>
             <data field="value">test1@example.com</data>
         </resource>
     </resource>
     <resource name="pr_person" uuid="MsgTestPerson2">
-        <data field="first_name">MsgTest</data>
-        <data field="last_name">Person2</data>
+        <data field="first_name">MsgTestPerson2</data>
         <resource name="pr_contact">
             <data field="contact_method">EMAIL</data>
             <data field="value">test2@example.com</data>
@@ -112,9 +112,8 @@ class S3OutboxTests(unittest.TestCase):
             outbox_id = outbox.insert(pe_id = row.pe_id,
                                       message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email
-        msg.process_outbox()
+        self.msg.send_email = self.send_email
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 2)
         self.assertTrue("test1@example.com" in self.sent)
         self.assertTrue("test2@example.com" in self.sent)
@@ -134,9 +133,8 @@ class S3OutboxTests(unittest.TestCase):
             outbox_id = outbox.insert(pe_id = row.pe_id,
                                       message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email
-        msg.process_outbox()
+        self.msg.send_email = self.send_email
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 2)
         self.assertTrue("test1@example.com" in self.sent)
         self.assertTrue("test2@example.com" in self.sent)
@@ -156,9 +154,8 @@ class S3OutboxTests(unittest.TestCase):
             outbox_id = outbox.insert(pe_id = row.pe_id,
                                       message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email
-        msg.process_outbox()
+        self.msg.send_email = self.send_email
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 2)
         self.assertTrue("test1@example.com" in self.sent)
         self.assertTrue("test2@example.com" in self.sent)
@@ -179,9 +176,8 @@ class S3OutboxTests(unittest.TestCase):
         outbox_id = outbox.insert(pe_id = None,
                                   message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email
-        msg.process_outbox()
+        self.msg.send_email = self.send_email
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 1)
         self.assertTrue("test1@example.com" in self.sent)
 
@@ -213,9 +209,8 @@ class S3OutboxTests(unittest.TestCase):
             outbox_id = outbox.insert(pe_id = row.pe_id,
                                       message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email
-        msg.process_outbox()
+        self.msg.send_email = self.send_email
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 1)
         self.assertTrue("test2@example.com" in self.sent)
 
@@ -237,9 +232,8 @@ class S3OutboxTests(unittest.TestCase):
             outbox_id = outbox.insert(pe_id = row.pe_id,
                                       message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email_error
-        msg.process_outbox()
+        self.msg.send_email = self.send_email_error
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 1)
         self.assertTrue("test2@example.com" in self.sent)
 
@@ -261,9 +255,8 @@ class S3OutboxTests(unittest.TestCase):
             outbox_id = outbox.insert(pe_id = row.pe_id,
                                       message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email_exception
-        msg.process_outbox()
+        self.msg.send_email = self.send_email_exception
+        self.msg.process_outbox()
         self.assertEqual(len(self.sent), 1)
         self.assertTrue("test1@example.com" in self.sent)
 
@@ -286,12 +279,11 @@ class S3OutboxTests(unittest.TestCase):
         outbox_id = outbox.insert(pe_id = row.pe_id,
                                   message_id = self.message_id)
 
-        msg = current.msg
-        msg.send_email = self.send_email_error
+        self.msg.send_email = self.send_email_error
         for i in range(MAX_SEND_RETRIES+1):
             out_msg = outbox[outbox_id]
             self.assertEqual(out_msg.status, 1) # Unsent
-            msg.process_outbox()
+            self.msg.process_outbox()
         out_msg = outbox[outbox_id]
         self.assertEqual(out_msg.status, 5) # Failed
 
@@ -331,8 +323,7 @@ class S3OutboxTests(unittest.TestCase):
     def tearDown(self):
         current.auth.override = False
         current.db.rollback()
-        # Restore normal method
-        current.msg.send_email = self.save_email
+        self.msg.send_email = self.save_email
 
 # =============================================================================
 def run_suite(*test_classes):

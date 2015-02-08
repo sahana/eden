@@ -1,0 +1,23 @@
+Warehouse,Category,Item description,Catalog,Tracking number (CTN),Remark,Outbound,UM,Currency,Price,Stock
+Central Warehouse,Food,Perishable Food,Default,FO-12000,,,lbs,USD,,7500
+Central Warehouse,Food,Canned/Dried Food,Default,FO-12001,,,lbs,USD,,50000
+Central Warehouse,FUEL,Gasoline,Default,FU-12000,,,gal,USD,,5000
+Central Warehouse,Health,Bandages,Default,HE-12000,,,ea,USD,,25000
+Central Warehouse,Food,Infant Formula,Default,FO-12006,,,lbs,USD,,6500
+Central Warehouse,CLOTHING,Childrens Clothing,Default,,,,ea,USD,,12000
+Central Warehouse,CLOTHING,Mens Clothing,Default,,,,ea,USD,,6000
+Central Warehouse,CLOTHING,Womens Clothing,Default,,,,ea,USD,,5000
+EMD Main Warehouse,Food,Potable Water,Default,FO-12002,,,gal,USD,,20000
+EMD Main Warehouse,Food,Canned/Dried Food,Default,FO-12003,,,lbs,USD,,75000
+EMD Main Warehouse,Food,Infant Formula,Default,FO-12004,,,lbs,USD,,8000
+EMD Main Warehouse,FUEL,Gasoline,Default,FU-12001,,,gal,USD,,9000
+EMD Main Warehouse,Health,Body Bags,Default,,,,ea,USD,,5000
+EMD Main Warehouse,SUPPLIES,ID Badges,Default,,,,ea,USD,,12000
+EMD Main Warehouse,WASH,Diapers,Default,,,,dz,USD,,2000
+EMD Main Warehouse,WASH,Non-Potable Water,Default,,,,gal,USD,,80000
+EMD Main Warehouse,Food,Water Cooler,Default,FO-12005,,,ea,USD,,500
+EMD Main Warehouse,Health,Water Purification System,Default,,,,ea,USD,,2000
+EMD Main Warehouse,Shelter,Tent,Default,,,,ea,USD,,5000
+EMD Main Warehouse,Health,Stretcher,Default,,,,ea,USD,,150
+EMD Main Warehouse,SUPPLIES,Radio,Default,,,,ea,USD,,50
+EMD Main Warehouse,SUPPLIES,Bolt Cutters,Default,,,,ea,USD,,75

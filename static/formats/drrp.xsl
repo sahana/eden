@@ -588,18 +588,16 @@
             <data field="year"><xsl:value-of select="data[@field='year']"/></data>
             <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
 
-            <resource name="org_organisation_organisation_type">
-                <reference field="organisation_type_id" resource="org_organisation_type">
-                    <xsl:choose>
-                        <xsl:when test="$OrgType=5">
-                            <xsl:attribute name="tuid">OrgType:Network</xsl:attribute>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:attribute name="tuid">OrgType:Committees/Mechanism/Forum</xsl:attribute>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </reference>
-            </resource>
+            <reference field="organisation_type_id" resource="org_organisation_type">
+                <xsl:choose>
+                    <xsl:when test="$OrgType=5">
+                        <xsl:attribute name="tuid">OrgType:Network</xsl:attribute>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:attribute name="tuid">OrgType:Committees/Mechanism/Forum</xsl:attribute>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </reference>
 
             <resource name="org_office">
                 <xsl:choose>
@@ -698,21 +696,19 @@
             <data field="comments"><xsl:value-of select="data[@field='notes']"/></data>
             <data field="region"><xsl:value-of select="reference[@field='country_id']"/></data>
 
-            <resource name="org_organisation_organisation_type">
-                <reference field="organisation_type_id" resource="org_organisation_type">
-                    <xsl:choose>
-                        <xsl:when test="$OrgType=1">
-                            <xsl:attribute name="tuid">OrgType:Regional Office</xsl:attribute>
-                        </xsl:when>
-                        <xsl:when test="$OrgType=2">
-                            <xsl:attribute name="tuid">OrgType:Regional Organisation</xsl:attribute>
-                        </xsl:when>
-                        <xsl:when test="$OrgType=3">
-                            <xsl:attribute name="tuid">OrgType:Regional Center</xsl:attribute>
-                        </xsl:when>
-                    </xsl:choose>
-                </reference>
-            </resource>
+            <reference field="organisation_type_id" resource="org_organisation_type">
+                <xsl:choose>
+                    <xsl:when test="$OrgType=1">
+                        <xsl:attribute name="tuid">OrgType:Regional Office</xsl:attribute>
+                    </xsl:when>
+                    <xsl:when test="$OrgType=2">
+                        <xsl:attribute name="tuid">OrgType:Regional Organisation</xsl:attribute>
+                    </xsl:when>
+                    <xsl:when test="$OrgType=3">
+                        <xsl:attribute name="tuid">OrgType:Regional Center</xsl:attribute>
+                    </xsl:when>
+                </xsl:choose>
+            </reference>
 
             <resource name="org_office">
                 <xsl:choose>

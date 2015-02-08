@@ -7,7 +7,7 @@
  */
 
 /**
- * @require GeoExt/data/ProtocolProxy.js
+ * requires GeoExt/data/ProtocolProxy.js
  */
 
 /** api: (define)

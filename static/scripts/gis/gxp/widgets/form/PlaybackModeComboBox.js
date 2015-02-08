@@ -36,15 +36,15 @@ gxp.form.PlaybackModeComboBox = Ext.extend(Ext.form.ComboBox, {
     /** api: property[defaultMode]
      *  ``String``
      *  The value of ``modes`` item to select by default.
-     *  Default is ``track`` ('Normal' mode)
+     *  Default is ``false`` ('Normal' mode)
      */
-    defaultMode: 'track',
+    defaultMode: false,
     
-    /** api: property[agents]
+    /** api: property[timeAgents]
      *  ``Array``(``OpenLayers.TimeAgent``)
      *  The array of time agents that this combo box will modify
      */
-    agents: null,
+    timeAgents: null,
 
     allowBlank: false,
 
@@ -55,9 +55,7 @@ gxp.form.PlaybackModeComboBox = Ext.extend(Ext.form.ComboBox, {
     editable: false,
     
     constructor: function(config){
-        this.addEvents(
-            "beforemodechange",
-
+        this.addEvents({
             /** api: event[modechange]
              *  Fired when the playback mode changes.
              *
@@ -67,11 +65,11 @@ gxp.form.PlaybackModeComboBox = Ext.extend(Ext.form.ComboBox, {
              *  * mode - :``String`` The selected mode value
              *  * agents - :class:`OpenLayers.TimeAgent` An array of the time agents effected
              */
-            "modechange"
-        );
+            "modechange" : true
+        });
         //initialize the default modes
         if(!config.modes && !this.modes.length){
-            this.modes.push(['track', this.normalOptText], ['cumulative', this.cumulativeOptText], ['ranged', this.rangedOptText]);
+            this.modes.push([false, this.normalOptText], ['cumulative', this.cumulativeOptText], ['ranged', this.rangedOptText]);
         }
         gxp.form.PlaybackModeComboBox.superclass.constructor.call(this,config);
   },
@@ -96,21 +94,30 @@ gxp.form.PlaybackModeComboBox = Ext.extend(Ext.form.ComboBox, {
     },
     
     setPlaybackMode: function(combo, record, index){
-        this.fireEvent('beforemodechange');
-        if(!this.agents && window.console){
-            window.console.warn("No agents configured for playback mode combobox");
-            return;
+        if(!this.timeAgents){
+            this.timeAgents = this.guessTimeAgents();
         }
         var mode = record.get('field1');
-        Ext.each(this.agents,function(agent){
-            agent.tickMode = mode;
+        Ext.each(this.timeAgents,function(agent){
+            agent.rangeMode = mode;            
             if(mode == 'range') {
                 if(!agent.rangeInterval) {
                     agent.rangeInterval = 1;
                 }
             }
         });
-        this.fireEvent('modechange',this,mode,this.agents);
+        this.fireEvent('modechange',this,mode,this.timeAgents);
+    },
+    
+    /**
+     * private: guessTimeAgents
+     * Guesses the mapPanel and the ``OpenLayers.Control.TimeManager``
+     * and returns an array of all the ``OpenLayers.TimeAgent`` managed by it
+     * 
+     * return: ``Array``(``OpenLayers.TimeAgent``) 
+     */
+    guessTimeAgents: function(){
+        
     }
     
 });

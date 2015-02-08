@@ -20,9 +20,7 @@ GeoExt.Lang.add("es", {
         panelTitleText: "Título",
         layerSelectionText: "Ver datos disponibles de:",
         doneText: "Hecho",
-        uploadText: "Subir Datos",
-        addFeedActionMenuText: "Add feeds",
-        searchText: "Search for layers"
+        uploadText: "Subir Datos"
     },
     
     "gxp.plugins.BingSource.prototype": {
@@ -33,13 +31,8 @@ GeoExt.Lang.add("es", {
     },    
 
     "gxp.plugins.FeatureEditor.prototype": {
-        splitButtonText: "Edit",
-        createFeatureActionText: "Create",
-        editFeatureActionText: "Modify",
         createFeatureActionTip: "Crear nuevo elemento",
-        editFeatureActionTip: "Editar elemento existente",
-        commitTitle: "Commit message",
-        commitText: "Please enter a commit message for this edit:"
+        editFeatureActionTip: "Editar elemento existente"
     },
     
     "gxp.plugins.FeatureGrid.prototype": {
@@ -48,8 +41,8 @@ GeoExt.Lang.add("es", {
         previousPageTip: "Página anterior",
         zoomPageExtentTip: "Zoom a la extensión de la página",
         nextPageTip: "Página siguiente",
-        lastPageTip: "Última página",
-        totalMsg: "Features {1} to {2} of {0}"
+        nextPageTip: "Última página",
+        totalMsg: "Total: {0} records"
     },
 
     "gxp.plugins.GoogleEarth.prototype": {
@@ -74,10 +67,6 @@ GeoExt.Lang.add("es", {
         shortTitle: "Capas",
         rootNodeText: "Capas",
         overlayNodeText: "Capas superpuestas",
-        baseNodeText: "Capa base"
-    },
-
-    "gxp.plugins.LayerManager.prototype": {
         baseNodeText: "Capa base"
     },
 
@@ -108,7 +97,6 @@ GeoExt.Lang.add("es", {
     },
 
     "gxp.plugins.Measure.prototype": {
-        buttonText: "Medir",
         lengthMenuText: "Longitud",
         areaMenuText: "Área",
         lengthTooltip: "Medir Longitud",
@@ -130,12 +118,11 @@ GeoExt.Lang.add("es", {
 
     "gxp.plugins.OSMSource.prototype": {
         title: "Capas OpenStreetMap",
-        mapnikAttribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+        mapnikAttribution: "Datos CC-By-SA de <a href='http://openstreetmap.org/'>OpenStreetMap</a>",
         osmarenderAttribution: "Datos CC-By-SA de <a href='http://openstreetmap.org/'>OpenStreetMap</a>"
     },
 
     "gxp.plugins.Print.prototype": {
-        buttonText:"Imprimir",
         menuText: "Imprimir mapa",
         tooltip: "Imprimir mapa",
         previewText: "Vista previa",
@@ -155,7 +142,8 @@ GeoExt.Lang.add("es", {
         queryActionText: "Consultar",
         queryMenuText: "Consultar capa",
         queryActionTip: "Consultar la capa seleccionada",
-        queryByLocationText: "Query by current map extent",
+        queryByLocationText: "Consultar por localización",
+        currentTextText: "Extensión actual",
         queryByAttributesText: "Consultar por atributos",
         queryMsg: "Consultando...",
         cancelButtonText: "Cancelar",
@@ -174,16 +162,13 @@ GeoExt.Lang.add("es", {
     },
 
     "gxp.plugins.WMSGetFeatureInfo.prototype": {
-        buttonText:"Identify",
         infoActionTip: "Consultar elementos",
         popupTitle: "Información de elementos"
     },
 
     "gxp.plugins.Zoom.prototype": {
-        zoomMenuText: "Zoom Box",
         zoomInMenuText: "Acercar",
         zoomOutMenuText: "Alejar",
-        zoomTooltip: "Zoom by dragging a box",
         zoomInTooltip: "Acercar",
         zoomOutTooltip: "Alejar"
     },
@@ -312,7 +297,6 @@ GeoExt.Lang.add("es", {
     },
     
     "gxp.WMSLayerPanel.prototype": {
-        attributionText: "Attribution",
         aboutText: "Acerca de",
         titleText: "Título",
         nameText: "Nombre",
@@ -323,19 +307,9 @@ GeoExt.Lang.add("es", {
         transparentText: "Transparente",
         cacheText: "Caché",
         cacheFieldText: "Usar la versión en caché",
-        stylesText: "Estilos disponibles",
+        stylesText: "Estilos",
         infoFormatText: "Info format",
-        infoFormatEmptyText: "Select a format",
-        displayOptionsText: "Display options",
-        queryText: "Limit with filters",
-        scaleText: "Limit by scale",
-        minScaleText: "Min scale",
-        maxScaleText: "Max scale",
-        switchToFilterBuilderText: "Switch back to filter builder",
-        cqlPrefixText: "or ",
-        cqlText: "use CQL filter instead",
-        singleTileText: "Single tile",
-        singleTileFieldText: "Use a single tile"
+        infoFormatEmptyText: "Select a format"
     },
 
     "gxp.EmbedMapDialog.prototype": {
@@ -384,16 +358,13 @@ GeoExt.Lang.add("es", {
         fileLabel: "Datos",
         fieldEmptyText: "Navegue por los datos...",
         uploadText: "Subir",
-        uploadFailedText: "Upload failed",
-        processingUploadText: "Processing upload...",
         waitMsgText: "Suba sus datos data...",
         invalidFileExtensionText: "El fichero debe tener alguna de estas extensiones: ",
         optionsText: "Opciones",
         workspaceLabel: "Espacio de trabajo",
         workspaceEmptyText: "Espacio de trabajo por defecto",
         dataStoreLabel: "Almacén de datos",
-        dataStoreEmptyText: "Create new store",
-        defaultDataStoreEmptyText: "Almacén de datos por defecto"
+        dataStoreEmptyText: "Almacén de datos por defecto"
     },
     
     "gxp.NewSourceDialog.prototype": {
@@ -406,23 +377,6 @@ GeoExt.Lang.add("es", {
 
     "gxp.ScaleOverlay.prototype": { 
         zoomLevelText: "Escala"
-    },
-
-    "gxp.Viewer.prototype": {
-        saveErrorText: "Problemas guardando: "
-    },
-
-    "gxp.FeedSourceDialog.prototype": {
-        feedTypeText: "Fuente",
-        addPicasaText: "Picasa fotos",
-        addYouTubeText: "YouTube Videos",
-        addRSSText: "Feed GeoRSS Otro",
-        addFeedText: "Agregar al Mapa",
-        addTitleText: "Título",
-        keywordText: "Palabra clave",
-        doneText: "Hecho",
-        titleText: "Agregar Feeds",
-        maxResultsText: "Productos Max"
     }
 
 });

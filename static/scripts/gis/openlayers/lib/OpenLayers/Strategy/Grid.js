@@ -14,7 +14,7 @@
  * layer with the <OpenLayers.Layer.Grid> constructor.
  *
  * Inherits from:
- *  - <OpenLayers.Strategy>
+ *  - <OpenLayers.Layer.HTTPRequest>
  */
 OpenLayers.Strategy.Grid = OpenLayers.Class(OpenLayers.Strategy, {
 

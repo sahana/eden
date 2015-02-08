@@ -1,0 +1,76 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{try:}}
+<h2 align='center'>{{=title}}</h2>
+{{except:}}{{pass}}
+<div id='menu_box_center'>
+{{=cols_box}}
+{{=facility_box}}
+{{if AUTHENTICATED not in session.s3.roles:}}
+ <div id='login_box' class='menu_box'>
+  {{if not self_registration or registered:}}
+    <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration:}}
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
+ </div>
+{{pass}}
+{{=manage_facility_box}}
+{{=org_box}}
+</div>
+</div>
+<div id='about'>
+ <p>
+  {{=XML(T("EUROSHA is a pilot project within the framework of the %(EU_Aid_Volunteers)s that seeks to address humanitarian issues and specifically to promote inclusive humanitarian information-sharing in crisis preparedness.") % dict(EU_Aid_Volunteers=A(T("EU Aid Volunteers"), _href="http://ec.europa.eu/echo/aid/voluntarycorps_en.htm", _target="_blank")))}}
+ </p>
+ <p>
+  {{=XML(T("This site, powered by %(Sahana_Eden)s, serves as a public repository of humanitarian organizations, locations and project data for the four countries involved in the EUROSHA pilot (Burundi, the Central African Republic, Chad and Kenya).  For more information, see the %(EUROSHA_Volunteers_site)s.") % dict(EUROSHA_Volunteers_site=A(T("EUROSHA Volunteers site"), _href="http://eurosha-volunteers-blog.org", _target="_blank"), Sahana_Eden=A(T("Sahana Eden"), _href="http://eden.sahanafoundation.org", _target="_blank")))}}
+ </p>
+ </div>
+{{if settings.frontpage.rss:}}
+<div id='feed-control'>
+ <span style="color:#676767;font-size:11px;margin:10px;padding:4px;">{{=T("Loading")}}...</span>
+</div>
+{{pass}}
+</table>
+<table class="tabcenter">
+ <tr>
+  <td rowspan=2>{{=T("Project Sponsor")}}:
+  <td><a href="http://ec.europa.eu/echo/index_en.htm"><img src="/{{=request.application}}/static/themes/EUROSHA/img/ECHO.png"></a></td>
+ </tr>
+ <tr>
+  <td><a href="http://ec.europa.eu/echo/index_en.htm">European Commission Humanitarian Office / Humanitarian Aid & Civil Protection</a></td>
+ </tr>
+</table>
+<br>
+<table class="tabcenter">
+ <tr>
+  <td rowspan=2>{{=T("Project Partners")}}:</td>
+  <td><a href="http://acra.it"><img src="/{{=request.application}}/static/themes/EUROSHA/img/ACRA.png"></a></td>
+  <td><a href="http://hrp.diakonie.cz/eng/"><img src="/{{=request.application}}/static/themes/EUROSHA/img/Diaconia.png"></a></td>
+  <td><a href="http://www.focsiv.it"><img src="/{{=request.application}}/static/themes/EUROSHA/img/FOCSIV.png"></a></td>
+  <td><a href="http://www.france-volontaires.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/FranceVolontaires.png"></a></td>
+  <td><a href="http://www.urd.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/GroupeURD.png"></a></td>
+  <td><a href="http://hot.openstreetmap.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/HOT.png"></a></td>
+  <td><a href="http://openstreetmap.fr"><img src="/{{=request.application}}/static/themes/EUROSHA/img/OSM-FR.png"></a></td>
+  <td><a href="http://www.clovekvohrozeni.sk/en/"><img src="/{{=request.application}}/static/themes/EUROSHA/img/PeopleInPeril.png"></a></td>
+  <td><a href="http://sahanafoundation.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/SSF.png"></a></td>
+  <td><a href="http://www.scd.asso.fr"><img src="/{{=request.application}}/static/themes/EUROSHA/img/SCD.png"></a></td>
+  <td><a href="http://www.sloga-platform.org"><img src="/{{=request.application}}/static/themes/EUROSHA/img/Sloga.png"></a></td>
+ </tr>
+</table>
+{{if org_box:}}
+{{include "dataTables.html"}}{{pass}}

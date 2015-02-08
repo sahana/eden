@@ -1,0 +1,2 @@
+UUID,Name,EPSG,maxExtent,proj4js,units
+"www.sahanafoundation.org/GIS-PROJECTION-23851","ID74 / UTM zone 51N",23851,"166020.2387,0,833979.7613,423920.9771","+proj=utm +zone=51 +a=6378160 +b=6356774.50408554 +units=m +no_defs","m"

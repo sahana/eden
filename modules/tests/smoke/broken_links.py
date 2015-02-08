@@ -1,6 +1,6 @@
 """ Sahana Eden Test Framework
 
-    @copyright: 2011-2015 (c) Sahana Software Foundation
+    @copyright: 2011-2012 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -70,15 +70,13 @@ class BrokenLinkTest(Web2UnitTest):
                                "delete",
                               )
         # tuple of strings that should be removed from the URL before storing
-        # Typically this will be some variables passed in via the URL
+        # Typically this will be some variables passed in via the URL 
         self.strip_url = ("?_next=",
                           )
         self.reportOnly = False
         self.maxDepth = 16 # sanity check
         self.setThreshold(10)
         self.setUser("test@example.com/eden")
-        self.total_visited = 0
-        self.broken_links_count = 0
 
     def clearRecord(self):
         # the total url links visited
@@ -133,15 +131,6 @@ class BrokenLinkTest(Web2UnitTest):
                 pass
         return False
 
-    def addResults2Current(self):
-        '''
-        Store the count links in gluon.current to be used by HTMLTestRunner for better reporting
-        '''
-        smoke_results = {}
-        smoke_results['working_links'] = self.total_visited - self.broken_links_count
-        smoke_results['broken_links_count'] = self.broken_links_count
-        current.data['smoke_results'] = smoke_results
-
     def runTest(self):
         """
             Test to find all exposed links and check the http code returned.
@@ -151,25 +140,17 @@ class BrokenLinkTest(Web2UnitTest):
 
             The test can also display an histogram depicting the number of
             links found at each depth.
-
-            Failure or Success to be shown in the report is checked in addSuccess in TestResult
-            class
         """
         for user in self.credentials:
             self.clearRecord()
             if self.login(user):
                 self.reporter("Smoke Test for user %s" % self.user)
                 self.visitLinks()
-                self.report()
-                self.addResults2Current()
-            else:
-                raise Exception("Login Failed")
 
     def visitLinks(self):
         url = self.homeURL + "/default/index"
         to_visit = [url]
         start = time()
-        self.total_visited = 0
         if not self.reportOnly:
             for depth in range(self.maxDepth):
                 if len(to_visit) == 0:
@@ -178,7 +159,6 @@ class BrokenLinkTest(Web2UnitTest):
                 self.totalLinks += len(to_visit)
                 visit_start = time()
                 url_visited = "%d urls" % len(to_visit)
-                self.total_visited += len(to_visit)
                 to_visit = self.visit(to_visit, depth)
                 msg = "%.2d Visited %s in %.3f seconds, %d more urls found" % (depth, url_visited, time()-visit_start, len(to_visit))
                 self.reporter(msg)
@@ -192,6 +172,7 @@ class BrokenLinkTest(Web2UnitTest):
                 self.linkDepth.append(len(to_visit))
             finish = time()
             self.reporter("Finished took %.3f seconds" % (finish - start))
+        self.report()
 
     def visit(self, url_list, depth):
         repr_list = [".pdf", ".xls", ".rss", ".kml"]
@@ -284,7 +265,7 @@ class BrokenLinkTest(Web2UnitTest):
                     self.urlParentList[short_url] = index_url
                     to_visit.append(url)
         return to_visit
-
+    
     def report(self):
         self.reporter("%d URLs visited" % self.totalLinks)
         self.brokenReport()
@@ -489,7 +470,7 @@ class BrokenLinkTest(Web2UnitTest):
     def brokenReport(self):
         self.reporter("Broken Links")
         as_html = current.test_config.html
-        self.broken_links_count = 0
+        n = 1
         for (url, rd_obj) in self.results.items():
             if as_html:
                 print_url = "<a href=%s%s target=\"_blank\">%s</a>" % (self.homeURL, url, url)
@@ -507,14 +488,16 @@ class BrokenLinkTest(Web2UnitTest):
                             parent = "<a href=%s%s target=\"_blank\">Parent</a>" % (self.homeURL, parent)
                     except:
                         parent = "unknown"
-                    msg = "%3d. (%s - %s) %s called from %s" % (self.broken_links_count + 1,
+                    msg = "%3d. (%s - %s) %s called from %s" % (n,
                                                                 http_code,
                                                                 ticket,
                                                                 print_url,
                                                                 parent
                                                                 )
                 self.reporter(msg)
-                self.broken_links_count += 1
+                n += 1
+        # If there are any broken links, report failed test.
+        self.assertTrue(n == 1, "Found Broken Links")
 
     def timeReport(self):
         from operator import itemgetter
@@ -536,7 +519,7 @@ class BrokenLinkTest(Web2UnitTest):
         total = len(linktimes)
         average = numpy.mean(linktimes)
         std = numpy.std(linktimes)
-        msg = "%s links visited with an average time of %.3f and standard deviation of %.3f" % (total, average, std)
+        msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
         self.reporter(msg)
 
     def scatterplot(self):

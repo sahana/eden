@@ -6,10 +6,9 @@
          Groups - CSV Import Stylesheet
 
          CSV fields:
-         uuid............................pr_group.uuid (Optional to match contact lists with event types)
          Name............................pr_group.name
          Type............................pr_group.group_type
-         Description.....................pr_group.description
+         uuid............................pr_group.uuid (Optional to match contact lists with event types)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -35,7 +34,6 @@
             </xsl:if>
             <data field="name"><xsl:value-of select="$GroupName"/></data>
             <data field="group_type"><xsl:value-of select="col[@field='Type']"/></data>
-            <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
         </resource>
 
     </xsl:template>

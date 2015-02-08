@@ -1,0 +1,1644 @@
+"L2","L2 KV:PSGC","L3","L3 KV:PSGC"
+"Pampanga",35400000,"Angeles City",35401000
+"Negros Occidental",64500000,"Bacolod City (capital)",64501000
+"Negros Occidental",64500000,"Bago City",64502000
+"Benguet",141100000,"Baguio City",141102000
+"Negros Oriental",74600000,"Bais City",74604000
+"Batangas",41000000,"Batangas City (capital)",41005000
+"Agusan del Norte",160200000,"Butuan City (capital)",160202000
+"Nueva Ecija",34900000,"Cabanatuan City",34903000
+"Negros Occidental",64500000,"Cadiz City",64504000
+"Misamis Oriental",104300000,"Cagayan de Oro City (capital)",104305000
+"Samar (Western Samar)",86000000,"Calbayog City",86003000
+"Negros Oriental",74600000,"Canlaon City",74608000
+"Cavite",42100000,"Cavite City",42105000
+"Cebu",72200000,"Cebu City (capital)",72217000
+"Pangasinan",15500000,"City of Alaminos",15503000
+"Rizal",45800000,"City of Antipolo",45802000
+"Bataan",30800000,"City of Balanga (capital)",30803000
+"Ilocos Norte",12800000,"City of Batac",12805000
+"Negros Oriental",74600000,"City Of Bayawan (Tulong)",74606000
+"Leyte",83700000,"City Of Baybay",83708000
+"Agusan del Sur",160300000,"City Of Bayugan",160301000
+"Surigao del Sur",166800000,"City Of Bislig",166803000
+"Cebu",72200000,"City Of Bogo",72211000
+"Eastern Samar",82600000,"City Of Borongan (capital)",82604000
+"Agusan del Norte",160200000,"City Of Cabadbaran",160203000
+"Laguna",43400000,"City Of Calamba",43405000
+"Oriental Mindoro",175200000,"City Of Calapan (capital)",175205000
+"Ilocos Sur",12900000,"City Of Candon",12906000
+"Cebu",72200000,"City Of Carcar",72214000
+"Samar (Western Samar)",86000000,"City Of Catbalogan (capital)",86005000
+"Isabela",23100000,"City Of Cauayan",23108000
+"Davao del Sur",112400000,"City Of Digos (capital)",112403000
+"Misamis Oriental",104300000,"City Of El Salvador",104307000
+"Negros Occidental",64500000,"City Of Escalante",64509000
+"Nueva Ecija",34900000,"City Of Gapan",34908000
+"Negros Oriental",74600000,"City Of Guihulngan",74611000
+"Negros Occidental",64500000,"City Of Himamaylan",64510000
+"City of Isabela",99700000,"City Of Isabela (capital)",99701000
+"Negros Occidental",64500000,"City Of Kabankalan",64515000
+"Cotabato (North Cotabato)",124700000,"City Of Kidapawan (capital)",124704000
+"South Cotabato",126300000,"City Of Koronadal (capital)",126306000
+"Basilan",150700000,"City Of Lamitan",150702000
+"NCR Fourth District",137600000,"City Of Las Piñas",137601000
+"Albay",50500000,"City Of Ligao",50508000
+"Southern Leyte",86400000,"City Of Maasin (capital)",86407000
+"NCR Fourth District",137600000,"City Of Makati",137602000
+"NCR Third District",137500000,"City Of Malabon",137502000
+"Bukidnon",101300000,"City Of Malaybalay (capital)",101312000
+"Bulacan",31400000,"City Of Malolos (capital)",31410000
+"NCR Second District",137400000,"City Of Mandaluyong",137401000
+"NCR First District",133900000,"Quiapo",133903000
+"NCR Second District",137400000,"City Of Marikina",137402000
+"Masbate",54100000,"City Of Masbate (capital)",54111000
+"Davao Oriental",112500000,"City Of Mati (capital)",112509000
+"Bulacan",31400000,"City Of Meycauayan",31412000
+"NCR Fourth District",137600000,"City Of Muntinlupa",137603000
+"Cebu",72200000,"City Of Naga",72234000
+"NCR Third District",137500000,"City Of Navotas",137503000
+"Davao del Norte",112300000,"City Of Panabo",112315000
+"NCR Fourth District",137600000,"City Of Parañaque",137604000
+"NCR Second District",137400000,"City Of Pasig",137403000
+"Iloilo",63000000,"City Of Passi",63035000
+"La Union",13300000,"City Of San Fernando (capital)",13314000
+"Pampanga",35400000,"City Of San Fernando (capital)",35416000
+"Bulacan",31400000,"City Of San Jose Del Monte",31420000
+"NCR Second District",137400000,"City Of San Juan",137405000
+"Laguna",43400000,"City Of Santa Rosa",43428000
+"Isabela",23100000,"City Of Santiago",23135000
+"Negros Occidental",64500000,"City Of Sipalay",64527000
+"Sorsogon",56200000,"City Of Sorsogon (capital)",56216000
+"Albay",50500000,"City Of Tabaco",50517000
+"Kalinga",143200000,"City Of Tabuk (capital)",143213000
+"Sultan Kudarat",126500000,"City Of Tacurong",126511000
+"Davao del Norte",112300000,"City Of Tagum (capital)",112319000
+"Negros Occidental",64500000,"City Of Talisay",64528000
+"Cebu",72200000,"City Of Talisay",72250000
+"Batangas",41000000,"City Of Tanauan",41031000
+"Surigao del Sur",166800000,"City Of Tandag (capital)",166819000
+"Negros Oriental",74600000,"City Of Tanjay",74621000
+"Tarlac",36900000,"City Of Tarlac (capital)",36916000
+"Quezon",45600000,"City Of Tayabas",45647000
+"Pangasinan",15500000,"City Of Urdaneta",15546000
+"Bukidnon",101300000,"City Of Valencia",101321000
+"NCR Third District",137500000,"City Of Valenzuela",137504000
+"Negros Occidental",64500000,"City Of Victorias",64531000
+"Ilocos Sur",12900000,"City Of Vigan (capital)",12934000
+"Cotabato City",129800000,"Cotabato City",129804000
+"Pangasinan",15500000,"Dagupan City",15518000
+"Cebu",72200000,"Danao City",72223000
+"Zamboanga del Norte",97200000,"Dapitan City",97201000
+"Davao del Sur",112400000,"Davao City",112402000
+"Zamboanga del Norte",97200000,"Dipolog City (capital)",97202000
+"Negros Oriental",74600000,"Dumaguete City (capital)",74610000
+"South Cotabato",126300000,"General Santos City (Dadiangas)",126303000
+"Misamis Oriental",104300000,"Gingoog City",104308000
+"Lanao del Norte",103500000,"Iligan City",103504000
+"Iloilo",63000000,"Iloilo City (capital)",63022000
+"Camarines Sur",51700000,"Iriga City",51716000
+"Davao del Norte",112300000,"Island Garden City Of Samal",112317000
+"NCR Third District",137500000,"Kalookan City",137501000
+"Negros Occidental",64500000,"La Carlota City",64516000
+"Ilocos Norte",12800000,"Laoag City (capital)",12812000
+"Cebu",72200000,"Lapu-Lapu City (Opon)",72226000
+"Albay",50500000,"Legazpi City (capital)",50506000
+"Batangas",41000000,"Lipa City",41014000
+"Quezon",45600000,"Lucena City (capital)",45624000
+"Cebu",72200000,"Mandaue City",72230000
+"Lanao del Sur",153600000,"Marawi City (capital)",153617000
+"Camarines Sur",51700000,"Naga City",51724000
+"Zambales",37100000,"Olongapo City",37107000
+"Leyte",83700000,"Ormoc City",83738000
+"Misamis Occidental",104200000,"Oroquieta City (capital)",104209000
+"Misamis Occidental",104200000,"Ozamis City",104210000
+"Zamboanga del Sur",97300000,"Pagadian City (capital)",97322000
+"Nueva Ecija",34900000,"Palayan City (capital)",34919000
+"NCR Fourth District",137600000,"Pasay City",137605000
+"Palawan",175300000,"Puerto Princesa City (capital)",175316000
+"NCR Second District",137400000,"Quezon City",137404000
+"Capiz",61900000,"Roxas City (capital)",61914000
+"Negros Occidental",64500000,"Sagay City",64523000
+"Pangasinan",15500000,"San Carlos City",15532000
+"Negros Occidental",64500000,"San Carlos City",64524000
+"Nueva Ecija",34900000,"San Jose City",34926000
+"Laguna",43400000,"San Pablo City",43424000
+"Nueva Ecija",34900000,"Science City Of Muñoz",34917000
+"Negros Occidental",64500000,"Silay City",64526000
+"Surigao del Norte",166700000,"Surigao City (capital)",166724000
+"Leyte",83700000,"Tacloban City (capital)",83747000
+"Cavite",42100000,"Tagaytay City",42119000
+"Bohol",71200000,"Tagbilaran City (capital)",71242000
+"NCR Fourth District",137600000,"Taguig City",137607000
+"Misamis Occidental",104200000,"Tangub City",104215000
+"Cebu",72200000,"Toledo City",72251000
+"Cavite",42100000,"Trece Martires City (capital)",42122000
+"Cagayan",21500000,"Tuguegarao City (capital)",21529000
+"Zamboanga del Sur",97300000,"Zamboanga City",97332000
+"Palawan",175300000,"Aborlan",175301000
+"Occidental Mindoro",175100000,"Abra De Ilog",175101000
+"Bataan",30800000,"Abucay",30801000
+"Cagayan",21500000,"Abulug",21501000
+"Leyte",83700000,"Abuyog",83701000
+"Ilocos Norte",12800000,"Adams",12801000
+"Quezon",45600000,"Agdangan",45601000
+"Quirino",25700000,"Aglipay",25701000
+"Pangasinan",15500000,"Agno",15501000
+"Batangas",41000000,"Agoncillo",41001000
+"La Union",13300000,"Agoo",13301000
+"Pangasinan",15500000,"Aguilar",15502000
+"Ifugao",142700000,"Aguinaldo",142708000
+"Palawan",175300000,"Agutaya",175302000
+"Iloilo",63000000,"Ajuy",63001000
+"Basilan",150700000,"Akbar",150708000
+"Quezon",45600000,"Alabat",45602000
+"Sarangani",128000000,"Alabel (capital)",128001000
+"Cotabato (North Cotabato)",124700000,"Alamada",124701000
+"Laguna",43400000,"Alaminos",43401000
+"Leyte",83700000,"Alangalang",83702000
+"Basilan",150700000,"Al-Barka",150709000
+"Leyte",83700000,"Albuera",83703000
+"Bohol",71200000,"Alburquerque",71201000
+"Pangasinan",15500000,"Alcala",15504000
+"Cagayan",21500000,"Alcala",21502000
+"Cebu",72200000,"Alcantara",72201000
+"Romblon",175900000,"Alcantara",175901000
+"Cebu",72200000,"Alcoy",72202000
+"Cebu",72200000,"Alegria",72203000
+"Surigao del Norte",166700000,"Alegria",166701000
+"Cotabato (North Cotabato)",124700000,"Aleosan",124717000
+"Cavite",42100000,"Alfonso",42101000
+"Nueva Vizcaya",25000000,"Alfonso Castaneda",25015000
+"Ifugao",142700000,"Alfonso Lista (Potia)",142707000
+"Nueva Ecija",34900000,"Aliaga",34901000
+"Zamboanga Sibugay",98300000,"Alicia",98301000
+"Isabela",23100000,"Alicia",23101000
+"Bohol",71200000,"Alicia",71202000
+"Ilocos Sur",12900000,"Alilem",12901000
+"Iloilo",63000000,"Alimodian",63002000
+"Batangas",41000000,"Alitagtag",41002000
+"Cagayan",21500000,"Allacapan",21503000
+"Northern Samar",84800000,"Allen",84801000
+"Samar (Western Samar)",86000000,"Almagro",86001000
+"Biliran",87800000,"Almeria",87801000
+"Cebu",72200000,"Aloguinsan",72204000
+"Misamis Occidental",104200000,"Aloran",104201000
+"Aklan",60400000,"Altavas",60401000
+"Misamis Oriental",104300000,"Alubijid",104301000
+"Cavite",42100000,"Amadeo",42102000
+"Nueva Vizcaya",25000000,"Ambaguio",25001000
+"Negros Oriental",74600000,"Amlan (Ayuquitan)",74601000
+"Maguindanao",153800000,"Ampatuan",153801000
+"Cagayan",21500000,"Amulung",21504000
+"Southern Leyte",86400000,"Anahawan",86401000
+"Tarlac",36900000,"Anao",36901000
+"Bohol",71200000,"Anda",71203000
+"Pangasinan",15500000,"Anda",15505000
+"Isabela",23100000,"Angadanan",23102000
+"Bulacan",31400000,"Angat",31401000
+"Rizal",45800000,"Angono",45801000
+"Iloilo",63000000,"Anilao",63003000
+"Antique",60600000,"Anini-Y",60601000
+"Bohol",71200000,"Antequera",71204000
+"Cotabato (North Cotabato)",124700000,"Antipas",124715000
+"Pampanga",35400000,"Apalit",35402000
+"Cagayan",21500000,"Aparri",21505000
+"Palawan",175300000,"Araceli",175303000
+"Cotabato (North Cotabato)",124700000,"Arakan",124718000
+"Pampanga",35400000,"Arayat",35403000
+"Cebu",72200000,"Argao",72205000
+"La Union",13300000,"Aringay",13302000
+"Nueva Vizcaya",25000000,"Aritao",25002000
+"Masbate",54100000,"Aroroy",54101000
+"Eastern Samar",82600000,"Arteche",82601000
+"Pangasinan",15500000,"Asingan",15506000
+"Ifugao",142700000,"Asipulo",142711000
+"Cebu",72200000,"Asturias",72206000
+"Davao del Norte",112300000,"Asuncion (Saug)",112301000
+"Quezon",45600000,"Atimonan",45603000
+"Benguet",141100000,"Atok",141101000
+"Isabela",23100000,"Aurora",23103000
+"Zamboanga del Sur",97300000,"Aurora",97302000
+"Negros Oriental",74600000,"Ayungon",74602000
+"Camarines Sur",51700000,"Baao",51701000
+"Leyte",83700000,"Babatngon",83705000
+"Albay",50500000,"Bacacay",50501000
+"Ilocos Norte",12800000,"Bacarra",12802000
+"Bohol",71200000,"Baclayon",71205000
+"La Union",13300000,"Bacnotan",13303000
+"Oriental Mindoro",175200000,"Baco",175201000
+"Lanao del Norte",103500000,"Bacolod",103501000
+"Lanao del Sur",153600000,"Bacolod-Kalawi (Bacolod Grande)",153601000
+"Pampanga",35400000,"Bacolor",35404000
+"Negros Oriental",74600000,"Bacong",74603000
+"Cavite",42100000,"Bacoor",42103000
+"Surigao del Norte",166700000,"Bacuag",166702000
+"Zamboanga del Norte",97200000,"Bacungan (Leon T. Postigo)",97226000
+"Cebu",72200000,"Badian",72207000
+"Iloilo",63000000,"Badiangan",63004000
+"Ilocos Norte",12800000,"Badoc",12803000
+"Nueva Vizcaya",25000000,"Bagabag",25003000
+"Bataan",30800000,"Bagac",30802000
+"Catanduanes",52000000,"Bagamanoc",52001000
+"Davao Oriental",112500000,"Baganga",112501000
+"Cagayan",21500000,"Baggao",21506000
+"La Union",13300000,"Bagulin",13304000
+"Sultan Kudarat",126500000,"Bagumbayan",126501000
+"Benguet",141100000,"Bakun",141103000
+"Palawan",175300000,"Balabac",175304000
+"Lanao del Sur",153600000,"Balabagan",153602000
+"Bulacan",31400000,"Balagtas (Bigaa)",31402000
+"Cebu",72200000,"Balamban",72208000
+"Eastern Samar",82600000,"Balangiga",82602000
+"Eastern Samar",82600000,"Balangkayan",82603000
+"La Union",13300000,"Balaoan",13305000
+"Iloilo",63000000,"Balasan",63005000
+"Camarines Sur",51700000,"Balatan",51702000
+"Batangas",41000000,"Balayan",41003000
+"Kalinga",143200000,"Balbalan",143201000
+"Masbate",54100000,"Baleno",54102000
+"Aurora",37700000,"Baler (capital)",37701000
+"Batangas",41000000,"Balete",41004000
+"Aklan",60400000,"Balete",60402000
+"Misamis Occidental",104200000,"Baliangao",104202000
+"Zamboanga del Norte",97200000,"Baliguian",97224000
+"Bohol",71200000,"Balilihan",71206000
+"Lanao del Sur",153600000,"Balindong (Watu)",153603000
+"Misamis Oriental",104300000,"Balingasag",104302000
+"Misamis Oriental",104300000,"Balingoan",104303000
+"Bulacan",31400000,"Baliuag",31403000
+"Cagayan",21500000,"Ballesteros",21507000
+"Lanao del Norte",103500000,"Baloi",103502000
+"Masbate",54100000,"Balud",54103000
+"Pangasinan",15500000,"Balungao",15507000
+"Tarlac",36900000,"Bamban",36902000
+"Nueva Vizcaya",25000000,"Bambang",25004000
+"Iloilo",63000000,"Banate",63006000
+"Ifugao",142700000,"Banaue",142701000
+"Davao Oriental",112500000,"Banaybanay",112502000
+"Ilocos Sur",12900000,"Banayoyo",12902000
+"South Cotabato",126300000,"Banga",126302000
+"Aklan",60400000,"Banga",60403000
+"La Union",13300000,"Bangar",13306000
+"Abra",140100000,"Bangued (capital)",140101000
+"Ilocos Norte",12800000,"Bangui",12804000
+"Pangasinan",15500000,"Bani",15508000
+"Cotabato (North Cotabato)",124700000,"Banisilan",124716000
+"Ilocos Norte",12800000,"Banna (Espiritu)",12811000
+"Davao del Sur",112400000,"Bansalan",112401000
+"Oriental Mindoro",175200000,"Bansud",175202000
+"Ilocos Sur",12900000,"Bantay",12903000
+"Cebu",72200000,"Bantayan",72209000
+"Romblon",175900000,"Banton",175902000
+"Rizal",45800000,"Baras",45803000
+"Catanduanes",52000000,"Baras",52002000
+"Antique",60600000,"Barbaza",60602000
+"Sorsogon",56200000,"Barcelona",56202000
+"Cebu",72200000,"Barili",72210000
+"Shariff Kabunsuan",158400000,"Barira",158401000
+"Mountain Province",144400000,"Barlig",144401000
+"Surigao del Sur",166800000,"Barobo",166801000
+"Iloilo",63000000,"Barotac Nuevo",63007000
+"Iloilo",63000000,"Barotac Viejo",63008000
+"Lanao del Norte",103500000,"Baroy",103503000
+"Leyte",83700000,"Barugo",83706000
+"Negros Oriental",74600000,"Basay",74605000
+"Batanes",20900000,"Basco (capital)",20901000
+"Samar (Western Samar)",86000000,"Basey",86002000
+"Dinagat Islands",168500000,"Basilisa (Rizal)",168501000
+"Pangasinan",15500000,"Basista",15509000
+"Camarines Norte",51600000,"Basud",51601000
+"Iloilo",63000000,"Batad",63009000
+"Aklan",60400000,"Batan",60404000
+"Palawan",175300000,"Bataraza",175305000
+"Camarines Sur",51700000,"Bato",51703000
+"Catanduanes",52000000,"Bato",52003000
+"Leyte",83700000,"Bato",83707000
+"Bohol",71200000,"Batuan",71207000
+"Masbate",54100000,"Batuan",54104000
+"Batangas",41000000,"Bauan",41006000
+"La Union",13300000,"Bauang",13307000
+"Mountain Province",144400000,"Bauko",144402000
+"Bukidnon",101300000,"Baungon",101301000
+"Pangasinan",15500000,"Bautista",15510000
+"Laguna",43400000,"Bay",43402000
+"Surigao del Sur",166800000,"Bayabas",166802000
+"Pangasinan",15500000,"Bayambang",15511000
+"Lanao del Sur",153600000,"Bayang",153604000
+"Zamboanga del Sur",97300000,"Bayog",97303000
+"Nueva Vizcaya",25000000,"Bayombong (capital)",25005000
+"Antique",60600000,"Belison",60603000
+"Isabela",23100000,"Benito Soliven",23104000
+"Mountain Province",144400000,"Besao",144403000
+"Bohol",71200000,"Bien Unido",71248000
+"Bohol",71200000,"Bilar",71208000
+"Biliran",87800000,"Biliran",87802000
+"Negros Occidental",64500000,"Binalbagan",64503000
+"Pangasinan",15500000,"Binalonan",15512000
+"Laguna",43400000,"Biñan",43403000
+"Rizal",45800000,"Binangonan",45804000
+"Negros Oriental",74600000,"Bindoy (Payabon)",74607000
+"Iloilo",63000000,"Bingawan",63010000
+"Lanao del Sur",153600000,"Binidayan",153605000
+"Pangasinan",15500000,"Binmaley",15513000
+"Misamis Oriental",104300000,"Binuangan",104304000
+"Northern Samar",84800000,"Biri",84802000
+"Marinduque",174000000,"Boac (capital)",174001000
+"Northern Samar",84800000,"Bobon",84803000
+"Bulacan",31400000,"Bocaue",31404000
+"Benguet",141100000,"Bokod",141104000
+"Pangasinan",15500000,"Bolinao",15514000
+"Abra",140100000,"Boliney",140102000
+"Cebu",72200000,"Boljoon",72212000
+"Camarines Sur",51700000,"Bombon",51704000
+"Nueva Ecija",34900000,"Bongabon",34902000
+"Oriental Mindoro",175200000,"Bongabong",175203000
+"Tawi-Tawi",157000000,"Bongao (capital)",157002000
+"Misamis Occidental",104200000,"Bonifacio",104203000
+"Southern Leyte",86400000,"Bontoc",86402000
+"Mountain Province",144400000,"Bontoc (capital)",144404000
+"Cebu",72200000,"Borbon",72213000
+"Davao Oriental",112500000,"Boston",112503000
+"Zambales",37100000,"Botolan",37101000
+"Davao del Norte",112300000,"Braulio E. Dujali",112323000
+"Palawan",175300000,"Brooke's Point",175306000
+"Lanao del Sur",153600000,"Buadiposo-Buntong",153633000
+"Lanao del Sur",153600000,"Bubong",153606000
+"Abra",140100000,"Bucay",140103000
+"Abra",140100000,"Bucloc",140104000
+"Bohol",71200000,"Buenavista",71209000
+"Quezon",45600000,"Buenavista",45605000
+"Agusan del Norte",160200000,"Buenavista",160201000
+"Guimaras",67900000,"Buenavista",67901000
+"Marinduque",174000000,"Buenavista",174002000
+"Pangasinan",15500000,"Bugallon",15515000
+"Antique",60600000,"Bugasong",60604000
+"Cagayan",21500000,"Buguey",21508000
+"Benguet",141100000,"Buguias",141105000
+"Camarines Sur",51700000,"Buhi",51705000
+"Camarines Sur",51700000,"Bula",51706000
+"Bulacan",31400000,"Bulacan",31405000
+"Oriental Mindoro",175200000,"Bulalacao (San Pedro)",175204000
+"Sorsogon",56200000,"Bulan",56203000
+"Shariff Kabunsuan",158400000,"Buldon",158402000
+"Maguindanao",153800000,"Buluan",153803000
+"Sorsogon",56200000,"Bulusan",56204000
+"Lanao del Sur",153600000,"Bumbaran",153637000
+"Agusan del Sur",160300000,"Bunawan",160302000
+"Leyte",83700000,"Burauen",83710000
+"Quezon",45600000,"Burdeos",45606000
+"Isabela",23100000,"Burgos",23105000
+"La Union",13300000,"Burgos",13308000
+"Pangasinan",15500000,"Burgos",15516000
+"Ilocos Norte",12800000,"Burgos",12806000
+"Surigao del Norte",166700000,"Burgos",166704000
+"Ilocos Sur",12900000,"Burgos",12904000
+"Aklan",60400000,"Buruanga",60405000
+"Bulacan",31400000,"Bustos",31406000
+"Palawan",175300000,"Busuanga",175307000
+"Lanao del Sur",153600000,"Butig",153607000
+"Zamboanga Sibugay",98300000,"Buug",98302000
+"La Union",13300000,"Caba",13309000
+"Isabela",23100000,"Cabagan",23106000
+"Zambales",37100000,"Cabangan",37102000
+"Bukidnon",101300000,"Cabanglasan",101322000
+"Quirino",25700000,"Cabarroguis (capital)",25702000
+"Iloilo",63000000,"Cabatuan",63012000
+"Isabela",23100000,"Cabatuan",23107000
+"Nueva Ecija",34900000,"Cabiao",34904000
+"Biliran",87800000,"Cabucgayan",87803000
+"Ilocos Sur",12900000,"Cabugao",12905000
+"Camarines Sur",51700000,"Cabusao",51707000
+"Laguna",43400000,"Cabuyao",43404000
+"Palawan",175300000,"Cagayancillo",175308000
+"Dinagat Islands",168500000,"Cagdianao",168502000
+"Surigao del Sur",166800000,"Cagwait",166804000
+"Biliran",87800000,"Caibiran",87804000
+"Rizal",45800000,"Cainta",45805000
+"Romblon",175900000,"Cajidiocan",175903000
+"Camarines Sur",51700000,"Calabanga",51708000
+"Batangas",41000000,"Calaca",41007000
+"Misamis Occidental",104200000,"Calamba",104204000
+"Apayao",148100000,"Calanasan (Bayag)",148101000
+"Lanao del Sur",153600000,"Calanogas",153632000
+"Bohol",71200000,"Calape",71210000
+"Pangasinan",15500000,"Calasiao",15517000
+"Batangas",41000000,"Calatagan",41008000
+"Negros Occidental",64500000,"Calatrava",64505000
+"Romblon",175900000,"Calatrava",175904000
+"Quezon",45600000,"Calauag",45607000
+"Laguna",43400000,"Calauan",43406000
+"Cagayan",21500000,"Calayan",21509000
+"Samar (Western Samar)",86000000,"Calbiga",86004000
+"Iloilo",63000000,"Calinog",63013000
+"Occidental Mindoro",175100000,"Calintaan",175102000
+"Leyte",83700000,"Calubian",83713000
+"Bulacan",31400000,"Calumpit",31407000
+"Antique",60600000,"Caluya",60605000
+"Cagayan",21500000,"Camalaniugan",21510000
+"Albay",50500000,"Camalig",50502000
+"Camarines Sur",51700000,"Camaligan",51709000
+"Tarlac",36900000,"Camiling",36903000
+"Camarines Sur",51700000,"Canaman",51710000
+"Eastern Samar",82600000,"Can-Avid",82605000
+"Pampanga",35400000,"Candaba",35405000
+"Quezon",45600000,"Candelaria",45608000
+"Zambales",37100000,"Candelaria",37103000
+"Bohol",71200000,"Candijay",71211000
+"Negros Occidental",64500000,"Candoni",64506000
+"Surigao del Sur",166800000,"Cantilan",166805000
+"Ilocos Sur",12900000,"Caoayan",12907000
+"Camarines Norte",51600000,"Capalonga",51602000
+"Tarlac",36900000,"Capas",36904000
+"Leyte",83700000,"Capoocan",83714000
+"Northern Samar",84800000,"Capul",84804000
+"Davao Oriental",112500000,"Caraga",112504000
+"Camarines Sur",51700000,"Caramoan",51711000
+"Catanduanes",52000000,"Caramoran",52004000
+"Ilocos Norte",12800000,"Carasi",12807000
+"Rizal",45800000,"Cardona",45806000
+"Leyte",83700000,"Carigara",83715000
+"Iloilo",63000000,"Carles",63014000
+"Cebu",72200000,"Carmen",72215000
+"Davao del Norte",112300000,"Carmen",112303000
+"Cotabato (North Cotabato)",124700000,"Carmen",124702000
+"Bohol",71200000,"Carmen",71212000
+"Agusan del Norte",160200000,"Carmen",160204000
+"Surigao del Sur",166800000,"Carmen",166806000
+"Cavite",42100000,"Carmona",42104000
+"Nueva Ecija",34900000,"Carranglan",34905000
+"Surigao del Sur",166800000,"Carrascal",166807000
+"Sorsogon",56200000,"Casiguran",56205000
+"Aurora",37700000,"Casiguran",37702000
+"Sorsogon",56200000,"Castilla",56206000
+"Zambales",37100000,"Castillejos",37104000
+"Masbate",54100000,"Cataingan",54105000
+"Quezon",45600000,"Catanauan",45610000
+"Camiguin",101800000,"Catarman",101801000
+"Northern Samar",84800000,"Catarman (capital)",84805000
+"Davao Oriental",112500000,"Cateel",112505000
+"Bohol",71200000,"Catigbian",71213000
+"Cebu",72200000,"Catmon",72216000
+"Northern Samar",84800000,"Catubig",84806000
+"Negros Occidental",64500000,"Cauayan",64507000
+"Laguna",43400000,"Cavinti",43407000
+"Masbate",54100000,"Cawayan",54106000
+"Ilocos Sur",12900000,"Cervantes",12908000
+"Misamis Occidental",104200000,"Clarin",104205000
+"Bohol",71200000,"Clarin",71214000
+"Surigao del Norte",166700000,"Claver",166706000
+"Cagayan",21500000,"Claveria",21511000
+"Masbate",54100000,"Claveria",54107000
+"Misamis Oriental",104300000,"Claveria",104306000
+"Sultan Kudarat",126500000,"Columbio",126502000
+"Compostela Valley",118200000,"Compostela",118201000
+"Cebu",72200000,"Compostela",72218000
+"Misamis Occidental",104200000,"Concepcion",104206000
+"Iloilo",63000000,"Concepcion",63015000
+"Tarlac",36900000,"Concepcion",36905000
+"Romblon",175900000,"Concepcion",175905000
+"Apayao",148100000,"Conner",148102000
+"Cebu",72200000,"Consolacion",72219000
+"Romblon",175900000,"Corcuera",175906000
+"Cebu",72200000,"Cordoba",72220000
+"Isabela",23100000,"Cordon",23109000
+"Bohol",71200000,"Corella",71215000
+"Palawan",175300000,"Coron",175309000
+"Bohol",71200000,"Cortes",71216000
+"Surigao del Sur",166800000,"Cortes",166808000
+"Capiz",61900000,"Cuartero",61901000
+"Batangas",41000000,"Cuenca",41009000
+"Biliran",87800000,"Culaba",87805000
+"Antique",60600000,"Culasi",60606000
+"Palawan",175300000,"Culion",175322000
+"Ilocos Norte",12800000,"Currimao",12808000
+"Nueva Ecija",34900000,"Cuyapo",34906000
+"Palawan",175300000,"Cuyo",175310000
+"Cebu",72200000,"Daanbantayan",72221000
+"Camarines Norte",51600000,"Daet (capital)",51603000
+"Leyte",83700000,"Dagami",83717000
+"Bohol",71200000,"Dagohoy",71217000
+"Abra",140100000,"Daguioman",140105000
+"Cebu",72200000,"Dalaguete",72222000
+"Bukidnon",101300000,"Damulog",101302000
+"Bohol",71200000,"Danao",71218000
+"Bukidnon",101300000,"Dangcagan",101303000
+"Abra",140100000,"Danglas",140106000
+"Capiz",61900000,"Dao",61902000
+"Surigao del Norte",166700000,"Dapa",166707000
+"Albay",50500000,"Daraga (Locsin)",50503000
+"Samar (Western Samar)",86000000,"Daram",86006000
+"Cavite",42100000,"Dasmariñas",42106000
+"Pangasinan",15500000,"Dasol",15519000
+"Maguindanao",153800000,"Datu Abdullah Sangki",153828000
+"Maguindanao",153800000,"Datu Anggal Midtimbang",153831000
+"Shariff Kabunsuan",158400000,"Datu Blah T. Sinsuat",158403000
+"Shariff Kabunsuan",158400000,"Datu Odin Sinsuat (Dinaig) (capital)",158404000
+"Maguindanao",153800000,"Datu Paglas",153805000
+"Maguindanao",153800000,"Datu Piang",153806000
+"Maguindanao",153800000,"Datu Saudi-Ampatuan",153826000
+"Maguindanao",153800000,"Datu Unsay",153827000
+"Negros Oriental",74600000,"Dauin",74609000
+"Bohol",71200000,"Dauis",71219000
+"Surigao del Norte",166700000,"Del Carmen",166708000
+"Camarines Sur",51700000,"Del Gallego",51712000
+"Isabela",23100000,"Delfin Albano (Magsaysay)",23118000
+"Nueva Vizcaya",25000000,"Diadi",25006000
+"Quirino",25700000,"Diffun",25703000
+"Aurora",37700000,"Dilasag",37703000
+"Masbate",54100000,"Dimasalang",54108000
+"Zamboanga del Sur",97300000,"Dimataling",97305000
+"Bohol",71200000,"Dimiao",71220000
+"Dinagat Islands",168500000,"Dinagat",168503000
+"Aurora",37700000,"Dinalungan",37704000
+"Bataan",30800000,"Dinalupihan",30804000
+"Isabela",23100000,"Dinapigue",23110000
+"Zamboanga del Sur",97300000,"Dinas",97306000
+"Aurora",37700000,"Dingalan",37705000
+"Iloilo",63000000,"Dingle",63016000
+"Ilocos Norte",12800000,"Dingras",12809000
+"Aurora",37700000,"Dipaculao",37706000
+"Zamboanga Sibugay",98300000,"Diplahan",98303000
+"Lanao del Sur",153600000,"Ditsaan-Ramain",153624000
+"Isabela",23100000,"Divilacan",23111000
+"Quezon",45600000,"Dolores",45615000
+"Eastern Samar",82600000,"Dolores",82606000
+"Abra",140100000,"Dolores",140107000
+"Bukidnon",101300000,"Don Carlos",101304000
+"Davao del Sur",112400000,"Don Marcelino",112416000
+"Misamis Occidental",104200000,"Don Victoriano Chiongbian (Don Mariano Marcos)",104217000
+"Bulacan",31400000,"Doña Remedios Trinidad",31424000
+"Sorsogon",56200000,"Donsol",56207000
+"Iloilo",63000000,"Dueñas",63017000
+"Bohol",71200000,"Duero",71221000
+"Leyte",83700000,"Dulag",83718000
+"Capiz",61900000,"Dumalag",61903000
+"Zamboanga del Sur",97300000,"Dumalinao",97307000
+"Ilocos Norte",12800000,"Dumalneg",12810000
+"Iloilo",63000000,"Dumangas",63018000
+"Cebu",72200000,"Dumanjug",72224000
+"Palawan",175300000,"Dumaran",175311000
+"Capiz",61900000,"Dumarao",61904000
+"Zamboanga del Sur",97300000,"Dumingag",97308000
+"Nueva Vizcaya",25000000,"Dupax Del Norte",25007000
+"Nueva Vizcaya",25000000,"Dupax Del Sur",25008000
+"Isabela",23100000,"Echague",23112000
+"Palawan",175300000,"El Nido (Bacuit)",175312000
+"Cagayan",21500000,"Enrile",21512000
+"Negros Occidental",64500000,"Enrique B. Magalona (Saravia)",64508000
+"Siquijor",76100000,"Enrique Villanueva",76101000
+"Agusan del Sur",160300000,"Esperanza",160303000
+"Masbate",54100000,"Esperanza",54109000
+"Sultan Kudarat",126500000,"Esperanza",126503000
+"Iloilo",63000000,"Estancia",63019000
+"Laguna",43400000,"Famy",43408000
+"Romblon",175900000,"Ferrol",175916000
+"Apayao",148100000,"Flora",148103000
+"Pampanga",35400000,"Floridablanca",35406000
+"Nueva Ecija",34900000,"Gabaldon (Bitulok & Sabani)",34907000
+"Camarines Sur",51700000,"Gainza",51713000
+"Ilocos Sur",12900000,"Galimuyod",12909000
+"Northern Samar",84800000,"Gamay",84807000
+"Isabela",23100000,"Gamu",23113000
+"Lanao del Sur",153600000,"Ganassi",153609000
+"Samar (Western Samar)",86000000,"Gandara",86007000
+"Camarines Sur",51700000,"Garchitorena",51714000
+"Bohol",71200000,"Garcia Hernandez",71222000
+"Marinduque",174000000,"Gasan",174003000
+"Cagayan",21500000,"Gattaran",21513000
+"Cavite",42100000,"Gen. Mariano Alvarez",42123000
+"Maguindanao",153800000,"Gen. S. K. Pendatun",153819000
+"Cavite",42100000,"General Emilio Aguinaldo",42107000
+"Quezon",45600000,"General Luna",45616000
+"Surigao del Norte",166700000,"General Luna",166710000
+"Eastern Samar",82600000,"General Macarthur",82607000
+"Nueva Ecija",34900000,"General Mamerto Natividad",34909000
+"Quezon",45600000,"General Nakar",45617000
+"Nueva Ecija",34900000,"General Tinio (Papaya)",34910000
+"Cavite",42100000,"General Trias",42108000
+"Tarlac",36900000,"Gerona",36906000
+"Surigao del Norte",166700000,"Gigaquit",166711000
+"Catanduanes",52000000,"Gigmoto",52005000
+"Cebu",72200000,"Ginatilan",72225000
+"Eastern Samar",82600000,"Giporlos",82608000
+"Misamis Oriental",104300000,"Gitagum",104309000
+"Sarangani",128000000,"Glan",128002000
+"Oriental Mindoro",175200000,"Gloria",175206000
+"Camarines Sur",51700000,"Goa",51715000
+"Zamboanga del Norte",97200000,"Godod",97225000
+"Cagayan",21500000,"Gonzaga",21514000
+"Davao Oriental",112500000,"Governor Generoso",112506000
+"Ilocos Sur",12900000,"Gregorio Del Pilar (Concepcion)",12910000
+"Pampanga",35400000,"Guagua",35407000
+"Sorsogon",56200000,"Gubat",56208000
+"Bulacan",31400000,"Guiguinto",31408000
+"Nueva Ecija",34900000,"Guimba",34911000
+"Iloilo",63000000,"Guimbal",63020000
+"Quezon",45600000,"Guinayangan",45618000
+"Bohol",71200000,"Guindulman",71223000
+"Maguindanao",153800000,"Guindulungan",153825000
+"Albay",50500000,"Guinobatan",50504000
+"Camiguin",101800000,"Guinsiliban",101802000
+"Zamboanga del Sur",97300000,"Guipos",97343000
+"Eastern Samar",82600000,"Guiuan",82609000
+"Quezon",45600000,"Gumaca",45619000
+"Zamboanga del Norte",97200000,"Gutalac",97223000
+"Basilan",150700000,"Hadji Mohammad Ajul",150710000
+"Basilan",150700000,"Hadji Muhtamad",150712000
+"Sulu",156600000,"Hadji Panglima Tahil (Marunggas)",156606000
+"Davao del Sur",112400000,"Hagonoy",112404000
+"Bulacan",31400000,"Hagonoy",31409000
+"Antique",60600000,"Hamtic",60608000
+"Bataan",30800000,"Hermosa",30805000
+"Eastern Samar",82600000,"Hernani",82610000
+"Leyte",83700000,"Hilongos",83719000
+"Samar (Western Samar)",86000000,"Hinabangan",86008000
+"Surigao del Sur",166800000,"Hinatuan",166809000
+"Leyte",83700000,"Hindang",83720000
+"Ifugao",142700000,"Hingyon",142709000
+"Negros Occidental",64500000,"Hinigaran",64511000
+"Negros Occidental",64500000,"Hinoba-An (Asia)",64512000
+"Southern Leyte",86400000,"Hinunangan",86403000
+"Southern Leyte",86400000,"Hinundayan",86404000
+"Ifugao",142700000,"Hungduan",142702000
+"Zambales",37100000,"Iba (capital)",37105000
+"Batangas",41000000,"Ibaan",41010000
+"Aklan",60400000,"Ibajay",60406000
+"Iloilo",63000000,"Igbaras",63021000
+"Cagayan",21500000,"Iguig",21515000
+"Isabela",23100000,"Ilagan (capital)",23114000
+"Negros Occidental",64500000,"Ilog",64513000
+"Zamboanga Sibugay",98300000,"Imelda",98304000
+"Bukidnon",101300000,"Impasug-Ong",101305000
+"Cavite",42100000,"Imus",42109000
+"Bohol",71200000,"Inabanga",71224000
+"Sulu",156600000,"Indanan",156601000
+"Cavite",42100000,"Indang",42110000
+"Pangasinan",15500000,"Infanta",15520000
+"Quezon",45600000,"Infanta",45620000
+"Misamis Oriental",104300000,"Initao",104310000
+"Leyte",83700000,"Inopacan",83721000
+"Zamboanga Sibugay",98300000,"Ipil (capital)",98305000
+"Sorsogon",56200000,"Irosin",56209000
+"Leyte",83700000,"Isabel",83722000
+"Negros Occidental",64500000,"Isabela",64514000
+"Sultan Kudarat",126500000,"Isulan (capital)",126504000
+"Batanes",20900000,"Itbayat",20902000
+"Benguet",141100000,"Itogon",141106000
+"Batanes",20900000,"Ivana",20903000
+"Capiz",61900000,"Ivisan",61905000
+"Agusan del Norte",160200000,"Jabonga",160205000
+"Nueva Ecija",34900000,"Jaen",34912000
+"Bohol",71200000,"Jagna",71225000
+"Rizal",45800000,"Jala-Jala",45807000
+"Capiz",61900000,"Jamindan",61906000
+"Iloilo",63000000,"Janiuay",63023000
+"Leyte",83700000,"Jaro",83723000
+"Misamis Oriental",104300000,"Jasaan",104311000
+"Leyte",83700000,"Javier (Bugho)",83724000
+"Bohol",71200000,"Jetafe",71226000
+"Samar (Western Samar)",86000000,"Jiabong",86009000
+"Negros Oriental",74600000,"Jimalalud",74612000
+"Misamis Occidental",104200000,"Jimenez",104207000
+"Eastern Samar",82600000,"Jipapad",82611000
+"Sulu",156600000,"Jolo (capital)",156602000
+"Quezon",45600000,"Jomalig",45621000
+"Isabela",23100000,"Jones",23115000
+"Guimaras",67900000,"Jordan (capital)",67902000
+"Davao del Sur",112400000,"Jose Abad Santos (Trinidad)",112405000
+"Zamboanga del Norte",97200000,"Jose Dalman (Ponot)",97222000
+"Camarines Norte",51600000,"Jose Panganiban",51605000
+"Zamboanga del Sur",97300000,"Josefina",97337000
+"Albay",50500000,"Jovellar",50505000
+"Sorsogon",56200000,"Juban",56210000
+"Leyte",83700000,"Julita",83725000
+"Cotabato (North Cotabato)",124700000,"Kabacan",124703000
+"Zamboanga Sibugay",98300000,"Kabasalan",98306000
+"Benguet",141100000,"Kabayan",141107000
+"Apayao",148100000,"Kabugao (capital)",148104000
+"Shariff Kabunsuan",158400000,"Kabuntalan (Tumbao)",158405000
+"Bukidnon",101300000,"Kadingilan",101306000
+"Sultan Kudarat",126500000,"Kalamansig",126505000
+"Zamboanga del Norte",97200000,"Kalawit",97227000
+"Laguna",43400000,"Kalayaan",43409000
+"Palawan",175300000,"Kalayaan",175321000
+"Aklan",60400000,"Kalibo (capital)",60407000
+"Bukidnon",101300000,"Kalilangan",101307000
+"Sulu",156600000,"Kalingalan Caluang",156603000
+"Leyte",83700000,"Kananga",83726000
+"Lanao del Sur",153600000,"Kapai",153610000
+"Davao del Norte",112300000,"Kapalong",112305000
+"Benguet",141100000,"Kapangan",141108000
+"Lanao del Sur",153600000,"Kapatagan",153639000
+"Lanao del Norte",103500000,"Kapatagan",103505000
+"Nueva Vizcaya",25000000,"Kasibu",25009000
+"Zamboanga del Norte",97200000,"Katipunan",97203000
+"Lanao del Norte",103500000,"Kauswagan",103507000
+"Biliran",87800000,"Kawayan",87806000
+"Cavite",42100000,"Kawit",42111000
+"Nueva Vizcaya",25000000,"Kayapa",25010000
+"Sarangani",128000000,"Kiamba",128003000
+"Ifugao",142700000,"Kiangan",142703000
+"Bukidnon",101300000,"Kibawe",101308000
+"Davao del Sur",112400000,"Kiblawan",112406000
+"Benguet",141100000,"Kibungan",141109000
+"Misamis Oriental",104300000,"Kinoguitan",104312000
+"Bukidnon",101300000,"Kitaotao",101309000
+"Agusan del Norte",160200000,"Kitcharao",160206000
+"Lanao del Norte",103500000,"Kolambugan",103508000
+"Zamboanga del Sur",97300000,"Kumalarang",97311000
+"Negros Occidental",64500000,"La Castellana",64517000
+"Zamboanga del Norte",97200000,"La Libertad",97204000
+"Negros Oriental",74600000,"La Libertad",74613000
+"Abra",140100000,"La Paz",140108000
+"Leyte",83700000,"La Paz",83728000
+"Agusan del Sur",160300000,"La Paz",160304000
+"Tarlac",36900000,"La Paz",36907000
+"Benguet",141100000,"La Trinidad (capital)",141110000
+"Compostela Valley",118200000,"Laak (San Vicente)",118202000
+"Zamboanga del Sur",97300000,"Labangan",97312000
+"Zamboanga del Norte",97200000,"Labason",97205000
+"Camarines Norte",51600000,"Labo",51606000
+"Pangasinan",15500000,"Labrador",15521000
+"Abra",140100000,"Lacub",140109000
+"Abra",140100000,"Lagangilang",140110000
+"Ifugao",142700000,"Lagawe (capital)",142704000
+"Abra",140100000,"Lagayan",140111000
+"Misamis Oriental",104300000,"Lagonglong",104313000
+"Camarines Sur",51700000,"Lagonoy",51717000
+"Misamis Oriental",104300000,"Laguindingan",104314000
+"South Cotabato",126300000,"Lake Sebu",126319000
+"Zamboanga del Sur",97300000,"Lakewood",97333000
+"Lanao del Norte",103500000,"Lala",103509000
+"Cagayan",21500000,"Lal-Lo",21516000
+"Sultan Kudarat",126500000,"Lambayong (Mariano Marcos)",126508000
+"Iloilo",63000000,"Lambunao",63025000
+"Ifugao",142700000,"Lamut",142705000
+"Abra",140100000,"Langiden",140112000
+"Tawi-Tawi",157000000,"Languyan",157009000
+"Bukidnon",101300000,"Lantapan",101310000
+"Basilan",150700000,"Lantawan",150703000
+"Surigao del Sur",166800000,"Lanuza",166810000
+"Pangasinan",15500000,"Laoac",15548000
+"Northern Samar",84800000,"Laoang",84808000
+"Northern Samar",84800000,"Lapinig",84809000
+"Zamboanga del Sur",97300000,"Lapuyan",97313000
+"Siquijor",76100000,"Larena",76102000
+"Northern Samar",84800000,"Las Navas",84810000
+"Agusan del Norte",160200000,"Las Nieves",160207000
+"Cagayan",21500000,"Lasam",21517000
+"Antique",60600000,"Laua-An",60609000
+"Nueva Ecija",34900000,"Laur",34913000
+"Batangas",41000000,"Laurel",41011000
+"Northern Samar",84800000,"Lavezares",84811000
+"Eastern Samar",82600000,"Lawaan",82612000
+"Siquijor",76100000,"Lazi",76103000
+"Sultan Kudarat",126500000,"Lebak",126506000
+"Iloilo",63000000,"Leganes",63026000
+"Batangas",41000000,"Lemery",41012000
+"Iloilo",63000000,"Lemery",63027000
+"Iloilo",63000000,"Leon",63028000
+"Leyte",83700000,"Leyte",83729000
+"Aklan",60400000,"Lezo",60408000
+"Batangas",41000000,"Lian",41013000
+"Surigao del Sur",166800000,"Lianga",166811000
+"Aklan",60400000,"Libacao",60409000
+"Southern Leyte",86400000,"Libagon",86405000
+"Misamis Oriental",104300000,"Libertad",104315000
+"Antique",60600000,"Libertad",60610000
+"Dinagat Islands",168500000,"Libjo (Albor)",168504000
+"Camarines Sur",51700000,"Libmanan",51718000
+"Albay",50500000,"Libon",50507000
+"Bukidnon",101300000,"Libona",101311000
+"Cotabato (North Cotabato)",124700000,"Libungan",124705000
+"Nueva Ecija",34900000,"Licab",34914000
+"Abra",140100000,"Licuan-Baay (Licuan)",140113000
+"Ilocos Sur",12900000,"Lidlidda",12911000
+"Bohol",71200000,"Lila",71227000
+"Laguna",43400000,"Liliw",43410000
+"Southern Leyte",86400000,"Liloan",86406000
+"Cebu",72200000,"Liloan",72227000
+"Zamboanga del Norte",97200000,"Liloy",97206000
+"Southern Leyte",86400000,"Limasawa",86419000
+"Bataan",30800000,"Limay",30806000
+"Lanao del Norte",103500000,"Linamon",103510000
+"Palawan",175300000,"Linapacan",175313000
+"Pangasinan",15500000,"Lingayen (capital)",15522000
+"Surigao del Sur",166800000,"Lingig",166812000
+"Nueva Ecija",34900000,"Llanera",34915000
+"Eastern Samar",82600000,"Llorente",82613000
+"Bohol",71200000,"Loay",71228000
+"Batangas",41000000,"Lobo",41015000
+"Bohol",71200000,"Loboc",71229000
+"Occidental Mindoro",175100000,"Looc",175103000
+"Romblon",175900000,"Looc",175907000
+"Bohol",71200000,"Loon",71230000
+"Northern Samar",84800000,"Lope De Vega",84824000
+"Quezon",45600000,"Lopez",45622000
+"Misamis Occidental",104200000,"Lopez Jaena",104208000
+"Agusan del Sur",160300000,"Loreto",160305000
+"Dinagat Islands",168500000,"Loreto",168505000
+"Laguna",43400000,"Los Baños",43411000
+"Abra",140100000,"Luba",140114000
+"Occidental Mindoro",175100000,"Lubang",175104000
+"Pampanga",35400000,"Lubao",35408000
+"Kalinga",143200000,"Lubuagan",143206000
+"Quezon",45600000,"Lucban",45623000
+"Misamis Oriental",104300000,"Lugait",104316000
+"Sulu",156600000,"Lugus",156617000
+"Laguna",43400000,"Luisiana",43412000
+"Lanao del Sur",153600000,"Lumba-Bayabao (Maguing)",153611000
+"Lanao del Sur",153600000,"Lumbaca-Unayan",153641000
+"Laguna",43400000,"Lumban",43413000
+"Lanao del Sur",153600000,"Lumbatan",153612000
+"Lanao del Sur",153600000,"Lumbayanague",153636000
+"La Union",13300000,"Luna",13310000
+"Isabela",23100000,"Luna",23116000
+"Apayao",148100000,"Luna",148105000
+"Nueva Ecija",34900000,"Lupao",34916000
+"Camarines Sur",51700000,"Lupi",51719000
+"Davao Oriental",112500000,"Lupon",112507000
+"Sultan Kudarat",126500000,"Lutayan",126507000
+"Sulu",156600000,"Luuk",156604000
+"Sarangani",128000000,"Maasim",128004000
+"Iloilo",63000000,"Maasin",63029000
+"Capiz",61900000,"Ma-Ayon",61907000
+"Pampanga",35400000,"Mabalacat",35409000
+"Negros Oriental",74600000,"Mabinay",74614000
+"Bohol",71200000,"Mabini",71231000
+"Pangasinan",15500000,"Mabini",15523000
+"Batangas",41000000,"Mabini",41016000
+"Compostela Valley",118200000,"Mabini (Doña Alicia)",118203000
+"Laguna",43400000,"Mabitac",43414000
+"Zamboanga Sibugay",98300000,"Mabuhay",98307000
+"Pampanga",35400000,"Macabebe",35410000
+"Quezon",45600000,"Macalelon",45625000
+"Leyte",83700000,"Macarthur",83730000
+"Compostela Valley",118200000,"Maco",118204000
+"Isabela",23100000,"Maconacon",23117000
+"Southern Leyte",86400000,"Macrohon",86408000
+"Aklan",60400000,"Madalag",60410000
+"Lanao del Sur",153600000,"Madalum",153613000
+"Lanao del Sur",153600000,"Madamba",153614000
+"Quirino",25700000,"Maddela",25704000
+"Surigao del Sur",166800000,"Madrid",166813000
+"Cebu",72200000,"Madridejos",72228000
+"Pampanga",35400000,"Magalang",35411000
+"Cavite",42100000,"Magallanes",42112000
+"Agusan del Norte",160200000,"Magallanes",160208000
+"Sorsogon",56200000,"Magallanes",56211000
+"Camarines Sur",51700000,"Magarao",51720000
+"Laguna",43400000,"Magdalena",43415000
+"Romblon",175900000,"Magdiwang",175908000
+"Cotabato (North Cotabato)",124700000,"Magpet",124706000
+"Occidental Mindoro",175100000,"Magsaysay",175105000
+"Lanao del Norte",103500000,"Magsaysay",103511000
+"Palawan",175300000,"Magsaysay",175314000
+"Davao del Sur",112400000,"Magsaysay",112407000
+"Misamis Oriental",104300000,"Magsaysay (Linugos)",104317000
+"Ilocos Sur",12900000,"Magsingal",12912000
+"Lanao del Sur",153600000,"Maguing",153634000
+"Leyte",83700000,"Mahaplag",83731000
+"Batanes",20900000,"Mahatao",20904000
+"Zamboanga del Sur",97300000,"Mahayag",97315000
+"Camiguin",101800000,"Mahinog",101803000
+"Lanao del Norte",103500000,"Maigo",103512000
+"Sulu",156600000,"Maimbung",156605000
+"Surigao del Norte",166700000,"Mainit",166714000
+"Sarangani",128000000,"Maitum",128005000
+"Laguna",43400000,"Majayjay",43416000
+"Aklan",60400000,"Makato",60411000
+"Cotabato (North Cotabato)",124700000,"Makilala",124707000
+"Lanao del Sur",153600000,"Malabang",153615000
+"Cebu",72200000,"Malabuyoc",72229000
+"Davao del Sur",112400000,"Malalag",112408000
+"Zamboanga Sibugay",98300000,"Malangas",98308000
+"Sarangani",128000000,"Malapatan",128006000
+"Pangasinan",15500000,"Malasiqui",15524000
+"Aklan",60400000,"Malay",60412000
+"Abra",140100000,"Malibcong",140115000
+"Albay",50500000,"Malilipot",50509000
+"Surigao del Norte",166700000,"Malimono",166715000
+"Aklan",60400000,"Malinao",60413000
+"Albay",50500000,"Malinao",50510000
+"Davao del Sur",112400000,"Malita",112409000
+"Southern Leyte",86400000,"Malitbog",86409000
+"Bukidnon",101300000,"Malitbog",101313000
+"Isabela",23100000,"Mallig",23119000
+"Sarangani",128000000,"Malungon",128007000
+"Basilan",150700000,"Maluso",150704000
+"Batangas",41000000,"Malvar",41017000
+"Maguindanao",153800000,"Mamasapano",153820000
+"Camiguin",101800000,"Mambajao (capital)",101804000
+"Occidental Mindoro",175100000,"Mamburao (capital)",175106000
+"Capiz",61900000,"Mambusao",61908000
+"Abra",140100000,"Manabo",140116000
+"Pangasinan",15500000,"Manaoag",15525000
+"Negros Occidental",64500000,"Manapla",64518000
+"Davao Oriental",112500000,"Manay",112508000
+"Masbate",54100000,"Mandaon",54110000
+"Pangasinan",15500000,"Mangaldan",15526000
+"Pangasinan",15500000,"Mangatarem",15527000
+"Maguindanao",153800000,"Mangudadatu",153832000
+"Albay",50500000,"Manito",50511000
+"Negros Oriental",74600000,"Manjuyod",74615000
+"Benguet",141100000,"Mankayan",141111000
+"Bukidnon",101300000,"Manolo Fortich",101314000
+"Oriental Mindoro",175200000,"Mansalay",175207000
+"Misamis Oriental",104300000,"Manticao",104318000
+"Zamboanga del Norte",97200000,"Manukan",97207000
+"Northern Samar",84800000,"Mapanas",84812000
+"Pangasinan",15500000,"Mapandan",15528000
+"Tawi-Tawi",157000000,"Mapun (Cagayan De Tawi-Tawi)",157003000
+"Samar (Western Samar)",86000000,"Marabut",86010000
+"Cavite",42100000,"Maragondon",42113000
+"Compostela Valley",118200000,"Maragusan (San Mariano)",118205000
+"Bukidnon",101300000,"Maramag",101315000
+"Lanao del Sur",153600000,"Marantao",153616000
+"Ilocos Norte",12800000,"Marcos",12813000
+"Zamboanga del Sur",97300000,"Margosatubig",97317000
+"Siquijor",76100000,"Maria",76104000
+"Aurora",37700000,"Maria Aurora",37707000
+"Bohol",71200000,"Maribojoc",71232000
+"Surigao del Sur",166800000,"Marihatag",166814000
+"Bulacan",31400000,"Marilao",31411000
+"Biliran",87800000,"Maripipi",87807000
+"Bataan",30800000,"Mariveles",30807000
+"Lanao del Sur",153600000,"Marogong",153631000
+"Pampanga",35400000,"Masantol",35412000
+"Zambales",37100000,"Masinloc",37106000
+"Lanao del Sur",153600000,"Masiu",153618000
+"Eastern Samar",82600000,"Maslog",82614000
+"Batangas",41000000,"Mataas Na Kahoy",41018000
+"Leyte",83700000,"Matag-Ob",83733000
+"Cotabato (North Cotabato)",124700000,"Matalam",124708000
+"Leyte",83700000,"Matalom",83734000
+"Davao del Sur",112400000,"Matanao",112410000
+"Shariff Kabunsuan",158400000,"Matanog",158406000
+"Sorsogon",56200000,"Matnog",56212000
+"Samar (Western Samar)",86000000,"Matuguinao",86011000
+"Lanao del Norte",103500000,"Matungao",103513000
+"Quezon",45600000,"Mauban",45627000
+"Compostela Valley",118200000,"Mawab",118206000
+"Tarlac",36900000,"Mayantoc",36908000
+"Eastern Samar",82600000,"Maydolong",82615000
+"Leyte",83700000,"Mayorga",83735000
+"Ifugao",142700000,"Mayoyao",142706000
+"Cebu",72200000,"Medellin",72231000
+"Misamis Oriental",104300000,"Medina",104319000
+"Cavite",42100000,"Mendez (Mendez-Nuñez)",42114000
+"Eastern Samar",82600000,"Mercedes",82616000
+"Camarines Norte",51600000,"Mercedes",51607000
+"Leyte",83700000,"Merida",83736000
+"Pampanga",35400000,"Mexico",35413000
+"Iloilo",63000000,"Miagao",63030000
+"Zamboanga del Sur",97300000,"Midsalip",97318000
+"Cotabato (North Cotabato)",124700000,"Midsayap",124709000
+"Masbate",54100000,"Milagros",54112000
+"Camarines Sur",51700000,"Milaor",51721000
+"Iloilo",63000000,"Mina",63031000
+"Camarines Sur",51700000,"Minalabac",51722000
+"Pampanga",35400000,"Minalin",35414000
+"Cebu",72200000,"Minglanilla",72232000
+"Cotabato (North Cotabato)",124700000,"M'Lang",124710000
+"Cebu",72200000,"Moalboal",72233000
+"Masbate",54100000,"Mobo",54113000
+"Marinduque",174000000,"Mogpog",174004000
+"Negros Occidental",64500000,"Moises Padilla (Magallon)",64519000
+"Zamboanga del Sur",97300000,"Molave",97319000
+"Tarlac",36900000,"Moncada",36909000
+"Northern Samar",84800000,"Mondragon",84813000
+"Compostela Valley",118200000,"Monkayo",118207000
+"Masbate",54100000,"Monreal",54114000
+"Compostela Valley",118200000,"Montevista",118208000
+"Rizal",45800000,"Morong",45809000
+"Bataan",30800000,"Morong",30808000
+"Samar (Western Samar)",86000000,"Motiong",86012000
+"Quezon",45600000,"Mulanay",45628000
+"Lanao del Sur",153600000,"Mulondo",153619000
+"Lanao del Norte",103500000,"Munai",103514000
+"Negros Occidental",64500000,"Murcia",64520000
+"Zamboanga del Norte",97200000,"Mutia",97208000
+"Misamis Oriental",104300000,"Naawan",104320000
+"Aklan",60400000,"Nabas",60414000
+"Camarines Sur",51700000,"Nabua",51723000
+"Compostela Valley",118200000,"Nabunturan (capital)",118209000
+"Zamboanga Sibugay",98300000,"Naga",98309000
+"Ilocos Sur",12900000,"Nagbukel",12913000
+"Laguna",43400000,"Nagcarlan",43417000
+"Quirino",25700000,"Nagtipunan",25706000
+"La Union",13300000,"Naguilian",13311000
+"Isabela",23100000,"Naguilian",23120000
+"Cavite",42100000,"Naic",42115000
+"Nueva Ecija",34900000,"Nampicuan",34918000
+"Palawan",175300000,"Narra",175315000
+"Ilocos Sur",12900000,"Narvacan",12914000
+"Agusan del Norte",160200000,"Nasipit",160209000
+"Batangas",41000000,"Nasugbu",41019000
+"Pangasinan",15500000,"Natividad",15529000
+"Mountain Province",144400000,"Natonin",144405000
+"Oriental Mindoro",175200000,"Naujan",175208000
+"Biliran",87800000,"Naval (capital)",87808000
+"Compostela Valley",118200000,"New Bataan",118210000
+"Davao del Norte",112300000,"New Corella",112314000
+"Iloilo",63000000,"New Lucena",63032000
+"Aklan",60400000,"New Washington",60415000
+"South Cotabato",126300000,"Norala",126311000
+"Shariff Kabunsuan",158400000,"Northern Kabuntalan",158411000
+"Bulacan",31400000,"Norzagaray",31413000
+"Cavite",42100000,"Noveleta",42116000
+"Ilocos Norte",12800000,"Nueva Era",12814000
+"Guimaras",67900000,"Nueva Valencia",67903000
+"Aklan",60400000,"Numancia",60416000
+"Lanao del Norte",103500000,"Nunungan",103515000
+"Albay",50500000,"Oas",50512000
+"Bulacan",31400000,"Obando",31414000
+"Camarines Sur",51700000,"Ocampo",51725000
+"Romblon",175900000,"Odiongan",175909000
+"Sulu",156600000,"Old Panamao",156607000
+"Zamboanga Sibugay",98300000,"Olutanga",98310000
+"Sulu",156600000,"Omar",156619000
+"Misamis Oriental",104300000,"Opol",104321000
+"Bataan",30800000,"Orani",30809000
+"Eastern Samar",82600000,"Oras",82617000
+"Bataan",30800000,"Orion",30810000
+"Cebu",72200000,"Oslob",72235000
+"Iloilo",63000000,"Oton",63034000
+"Davao del Sur",112400000,"Padada",112411000
+"Southern Leyte",86400000,"Padre Burgos",86410000
+"Quezon",45600000,"Padre Burgos",45629000
+"Batangas",41000000,"Padre Garcia",41020000
+"Laguna",43400000,"Paete",43418000
+"Maguindanao",153800000,"Pagagawan",153822000
+"Maguindanao",153800000,"Pagalungan",153810000
+"Lanao del Sur",153600000,"Pagayawan (Tatarikan)",153620000
+"Quezon",45600000,"Pagbilao",45630000
+"Maguindanao",153800000,"Paglat",153823000
+"Samar (Western Samar)",86000000,"Pagsanghan",86026000
+"Laguna",43400000,"Pagsanjan",43419000
+"Ilocos Norte",12800000,"Pagudpud",12815000
+"Laguna",43400000,"Pakil",43420000
+"Isabela",23100000,"Palanan",23121000
+"Masbate",54100000,"Palanas",54115000
+"Northern Samar",84800000,"Palapag",84814000
+"Zambales",37100000,"Palauig",37108000
+"Sultan Kudarat",126500000,"Palimbang",126509000
+"Leyte",83700000,"Palo",83739000
+"Leyte",83700000,"Palompon",83740000
+"Occidental Mindoro",175100000,"Paluan",175107000
+"Northern Samar",84800000,"Pambujan",84815000
+"Camarines Sur",51700000,"Pamplona",51726000
+"Cagayan",21500000,"Pamplona",21518000
+"Negros Oriental",74600000,"Pamplona",74616000
+"Misamis Occidental",104200000,"Panaon",104211000
+"Capiz",61900000,"Panay",61909000
+"Maguindanao",153800000,"Pandag",153833000
+"Sulu",156600000,"Pandami",156618000
+"Antique",60600000,"Pandan",60611000
+"Catanduanes",52000000,"Pandan",52006000
+"Bulacan",31400000,"Pandi",31415000
+"Catanduanes",52000000,"Panganiban (Payo)",52007000
+"Bukidnon",101300000,"Pangantucan",101316000
+"Laguna",43400000,"Pangil",43421000
+"Bohol",71200000,"Panglao",71233000
+"Sulu",156600000,"Panglima Estino (New Panamao)",156616000
+"Tawi-Tawi",157000000,"Panglima Sugala (Balimbing) (capital)",157001000
+"Sulu",156600000,"Pangutaran",156608000
+"Tarlac",36900000,"Paniqui",36910000
+"Capiz",61900000,"Panitan",61910000
+"Nueva Ecija",34900000,"Pantabangan",34920000
+"Lanao del Norte",103500000,"Pantao Ragat",103516000
+"Lanao del Norte",103500000,"Pantar",103523000
+"Compostela Valley",118200000,"Pantukan",118211000
+"Quezon",45600000,"Panukulan",45631000
+"Ilocos Norte",12800000,"Paoay",12816000
+"Bulacan",31400000,"Paombong",31416000
+"Camarines Norte",51600000,"Paracale",51608000
+"Mountain Province",144400000,"Paracelis",144406000
+"Samar (Western Samar)",86000000,"Paranas (Wright)",86022000
+"Sulu",156600000,"Parang",156609000
+"Shariff Kabunsuan",158400000,"Parang",158407000
+"Camarines Sur",51700000,"Pasacao",51727000
+"Kalinga",143200000,"Pasil",143208000
+"Leyte",83700000,"Pastrana",83741000
+"Ilocos Norte",12800000,"Pasuquin",12817000
+"Sulu",156600000,"Pata",156610000
+"NCR Fourth District",137600000,"Pateros",137606000
+"Sulu",156600000,"Patikul",156611000
+"Quezon",45600000,"Patnanungan",45632000
+"Antique",60600000,"Patnongon",60612000
+"Iloilo",63000000,"Pavia",63036000
+"Zamboanga Sibugay",98300000,"Payao",98311000
+"Cagayan",21500000,"Peñablanca",21519000
+"Nueva Ecija",34900000,"Peñaranda",34921000
+"Abra",140100000,"Peñarrubia",140117000
+"Quezon",45600000,"Perez",45633000
+"Lanao del Sur",153600000,"Piagapo",153621000
+"Cagayan",21500000,"Piat",21520000
+"Lanao del Sur",153600000,"Picong (Sultan Gumander)",153635000
+"Ilocos Norte",12800000,"Piddig",12818000
+"Abra",140100000,"Pidigan",140118000
+"Cotabato (North Cotabato)",124700000,"Pigkawayan",124711000
+"Cotabato (North Cotabato)",124700000,"Pikit",124712000
+"Laguna",43400000,"Pila",43422000
+"Capiz",61900000,"Pilar",61911000
+"Surigao del Norte",166700000,"Pilar",166716000
+"Bohol",71200000,"Pilar",71234000
+"Cebu",72200000,"Pilar",72236000
+"Abra",140100000,"Pilar",140119000
+"Bataan",30800000,"Pilar",30811000
+"Sorsogon",56200000,"Pilar",56213000
+"Camarines Sur",51700000,"Pili (capital)",51728000
+"Rizal",45800000,"Pililla",45810000
+"Samar (Western Samar)",86000000,"Pinabacdao",86013000
+"Oriental Mindoro",175200000,"Pinamalayan",175209000
+"Cebu",72200000,"Pinamungahan",72237000
+"Zamboanga del Norte",97200000,"Piñan (New Piñan)",97209000
+"Ilocos Norte",12800000,"Pinili",12819000
+"Southern Leyte",86400000,"Pintuyan",86411000
+"Kalinga",143200000,"Pinukpuk",143209000
+"Albay",50500000,"Pio Duran",50513000
+"Masbate",54100000,"Pio V. Corpuz (Limbuhan)",54116000
+"Quezon",45600000,"Pitogo",45634000
+"Zamboanga del Sur",97300000,"Pitogo",97338000
+"Masbate",54100000,"Placer",54117000
+"Surigao del Norte",166700000,"Placer",166717000
+"Bulacan",31400000,"Plaridel",31417000
+"Quezon",45600000,"Plaridel",45635000
+"Misamis Occidental",104200000,"Plaridel",104212000
+"Oriental Mindoro",175200000,"Pola",175210000
+"Zamboanga del Norte",97200000,"Polanco",97210000
+"Albay",50500000,"Polangui",50514000
+"Quezon",45600000,"Polillo",45636000
+"South Cotabato",126300000,"Polomolok",126312000
+"Negros Occidental",64500000,"Pontevedra",64521000
+"Capiz",61900000,"Pontevedra",61912000
+"Lanao del Sur",153600000,"Poona Bayabao (Gata)",153622000
+"Lanao del Norte",103500000,"Poona Piagapo",103517000
+"Pampanga",35400000,"Porac",35415000
+"Cebu",72200000,"Poro",72238000
+"Iloilo",63000000,"Pototan",63037000
+"Pangasinan",15500000,"Pozzorubio",15530000
+"Bohol",71200000,"Pres. Carlos P. Garcia (Pitogo)",71235000
+"Zamboanga del Norte",97200000,"Pres. Manuel A. Roxas",97211000
+"Camarines Sur",51700000,"Presentacion (Parubcan)",51729000
+"Sultan Kudarat",126500000,"President Quirino",126510000
+"Cotabato (North Cotabato)",124700000,"President Roxas",124713000
+"Capiz",61900000,"President Roxas",61913000
+"Sorsogon",56200000,"Prieto Diaz",56214000
+"Agusan del Sur",160300000,"Prosperidad (capital)",160306000
+"Lanao del Sur",153600000,"Pualas",153623000
+"Apayao",148100000,"Pudtol",148106000
+"Oriental Mindoro",175200000,"Puerto Galera",175211000
+"La Union",13300000,"Pugo",13312000
+"Bulacan",31400000,"Pulilan",31418000
+"Negros Occidental",64500000,"Pulupandan",64522000
+"Tarlac",36900000,"Pura",36911000
+"Palawan",175300000,"Quezon",175317000
+"Isabela",23100000,"Quezon",23122000
+"Bukidnon",101300000,"Quezon",101317000
+"Quezon",45600000,"Quezon",45637000
+"Nueva Vizcaya",25000000,"Quezon",25011000
+"Nueva Ecija",34900000,"Quezon",34922000
+"Eastern Samar",82600000,"Quinapondan",82618000
+"Isabela",23100000,"Quirino",23123000
+"Ilocos Sur",12900000,"Quirino (Angkaki)",12915000
+"Camarines Sur",51700000,"Ragay",51730000
+"Maguindanao",153800000,"Rajah Buayan",153829000
+"Isabela",23100000,"Ramon",23124000
+"Zamboanga del Sur",97300000,"Ramon Magsaysay (Liargo)",97323000
+"Tarlac",36900000,"Ramos",36912000
+"Albay",50500000,"Rapu-Rapu",50515000
+"Quezon",45600000,"Real",45638000
+"Isabela",23100000,"Reina Mercedes",23125000
+"Agusan del Norte",160200000,"Remedios T. Romualdez",160212000
+"Nueva Ecija",34900000,"Rizal",34923000
+"Occidental Mindoro",175100000,"Rizal",175108000
+"Zamboanga del Norte",97200000,"Rizal",97212000
+"Cagayan",21500000,"Rizal",21521000
+"Laguna",43400000,"Rizal",43423000
+"Kalinga",143200000,"Rizal (Liwan)",143211000
+"Palawan",175300000,"Rizal (Marcos)",175323000
+"Rizal",45800000,"Rodriguez (Montalban)",45808000
+"Romblon",175900000,"Romblon (capital)",175910000
+"Cebu",72200000,"Ronda",72239000
+"Pangasinan",15500000,"Rosales",15531000
+"Batangas",41000000,"Rosario",41021000
+"Agusan del Sur",160300000,"Rosario",160307000
+"Northern Samar",84800000,"Rosario",84816000
+"La Union",13300000,"Rosario",13313000
+"Cavite",42100000,"Rosario",42117000
+"Zamboanga Sibugay",98300000,"Roseller Lim",98312000
+"Oriental Mindoro",175200000,"Roxas",175212000
+"Isabela",23100000,"Roxas",23126000
+"Palawan",175300000,"Roxas",175318000
+"Mountain Province",144400000,"Sabangan",144407000
+"Benguet",141100000,"Sablan",141112000
+"Occidental Mindoro",175100000,"Sablayan",175109000
+"Batanes",20900000,"Sabtang",20905000
+"Mountain Province",144400000,"Sadanga",144408000
+"Mountain Province",144400000,"Sagada",144409000
+"Camiguin",101800000,"Sagay",101805000
+"Bohol",71200000,"Sagbayan (Borja)",71236000
+"Camarines Sur",51700000,"Sagñay",51731000
+"Quirino",25700000,"Saguday",25705000
+"Lanao del Sur",153600000,"Saguiaran",153625000
+"Southern Leyte",86400000,"Saint Bernard",86412000
+"Misamis Oriental",104300000,"Salay",104322000
+"Eastern Samar",82600000,"Salcedo",82619000
+"Ilocos Sur",12900000,"Salcedo (Baugen)",12916000
+"Abra",140100000,"Sallapadan",140120000
+"Zamboanga del Norte",97200000,"Salug",97213000
+"Lanao del Norte",103500000,"Salvador",103518000
+"Negros Occidental",64500000,"Salvador Benedicto",64532000
+"Bataan",30800000,"Samal",30812000
+"Cebu",72200000,"Samboan",72240000
+"Quezon",45600000,"Sampaloc",45639000
+"Surigao del Sur",166800000,"San Agustin",166815000
+"Isabela",23100000,"San Agustin",23127000
+"Romblon",175900000,"San Agustin",175911000
+"Quezon",45600000,"San Andres",45640000
+"Romblon",175900000,"San Andres",175912000
+"Catanduanes",52000000,"San Andres (Calolbon)",52008000
+"Nueva Ecija",34900000,"San Antonio",34924000
+"Northern Samar",84800000,"San Antonio",84817000
+"Quezon",45600000,"San Antonio",45641000
+"Zambales",37100000,"San Antonio",37109000
+"Surigao del Norte",166700000,"San Benito",166718000
+"Tarlac",36900000,"San Clemente",36913000
+"Iloilo",63000000,"San Dionisio",63038000
+"Ilocos Sur",12900000,"San Emilio",12917000
+"Negros Occidental",64500000,"San Enrique",64525000
+"Iloilo",63000000,"San Enrique",63039000
+"Ilocos Sur",12900000,"San Esteban",12918000
+"Pangasinan",15500000,"San Fabian",15533000
+"Zambales",37100000,"San Felipe",37110000
+"Masbate",54100000,"San Fernando",54118000
+"Bukidnon",101300000,"San Fernando",101318000
+"Cebu",72200000,"San Fernando",72241000
+"Romblon",175900000,"San Fernando",175913000
+"Camarines Sur",51700000,"San Fernando",51732000
+"Agusan del Sur",160300000,"San Francisco",160308000
+"Southern Leyte",86400000,"San Francisco",86413000
+"Cebu",72200000,"San Francisco",72242000
+"Surigao del Norte",166700000,"San Francisco (Anao-Aon)",166719000
+"Quezon",45600000,"San Francisco (Aurora)",45642000
+"La Union",13300000,"San Gabriel",13315000
+"Isabela",23100000,"San Guillermo",23128000
+"Ilocos Sur",12900000,"San Ildefonso",12919000
+"Bulacan",31400000,"San Ildefonso",31419000
+"Abra",140100000,"San Isidro",140121000
+"Nueva Ecija",34900000,"San Isidro",34925000
+"Davao Oriental",112500000,"San Isidro",112510000
+"Northern Samar",84800000,"San Isidro",84818000
+"Bohol",71200000,"San Isidro",71237000
+"Davao del Norte",112300000,"San Isidro",112324000
+"Isabela",23100000,"San Isidro",23129000
+"Leyte",83700000,"San Isidro",83742000
+"Surigao del Norte",166700000,"San Isidro",166720000
+"Pangasinan",15500000,"San Jacinto",15534000
+"Masbate",54100000,"San Jacinto",54119000
+"Iloilo",63000000,"San Joaquin",63040000
+"Samar (Western Samar)",86000000,"San Jorge",86025000
+"Occidental Mindoro",175100000,"San Jose",175110000
+"Camarines Sur",51700000,"San Jose",51733000
+"Romblon",175900000,"San Jose",175914000
+"Northern Samar",84800000,"San Jose",84819000
+"Negros Oriental",74600000,"San Jose",74617000
+"Batangas",41000000,"San Jose",41022000
+"Tarlac",36900000,"San Jose",36918000
+"Dinagat Islands",168500000,"San Jose (capital)",168506000
+"Antique",60600000,"San Jose (capital)",60613000
+"Samar (Western Samar)",86000000,"San Jose De Buan",86014000
+"Siquijor",76100000,"San Juan",76105000
+"Abra",140100000,"San Juan",140122000
+"La Union",13300000,"San Juan",13316000
+"Batangas",41000000,"San Juan",41023000
+"Southern Leyte",86400000,"San Juan (Cabalian)",86414000
+"Ilocos Sur",12900000,"San Juan (Lapog)",12920000
+"Eastern Samar",82600000,"San Julian",82620000
+"Nueva Ecija",34900000,"San Leonardo",34927000
+"Guimaras",67900000,"San Lorenzo",67904000
+"Camarines Norte",51600000,"San Lorenzo Ruiz (Imelda)",51604000
+"Aurora",37700000,"San Luis",37708000
+"Agusan del Sur",160300000,"San Luis",160309000
+"Batangas",41000000,"San Luis",41024000
+"Pampanga",35400000,"San Luis",35417000
+"Isabela",23100000,"San Manuel",23130000
+"Tarlac",36900000,"San Manuel",36914000
+"Pangasinan",15500000,"San Manuel",15535000
+"Zambales",37100000,"San Marcelino",37111000
+"Isabela",23100000,"San Mariano",23131000
+"Isabela",23100000,"San Mateo",23132000
+"Rizal",45800000,"San Mateo",45811000
+"Catanduanes",52000000,"San Miguel",52009000
+"Leyte",83700000,"San Miguel",83743000
+"Zamboanga del Sur",97300000,"San Miguel",97324000
+"Bohol",71200000,"San Miguel",71238000
+"Iloilo",63000000,"San Miguel",63041000
+"Bulacan",31400000,"San Miguel",31421000
+"Surigao del Sur",166800000,"San Miguel",166816000
+"Zambales",37100000,"San Narciso",37112000
+"Quezon",45600000,"San Narciso",45644000
+"Batangas",41000000,"San Nicolas",41025000
+"Pangasinan",15500000,"San Nicolas",15536000
+"Ilocos Norte",12800000,"San Nicolas",12820000
+"Zamboanga del Sur",97300000,"San Pablo",97325000
+"Isabela",23100000,"San Pablo",23133000
+"Masbate",54100000,"San Pascual",54120000
+"Batangas",41000000,"San Pascual",41026000
+"Laguna",43400000,"San Pedro",43425000
+"Eastern Samar",82600000,"San Policarpo",82621000
+"Pangasinan",15500000,"San Quintin",15537000
+"Abra",140100000,"San Quintin",140123000
+"Iloilo",63000000,"San Rafael",63042000
+"Bulacan",31400000,"San Rafael",31422000
+"Cebu",72200000,"San Remigio",72243000
+"Antique",60600000,"San Remigio",60614000
+"Southern Leyte",86400000,"San Ricardo",86415000
+"Northern Samar",84800000,"San Roque",84820000
+"Samar (Western Samar)",86000000,"San Sebastian",86015000
+"Pampanga",35400000,"San Simon",35418000
+"Oriental Mindoro",175200000,"San Teodoro",175213000
+"Northern Samar",84800000,"San Vicente",84821000
+"Camarines Norte",51600000,"San Vicente",51609000
+"Palawan",175300000,"San Vicente",175319000
+"Ilocos Sur",12900000,"San Vicente",12921000
+"Cagayan",21500000,"Sanchez-Mira",21522000
+"Ilocos Sur",12900000,"Santa",12922000
+"Cagayan",21500000,"Santa Ana",21523000
+"Pampanga",35400000,"Santa Ana",35419000
+"Pangasinan",15500000,"Santa Barbara",15538000
+"Iloilo",63000000,"Santa Barbara",63043000
+"Ilocos Sur",12900000,"Santa Catalina",12923000
+"Negros Oriental",74600000,"Santa Catalina",74618000
+"Zambales",37100000,"Santa Cruz",37113000
+"Occidental Mindoro",175100000,"Santa Cruz",175111000
+"Ilocos Sur",12900000,"Santa Cruz",12924000
+"Marinduque",174000000,"Santa Cruz",174005000
+"Davao del Sur",112400000,"Santa Cruz",112412000
+"Laguna",43400000,"Santa Cruz (capital)",43426000
+"Camarines Norte",51600000,"Santa Elena",51610000
+"Cebu",72200000,"Santa Fe",72244000
+"Leyte",83700000,"Santa Fe",83744000
+"Nueva Vizcaya",25000000,"Santa Fe",25012000
+"Romblon",175900000,"Santa Fe",175915000
+"Tarlac",36900000,"Santa Ignacia",36915000
+"Agusan del Sur",160300000,"Santa Josefa",160310000
+"Ilocos Sur",12900000,"Santa Lucia",12925000
+"Sorsogon",56200000,"Santa Magdalena",56215000
+"Apayao",148100000,"Santa Marcela",148107000
+"Samar (Western Samar)",86000000,"Santa Margarita",86016000
+"Bulacan",31400000,"Santa Maria",31423000
+"Isabela",23100000,"Santa Maria",23134000
+"Davao del Sur",112400000,"Santa Maria",112413000
+"Ilocos Sur",12900000,"Santa Maria",12926000
+"Pangasinan",15500000,"Santa Maria",15539000
+"Laguna",43400000,"Santa Maria",43427000
+"Romblon",175900000,"Santa Maria (Imelda)",175917000
+"Surigao del Norte",166700000,"Santa Monica (Sapao)",166721000
+"Cagayan",21500000,"Santa Praxedes",21524000
+"Pampanga",35400000,"Santa Rita",35420000
+"Samar (Western Samar)",86000000,"Santa Rita",86017000
+"Nueva Ecija",34900000,"Santa Rosa",34928000
+"Batangas",41000000,"Santa Teresita",41027000
+"Cagayan",21500000,"Santa Teresita",21525000
+"Cebu",72200000,"Santander",72245000
+"Agusan del Norte",160200000,"Santiago",160210000
+"Ilocos Sur",12900000,"Santiago",12927000
+"Ilocos Sur",12900000,"Santo Domingo",12928000
+"Nueva Ecija",34900000,"Santo Domingo",34929000
+"Albay",50500000,"Santo Domingo (Libog)",50516000
+"South Cotabato",126300000,"Santo Niño",126318000
+"Samar (Western Samar)",86000000,"Santo Niño",86018000
+"Cagayan",21500000,"Santo Niño (Faire)",21526000
+"Isabela",23100000,"Santo Tomas",23136000
+"La Union",13300000,"Santo Tomas",13317000
+"Batangas",41000000,"Santo Tomas",41028000
+"Pangasinan",15500000,"Santo Tomas",15540000
+"Davao del Norte",112300000,"Santo Tomas",112318000
+"Pampanga",35400000,"Santo Tomas",35421000
+"La Union",13300000,"Santol",13318000
+"Lanao del Norte",103500000,"Sapad",103519000
+"Misamis Occidental",104200000,"Sapang Dalaga",104213000
+"Tawi-Tawi",157000000,"Sapa-Sapa",157010000
+"Capiz",61900000,"Sapi-An",61915000
+"Iloilo",63000000,"Sara",63044000
+"Davao del Sur",112400000,"Sarangani",112415000
+"Quezon",45600000,"Sariaya",45645000
+"Ilocos Norte",12800000,"Sarrat",12821000
+"Pampanga",35400000,"Sasmuan (Sexmoan)",35422000
+"Antique",60600000,"Sebaste",60615000
+"Sultan Kudarat",126500000,"Sen. Ninoy Aquino",126512000
+"Zamboanga del Norte",97200000,"Sergio Osmeña Sr.",97214000
+"Bohol",71200000,"Sevilla",71239000
+"Maguindanao",153800000,"Shariff Aguak (Maganoy) (capital)",153808000
+"Sulu",156600000,"Siasi",156612000
+"Negros Oriental",74600000,"Siaton",74619000
+"Zamboanga Sibugay",98300000,"Siay",98313000
+"Zamboanga del Norte",97200000,"Siayan",97215000
+"Agusan del Sur",160300000,"Sibagat",160314000
+"Antique",60600000,"Sibalom",60616000
+"Cebu",72200000,"Sibonga",72246000
+"Zamboanga del Norte",97200000,"Sibuco",97216000
+"Negros Oriental",74600000,"Sibulan",74620000
+"Guimaras",67900000,"Sibunag",67905000
+"Zamboanga del Norte",97200000,"Sibutad",97217000
+"Tawi-Tawi",157000000,"Sibutu",157011000
+"Bohol",71200000,"Sierra Bullones",71240000
+"Ilocos Sur",12900000,"Sigay",12929000
+"Capiz",61900000,"Sigma",61916000
+"Bohol",71200000,"Sikatuna",71241000
+"Southern Leyte",86400000,"Silago",86416000
+"Cavite",42100000,"Silang",42118000
+"Northern Samar",84800000,"Silvino Lobos",84822000
+"Tawi-Tawi",157000000,"Simunul",157004000
+"Misamis Occidental",104200000,"Sinacaban",104214000
+"Ilocos Sur",12900000,"Sinait",12930000
+"Zamboanga del Norte",97200000,"Sindangan",97218000
+"Laguna",43400000,"Siniloan",43429000
+"Zamboanga del Norte",97200000,"Siocon",97219000
+"Camarines Sur",51700000,"Sipocot",51734000
+"Siquijor",76100000,"Siquijor (capital)",76106000
+"Zamboanga del Norte",97200000,"Sirawai",97220000
+"Camarines Sur",51700000,"Siruma",51735000
+"Surigao del Norte",166700000,"Sison",166722000
+"Pangasinan",15500000,"Sison",15541000
+"Tawi-Tawi",157000000,"Sitangkai",157005000
+"Surigao del Norte",166700000,"Socorro",166723000
+"Oriental Mindoro",175200000,"Socorro",175214000
+"Palawan",175300000,"Sofronio Española",175324000
+"Southern Leyte",86400000,"Sogod",86417000
+"Cebu",72200000,"Sogod",72247000
+"Cagayan",21500000,"Solana",21527000
+"Nueva Vizcaya",25000000,"Solano",25013000
+"Ilocos Norte",12800000,"Solsona",12822000
+"Zamboanga del Sur",97300000,"Sominot (Don Mariano Marcos)",97340000
+"Tawi-Tawi",157000000,"South Ubian",157006000
+"Maguindanao",153800000,"South Upi",153817000
+"Pangasinan",15500000,"Sual",15542000
+"Zambales",37100000,"Subic",37114000
+"La Union",13300000,"Sudipen",13319000
+"Misamis Oriental",104300000,"Sugbongcogon",104323000
+"Ilocos Sur",12900000,"Sugpon",12931000
+"Eastern Samar",82600000,"Sulat",82622000
+"Davao del Sur",112400000,"Sulop",112414000
+"Lanao del Sur",153600000,"Sultan Dumalondong",153640000
+"Shariff Kabunsuan",158400000,"Sultan Kudarat (Nuling)",158408000
+"Shariff Kabunsuan",158400000,"Sultan Mastura",158409000
+"Lanao del Norte",103500000,"Sultan Naga Dimaporo (Karomatan)",103506000
+"Maguindanao",153800000,"Sultan Sa Barongis (Lambayong)",153813000
+"Bukidnon",101300000,"Sumilao",101319000
+"Basilan",150700000,"Sumisip",150705000
+"South Cotabato",126300000,"Surallah",126313000
+"Ilocos Sur",12900000,"Suyo",12932000
+"Batangas",41000000,"Taal",41029000
+"Leyte",83700000,"Tabango",83745000
+"Zamboanga del Sur",97300000,"Tabina",97327000
+"Cebu",72200000,"Tabogon",72248000
+"Leyte",83700000,"Tabontabon",83746000
+"Cebu",72200000,"Tabuelan",72249000
+"Mountain Province",144400000,"Tadian",144410000
+"Eastern Samar",82600000,"Taft",82623000
+"Surigao del Norte",166700000,"Tagana-An",166725000
+"Samar (Western Samar)",86000000,"Tagapul-An",86024000
+"Surigao del Sur",166800000,"Tagbina",166817000
+"Quezon",45600000,"Tagkawayan",45646000
+"Surigao del Sur",166800000,"Tago",166818000
+"Misamis Oriental",104300000,"Tagoloan",104324000
+"Lanao del Norte",103500000,"Tagoloan",103520000
+"Lanao del Sur",153600000,"Tagoloan Ii",153638000
+"Ilocos Sur",12900000,"Tagudin",12933000
+"Agusan del Sur",160300000,"Talacogon",160311000
+"Davao del Norte",112300000,"Talaingod",112322000
+"Bukidnon",101300000,"Talakag",101320000
+"Samar (Western Samar)",86000000,"Talalora",86019000
+"Nueva Ecija",34900000,"Talavera",34930000
+"Maguindanao",153800000,"Talayan",153816000
+"Bohol",71200000,"Talibon",71243000
+"Sulu",156600000,"Talipao",156613000
+"Batangas",41000000,"Talisay",41030000
+"Camarines Norte",51600000,"Talisay",51611000
+"Misamis Oriental",104300000,"Talisayan",104325000
+"Maguindanao",153800000,"Talitay",153821000
+"Nueva Ecija",34900000,"Talugtug",34931000
+"Zamboanga Sibugay",98300000,"Talusan",98314000
+"Zamboanga del Sur",97300000,"Tambulig",97328000
+"South Cotabato",126300000,"Tampakan",126314000
+"Lanao del Sur",153600000,"Tamparan",153626000
+"Zamboanga del Norte",97200000,"Tampilisan",97221000
+"Leyte",83700000,"Tanauan",83748000
+"Rizal",45800000,"Tanay",45812000
+"Tawi-Tawi",157000000,"Tandubas",157007000
+"Aklan",60400000,"Tangalan",60417000
+"Lanao del Norte",103500000,"Tangcal",103521000
+"South Cotabato",126300000,"Tantangan",126315000
+"Kalinga",143200000,"Tanudan",143214000
+"Cavite",42100000,"Tanza",42120000
+"Capiz",61900000,"Tapaz",61917000
+"Sulu",156600000,"Tapul",156614000
+"Lanao del Sur",153600000,"Taraka",153627000
+"Samar (Western Samar)",86000000,"Tarangnan",86020000
+"Davao Oriental",112500000,"Tarragona",112511000
+"Negros Oriental",74600000,"Tayasan",74622000
+"Batangas",41000000,"Taysan",41032000
+"Rizal",45800000,"Taytay",45813000
+"Palawan",175300000,"Taytay",175320000
+"Pangasinan",15500000,"Tayug",15543000
+"Abra",140100000,"Tayum",140124000
+"South Cotabato",126300000,"T'Boli",126316000
+"Rizal",45800000,"Teresa",45814000
+"Cavite",42100000,"Ternate",42121000
+"Quezon",45600000,"Tiaong",45648000
+"Antique",60600000,"Tibiao",60617000
+"Camarines Sur",51700000,"Tigaon",51736000
+"Zamboanga del Sur",97300000,"Tigbao",97344000
+"Iloilo",63000000,"Tigbauan",63045000
+"Camarines Sur",51700000,"Tinambac",51737000
+"Abra",140100000,"Tineg",140125000
+"Kalinga",143200000,"Tinglayan",143215000
+"Batangas",41000000,"Tingloy",41033000
+"Ifugao",142700000,"Tinoc",142710000
+"Basilan",150700000,"Tipo-Tipo",150706000
+"Zamboanga Sibugay",98300000,"Titay",98315000
+"Albay",50500000,"Tiwi",50518000
+"Antique",60600000,"Tobias Fornier (Dao)",60607000
+"Negros Occidental",64500000,"Toboso",64529000
+"Leyte",83700000,"Tolosa",83749000
+"Southern Leyte",86400000,"Tomas Oppus",86418000
+"Sulu",156600000,"Tongkil",156615000
+"Marinduque",174000000,"Torrijos",174006000
+"Agusan del Sur",160300000,"Trento",160312000
+"Bohol",71200000,"Trinidad",71244000
+"Cagayan",21500000,"Tuao",21528000
+"Benguet",141100000,"Tuba",141113000
+"Dinagat Islands",168500000,"Tubajon",168507000
+"La Union",13300000,"Tubao",13320000
+"Lanao del Sur",153600000,"Tubaran",153628000
+"Agusan del Norte",160200000,"Tubay",160211000
+"Bohol",71200000,"Tubigon",71245000
+"Benguet",141100000,"Tublay",141114000
+"Abra",140100000,"Tubo",140126000
+"Surigao del Norte",166700000,"Tubod",166727000
+"Lanao del Norte",103500000,"Tubod (capital)",103522000
+"Iloilo",63000000,"Tubungan",63046000
+"Cebu",72200000,"Tuburan",72252000
+"Basilan",150700000,"Tuburan",150707000
+"Misamis Occidental",104200000,"Tudela",104216000
+"Cebu",72200000,"Tudela",72253000
+"Lanao del Sur",153600000,"Tugaya",153629000
+"Zamboanga del Sur",97300000,"Tukuran",97330000
+"Cotabato (North Cotabato)",124700000,"Tulunan",124714000
+"Isabela",23100000,"Tumauini",23137000
+"Leyte",83700000,"Tunga",83750000
+"Zamboanga Sibugay",98300000,"Tungawan",98316000
+"South Cotabato",126300000,"Tupi",126317000
+"Tawi-Tawi",157000000,"Turtle Islands",157008000
+"Batangas",41000000,"Tuy",41034000
+"Bohol",71200000,"Ubay",71246000
+"Pangasinan",15500000,"Umingan",15544000
+"Basilan",150700000,"Ungkaya Pukan",150711000
+"Quezon",45600000,"Unisan",45649000
+"Shariff Kabunsuan",158400000,"Upi",158410000
+"Pangasinan",15500000,"Urbiztondo",15545000
+"Masbate",54100000,"Uson",54121000
+"Batanes",20900000,"Uyugan",20906000
+"Antique",60600000,"Valderrama",60618000
+"Bohol",71200000,"Valencia",71247000
+"Negros Oriental",74600000,"Valencia (Luzurriaga)",74623000
+"Negros Occidental",64500000,"Valladolid",64530000
+"Negros Oriental",74600000,"Vallehermoso",74624000
+"Agusan del Sur",160300000,"Veruela",160313000
+"Oriental Mindoro",175200000,"Victoria",175215000
+"Northern Samar",84800000,"Victoria",84823000
+"Laguna",43400000,"Victoria",43430000
+"Tarlac",36900000,"Victoria",36917000
+"Catanduanes",52000000,"Viga",52010000
+"Leyte",83700000,"Villaba",83751000
+"Misamis Oriental",104300000,"Villanueva",104326000
+"Samar (Western Samar)",86000000,"Villareal",86021000
+"Pangasinan",15500000,"Villasis",15547000
+"Nueva Vizcaya",25000000,"Villaverde",25014000
+"Abra",140100000,"Villaviciosa",140127000
+"Zamboanga del Sur",97300000,"Vincenzo A. Sagun",97341000
+"Ilocos Norte",12800000,"Vintar",12823000
+"Camarines Norte",51600000,"Vinzons",51612000
+"Catanduanes",52000000,"Virac (capital)",52011000
+"Lanao del Sur",153600000,"Wao",153630000
+"Negros Oriental",74600000,"Zamboanguita",74625000
+"Nueva Ecija",34900000,"Zaragoza",34932000
+"Iloilo",63000000,"Zarraga",63047000
+"Samar (Western Samar)",86000000,"Zumarraga",86023000
+"NCR First District",133900000,"Tondo I / II",133901000
+"NCR First District",133900000,"Binondo",133902000
+"NCR First District",133900000,"San Nicolas",133904000
+"NCR First District",133900000,"Santa Cruz",133905000
+"NCR First District",133900000,"Sampaloc",133906000
+"NCR First District",133900000,"San Miguel",133907000
+"NCR First District",133900000,"Ermita",133908000
+"NCR First District",133900000,"Intramuros",133909000
+"NCR First District",133900000,"Malate",133910000
+"NCR First District",133900000,"Paco",133911000
+"NCR First District",133900000,"Pandacan",133912000
+"NCR First District",133900000,"Port Area",133913000
+"NCR First District",133900000,"Santa Ana",133914000

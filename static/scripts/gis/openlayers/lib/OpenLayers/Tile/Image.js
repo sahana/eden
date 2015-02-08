@@ -177,24 +177,25 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
             }
             if (this.isLoading) {
                 //if we're already loading, send 'reload' instead of 'loadstart'.
-                var loadEvent = "reload";
+                this._loadEvent = "reload";
             } else {
                 this.isLoading = true;
-                var loadEvent = "loadstart";
+                this._loadEvent = "loadstart";
             }
-            this.renderTile(loadEvent);
+            this.renderTile();
             this.positionTile();
         } else if (shouldDraw === false) {
             this.unload();
         }
         return shouldDraw;
     },
+    
     /**
      * Method: renderTile
      * Internal function to actually initialize the image tile,
      *     position it correctly, and set its url.
      */
-    renderTile: function(loadEvent) {
+    renderTile: function() {
         if (this.layer.async) {
             // Asynchronous image requests call the asynchronous getURL method
             // on the layer to fetch an image that covers 'this.bounds'.
@@ -202,16 +203,13 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
             this.layer.getURLasync(this.bounds, function(url) {
                 if (id == this.asyncRequestId) {
                     this.url = url;
-                    this.initImage(loadEvent);
-                } else {
-                    // make sure the event gets triggered regardless
-                    this.events.triggerEvent(loadEvent);
+                    this.initImage();
                 }
             }, this);
         } else {
             // synchronous image requests get the url immediately.
             this.url = this.layer.getURL(this.bounds);
-            this.initImage(loadEvent);
+            this.initImage();
         }
     },
 
@@ -315,18 +313,12 @@ OpenLayers.Tile.Image = OpenLayers.Class(OpenLayers.Tile, {
      * Method: initImage
      * Creates the content for the frame on the tile.
      */
-    initImage: function(loadEvent) {
-        if (!this.url && !this.imgDiv) {
-            // fast path out - if there is no tile url and no previous image
-            this.isLoading = false;
-            return;
-        }
+    initImage: function() {
         this.events.triggerEvent('beforeload');
         this.layer.div.appendChild(this.getTile());
-        this.events.triggerEvent(loadEvent);
+        this.events.triggerEvent(this._loadEvent);
         var img = this.getImage();
-        var src = img.getAttribute('src') || '';
-        if (this.url && OpenLayers.Util.isEquivalentUrl(src, this.url)) {
+        if (this.url && OpenLayers.Util.isEquivalentUrl(img.src, this.url)) {
             this._loadTimeout = window.setTimeout(
                 OpenLayers.Function.bind(this.onImageLoad, this), 0
             );

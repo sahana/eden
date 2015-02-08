@@ -56,6 +56,12 @@ input#sub_defaulttime_defaulttime_hours_edit_none {
     width: 60px;
 }
 /* ========================================================================= */
+/* HUMAN RESOURCES MODULE */
+.hrm_avatar {
+    float: left;
+    clear: right;
+}
+/* ========================================================================= */
 /* PERSON REGISTRY MODULE */
 /* Contacts */
 .contacts-wrapper {

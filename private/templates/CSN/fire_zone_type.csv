@@ -1,0 +1,4 @@
+Name,Style,Comments
+Burnt,"{'fillOpacity':0.5,'strokeWidth':1,'stroke':'000000'}",
+Evacuation,"{'fillOpacity':0.5,'strokeWidth':1,'stroke':'FFFF00'}",
+Fire,"{'fillOpacity':0.5,'strokeWidth':1,'stroke':'FF0000'}",

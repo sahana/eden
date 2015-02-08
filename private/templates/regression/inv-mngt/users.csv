@@ -1,0 +1,10 @@
+"First Name","Last Name","Email","Password","Role","Organisation"
+"Project","Editor","project@example.com","testing","STAFF,MAP_ADMIN","Example.com"
+"Test","User","test@example.com","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Adriana","Macedo","adriana.macedo@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Duarte","Botelheiro","duarte.botelheiro@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Beatriz","de Carvalho","beatriz.decarvalho@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Yakobus","Sereno","yakobus.serena@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Liliana","Otilia","liliana.otilia@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Eduardo","dos Santos","eduardo.dossantos@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",
+"Margarida","Martins","margarida.martins@redcross.tl","eden","LOGS_EDIT,PROJECT_EDIT,HR_EDIT,ASSET_EDIT,EVENT_EDIT,SURVEY_EDIT,MEMBER_EDIT",

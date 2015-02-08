@@ -1,0 +1,10 @@
+"Name","Description","Type","Enabled","Default","Config"
+"Google Maps","Streets","maps","True",,
+"Google Maps","Streets","maps","True","True","TL"
+"Google Hybrid","Streets over Satellite imagery","hybrid","False",,
+"Google Satellite","Satellite imagery","satellite","True",,
+"Google Terrain","Streets over topography","terrain","False",,
+"Google MapMaker","Community additions to streets. This is much more detailed than normal Google in some locations. It is incompatioble with Streetview.","mapmaker","False",,
+"Google MapMapker Hybrid","Community additions to streets overlaid over Satellite imagery. This is much more detailed than normal Google in some locations. It is incompatioble with Streetview.","mapmakerhybrid","False",,
+"Google Earth","Earth allows access to a 3D satellite view.","earth","True",,
+"Google Streetview","Streetview allows access to a 3D photographic panorama. It is incompatible with MapMaker layers.","streetview","True",,

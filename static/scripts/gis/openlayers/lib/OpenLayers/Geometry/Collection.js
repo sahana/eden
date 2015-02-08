@@ -75,8 +75,7 @@ OpenLayers.Geometry.Collection = OpenLayers.Class(OpenLayers.Geometry, {
      * {<OpenLayers.Geometry.Collection>} An exact clone of this collection
      */
     clone: function() {
-        var Constructor = OpenLayers.Util.getConstructor(this.CLASS_NAME);
-        var geometry = new Constructor();
+        var geometry = eval("new " + this.CLASS_NAME + "()");
         for(var i=0, len=this.components.length; i<len; i++) {
             geometry.addComponent(this.components[i].clone());
         }

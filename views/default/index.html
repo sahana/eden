@@ -2,19 +2,28 @@
 <div id='home'>
 {{try:}}<h2 align='center'>{{=title}}</h2>{{except:}}{{pass}}
 {{=XML(item)}}
+<!--added-->
 <div id='menu_box_center'>
 {{try:}}{{=sit_dec_res_box}}{{except:}}{{pass}}
 {{=facility_box}}
 {{if AUTHENTICATED not in session.s3.roles:}}
  <div id='login_box' class='menu_box'>
-  <div id='login_form' {{if self_registration and not registered and not login_form.errors:}}class='hide'{{pass}}>
-   {{=login_div}}
-   {{include "auth/_login.html"}}
-  </div>
+  {{if not self_registration or registered:}}
+    <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+  {{pass}}
   {{if self_registration:}}
-   <div id='register_form' {{if registered or login_form.errors:}}class='hide'{{pass}}>
+   <div id='register_form' {{if registered:}}class='hide'{{pass}}>
     {{=register_div}}
     {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+  {{if self_registration and not registered:}}
+   <div id='login_form' class='hide'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
    </div>
   {{pass}}
  </div>
@@ -35,4 +44,3 @@
 </div>
 {{pass}}
 {{if settings.get_base_guided_tour() and request.get_vars.tour:}}{{=joyride_div}}{{pass}}
-{{if org_box:}}{{include "dataTables.html"}}{{pass}}

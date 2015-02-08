@@ -1,0 +1,12 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{try:}}
+<h2>{{=title}}</h2>
+{{except:}}
+{{pass}}
+<div id='menu_box_1'>
+{{try:}}
+{{=sit_dec_res_box}}
+{{except:}}
+{{pass}}
+</div>

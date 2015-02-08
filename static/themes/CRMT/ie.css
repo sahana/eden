@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+/* Internet Explorer 9- tweaks */
+
+/* Login Form */
+.dropdown-menu form {
+    height: 100px;
+}
+.dropdown-menu input.btn {
+    left: 268px;
+}

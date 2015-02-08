@@ -1,0 +1,57 @@
+{{extend "layout.html"}}{{theme=response.s3.theme}}
+<div class='banner'>
+  <img class='banner' src='/{{=appname}}/static/themes/{{=theme}}/img/LA.jpg' alt='Banner'/>
+  <div class='banner-btns'>
+    <a class='btn' href='/{{=appname}}/default/video'><i class='icon-youtube-play'></i> {{=T("Video Tutorials")}}</a>
+    {{if not auth.is_logged_in():}}
+    <a class='btn' href='/{{=appname}}/default/user/register'><i class='icon-check'></i> {{=T("Register")}}</a>
+    <a class='btn' href='/{{=appname}}/default/user/login'><i class='icon-signin'></i> {{=T("Login")}}</a>
+    {{pass}}
+  </div>
+  <div class='title'>
+    <h1>Sahana</h1>
+    <h2>{{=settings.get_system_name()}}</h2>
+  </div>
+</div>
+<div class='row'>
+ <div class='span8'>
+  <div class='row'>
+   <div class='span4'>
+    <div class='intro'>
+     <h3>Understand Your </br>Community's Resilience</h3>
+     <p>Make maps and charts to picture and understand your community's resilience.</p>
+    </div>
+   </div>
+   <div class='span4'>
+    <div class='updates'>
+     <h3>Updates</h3>
+     {{=filter_form}}
+     {{=updates}}
+    </div>
+   </div>
+  </div>
+  <div class='row'>
+   <a class='btn map-btn' href='/{{=appname}}/gis/index'><i class='icon-globe'></i> {{=T("Make a Map")}}</a>
+   <div class='span8 map'>
+    {{=XML(map)}}
+   </div>
+  </div>
+ </div>
+ <div class='span4'>
+  <div class='community-data'>
+   <h3>All Your Data In One Place</h3>
+   <p>Manage data about the  resources, hazards and activities which affect your community resilience.</p>
+   {{for opt in response.menu:}}
+    <a href='{{=opt["url"]}}/summary'>
+     <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}
+    </a>     {{=opt["cms"]}}
+       <!--  
+       <a href='{{=opt["url"]}}/summary' class="btn btn-info btn-large menu" type="button">
+        <i class='{{=opt["icon"]}}'></i> {{=opt["name"]}}
+       </a>
+       <a href='{{=opt["url"]}}/create' class="btn btn-info btn-large create" type="button"><i class='icon-plus'></i></a>
+        -->
+   {{pass}}
+  </div>
+ </div>
+</div>

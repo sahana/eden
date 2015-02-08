@@ -389,9 +389,6 @@ OpenLayers.Format.KML = OpenLayers.Class(OpenLayers.Format.XML, {
                     var width = this.parseProperty(styleTypeNode, "*", "width");
                     if (width) {
                         style["strokeWidth"] = width;
-                    } else {
-                        // Added by Fran
-                        style["strokeWidth"] = 4;
                     }
                     break;
 

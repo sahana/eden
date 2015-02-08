@@ -8,7 +8,7 @@
 
 /**
  * @requires plugins/WMSSource.js
- * @require OpenLayers/Format/WMSCapabilities/v1_1_1_WMSC.js
+ * requires OpenLayers/Format/WMSCapabilities/v1_1_1_WMSC.js
  */
 
 /** api: (define)
@@ -84,8 +84,7 @@ gxp.plugins.WMSCSource = Ext.extend(gxp.plugins.WMSSource, {
         if (!config.format) {
             this.format = new OpenLayers.Format.WMSCapabilities({
                 keepData: true,
-                profile: "WMSC",
-                allowFallback: true
+                profile: "WMSC"
             });
         }
         gxp.plugins.WMSCSource.superclass.constructor.apply(this, arguments); 
@@ -97,7 +96,7 @@ gxp.plugins.WMSCSource = Ext.extend(gxp.plugins.WMSSource, {
         if (!record) {
             return;
         }
-        var caps, srs;
+        var caps;
         if (this.store.reader.raw) {
             caps = this.store.reader.raw.capability;
         }
@@ -111,7 +110,7 @@ gxp.plugins.WMSCSource = Ext.extend(gxp.plugins.WMSSource, {
                 var tileSet = tileSets[i];
                 if (tileSet.layers === layer.params.LAYERS) {
                     var tileProjection;
-                    for (srs in tileSet.srs) {
+                    for (var srs in tileSet.srs) {
                         tileProjection = new OpenLayers.Projection(srs);
                         break;
                     }
@@ -143,16 +142,7 @@ gxp.plugins.WMSCSource = Ext.extend(gxp.plugins.WMSSource, {
                 // because we persist the config from layer.options in
                 // getConfigForRecord, and we don't want to persist a guessed
                 // configuration.
-                var maxExtent;
-                if (this.target.map.maxExtent) {
-                    maxExtent = this.target.map.maxExtent;
-                } else {
-                    srs = config.srs || this.target.map.projection;
-                    maxExtent = OpenLayers.Projection.defaults[srs].maxExtent;
-                }
-                if (maxExtent) {
-                    layer.tileOrigin = OpenLayers.LonLat.fromArray(maxExtent);
-                }
+                layer.tileOrigin = OpenLayers.LonLat.fromArray(this.target.map.maxExtent);
             }
         }
         // unless explicitly configured otherwise, use cached version
@@ -171,7 +161,7 @@ gxp.plugins.WMSCSource = Ext.extend(gxp.plugins.WMSSource, {
             name = config.name,
             tileSetsCap,
             layer = record.getLayer();
-        if (config.capability && this.store.reader.raw) {
+        if (config.capability) {
             var capability = this.store.reader.raw.capability;
             var tileSets = capability.vendorSpecific && capability.vendorSpecific.tileSets;
             if (tileSets) {

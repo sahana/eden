@@ -1,0 +1,124 @@
+{{extend "layout.html"}}
+{{include "_list_create.html"}}
+<script type="text/javascript">//<![CDATA[
+$(document).ready(function() {
+    // Hide detail fields
+    $("#building_nzseel2_construction_type_other__row1").hide();
+    $("#building_nzseel2_construction_type_other__row").hide();
+    $("#building_nzseel2_primary_occupancy_other__row1").hide();
+    $("#building_nzseel2_primary_occupancy_other__row").hide();
+    $("#building_nzseel2_other_details__row1").hide();
+    $("#building_nzseel2_other_details__row").hide();
+    $("#building_nzseel2_barricades_details__row1").hide();
+    $("#building_nzseel2_barricades_details__row").hide();
+    $("#building_nzseel2_detailed_structural__row1").hide();
+    $("#building_nzseel2_detailed_structural__row").hide();
+    $("#building_nzseel2_detailed_geotechnical__row1").hide();
+    $("#building_nzseel2_detailed_geotechnical__row").hide();
+    $("#building_nzseel2_detailed_other__row1").hide();
+    $("#building_nzseel2_detailed_other__row").hide();
+    $("#building_nzseel2_detailed_other_details__row1").hide();
+    $("#building_nzseel2_detailed_other_details__row").hide();
+
+    // Set the L1 to Christchurch
+    //$('#gis_location_L1').val(247);
+    // Hide the Search button
+    $('#gis_location_search-btn').hide();
+
+    // Open up the 'Add New Location' form
+    $('#gis_location_add-btn').click();
+    // Hide the Cancel button
+    $('#gis_location_cancel-btn').hide();
+
+    // Change the label of the Name field
+    $('#gis_location_name_label > label').html('{{=T("Building Name")}}: ');
+
+    // Open up the GPS coordinates fields
+    //$('#gis_location_advanced_checkbox').attr('checked', true);
+    $('#gis_location_advanced_div').hide();
+    $('#gis_location_lat_label').removeClass('hide').show();
+    $('#gis_location_lat_row').removeClass('hide').show();
+    $('#gis_location_lon_label').removeClass('hide').show();
+    $('#gis_location_lon_row').removeClass('hide').show();
+
+    // Detail fields
+    $("#building_nzseel2_construction_type").change(function() {
+		if ($('#building_nzseel2_construction_type').val() == "99") {
+            // Other: show the detail field
+            $("#building_nzseel2_construction_type_other__row1").show();
+            $("#building_nzseel2_construction_type_other__row").show();
+        } else {
+            // Not Other: hide the detail field
+            $("#building_nzseel2_construction_type_other__row1").hide();
+            $("#building_nzseel2_construction_type_other__row").hide();
+        }
+    })
+    $("#building_nzseel2_primary_occupancy").change(function() {
+		if ($('#building_nzseel2_primary_occupancy').val() == "99") {
+            // Other: show the detail field
+            $("#building_nzseel2_primary_occupancy_other__row1").show();
+            $("#building_nzseel2_primary_occupancy_other__row").show();
+        } else {
+            // Not Other: hide the detail field
+            $("#building_nzseel2_primary_occupancy_other__row1").hide();
+            $("#building_nzseel2_primary_occupancy_other__row").hide();
+        }
+    })
+    $("#building_nzseel2_other").change(function() {
+		if ($('#building_nzseel2_other').val() !== "") {
+            // Selected: show the detail fields
+            $("#building_nzseel2_other_details__row1").show();
+            $("#building_nzseel2_other_details__row").show();
+        } else {
+            // Blanked: hide the detail fields
+            $("#building_nzseel2_other_details__row1").hide();
+            $("#building_nzseel2_other_details__row").hide();
+        }
+    })
+    $("#building_nzseel2_barricades").change(function() {
+		if ($('#building_nzseel2_barricades:checked').val() !== undefined) {
+            // Checked: show the detail fields
+            $("#building_nzseel2_barricades_details__row1").show();
+            $("#building_nzseel2_barricades_details__row").show();
+        } else {
+            // Unchecked: hide the detail fields
+            $("#building_nzseel2_barricades_details__row1").hide();
+            $("#building_nzseel2_barricades_details__row").hide();
+        }
+    })
+    $("#building_nzseel2_detailed_evaluation").change(function() {
+		if ($('#building_nzseel2_detailed_evaluation:checked').val() !== undefined) {
+            // Checked: show the detail fields
+            $("#building_nzseel2_detailed_structural__row1").show();
+            $("#building_nzseel2_detailed_structural__row").show();
+            $("#building_nzseel2_detailed_geotechnical__row1").show();
+            $("#building_nzseel2_detailed_geotechnical__row").show();
+            $("#building_nzseel2_detailed_other__row1").show();
+            $("#building_nzseel2_detailed_other__row").show();
+            $("#building_nzseel2_detailed_other_details__row1").show();
+            $("#building_nzseel2_detailed_other_details__row").show();
+        } else {
+            // Unchecked: hide the detail fields
+            $("#building_nzseel2_detailed_structural__row1").hide();
+            $("#building_nzseel2_detailed_structural__row").hide();
+            $("#building_nzseel2_detailed_geotechnical__row1").hide();
+            $("#building_nzseel2_detailed_geotechnical__row").hide();
+            $("#building_nzseel2_detailed_other__row1").hide();
+            $("#building_nzseel2_detailed_other__row").hide();
+            $("#building_nzseel2_detailed_other_details__row1").hide();
+            $("#building_nzseel2_detailed_other_details__row").hide();
+        }
+    })
+    $("#building_nzseel2_detailed_other").change(function() {
+		if ($('#building_nzseel2_detailed_other:checked').val() !== undefined) {
+            // Checked: show the detail fields
+            $("#building_nzseel2_detailed_other_details__row1").show();
+            $("#building_nzseel2_detailed_other_details__row").show();
+        } else {
+            // Unchecked: hide the detail fields
+            $("#building_nzseel2_detailed_other_details__row1").hide();
+            $("#building_nzseel2_detailed_other_details__row").hide();
+        }
+    })
+});
+//]]></script>

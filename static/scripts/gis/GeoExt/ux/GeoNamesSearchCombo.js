@@ -49,11 +49,6 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
      */
     emptyText: 'Search location in Geonames',
 
-    /** api: config[username]
-     *  ``String`` Username to send with API requests. Mandatory.
-     */
-    username: null,
-
     /** api: config[zoom]
      *  ``Number`` Zoom level for recentering the map after search, if set to
      *  a negative number the map isn't recentered, defaults to 8.
@@ -224,7 +219,7 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
     initComponent: function() {
         GeoExt.ux.GeoNamesSearchCombo.superclass.initComponent.apply(this, arguments);
 
-        var urlAppendString = 'username=' + this.username;
+        var urlAppendString = '';
 
         if (this.countryString.length > 0) {
             urlAppendString = urlAppendString + this.countryString;      

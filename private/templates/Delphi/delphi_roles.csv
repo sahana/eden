@@ -1,0 +1,2 @@
+"role"," description","controller","function","table","oacl","uacl","hidden","system","protected","uid"
+"DelphiAdmin","Permission to administer the Delphi Decision Maker module","delphi",,,"ALL","ALL",,,,

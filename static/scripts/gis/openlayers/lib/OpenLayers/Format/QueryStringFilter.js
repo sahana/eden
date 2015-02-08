@@ -124,11 +124,9 @@ OpenLayers.Format.QueryStringFilter = (function() {
                 case "Spatial":
                     switch (filter.type) {
                         case OpenLayers.Filter.Spatial.BBOX:
-                            if (filter.value) {
-                                params.bbox = filter.value.toArray();
-                                if (this.srsInBBOX && filter.projection) {
-                                    params.bbox.push(filter.projection.getCode());
-                                }
+                            params.bbox = filter.value.toArray();
+                            if (this.srsInBBOX && filter.projection) {
+                                params.bbox.push(filter.projection.getCode());
                             }
                             break;
                         case OpenLayers.Filter.Spatial.DWITHIN:

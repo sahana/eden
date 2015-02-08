@@ -33,6 +33,7 @@
                                               where first name and email as well as the
                                               three commas are mandatory
          Beneficiaries:XXX....integer.........Number of Beneficiaries of type XXX (multiple allowed)
+         Distribution:XXX.....integer.........Number of Items of type XXX Distributed(multiple allowed)
 
     *********************************************************************** -->
 
@@ -87,6 +88,11 @@
                 <xsl:call-template name="BeneficiaryType"/>
             </xsl:for-each>
 
+            <!-- Distribution Items -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Distribution')]">
+                <xsl:call-template name="DistributionItem"/>
+            </xsl:for-each>
+
             <!-- Project Locations -->
             <xsl:apply-templates select="./table/row"/>
         </s3xml>
@@ -123,6 +129,9 @@
                 <xsl:call-template name="Beneficiaries"/>
             </xsl:for-each>
 
+            <xsl:for-each select="col[starts-with(@field, 'Distribution')]">
+                <xsl:call-template name="Distribution"/>
+            </xsl:for-each>
         </resource>
 
         <xsl:call-template name="splitList">
@@ -136,7 +145,6 @@
 
         <!-- Locations -->
         <xsl:call-template name="Locations"/>
-
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -361,6 +369,49 @@
                 <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$BeneficiaryType"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Distribution">
+        <xsl:variable name="DistributionItem" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="ItemNumber" select="text()"/>
+
+        <xsl:if test="$ItemNumber!=''">
+            <resource name="supply_distribution">
+                <reference field="parameter_id" resource="supply_distribution_item">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('DITEM:', $DistributionItem)"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="value"><xsl:value-of select="$ItemNumber"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="DistributionItem">
+        <xsl:variable name="DistributionItem" select="normalize-space(substring-after(@field, ':'))"/>
+
+        <resource name="supply_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('ITEM:', $DistributionItem)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$DistributionItem"/></data>
+        </resource>
+
+        <resource name="supply_distribution_item">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('DITEM:', $DistributionItem)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$DistributionItem"/></data>
+            <reference field="item_id" resource="supply_item">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ITEM:', $DistributionItem)"/>
+                </xsl:attribute>
+            </reference>
         </resource>
 
     </xsl:template>

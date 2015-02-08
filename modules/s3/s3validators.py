@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: (c) 2010-2015 Sahana Software Foundation
+    @copyright: (c) 2010-2013 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -30,7 +30,7 @@
 
 """
 
-__all__ = ("single_phone_number_pattern",
+__all__ = ["single_phone_number_pattern",
            "multi_phone_number_pattern",
            "s3_single_phone_requires",
            "s3_phone_requires",
@@ -39,33 +39,29 @@ __all__ = ("single_phone_number_pattern",
            "IS_ADD_PERSON_WIDGET2",
            "IS_COMBO_BOX",
            "IS_FLOAT_AMOUNT",
-           "IS_HTML_COLOUR",
            "IS_INT_AMOUNT",
            "IS_IN_SET_LAZY",
-           "IS_ISO639_2_LANGUAGE_CODE",
-           "IS_JSONS3",
+           "IS_HTML_COLOUR",
            "IS_LAT",
            "IS_LON",
-           "IS_LAT_LON",
            "IS_LOCATION",
            "IS_LOCATION_SELECTOR",
+           "IS_LOCATION_SELECTOR2",
            "IS_ONE_OF",
            "IS_ONE_OF_EMPTY",
            "IS_ONE_OF_EMPTY_SELECT",
            "IS_NOT_ONE_OF",
-           "IS_PHONE_NUMBER",
            "IS_PROCESSED_IMAGE",
            "IS_SITE_SELECTOR",
            "IS_UTC_DATETIME",
            "IS_UTC_OFFSET",
            "QUANTITY_INV_ITEM",
-           )
+           ]
 
 import re
 import time
 from datetime import datetime, timedelta
 
-JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -73,21 +69,22 @@ except ImportError:
         import simplejson as json # try external module
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
-        from gluon.contrib.simplejson.decoder import JSONDecodeError
-        JSONErrors += (JSONDecodeError,)
 
 from gluon import *
 #from gluon import current
+#from gluon.dal import Field
 #from gluon.validators import IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
+from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3utils import S3DateTime, s3_orderby_fields, s3_unicode, s3_validate
-
+from s3utils import S3DateTime, s3_orderby_fields, s3_unicode
+    
 def translate(text):
     if text is None:
         return None
     elif isinstance(text, (str, unicode)):
+        from globals import current
         if hasattr(current, "T"):
             return str(current.T(text))
     return str(text)
@@ -95,7 +92,6 @@ def translate(text):
 def options_sorter(x, y):
     return (s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() and 1) or -1
 
-DEFAULT = lambda: None
 # -----------------------------------------------------------------------------
 # Phone number requires
 # Multiple phone numbers can be separated by comma, slash, semi-colon.
@@ -113,56 +109,10 @@ multi_phone_number_pattern = "%s(\s*(,|/|;)\s*%s)*$" % (phone_number_pattern,
 
 s3_single_phone_requires = IS_MATCH(single_phone_number_pattern)
 s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
-                             error_message="Invalid phone number!")
+                             error_message=current.T("Invalid phone number!"))
 
 # =============================================================================
-class IS_JSONS3(Validator):
-    """
-    Example:
-        Used as::
-
-            INPUT(_type='text', _name='name',
-                requires=IS_JSON(error_message="This is not a valid json input")
-
-            >>> IS_JSON()('{"a": 100}')
-            ({u'a': 100}, None)
-
-            >>> IS_JSON()('spam1234')
-            ('spam1234', 'invalid json')
-    """
-
-    def __init__(self, error_message="Invalid JSON"):
-        try:
-            self.driver_auto_json = current.db._adapter.driver_auto_json
-        except:
-            current.log.warning("Update Web2Py to 2.9.11 to get native JSON support")
-            self.driver_auto_json = []
-        self.error_message = error_message
-
-    # -------------------------------------------------------------------------
-    def __call__(self, value):
-        # Convert CSV import format to valid JSON
-        value = value.replace("'", "\"")
-        try:
-            if "dumps" in self.driver_auto_json:
-                json.loads(value) # raises error in case of malformed JSON
-                return (value, None) #  the serialized value is not passed
-            else:
-                return (json.loads(value), None)
-        except JSONErrors, e:
-            return (value, "%s: %s" % (current.T(self.error_message), e))
-
-    # -------------------------------------------------------------------------
-    def formatter(self, value):
-        if value is None:
-            return None
-        if "loads" in self.driver_auto_json:
-            return value
-        else:
-            return json.dumps(value)
-
-# =============================================================================
-class IS_LAT(Validator):
+class IS_LAT(object):
     """
         example:
 
@@ -171,7 +121,6 @@ class IS_LAT(Validator):
         Latitude has to be in decimal degrees between -90 & 90
         - we attempt to convert DMS format into decimal degrees
     """
-
     def __init__(self,
                  error_message = "Latitude/Northing should be between -90 & 90!"
                  ):
@@ -224,11 +173,11 @@ class IS_LAT(Validator):
                 e = int(sec)/60 #formula to get back decimal degree
                 f = int(mins) + e #formula
                 g = int(f) / 60 #formula
-                value = int(deg) + g
+                value = int(deg) + g                
                 return (value, None)
 
 # =============================================================================
-class IS_LON(Validator):
+class IS_LON(object):
     """
         example:
 
@@ -237,7 +186,6 @@ class IS_LON(Validator):
         Longitude has to be in decimal degrees between -180 & 180
         - we attempt to convert DMS format into decimal degrees
     """
-
     def __init__(self,
                  error_message = "Longitude/Easting should be between -180 & 180!"
                  ):
@@ -275,90 +223,28 @@ class IS_LON(Validator):
                 sec = ""
                 posn = sep[1]
                 while posn != (count-1):
-                    # join the numbers for seconds
-                    sec = sec + val[0][posn+1]
+                    sec = sec + val[0][posn+1]#to join the numbers for seconds
                     posn += 1
                 posn2 = sep[0]
                 mins = ""
                 while posn2 != (sep[1]-1):
-                    # join the numbers for minutes
-                    mins = mins + val[0][posn2+1]
+                    mins = mins + val[0][posn2+1]# to join the numbers for minutes
                     posn2 += 1
                 deg = ""
                 posn3 = 0
                 while posn3 != (sep[0]):
-                    # join the numbers for degree
-                    deg = deg + val[0][posn3]
+                    deg = deg + val[0][posn3] # to join the numbers for degree
                     posn3 += 1
-                e = int(sec) / 60 #formula to get back decimal degree
+                e = int(sec)/60 #formula to get back decimal degree
                 f = int(mins) + e #formula
                 g = int(f) / 60 #formula
-                value = int(deg) + g
+                value = int(deg) + g                
                 return (value, None)
-
-# =============================================================================
-class IS_LAT_LON(Validator):
-    """
-        Designed for use within the S3LocationLatLonWidget.
-        For Create forms, this will create a new location from the additional fields
-        For Update forms, this will check that we have a valid location_id FK and update any changes
-
-        @ToDo: Audit
-    """
-
-    def __init__(self,
-                 field,
-                 ):
-
-        self.field = field
-        # Tell s3_mark_required that this validator doesn't accept NULL values
-        self.mark_required = True
-
-    # -------------------------------------------------------------------------
-    def __call__(self, value):
-
-        if current.response.s3.bulk:
-            # Pointless in imports
-            return (value, None)
-
-        selector = str(self.field).replace(".", "_")
-        post_vars = current.request.post_vars
-        lat = post_vars.get("%s_lat" % selector, None)
-        if lat == "":
-            lat = None
-        lon = post_vars.get("%s_lon" % selector, None)
-        if lon == "":
-            lon = None
-
-        if lat is None or lon is None:
-            # We don't accept None
-            return (value, current.T("Latitude and Longitude are required"))
-
-        # Check Lat
-        lat, error = IS_LAT()(lat)
-        if error:
-            return (value, error)
-
-        # Check Lon
-        lon, error = IS_LON()(lon)
-        if error:
-            return (value, error)
-
-        if value:
-            # update
-            db = current.db
-            db(db.gis_location.id == value).update(lat=lat, lon=lon)
-        else:
-            # create
-            value = current.db.gis_location.insert(lat=lat, lon=lon)
-
-        # OK
-        return (value, None)
 
 # =============================================================================
 class IS_NUMBER(object):
     """
-        Used by s3data.py to wrap IS_INT_AMOUNT & IS_FLOAT_AMOUNT
+        Used by s3data.py to wrap IS_INT_AMOUNT & IS_LOAT_AMOUNT
     """
 
     # -------------------------------------------------------------------------
@@ -696,10 +582,9 @@ class IS_ONE_OF_EMPTY(Validator):
                    not_filterby = None,
                    not_filter_opts = None):
         """
-            This can be called from prep to apply a filter based on
+            This can be called from prep to apply a filter base on
             data in the record or the primary resource id.
         """
-
         if filterby:
             self.filterby = filterby
         if filter_opts:
@@ -729,9 +614,68 @@ class IS_ONE_OF_EMPTY(Validator):
             if db._dbname not in ("gql", "gae"):
                 orderby = self.orderby or reduce(lambda a, b: a|b, fields)
                 groupby = self.groupby
-
+                # Caching breaks Colorbox dropdown refreshes
+                #dd = dict(orderby=orderby, groupby=groupby, cache=(current.cache.ram, 60))
                 dd = dict(orderby=orderby, groupby=groupby)
-                query, left = self.query(table, fields=fields, dd=dd)
+
+                method = "update" if self.updateable else "read"
+                query, left = self.accessible_query(method, table,
+                                                    instance_types=self.instance_types)
+
+                if "deleted" in table:
+                    query &= (table["deleted"] == False)
+
+                # Realms filter?
+                if self.realms:
+                    auth = current.auth
+                    if auth.is_logged_in() and \
+                       auth.get_system_roles().ADMIN in auth.user.realms:
+                        # Admin doesn't filter
+                        pass
+                    else:
+                        query &= auth.permission.realm_query(table, self.realms)
+
+                all_fields = [str(f) for f in fields]
+
+                filterby = self.filterby
+                if filterby and filterby in table:
+                    filter_opts = self.filter_opts
+                    if filter_opts:
+                        if None in filter_opts:
+                            # Needs special handling (doesn't show up in 'belongs')
+                            _query = (table[filterby] == None)
+                            filter_opts = [f for f in filter_opts if f is not None]
+                            if filter_opts:
+                                _query = _query | (table[filterby].belongs(filter_opts))
+                            query &= _query
+                        else:
+                            query &= (table[filterby].belongs(filter_opts))
+                    if not self.orderby:
+                        filterby_field = table[filterby]
+                        dd.update(orderby=filterby_field)
+                        if str(filterby_field) not in all_fields:
+                            fields.append(filterby_field)
+                            all_fields.append(str(filterby_field))
+
+                not_filterby = self.not_filterby
+                if not_filterby and not_filterby in table:
+                    not_filter_opts = self.not_filter_opts
+                    if not_filter_opts:
+                        if None in not_filter_opts:
+                            # Needs special handling (doesn't show up in 'belongs')
+                            _query = (table[not_filterby] == None)
+                            not_filter_opts = [f for f in not_filter_opts if f is not None]
+                            if not_filter_opts:
+                                _query = _query | (table[not_filterby].belongs(not_filter_opts))
+                            query &= (~_query)
+                        else:
+                            query &= (~(table[not_filterby].belongs(not_filter_opts)))
+                    if not self.orderby:
+                        filterby_field = table[not_filterby]
+                        dd.update(orderby=filterby_field)
+                        if str(filterby_field) not in all_fields:
+                            fields.append(filterby_field)
+                            all_fields.append(str(filterby_field))
 
                 if left is not None:
                     if self.left is not None:
@@ -747,7 +691,7 @@ class IS_ONE_OF_EMPTY(Validator):
                         self.left = left
                 if self.left is not None:
                     dd.update(left=self.left)
-
+                    
                 # Make sure we have all ORDERBY fields in the query
                 # (otherwise postgresql will complain)
                 fieldnames = [str(f) for f in fields]
@@ -796,7 +740,7 @@ class IS_ONE_OF_EMPTY(Validator):
             if labels and self.sort:
 
                 items = zip(self.theset, self.labels)
-
+                
                 # Alternative variant that handles generator objects,
                 # doesn't seem necessary, retained here just in case:
                 #orig_labels = self.labels
@@ -817,91 +761,6 @@ class IS_ONE_OF_EMPTY(Validator):
         else:
             self.theset = None
             self.labels = None
-
-    # -------------------------------------------------------------------------
-    def query(self, table, fields=None, dd=None):
-        """
-            Construct the query to lookup the options (separated from
-            build_set so the query can be extracted and used in other
-            lookups, e.g. filter options).
-
-            @param table: the lookup table
-            @param fields: fields (updatable list)
-            @param dd: additional query options (updatable dict)
-        """
-
-        # Accessible-query
-        method = "update" if self.updateable else "read"
-        query, left = self.accessible_query(method, table,
-                                            instance_types=self.instance_types)
-
-        # Available-query
-        if "deleted" in table:
-            query &= (table["deleted"] != True)
-
-        # Realms filter?
-        if self.realms:
-            auth = current.auth
-            if auth.is_logged_in() and \
-               auth.get_system_roles().ADMIN in auth.user.realms:
-                # Admin doesn't filter
-                pass
-            else:
-                query &= auth.permission.realm_query(table, self.realms)
-
-        all_fields = [str(f) for f in fields] if fields is not None else []
-
-        filterby = self.filterby
-        if filterby and filterby in table:
-
-            filter_opts = self.filter_opts
-
-            if filter_opts:
-                if None in filter_opts:
-                    # Needs special handling (doesn't show up in 'belongs')
-                    _query = (table[filterby] == None)
-                    filter_opts = [f for f in filter_opts if f is not None]
-                    if filter_opts:
-                        _query = _query | (table[filterby].belongs(filter_opts))
-                    query &= _query
-                else:
-                    query &= (table[filterby].belongs(filter_opts))
-
-            if not self.orderby and \
-               fields is not None and dd is not None:
-                filterby_field = table[filterby]
-                if dd is not None:
-                    dd.update(orderby=filterby_field)
-                if str(filterby_field) not in all_fields:
-                    fields.append(filterby_field)
-                    all_fields.append(str(filterby_field))
-
-        not_filterby = self.not_filterby
-        if not_filterby and not_filterby in table:
-
-            not_filter_opts = self.not_filter_opts
-
-            if not_filter_opts:
-                if None in not_filter_opts:
-                    # Needs special handling (doesn't show up in 'belongs')
-                    _query = (table[not_filterby] == None)
-                    not_filter_opts = [f for f in not_filter_opts if f is not None]
-                    if not_filter_opts:
-                        _query = _query | (table[not_filterby].belongs(not_filter_opts))
-                    query &= (~_query)
-                else:
-                    query &= (~(table[not_filterby].belongs(not_filter_opts)))
-
-            if not self.orderby and \
-               fields is not None and dd is not None:
-                filterby_field = table[not_filterby]
-                if dd is not None:
-                    dd.update(orderby=filterby_field)
-                if str(filterby_field) not in all_fields:
-                    fields.append(filterby_field)
-                    all_fields.append(str(filterby_field))
-
-        return query, left
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -975,16 +834,8 @@ class IS_ONE_OF_EMPTY(Validator):
             filter_opts_q = False
             filterby = self.filterby
             if filterby and filterby in table:
-                filter_opts = self.filter_opts
-                if filter_opts:
-                    if None in filter_opts:
-                        # Needs special handling (doesn't show up in 'belongs')
-                        filter_opts_q = (table[filterby] == None)
-                        filter_opts = [f for f in filter_opts if f is not None]
-                        if filter_opts:
-                            filter_opts_q |= (table[filterby].belongs(filter_opts))
-                    else:
-                        filter_opts_q = (table[filterby].belongs(filter_opts))
+                if self.filter_opts:
+                    filter_opts_q = table[filterby].belongs(self.filter_opts)
 
             if self.multiple:
                 if isinstance(value, list):
@@ -1145,7 +996,10 @@ class IS_LOCATION(Validator):
             table = db.gis_location
             query = (table.id == value) & (table.deleted == False)
             if level:
-                if isinstance(level, (tuple, list)):
+                if not hasattr(level, "strip") and \
+                       (hasattr(level, "__getitem__") or \
+                        hasattr(level, "__iter__")):
+                    # List or Tuple
                     if None in level:
                         # None needs special handling
                         level = [l for l in level if l is not None]
@@ -1155,7 +1009,7 @@ class IS_LOCATION(Validator):
                         query &= (table.level.belongs(level))
                 else:
                     query &= (table.level == level)
-            ok = db(query).select(table.id, limitby=(0, 1)).first()
+            ok = db(query).select(table.id, limitby=(0, 1))
         if ok:
             return (value, None)
         else:
@@ -1285,9 +1139,9 @@ class IS_LOCATION_SELECTOR(Validator):
         """
 
         # Rough check for valid Lat/Lon (detailed later)
-        post_vars = current.request.post_vars
-        lat = post_vars.get("gis_location_lat", None)
-        lon = post_vars.get("gis_location_lon", None)
+        vars = current.request.vars
+        lat = vars.get("gis_location_lat", None)
+        lon = vars.get("gis_location_lon", None)
         if lat:
             try:
                 lat = float(lat)
@@ -1301,7 +1155,7 @@ class IS_LOCATION_SELECTOR(Validator):
         if self.errors:
             return None
 
-        L0 = post_vars.get("gis_location_L0", None)
+        L0 = vars.get("gis_location_L0", None)
 
         db = current.db
         table = db.gis_location
@@ -1352,11 +1206,11 @@ class IS_LOCATION_SELECTOR(Validator):
 
         onaccept = current.gis.update_location_tree
 
-        L1 = post_vars.get("gis_location_L1", None)
-        L2 = post_vars.get("gis_location_L2", None)
-        L3 = post_vars.get("gis_location_L3", None)
-        L4 = post_vars.get("gis_location_L4", None)
-        L5 = post_vars.get("gis_location_L5", None)
+        L1 = vars.get("gis_location_L1", None)
+        L2 = vars.get("gis_location_L2", None)
+        L3 = vars.get("gis_location_L3", None)
+        L4 = vars.get("gis_location_L4", None)
+        L5 = vars.get("gis_location_L5", None)
 
         # Check if we have parents to create
         # L1
@@ -1681,27 +1535,27 @@ class IS_LOCATION_SELECTOR(Validator):
                     L5 = None
 
         # Check if we have a specific location to create
-        name = post_vars.get("gis_location_name", None)
-        wkt = post_vars.get("gis_location_wkt", None)
-        street = post_vars.get("gis_location_street", None)
-        postcode = post_vars.get("gis_location_postcode", None)
+        name = vars.get("gis_location_name", None)
+        wkt = vars.get("gis_location_wkt", None)
+        street = vars.get("gis_location_street", None)
+        postcode = vars.get("gis_location_postcode", None)
         parent = L5 or L4 or L3 or L2 or L1 or L0 or None
 
         # Move vars into form.
         form = Storage()
         form.errors = dict()
         form.vars = Storage()
-        form_vars = form.vars
-        form_vars.lat = lat
-        form_vars.lon = lon
-        form_vars.wkt = wkt
+        vars = form.vars
+        vars.lat = lat
+        vars.lon = lon
+        vars.wkt = wkt
         if wkt:
             # Polygon (will be corrected as-required by wkt_centroid)
-            form_vars.gis_feature_type = "3"
+            vars.gis_feature_type = "3"
         else:
             # Point
-            form_vars.gis_feature_type = "1"
-        form_vars.parent = parent
+            vars.gis_feature_type = "1"
+        vars.parent = parent
         if self.id:
             # Provide the old record to check inherited
             form.record = db(table.id == self.id).select(table.inherited,
@@ -1714,21 +1568,243 @@ class IS_LOCATION_SELECTOR(Validator):
             self.errors = form.errors
             return None
         location = Storage(name=name,
-                           lat=form_vars.lat,
-                           lon=form_vars.lon,
-                           inherited=form_vars.inherited,
+                           lat=vars.lat,
+                           lon=vars.lon,
+                           inherited=vars.inherited,
                            street=street,
                            postcode=postcode,
                            parent=parent,
-                           wkt = form_vars.wkt,
-                           gis_feature_type = form_vars.gis_feature_type,
-                           lon_min = form_vars.lon_min,
-                           lon_max = form_vars.lon_max,
-                           lat_min = form_vars.lat_min,
-                           lat_max = form_vars.lat_max
+                           wkt = vars.wkt,
+                           gis_feature_type = vars.gis_feature_type,
+                           lon_min = vars.lon_min,
+                           lon_max = vars.lon_max,
+                           lat_min = vars.lat_min,
+                           lat_max = vars.lat_max
                            )
 
         return location
+
+# =============================================================================
+class IS_LOCATION_SELECTOR2(Validator):
+    """
+        Designed for use within the S3LocationSelectorWidget2.
+        For Create forms, this will create a new location if there is a Lat/Lon submitted
+        For Update forms, this will check that we have a valid location_id FK and update any changes
+
+        @ToDo: Audit
+    """
+
+    def __init__(self,
+                 levels=("L1", "L2", "L3"),
+                 error_message = None,
+                 ):
+
+        self.levels = levels
+        self.error_message = error_message
+        # Tell s3_mark_required that this validator doesn't accept NULL values
+        self.mark_required = True
+
+    # -------------------------------------------------------------------------
+    def __call__(self, value):
+
+        if current.response.s3.bulk:
+            # Pointless in imports
+            return (value, None)
+
+        vars = current.request.post_vars
+        address = vars.get("address", None)
+        postcode = vars.get("postcode", None)
+        lat = vars.get("lat", None)
+        if lat == "":
+            lat = None
+        lon = vars.get("lon", None)
+        if lon == "":
+            lon = None
+        wkt = vars.get("wkt", None)
+        if wkt == "":
+            wkt = None
+        parent = vars.get("parent", None)
+        # Rough check for valid Lat/Lon
+        errors = Storage()
+        if lat:
+            try:
+                lat = float(lat)
+            except ValueError:
+                errors["lat"] = current.T("Latitude is Invalid!")
+        if lon:
+            try:
+                lon = float(lon)
+            except ValueError:
+                errors["lon"] = current.T("Longitude is Invalid!")
+        if wkt:
+            try:
+                from shapely.wkt import loads as wkt_loads
+                polygon = wkt_loads(wkt)
+            except:
+                errors["wkt"] = current.T("WKT is Invalid!")
+        if errors:
+            return (value, errors)
+
+        if parent or address or postcode or wkt is not None or \
+           (lat is not None and lon is not None):
+            # Specific Location
+            db = current.db
+            table = db.gis_location
+            if value == "dummy":
+                # Create a new point
+                if not current.auth.s3_has_permission("create", table):
+                    return (None, current.auth.messages.access_denied)
+                vars = Storage(lat=lat,
+                               lon=lon,
+                               wkt=wkt,
+                               inherited=False,
+                               addr_street=address,
+                               addr_postcode=postcode,
+                               parent=parent,
+                               )
+                # onvalidation
+                # - includes detailed bounds check if deployment_setting doesn't disable it
+                form = Storage()
+                form.errors = errors
+                form.vars = vars
+                current.s3db.gis_location_onvalidation(form)
+                if form.errors:
+                    errors = form.errors
+                    error = ""
+                    for e in errors:
+                        error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                    return (parent, error)
+                id = table.insert(**vars)
+                vars.id = id
+                # onaccept
+                current.gis.update_location_tree(vars)
+                return (id, None)
+            else:
+                # Update existing Point
+                # Check that this is a valid location_id
+                query = (table.id == value) & \
+                        (table.deleted == False) & \
+                        (table.level == None) # NB Specific Locations only
+                location = db(query).select(table.lat,
+                                            table.lon,
+                                            table.wkt,
+                                            table.addr_street,
+                                            table.addr_postcode,
+                                            table.parent,
+                                            limitby=(0, 1)).first()
+                if location:
+                    changed = False
+                    lparent = location.parent
+                    if parent and lparent:
+                        if int(parent) != int(lparent):
+                            changed = True
+                    elif parent or lparent:
+                        changed = True
+                    if not changed:
+                        addr_street = location.addr_street
+                        if address and addr_street:
+                            if address != addr_street:
+                                changed = True
+                        elif address or addr_street:
+                            changed = True
+                        if not changed:
+                            addr_postcode = location.addr_postcode
+                            if postcode and addr_postcode:
+                                if postcode != addr_postcode:
+                                    changed = True
+                            elif postcode or addr_postcode:
+                                changed = True
+                            if not changed:
+                                if wkt and wkt != location.wkt:
+                                    changed = True
+                                else:
+                                    # Float comparisons need care - just check the 1st 5 decimal points, as that's all we care about
+                                    llat = location.lat
+                                    if lat is not None and llat is not None:
+                                        if round(lat, 5) != round(llat, 5):
+                                            changed = True
+                                    elif lat is not None or llat is not None:
+                                        changed = True
+                                    if not changed:
+                                        llon = location.lon
+                                        if lon is not None and llon is not None:
+                                            if round(lon, 5) != round(llon, 5):
+                                                changed = True
+                                        elif lon is not None or llon is not None:
+                                            changed = True
+
+                    if changed:
+                        # Update the record
+                        if not current.auth.s3_has_permission("update", table, record_id=value):
+                            return (value, current.auth.messages.access_denied)
+                        vars = Storage(addr_street=address,
+                                       addr_postcode=postcode,
+                                       parent=parent,
+                                       )
+                        if lat is not None and lon is not None:
+                            vars.lat = lat
+                            vars.lon = lon
+                            vars.inherited = False
+                        elif wkt is not None:
+                            vars.wkt = wkt
+                            vars.inherited = False
+                        # onvalidation
+                        # - includes detailed bounds check if deployment_setting doesn't disable it
+                        form = Storage()
+                        form.errors = errors
+                        form.vars = vars
+                        current.s3db.gis_location_onvalidation(form)
+                        if form.errors:
+                            errors = form.errors
+                            error = ""
+                            for e in errors:
+                                error = "%s\n%s" % (error, errors[e]) if error else errors[e]
+                            return (value, error)
+                        # Update the record
+                        db(table.id == value).update(**vars)
+                        # Update location tree in case parent has changed
+                        vars.id = value
+                        # onaccept
+                        current.gis.update_location_tree(vars)
+                    return (value, None)
+                else:
+                    return (value,
+                            self.error_message or current.T("Invalid Location!"))
+        else:
+            # Lx or a specific location with blank Parent/Address/Lat/Lon
+            if value:
+                db = current.db
+                table = db.gis_location
+                query = (table.id == value) & \
+                        (table.deleted == False)
+                location = db(query).select(table.level,
+                                            table.lat,
+                                            table.lon,
+                                            table.addr_street,
+                                            table.addr_postcode,
+                                            table.parent,
+                                            limitby=(0, 1)).first()
+                if not location:
+                    return (value,
+                            self.error_message or current.T("Invalid Location!"))
+                if location.level:
+                    # Do a simple Location check
+                    return IS_LOCATION(level=self.levels)(value)
+                else:
+                    # Clear the Parent/Lat/Lon/Address
+                    vars = Storage(lat = None,
+                                   lon = None,
+                                   addr_street = None,
+                                   addr_postcode = None,
+                                   parent = None)
+                    db(table.id == value).update(**vars)
+                    # Update location tree in case parent has changed
+                    vars.id = value
+                    # onaccept
+                    current.gis.update_location_tree(vars)
+            else:
+                # Do a simple Location check
+                return IS_LOCATION(level=self.levels)(value)
 
 # =============================================================================
 class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
@@ -1737,7 +1813,7 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
         Sites of the specified type.
         Note that these cannot include any other mandatory fields other than Name & location_id
 
-        Designed for use within the S3LocationSelectorWidget with sites.
+        Designed for use within the ???S3LocationSelectorWidget.
         For Create forms, this will create a new site & location from the additional fields
         For Update forms, this will normally just check that we have a valid site_id FK
         - although there is the option to create a new location there too, in which case it acts as-above.
@@ -1852,9 +1928,6 @@ class IS_SITE_SELECTOR(IS_LOCATION_SELECTOR):
 
 # =============================================================================
 class IS_ADD_PERSON_WIDGET(Validator):
-    """
-        Validator for S3AddPersonWidget
-    """
 
     def __init__(self,
                  error_message=None):
@@ -1935,6 +2008,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
                     error = T("Invalid phone number")
                     return (person_id, error)
 
+            validate = current.manager.validate
             if person_id:
                 # Filter out location_id (location selector form values
                 # being processed only after this widget has been validated)
@@ -1945,7 +2019,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
                 query = (ptable.id == person_id)
                 data = Storage()
                 for f in ptable._filter_fields(_vars):
-                    value, error = s3_validate(ptable, f, _vars[f])
+                    value, error = validate(ptable, None, f, _vars[f])
                     if error:
                         return (person_id, error)
                     if value:
@@ -2021,7 +2095,7 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
                 # Validate and add the person record
                 for f in ptable._filter_fields(_vars):
-                    value, error = s3_validate(ptable, f, _vars[f])
+                    value, error = validate(ptable, None, f, _vars[f])
                     if error:
                         return (None, error)
                     elif f == "date_of_birth" and \
@@ -2062,34 +2136,13 @@ class IS_ADD_PERSON_WIDGET(Validator):
 
 # =============================================================================
 class IS_ADD_PERSON_WIDGET2(Validator):
-    """
-        Validator for S3AddPersonWidget2
-
-        @ToDo: get working human_resource_id
-    """
 
     def __init__(self,
-                 error_message=None,
-                 allow_empty=False):
-        """
-            Constructor
-
-            @param error_message: alternative error message
-            @param allow_empty: allow the selector to be left empty
-
-            @note: This validator can *not* be used together with IS_EMPTY_OR,
-                   because when a new person gets entered, the submitted value
-                   for person_id would be None and hence satisfy IS_EMPTY_OR,
-                   and then this validator would never be reached and no new
-                   person record would be created => instead of IS_EMPTY_OR,
-                   use IS_ADD_PERSON_WIDGET2(allow_empty=True).
-        """
+                 error_message=None):
 
         self.error_message = error_message
-        self.allow_empty = allow_empty
-
         # Tell s3_mark_required that this validator doesn't accept NULL values
-        self.mark_required = not allow_empty
+        self.mark_required = True
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
@@ -2104,10 +2157,6 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 person_id = int(value)
             except:
                 pass
-
-        if person_id:
-            # Nothing to do here - we can't change values within this widget
-            return (person_id, None)
 
         request = current.request
         if request.env.request_method == "POST":
@@ -2154,11 +2203,9 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 #    middle_name = None
                 #return first_name, middle_name, last_name
 
-                # https://github.com/derek73/python-nameparser
+                # https://code.google.com/p/python-nameparser/
                 from nameparser import HumanName
                 name = HumanName(name)
-
-                # @ToDo?: name.nickname
 
                 return name.first, name.middle, name.last
 
@@ -2201,176 +2248,173 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             _vars = request.post_vars
             mobile = _vars["mobile_phone"]
             if mobile:
-                # Validate the mobile phone number
-                validator = IS_PHONE_NUMBER(international = True)
-                mobile, error = validator(mobile)
-                if error:
+                # Validate the phone number
+                regex = re.compile(single_phone_number_pattern)
+                if not regex.match(mobile):
+                    error = T("Invalid phone number")
                     return (person_id, error)
 
             home_phone = _vars.get("home_phone", None)
             if home_phone:
-                # Validate the home phone number
-                validator = IS_PHONE_NUMBER()
-                mobile, error = validator(mobile)
-                if error:
+                # Validate the phone number
+                regex = re.compile(single_phone_number_pattern)
+                if not regex.match(home_phone):
+                    error = T("Invalid phone number")
                     return (person_id, error)
 
-            #if person_id:
-            #    # Filter out location_id (location selector form values
-            #    # being processed only after this widget has been validated)
-            #    _vars = Storage([(k, _vars[k])
-            #                     for k in _vars if k != "location_id"])
+            validate = current.manager.validate
+            if person_id:
+                # Filter out location_id (location selector form values
+                # being processed only after this widget has been validated)
+                _vars = Storage([(k, _vars[k])
+                                 for k in _vars if k != "location_id"])
 
-            #    # Separate the Name into components
-            #    first_name, middle_name, last_name = name_split(_vars["full_name"])
-            #    _vars["first_name"] = first_name
-            #    _vars["middle_name"] = middle_name
-            #    _vars["last_name"] = last_name
+                # Separate the Name into components
+                first_name, middle_name, last_name = name_split(_vars["full_name"])
+                _vars["first_name"] = first_name
+                _vars["middle_name"] = middle_name
+                _vars["last_name"] = last_name
 
-            #    # Validate and update the person record
-            #    query = (ptable.id == person_id)
-            #    data = Storage()
-            #    for f in ptable._filter_fields(_vars):
-            #        value, error = s3_validate(ptable, f, _vars[f])
-            #        if error:
-            #            return (person_id, error)
-            #        if value:
-            #            if f == "date_of_birth":
-            #                data[f] = value.isoformat()
-            #            else:
-            #                data[f] = value
-            #    if data:
-            #        db(query).update(**data)
+                # Validate and update the person record
+                query = (ptable.id == person_id)
+                data = Storage()
+                for f in ptable._filter_fields(_vars):
+                    value, error = validate(ptable, None, f, _vars[f])
+                    if error:
+                        return (person_id, error)
+                    if value:
+                        if f == "date_of_birth":
+                            data[f] = value.isoformat()
+                        else:
+                            data[f] = value
+                if data:
+                    db(query).update(**data)
 
-            #    # Update the contact information & details
-            #    record = db(query).select(ptable.pe_id,
-            #                              limitby=(0, 1)).first()
-            #    if record:
-            #        pe_id = record.pe_id
+                # Update the contact information & details
+                record = db(query).select(ptable.pe_id,
+                                          limitby=(0, 1)).first()
+                if record:
+                    pe_id = record.pe_id
 
-            #        r = ctable(pe_id=pe_id, contact_method="EMAIL")
-            #        email = _vars["email"]
-            #        if email:
-            #            query = (ctable.pe_id == pe_id) & \
-            #                    (ctable.contact_method == "EMAIL") &\
-            #                    (ctable.deleted != True)
-            #            r = db(query).select(ctable.value,
-            #                                 limitby=(0, 1)).first()
-            #            if r: # update
-            #                if email != r.value:
-            #                    db(query).update(value=email)
-            #            else: # insert
-            #                ctable.insert(pe_id=pe_id,
-            #                              contact_method="EMAIL",
-            #                              value=email)
+                    r = ctable(pe_id=pe_id, contact_method="EMAIL")
+                    email = _vars["email"]
+                    if email:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "EMAIL") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if email != r.value:
+                                db(query).update(value=email)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="EMAIL",
+                                          value=email)
 
-            #        if mobile:
-            #            query = (ctable.pe_id == pe_id) & \
-            #                    (ctable.contact_method == "SMS") &\
-            #                    (ctable.deleted != True)
-            #            r = db(query).select(ctable.value,
-            #                                 limitby=(0, 1)).first()
-            #            if r: # update
-            #                if mobile != r.value:
-            #                    db(query).update(value=mobile)
-            #            else: # insert
-            #                ctable.insert(pe_id=pe_id,
-            #                              contact_method="SMS",
-            #                              value=mobile)
+                    if mobile:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "SMS") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if mobile != r.value:
+                                db(query).update(value=mobile)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="SMS",
+                                          value=mobile)
 
-            #        if home_phone:
-            #            query = (ctable.pe_id == pe_id) & \
-            #                    (ctable.contact_method == "HOME_PHONE") &\
-            #                    (ctable.deleted != True)
-            #            r = db(query).select(ctable.value,
-            #                                 limitby=(0, 1)).first()
-            #            if r: # update
-            #                if home_phone != r.value:
-            #                    db(query).update(value=home_phone)
-            #            else: # insert
-            #                ctable.insert(pe_id=pe_id,
-            #                              contact_method="HOME_PHONE",
-            #                              value=home_phone)
+                    if home_phone:
+                        query = (ctable.pe_id == pe_id) & \
+                                (ctable.contact_method == "HOME_PHONE") &\
+                                (ctable.deleted != True)
+                        r = db(query).select(ctable.value,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if home_phone != r.value:
+                                db(query).update(value=home_phone)
+                        else: # insert
+                            ctable.insert(pe_id=pe_id,
+                                          contact_method="HOME_PHONE",
+                                          value=home_phone)
 
-            #        occupation = _vars.get("occupation", None)
-            #        if occupation:
-            #            pdtable = s3db.pr_person_details
-            #            query = (pdtable.person_id == person_id) & \
-            #                    (pdtable.deleted != True)
-            #            r = db(query).select(pdtable.occupation,
-            #                                 limitby=(0, 1)).first()
-            #            if r: # update
-            #                if occupation != r.occupation:
-            #                    db(query).update(occupation=occupation)
-            #            else: # insert
-            #                pdtable.insert(person_id=person_id,
-            #                               occupation=occupation)
+                    occupation = _vars.get("occupation", None)
+                    if occupation:
+                        pdtable = s3db.pr_person_details
+                        query = (pdtable.person_id == person_id) & \
+                                (pdtable.deleted != True)
+                        r = db(query).select(pdtable.occupation,
+                                             limitby=(0, 1)).first()
+                        if r: # update
+                            if occupation != r.occupation:
+                                db(query).update(occupation=occupation)
+                        else: # insert
+                            pdtable.insert(person_id=person_id,
+                                           occupation=occupation)
 
-            #else:
-            # Create a new person record
+            else:
+                # Create a new person record
 
-            # Filter out location_id (location selector form values
-            # being processed only after this widget has been validated)
-            _vars = Storage([(k, _vars[k])
-                             for k in _vars if k != "location_id"])
+                # Filter out location_id (location selector form values
+                # being processed only after this widget has been validated)
+                _vars = Storage([(k, _vars[k])
+                                 for k in _vars if k != "location_id"])
 
-            fullname = _vars["full_name"]
-            if not fullname and self.allow_empty:
-                return None, None
-
-            # Validate the email
-            email, error = email_validate(_vars.email, None)
-            if error:
-                return (None, error)
-
-            # Separate the Name into components
-            first_name, middle_name, last_name = name_split(fullname)
-            _vars["first_name"] = first_name
-            _vars["middle_name"] = middle_name
-            _vars["last_name"] = last_name
-
-            # Validate and add the person record
-            for f in ptable._filter_fields(_vars):
-                value, error = s3_validate(ptable, f, _vars[f])
+                # Validate the email
+                email, error = email_validate(_vars.email, None)
                 if error:
                     return (None, error)
-                elif f == "date_of_birth" and \
-                    value:
-                    _vars[f] = value.isoformat()
-            person_id = ptable.insert(**ptable._filter_fields(_vars))
 
-            # Need to update post_vars here,
-            # for some reason this doesn't happen through validation alone
-            request.post_vars.update(person_id=str(person_id))
+                # Separate the Name into components
+                first_name, middle_name, last_name = name_split(_vars["full_name"])
+                _vars["first_name"] = first_name
+                _vars["middle_name"] = middle_name
+                _vars["last_name"] = last_name
 
-            if person_id:
-                # Update the super-entities
-                s3db.update_super(ptable, dict(id=person_id))
-                # Read the created pe_id
-                query = (ptable.id == person_id)
-                person = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1)).first()
+                # Validate and add the person record
+                for f in ptable._filter_fields(_vars):
+                    value, error = validate(ptable, None, f, _vars[f])
+                    if error:
+                        return (None, None)
+                    elif f == "date_of_birth" and \
+                        value:
+                        _vars[f] = value.isoformat()
+                person_id = ptable.insert(**ptable._filter_fields(_vars))
 
-                # Add contact information as provided
-                if _vars.email:
-                    ctable.insert(pe_id=person.pe_id,
-                                  contact_method="EMAIL",
-                                  value=_vars.email)
-                if mobile:
-                    ctable.insert(pe_id=person.pe_id,
-                                  contact_method="SMS",
-                                  value=_vars.mobile_phone)
-                if home_phone:
-                    ctable.insert(pe_id=person.pe_id,
-                                  contact_method="HOME_PHONE",
-                                  value=_vars.home_phone)
-                if _vars.occupation:
-                    s3db.pr_person_details.insert(person_id = person_id,
-                                                  occupation = _vars.occupation)
-            else:
-                # Something went wrong
-                return (person_id, self.error_message or \
-                                   T("Could not add person record"))
+                # Need to update post_vars here,
+                # for some reason this doesn't happen through validation alone
+                request.post_vars.update(person_id=str(person_id))
+
+                if person_id:
+                    # Update the super-entities
+                    s3db.update_super(ptable, dict(id=person_id))
+                    # Read the created pe_id
+                    query = (ptable.id == person_id)
+                    person = db(query).select(ptable.pe_id,
+                                              limitby=(0, 1)).first()
+
+                    # Add contact information as provided
+                    if _vars.email:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="EMAIL",
+                                      value=_vars.email)
+                    if mobile:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="SMS",
+                                      value=_vars.mobile_phone)
+                    if home_phone:
+                        ctable.insert(pe_id=person.pe_id,
+                                      contact_method="HOME_PHONE",
+                                      value=_vars.home_phone)
+                    if _vars.occupation:
+                        s3db.pr_person_details.insert(person_id = person_id,
+                                                      occupation = _vars.occupation)
+                else:
+                    # Something went wrong
+                    return (person_id, self.error_message or \
+                                       T("Could not add person record"))
 
         return (person_id, None)
 
@@ -2379,6 +2423,8 @@ class IS_PROCESSED_IMAGE(Validator):
     """
         Uses an S3ImageCropWidget to allow the user to crop/scale images and
         processes the results sent by the browser.
+
+        @author: aviraldg
 
         @param file_cb: callback that returns the file for this field
 
@@ -2468,6 +2514,8 @@ class IS_PROCESSED_IMAGE(Validator):
 class IS_UTC_OFFSET(Validator):
     """
         Validates a given string value as UTC offset in the format +/-HHMM
+
+        @author: nursix
 
         @param error_message:   the error message to be returned
 
@@ -2640,6 +2688,8 @@ class IS_ACL(IS_IN_SET):
         Validator for ACLs
 
         @attention: Incomplete! Does not validate yet, but just convert.
+
+        @author: Dominic König <dominic@aidiq.com>
     """
 
     def __call__(self, value):
@@ -2716,11 +2766,10 @@ class IS_COMBO_BOX(Validator):
             return (value, None)
 
 # =============================================================================
-class QUANTITY_INV_ITEM(Validator):
+class QUANTITY_INV_ITEM(object):
     """
         For Inventory module
     """
-
     def __init__(self,
                  db,
                  inv_item_id,
@@ -2771,6 +2820,10 @@ class QUANTITY_INV_ITEM(Validator):
         else:
             return (value, error)
 
+    # -------------------------------------------------------------------------
+    def formatter(self, value):
+        return value
+
 # =============================================================================
 class IS_IN_SET_LAZY(Validator):
     """
@@ -2806,7 +2859,7 @@ class IS_IN_SET_LAZY(Validator):
         "lambda:" in front of the call.  E.g.:
 
         Field("nationality",
-            requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
+            requires = IS_NULL_OR(IS_IN_SET_LAZY(
                 lambda: gis.get_countries(key_type="code"))),
             label = T("Nationality"),
             represent = lambda code: gis.get_country(code, key_type="code") or UNKNOWN_OPT)
@@ -2920,824 +2973,5 @@ class IS_TIME_INTERVAL_WIDGET(Validator):
             return (0, None)
         seconds = val * mul
         return (seconds, None)
-
-# =============================================================================
-class IS_PHONE_NUMBER(Validator):
-    """
-        Validator for single phone numbers with option to
-        enforce E.123 international notation (with leading +
-        and no punctuation or spaces).
-    """
-
-    def __init__(self,
-                 international = False,
-                 error_message = None):
-        """
-            Constructor
-
-            @param international: enforce E.123 international notation,
-                                  no effect if turned off globally in
-                                  deployment settings
-            @param error_message: alternative error message
-        """
-
-        self.international = international
-        self.error_message = error_message
-
-    def __call__(self, value):
-        """
-            Validation of a value
-
-            @param value: the value
-            @return: tuple (value, error), where error is None if value
-                     is valid. With international=True, the value returned
-                     is converted into E.123 international notation.
-        """
-
-        T = current.T
-        error_message = self.error_message
-
-        number = str(value).strip()
-        number, error = s3_single_phone_requires(number)
-        if not error:
-            if self.international and \
-               current.deployment_settings \
-                      .get_msg_require_international_phone_numbers():
-                if not error_message:
-                    error_message = T("Enter phone number in international format like +46783754957")
-                # Require E.123 international format
-                number = "".join(re.findall("[\d+]+", number))
-                match = re.match("(\+)([1-9]\d+)$", number)
-                #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
-                if match:
-                    number = "+%s" % match.groups()[1]
-                    return (number, None)
-            else:
-                return (number, None)
-
-        if not error_message:
-            error_message = T("Enter a valid phone number")
-
-        return (value, error_message)
-
-# =============================================================================
-class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
-    """
-        Validate ISO639-2 Alpha-2/Alpha-3 language codes
-    """
-
-    def __init__(self,
-                 error_message = "Invalid language code",
-                 multiple = False,
-                 select = DEFAULT,
-                 sort = False,
-                 zero = ""):
-        """
-            Constructor
-
-            @param error_message: alternative error message
-            @param multiple: allow selection of multiple options
-            @param select: dict of options for the selector,
-                           defaults to settings.L10n.languages,
-                           set explicitly to None to allow all languages
-            @param sort: sort options in selector
-            @param zero: use this label for the empty-option (default="")
-        """
-        super(IS_ISO639_2_LANGUAGE_CODE, self).__init__(
-                                                self.language_codes(),
-                                                error_message = error_message,
-                                                multiple = multiple,
-                                                zero = zero,
-                                                sort = sort,
-                                                )
-
-        if select is DEFAULT:
-            self._select = current.deployment_settings.get_L10n_languages()
-        else:
-            self._select = select
-
-    # -------------------------------------------------------------------------
-    def options(self, zero=True):
-        """
-            Get the options for the selector. This could be only a subset
-            of all valid options (self._select), therefore overriding
-            superclass function here.
-        """
-
-        language_codes = self.language_codes()
-        if self._select:
-            language_codes_dict = dict(language_codes)
-            items = [(k, v) for k, v in self._select.items()
-                            if k in language_codes_dict]
-        else:
-            items = self.language_codes()
-        if self.sort:
-            items.sort(options_sorter)
-        if zero and not self.zero is None and not self.multiple:
-            items.insert(0, ("", self.zero))
-        return items
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def represent(cls, code):
-        """
-            Represent a language code by language name
-
-            @param code: the language code
-        """
-
-        l10n_languages = current.deployment_settings.get_L10n_languages()
-        if code in l10n_languages:
-            name = l10n_languages[code]
-        else:
-            all_languages = dict(cls.language_codes())
-            name = all_languages.get(code)
-            if name is None:
-                name = current.messages.UNKNOWN_OPT
-        return name
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def language_codes():
-        """
-            Returns a list of tuples of ISO639-1 alpha-2 language
-            codes, can also be used to look up the language name
-
-            Just the subset which are useful for Translations
-            - 2 letter code preferred, 3-letter code where none exists,
-              no 'families' or Old
-        """
-
-        return [#("aar", "Afar"),
-                ("aa", "Afar"),
-                #("abk", "Abkhazian"),
-                ("ab", "Abkhazian"),
-                ("ace", "Achinese"),
-                ("ach", "Acoli"),
-                ("ada", "Adangme"),
-                ("ady", "Adyghe; Adygei"),
-                #("afa", "Afro-Asiatic languages"),
-                ("afh", "Afrihili"),
-                #("afr", "Afrikaans"),
-                ("af", "Afrikaans"),
-                ("ain", "Ainu"),
-                #("aka", "Akan"),
-                ("ak", "Akan"),
-                ("akk", "Akkadian"),
-                #("alb", "Albanian"),
-                ("sq", "Albanian"),
-                ("ale", "Aleut"),
-                #("alg", "Algonquian languages"),
-                ("alt", "Southern Altai"),
-                #("amh", "Amharic"),
-                ("am", "Amharic"),
-                #("ang", "English, Old (ca.450-1100)"),
-                ("anp", "Angika"),
-                #("apa", "Apache languages"),
-                #("ara", "Arabic"),
-                ("ar", "Arabic"),
-                #("arc", "Official Aramaic (700-300 BCE); Imperial Aramaic (700-300 BCE)"),
-                #("arg", "Aragonese"),
-                ("an", "Aragonese"),
-                #("arm", "Armenian"),
-                ("hy", "Armenian"),
-                ("arn", "Mapudungun; Mapuche"),
-                ("arp", "Arapaho"),
-                #("art", "Artificial languages"),
-                ("arw", "Arawak"),
-                #("asm", "Assamese"),
-                ("as", "Assamese"),
-                ("ast", "Asturian; Bable; Leonese; Asturleonese"),
-                #("ath", "Athapascan languages"),
-                #("aus", "Australian languages"),
-                #("ava", "Avaric"),
-                ("av", "Avaric"),
-                #("ave", "Avestan"),
-                ("ae", "Avestan"),
-                ("awa", "Awadhi"),
-                #("aym", "Aymara"),
-                ("ay", "Aymara"),
-                #("aze", "Azerbaijani"),
-                ("az", "Azerbaijani"),
-                #("bad", "Banda languages"),
-                #("bai", "Bamileke languages"),
-                #("bak", "Bashkir"),
-                ("ba", "Bashkir"),
-                ("bal", "Baluchi"),
-                #("bam", "Bambara"),
-                ("bm", "Bambara"),
-                ("ban", "Balinese"),
-                #("baq", "Basque"),
-                ("eu", "Basque"),
-                ("bas", "Basa"),
-                #("bat", "Baltic languages"),
-                ("bej", "Beja; Bedawiyet"),
-                #("bel", "Belarusian"),
-                ("be", "Belarusian"),
-                ("bem", "Bemba"),
-                #("ben", "Bengali"),
-                ("bn", "Bengali"),
-                #("ber", "Berber languages"),
-                ("bho", "Bhojpuri"),
-                #("bih", "Bihari languages"),
-                #("bh", "Bihari languages"),
-                ("bik", "Bikol"),
-                ("bin", "Bini; Edo"),
-                #("bis", "Bislama"),
-                ("bi", "Bislama"),
-                ("bla", "Siksika"),
-                #("bnt", "Bantu (Other)"),
-                #("bos", "Bosnian"),
-                ("bs", "Bosnian"),
-                ("bra", "Braj"),
-                #("bre", "Breton"),
-                ("br", "Breton"),
-                #("btk", "Batak languages"),
-                ("bua", "Buriat"),
-                ("bug", "Buginese"),
-                #("bul", "Bulgarian"),
-                ("bg", "Bulgarian"),
-                #("bur", "Burmese"),
-                ("my", "Burmese"),
-                ("byn", "Blin; Bilin"),
-                ("cad", "Caddo"),
-                #("cai", "Central American Indian languages"),
-                ("car", "Galibi Carib"),
-                #("cat", "Catalan; Valencian"),
-                ("ca", "Catalan; Valencian"),
-                #("cau", "Caucasian languages"),
-                ("ceb", "Cebuano"),
-                #("cel", "Celtic languages"),
-                #("cha", "Chamorro"),
-                ("ch", "Chamorro"),
-                ("chb", "Chibcha"),
-                #("che", "Chechen"),
-                ("ce", "Chechen"),
-                ("chg", "Chagatai"),
-                #("chi", "Chinese"),
-                ("zh", "Chinese"),
-                ("chk", "Chuukese"),
-                ("chm", "Mari"),
-                ("chn", "Chinook jargon"),
-                ("cho", "Choctaw"),
-                ("chp", "Chipewyan; Dene Suline"),
-                ("chr", "Cherokee"),
-                #("chu", "Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church Slavonic"),
-                ("cu", "Church Slavic; Old Slavonic; Church Slavonic; Old Bulgarian; Old Church Slavonic"),
-                #("chv", "Chuvash"),
-                ("cv", "Chuvash"),
-                ("chy", "Cheyenne"),
-                #("cmc", "Chamic languages"),
-                ("cop", "Coptic"),
-                #("cor", "Cornish"),
-                ("kw", "Cornish"),
-                #("cos", "Corsican"),
-                ("co", "Corsican"),
-                #("cpe", "Creoles and pidgins, English based"),
-                #("cpf", "Creoles and pidgins, French-based"),
-                #("cpp", "Creoles and pidgins, Portuguese-based"),
-                #("cre", "Cree"),
-                ("cr", "Cree"),
-                ("crh", "Crimean Tatar; Crimean Turkish"),
-                #("crp", "Creoles and pidgins"),
-                ("csb", "Kashubian"),
-                ("cus", "Cushitic languages"),
-                #("cze", "Czech"),
-                ("cs", "Czech"),
-                ("dak", "Dakota"),
-                #("dan", "Danish"),
-                ("da", "Danish"),
-                ("dar", "Dargwa"),
-                #("day", "Land Dayak languages"),
-                ("del", "Delaware"),
-                ("den", "Slave (Athapascan)"),
-                ("dgr", "Dogrib"),
-                ("din", "Dinka"),
-                #("div", "Divehi; Dhivehi; Maldivian"),
-                ("dv", "Divehi; Dhivehi; Maldivian"),
-                ("doi", "Dogri"),
-                #("dra", "Dravidian languages"),
-                ("dsb", "Lower Sorbian"),
-                ("dua", "Duala"),
-                #("dum", "Dutch, Middle (ca.1050-1350)"),
-                #("dut", "Dutch; Flemish"),
-                ("nl", "Dutch; Flemish"),
-                ("dyu", "Dyula"),
-                #("dzo", "Dzongkha"),
-                ("dz", "Dzongkha"),
-                ("efi", "Efik"),
-                #("egy", "Egyptian (Ancient)"),
-                ("eka", "Ekajuk"),
-                ("elx", "Elamite"),
-                #("eng", "English"),
-                ("en", "English"),
-                #("enm", "English, Middle (1100-1500)"),
-                #("epo", "Esperanto"),
-                ("eo", "Esperanto"),
-                #("est", "Estonian"),
-                ("et", "Estonian"),
-                #("ewe", "Ewe"),
-                ("ee", "Ewe"),
-                ("ewo", "Ewondo"),
-                ("fan", "Fang"),
-                #("fao", "Faroese"),
-                ("fo", "Faroese"),
-                ("fat", "Fanti"),
-                #("fij", "Fijian"),
-                ("fj", "Fijian"),
-                ("fil", "Filipino; Pilipino"),
-                #("fin", "Finnish"),
-                ("fi", "Finnish"),
-                #("fiu", "Finno-Ugrian languages"),
-                ("fon", "Fon"),
-                #("fre", "French"),
-                ("fr", "French"),
-                #("frm", "French, Middle (ca.1400-1600)"),
-                #("fro", "French, Old (842-ca.1400)"),
-                ("frr", "Northern Frisian"),
-                ("frs", "Eastern Frisian"),
-                #("fry", "Western Frisian"),
-                ("fy", "Western Frisian"),
-                #("ful", "Fulah"),
-                ("ff", "Fulah"),
-                ("fur", "Friulian"),
-                ("gaa", "Ga"),
-                ("gay", "Gayo"),
-                ("gba", "Gbaya"),
-                #("gem", "Germanic languages"),
-                #("geo", "Georgian"),
-                ("ka", "Georgian"),
-                #("ger", "German"),
-                ("de", "German"),
-                ("gez", "Geez"),
-                ("gil", "Gilbertese"),
-                #("gla", "Gaelic; Scottish Gaelic"),
-                ("gd", "Gaelic; Scottish Gaelic"),
-                #("gle", "Irish"),
-                ("ga", "Irish"),
-                #("glg", "Galician"),
-                ("gl", "Galician"),
-                #("glv", "Manx"),
-                ("gv", "Manx"),
-                #("gmh", "German, Middle High (ca.1050-1500)"),
-                #("goh", "German, Old High (ca.750-1050)"),
-                ("gon", "Gondi"),
-                ("gor", "Gorontalo"),
-                ("got", "Gothic"),
-                ("grb", "Grebo"),
-                #("grc", "Greek, Ancient (to 1453)"),
-                #("gre", "Greek, Modern (1453-)"),
-                ("el", "Greek, Modern (1453-)"),
-                #("grn", "Guarani"),
-                ("gn", "Guarani"),
-                ("gsw", "Swiss German; Alemannic; Alsatian"),
-                #("guj", "Gujarati"),
-                ("gu", "Gujarati"),
-                ("gwi", "Gwich'in"),
-                ("hai", "Haida"),
-                #("hat", "Haitian; Haitian Creole"),
-                ("ht", "Haitian; Haitian Creole"),
-                #("hau", "Hausa"),
-                ("ha", "Hausa"),
-                ("haw", "Hawaiian"),
-                #("heb", "Hebrew"),
-                ("he", "Hebrew"),
-                #("her", "Herero"),
-                ("hz", "Herero"),
-                ("hil", "Hiligaynon"),
-                #("him", "Himachali languages; Western Pahari languages"),
-                #("hin", "Hindi"),
-                ("hi", "Hindi"),
-                ("hit", "Hittite"),
-                ("hmn", "Hmong; Mong"),
-                #("hmo", "Hiri Motu"),
-                ("ho", "Hiri Motu"),
-                #("hrv", "Croatian"),
-                ("hr", "Croatian"),
-                ("hsb", "Upper Sorbian"),
-                #("hun", "Hungarian"),
-                ("hu", "Hungarian"),
-                ("hup", "Hupa"),
-                ("iba", "Iban"),
-                #("ibo", "Igbo"),
-                ("ig", "Igbo"),
-                #("ice", "Icelandic"),
-                ("is", "Icelandic"),
-                #("ido", "Ido"),
-                ("io", "Ido"),
-                #("iii", "Sichuan Yi; Nuosu"),
-                ("ii", "Sichuan Yi; Nuosu"),
-                #("ijo", "Ijo languages"),
-                #("iku", "Inuktitut"),
-                ("iu", "Inuktitut"),
-                #("ile", "Interlingue; Occidental"),
-                ("ie", "Interlingue; Occidental"),
-                ("ilo", "Iloko"),
-                #("ina", "Interlingua (International Auxiliary Language Association)"),
-                ("ia", "Interlingua (International Auxiliary Language Association)"),
-                #("inc", "Indic languages"),
-                #("ind", "Indonesian"),
-                ("id", "Indonesian"),
-                #("ine", "Indo-European languages"),
-                ("inh", "Ingush"),
-                #("ipk", "Inupiaq"),
-                ("ik", "Inupiaq"),
-                #("ira", "Iranian languages"),
-                #("iro", "Iroquoian languages"),
-                #("ita", "Italian"),
-                ("it", "Italian"),
-                #("jav", "Javanese"),
-                ("jv", "Javanese"),
-                ("jbo", "Lojban"),
-                #("jpn", "Japanese"),
-                ("ja", "Japanese"),
-                #("jpr", "Judeo-Persian"),
-                #("jrb", "Judeo-Arabic"),
-                ("kaa", "Kara-Kalpak"),
-                ("kab", "Kabyle"),
-                ("kac", "Kachin; Jingpho"),
-                #("kal", "Kalaallisut; Greenlandic"),
-                ("kl", "Kalaallisut; Greenlandic"),
-                ("kam", "Kamba"),
-                #("kan", "Kannada"),
-                ("kn", "Kannada"),
-                #("kar", "Karen languages"),
-                #("kas", "Kashmiri"),
-                ("ks", "Kashmiri"),
-                #("kau", "Kanuri"),
-                ("kr", "Kanuri"),
-                ("kaw", "Kawi"),
-                #("kaz", "Kazakh"),
-                ("kk", "Kazakh"),
-                ("kbd", "Kabardian"),
-                ("kha", "Khasi"),
-                #("khi", "Khoisan languages"),
-                #("khm", "Central Khmer"),
-                ("km", "Central Khmer"),
-                ("kho", "Khotanese; Sakan"),
-                #("kik", "Kikuyu; Gikuyu"),
-                ("ki", "Kikuyu; Gikuyu"),
-                #("kin", "Kinyarwanda"),
-                ("rw", "Kinyarwanda"),
-                #("kir", "Kirghiz; Kyrgyz"),
-                ("ky", "Kirghiz; Kyrgyz"),
-                ("kmb", "Kimbundu"),
-                ("kok", "Konkani"),
-                #("kom", "Komi"),
-                ("kv", "Komi"),
-                #("kon", "Kongo"),
-                ("kg", "Kongo"),
-                #("kor", "Korean"),
-                ("ko", "Korean"),
-                ("kos", "Kosraean"),
-                ("kpe", "Kpelle"),
-                ("krc", "Karachay-Balkar"),
-                ("krl", "Karelian"),
-                #("kro", "Kru languages"),
-                ("kru", "Kurukh"),
-                #("kua", "Kuanyama; Kwanyama"),
-                ("kj", "Kuanyama; Kwanyama"),
-                ("kum", "Kumyk"),
-                #("kur", "Kurdish"),
-                ("ku", "Kurdish"),
-                ("kut", "Kutenai"),
-                ("lad", "Ladino"),
-                ("lah", "Lahnda"),
-                ("lam", "Lamba"),
-                #("lao", "Lao"),
-                ("lo", "Lao"),
-                #("lat", "Latin"),
-                ("la", "Latin"),
-                #("lav", "Latvian"),
-                ("lv", "Latvian"),
-                ("lez", "Lezghian"),
-                #("lim", "Limburgan; Limburger; Limburgish"),
-                ("li", "Limburgan; Limburger; Limburgish"),
-                #("lin", "Lingala"),
-                ("ln", "Lingala"),
-                #("lit", "Lithuanian"),
-                ("lt", "Lithuanian"),
-                ("lol", "Mongo"),
-                ("loz", "Lozi"),
-                #("ltz", "Luxembourgish; Letzeburgesch"),
-                ("lb", "Luxembourgish; Letzeburgesch"),
-                ("lua", "Luba-Lulua"),
-                #("lub", "Luba-Katanga"),
-                ("lu", "Luba-Katanga"),
-                #("lug", "Ganda"),
-                ("lg", "Ganda"),
-                ("lui", "Luiseno"),
-                ("lun", "Lunda"),
-                ("luo", "Luo (Kenya and Tanzania)"),
-                ("lus", "Lushai"),
-                #("mac", "Macedonian"),
-                ("mk", "Macedonian"),
-                ("mad", "Madurese"),
-                ("mag", "Magahi"),
-                #("mah", "Marshallese"),
-                ("mh", "Marshallese"),
-                ("mai", "Maithili"),
-                ("mak", "Makasar"),
-                #("mal", "Malayalam"),
-                ("ml", "Malayalam"),
-                ("man", "Mandingo"),
-                #("mao", "Maori"),
-                ("mi", "Maori"),
-                #("map", "Austronesian languages"),
-                #("mar", "Marathi"),
-                ("mr", "Marathi"),
-                ("mas", "Masai"),
-                #("may", "Malay"),
-                ("ms", "Malay"),
-                ("mdf", "Moksha"),
-                ("mdr", "Mandar"),
-                ("men", "Mende"),
-                #("mga", "Irish, Middle (900-1200)"),
-                ("mic", "Mi'kmaq; Micmac"),
-                ("min", "Minangkabau"),
-                #("mis", "Uncoded languages"),
-                #("mkh", "Mon-Khmer languages"),
-                #("mlg", "Malagasy"),
-                ("mg", "Malagasy"),
-                ("mlt", "Maltese"),
-                ("mt", "Maltese"),
-                ("mnc", "Manchu"),
-                ("mni", "Manipuri"),
-                #("mno", "Manobo languages"),
-                ("moh", "Mohawk"),
-                #("mon", "Mongolian"),
-                ("mn", "Mongolian"),
-                ("mos", "Mossi"),
-                #("mul", "Multiple languages"),
-                #("mun", "Munda languages"),
-                ("mus", "Creek"),
-                ("mwl", "Mirandese"),
-                ("mwr", "Marwari"),
-                #("myn", "Mayan languages"),
-                ("myv", "Erzya"),
-                #("nah", "Nahuatl languages"),
-                #("nai", "North American Indian languages"),
-                ("nap", "Neapolitan"),
-                #("nau", "Nauru"),
-                ("na", "Nauru"),
-                #("nav", "Navajo; Navaho"),
-                ("nv", "Navajo; Navaho"),
-                #("nbl", "Ndebele, South; South Ndebele"),
-                ("nr", "Ndebele, South; South Ndebele"),
-                #("nde", "Ndebele, North; North Ndebele"),
-                ("nd", "Ndebele, North; North Ndebele"),
-                #("ndo", "Ndonga"),
-                ("ng", "Ndonga"),
-                ("nds", "Low German; Low Saxon; German, Low; Saxon, Low"),
-                #("nep", "Nepali"),
-                ("ne", "Nepali"),
-                ("new", "Nepal Bhasa; Newari"),
-                ("nia", "Nias"),
-                #("nic", "Niger-Kordofanian languages"),
-                ("niu", "Niuean"),
-                #("nno", "Norwegian Nynorsk; Nynorsk, Norwegian"),
-                ("nn", "Norwegian Nynorsk; Nynorsk, Norwegian"),
-                #("nob", "Bokmål, Norwegian; Norwegian Bokmål"),
-                ("nb", "Bokmål, Norwegian; Norwegian Bokmål"),
-                ("nog", "Nogai"),
-                #("non", "Norse, Old"),
-                #("nor", "Norwegian"),
-                ("no", "Norwegian"),
-                ("nqo", "N'Ko"),
-                ("nso", "Pedi; Sepedi; Northern Sotho"),
-                #("nub", "Nubian languages"),
-                #("nwc", "Classical Newari; Old Newari; Classical Nepal Bhasa"),
-                #("nya", "Chichewa; Chewa; Nyanja"),
-                ("ny", "Chichewa; Chewa; Nyanja"),
-                ("nym", "Nyamwezi"),
-                ("nyn", "Nyankole"),
-                ("nyo", "Nyoro"),
-                ("nzi", "Nzima"),
-                #("oci", "Occitan (post 1500); Provençal"),
-                ("oc", "Occitan (post 1500); Provençal"),
-                #("oji", "Ojibwa"),
-                ("oj", "Ojibwa"),
-                #("ori", "Oriya"),
-                ("or", "Oriya"),
-                #("orm", "Oromo"),
-                ("om", "Oromo"),
-                ("osa", "Osage"),
-                #("oss", "Ossetian; Ossetic"),
-                ("os", "Ossetian; Ossetic"),
-                #("ota", "Turkish, Ottoman (1500-1928)"),
-                #("oto", "Otomian languages"),
-                #("paa", "Papuan languages"),
-                ("pag", "Pangasinan"),
-                ("pal", "Pahlavi"),
-                ("pam", "Pampanga; Kapampangan"),
-                #("pan", "Panjabi; Punjabi"),
-                ("pa", "Panjabi; Punjabi"),
-                ("pap", "Papiamento"),
-                ("pau", "Palauan"),
-                #("peo", "Persian, Old (ca.600-400 B.C.)"),
-                #("per", "Persian"),
-                ("fa", "Persian"),
-                #("phi", "Philippine languages"),
-                ("phn", "Phoenician"),
-                #("pli", "Pali"),
-                ("pi", "Pali"),
-                #("pol", "Polish"),
-                ("pl", "Polish"),
-                ("pon", "Pohnpeian"),
-                #("por", "Portuguese"),
-                ("pt", "Portuguese"),
-                #("pra", "Prakrit languages"),
-                #("pro", "Provençal, Old (to 1500)"),
-                #("pus", "Pushto; Pashto"),
-                ("ps", "Pushto; Pashto"),
-                #("qaa-qtz", "Reserved for local use"),
-                #("que", "Quechua"),
-                ("qu", "Quechua"),
-                ("raj", "Rajasthani"),
-                ("rap", "Rapanui"),
-                ("rar", "Rarotongan; Cook Islands Maori"),
-                #("roa", "Romance languages"),
-                #("roh", "Romansh"),
-                ("rm", "Romansh"),
-                ("rom", "Romany"),
-                #("rum", "Romanian; Moldavian; Moldovan"),
-                ("ro", "Romanian; Moldavian; Moldovan"),
-                #("run", "Rundi"),
-                ("rn", "Rundi"),
-                ("rup", "Aromanian; Arumanian; Macedo-Romanian"),
-                #("rus", "Russian"),
-                ("ru", "Russian"),
-                ("sad", "Sandawe"),
-                #("sag", "Sango"),
-                ("sg", "Sango"),
-                ("sah", "Yakut"),
-                #("sai", "South American Indian (Other)"),
-                #("sal", "Salishan languages"),
-                ("sam", "Samaritan Aramaic"),
-                #("san", "Sanskrit"),
-                ("sa", "Sanskrit"),
-                ("sas", "Sasak"),
-                ("sat", "Santali"),
-                ("scn", "Sicilian"),
-                ("sco", "Scots"),
-                ("sel", "Selkup"),
-                #("sem", "Semitic languages"),
-                #("sga", "Irish, Old (to 900)"),
-                #("sgn", "Sign Languages"),
-                ("shn", "Shan"),
-                ("sid", "Sidamo"),
-                #("sin", "Sinhala; Sinhalese"),
-                ("si", "Sinhala; Sinhalese"),
-                #("sio", "Siouan languages"),
-                #("sit", "Sino-Tibetan languages"),
-                #("sla", "Slavic languages"),
-                #("slo", "Slovak"),
-                ("sk", "Slovak"),
-                #("slv", "Slovenian"),
-                ("sl", "Slovenian"),
-                ("sma", "Southern Sami"),
-                #("sme", "Northern Sami"),
-                ("se", "Northern Sami"),
-                #("smi", "Sami languages"),
-                ("smj", "Lule Sami"),
-                ("smn", "Inari Sami"),
-                #("smo", "Samoan"),
-                ("sm", "Samoan"),
-                ("sms", "Skolt Sami"),
-                #("sna", "Shona"),
-                ("sn", "Shona"),
-                #("snd", "Sindhi"),
-                ("sd", "Sindhi"),
-                ("snk", "Soninke"),
-                ("sog", "Sogdian"),
-                #("som", "Somali"),
-                ("so", "Somali"),
-                #("son", "Songhai languages"),
-                #("sot", "Sotho, Southern"),
-                ("st", "Sotho, Southern"),
-                #("spa", "Spanish; Castilian"),
-                ("es", "Spanish; Castilian"),
-                #("srd", "Sardinian"),
-                ("sc", "Sardinian"),
-                ("srn", "Sranan Tongo"),
-                #("srp", "Serbian"),
-                ("sr", "Serbian"),
-                ("srr", "Serer"),
-                #("ssa", "Nilo-Saharan languages"),
-                #("ssw", "Swati"),
-                ("ss", "Swati"),
-                ("suk", "Sukuma"),
-                #("sun", "Sundanese"),
-                ("su", "Sundanese"),
-                ("sus", "Susu"),
-                ("sux", "Sumerian"),
-                #("swa", "Swahili"),
-                ("sw", "Swahili"),
-                #("swe", "Swedish"),
-                ("sv", "Swedish"),
-                #("syc", "Classical Syriac"),
-                ("syr", "Syriac"),
-                #("tah", "Tahitian"),
-                ("ty", "Tahitian"),
-                #("tai", "Tai languages"),
-                #("tam", "Tamil"),
-                ("ta", "Tamil"),
-                #("tat", "Tatar"),
-                ("tt", "Tatar"),
-                #("tel", "Telugu"),
-                ("te", "Telugu"),
-                ("tem", "Timne"),
-                ("ter", "Tereno"),
-                ("tet", "Tetum"),
-                #("tgk", "Tajik"),
-                ("tg", "Tajik"),
-                #("tgl", "Tagalog"),
-                ("tl", "Tagalog"),
-                #("tha", "Thai"),
-                ("th", "Thai"),
-                #("tib", "Tibetan"),
-                ("bo", "Tibetan"),
-                ("tig", "Tigre"),
-                #("tir", "Tigrinya"),
-                ("ti", "Tigrinya"),
-                ("tiv", "Tiv"),
-                ("tkl", "Tokelau"),
-                #("tlh", "Klingon; tlhIngan-Hol"),
-                ("tli", "Tlingit"),
-                ("tmh", "Tamashek"),
-                ("tog", "Tonga (Nyasa)"),
-                #("ton", "Tonga (Tonga Islands)"),
-                ("to", "Tonga (Tonga Islands)"),
-                ("tpi", "Tok Pisin"),
-                ("tsi", "Tsimshian"),
-                #("tsn", "Tswana"),
-                ("tn", "Tswana"),
-                #("tso", "Tsonga"),
-                ("ts", "Tsonga"),
-                #("tuk", "Turkmen"),
-                ("tk", "Turkmen"),
-                ("tum", "Tumbuka"),
-                #("tup", "Tupi languages"),
-                #("tur", "Turkish"),
-                ("tr", "Turkish"),
-                #("tut", "Altaic languages"),
-                ("tvl", "Tuvalu"),
-                #("twi", "Twi"),
-                ("tw", "Twi"),
-                ("tyv", "Tuvinian"),
-                ("udm", "Udmurt"),
-                ("uga", "Ugaritic"),
-                #("uig", "Uighur; Uyghur"),
-                ("ug", "Uighur; Uyghur"),
-                #("ukr", "Ukrainian"),
-                ("uk", "Ukrainian"),
-                ("umb", "Umbundu"),
-                #("und", "Undetermined"),
-                #("urd", "Urdu"),
-                ("ur", "Urdu"),
-                #("uzb", "Uzbek"),
-                ("uz", "Uzbek"),
-                ("vai", "Vai"),
-                #("ven", "Venda"),
-                ("ve", "Venda"),
-                #("vie", "Vietnamese"),
-                ("vi", "Vietnamese"),
-                #("vol", "Volapük"),
-                ("vo", "Volapük"),
-                ("vot", "Votic"),
-                #("wak", "Wakashan languages"),
-                ("wal", "Walamo"),
-                ("war", "Waray"),
-                ("was", "Washo"),
-                #("wel", "Welsh"),
-                ("cy", "Welsh"),
-                #("wen", "Sorbian languages"),
-                #("wln", "Walloon"),
-                ("wa", "Walloon"),
-                #("wol", "Wolof"),
-                ("wo", "Wolof"),
-                ("xal", "Kalmyk; Oirat"),
-                #("xho", "Xhosa"),
-                ("xh", "Xhosa"),
-                ("yao", "Yao"),
-                ("yap", "Yapese"),
-                #("yid", "Yiddish"),
-                ("yi", "Yiddish"),
-                #("yor", "Yoruba"),
-                ("yo", "Yoruba"),
-                #("ypk", "Yupik languages"),
-                ("zap", "Zapotec"),
-                #("zbl", "Blissymbols; Blissymbolics; Bliss"),
-                ("zen", "Zenaga"),
-                ("zgh", "Standard Moroccan Tamazight"),
-                #("zha", "Zhuang; Chuang"),
-                ("za", "Zhuang; Chuang"),
-                #("znd", "Zande languages"),
-                #("zul", "Zulu"),
-                ("zu", "Zulu"),
-                ("zun", "Zuni"),
-                #("zxx", "No linguistic content; Not applicable"),
-                ("zza", "Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki"),
-                 ]
 
 # END =========================================================================

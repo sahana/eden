@@ -6,7 +6,6 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/suite.py
 
 import unittest
-import sys
 
 # =============================================================================
 def run_suite(*modules):
@@ -20,10 +19,7 @@ def run_suite(*modules):
         tests = loader.loadTestsFromName(path)
         suite.addTests(tests)
     if suite is not None:
-        result = unittest.TextTestRunner(verbosity=2).run(suite)
-        status_code = len(result.failures) + len(result.errors)
-        sys.exit(status_code)
-
+        unittest.TextTestRunner(verbosity=2).run(suite)
     return
 
 if __name__ == "__main__":

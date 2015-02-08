@@ -8,8 +8,7 @@
 
 /**
  * @requires plugins/Tool.js
- * @require GeoExt/widgets/LegendPanel.js
- * @require GeoExt/widgets/WMSLegend.js
+ * requires GeoExt/widgets/LegendPanel.js
  */
 
 /** api: (define)
@@ -74,7 +73,7 @@ gxp.plugins.Legend = Ext.extend(gxp.plugins.Tool, {
             tooltip: this.tooltip,
             handler: function() {
                 this.removeOutput();
-                this.addOutput(this.outputConfig);
+                this.addOutput();
             },
             scope: this
         }];

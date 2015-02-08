@@ -1,0 +1,11 @@
+"Name","Description","URL","Layers","Folder","Enabled","Visible","Base","Transparent","Opacity","Format","Queryable","LegendURL","Tiled","Map"
+"Topography","SRTMv4","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:SRTMv4","Topography","False","False","False","True",0.8,"image/png","False",,,
+"GADMv1","GADM Base Layer: L0-L2 Boundaries, Polygon fill, Labels","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:gadm1_base",,"False","False","True",,,"image/jpeg","False",,,
+"Admin Boundaries","GADM Overlay: L0-L2 Boundaries, Labels, No Polygon fill","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:gadm1_overlays","Admin Boundaries","False","False","False","True",,"image/png","False",,,
+"L2 Boundaries","GADM L2 Overlay: Boundaries, Labels, No Polygon fill","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:gadm1_lev2","Admin Boundaries","False","False","False","True",,"image/png","True",,,
+"L1 Boundaries","GADM L1 Overlay: Boundaries, Labels, No Polygon fill","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:gadm1_lev1","Admin Boundaries","False","False","False","True",,"image/png","True",,,
+"Country Boundaries","GADM L0 Overlay: Boundaries, Labels, No Polygon fill","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:gadm1_lev0","Admin Boundaries","False","False","False","True",,"image/png","False",,,
+"Country Boundaries","GADM L0 Base Layer: Boundaries, Polygon fill, No Labels","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:gadm1_lev0_base",,"False","False","True",,,"image/jpeg","False",,,
+"Population Density","GPWv3","http://geo.eden.sahanafoundation.org/geoserver/gwc/service/wms","world:populationDensity","Population","True","False","False","True",0.8,"image/png","False","/static/img/gis/GPWv3.png",,
+"Rainfall (1 day)","TRMM","http://geo.eden.sahanafoundation.org/proxy/service?","TRMM_3B42_V6_DAILY","Weather","False","False","False","True",0.4,"image/png","False",,,
+"Rainfall (10 day)","TRMM","http://geo.eden.sahanafoundation.org/proxy/service?","TRMM_3B42_V6_10_DAY","Weather","False","False","False","True",0.4,"image/png","False",,,

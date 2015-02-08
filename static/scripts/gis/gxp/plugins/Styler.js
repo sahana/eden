@@ -9,8 +9,6 @@
 /**
  * @requires plugins/Tool.js
  * @requires widgets/WMSStylesDialog.js
- * @requires plugins/GeoServerStyleWriter.js
- * @requires plugins/WMSRasterStylesDialog.js
  */
 
 /** api: (define)
@@ -44,12 +42,6 @@ gxp.plugins.Styler = Ext.extend(gxp.plugins.Tool, {
      *  Text for layer properties action tooltip (i18n).
      */
     tooltip: "Manage layer styles",
-    
-    /** api: config[roles]
-     *  ``Array`` Roles authorized to style layers. Default is
-     *  ["ROLE_ADMINISTRATOR"]
-     */
-    roles: ["ROLE_ADMINISTRATOR"],
     
     /** api: config[sameOriginStyling]
      *  ``Boolean``
@@ -122,7 +114,7 @@ gxp.plugins.Styler = Ext.extend(gxp.plugins.Tool, {
             disabled: true,
             tooltip: this.tooltip,
             handler: function() {
-                this.target.doAuthorized(this.roles, this.addOutput, this);
+                this.addOutput();
             },
             scope: this
         }]);
@@ -143,7 +135,7 @@ gxp.plugins.Styler = Ext.extend(gxp.plugins.Tool, {
      */
     handleLayerChange: function(record) {
         this.launchAction.disable();
-        if (record) {
+        if (record && record.get("styles")) {
             var source = this.target.getSource(record);
             if (source instanceof gxp.plugins.WMSSource) {
                 source.describeLayer(record, function(describeRec) {
@@ -185,14 +177,6 @@ gxp.plugins.Styler = Ext.extend(gxp.plugins.Tool, {
                 // this could be made more robust
                 // for now, only style for sources with relative url
                 editableStyles = url.charAt(0) === "/";
-                // and assume that local sources are GeoServer instances with
-                // styling capabilities
-                if (this.target.authenticate && editableStyles) {
-                    // we'll do on-demand authentication when the button is
-                    // pressed.
-                    this.launchAction.enable();
-                    return;
-                }
             } else {
                 editableStyles = true;
             }
@@ -241,14 +225,20 @@ gxp.plugins.Styler = Ext.extend(gxp.plugins.Tool, {
         Ext.applyIf(config, {style: "padding: 10px"});
         
         var output = gxp.plugins.Styler.superclass.addOutput.call(this, config);
-        if (!(output.ownerCt.ownerCt instanceof Ext.Window)) {
-            output.dialogCls = Ext.Panel;
-            output.showDlg = function(dlg) {
+        if (output.ownerCt.ownerCt instanceof Ext.Window) {
+            output.dialogCls = Ext.Window;
+        } else {
+            output.dialogCls = Ext.Container;
+        }
+        output.showDlg = function(dlg) {
+            if (dlg instanceof Ext.Window) {
+                dlg.show();
+            } else {
                 dlg.layout = "fit";
                 dlg.autoHeight = false;
                 output.ownerCt.add(dlg);
-            };
-        }
+            }
+        };
         output.stylesStore.on("load", function() {
             if (!this.outputTarget && output.ownerCt.ownerCt instanceof Ext.Window) {
                 output.ownerCt.ownerCt.center();

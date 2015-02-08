@@ -18,10 +18,9 @@
          
 
     *********************************************************************** -->
-    <xsl:import href="../commons.xsl"/>
-    <xsl:import href="../../xml/countries.xsl"/>
-
     <xsl:output method="xml"/>
+    <xsl:include href="../commons.xsl"/>
+    <xsl:include href="../../xml/countries.xsl"/>
 
     <xsl:param name="mode"/>
 

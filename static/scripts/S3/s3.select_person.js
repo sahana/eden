@@ -39,8 +39,7 @@
             }
         });
         var value = $('#select_from_registry_row').attr('value');
-        // GET gives 'None', POST with errors gives ''
-        if (value != 'None' && value != '') {
+        if (value != 'None') {
             addPerson_real_input.val(value);
             select_person(value);
         }

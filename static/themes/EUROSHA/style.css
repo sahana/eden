@@ -1,0 +1,179 @@
+@charset "UTF-8";
+
+/*** General ***/
+html {
+    font-size: 100.01%;
+}
+body {
+    color: #000;
+    background: #fff;
+    font-size: 75%;
+    font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+/* Over-ride Ext */
+ol, ul {
+    list-style: disc inside none;
+}
+
+/* Logo in Menu */
+.S3menulogo {
+    background: url(img/ECHO_menulogo.png) left top no-repeat;
+    text-shadow: none;
+    padding: none;
+    width: 48px;
+    height: 28px;
+    display: inline-block;
+    position: absolute;
+    top: 3px;
+    left: 2px;
+}
+.S3menuHome {
+    padding-left: 33px;
+}
+
+/*** Typography ***/
+#content {
+    background: #f0f3f4;
+    border: 1px solid #bbb;
+    margin: 6px 5px;
+    padding: 0;
+    margin-bottom: 2px;
+    padding: 6px 10px 6px 10px;
+    border-radius: 10px 10px 10px 10px;
+    overflow: auto;
+}
+#content h1,
+#content h2 {
+    color: #112038;
+    font-size: 16px;
+    font-weight: bolder;
+    background: #cfdde7;
+    padding: 10px 5px 5px 5px;
+    border-bottom: 1px solid #bbb;
+}
+#content h2:first-child {
+    background-image: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.16, rgb(188,204,217)),
+        color-stop(0.57, rgb(212,225,235))
+    );
+    background-image: -moz-linear-gradient(
+        center bottom,
+        rgb(188,204,217) 16%,
+        rgb(212,225,235) 57%
+    );
+    margin: -6px -10px 6px -10px;
+    background-color: #cfdde7;
+    text-shadow: 0 1px 1px #e3edf4;
+    border: 1px solid #aecbe0;
+    border-top: 1px solid #e1eaf1;
+    border-bottom: 1px solid #9cb2c1;
+    padding-left: 10px;
+    border-radius: 10px 10px 0 0;
+}
+#content h3 {
+    color: #2a485d;
+    font-size: 14px;
+    font-weight: bolder;
+    padding: 5px 5px 2px 5px;
+    border-bottom: 1px #006699 solid;
+    margin-bottom: 10px;
+}
+#content h4 {
+    color: #375d78;
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: bolder;
+    padding: 2px 2px 1px 2px;
+    border-bottom: 1px #003366 dotted;
+    margin-bottom: 10px;
+}
+
+/* Home used for main & module home pages, about, etc */
+/*#home {
+    border: 10px #fff solid;
+}*/
+#home h2 {
+	padding-top: 8px;
+	padding-bottom: 8px;
+	font-size: 1.4em;
+	margin-bottom: 5px;
+}
+#home p {
+    text-align: center;
+    text-align: justify;
+    line-height: 1.25;
+}
+#home li {
+    margin-left: 12px;
+}
+
+/* Links should ALWAYS be unvisited */
+a {
+    color: #039;
+    text-decoration: underline;
+    outline: 0;
+}
+a:hover {
+    color: #c00;
+    text-decoration: none;
+    background-color: #ffffcc;
+    outline: 0;
+}
+a:active,
+a:focus {
+    outline: 0;
+}
+
+a.help, a:link.help {
+    color: #fff;
+    text-decoration: none;
+    margin-right: 10px;
+}
+a:hover.help {
+    background-color: #336699;
+    text-decoration: underline;
+}
+a:visited.help {
+    font-weight: normal;
+    color: #666;
+}
+
+p {
+    padding: 5px;
+    margin: 0;
+}
+/*** Overrides to widgets.css ***/
+/* Form Layout Styles */
+
+/* Input fields should give visual feedback when focussed */
+input:focus,
+select:focus,
+textarea:focus {
+    background-color: #ffffcc;
+}
+
+div.form-container form input:focus,
+div.form-container form select:focus,
+div.form-container form input.errorfield:focus,
+div.form-container form textarea:focus {
+    background-color: #ffc;
+    /* border-color: #ffc; */
+}
+div.form-container form td.w2p_fl label,
+div.item-container form td.w2p_fl label {
+    width: auto;
+}
+/* Big Buttons (e.g. RMS) */
+div.question-container {
+    text-align: center;
+    width: 8em;
+    background-color: #F3F6FF;
+    border: solid 3px #bbb;
+    padding: 1.5em;
+    font-size: large;
+    overflow: auto;
+}

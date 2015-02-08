@@ -22,52 +22,17 @@ def index_alt():
         Module homepage for non-Admin users when no CMS content found
     """
 
-    # @ToDo: Move this to the Template (separate deployment_setting or else a customise for non-REST controllers)
+    # @ToDo: Move this to the Template (separate deployment_setting or else a customize for non-REST controllers)
     template = settings.get_template()
     if template == "SandyRelief":
         # Just redirect to the Facilities
-        redirect(URL(f="facility"))
+        redirect(URL(f="facility", args=["search"]))
     else:
         # Just redirect to the list of Organisations
         redirect(URL(f="organisation"))
 
 # -----------------------------------------------------------------------------
 def group():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller(rheader = s3db.org_rheader)
-
-# -----------------------------------------------------------------------------
-def group_membership():
-    """ RESTful CRUD controller for options.s3json lookups """
-
-    if auth.permission.format != "s3json":
-        return ""
-
-    # Pre-process
-    def prep(r):
-        if r.method != "options":
-            return False
-        return True
-    s3.prep = prep
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def group_membership_status():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def group_person():
-    """ REST controller for options.s3json lookups """
-
-    s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
-    return s3_rest_controller()
-
-# -----------------------------------------------------------------------------
-def group_person_status():
     """ RESTful CRUD controller """
 
     return s3_rest_controller()
@@ -101,16 +66,15 @@ def subsector():
 def site():
     """
         RESTful CRUD controller
-        - used by S3SiteAutocompleteWidget
+        - used by S3SiteAutocompleteWidget/S3SiteAddressAutocompleteWidget
           which doesn't yet support filtering to just updateable sites
-        - used by site_contact_person()
         - used by S3OptionsFilter (e.g. Asset Log)
     """
 
     # Pre-processor
     def prep(r):
         if r.representation != "json" and \
-           r.method not in ("search_ac", "search_address_ac", "site_contact_person"):
+           r.method not in ("search_ac", "search_address_ac"):
             return False
 
         # Location Filter
@@ -124,7 +88,7 @@ def site():
 def sites_for_org():
     """
         Used to provide the list of Sites for an Organisation
-        - used in User Registration & Assets
+        - used in User Registration
     """
 
     try:
@@ -132,28 +96,23 @@ def sites_for_org():
     except:
         result = current.xml.json_message(False, 400, "No Org provided!")
     else:
-        try:
-            org = int(org)
-        except:
-            result = current.xml.json_message(False, 400, "Invalid Org provided!")
+        stable = s3db.org_site
+        if settings.get_org_branches():
+            # Find all branches for this Organisation
+            btable = s3db.org_organisation_branch
+            query = (btable.organisation_id == org) & \
+                    (btable.deleted != True)
+            rows = db(query).select(btable.branch_id)
+            org_ids = [row.branch_id for row in rows] + [org]
+            query = (stable.organisation_id.belongs(org_ids)) & \
+                    (stable.deleted != True)
         else:
-            stable = s3db.org_site
-            if settings.get_org_branches():
-                # Find all branches for this Organisation
-                btable = s3db.org_organisation_branch
-                query = (btable.organisation_id == org) & \
-                        (btable.deleted != True)
-                rows = db(query).select(btable.branch_id)
-                org_ids = [row.branch_id for row in rows] + [org]
-                query = (stable.organisation_id.belongs(org_ids)) & \
-                        (stable.deleted != True)
-            else:
-                query = (stable.organisation_id == org) & \
-                        (stable.deleted != True)
-            rows = db(query).select(stable.site_id,
-                                    stable.name,
-                                    orderby=stable.name)
-            result = rows.json()
+            query = (stable.organisation_id == org) & \
+                    (stable.deleted != True)
+        rows = db(query).select(stable.site_id,
+                                stable.name,
+                                orderby=stable.name)
+        result = rows.json()
     finally:
         response.headers["Content-Type"] = "application/json"
         return result
@@ -230,7 +189,7 @@ def person():
             # Do not serve other representations here
             return False
         else:
-            current.xml.show_ids = True
+            s3mgr.show_ids = True
         return True
     s3.prep = prep
 
@@ -239,12 +198,6 @@ def person():
 # -----------------------------------------------------------------------------
 def room():
     """ RESTful CRUD controller """
-
-    def prep(r):
-        field = r.table.site_id
-        field.readable = field.writable = True
-        return True
-    s3.prep = prep
 
     return s3_rest_controller()
 
@@ -256,7 +209,7 @@ def mailing_list():
     table = s3db[tablename]
 
     # Only groups with a group_type of 5
-    s3.filter = (table.group_type == 5)
+    response.s3.filter = (table.group_type == 5)
     table.group_type.writable = False
     table.group_type.readable = False
     table.name.label = T("Mailing List Name")
@@ -264,15 +217,15 @@ def mailing_list():
 
     # define the list_fields
     list_fields = s3db.configure(tablename,
-                                 list_fields = ["id",
-                                                "name",
-                                                "description",
-                                                ])
+                                        list_fields = ["id",
+                                                       "name",
+                                                       "description",
+                                                      ])
     # Components
     _rheader = s3db.pr_rheader
     _tabs = [(T("Organization"), "organisation/"),
-             (T("Mailing List Details"), None),
-             ]
+            (T("Mailing List Details"), None),
+           ]
     if len(request.args) > 0:
         _tabs.append((T("Members"), "group_membership"))
     if "viewing" in request.vars:
@@ -281,7 +234,7 @@ def mailing_list():
             table = s3db[tablename]
             _rheader = s3db.org_rheader
             _tabs = []
-    s3db.add_components("pr_group", pr_group_membership="group_id")
+    s3db.add_component("pr_group_membership", pr_group="group_id")
 
     rheader = lambda r: _rheader(r, tabs = _tabs)
     return s3_rest_controller("pr",
@@ -297,11 +250,14 @@ def donor():
 
     tablename = "org_donor"
     s3.crud_strings[tablename] = Storage(
-        label_create = ADD_DONOR,
+        title_create = ADD_DONOR,
         title_display = T("Donor Details"),
         title_list = T("Donors Report"),
         title_update = T("Edit Donor"),
+        title_search = T("Search Donors"),
+        subtitle_create = T("Add New Donor"),
         label_list_button = T("List Donors"),
+        label_create_button = ADD_DONOR,
         label_delete_button = T("Delete Donor"),
         msg_record_created = T("Donor added"),
         msg_record_modified = T("Donor updated"),
@@ -322,12 +278,12 @@ def resource():
             if r.method in ("create", "update"):
                 # Context from a Profile page?"
                 table = r.table
-                location_id = get_vars.get("(location)", None)
+                location_id = request.get_vars.get("(location)", None)
                 if location_id:
                     field = table.location_id
                     field.default = location_id
                     field.readable = field.writable = False
-                organisation_id = get_vars.get("(organisation)", None)
+                organisation_id = request.get_vars.get("(organisation)", None)
                 if organisation_id:
                     field = table.organisation_id
                     field.default = organisation_id
@@ -335,7 +291,7 @@ def resource():
 
         return True
     s3.prep = prep
-
+    
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -361,11 +317,10 @@ def incoming():
     """
         Incoming Shipments for Sites
 
-        Used from Requests rheader when looking at Transport Status
+        @unused
     """
 
-    # @ToDo: Create this function!
-    return s3db.inv_incoming()
+    return inv_incoming()
 
 # -----------------------------------------------------------------------------
 def facility_geojson():

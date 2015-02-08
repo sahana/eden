@@ -7,13 +7,9 @@
 
          CSV fields:
          Name............................hrm_programme.name
-         Long Name.......................hrm_programme.name_long
-         Description.....................hrm_programme.comments
          Organisation....................hrm_programme.owned_by_entity
 
     *********************************************************************** -->
-    <xsl:import href="../commons.xsl"/>
-
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
@@ -44,13 +40,23 @@
 
         <resource name="hrm_programme">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="name_long"><xsl:value-of select="col[@field='Long Name']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Description']"/></data>
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Organisation']"/>
                 </xsl:attribute>
             </reference>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Organisation">
+
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="col[@field='Organisation']"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="col[@field='Organisation']"/></data>
         </resource>
 
     </xsl:template>

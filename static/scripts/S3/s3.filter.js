@@ -21,7 +21,7 @@ S3.search = {};
             if (result.search(/\,/) != -1) {
                 result = '"' + result + '"';
             }
-            return result;
+            return result
         } else {
             return (value);
         }
@@ -70,24 +70,22 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.options-filter, .location-filter').each(function() {
-            $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
+                $this = $(this)
                 $this.val('');
-                if ($this.hasClass('groupedopts-filter-widget') && 
-                    $this.groupedopts('instance')) {
+                if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
                     $this.groupedopts('refresh');
                 } else
-                if ($this.hasClass('multiselect-filter-widget') && 
-                    $this.multiselect('instance')) {
+                if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
                     $this.multiselect('refresh');
                 }
             } else {
-                var id = $this.attr('id');
+                var id = $(this).attr('id');
                 $("input[name='" + id + "']:checked").each(function() {
                     $(this).click();
                 });
             }
-            if ($this.hasClass('location-filter')) {
+            if ($(this).hasClass('location-filter')) {
                 hierarchical_location_change(this);
             }
         });
@@ -97,11 +95,6 @@ S3.search = {};
         form.find('.date-filter-input').each(function() {
             $(this).val('');
         });
-        // Hierarchy filter widget (experimental)
-        form.find('.hierarchy-filter').each(function() {
-            $(this).hierarchicalopts('reset');
-        });
-
         // Other widgets go here
 
         // Clear filter manager
@@ -118,7 +111,7 @@ S3.search = {};
         // Fire optionChanged event
         form.trigger('optionChanged');
     };
-
+    
     /**
      * getCurrentFilters: retrieve all current filters
      *
@@ -285,15 +278,13 @@ S3.search = {};
         });
 
         // Location widgets
-        form.find('.s3-groupedopts-widget:visible').prev(
-                  '.location-filter.groupedopts-filter-widget')
-        .add(
         form.find('.ui-multiselect:visible').prev(
-                  '.location-filter.multiselect-filter-widget')
+          '.location-filter.multiselect-filter-widget,' +
+          '.location-filter.groupedopts-filter-widget')
         .add(
         form.find('.location-filter:visible,' +
-                  '.location-filter.multiselect-filter-widget.active' /*+
-          ',.location-filter.multiselect-filter-bootstrap.active'*/)))
+          '.location-filter.multiselect-filter-widget.active' /*+
+          ',.location-filter.multiselect-filter-bootstrap.active'*/))
         .each(function() {
             id = $(this).attr('id');
             url_var = $('#' + id + '-data').val();
@@ -330,36 +321,13 @@ S3.search = {};
             }
         });
 
-        // Hierarchy filter (experimental)
-        form.find('.hierarchy-filter:visible').each(function() {
-            $this = $(this);
-            id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            values = $this.hierarchicalopts('get');
-            value = '';
-            if (values) {
-                for (i=0; i < values.length; i++) {
-                    if (value === '') {
-                        value += values[i];
-                    } else {
-                        value = value + ',' + values[i];
-                    }
-                }
-            }
-            if (value === '') {
-                queries.push([url_var, null]);
-            } else {
-                queries.push([url_var, value]);
-            }
-        });
-
         // Other widgets go here...
 
         // return queries to caller
         return queries;
     };
-
-    // Pass to global scope to be called by s3.ui.pivottable.js
+    
+    // Pass to global scope to be called by s3.jquery.ui.pivottable.js
     S3.search.getCurrentFilters = getCurrentFilters;
 
     /**
@@ -384,27 +352,20 @@ S3.search = {};
         for (i=0, len=queries.length; i < len; i++) {
             var query = queries[i];
             expression = query[0];
-            if (typeof query[1] == 'string') {
-                values = parseValue(query[1]);
-            } else {
-                values = query[1];
-            }
+            values = parseValue(query[1]);
             if (q.hasOwnProperty(expression)) {
                 q[expression] = q[expression].concat(values);
             } else {
                 q[expression] = values;
             }
         }
-
+        
         // Text widgets
-        form.find('.text-filter').each(function() {
+        form.find('.text-filter:visible').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
-                if (!$this.is(':visible') && !$this.hasClass('active')) {
-                    toggleAdvanced(form);
-                }
                 values = q[expression];
                 value = '';
                 if (values) {
@@ -430,24 +391,30 @@ S3.search = {};
         });
 
         // Options widgets
-        form.find('.options-filter').each(function() {
+        form.find('.s3-groupedopts-widget:visible').prev(
+                  '.options-filter.groupedopts-filter-widget')
+        .add(
+        form.find('.ui-multiselect:visible').prev(
+                  '.options-filter.multiselect-filter-widget'))
+        .add(
+        form.find('.options-filter:visible,' +
+                  '.options-filter.multiselect-filter-widget.active' /*+
+                  ',.options-filter.multiselect-filter-bootstrap.active'*/))
+        .each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             var operator = $('input:radio[name="' + id + '_filter"]:checked').val();
+
             if (this.tagName && this.tagName.toLowerCase() == 'select') {
                 var refresh = false;
-                var selector = expression.split('__')[0];
-                if (q.hasOwnProperty(selector + '__eq')) {
-                    values = q[selector + '__eq'];
-                    refresh = true;
-                } else if (q.hasOwnProperty(selector)) {
-                    values = q[selector];
-                    refresh = true;
-                } else if (q.hasOwnProperty(expression)) {
+                
+                if (q.hasOwnProperty(expression)) {
                     values = q[expression];
                     refresh = true;
-                } else if (operator == 'any' || operator == 'all') {
+                } else
+                if (operator == 'any' || operator == 'all') {
+                    var selector = expression.split('__')[0];
                     if (q.hasOwnProperty(selector + '__anyof')) {
                         values = q[selector + '__anyof'];
                         refresh = true;
@@ -461,31 +428,25 @@ S3.search = {};
                     }
                 }
                 if (refresh) {
-                    if (!$this.is(':visible') && !$this.hasClass('active')) {
-                        toggleAdvanced(form);
-                    }
                     $this.val(values);
                     if ($this.hasClass('groupedopts-filter-widget') &&
-                        $this.groupedopts('instance')) {
+                        typeof $this.groupedopts != 'undefined') {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') && 
-                        $this.multiselect('instance')) {
+                    if ($this.hasClass('multiselect-filter-widget') &&
+                        typeof $this.multiselect != 'undefined') {
                         $this.multiselect('refresh');
                     }
                 }
             }
         });
-
+        
         // Numerical range widgets
         form.find('.range-filter-input:visible').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
-                if (!$this.is(':visible') && !$this.hasClass('active')) {
-                    toggleAdvanced(form);
-                }
                 values = q[expression];
                 if (values) {
                     $this.val(values[0]);
@@ -501,9 +462,6 @@ S3.search = {};
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             if (q.hasOwnProperty(expression)) {
-                if (!$this.is(':visible') && !$this.hasClass('active')) {
-                    toggleAdvanced(form);
-                }
                 values = q[expression];
                 if (values) {
                     value = new Date(values[0]);
@@ -526,13 +484,22 @@ S3.search = {};
         });
 
         // Location filter widget
-        form.find('.location-filter').each(function() {
+        form.find('.ui-multiselect:visible').prev(
+          '.location-filter.multiselect-filter-widget,' +
+          '.location-filter.groupedopts-filter-widget')
+        .add(
+        form.find('.location-filter:visible,' +
+          '.location-filter.multiselect-filter-widget.active' /*+
+          ',.location-filter.multiselect-filter-bootstrap.active'*/))
+        .each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
             var operator = $('input:radio[name="' + id + '_filter"]:checked').val();
+
             if (this.tagName && this.tagName.toLowerCase() == 'select') {
                 var refresh = false;
+
                 if (q.hasOwnProperty(expression)) {
                     values = q[expression];
                     refresh = true;
@@ -552,37 +519,20 @@ S3.search = {};
                     }
                 }
                 if (refresh) {
-                    if (!$this.is(':visible') && !$this.hasClass('active')) {
-                        toggleAdvanced(form);
-                    }
                     $this.val(values);
-                    if ($this.hasClass('groupedopts-filter-widget') && 
-                        $this.groupedopts('instance')) {
+                    if ($this.hasClass('groupedopts-filter-widget') &&
+                        typeof $this.groupedopts != 'undefined') {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') && 
-                        $this.multiselect('instance')) {
+                    if ($this.hasClass('multiselect-filter-widget') &&
+                        typeof $this.multiselect != 'undefined') {
                         $this.multiselect('refresh');
                     }
                     hierarchical_location_change(this);
                 }
             }
         });
-
-        // Hierarchy filter widget (experimental)
-        form.find('.hierarchy-filter:visible').each(function() {
-            $this = $(this);
-            id = $this.attr('id');
-            expression = $('#' + id + '-data').val();
-            if (q.hasOwnProperty(expression)) {
-                if (!$this.is(':visible') && !$this.hasClass('active')) {
-                    toggleAdvanced(form);
-                }
-                values = q[expression];
-                $this.hierarchicalopts('set', values);
-            }
-        });
-
+        
         // Re-enable auto-submit
         form.data('noAutoSubmit', 0);
 
@@ -596,26 +546,26 @@ S3.search = {};
      * Update a variable in the query part of the filter-submit URL
      */
     var updateFilterSubmitURL = function(form, name, value) {
-
+        
         var submit_url = $('#' + form).find('input.filter-submit-url[type="hidden"]');
 
         if (submit_url.length) {
-
+            
             submit_url = submit_url.first();
-
+            
             var url = $(submit_url).val();
-
+            
             var url_parts = url.split('?'),
                 update_url,
                 query,
                 vars = [];
 
             if (url_parts.length > 1) {
-
+                
                 var qstr = url_parts[1];
                 var a = qstr.split('&'), b, c;
                 for (i=0; i<a.length; i++) {
-                    b = a[i].split('=');
+                    var b = a[i].split('=');
                     if (b.length > 1) {
                         c = decodeURIComponent(b[0]);
                         if (c != name) {
@@ -624,7 +574,7 @@ S3.search = {};
                     }
                 }
                 vars.push(name + '=' + value);
-
+                
                 query = vars.join('&');
                 update_url = url_parts[0];
                 if (query) {
@@ -654,7 +604,7 @@ S3.search = {};
         if (undefined === queries) {
             queries = getCurrentFilters();
         }
-
+        
         var url_parts = url.split('?'),
             update = {},
             reset = {},
@@ -677,14 +627,12 @@ S3.search = {};
         }
 
         var query = [];
-
-        if (S3.search.stripFilters == 1) {
-            // Strip existing URL filters
-        } else if (url_parts.length > 1) {
-            // Keep existing URL filters
+        
+        if (url_parts.length > 1) {
+            
             var qstr = url_parts[1];
             var url_vars = qstr.split('&');
-
+            
             for (i=0, len=url_vars.length; i < len; i++) {
                 q = url_vars[i].split('=');
                 if (q.length > 1) {
@@ -697,7 +645,7 @@ S3.search = {};
                 }
             }
         }
-
+        
         for (i=0, len=queries.length; i < len; i++) {
             q = queries[i];
             k = q[0];
@@ -706,7 +654,7 @@ S3.search = {};
                 query.push(k + '=' + v);
             }
         }
-
+            
         var url_query = query.join('&'),
             filtered_url = url_parts[0];
         if (url_query) {
@@ -714,7 +662,7 @@ S3.search = {};
         }
         return filtered_url;
     };
-
+    
     // Pass to global scope to be called by S3.gis.refreshLayer()
     S3.search.filterURL = filterURL;
 
@@ -787,12 +735,10 @@ S3.search = {};
                         }
 
                         // Refresh UI widgets
-                        if (widget.hasClass('groupedopts-filter-widget') && 
-                            widget.groupedopts('instance')) {
+                        if (widget.hasClass('groupedopts-filter-widget') && typeof widget.groupedopts != 'undefined') {
                             widget.groupedopts('refresh');
                         } else
-                        if (widget.hasClass('multiselect-filter-widget') && 
-                            widget.multiselect('instance')) {
+                        if (widget.hasClass('multiselect-filter-widget') && typeof widget.multiselect != 'undefined') {
                             widget.multiselect('refresh');
                         }
 
@@ -824,10 +770,8 @@ S3.search = {};
             'url': ajaxurl,
             'dataType': 'json'
         }).done(function(data) {
-            // Temporarily disable auto-submit
             $form.data('noAutoSubmit', 1);
             updateOptions(data);
-            // Re-enable
             $form.data('noAutoSubmit', 0);
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (errorThrown == 'UNAUTHORIZED') {
@@ -836,25 +780,6 @@ S3.search = {};
                 msg = jqXHR.responseText;
             }
             console.log(msg);
-        });
-    };
-
-    /**
-     * Update export format URLs in a datatable
-     *
-     * @param {jQuery} dt - the datatable
-     * @param {object} queries - the filter queries
-     */
-    var updateFormatURLs = function(dt, queries) {
-
-        $('#' + dt[0].id).closest('.dt-wrapper')
-                         .find('.dt-export')
-                         .each(function() {
-            var $this = $(this);
-            var url = $this.data('url');
-            if (url) {
-                $this.data('url', filterURL(url, queries));
-            }
         });
     };
 
@@ -908,27 +833,34 @@ S3.search = {};
         for (target_id in targets) {
             t = $('#' + target_id);
             if (!t.is(':visible')) {
-                continue;
+                continue
             }
             target_data = targets[target_id];
             t = $('#' + target_id);
             if (t.hasClass('dl')) {
-                t.datalist('ajaxReload', target_data['queries']);
-//                 dlAjaxReload(target_id, target_data['queries']);
+                dlAjaxReload(target_id, target_data['queries']);
             } else if (t.hasClass('dataTable')) {
                 var dt = t.dataTable();
                 // Refresh Data
-                dt.reloadAjax(target_data['ajaxurl']);
-                updateFormatURLs(dt, queries);
-                $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                    $(this).val(target_data['ajaxurl']);
+                dt.fnReloadAjax(target_data['ajaxurl']);
+                // Update Export Formats
+                var $this,
+                    s,
+                    parts;
+                $('#' + dt[0].id + '_list_formats div').each(function() {
+                    $this = $(this);
+                    s = $this.attr('onclick');
+                    parts = s.split("','");
+                    url = parts[2].split("');")[0];
+                    url = filterURL(url, queries);
+                    parts[2] = url + "');";
+                    s = parts.join("','");
+                    $this.attr('onclick', s);
                 });
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('pt-container')) {
                 t.pivottable('reload', null, target_data['queries']);
-            } else if (t.hasClass('tp-container')) {
-                t.timeplot('reload', null, target_data['queries']);
             }
         }
     };
@@ -998,7 +930,6 @@ S3.search = {};
                 t = $('#' + target_id);
                 if (t.hasClass('dl') ||
                     t.hasClass('pt-container') ||
-                    t.hasClass('tp-container') ||
                     t.hasClass('map_wrapper')) {
                     // These targets handle their AjaxURL themselves
                     ajaxurl = null;
@@ -1011,7 +942,7 @@ S3.search = {};
                         if (typeof ajaxurl != 'undefined') {
                             ajaxurl = filterURL(ajaxurl, q);
                         } else {
-                            continue;
+                            continue
                         }
                     }
                 } else {
@@ -1024,19 +955,6 @@ S3.search = {};
                 };
             }
         }
-
-        /**
-         * Helper method to trigger re-calculation of column width in
-         * responsive data tables after unhiding them
-         *
-         * @param {jQuery} datatable - the datatable
-         */
-        var recalcResponsive = function(datatable) {
-            var dt = $(datatable).DataTable();
-            if (dt && dt.responsive) {
-                dt.responsive.recalc();
-            }
-        };
 
         // Initialise jQueryUI Tabs
         $('#summary-tabs').tabs({
@@ -1083,20 +1001,10 @@ S3.search = {};
                     // Update all just-unhidden widgets which have pending updates
                     updatePendingTargets(form);
                 }
-                newPanel.find('table.dataTable.display.responsive')
-                        .each(function() {
-                    recalcResponsive(this);
-                });
             }
         }).css({visibility: 'visible'});
-
         // Activate not called? Unhide initial section anyway:
-        $('.ui-tabs-panel[aria-hidden="false"]').first()
-                                                .removeClass('hide')
-                                                .find('table.dataTable.display.responsive')
-                                                .each(function() {
-                                                    recalcResponsive(this);
-                                                });
+        $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
     };
 
     /**
@@ -1129,8 +1037,8 @@ S3.search = {};
      * - in global scope as called from callback to Map Loader
      */
     S3.search.summary_maps = function(form) {
-        // Find any Map widgets in the common section or initially active tab
-        var maps = $('#summary-common, #summary-sections').find('.map_wrapper');
+        // Find any Map widgets in the initially active tab
+        var maps = $('#summary-sections').find('.map_wrapper');
         for (var i=0; i < maps.length; i++) {
             var map = maps[i];
             if (!map.hidden) {
@@ -1139,13 +1047,11 @@ S3.search = {};
                 if (undefined === gis.maps[map_id]) {
                     // Instantiate the map (can't be done when the DIV is hidden)
                     var options = gis.options[map_id];
-                    if (undefined != options) {
-                        gis.show_map(map_id, options);
-                        // Get the current Filters
-                        var queries = getCurrentFilters($('#' + form));
-                        // Load the layer
-                        gis.refreshLayer('search_results', queries);
-                    }
+                    gis.show_map(map_id, options);
+                    // Get the current Filters
+                    var queries = getCurrentFilters($('#' + form));
+                    // Load the layer
+                    gis.refreshLayer('search_results', queries);
                 }
             }
         }
@@ -1173,42 +1079,9 @@ S3.search = {};
      */
     var hierarchical_location_change = function(widget) {
         var name = widget.name;
+        var values = $('#' + name).val();
         var base = name.slice(0, -1);
         var level = parseInt(name.slice(-1));
-        var $widget = $('#' + name);
-        var values = $widget.val();
-        if (values) {
-            // Show the next widget down
-            var fn = base.replace(/-/g, '_') + (level + 1);
-            S3[fn]();
-            $('#' + base + (level + 1)).next('.ui-multiselect').show();
-        } else {
-            // Hide the next widget down
-            var next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
-            if (next_widget.length) {
-                next_widget.hide();
-                // Hide the next widget down
-                next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
-                if (next_widget.length) {
-                    next_widget.hide();
-                    // Hide the next widget down
-                    next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
-                    if (next_widget.length) {
-                        next_widget.hide();
-                        // Hide the next widget down
-                        next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
-                        if (next_widget.length) {
-                            next_widget.hide();
-                            // Hide the next widget down
-                            next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
-                            if (next_widget.length) {
-                                next_widget.hide();
-                            }
-                        }
-                    }
-                }
-            }
-        }
         var hierarchy = S3.location_filter_hierarchy;
         if (S3.location_name_l10n != undefined) {
             var translate = true;
@@ -1381,16 +1254,7 @@ S3.search = {};
                     }
                 }
                 select.html(_options);
-                if (select.hasClass('groupedopts-filter-widget') && 
-                    select.groupedopts('instance')) {
-                    try {
-                        select.groupedopts('refresh');
-                    } catch(e) { }
-                } else
-                if (select.hasClass('multiselect-filter-widget') && 
-                    select.multiselect('instance')) {
-                    select.multiselect('refresh');
-                }
+                select.multiselect('refresh');
                 if (l === (level + 1)) {
                     if (values) {
                         // Show next level down (if hidden)
@@ -1406,10 +1270,7 @@ S3.search = {};
     };
 
     var filterSubmit = function(filter_form) {
-
-        // Hide any warnings (e.g. 'Too Many Features')
-        S3.hideAlerts('warning');
-
+        
         var form_id = filter_form.attr('id'),
             url = filter_form.find('input.filter-submit-url[type="hidden"]').val(),
             queries = getCurrentFilters(filter_form);
@@ -1479,9 +1340,6 @@ S3.search = {};
                 } else if (t.hasClass('pt-container')) {
                     // PivotTables do not need page reload
                     needs_reload = false;
-                } else if (t.hasClass('tp-container')) {
-                    // TimePlots do not need page reload
-                    needs_reload = false;
                 } else {
                     // all other targets need page reload
                     if (visible) {
@@ -1506,26 +1364,33 @@ S3.search = {};
 
             // Ajax-update all visible targets
             for (i=0; i < targets.length; i++) {
-                target_id = targets[i];
+                target_id = targets[i]
                 t = $('#' + target_id);
                 if (!t.is(':visible')) {
                     continue;
                 } else if (t.hasClass('dl')) {
-                    t.datalist('ajaxReload', queries);
-//                     dlAjaxReload(target_id, queries);
+                    dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable();
-                    dt.reloadAjax(dt_ajaxurl[target_id]);
-                    updateFormatURLs(dt, queries);
-                    $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                        $(this).val(dt_ajaxurl[target_id]);
+                    dt.fnReloadAjax(dt_ajaxurl[target_id]);
+                    // Update Export Formats
+                    var $this,
+                        s,
+                        parts;
+                    $('#' + dt[0].id + '_list_formats div').each(function() {
+                        $this = $(this);
+                        s = $this.attr('onclick');
+                        parts = s.split("','");
+                        url = parts[2].split("');")[0];
+                        url = filterURL(url, queries);
+                        parts[2] = url + "');";
+                        s = parts.join("','");
+                        $this.attr('onclick', s);
                     });
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('pt-container')) {
                     t.pivottable('reload', null, queries);
-                } else if (t.hasClass('tp-container')) {
-                    t.timeplot('reload', null, queries);
                 }
             }
         } else {
@@ -1533,61 +1398,15 @@ S3.search = {};
             url = filterURL(url, queries);
             window.location.href = url;
         }
-    };
-
-    var toggleAdvanced = function(form) {
-
-        var $form = $(form), hidden;
-        
-        $form.find('.advanced').each(function() {
-            var widget = $(this);
-            // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
-            var selectors = '.multiselect-filter-widget,.groupedopts-filter-widget';
-            if (widget.hasClass('hide')) {
-                // Show the Widgets
-                widget.removeClass('hide')
-                        .show()
-                        .find(selectors).each( function() {
-                            selector = $(this)
-                            // Mark them as Active
-                            selector.addClass('active');
-                            // Refresh the contents
-                            if (selector.hasClass('groupedopts-filter-widget') &&
-                                selector.groupedopts('instance')) {
-                                selector.groupedopts('refresh');
-                            } else
-                            if (selector.hasClass('multiselect-filter-widget') &&
-                                selector.multiselect('instance')) {
-                                selector.multiselect('refresh');
-                            }
-                        });
-                hidden = true;
-            } else {
-                // Hide the Widgets
-                widget.addClass('hide')
-                        .hide()
-                        // Mark them as Inactive
-                        .find(selectors)
-                        .removeClass('active');
-                hidden = false;
-            }
-        });
-        
-        var $btn = $($form.find('.filter-advanced-label'));
-        if (hidden) {
-            // Change label to label_off
-            $btn.text($btn.data('off')).siblings().toggle();
-        } else {
-            // Change label to label_on
-            $btn.text($btn.data('on')).siblings().toggle();
-        }
-        
-    };
+    }
 
     /**
      * document-ready script
      */
     $(document).ready(function() {
+
+        // Mark visible widgets as active, otherwise submit won't use them
+        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
 
         // Activate MultiSelect Widgets
         /*
@@ -1608,29 +1427,53 @@ S3.search = {};
             $('.multiselect-filter-bootstrap').multiselect_bs();
         }*/
 
-        // Mark visible widgets as active, otherwise submit won't use them
-        $('.groupedopts-filter-widget:visible,.multiselect-filter-widget:visible').addClass('active');
-
-        // Clear all filters
-        $('.filter-clear').click(function() {
-            var form = $(this).closest('.filter-form');
-            clearFilters(form);
-        });
-
-        // Show Filter Manager
-        $('.show-filter-manager').click(function() {
-            $('.filter-manager-row').removeClass('hide').show();
-            $('.show-filter-manager').hide();
-        });
-
-        // Filter-form submission
-        $('.filter-submit').click(function() {
-            filterSubmit($(this).closest('.filter-form'));
-        });
-
         // Advanced button
         $('.filter-advanced').on('click', function() {
-            toggleAdvanced($(this).closest('form'));
+            
+            // Toggle visibility & mark widgets as [in]active
+            // @todo: select form
+            var hidden;
+            $('.advanced').each(function() {
+                var that = $(this);
+                // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
+                var selectors = '.multiselect-filter-widget,.groupedopts-filter-widget';
+                if (that.hasClass('hide')) {
+                    // Show the Widgets
+                    that.removeClass('hide')
+                        .show()
+                        .find(selectors).each( function() {
+                            $this = $(this)
+                            // Mark them as Active
+                            $this.addClass('active');
+                            // Refresh the contents
+                            if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
+                                $this.groupedopts('refresh');
+                            } else
+                            if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
+                                $this.multiselect('refresh');
+                            }
+                        });
+                    hidden = true;
+                } else {
+                    // Hide the Widgets
+                    that.addClass('hide')
+                        .hide()
+                        // Mark them as Inactive
+                        .find(selectors)
+                        .removeClass('active');
+                    hidden = false;
+                }
+            });
+            var that = $(this);
+            if (hidden) {
+                // Change label to label_off
+                var label_off = that.attr('label_off');
+                that.attr('value', label_off);
+            } else {
+                // Change label to label_on
+                var label_on = that.attr('label_on');
+                that.attr('value', label_on);
+            }
         });
 
         // Hierarchical Location Filter
@@ -1645,18 +1488,18 @@ S3.search = {};
         $('.options-filter, .location-filter, .date-filter-input').on('change.autosubmit', function () {
             $(this).closest('form').trigger('optionChanged');
         });
-        $('.hierarchy-filter').on('select.s3hierarchy', function() {
-            $(this).closest('form').trigger('optionChanged');
+
+        // Clear all filters
+        $('.filter-clear').click(function() {
+            var form = $(this).closest('form.filter-form');
+            clearFilters(form);
         });
 
-        // Don't submit if pressing Enter
-        $('.text-filter').keypress(function(e) {
-            if (e.which == 13) {
-                e.preventDefault();
-                return false;
-            }
-            return true;
+        // Filter-form submission
+        $('.filter-submit').click(function() {
+            filterSubmit($(this).closest('form.filter-form'));
         });
+
     });
 
 }());

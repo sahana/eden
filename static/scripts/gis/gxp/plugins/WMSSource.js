@@ -9,16 +9,16 @@
 /**
  * @requires util.js
  * @requires plugins/LayerSource.js
- * @require OpenLayers/Layer/WMS.js
- * @require OpenLayers/Format/WMSCapabilities/v1_1_0.js
- * @require OpenLayers/Format/WMSCapabilities/v1_1_1.js
- * @require OpenLayers/Format/WMSCapabilities/v1_3_0.js
- * @require OpenLayers/Protocol/WFS/v1_1_0.js
- * @require GeoExt/data/WMSCapabilitiesReader.js
- * @require GeoExt/data/WMSCapabilitiesStore.js
- * @require GeoExt/data/WMSDescribeLayerStore.js
- * @require GeoExt/data/AttributeReader.js
- * @require GeoExt/data/AttributeStore.js
+ * requires OpenLayers/Layer/WMS.js
+ * requires OpenLayers/Format/WMSCapabilities/v1_1_0.js
+ * requires OpenLayers/Format/WMSCapabilities/v1_1_1.js
+ * requires OpenLayers/Format/WMSCapabilities/v1_3_0.js
+ * requires OpenLayers/Protocol/WFS/v1_1_0.js
+ * requires GeoExt/data/WMSCapabilitiesReader.js
+ * requires GeoExt/data/WMSCapabilitiesStore.js
+ * requires GeoExt/data/WMSDescribeLayerStore.js
+ * requires GeoExt/data/AttributeReader.js
+ * requires GeoExt/data/AttributeStore.js
  */
 
 /**
@@ -93,21 +93,6 @@ Ext.namespace("gxp.plugins");
  *        name: "world",
  *        group: "background"
  *    }
- *
- * An optional 'getFeatureInfo' property can also be passed to
- * customize the sort order, visibility, & labels for layer attributes.
- * A sample 'getFeatureInfo' configuration would look like this:
- *
- *  .. code-block:: javascript
- *
- *    {
- *        fields: ["twn_name","pop1990"]
- *        propertyNames: {"pop1990": "1990 Population",  "twn_name": "Town"}
- *    }
- *
- *  Within the 'getFeatureInfo' configuration, the 'fields' property determines sort
- *  order & visibility (any attributes not included are not displayed) and
- *  'propertyNames'  specifies the labels for the attributes.
  *
  *  For initial programmatic layer configurations, to leverage lazy loading of
  *  the Capabilities document, it is recommended to configure layers with the
@@ -216,12 +201,8 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
      *  Reload the store when the authorization changes.
      */
     onAuthorizationChange: function() {
-        if (this.disabled !== true && this.store && this.url.charAt(0) === "/") {
-            var lastOptions = this.store.lastOptions || {params: {}};
-            Ext.apply(lastOptions.params, {
-                '_dc': Math.random()
-            });
-            this.store.reload(lastOptions);
+        if (this.store && this.store.url.charAt(0) === "/") {
+            this.store.reload();
         }
     },
 
@@ -365,9 +346,28 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
             }
         });
         if (lazy) {
-            this.lazy = lazy;
-            this.ready = true;
-            this.fireEvent("ready", this);
+            this.lazy = true;
+            // ping server of lazy source with an incomplete request, to see if
+            // it is available
+            Ext.Ajax.request({
+                method: "GET",
+                url: this.url,
+                params: {SERVICE: "WMS"},
+                callback: function(options, success, response) {
+                    var status = response.status;
+                    // responseText should not be empty (OGCException)
+                    if (status >= 200 && status < 403 && response.responseText) {
+                        this.ready = true;
+                        this.fireEvent("ready", this);
+                    } else {
+                        this.fireEvent("failure", this,
+                            "Layer source not available.",
+                            "Unable to contact WMS service."
+                        );
+                    }
+                },
+                scope: this
+            });
         }
     },
     
@@ -409,7 +409,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
         config.srs = {};
         config.srs[srs] = true;
         
-        var bbox = config.bbox || this.target.map.maxExtent || OpenLayers.Projection.defaults[srs].maxExtent;
+        var bbox = config.bbox || this.target.map.maxExtent;
         config.bbox = {};
         config.bbox[srs] = {bbox: bbox};
         
@@ -424,45 +424,15 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
             config.url || this.url, {
                 layers: config.name,
                 transparent: "transparent" in config ? config.transparent : true,
-                cql_filter: config.cql_filter,
                 format: config.format
             }, {
-                projection: srs,
-                eventListeners: {
-                  tileloaded: this.countAlive,
-                  tileerror: this.countAlive,
-                  scope: this
-                }
+                projection: srs
             }
         ));
         record.json = config;
         return record;
     },
-
-    countAlive: function(evt) {
-        if (!('_alive' in evt.object.metadata)) {
-            evt.object.metadata._alive = 0;
-            evt.object.events.register('loadend', this, this.removeDeadLayer);
-        }
-        evt.object.metadata._alive += (evt.type == 'tileerror' ? -1 : 1);
-    },
-
-    removeDeadLayer: function(evt) {
-        evt.object.events.un({
-            'tileloaded': this.countAlive,
-            'tileerror': this.countAlive,
-            'loadend': this.removeDeadLayer,
-            scope: this
-        });
-        if (evt.object.metadata._alive === 0) {
-            this.target.mapPanel.map.removeLayer(evt.object);
-            if (window.console) {
-              console.debug('Unavailable layer ' + evt.object.name + ' removed.');
-            }
-        }
-        delete evt.object.metadata._alive;
-    },
-
+     
     /** api: method[createLayerRecord]
      *  :arg config:  ``Object``  The application config for this layer.
      *  :returns: ``GeoExt.data.LayerRecord`` or null when the source is lazy.
@@ -482,7 +452,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
             original = this.store.getAt(index);
         } else if (Ext.isObject(config.capability)) {
             original = this.store.reader.readRecords({capability: {
-                request: {getmap: {href: this.trimUrl(this.url, this.baseParams)}},
+                request: {getmap: {href: this.url}},
                 layers: [config.capability]}
             }).records[0];
         } else if (this.layerConfigComplete(config)) {
@@ -502,24 +472,22 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
             // compatible projection that equals the map projection. This helps
             // us in dealing with the different EPSG codes for web mercator.
             var layerProjection = this.getProjection(original);
-            if (layerProjection) {
-                layer.addOptions({projection: layerProjection});
-            }
 
             var projCode = (layerProjection || projection).getCode(),
                 bbox = original.get("bbox"), maxExtent;
-
-            // determine maxExtent in map projection
             if (bbox && bbox[projCode]){
+                layer.addOptions({projection: layerProjection});
                 maxExtent = OpenLayers.Bounds.fromArray(bbox[projCode].bbox, layer.reverseAxisOrder());
             } else {
                 var llbbox = original.get("llbbox");
                 if (llbbox) {
-                    llbbox[0] = Math.max(llbbox[0], -180);
-                    llbbox[1] = Math.max(llbbox[1], -90);
-                    llbbox[2] = Math.min(llbbox[2], 180);
-                    llbbox[3] = Math.min(llbbox[3], 90);
-                    maxExtent = OpenLayers.Bounds.fromArray(llbbox).transform("EPSG:4326", projection);
+                    var extent = OpenLayers.Bounds.fromArray(llbbox).transform("EPSG:4326", projection);
+                    // make sure maxExtent is valid (transform does not succeed for all llbbox)
+                    if ((1 / extent.getHeight() > 0) && (1 / extent.getWidth() > 0)) {
+                        // maxExtent has infinite or non-numeric width or height
+                        // in this case, the map maxExtent must be specified in the config
+                        maxExtent = extent;
+                    }
                 }
             }
             
@@ -527,8 +495,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
             layer.mergeNewParams({
                 STYLES: config.styles,
                 FORMAT: config.format,
-                TRANSPARENT: config.transparent,
-                CQL_FILTER: config.cql_filter
+                TRANSPARENT: config.transparent
             });
             
             var singleTile = false;
@@ -543,7 +510,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
 
             layer.setName(config.title || layer.name);
             layer.addOptions({
-                attribution: layer.attribution || config.attribution,
+                attribution: layer.attribution,
                 maxExtent: maxExtent,
                 restrictedExtent: maxExtent,
                 singleTile: singleTile,
@@ -552,9 +519,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
                 opacity: ("opacity" in config) ? config.opacity : 1,
                 buffer: ("buffer" in config) ? config.buffer : 1,
                 dimensions: original.data.dimensions,
-                transitionEffect: singleTile ? 'resize' : null,
-                minScale: config.minscale,
-                maxScale: config.maxscale
+                transitionEffect: singleTile ? 'resize' : null
             });
             
             // data for the new record
@@ -562,7 +527,6 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
                 title: layer.name,
                 group: config.group,
                 infoFormat: config.infoFormat,
-                getFeatureInfo:  config.getFeatureInfo,
                 source: config.source,
                 properties: "gxp_wmslayerpanel",
                 fixed: config.fixed,
@@ -579,8 +543,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
                 {name: "fixed", type: "boolean"},
                 {name: "selected", type: "boolean"},
                 {name: "restUrl", type: "string"},
-                {name: "infoFormat", type: "string"},
-                {name: "getFeatureInfo"}
+                {name: "infoFormat", type: "string"}
             ];
             original.fields.each(function(field) {
                 fields.push(field);
@@ -591,7 +554,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
             record.json = config;
 
         } else {
-            if (window.console && this.store.getCount() > 0 && config.name !== undefined) {
+            if (window.console && this.store.getCount() > 0) {
                 console.warn("Could not create layer record for layer '" + config.name + "'. Check if the layer is found in the WMS GetCapabilities response.");
             }
         }
@@ -852,8 +815,7 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
                 record.json
             ),
             layer = record.getLayer(),
-            params = layer.params,
-            options = layer.options;
+            params = layer.params;
         var name = config.name,
             raw = this.store.reader.raw;
         if (raw) {
@@ -878,18 +840,8 @@ gxp.plugins.WMSSource = Ext.extend(gxp.plugins.LayerSource, {
         return Ext.apply(config, {
             format: params.FORMAT,
             styles: params.STYLES,
-            tiled: !options.singleTile,
-            transparent: params.TRANSPARENT,
-            cql_filter: params.CQL_FILTER,
-            minscale: options.minScale,
-            maxscale: options.maxScale,
-            infoFormat: record.get("infoFormat"),
-            attribution: layer.attribution
+            transparent: params.TRANSPARENT
         });
-    },
-
-    disable: function() {
-        this.disabled = true;
     },
     
     /** private: method[getState] */

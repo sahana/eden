@@ -46,12 +46,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
      */
     allowBlank: false,
     
-    /** api: config[caseInsensitiveMatch]
-     *  ``Boolean``
-     *  Should Comparison Filters for Strings do case insensitive matching?  Default is ``"false"``.
-     */
-    caseInsensitiveMatch: false,
-
     /** api: config[preComboText]
      *  ``String``
      *  String to display before filter type combo.  Default is ``"Match"``.
@@ -71,11 +65,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
      *  ``"gxp-filterbuilder"``).
      */
     cls: "gxp-filterbuilder",
-    
-    /** api: config[filter]
-     *  ``OpenLayers.Filter``
-     *  Filter to initialize the component with
-     */
 
     /** private: property[builderType]
      */
@@ -117,7 +106,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
         this.items = [{
             xtype: "container",
             layout: "form",
-            ref: "form",
             defaults: {anchor: "100%"},
             hideLabels: true,
             items: [{
@@ -331,10 +319,9 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
         }
         return filter;
     },
-
+    
     createDefaultFilter: function() {
-        return new OpenLayers.Filter.Comparison({
-                            matchCase: !this.caseInsensitiveMatch});
+        return new OpenLayers.Filter.Comparison();
     },
     
     /** private: method[wrapFilter]
@@ -382,7 +369,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
             attributes: this.attributes,
             allowBlank: group ? undefined : this.allowBlank,
             customizeFilterOnInit: group && false,
-            caseInsensitiveMatch: this.caseInsensitiveMatch,
             listeners: {
                 change: function() {
                     this.fireEvent("change", this);
@@ -402,12 +388,9 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
      */
     removeCondition: function(item, filter) {
         var parent = this.filter.filters[0].filters;
-        if(parent.length > 0) {
+        if(parent.length > 1) {
             parent.remove(filter);
             this.childFilterContainer.remove(item, true);
-        }
-        if(parent.length === 0) {
-            this.addCondition();
         }
         this.fireEvent("change", this);
     },
@@ -431,7 +414,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
                 fields: ["value", "name"]
             }),
             value: this.builderType,
-            ref: "../../builderTypeCombo",
             displayField: "name",
             valueField: "value",
             triggerAction: "all",
@@ -476,7 +458,7 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
             }
         }
     },
-
+    
     /** private: method[createChildFiltersPanel]
      *  :return: ``Ext.Container``
      *  
@@ -551,7 +533,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
     },
 
     /** private: method[getBuilderType]
-     *
      *  :return: ``Integer``  One of the builder type constants.
      *  Determine the builder type based on this filter.
      */
@@ -580,22 +561,6 @@ gxp.FilterBuilder = Ext.extend(Ext.Container, {
             }
         }
         return type;
-    },
-
-    /** api: method[setFilter]
-     *
-     *  :param filter: ``OpenLayers.Filter``
-     *
-     *  Change the filter associated with this instance.
-     */
-    setFilter: function(filter) {
-        this.filter = this.customizeFilter(filter);
-        this.changeBuilderType(this.getBuilderType());
-        this.builderTypeCombo.setValue(this.builderType);
-        this.form.remove(this.childFilterContainer);
-        this.form.insert(1, this.createChildFiltersPanel());
-        this.form.doLayout();
-        this.fireEvent("change", this);
     }
 
 });

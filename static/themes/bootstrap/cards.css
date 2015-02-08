@@ -3,7 +3,17 @@
 /* Cards - common styling for Updates & Profile pages */
 
 .thumbnail {
+    background-color: #fff;
+    border-radius: 0;
     margin-bottom: 8px;
+    border-radius: 4px;
+    border: 1px solid #9e9b9b;
+    -moz-box-shadow: 0 -1px 3px #d7d7d6;
+    -webkit-box-shadow: 0 -1px 3px #d7d7d6;
+    box-shadow: 0 -1px 3px #d7d7d6;
+    -moz-box-shadow: 0 1px 1px #aaaaa7;
+    -webkit-box-shadow: 0 1px 1px #aaaaa7;
+    box-shadow: 0 1px 1px #aaaaa7;
 }
 	
 .thumbnail:hover {
@@ -21,12 +31,6 @@
     border: 3px solid #E67E22;
     padding-right: 5px;
     margin: -2px 6px 6px -2px;
-}
-
-.card-title2 {
-    border-left: 1px solid rgba(0, 0, 0, 0.1);
-    padding-left: 10px;
-    margin-left: 10px;
 }
 
 .media-body a span.date-title {
@@ -48,9 +52,13 @@
 
 .date-title.event {
     font: 600 14px 'Helvetica Neue',Arial,sans-serif;
+    list-style: none outside none;
+    padding-left: 10px;
     color: #666;
     border-left: none;
     margin-left: 0;
+    padding-top: 10px;
+    padding-bottom: 9px;
 }
 
 .location-title {
@@ -98,40 +106,28 @@ a h5.media-heading:hover {
 }
 
 /* Edit Toolbar */
-.edit-bar {
+.edit-bar.fright {
     color: #8a8989;
     font-size: 14px;
     position: relative;
     top: 4px;
+    float: right;
 }
 
-.edit-bar .icon-bookmark,
-.edit-bar .icon-bookmark-empty,
-.edit-bar .icon-edit,
-.edit-bar .icon-link,
-.edit-bar .icon-file-alt,
-.edit-bar .icon-paperclip,
-.edit-bar .icon-trash,
-.edit-bar .icon-remove-sign {
+.icon.icon-edit,
+.icon.icon-remove-sign {
     color: #999;
     padding-left: 2px;
 }
 
-.edit-bar a,
-.edit-bar .icon-bookmark:hover,
-.edit-bar .icon-bookmark-empty:hover,
-.edit-bar .icon-edit:hover,
-.edit-bar .icon-link:hover,
-.edit-bar .icon-file-alt:hover,
-.edit-bar .icon-paperclip:hover {
+.icon.icon-edit:hover,
+.icon.icon-remove-sign:hover {
     color: #0095fe;
     text-decoration: none;
 }
 
-.edit-bar .icon-trash:hover,
-.edit-bar .icon-remove-sign:hover {
+.icon.icon-remove-sign:hover {
     color: #E74C3C;
-    text-decoration: none;
 }
 
 /* Used by Updates & Selection but not Profile */

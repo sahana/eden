@@ -23,15 +23,10 @@ def config():
     else:
         record_id = record.id
 
-    def postp(r, output):
-        if isinstance(output, dict) and "buttons" in output:
-            output["buttons"].pop("list_btn", None)
-        return output
-    s3.postp = postp
-    
     # Can't do anything else than update here
     r = s3_request(args=[str(record_id), "update"], extension="html")
-    return r()
+
+    return r(list_btn=None)
 
 # -----------------------------------------------------------------------------
 def repository():
@@ -66,30 +61,14 @@ def repository():
 
     def prep(r):
         if r.interactive:
-
-            # Make the UUID field editable in the form
-            field = r.table.uuid
-            field.label = "UUID"
-            field.readable = True
-            field.writable = True
-            field.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (
-                                       T("Repository UUID"),
-                                       T("Identifier which the remote site uses to authenticate at this site when sending synchronization requests.")))
-            
             if r.component and r.id:
                 if r.component.alias == "job":
                     s3task.configure_tasktable_crud(
                         function="sync_synchronize",
                         args = [r.id],
-                        vars = dict(user_id = auth.user.id if auth.user else 0),
+                        vars = dict(user_id = auth.user is not None and auth.user.id or 0),
                         period = 600, # seconds, so 10 mins
                         )
-                elif r.component.alias == "log" and r.component_id:
-                    table = r.component.table
-                    table.message.represent = lambda msg: \
-                                                DIV(s3base.s3_strip_markup(msg),
-                                                    _class="message-body")
                 s3.cancel = URL(c="sync", f="repository",
                                 args=[str(r.id), r.component.alias])
         return True
@@ -115,50 +94,44 @@ def repository():
 def sync():
     """ Synchronization """
 
-    if "resource" in get_vars:
-        tablename = get_vars["resource"]
+    if "resource" in request.get_vars:
+        tablename = request.get_vars["resource"]
         if "_" in tablename:
 
             # URL variables from peer:
             # repository ID, msince and sync filters
-            get_vars_new = Storage(include_deleted=True)
+            get_vars = Storage(include_deleted=True)
             
-            for k, v in get_vars.items():
+            _vars = request.get_vars
+            for k, v in _vars.items():
                 if k in ("repository", "msince") or \
                    k[0] == "[" and "]" in k:
-                    get_vars_new[k] = v
+                    get_vars[k] = v
 
             # Request
             prefix, name = tablename.split("_", 1)
             r = s3_request(prefix=prefix,
                            name=name,
                            args=["sync"],
-                           get_vars=get_vars_new)
+                           get_vars=get_vars)
 
             # Response
             output = r()
             return output
 
-    raise HTTP(400, body=current.ERROR.BAD_REQUEST)
+    raise HTTP(400, body=s3mgr.ERROR.BAD_REQUEST)
 
 # -----------------------------------------------------------------------------
 def log():
     """ Log Reader """
 
-    if "return" in get_vars:
-        c, f = get_vars["return"].split(".", 1)
+    if "return" in request.get_vars:
+        c, f = request.get_vars["return"].split(".", 1)
         list_btn = URL(c=c, f=f, args="sync_log")
     else:
-        list_btn = URL(c="sync", f="log", vars=get_vars)
+        list_btn = URL(c="sync", f="log", vars=request.get_vars)
 
     list_btn = A(T("List all Entries"), _href=list_btn, _class="action-btn")
-
-    def prep(r):
-        if r.record:
-            r.table.message.represent = lambda msg: DIV(s3base.s3_strip_markup(msg),
-                                                         _class="message-body")
-        return True
-    s3.prep = prep
 
     output = s3_rest_controller("sync", "log",
                                 subtitle=None,

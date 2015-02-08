@@ -8,8 +8,8 @@
 
          CSV column...........Format..........Content
 
-         Organisation.........string..........Name of the Lead Organisation
-         Project..............string..........Project Name
+         Organisation.........string..........Name of the Host Organisation
+         Name.................string..........Project Name
          Code.................string..........Project Code (optional)
          Description..........string..........Project short description
          Objectives...........string..........Project objectives
@@ -18,7 +18,7 @@
          Duration.............string..........Project duration
          Start Date...........YYYY-MM-DD......Start date of the project
          End Date.............YYYY-MM-DD......End date of the project
-         Sectors..............;-sep list......List of Project Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
+         Sectors..............comma-sep list..List of Organisation Sectors
          Hazards..............comma-sep list..List of Hazard names
          HFA..................comma-sep list..List of HFA priorities (integer numbers)
          Budget...............double          Total Budget of project
@@ -126,7 +126,7 @@
         <!-- Projects -->
         <resource name="project_project">
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
-            <data field="name"><xsl:value-of select="col[@field='Project']"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <xsl:if test="col[@field='Start Date']!=''">
                 <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
@@ -172,7 +172,6 @@
                 <xsl:with-param name="list">
                     <xsl:value-of select="$Sectors"/>
                 </xsl:with-param>
-                <xsl:with-param name="listsep" select="';'"/>
                 <xsl:with-param name="arg">sector_ref</xsl:with-param>
             </xsl:call-template>
 
@@ -307,7 +306,6 @@
 
         <xsl:call-template name="splitList">
             <xsl:with-param name="list"><xsl:value-of select="$Sectors"/></xsl:with-param>
-            <xsl:with-param name="listsep" select="';'"/>
             <xsl:with-param name="arg">sector_res</xsl:with-param>
         </xsl:call-template>
 

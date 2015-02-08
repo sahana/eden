@@ -1,0 +1,5 @@
+"role"," description","controller","function","table","oacl","uacl","hidden","system","protected","uid"
+"Hospital Staff"," Hospital Staff - permission to add/update own records in the HMS","hms",,,"READ|UPDATE","READ|CREATE",,,,
+"Hospital Staff"," Hospital Staff - permission to add/update own records in the HMS",,,"hms_hospital","READ|UPDATE","READ|CREATE",,,,
+"Hospital Admin"," Hospital Admin - permission to add/update all records in the HMS","hms",,,"ALL","ALL",,,,
+"Hospital Admin"," Hospital Admin - permission to add/update all records in the HMS",,,"hms_hospital","ALL","ALL",,,,

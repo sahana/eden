@@ -7,8 +7,8 @@
  */
 
 /**
- * @require GeoExt/widgets/grid/FeatureSelectionModel.js
- * @require GeoExt/data/FeatureStore.js
+ * requires GeoExt/widgets/grid/FeatureSelectionModel.js
+ * requires GeoExt/data/FeatureStore.js
  */
 
 /** api: (define)
@@ -54,21 +54,10 @@ gxp.grid.FeatureGrid = Ext.extend(Ext.grid.GridPanel, {
      *  name will be shown as column header instead of the property name.
      */
     
-    /** api: config[customRenderers]
-     *  ``Object`` Property name/renderer pairs. If specified for a field name,
-     *  the custom renderer will be used instead of the type specific one.
-     */
-
-    /** api: config[customEditors]
-     *  ``Object`` Property name/editor pairs. If specified for a field name,
-     *  the custom editor will be used instead of the standard textfield.
-     */
-
-    /** api: config[columnConfig]
-     *  ``Object`` Property name/config pairs. Any additional config that
-     *  should be used on the column, such as making a column non-editable
-     *  by specifying editable: false
-     */
+     /** api: config[customRenderers]
+      *  ``Object`` Property name/renderer pairs. If specified for a field name,
+      *  the custom renderer will be used instead of the type specific one.
+      */
 
     /** api: config[layer]
      *  ``OpenLayers.Layer.Vector``
@@ -97,16 +86,6 @@ gxp.grid.FeatureGrid = Ext.extend(Ext.grid.GridPanel, {
      *  store
      */
     layer: null,
-    
-    /** api: config[columnsSortable]
-     *  ``Boolean`` Should fields in the grid be sortable? Default is true.
-     */
-    columnsSortable: true,
-    
-    /** api: config[columnmenuDisabled]
-     *  ``Boolean`` Should the column menu be disabled? Default is false.
-     */
-    columnMenuDisabled: false,
     
     /** api: method[initComponent]
      *  Initializes the FeatureGrid.
@@ -206,7 +185,6 @@ gxp.grid.FeatureGrid = Ext.extend(Ext.grid.GridPanel, {
             };
         }
         var columns = [],
-            customEditors = this.customEditors || {},
             customRenderers = this.customRenderers || {},
             name, type, xtype, format, renderer;
         (this.schema || store.fields).each(function(f) {
@@ -238,23 +216,18 @@ gxp.grid.FeatureGrid = Ext.extend(Ext.grid.GridPanel, {
             }
             if (this.ignoreFields.indexOf(name) === -1 &&
                (this.includeFields === null || this.includeFields.indexOf(name) >= 0)) {
-                var columnConfig = this.columnConfig ? this.columnConfig[name] : null;
-                columns.push(Ext.apply({
+                columns.push({
                     dataIndex: name,
                     hidden: this.fieldVisibility ?
                         (!this.fieldVisibility[name]) : false,
                     header: this.propertyNames ?
                         (this.propertyNames[name] || name) : name,
-                    sortable: this.columnsSortable,
-                    menuDisabled: this.columnMenuDisabled,
+                    sortable: true,
                     xtype: xtype,
-                    editor: customEditors[name] || {
-                        xtype: 'textfield'
-                    },
                     format: format,
                     renderer: customRenderers[name] ||
                         (xtype ? undefined : renderer)
-                }, columnConfig));
+                });
             }
         }, this);
         return columns;

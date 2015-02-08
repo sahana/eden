@@ -23,8 +23,10 @@ secs = time.mktime(time.localtime())
 auth.override = True
 session.s3.roles.append(ADMIN)
 
+s3db.table("supply_item")
+
 stylesheet_dir = os.path.join(request.folder, "static", "formats", "s3csv", "supply")
-import_dir = os.path.join(request.folder, "modules", "templates", "IFRC")
+import_dir = os.path.join(request.folder, "private", "templates", "Standard")
 
 import_file = os.path.join(import_dir, "supply_item_category_ifrc_standard.csv")
 stylesheet = os.path.join(stylesheet_dir, "item_category_ifrc_standard.xsl")

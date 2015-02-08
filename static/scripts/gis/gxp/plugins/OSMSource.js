@@ -8,7 +8,7 @@
 
 /**
  * @requires plugins/LayerSource.js
- * @require OpenLayers/Layer/OSM.js
+ * requires OpenLayers/Layer/OSM.js
  */
 
 /** api: (define)
@@ -69,7 +69,7 @@ gxp.plugins.OSMSource = Ext.extend(gxp.plugins.LayerSource, {
      *  ``String``
      *  Attribution string for mapnik generated layer (i18n).
      */
-    mapnikAttribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
+    mapnikAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/' target='_blank'>OpenStreetMap</a>",
 
     /** api: config[homeAttribution]
      *  ``String``
@@ -100,9 +100,9 @@ gxp.plugins.OSMSource = Ext.extend(gxp.plugins.LayerSource, {
             new OpenLayers.Layer.OSM(
                 "OpenStreetMap",
                 [
-                    "//a.tile.openstreetmap.org/${z}/${x}/${y}.png",
-                    "//b.tile.openstreetmap.org/${z}/${x}/${y}.png",
-                    "//c.tile.openstreetmap.org/${z}/${x}/${y}.png"
+                    "http://a.tile.openstreetmap.org/${z}/${x}/${y}.png",
+                    "http://b.tile.openstreetmap.org/${z}/${x}/${y}.png",
+                    "http://c.tile.openstreetmap.org/${z}/${x}/${y}.png"
                 ],
                 OpenLayers.Util.applyDefaults({                
                     attribution: this.mapnikAttribution,

@@ -511,20 +511,13 @@ OpenLayers.Popup = OpenLayers.Class({
      *     determined by this.contentDiv.innerHTML). Popup size will, of
      *     course, be limited by the available space on the current map
      */
-    updateSize: function(iframe) {
+    updateSize: function() {
         
         // determine actual render dimensions of the contents by putting its
         // contents into a fake contentDiv (for the CSS) and then measuring it
-
-        // Patched by Fran to check iframe contents to allow that to resize too
-        if (iframe) {
-            var innerHTML = $('#' + this.id + '_contentDiv iframe').contents().find('body').html();
-        } else {
-            var innerHTML = this.contentDiv.innerHTML;
-        }
-
         var preparedHTML = "<div class='" + this.contentDisplayClass+ "'>" + 
-                           innerHTML + "</div>";
+            this.contentDiv.innerHTML + 
+            "</div>";
  
         var containerElement = (this.map) ? this.map.div : document.body;
         var realSize = OpenLayers.Util.getRenderedDimensions(
@@ -588,16 +581,9 @@ OpenLayers.Popup = OpenLayers.Class({
                 
                 newSize = this.getSafeContentSize(clippedSize);
             }
-        }      
-        this.setSize(newSize);
-
-        // Patched by Fran to also update the iframe
-        if (iframe) {
-            $('#' + this.id + '_contentDiv iframe').height(newSize.h)
-                                                   .width(newSize.w);
-        }
-
-    },
+        }                        
+        this.setSize(newSize);     
+    },    
 
     /**
      * Method: setBackgroundColor

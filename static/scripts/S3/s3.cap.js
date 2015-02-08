@@ -42,31 +42,36 @@
 
     // Logic for forms
     function init_cap_form($form) {
-        // Initialization of the cap_form
-        var restriction_row = $('#cap_alert_restriction__row, #cap_alert_restriction__row1');
-        var recipient_row = $('#cap_alert_addresses__row, #cap_alert_addresses__row1');
-        // Hide the restriction text box by default
-        restriction_row.hide();
         // On change in scope
-        $('#cap_alert_scope').change(function() {
-            var scope = $(this).val();
+        $form.find('[name=scope]').change(function() {
+            var scope = $(this).val(),
+                $restriction = $form.find('[name=restriction]'),
+                $recipients  = $form.find('[name=addresses]'),
+
+                disable = function (item) {
+                            item.parents('tr').eq(0).hide().prev().hide();
+                          }, // @ToDo: hide or disable?
+                enable  = function (item) {
+                            item.parents('tr').eq(0).show().prev().show();
+                          };
+
             switch(scope) {
                 case 'Public':
-                    restriction_row.hide();
-                    recipient_row.show();
+                    disable($restriction);
+                    disable($recipients);
                     break;
                 case 'Restricted':
-                    restriction_row.show();
-                    recipient_row.hide();
+                    enable($restriction);
+                    disable($recipients);
                     break;
                 case 'Private':
-                    restriction_row.hide();
-                    recipient_row.show();
+                    disable($restriction);
+                    enable($recipients);
                     break;
             }
         });
 
-        $('#cap_info_priority').change(function() {
+        $form.find('[name=priority]').change(function() {
             var p = S3.cap_priorities,
                 len = p.length;
             if ($(this).val() == 'Undefined') {

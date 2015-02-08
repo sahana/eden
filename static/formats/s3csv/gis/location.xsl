@@ -6,34 +6,27 @@
          Location - CSV Import Stylesheet
 
          CSV fields:
-         ISO2...............ISO2 country code - only for use with Countries, where it is required
-         L0.................L0 Name or ISO2 code (latter preferred except when importing countries)
-         L0 alt_name........L0 alt_name
+         L0.................L0 Name
          L0 KV:XX...........L0 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L0 L10n:XX.........L0 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L1.................L1 Name
-         L1 alt_name........L1 alt_name
          L1 KV:XX ..........L1 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L1 L10n:XX.........L1 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L2.................L2 Name
-         L2 alt_name........L2 alt_name
          L2 KV:XX ..........L2 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L2 L10n:XX.........L2 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L3.................L3 Name
-         L3 alt_name........L3 alt_name
          L3 KV:XX ..........L3 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L3 L10n:XX.........L3 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L4.................L4 Name
-         L4 alt_name........L4 alt_name
          L4 KV:XX ..........L4 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L4 L10n:XX.........L4 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          L5.................L5 Name
-         L5 alt_name........L5 alt_name
          L5 KV:XX ..........L5 Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
          L5 L10n:XX.........L5 name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For specific locations:
          Name...............Location Name
-         KV:XX..............Key,Value (Key = XX in column name, value = cell in row. Multiple allowed)
+         KV:XX..............Key,Value
          L10n:XX............name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          For lowest-level specified:
          WKT................WKT
@@ -43,11 +36,8 @@
          lat_max............
          lon_min............
          lon_max............
-         Elevation..........float........Elevation    (optional)
-         Start Date.........YYYY-MM-DD...Start Date   (optional)
-         End Date...........YYYY-MM-DD...End Date     (optional)
-         Population.........integer......Population   (optional) NB Better to store in stats_demographic_data
-         Comments...........string.......Comments     (optional)
+         Elevation..........Elevation    (optional)
+         Population.........Population   (optional)
 
          Specify as many level of hierarchy as you need to ensure correct
          location within the hierarchy
@@ -85,33 +75,25 @@
     <xsl:key name="L1" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
-                             concat('|', @field, '|'))], '/', col[@field='L1'], '/',
-                                                              col[@field='Start Date'], '/',
-                                                              col[@field='End Date'])"/>
+                             concat('|', @field, '|'))], '/', col[@field='L1'])"/>
     <xsl:key name="L2" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/', col[@field='L1'], '/',
-                                                              col[@field='L2'], '/',
-                                                              col[@field='Start Date'], '/',
-                                                              col[@field='End Date'])"/>
+                                                              col[@field='L2'])"/>
     <xsl:key name="L3" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/', col[@field='L1'], '/',
                                                               col[@field='L2'], '/',
-                                                              col[@field='L3'], '/',
-                                                              col[@field='Start Date'], '/',
-                                                              col[@field='End Date'])"/>
+                                                              col[@field='L3'])"/>
     <xsl:key name="L4" match="row"
              use="concat(col[contains(
                              document('../labels.xml')/labels/column[@name='Country']/match/text(),
                              concat('|', @field, '|'))], '/', col[@field='L1'], '/',
                                                               col[@field='L2'], '/',
                                                               col[@field='L3'], '/',
-                                                              col[@field='L4'], '/',
-                                                              col[@field='Start Date'], '/',
-                                                              col[@field='End Date'])"/>
+                                                              col[@field='L4'])"/>
 
     <xsl:key name="L5" match="row"
              use="concat(col[contains(
@@ -120,9 +102,7 @@
                                                               col[@field='L2'], '/',
                                                               col[@field='L3'], '/',
                                                               col[@field='L4'], '/',
-                                                              col[@field='L5'], '/',
-                                                              col[@field='Start Date'], '/',
-                                                              col[@field='End Date'])"/>
+                                                              col[@field='L5'])"/>
 
     <!-- ****************************************************************** -->
 
@@ -141,9 +121,7 @@
                                                                    concat(col[contains(
                                                                               document('../labels.xml')/labels/column[@name='Country']/match/text(),
                                                                               concat('|', @field, '|'))], '/',
-                                                                          col[@field='L1'], '/',
-                                                                          col[@field='Start Date'], '/',
-                                                                          col[@field='End Date']))[1])]">
+                                                                          col[@field='L1']))[1])]">
                 <xsl:call-template name="L1"/>
             </xsl:for-each>
 
@@ -153,9 +131,7 @@
                                                                               document('../labels.xml')/labels/column[@name='Country']/match/text(),
                                                                               concat('|', @field, '|'))], '/',
                                                                           col[@field='L1'], '/',
-                                                                          col[@field='L2'], '/',
-                                                                          col[@field='Start Date'], '/',
-                                                                          col[@field='End Date']))[1])]">
+                                                                          col[@field='L2']))[1])]">
                 <xsl:call-template name="L2"/>
             </xsl:for-each>
 
@@ -166,9 +142,7 @@
                                                                               concat('|', @field, '|'))], '/',
                                                                           col[@field='L1'], '/',
                                                                           col[@field='L2'], '/',
-                                                                          col[@field='L3'], '/',
-                                                                          col[@field='Start Date'], '/',
-                                                                          col[@field='End Date']))[1])]">
+                                                                          col[@field='L3']))[1])]">
                 <xsl:call-template name="L3"/>
             </xsl:for-each>
 
@@ -180,9 +154,7 @@
                                                                           col[@field='L1'], '/',
                                                                           col[@field='L2'], '/',
                                                                           col[@field='L3'], '/',
-                                                                          col[@field='L4'], '/',
-                                                                          col[@field='Start Date'], '/',
-                                                                          col[@field='End Date']))[1])]">
+                                                                          col[@field='L4']))[1])]">
                 <xsl:call-template name="L4"/>
             </xsl:for-each>
 
@@ -195,9 +167,7 @@
                                                                           col[@field='L2'], '/',
                                                                           col[@field='L3'], '/',
                                                                           col[@field='L4'], '/',
-                                                                          col[@field='L5'], '/',
-                                                                          col[@field='Start Date'], '/',
-                                                                          col[@field='End Date']))[1])]">
+                                                                          col[@field='L5']))[1])]">
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
 
@@ -267,15 +237,6 @@
                             <data field="lat_max"><xsl:value-of select="col[@field='lat_max']"/></data>
                             <data field="lon_max"><xsl:value-of select="col[@field='lon_max']"/></data>
                         </xsl:if>
-                        <xsl:if test="col[@field='Start Date']!=''">
-                            <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='End Date']!=''">
-                            <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='Comments']!=''">
-                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-                        </xsl:if>
                         <!-- Named Tags -->
                         <resource name="gis_location_tag">
                             <data field="tag">ISO2</data>
@@ -285,12 +246,6 @@
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
                                 <data field="value"><xsl:value-of select="col[@field='Population']"/></data>
-                            </resource>
-                        </xsl:if>
-                        <!-- Alt Name -->
-                        <xsl:if test="col[@field='L0 alt_name']!=''">
-                            <resource name="gis_location_name_alt">
-                                <data field="name_alt"><xsl:value-of select="col[@field='L0 alt_name']"/></data>
                             </resource>
                         </xsl:if>
                         <!-- L10n -->
@@ -318,8 +273,6 @@
                 </xsl:call-template>
             </xsl:variable>
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
-            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
-            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -358,12 +311,6 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:if>
-                <!-- Alt Name -->
-                <xsl:if test="col[@field='L1 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L1 alt_name']"/></data>
-                    </resource>
-                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L1 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -394,15 +341,6 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="$start!=''">
-                            <data field="start_date"><xsl:value-of select="$start"/></data>
-                        </xsl:if>
-                        <xsl:if test="$end!=''">
-                            <data field="end_date"><xsl:value-of select="$end"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='Comments']!=''">
-                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -427,8 +365,6 @@
             </xsl:variable>
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
-            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
-            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -477,12 +413,6 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
-                <!-- Alt Name -->
-                <xsl:if test="col[@field='L2 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L2 alt_name']"/></data>
-                    </resource>
-                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L2 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -514,15 +444,6 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="$start!=''">
-                            <data field="start_date"><xsl:value-of select="$start"/></data>
-                        </xsl:if>
-                        <xsl:if test="$end!=''">
-                            <data field="end_date"><xsl:value-of select="$end"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='Comments']!=''">
-                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -548,8 +469,6 @@
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
             <xsl:variable name="l3" select="col[@field='L3']/text()"/>
-            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
-            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -602,12 +521,6 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
-                <!-- Alt Name -->
-                <xsl:if test="col[@field='L3 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L3 alt_name']"/></data>
-                    </resource>
-                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L3 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -639,15 +552,6 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="$start!=''">
-                            <data field="start_date"><xsl:value-of select="$start"/></data>
-                        </xsl:if>
-                        <xsl:if test="$end!=''">
-                            <data field="end_date"><xsl:value-of select="$end"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='Comments']!=''">
-                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -674,8 +578,6 @@
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
             <xsl:variable name="l3" select="col[@field='L3']/text()"/>
             <xsl:variable name="l4" select="col[@field='L4']/text()"/>
-            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
-            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -736,12 +638,6 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
-                <!-- Alt Name -->
-                <xsl:if test="col[@field='L4 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L4 alt_name']"/></data>
-                    </resource>
-                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L4 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -773,15 +669,6 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="$start!=''">
-                            <data field="start_date"><xsl:value-of select="$start"/></data>
-                        </xsl:if>
-                        <xsl:if test="$end!=''">
-                            <data field="end_date"><xsl:value-of select="$end"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='Comments']!=''">
-                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -809,8 +696,6 @@
             <xsl:variable name="l3" select="col[@field='L3']/text()"/>
             <xsl:variable name="l4" select="col[@field='L4']/text()"/>
             <xsl:variable name="l5" select="col[@field='L5']/text()"/>
-            <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
-            <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
             <!-- Country Code = UUID of the L0 Location -->
             <xsl:variable name="countrycode">
@@ -879,12 +764,6 @@
                         </reference>
                     </xsl:when>
                 </xsl:choose>
-                <!-- Alt Name -->
-                <xsl:if test="col[@field='L5 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L5 alt_name']"/></data>
-                    </resource>
-                </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L5 KV')]">
                     <xsl:call-template name="KeyValue"/>
@@ -916,15 +795,6 @@
                                 </xsl:if>
                             </xsl:when>
                         </xsl:choose>
-                        <xsl:if test="$start!=''">
-                            <data field="start_date"><xsl:value-of select="$start"/></data>
-                        </xsl:if>
-                        <xsl:if test="$end!=''">
-                            <data field="end_date"><xsl:value-of select="$end"/></data>
-                        </xsl:if>
-                        <xsl:if test="col[@field='Comments']!=''">
-                            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
-                        </xsl:if>
                         <xsl:if test="col[@field='Population']!=''">
                             <resource name="gis_location_tag">
                                 <data field="tag">population</data>
@@ -995,15 +865,6 @@
                 </xsl:choose>
                 <xsl:if test="col[@field='Elevation']!=''">
                     <data field="elevation"><xsl:value-of select="col[@field='Elevation']"/></data>
-                </xsl:if>
-                <xsl:if test="col[@field='Start Date']!=''">
-                    <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
-                </xsl:if>
-                <xsl:if test="col[@field='End Date']!=''">
-                    <data field="end_date"><xsl:value-of select="col[@field='End Date']"/></data>
-                </xsl:if>
-                <xsl:if test="col[@field='Comments']!=''">
-                    <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Population']!=''">
                     <resource name="gis_location_tag">

@@ -41,19 +41,7 @@ def vehicle():
     table = s3db[tablename]
 
     s3db.configure("vehicle_vehicle",
-                   deletable = False,
-                   )
-
-    set_method = s3db.set_method
-
-    set_method("asset", "asset", method="assign",
-               action = s3db.hrm_AssignMethod(component="human_resource"))
-
-    set_method("asset", "asset", method="check-in",
-               action = s3base.S3CheckInMethod())
-
-    set_method("asset", "asset", method="check-out",
-               action = s3base.S3CheckOutMethod())
+                    deletable=False)
 
     # Type is Vehicle
     VEHICLE = s3db.asset_types["VEHICLE"]
@@ -67,8 +55,8 @@ def vehicle():
 
     # Remove type from list_fields
     list_fields = s3db.get_config("asset_asset", "list_fields")
-    if "type" in list_fields:
-        list_fields.remove("type")
+    list_fields.remove("type")
+    s3db.configure(tablename, list_fields=list_fields)
 
     field = table.item_id
     field.label = T("Vehicle Type")
@@ -79,9 +67,6 @@ def vehicle():
                                       info=T("Add a new vehicle type"),
                                       title=T("Vehicle Type"),
                                       tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
-
-    # Use this controller for options.json rather than looking for one called 'asset'
-    table.organisation_id.comment[0].vars = dict(parent="vehicle")
 
     # Only select from vehicles
     field.widget = None # We want a simple dropdown
@@ -98,29 +83,53 @@ def vehicle():
     s3db.asset_log.room_id.label = T("Parking Area")
 
     # CRUD strings
+    ADD_VEHICLE = T("Add Vehicle")
     s3.crud_strings[tablename] = Storage(
-        label_create = T("Add Vehicle"),
+        title_create = ADD_VEHICLE,
         title_display = T("Vehicle Details"),
         title_list = T("Vehicles"),
         title_update = T("Edit Vehicle"),
+        title_search = T("Search Vehicles"),
         title_map = T("Map of Vehicles"),
+        subtitle_create = T("Add New Vehicle"),
         label_list_button = T("List Vehicles"),
+        label_create_button = ADD_VEHICLE,
         label_delete_button = T("Delete Vehicle"),
         msg_record_created = T("Vehicle added"),
         msg_record_modified = T("Vehicle updated"),
         msg_record_deleted = T("Vehicle deleted"),
         msg_list_empty = T("No Vehicles currently registered"))
 
-    # @ToDo: Tweak the search comment
+    # Tweak the search method labels
+    vehicle_search = s3base.S3Search(
+        # Advanced Search only
+        advanced=(s3base.S3SearchSimpleWidget(
+                    name="vehicle_search_text",
+                    label=T("Search"),
+                    comment=T("Search for a vehicle by text."),
+                    field=[
+                            "number",
+                            "item_id$name",
+                            #"item_id$category_id$name",
+                            "comments"
+                        ]
+                  ),
+                s3base.S3SearchOptionsWidget(
+                    name="vehicle_search_location",
+                    field="L1",
+                    location_level="L1",
+                    cols = 3
+                ),
+                s3base.S3SearchLocationWidget(
+                    name="vehicle_search_map",
+                    label=T("Map"),
+                ),
+        ))
+    s3db.configure(tablename,
+                    search_method = vehicle_search)
 
     # Defined in Model
     return s3db.asset_controller()
-
-# =============================================================================
-def vehicle_type():
-    """ RESTful CRUD controller """
-
-    return s3_rest_controller()
 
 # =============================================================================
 def item():
@@ -151,12 +160,16 @@ def item():
                                       tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
 
     # CRUD strings
+    ADD_ITEM = T("Add New Vehicle Type")
     s3.crud_strings["supply_item"] = Storage(
-        label_create = T("Add New Vehicle Type"),
+        title_create = ADD_ITEM,
         title_display = T("Vehicle Type Details"),
         title_list = T("Vehicle Types"),
         title_update = T("Edit Vehicle Type"),
+        title_search = T("Search Vehicle Types"),
+        subtitle_create = T("Add New Vehicle Type"),
         label_list_button = T("List Vehicle Types"),
+        label_create_button = ADD_ITEM,
         label_delete_button = T("Delete Vehicle Type"),
         msg_record_created = T("Vehicle Type added"),
         msg_record_modified = T("Vehicle Type updated"),

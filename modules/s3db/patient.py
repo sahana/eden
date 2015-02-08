@@ -2,7 +2,7 @@
 
 """ Sahana Eden Patient Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2013 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,11 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3PatientModel",)
+__all__ = ["S3PatientModel"]
 
 from gluon import *
+from gluon.dal import Row
 from gluon.storage import Storage
-
 from ..s3 import *
 
 # =============================================================================
@@ -39,10 +39,10 @@ class S3PatientModel(S3Model):
     """
     """
 
-    names = ("patient_patient",
+    names = ["patient_patient",
              "patient_relative",
              "patient_home",
-             )
+            ]
 
     def model(self):
 
@@ -54,130 +54,112 @@ class S3PatientModel(S3Model):
 
         messages = current.messages
 
-        add_components = self.add_components
+        s3_date_format = current.deployment_settings.get_L10n_date_format()
+        s3_date_represent = lambda dt: S3DateTime.date_represent(dt, utc=True)
+
+        add_component = self.add_component
         crud_strings = current.response.s3.crud_strings
 
         # ---------------------------------------------------------------------
         # Patients
 
         tablename = "patient_patient"
-        self.define_table(tablename,
-                          person_id(comment = None,
-                                    label = T("Patient"),
-                                    requires = IS_ADD_PERSON_WIDGET2(),
-                                    widget = S3AddPersonWidget2(),
-                                    ),
-                          #person_id(empty=False, label = T("Patient")),
-                          Field("country",
-                                label = T("Current Location Country"),
-                                represent = lambda code: \
+        table = self.define_table(tablename,
+                                  person_id(widget=S3AddPersonWidget(),
+                                            requires=IS_ADD_PERSON_WIDGET(),
+                                            label=T("Patient"),
+                                            comment=None),
+                                  #person_id(empty=False, label = T("Patient")),
+                                  Field("country",
+                                        label = T("Current Location Country"),
+                                        requires = IS_NULL_OR(IS_IN_SET_LAZY(
+                                            lambda: gis.get_countries(key_type="code"),
+                                            zero = messages.SELECT_LOCATION)),
+                                        represent = lambda code: \
                                             gis.get_country(code, key_type="code") or \
-                                            messages.UNKNOWN_OPT,
-                                requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
-                                           lambda: gis.get_countries(key_type="code"),
-                                           zero = messages.SELECT_LOCATION)),
-                                ),
-                          self.hms_hospital_id(
-                                empty = False,
-                                label = T("Current Location Treating Hospital")
-                                ),
-                          Field("phone", requires=s3_phone_requires,
-                                label = T("Current Location Phone Number"),
-                                ),
-                          s3_date("treatment_date",
-                                  label = T("Date of Treatment"),
-                                  ),
-                          s3_date("return_date",
-                                  label = T("Expected Return Home"),
-                                  ),
-                          s3_comments(),
-                          *s3_meta_fields())
+                                                messages.UNKNOWN_OPT),
+                                  self.hms_hospital_id(
+                                    empty=False,
+                                    label = T("Current Location Treating Hospital")
+                                    ),
+                                  Field("phone", requires=s3_phone_requires,
+                                        label=T("Current Location Phone Number")),
+                                  Field("treatment_date", "date",
+                                        label=T("Date of Treatment"),
+                                        represent = s3_date_represent,
+                                        requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                        widget = S3DateWidget()
+                                        ),
+                                  Field("return_date", "date",
+                                        label=T("Expected Return Home"),
+                                        represent = s3_date_represent,
+                                        requires = IS_NULL_OR(IS_DATE(format=s3_date_format)),
+                                        widget = S3DateWidget()
+                                       ),
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add New Patient"),
+        ADD_PATIENT = T("New Patient")
+        s3.crud_strings[tablename] = Storage(
+            title_create = ADD_PATIENT,
             title_display = T("Patient Details"),
             title_list = T("Patients"),
             title_update = T("Edit Patient"),
+            title_search = T("Search Patients"),
+            subtitle_create = T("Add New Patient"),
             label_list_button = T("List Patients"),
+            label_create_button = ADD_PATIENT,
             label_delete_button = T("Delete Patient"),
             msg_record_created = T("Patient added"),
             msg_record_modified = T("Patient updated"),
             msg_record_deleted = T("Patient deleted"),
             msg_list_empty = T("No Patients currently registered"))
 
-        patient_represent = patient_PatientRepresent(lookup = "patient_patient")
-
         # Reusable Field for Component Link
-        patient_id = S3ReusableField("patient_id", "reference %s" % tablename,
-                                     ondelete = "RESTRICT",
-                                     represent = patient_represent,
+        patient_id = S3ReusableField("patient_id", db.patient_patient,
                                      requires = IS_ONE_OF(db,
                                                           "patient_patient.id",
-                                                          patient_represent),
-                                     )
-        # Search method
-        filter_widgets = [
-            S3TextFilter(["person_id$first_name",
-                          "person_id$middle_name",
-                          "person_id$last_name",
-                          "person_id$local_name",
-                         ],
-                         label = T("Search"),
-                         comment=T("To search for a patient, enter any of the first, middle or last names, separated by spaces. You may use % as wildcard. Press 'Search' without input to list all patients."),
-                        ),
-            S3OptionsFilter("country",
-                            label = messages.COUNTRY,
-                            cols = 2,
-                            hidden = True,
-                           ),
-            S3OptionsFilter("hospital_id",
-                            label = T("Hospital"),
-                            cols = 2,
-                            hidden = True,
-                           ),
-        ]
-
-        # Configuration
-        self.configure(tablename,
-                       filter_widgets = filter_widgets,
-                       )
+                                                          self.patient_represent),
+                                     represent = self.patient_represent,
+                                     ondelete = "RESTRICT")
 
         # Components
-        add_components(tablename,
-                       # Relatives
-                       patient_relative = {"joinby": "patient_id",
-                                           "multiple": False,
-                                           },
-                       # Homes
-                       patient_home = {"joinby": "patient_id",
-                                       "multiple": False,
-                                       },
-                       )
+        # Relatives
+        add_component("patient_relative",
+                      patient_patient=dict(joinby="patient_id",
+                                           multiple=False))
+
+        # Homes
+        add_component("patient_home",
+                      patient_patient=dict(joinby="patient_id",
+                                           multiple=False))
 
         # ---------------------------------------------------------------------
         # Relatives
 
         tablename = "patient_relative"
-        self.define_table(tablename,
-                          patient_id(readable = False,
-                                     writable = False),
-                          person_id(comment = None,
-                                    label = T("Accompanying Relative"),
-                                    requires = IS_ADD_PERSON_WIDGET2(),
-                                    widget = S3AddPersonWidget2(),
-                                    ),
-                          s3_comments(),
-                          *s3_meta_fields())
+        table = self.define_table(tablename,
+                                  patient_id(readable=False, writable=False),
+                                  #person_id(label = T("Accompanying Relative")),
+                                  person_id(widget=S3AddPersonWidget(),
+                                            requires=IS_ADD_PERSON_WIDGET(),
+                                            label=T("Accompanying Relative"),
+                                            comment=None),
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
         ADD_RELATIVE = T("New Relative")
         crud_strings[tablename] = Storage(
-            label_create = ADD_RELATIVE,
+            title_create = ADD_RELATIVE,
             title_display = T("Relative Details"),
             title_list = T("Relatives"),
             title_update = T("Edit Relative"),
+            title_search = T("Search Relatives"),
+            subtitle_create = T("Add New Relative"),
             label_list_button = T("List Relatives"),
+            label_create_button = ADD_RELATIVE,
             label_delete_button = T("Delete Relative"),
             msg_record_created = T("Relative added"),
             msg_record_modified = T("Relative updated"),
@@ -191,34 +173,35 @@ class S3PatientModel(S3Model):
         # @ToDo: Onvalidation to set the Relative's Contact
 
         tablename = "patient_home"
-        self.define_table(tablename,
-                          patient_id(readable = False,
-                                     writable = False),
-                          person_id(comment = None,
-                                    label = T("Home Relative"),
-                                    requires = IS_ADD_PERSON_WIDGET2(),
-                                    widget = S3AddPersonWidget2(),
+        table = self.define_table(tablename,
+                                  patient_id(readable=False, writable=False),
+                                  person_id(widget=S3AddPersonWidget(),
+                                            requires=IS_ADD_PERSON_WIDGET(),
+                                            label=T("Home Relative"),
+                                            comment=None),
+                                  #person_id(label = T("Home Relative")),
+                                  self.gis_location_id(
+                                    label=T("Home City"),
+                                    widget = S3LocationAutocompleteWidget(level="L2"),
+                                    requires = IS_LOCATION(level="L2")
                                     ),
-                          #person_id(label = T("Home Relative")),
-                          self.gis_location_id(
-                              label = T("Home City"),
-                              requires = IS_LOCATION(level="L2"),
-                              widget = S3LocationAutocompleteWidget(level="L2"),
-                              ),
-                          Field("phone",
-                                label = T("Home Phone Number"),
-                                requires = IS_EMPTY_OR(s3_phone_requires),
-                                ),
-                          s3_comments(),
-                          *s3_meta_fields())
+                                  Field("phone",
+                                        requires=IS_NULL_OR(s3_phone_requires),
+                                        label=T("Home Phone Number")),
+                                  s3_comments(),
+                                  *s3_meta_fields())
 
         # CRUD strings
+        ADD_HOME = T("New Home")
         crud_strings[tablename] = Storage(
-            label_create = T("Add New Home"),
+            title_create = ADD_HOME,
             title_display = T("Home Details"),
             title_list = T("Homes"),
             title_update = T("Edit Home"),
+            title_search = T("Search Homes"),
+            subtitle_create = T("Add New Home"),
             label_list_button = T("List Homes"),
+            label_create_button = ADD_HOME,
             label_delete_button = T("Delete Home"),
             msg_record_created = T("Home added"),
             msg_record_modified = T("Home updated"),
@@ -228,54 +211,26 @@ class S3PatientModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
-
-# =============================================================================
-class patient_PatientRepresent(S3Represent):
-    """
-        Representation of Patient names by their full name
-    """
-
-    def lookup_rows(self, key, values, fields=[]):
-        """
-            Custom lookup method for Patient names
-
-            @param key: Key for patient table
-            @param values: Patient IDs
-        """
-
-        table = self.table
-        ptable = current.s3db.pr_person
-
-        count = len(values)
-        if count == 1:
-            query = (key == values[0])
-        else:
-            query = (key.belongs(values))
-
-        left = ptable.on(table.person_id == ptable.id)
-
-        db = current.db
-        rows = db(query).select(patient_patient.id,
-                                pr_person.first_name,
-                                pr_person.middle_name,
-                                pr_person.last_name,
-                                limitby = (0, count),
-                                left = left)
-
-        self.queries += 1
-        return rows
+        return Storage()
 
     # -------------------------------------------------------------------------
-    def represent_row(self, row):
+    @staticmethod
+    def patient_represent(id, row=None):
         """
-            Represent a row for a particular patient
-
-            @param row: patient_patient Row
+            Represent a Patient by their full name
         """
 
+        if row:
+            pass
+        elif not id:
+            return current.messages["NONE"]
+        else:
+            db = current.db
+            table = db.patient_patient
+            row = db(table.id == id).select(table.person_id,
+                                            limitby=(0, 1)).first()
         try:
-            return s3_fullname(row)
+            return s3_fullname(row.person_id)
         except:
             return current.messages.UNKNOWN_OPT
 

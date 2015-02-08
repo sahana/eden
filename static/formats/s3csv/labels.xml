@@ -114,11 +114,6 @@
         <label>Volunteer Role</label>
     </column>
 
-    <column name="StaffID">
-        <label>Staff ID</label>
-        <label>Volunteer ID</label>
-    </column>
-
     <column name="MemberType">
         <label>HRMType</label>
         <label>PersonType</label>
@@ -134,14 +129,6 @@
         <option value="3" name="Honorary Member">
             <label>Honorary Member</label>
         </option>
-    </column>
-
-    <column name="OfficeName">
-        <match>|Name|name|Office|office|</match>
-        <label>Name</label>
-        <label>name</label>
-        <label>Office</label>
-        <label>office</label>
     </column>
 
     <column name="Country">
@@ -198,14 +185,6 @@
         <label>Organization</label>
         <label>organisation</label>
         <label>organization</label>
-    </column>
-
-    <column name="OrgGroup">
-        <!-- Special Element match for key generation -->
-        <match>|Coalition|Network|OrgGroup</match>
-        <label>Coalition</label>
-        <label>Network</label>
-        <label>OrgGroup</label>
     </column>
 
     <!-- For Inventory -->

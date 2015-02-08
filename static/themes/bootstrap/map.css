@@ -1,4 +1,5 @@
 /* Map */
+
 /* Over-ride Bootstrap: Tile images */
 .gis-map-window img,
 .map_wrapper img {
@@ -6,7 +7,7 @@
 }
 /* Over-ride jQuery UI Bootstrap */
 #gis_print_help_popup a {
-    color: #08c;
+    color: #0088CC;
 }
 
 .map_loader {
@@ -59,17 +60,17 @@
 }
 
 .olFramedCloudPopupContent .throbber {
-    background-image: url(../../img/bootstrap/ajax-loader.gif);
+    background-image: url(../../img/bootstrap/img/ajax-loader.gif);
     height: 48px;
     width: 48px;
 }
 
-.gis_tooltip div[id*="_GroupDiv"] {
-    /*background-color: #fff;
-    padding: 0 3px 0 0;*/
+#activetooltip_GroupDiv {
+    background-color: #fff;
     border: 1px solid #aaa7a7;
     border-radius: 4px;
     font-size: 12px;
+    padding: 0 3px 0 0;
 }
 
 /* Toolbar */

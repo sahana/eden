@@ -1,0 +1,7 @@
+"UUID",Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,Symbology,LatMin,LatMax,LonMin,LonMax,Geocoder,WMS Browser
+"SITE_DEFAULT",Default,,,6,34.56169,38.316955,900913,"OCHA",30,38,30,45,"False",
+"SY",Syria,,,6,34.56169,38.316955,900913,"OCHA",30,38,30,45,"False",
+"JO",Jordan,,,7,31.8185,37.14014,900913,"OCHA",30,38,30,45,"False",
+"LB",Lebanon,,,8,33.8849,36.425387,900913,"OCHA",30,38,30,45,"False",
+"IQ",Iraq,,,6,33.43916,41.2064,900913,"OCHA",30,38,30,45,"False",
+"TR",Turkey,,,6,37.638962,35.5814,900913,"OCHA",30,38,30,45,"False",
