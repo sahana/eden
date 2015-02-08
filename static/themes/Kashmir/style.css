@@ -198,6 +198,12 @@ textarea {
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
+.form-container form table.embeddedComponent {
+  border: 1px solid #DDDDDD;
+}
+.form-container form table.embeddedComponent td {
+  border: none;
+}
 
 .item-container .controls {
   background: #fafafa;
@@ -715,6 +721,11 @@ input.date.hasDatepicker {
 }
 .dl .dl-row {
   border: 0;
+}
+
+/* Comment feeds */
+.comment-box {
+  background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
