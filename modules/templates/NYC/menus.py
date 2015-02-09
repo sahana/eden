@@ -142,38 +142,42 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org(self):
         """ ORG / Organization Registry """
 
-        request = current.request
-        function = request.function
-        if function in ("facility", "facility_type"):
-            ADMIN = current.session.s3.system_roles.ADMIN
-            if function == "facility" and request.args(0) == "summary":
-                LIST = M("List", _onclick="$('#ui-id-1').click()")
-                MAP = M("Map", _onclick="$('#ui-id-3').click()")
-                REPORT = M("Report", _onclick="$('#ui-id-2').click()")
-            else:
-                LIST = M("List", m="summary")
-                MAP = M("Map", m="summary", vars={"t":2})
-                REPORT = M("Report", m="summary", vars={"t":1})
-            return M()(
-                    M("Create a Facility", c="org", f="facility", m="create")(
-                    ),
-                    M("View Facilities", c="org", f="facility", m="summary")(
-                        LIST,
-                        MAP,
-                        REPORT,
-                    ),
-                    M("Import Facilities", c="org", f="facility", m="import",
-                      restrict=[ADMIN])(
-                    ),
-                    M("Facility Types", c="org", f="facility_type",
-                      restrict=[ADMIN])(
-                        M("View"),
-                        M("Create", m="create"),
-                    ),
-                )
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
         else:
-            # organisation, organisation_type or hrm
-            return self.hrm()
+            request = current.request
+            function = request.function
+            if function in ("facility", "facility_type"):
+                ADMIN = current.session.s3.system_roles.ADMIN
+                if function == "facility" and request.args(0) == "summary":
+                    LIST = M("List", _onclick="$('#ui-id-1').click()")
+                    MAP = M("Map", _onclick="$('#ui-id-3').click()")
+                    REPORT = M("Report", _onclick="$('#ui-id-2').click()")
+                else:
+                    LIST = M("List", m="summary")
+                    MAP = M("Map", m="summary", vars={"t":2})
+                    REPORT = M("Report", m="summary", vars={"t":1})
+                return M()(
+                        M("Create a Facility", c="org", f="facility", m="create")(
+                        ),
+                        M("View Facilities", c="org", f="facility", m="summary")(
+                            LIST,
+                            MAP,
+                            REPORT,
+                        ),
+                        M("Import Facilities", c="org", f="facility", m="import",
+                          restrict=[ADMIN])(
+                        ),
+                        M("Facility Types", c="org", f="facility_type",
+                          restrict=[ADMIN])(
+                            M("View"),
+                            M("Create", m="create"),
+                        ),
+                    )
+            else:
+                # organisation, organisation_type or hrm
+                return self.hrm()
 
     # -------------------------------------------------------------------------
     def pr(self):
