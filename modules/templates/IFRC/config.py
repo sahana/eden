@@ -194,6 +194,12 @@ def config(settings):
     # Uncomment to disable responsive behavior of datatables
     settings.ui.datatables_responsive = False
 
+    settings.ui.custom_icons = {
+        "male": "icon-male",
+        "female": "icon-female",
+        "medical": "icon-plus-sign-alt",
+    }
+
     settings.gis.map_height = 600
     settings.gis.map_width = 869
     # Display Resources recorded to Admin-Level Locations on the map
@@ -1426,6 +1432,23 @@ def config(settings):
                                         "icon": "phone",
                                         }
                     append_widget(emergency_widget)
+
+                if r.record:
+                    widgets.insert(0, {"label": "Personal Details",
+                                       "tablename": "pr_person",
+                                       "type": "datalist",
+                                       "insert": False,
+                                       "list_fields": ["first_name",
+                                                       "middle_name",
+                                                       "last_name",
+                                                       "date_of_birth",
+                                                       "gender",
+                                                       "person_details.nationality",
+                                                       "physical_description.blood_type",
+                                                       ],
+                                       "filter": FS("id") == r.record.person_id,
+                                       "icon": "user",
+                                       })
 
                 # Remove unneeded filters widgets
                 filters = []
