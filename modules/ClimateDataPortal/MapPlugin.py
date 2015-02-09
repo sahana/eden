@@ -24,8 +24,6 @@ from . import (
     start_month_0_indexed
 )
 
-from s3dal import Row
-
 def round_to_4_sd(x):
     if x == 0:
         return 0.0

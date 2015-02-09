@@ -23,7 +23,7 @@
 /* span for disabled cells */
 .ui-timepicker-table td span {
 	display: block;
-    padding: 0.2em 0.3em 0.2em 0.5em;
+    padding: 0.2em 1.5em 0.2em 0.5em;
     width:  1.2em;
 
     text-align: right;

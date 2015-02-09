@@ -71,7 +71,7 @@ __all__ = ("S3SurveyTemplateModel",
 
 try:
     from cStringIO import StringIO    # Faster, where available
-except:
+except ImportError:
     from StringIO import StringIO
 
 try:
@@ -79,14 +79,13 @@ try:
 except ImportError:
     try:
         import simplejson as json # try external module
-    except:
+    except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3dal import Row
 from s3chart import S3Chart
 from s3survey import survey_question_type, \
                      survey_analysis_type, \
@@ -106,7 +105,7 @@ def json2py(jsonstr):
         jsonstr = unescape(jsonstr, {"u'": '"'})
         jsonstr = unescape(jsonstr, {"'": '"'})
         pythonStructure = json.loads(jsonstr)
-    except:
+    except ValueError:
         _debug("ERROR: attempting to convert %s using modules/s3db/survey/json2py.py" % (jsonstr))
         return jsonstr
     else:
@@ -256,8 +255,16 @@ class S3SurveyTemplateModel(S3Model):
                    action = survey_TranslateDownload,
                    )
 
+        filter_widgets = [
+            S3TextFilter("name",
+                         label = T("Search")),
+            S3OptionsFilter("status",
+                            label = T("Status")),
+            ]
+
         configure(tablename,
                   deduplicate = self.survey_template_duplicate,
+                  filter_widgets = filter_widgets,
                   onaccept = self.template_onaccept,
                   onvalidation = self.template_onvalidate,
                   )
@@ -513,7 +520,7 @@ def survey_template_represent(id, row=None):
                                       limitby=(0, 1)).first()
     try:
         return record.name
-    except:
+    except AttributeError:
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
@@ -750,7 +757,8 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                 else:
                     table.append(widget)
     if not readOnly:
-        button = INPUT(_type="submit", _name="Save", _value=current.T("Save"))
+        button = INPUT(_type="submit", _name="Save", _value=current.T("Save"),
+                       _class="small primary button")
         form.append(button)
     return form
 
@@ -1111,12 +1119,12 @@ class S3SurveyQuestionModel(S3Model):
             template_id = vars.template_id
             section_id = vars.section_id
             posn = vars.posn
-        except:
+        except AttributeError:
             return
         record = qstntable[question_id]
         try:
             type = record.type
-        except:
+        except AttributeError:
             _debug("survey question missing type: %s" % record)
             return
         if type == "Grid":
@@ -1351,7 +1359,7 @@ def survey_updateMetaData(record, type, metadata):
             metatable.insert(question_id = id,
                              descriptor = desc,
                              value = value
-                            )
+                             )
     if type == "Grid":
         widgetObj = survey_question_type["Grid"]()
         widgetObj.insertChildren(record, metadataList)
@@ -1661,9 +1669,19 @@ class S3SurveySeriesModel(S3Model):
             msg_record_deleted = T("Disaster Assessment deleted"),
             msg_list_empty = T("No Disaster Assessments"))
 
+        filter_widgets = [
+            S3TextFilter("name",
+                         label = T("Search")),
+            S3OptionsFilter("organisation_id",
+                            label = T("Organization")),
+            S3DateFilter("start_date",
+                         label = T("Start Date")),
+            ]
+
         self.configure(tablename,
                        create_next = URL(f="new_assessment",
                                          vars={"viewing":"survey_series.[id]"}),
+                       filter_widgets = filter_widgets,
                        deduplicate = self.survey_series_duplicate,
                        onaccept = self.series_onaccept,
                        )
@@ -1795,12 +1813,12 @@ class S3SurveySeriesModel(S3Model):
                               args=[series_id, "summary.pdf"],
                               vars = {"mode": mode,
                                       "selected": vars["selected"]}
-                             )
+                              )
                 url_xls = URL(c="survey", f="series",
                               args=[series_id, "summary.xls"],
                               vars = {"mode": mode,
                                       "selected": vars["selected"]}
-                             )
+                              )
                 s3.formats["pdf"] = url_pdf
                 s3.formats["xls"] = url_xls
             else:
@@ -2010,6 +2028,7 @@ class S3SurveySeriesModel(S3Model):
                        _id="chart_btn",
                        _name="Chart",
                        _value=T("Display Chart"),
+                       _class="small primary button",
                        )
         form.append(series)
         form.append(button)
@@ -2186,7 +2205,7 @@ $('#chart_btn').click(function(){
                                                 1:"Average",
                                                 2:"High",
                                                 },
-                                          zero = True)
+                                         zero = True)
         for series_id in series:
             series_name = series[series_id]
             response_locations = getLocationList(series_id)
@@ -2214,7 +2233,7 @@ $('#chart_btn').click(function(){
                                                     key)),
                             TD(priorityObj.desc(key)),
                             TD(priorityObj.rangeText(key, pBand)),
-                           )
+                            )
                     legend.append(tr)
                 output["legend"] = legend
 
@@ -2272,7 +2291,9 @@ $('#chart_btn').click(function(){
         form.append(table)
 
         button = INPUT(_type="submit", _name="Chart",
-                       _value=T("Update Map"))
+                       _value=T("Update Map"),
+                       _class="small primary button",
+                       )
         # REMOVED until we have dynamic loading of maps.
         #button = INPUT(_type="button", _id="map_btn", _name="Map_Btn", _value=T("Select the Question"))
         #jurl = URL(c=r.prefix, f=r.function, args=r.args)
@@ -2311,7 +2332,7 @@ def survey_serieslist_dataTable_post(r):
                         url=URL(c="survey", f="series",
                                 args=["[id]", "summary"]
                                 )
-                       ),
+                        ),
                   ]
 
 # =============================================================================
@@ -2409,15 +2430,14 @@ def survey_series_rheader(r):
                             ),
                           )
 
-            rheader = DIV(TABLE(
-                          TR(TH("%s: " % T("Template")),
-                             survey_template_represent(record.template_id),
-                             TH("%s: " % T("Name")),
-                             record.name,
-                             TH("%s: " % T("Status")),
-                             s3db.survey_series_status[record.status],
-                             ),
-                              ),
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Template")),
+                                   survey_template_represent(record.template_id),
+                                   TH("%s: " % T("Name")),
+                                   record.name,
+                                   TH("%s: " % T("Status")),
+                                   s3db.survey_series_status[record.status],
+                                   ),
+                                 ),
                           tsection,
                           tranForm,
                           buttons,
@@ -2554,7 +2574,7 @@ def buildSeriesSummary(series_id, posn_offset):
                                   **attr
                                   )
     series = INPUT(_type="hidden", _id="selectSeriesID", _name="series",
-                _value="%s" % series_id)
+                   _value="%s" % series_id)
     form.append(series)
     return form
 
@@ -2940,7 +2960,7 @@ def survey_answerlist_dataTable_post(r):
                         _class="action-btn edit",
                         url=URL(c="survey", f="series",
                                 args=[r.id, "complete", "[id]", "update"])
-                       ),
+                        ),
                   ]
 
 # =============================================================================
@@ -3171,7 +3191,7 @@ def getLocationList(series_id):
             elif question == "STD-Lat":
                 try:
                     lat = float(answer.strip('"'))
-                except:
+                except ValueError:
                     pass
                 else:
                     if lat < -90.0 or lat > 90.0:
@@ -3179,7 +3199,7 @@ def getLocationList(series_id):
             elif question == "STD-Lon":
                 try:
                     lon = float(answer.strip('"'))
-                except:
+                except ValueError:
                     pass
                 else:
                     if lon < -180.0 or lon > 180.0:
@@ -3194,6 +3214,8 @@ def getLocationList(series_id):
                 name = answer_dict[locCode]
                 break
         if lat and lon:
+            from s3dal import Row
+
             # We have sufficient data to display on the map
             location = Row()
             location.lat = lat
@@ -3243,7 +3265,7 @@ class S3SurveyTranslateModel(S3Model):
                           self.survey_template_id(),
                           Field("language",
                                 comment = DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Language"),
+                                              _title="%s|%s" % (T("Language"),
                                                                 LANG_HELP))
                                 ),
                           Field("code",
@@ -3301,14 +3323,14 @@ class S3SurveyTranslateModel(S3Model):
             code = form.record.code
             try:
                 workbook = xlrd.open_workbook(file_contents=openFile)
-            except:
+            except IOError:
                 msg = T("Unable to open spreadsheet")
                 response.error = msg
                 response.flash = None
                 return
             try:
                 sheetL = workbook.sheet_by_name(lang)
-            except:
+            except IOError:
                 msg = T("Unable to find sheet %(sheet_name)s in uploaded spreadsheet") % \
                     dict(sheet_name=lang)
                 response.error = msg
@@ -3323,7 +3345,7 @@ class S3SurveyTranslateModel(S3Model):
                 (request.application, code)
             try:
                 strings = read_dict(lang_fileName)
-            except:
+            except IOError:
                 strings = dict()
             for row in xrange(1, sheetL.nrows):
                 original = sheetL.cell_value(row, 0)
@@ -3385,7 +3407,7 @@ class survey_TranslateDownload(S3Method):
 
         T = current.T
         try:
-           import xlwt
+            import xlwt
         except ImportError:
             r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
 
@@ -3449,8 +3471,8 @@ class survey_TranslateDownload(S3Method):
 
         for text in originalList:
             row += 1
-            original = unicode(text)
-            sheet.write(row, 0, s3_unicode(original))
+            original = s3_unicode(text)
+            sheet.write(row, 0, original)
             if (original in strings):
                 sheet.write(row, 1, s3_unicode(strings[original]))
 

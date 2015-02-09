@@ -4099,7 +4099,8 @@ class S3InventoryAdjustModel(S3Model):
                            requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            represent = lambda opt: \
                                        inv_item_status_opts.get(opt, UNKNOWN_OPT),
-                           default = 0,),
+                           default = 0,
+                           ),
                      s3_date("expiry_date",
                              label = T("Expiry Date")),
                      Field("bin", "string", length=16,
@@ -4111,7 +4112,8 @@ class S3InventoryAdjustModel(S3Model):
                      organisation_id(name = "old_owner_org_id",
                                      label = T("Current Owned By (Organization/Branch)"),
                                      ondelete = "SET NULL",
-                                     writable = False),
+                                     writable = False,
+                                     comment = None),
                      # Organisation that owns this item now
                      organisation_id(name = "new_owner_org_id",
                                      label = T("Transfer Ownership To (Organization/Branch)"),

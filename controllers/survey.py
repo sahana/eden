@@ -991,8 +991,8 @@ def new_assessment():
                             _class="action-btn"
                             ),
                           )
-            output["subtitle"] = buttons
-            output["form"] = form
+
+            output["form"] = DIV(buttons, form)
         return output
     s3.postp = postp
 
@@ -1066,7 +1066,7 @@ def complete():
         for row in xrange(1, sheetM.nrows):
             header += ',"%s"' % sheetM.cell_value(row, 0)
             code = sheetM.cell_value(row, 0)
-            qstn = s3.survey_getQuestionFromCode(code, series_id)
+            qstn = s3db.survey_getQuestionFromCode(code, series_id)
             type = qstn["type"]
             count = sheetM.cell_value(row, 1)
             if count != "":
