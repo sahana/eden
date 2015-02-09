@@ -13,7 +13,6 @@ from gluon.storage import Storage
 from s3dal import Row
 from eden.project import S3ProjectActivityModel
 
-
 # =============================================================================
 class ProjectTests(unittest.TestCase):
     """ Project Module Tests """
