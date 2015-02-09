@@ -2095,7 +2095,7 @@ def deploy_response_select_mission(r, **attr):
             for a in atts:
                 url = URL(c="default", f="download",
                           args=a.file)
-                attachments.append(TR(TD(A(I(" ", _class="icon icon-paperclip"),
+                attachments.append(TR(TD(A(ICON("attachment"),
                                            a.name,
                                            _href=url))))
         else:
@@ -2452,7 +2452,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             # Workflow
             if not sent and total_recipients and \
                has_permission("update", table, record_id=record_id):
-                send = A(I(" ", _class="icon icon-envelope-alt"),
+                send = A(ICON("mail"),
                          SPAN(T("Send this Alert"),
                               _class="card-action"),
                          _onclick="window.location.href='%s'" %
@@ -2512,7 +2512,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                     doc_url = URL(c="default", f="download",
                                 args=[doc])
                     if bootstrap:
-                        doc_item = LI(A(I(_class="icon-file"),
+                        doc_item = LI(A(ICON("file"),
                                         " ",
                                         doc_name,
                                         _href=doc_url,
@@ -2520,15 +2520,15 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                     _role="menuitem",
                                     )
                     else:
-                        doc_item = A(I(_class="icon-file"),
-                                    " ",
-                                    doc_name,
-                                    _href=doc_url,
-                                    )
+                        doc_item = A(ICON("file"),
+                                     " ",
+                                     doc_name,
+                                     _href=doc_url,
+                                     )
                     docs.append(doc_item)
                     docs.append(", ")
                 if bootstrap:
-                    docs = DIV(A(I(_class="icon-paper-clip"),
+                    docs = DIV(A(ICON("attachment"),
                                 SPAN(_class="caret"),
                                 _class="btn dropdown-toggle",
                                 _href="#",
@@ -2677,7 +2677,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                           vars={"refresh": list_id,
                                 "record": record_id
                                })
-                edit = A(I(" ", _class="icon icon-paperclip"),
+                edit = A(ICON("paper-clip"),
                          SPAN(EDIT_APPRAISAL, _class="card-action"),
                          _href=url,
                          _class="s3_modal action-lnk",
@@ -2701,7 +2701,7 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                                 "refresh": list_id,
                                 "record": record_id,
                                })
-                upload = A(I(" ", _class="icon icon-paperclip"),
+                upload = A(ICON("attachment"),
                            SPAN(UPLOAD_APPRAISAL, _class="card-action"),
                            _href=url,
                            _class="s3_modal action-lnk",
@@ -2799,19 +2799,19 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
         if update_url and \
            has_permission("update", table, record_id=record_id):
-            btn = A(I(" ", _class="icon icon-edit"),
+            btn = A(ICON("edit"),
                     _href=update_url,
                     _class="s3_modal",
                     _title=crud_string(tablename, "title_update"))
             toolbox.append(btn)
         elif open_url:
-            btn = A(I(" ", _class="icon icon-file-alt"),
+            btn = A(ICON("read"),
                     _href=open_url,
                     _title=crud_string(tablename, "title_display"))
             toolbox.append(btn)
 
         if has_permission("delete", table, record_id=record_id):
-            btn = A(I(" ", _class="icon icon-trash"),
+            btn = A(ICON("delete"),
                     _class="dl-item-delete",
                     _title=crud_string(tablename, "label_delete_button"))
             toolbox.append(btn)

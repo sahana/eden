@@ -5586,10 +5586,10 @@ class gis_LocationRepresent(S3Represent):
                                                                           self.iheight,
                                                                           popup)
                     represent = SPAN(s3_unicode(represent),
-                                     I(_class="icon icon-map-marker",
-                                       _title=self.lat_lon_represent(row),
-                                       _onclick=script,
-                                       ),
+                                     ICON("map-marker",
+                                          _title=self.lat_lon_represent(row),
+                                          _onclick=script,
+                                          ),
                                      _class="gis-display-feature",
                                      )
                     return represent

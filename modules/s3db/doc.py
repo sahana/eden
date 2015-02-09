@@ -565,7 +565,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
             doc_name = current.messages["NONE"]
         doc_url = URL(c="default", f="download",
                       args=[file])
-        body = P(I(_class="icon-paperclip"),
+        body = P(ICON("attachment"),
                  " ",
                  SPAN(A(doc_name,
                         _href=doc_url,
@@ -575,7 +575,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                  _class="card_1_line",
                  )
     elif url:
-        body = P(I(_class="icon-globe"),
+        body = P(ICON("globe"),
                  " ",
                  SPAN(A(url,
                         _href=url,
@@ -591,7 +591,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = current.s3db.doc_document
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="doc", f="document",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -602,7 +602,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -613,7 +613,7 @@ def doc_document_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"),
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
