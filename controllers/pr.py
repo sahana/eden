@@ -366,6 +366,17 @@ def contact_emergency():
                 pe_id = db(query).select(table.pe_id,
                                          limitby=(0, 1)).first().pe_id
                 s3db.pr_contact_emergency.pe_id.default = pe_id
+        else:
+            field = s3db.pr_contact_emergency.pe_id
+            if r.method == "create" and r.representation == "popup":
+                # Coming from Profile page
+                pe_id = get_vars.get("~.pe_id", None)
+                if pe_id:
+                    field.default = pe_id
+                else:
+                    field.label = T("Entity")
+                    field.readable = field.writable = True
+
         return True
     s3.prep = prep
 

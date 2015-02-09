@@ -2210,6 +2210,7 @@ class S3ContactModel(S3Model):
 
         configure(tablename,
                   deduplicate = self.pr_emergency_deduplicate,
+                  list_layout = pr_EmergencyContactListLayout(),
                   )
 
         # ---------------------------------------------------------------------
@@ -6837,6 +6838,136 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+class pr_EmergencyContactListLayout(S3DataListLayout):
+    """ Datalist layout for emergency contacts """
+
+    ICONS = {"phone": "phone",
+             "address": "home",
+             "relationship": "user",
+             }
+
+    # -------------------------------------------------------------------------
+    def render_header(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card header
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        header = DIV(ICON("icon"),
+                     SPAN(record["pr_contact_emergency.name"],
+                          _class="card-title",
+                          ),
+                     _class="card-header",
+                     )
+
+        toolbox = self.render_toolbox(list_id, resource, record)
+        if toolbox:
+            header.append(toolbox)
+
+        return header
+
+    # -------------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        body = DIV(_class="media")
+        append = body.append
+
+        fields = ("pr_contact_emergency.relationship",
+                  "pr_contact_emergency.phone",
+                  "pr_contact_emergency.address",
+                  "pr_contact_emergency.comments",
+                  )
+
+        render_column = self.render_column
+        for rfield in rfields:
+            if rfield.colname in fields:
+                column = self.render_column(item_id, rfield, record)
+                if column:
+                    append(column)
+        return DIV(DIV(body, _class="media-body"), _class="media")
+
+    # -------------------------------------------------------------------------
+    def render_column(self, item_id, rfield, record):
+        """
+            Render a column of the record
+
+            @param list_id: the HTML ID of the list
+            @param rfield: the S3ResourceField
+            @param record: the record as dict
+        """
+
+        value = record[rfield.colname]
+        if value:
+            if rfield.ftype == "text":
+                _class = "card_manylines"
+            else:
+                _class = "card_1_line"
+            return P(ICON(self.ICONS.get(rfield.fname, "icon")),
+                     SPAN(value),
+                     _class=_class,
+                     )
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        table = resource.table
+        tablename = resource.tablename
+        record_id = record[str(resource._id)]
+
+        toolbox = DIV(_class="edit-bar fright")
+
+        update_url = URL(c="pr",
+                         f="contact_emergency",
+                         args=[record_id, "update.popup"],
+                         vars={"refresh": list_id,
+                               "record": record_id,
+                               "profile": self.profile,
+                               },
+                         )
+
+        has_permission = current.auth.s3_has_permission
+        crud_string = S3Method.crud_string
+
+        if update_url and \
+           has_permission("update", table, record_id=record_id):
+            btn = A(ICON("edit"),
+                    _href=update_url,
+                    _class="s3_modal",
+                    _title=crud_string(tablename, "title_update"))
+            toolbox.append(btn)
+
+        if has_permission("delete", table, record_id=record_id):
+            btn = A(ICON("delete"),
+                    _class="dl-item-delete",
+                    _title=crud_string(tablename, "label_delete_button"))
+            toolbox.append(btn)
+
+        return toolbox
 
 # =============================================================================
 def pr_filter_list_layout(list_id, item_id, resource, rfields, record):

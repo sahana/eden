@@ -478,3 +478,7 @@ button.alert-send-btn:enabled {
     width: 400px;
     vertical-align: top;
 }
+
+.profile-sub-header .icon {
+    margin-right: 8px;
+}

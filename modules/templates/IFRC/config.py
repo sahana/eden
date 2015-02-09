@@ -1395,6 +1395,7 @@ def config(settings):
                 widgets = []
                 append_widget = widgets.append
                 profile_widgets = get_config("profile_widgets")
+                contacts_filter = None
                 while profile_widgets:
                     widget = profile_widgets.pop(0)
                     if widget["tablename"] == "hrm_competency":
@@ -1412,6 +1413,19 @@ def config(settings):
                         append_widget(new_widget)
                     else:
                         append_widget(widget)
+                    if widget["tablename"] == "pr_contact":
+                        contacts_filter = widget["filter"]
+
+                # Emergency contacts
+                if contacts_filter is not None:
+                    emergency_widget = {"label": "Emergency Contacts",
+                                        "label_create": "Add Emergency Contact",
+                                        "tablename": "pr_contact_emergency",
+                                        "type": "datalist",
+                                        "filter": contacts_filter,
+                                        "icon": "phone",
+                                        }
+                    append_widget(emergency_widget)
 
                 # Remove unneeded filters widgets
                 filters = []
