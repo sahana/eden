@@ -6310,6 +6310,11 @@ class S3HierarchyWidget(FormWidget):
         if widget_id == None:
             widget_id = attr["_id"] = "%s-hierarchy" % selector
 
+        # Field name
+        name = attr.get("_name")
+        if not name:
+            name = field.name
+
         # Get the lookup table
         lookup = self.lookup
         if not lookup:
@@ -6340,7 +6345,7 @@ class S3HierarchyWidget(FormWidget):
         # Generate the widget
         widget = DIV(INPUT(_type = "hidden",
                            _multiple = "multiple",
-                           _name = field.name,
+                           _name = name,
                            _class = "s3-hierarchy-input",
                            requires = self.parse),
                      DIV(h.html("%s-tree" % widget_id),
