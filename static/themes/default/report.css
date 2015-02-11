@@ -20,7 +20,7 @@
 /* Chart options */
 .tp-chart-tops,
 .pt-chart-opts {
-  height: 1.0em;
+  height: 1.0rem;
 }
 
 .tp-chart-icon,
@@ -34,7 +34,7 @@
 
 .tp-chart-label,
 .pt-chart-label {
-  font-size: 0.7em;
+  font-size: 0.7rem;
   float: left;
   margin-right: 8px;
 }
@@ -80,7 +80,7 @@
   top: 0;
 }
 .pt-chart-contents .pt-chart-title h4 {
-  font-size: 1.0em;
+  font-size: 1.0rem;
   font-weight: normal;
 }
 .pt-chart-contents .pt-hide-chart {
@@ -204,7 +204,7 @@
 .pt-empty,
 .pt-no-data {
   font-style: italic;
-  font-size: 0.8em;
+  font-size: 0.8rem;
 }
 
 /* Table toggle */
