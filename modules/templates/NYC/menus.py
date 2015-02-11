@@ -183,6 +183,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def pr(self):
         """ Person Registry """
 
-        return self.hrm()
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
+        else:
+            return self.hrm()
 
 # END =========================================================================
