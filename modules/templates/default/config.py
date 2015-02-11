@@ -948,7 +948,7 @@ def config(settings):
             #description = "Sends & Receives Alerts via Email & SMS",
             restricted = True,
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-            module_type = None,
+            module_type = 10,
         )),
         ("supply", Storage(
             name_nice = T("Supply Chain Management"),
