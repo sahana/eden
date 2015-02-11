@@ -7535,8 +7535,11 @@ class hrm_Record(S3Method):
                 ]
 
             if controller == "vol":
+                widget_filter = FS("type") == 2
                 label = "Volunteer Record"
+            #elif controller = "hrm":
             else:
+                widget_filter = FS("type") == 1
                 label = "Staff Record"
 
             table = s3db.hrm_human_resource
@@ -7545,6 +7548,7 @@ class hrm_Record(S3Method):
                      type = "form",
                      tablename = "hrm_human_resource",
                      context = "person",
+                     filter = widget_filter,
                      )
                 ]
 
