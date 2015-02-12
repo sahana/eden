@@ -6435,8 +6435,8 @@ class S3HierarchyWidget(FormWidget):
             value = json.loads(value)
         except ValueError:
             return default, None
-        if not self.multiple and value and isinstance(value, list):
-            value = value[0]
+        if not self.multiple and isinstance(value, list):
+            value = value[0] if value else None
         return value, None
 
 # =============================================================================
