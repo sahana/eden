@@ -93,6 +93,25 @@ class S3Config(Storage):
                     "zh-tw": "%Y/%m/%d",
                     }
 
+    # PDF fonts for each language
+    # fontset format -> [normal-version, bold-version]
+    # defaults to ["Helvetica", "Helvetica-Bold"] if not-specified here
+    # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
+    # Unifont can be downloaded from http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf
+    fonts = {"ar": ["unifont", "unifont"],
+             "km": ["unifont", "unifont"],
+             "ko": ["unifont", "unifont"],
+             "mn": ["unifont", "unifont"],
+             "ne": ["unifont", "unifont"],
+             "prs": ["unifont", "unifont"],
+             "ps": ["unifont", "unifont"],
+             #"th": ["unifont", "unifont"],
+             "tr": ["unifont", "unifont"],
+             "vi": ["unifont", "unifont"],
+             "zh-cn": ["unifont", "unifont"],
+             "zh-tw": ["unifont", "unifont"],
+             }
+
     def __init__(self):
         self.asset = Storage()
         self.auth = Storage()
@@ -1392,8 +1411,13 @@ class S3Config(Storage):
     # PDF settings
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
+
     def get_pdf_logo(self):
         return self.ui.get("pdf_logo", None)
+
+    def get_pdf_export_font(self):
+        language = current.session.s3.language
+        return self.fonts.get(language, None)
 
     # Optical Character Recognition (OCR)
     def get_pdf_excluded_fields(self, resourcename):

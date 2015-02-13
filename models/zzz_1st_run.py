@@ -205,11 +205,13 @@ if len(pop_list) > 0:
     # Create the bulk Importer object
     bi = s3base.S3BulkImporter()
 
-    s3.import_role = bi.import_role
-    s3.import_user = bi.import_user
+    # Register handlers
+    s3.import_font = bi.import_font
     s3.import_image = bi.import_image
     s3.import_remote_csv = bi.import_remote_csv
+    s3.import_role = bi.import_role
     s3.import_script = bi.import_script
+    s3.import_user = bi.import_user
 
     # Relax strict email-matching rule for import updates of person records
     email_required = settings.get_pr_import_update_requires_email()
