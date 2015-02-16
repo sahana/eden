@@ -146,6 +146,7 @@ class S3Config(Storage):
         self.supply = Storage()
         self.search = Storage()
         self.security = Storage()
+        self.setup = Storage()
         self.sync = Storage()
         self.ui = Storage()
         self.vulnerability = Storage()
@@ -1969,6 +1970,14 @@ class S3Config(Storage):
     def get_search_filter_manager_load(self):
         """ Text for saved filter load-button """
         return self.search.get("filter_manager_load", None)
+
+    # =========================================================================
+    # Setup
+    #
+    def get_setup_url(self):
+        """ URL for Setup Coapp """
+
+        return self.setup.get("url", None)
 
     # =========================================================================
     # Sync
