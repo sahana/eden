@@ -5454,6 +5454,16 @@ def org_organisation_controller():
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_project_start_date','project_project_end_date')''')
 
+            elif r.component_name == "branch" and r.record and \
+                 isinstance(output, dict) and \
+                 "showadd_btn" in output:
+                treeview_link = A(current.T("Show Branch Hierarchy"),
+                                  _href=r.url(method="hierarchy", component=""),
+                                  _class="action-btn",
+                                  )
+                output["showadd_btn"] = TAG[""](output["showadd_btn"],
+                                                treeview_link,
+                                                )
         return output
     s3.postp = postp
 
