@@ -5764,7 +5764,7 @@ def hrm_rheader(r, tabs=[], profile=False):
             experience_tab = (T("Experience"), "experience")
 
         if settings.get_hrm_use_certificates():
-            certificates_tab = (T("Certificates"), "certificate")
+            certificates_tab = (T("Certificates"), "certification")
         else:
             certificates_tab = None
 
@@ -8445,17 +8445,18 @@ def hrm_human_resource_filters(resource_type=None,
                                           hidden = True,
                                           ))
 
-    # Organisation filter (always)
-    if settings.get_org_branches():
-        append_filter(S3HierarchyFilter("organisation_id",
-                                        leafonly = False,
-                                        ))
-    else:
-        append_filter(S3OptionsFilter("organisation_id",
-                                      filter = True,
-                                      header = "",
-                                      #hidden = True,
-                                      ))
+    # Organisation filter
+    if settings.get_hrm_multiple_orgs():
+        if settings.get_org_branches():
+            append_filter(S3HierarchyFilter("organisation_id",
+                                            leafonly = False,
+                                            ))
+        else:
+            append_filter(S3OptionsFilter("organisation_id",
+                                          filter = True,
+                                          header = "",
+                                          #hidden = True,
+                                          ))
 
     # Location filter (always)
     append_filter(S3LocationFilter("location_id",
@@ -8520,11 +8521,19 @@ def hrm_human_resource_filters(resource_type=None,
                                    hidden = True,
                                    ))
 
-    # Training filter (always)
-    append_filter(S3OptionsFilter("training.course_id",
-                                  label = T("Training"),
-                                  hidden = True,
-                                  ))
+    # Training filter 
+    if settings.get_hrm_use_trainings():
+        append_filter(S3OptionsFilter("training.course_id",
+                                      label = T("Training"),
+                                      hidden = True,
+                                      ))
+
+    # Certificate filter
+    if settings.get_hrm_use_certificates():
+        append_filter(S3OptionsFilter("certification.certificate_id",
+                                      label = T("Certificate"),
+                                      hidden = True,
+                                      ))
 
     # Group (team) membership filter
     teams = settings.get_hrm_teams()

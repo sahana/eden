@@ -79,7 +79,10 @@
          Permanent L4...................optional.....person permanent address L4
          Skills.........................optional.....comma-separated list of Skills
          Teams..........................optional.....comma-separated list of Groups
-         Trainings......................optional.....comma-separated list of Courses
+         Trainings......................optional.....comma-separated list of Training Courses
+         Training:XXXX..................optional.....Date of Training Course XXXX OR "True" to add Training Courses by column 
+         Certificates...................optional.....comma-separated list of Certificates
+         Certificate:XXXX...............optional.....Expiry Date of Certificate XXXX OR "True" to add Certificate by column
          Education Level................optional.....person education level of award (highest)
          Degree Name....................optional.....person education award
          Major..........................optional.....person education major
@@ -554,6 +557,8 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
+        <xsl:variable name="Trainings" select="col[@field='Trainings']"/>
+        <xsl:variable name="Certificates" select="col[@field='Certificates']"/>
         <xsl:variable name="DeployableRoles" select="col[@field='Deployable Roles']"/>
 
         <xsl:variable name="gender">
@@ -784,10 +789,44 @@
             </xsl:call-template>
 
             <!-- Trainings -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="$Trainings"/></xsl:with-param>
+                <xsl:with-param name="arg">training</xsl:with-param>
+            </xsl:call-template>
+
+            <!-- Training:XXXX -->
+            <xsl:for-each select="col[starts-with(@field, 'Training:')]">
+                <xsl:variable name="Date" select="text()"/>
+                <xsl:if test="$Date!=''">
+                    <xsl:call-template name="resource">
+                        <xsl:with-param name="item" select="normalize-space(substring-after(@field, ':'))"/>
+                        <xsl:with-param name="arg">training</xsl:with-param>
+                        <xsl:with-param name="date" select="$Date"/>
+                    </xsl:call-template>
+                </xsl:if>
+            </xsl:for-each>
+<!--
             <xsl:call-template name="Trainings">
                 <xsl:with-param name="course_list" select="col[@field='Trainings']"/>
             </xsl:call-template>
+-->
+            <!-- Certificates -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list"><xsl:value-of select="$Certificates"/></xsl:with-param>
+                <xsl:with-param name="arg">certificate</xsl:with-param>
+            </xsl:call-template>
 
+            <!-- Certificate:XXXX -->
+            <xsl:for-each select="col[starts-with(@field, 'Certificate:')]">
+                <xsl:variable name="Date" select="text()"/>
+                <xsl:if test="$Date!=''">
+                    <xsl:call-template name="resource">
+                        <xsl:with-param name="item" select="normalize-space(substring-after(@field, ':'))"/>
+                        <xsl:with-param name="arg">certificate</xsl:with-param>
+                        <xsl:with-param name="date" select="$Date"/>
+                    </xsl:call-template>
+                </xsl:if>
+            </xsl:for-each>
         </resource>
 
         <!-- Job Roles that a deployable is credentialled for -->
@@ -1422,7 +1461,7 @@
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
-
+        <xsl:param name="date"/>
         <xsl:choose>
             <!-- Contacts -->
             <xsl:when test="$arg='email'">
@@ -1471,6 +1510,34 @@
                             <data field="group_type">3</data>
                         </resource>
                     </reference>
+                </resource>
+            </xsl:when>
+            <!-- Trainings -->
+            <xsl:when test="$arg='training'">
+                <resource name="hrm_training">
+                    <reference field="course_id" resource="hrm_course">
+                        <resource name="hrm_course">
+                            <xsl:attribute name="tuid"><xsl:value-of select="$item"/></xsl:attribute>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                    <xsl:if test="$date!='' and $date!='TRUE' and $date!='True' and $date!='true' and $date!='YES' and $date!='Yes' and $date!='yes'">
+                        <data field="date"><xsl:value-of select="$date"/></data>
+                    </xsl:if>
+                </resource>
+            </xsl:when>
+            <!-- Certificate -->
+            <xsl:when test="$arg='certificate'">
+                <resource name="hrm_certification">
+                    <reference field="certificate_id" resource="hrm_certificate">
+                        <resource name="hrm_certificate">
+                            <xsl:attribute name="tuid"><xsl:value-of select="$item"/></xsl:attribute>
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                    <xsl:if test="$date!='' and $date!='TRUE' and $date!='True' and $date!='true' and $date!='YES' and $date!='Yes' and $date!='yes'">
+                        <data field="date"><xsl:value-of select="$date"/></data>
+                    </xsl:if>
                 </resource>
             </xsl:when>
         </xsl:choose>
@@ -1600,7 +1667,7 @@
         </xsl:if>
     </xsl:template>
 
-    <!-- ****************************************************************** -->
+    <!-- ****************************************************************** 
     <xsl:template name="Training">
 
         <xsl:param name="course"/>
@@ -1616,8 +1683,8 @@
         </xsl:if>
 
     </xsl:template>
-
-    <!-- ****************************************************************** -->
+-->
+    <!-- ****************************************************************** 
     <xsl:template name="Trainings">
 
         <xsl:param name="course_list"/>
@@ -1643,7 +1710,7 @@
         </xsl:if>
 
     </xsl:template>
-
+-->
     <!-- ****************************************************************** -->
     <!-- Pull this in from training_event.xsl if-required
     <xsl:template name="Course">

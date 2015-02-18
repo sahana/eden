@@ -31,6 +31,7 @@ class index():
         except IOError:
             from gluon.http import HTTP
             raise HTTP(404, "Unable to open Custom View: %s" % view)
+        current.response.s3.stylesheets.append("../themes/CERT/homepage.css")
 
         appname = request.application
         settings = current.deployment_settings
@@ -47,145 +48,70 @@ class index():
         AUTHENTICATED = system_roles.AUTHENTICATED
         #s3_has_role = auth.s3_has_role
 
-        # Menu Boxes
-        # NB Order defined later (in sit_dec_res_box)
-        menu_btns = [#div, label, app, function, is_icon
-                    ["vol", T("View Volunteers"), "vol", "volunteer", True],
-                    ["vol", T("View Volunteers"), "vol", "volunteer", False],
-                    ["vol", T("Create Volunteer"), "vol", "volunteer/create", False],
-                    ["qua", T("View Qualifications"), "vol", "certificate", True],
-                    ["qua", T("View Qualifications"), "vol", "certificate", False],
-                    ["qua", T("Add Qualification"), "vol", "certificate/create", False],
-                    ["evt", T("View Event"), "vol", "event", True],
-                    ["evt", T("View Events"), "vol", "event", False],
-                    ["evt", T("Add Event"), "vol", "event/create", False],
-                    ["adm", T("Deploy Volunteers"), "vol", "event", True],
-                    ["adm", T("Deploy Volunteers"), "vol", "event", False],
-                    ["not", T("Send Notification"), "msg", "compose", True],
-                    ["not", T("Send Notification"), "msg", "compose", False],
-                    ["rep", T("View Reports"), "vol", "experience/report", True],
-                    ["rep", T("View Reports"), "vol", "experience/report", False],
-                    ]
-
-        # NB Order defined later (in sit_dec_res_box)
-        menu_divs = {"facility": DIV(H3(T("Facilities")),
-                                     _id = "facility_box",
-                                     _class = "menu_box",
-                                     ),
-                     "vol": DIV(H3(T("Volunteers")),
-                                _id = "menu_div_vol",
-                                _class = "menu_div",
-                                ),
-                     "qua": DIV(H3(T("Qualifications")),
-                                _id = "menu_div_qua",
-                                _class = "menu_div",
-                                ),
-                     "evt": DIV(H3(A(T("Events")),
-                                   _href="blue"),
-                                _id = "menu_div_evt",
-                                _class = "menu_div",
-                                ),
-                     "adm": DIV(H3(T("Volunteer Admin")),
-                                _id = "menu_div_adm",
-                                _class = "menu_div",
-                                ),
-                     "not": DIV(H3(T("Notifications")),
-                                _id = "menu_div_not",
-                                _class = "menu_div",
-                                ),
-                     "rep": DIV(H3(T("Reports")),
-                                _id = "menu_div_rep",
-                                _class = "menu_div",
-                                ),
-                    }
-
-        for div, label, app, function, is_icon in menu_btns:
-            if settings.has_module(app):
-                # @ToDo: Also check permissions (e.g. for anonymous users)
-                if is_icon:
-                    menu_divs[div].append(A(DIV(label,
-                                                _class = "icon"),
-                                            _href = URL(app, function),
-                                            _class = "",
-                                            )
-                                          )
-                else:
-                    menu_divs[div].append(DIV(A(label,
-                                                _href = URL(app, function),
-                                                _class = "",
-                                                )
-                                              )
-                                          )
-
-        div_clear = DIV(T(""),
-                        _class="clear")
-
-        sit_dec_res_box = DIV(menu_divs["vol"],
-                              menu_divs["qua"],
-                              menu_divs["evt"],
-                              div_clear,
-                              menu_divs["adm"],
-                              menu_divs["not"],
-                              menu_divs["rep"],
-                              _id = "sit_dec_res_box",
-                              _class = "menu_box fleft swidth"
-                              )
-
-        # Login/Registration forms
-        self_registration = settings.get_security_self_registration()
-        registered = False
-        login_form = None
-        login_div = None
-        register_form = None
-        register_div = None
-        if AUTHENTICATED not in roles:
-            # This user isn't yet logged-in
-            if request.cookies.has_key("registered"):
-                # This browser has logged-in before
-                registered = True
-
-            if self_registration:
-                # Provide a Registration box on front page
-                register_form = auth.register()
-                register_div = DIV(H3(T("Register")),
-                                   P(XML(T("If you would like to help, then please %(sign_up_now)s") % \
-                                            dict(sign_up_now=B(T("sign-up now"))))))
-
-                if request.env.request_method == "POST":
-                    post_script = \
-'''$('#register_form').removeClass('hide')
-$('#login_form').addClass('hide')'''
-                else:
-                    post_script = ""
-                register_script = \
-'''$('#register-btn').attr('href','#register')
-$('#login-btn').attr('href','#login')
-%s
-$('#register-btn').click(function(){
- $('#register_form').removeClass('hide')
- $('#login_form').addClass('hide')
-})
-$('#login-btn').click(function(){
- $('#register_form').addClass('hide')
- $('#login_form').removeClass('hide')
-})''' % post_script
-                response.s3.jquery_ready.append(register_script)
-
-            # Provide a login box on front page
-            auth.messages.submit_button = T("Login")
-            login_form = auth.login(inline=True)
-            login_div = DIV(H3(T("Login")),
-                            P(XML(T("Registered users can %(login)s to access the system") % \
-                                  dict(login=B(T("login"))))))
+        # @ToDo: Add event/human_resource - but this requires extending event_human_resource to link to event.
+        menus = [{"title":T("Volunteers"),
+                  "icon":"user",
+                  "description":T("Manage people who have volunteered for your organization, their contact details, certicates and trainings."),
+                  "module":"vol",
+                  "function":"volunteer",
+                  "buttons":[{"args":"summary",
+                              "icon":"list",
+                              "label":T("View"),
+                             },
+                             {"args":"create",
+                              "icon":"plus-sign",
+                              "label":T("Create"),
+                             }]
+                  },
+                 {"title":T("Trainings"),
+                  "icon":"book",
+                  "description":T("Catalog of Training Courses which your Volunteers can attend."),
+                  "module":"vol",
+                  "function":"course",
+                  "buttons":[{"args":"summary",
+                              "icon":"list",
+                              "label":T("View"),
+                             },
+                             {"args":"create",
+                              "icon":"plus-sign",
+                              "label":T("Create"),
+                             }]
+                  },
+                 {"title":T("Certificates"),
+                  "icon":"certificate",
+                  "description":T("Catalog of Certificates which your Volunteers can get."),
+                  "module":"vol",
+                  "function":"certificate",
+                  "buttons":[{"args":"summary",
+                              "icon":"list",
+                              "label":T("View"),
+                             },
+                             {"args":"create",
+                              "icon":"plus-sign",
+                              "label":T("Create"),
+                             }]
+                  },
+                 {"title":T("Messaging"),
+                  "icon":"envelope-alt",
+                  "description":T("Send Email, SMS and Twitter messages to your Volunteers."),
+                  "module":"msg",
+                  "function":"Index",
+                  "args":None,
+                  "buttons":[{"function":"inbox",
+                              "args":None,
+                              "icon":"inbox",
+                              "label":T("Inbox"),
+                             },
+                             {"function":"compose",
+                              "args":None,
+                              "icon":"plus-sign",
+                              "label":T("Compose"),
+                             }]
+                  },
+                 ] 
 
         return dict(title = title,
-                    sit_dec_res_box = sit_dec_res_box,
-                    self_registration=self_registration,
-                    registered=registered,
-                    login_form=login_form,
-                    login_div=login_div,
-                    register_form=register_form,
-                    register_div=register_div
+                    menus=menus,
                     )
 
 # END =========================================================================

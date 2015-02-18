@@ -12,7 +12,8 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings for Chicago CERT
+        Template settings for CERT (Community Emergency Response Teams)
+
         http://eden.sahanafoundation.org/wiki/BluePrintCERT
 
         Demo only, not in Production
@@ -24,7 +25,10 @@ def config(settings):
     settings.base.prepopulate = ("CERT", "default/users")
 
     # Theme
-    settings.base.theme = "CERT"
+    #settings.base.theme = "CERT"
+
+    settings.base.system_name = T("Sahana Disaster Management Platform")
+    settings.base.system_name_short = T("Sahana")
 
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
@@ -47,6 +51,18 @@ def config(settings):
     settings.ui.label_postcode = "ZIP Code"
     # PDF to Letter
     settings.base.paper_size = T("Letter")
+    
+    settings.hrm.multiple_orgs = False
+    
+    settings.hrm.vol_experience = False
+    settings.hrm.use_description = False
+    settings.hrm.use_skills = False
+    settings.hrm.use_awards = False
+    settings.hrm.use_credentials = False
+    
+    settings.msg.require_international_phone_numbers = False
+    
+    settings.gis.geocode_imported_addresses = "google"
 
     # Comment/uncomment modules here to disable/enable them
     settings.modules = OrderedDict([
