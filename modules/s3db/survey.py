@@ -2389,18 +2389,13 @@ def survey_series_rheader(r):
                                    _class="action-btn"
                                   )
             tranForm.append(export_xls_btn)
-            try:
-                # only add the Export to Word button up if PyRTF is installed
-                from PyRTF import Document
-                export_rtf_btn = INPUT(_type="submit",
-                                       _id="export_rtf_btn",
-                                       _name="Export_Word",
-                                       _value=T("Download Assessment Form Document"),
-                                       _class="action-btn"
-                                      )
-                tranForm.append(export_rtf_btn)
-            except:
-                pass
+            export_rtf_btn = INPUT(_type="submit",
+                                   _id="export_rtf_btn",
+                                   _name="Export_Word",
+                                   _value=T("Download Assessment Form Document"),
+                                   _class="action-btn"
+                                   )
+            tranForm.append(export_rtf_btn)
             urlimport = URL(c="survey",
                             f="series",
                             args=[record.id, "export_responses"],
