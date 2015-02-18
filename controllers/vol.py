@@ -76,16 +76,17 @@ def volunteer():
         else:
             list_fields = ["person_id",
                            ]
-        list_fields.extend(("job_title_id",
-                            "organisation_id",
-                            (settings.get_ui_label_mobile_phone(), "phone.value"),
+        list_fields.append("job_title_id")
+        if settings.get_hrm_multiple_orgs():
+            list_fields.append("organisation_id")
+        list_fields.extend(((settings.get_ui_label_mobile_phone(), "phone.value"),
                             (T("Email"), "email.value"),
                             "location_id",
                             ))
         if settings.get_hrm_use_trainings():
-            list_fields.append("person_id$training.course_id")
+            list_fields.append((T("Trainings"),"person_id$training.course_id"))
         if settings.get_hrm_use_certificates():
-            list_fields.append("person_id$certification.certificate_id")
+            list_fields.append((T("Certificates"),"person_id$certification.certificate_id"))
 
         # Volunteer Programme and Active-status
         report_options = get_config("report_options")
