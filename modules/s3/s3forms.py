@@ -3333,7 +3333,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 # Delete links which are no longer used
                 # @todo: apply filterby to only delete within the subset?
                 if delete:
-                    query = FS(component.rkey).belongs(delete)
+                    query &= FS(component.rkey).belongs(delete)
                     lresource = s3db.resource(link.tablename, filter = query)
                     lresource.delete()
 
