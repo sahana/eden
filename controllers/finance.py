@@ -19,11 +19,5 @@ msg_record_deleted = T("Donation deleted"),
 msg_list_empty = T("No Donations currently registered"))
 
 
-def donations_total(r, **attr):
-	table = current.s3db.finance_donations
-	tot = table.amount.sum()
-	query = (table.deleted != True) 
-	return current.db(query).select(tot).first()[tot] or \
-               current.messages["NONE"]
-               
+
 	

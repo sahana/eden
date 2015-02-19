@@ -50,4 +50,10 @@ class FinanceDonations(S3Model):
 			
 			self.set_method("finance", "donations", method="total", action=donations_total)
 			
-	
+
+def donations_total(r, **attr):
+	table = current.s3db.finance_donations
+	tot = table.amount.sum()
+	output = current.db().select(tot).first()[tot] or \
+			current.messages["NONE"]
+	return dict(output=output)
