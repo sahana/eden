@@ -1417,7 +1417,9 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
+        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
+
         thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
         thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
@@ -1519,7 +1521,9 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
+        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
+
         thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
         thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
@@ -1996,7 +2000,9 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
         """
-        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
+        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
+
         thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
         thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
@@ -2538,7 +2544,9 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
             This will just display the grid name, following this will be the
             grid child objects.
         """
-        from PyRTF import Paragraph, Cell, B, BorderPS, FramePS
+        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
+        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
+
         thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
         thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
         line = []
