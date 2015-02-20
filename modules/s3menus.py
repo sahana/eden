@@ -982,6 +982,8 @@ class S3OptionsMenu(object):
         # to have them checked only immediately before rendering:
         manager_mode = lambda i: s3.hrm.mode is None
         personal_mode = lambda i: s3.hrm.mode is not None
+        skills = lambda i: settings.get_hrm_use_skills()
+        certificates = lambda i: settings.get_hrm_use_certificates()
         is_org_admin = lambda i: s3.hrm.orgs and True or \
                                  ADMIN in s3.roles
         settings = current.deployment_settings
@@ -994,14 +996,15 @@ class S3OptionsMenu(object):
                       check=manager_mode)(
                         M("Create", m="create"),
                         M("Search by Skills", f="competency"),
+                        M("Search by Skills", f="competency", check=skills),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
                     ),
                     M("Staff & Volunteers (Combined)",
                       c="hrm", f="human_resource", m="summary",
-                      check=[manager_mode, vol_enabled]),
+                      check=(manager_mode, vol_enabled)),
                     M(teams, f="group",
-                      check=[manager_mode, use_teams])(
+                      check=(manager_mode, use_teams))(
                         M("Create", m="create"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
@@ -1015,7 +1018,7 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                     ),
                     M("Skill Catalog", f="skill",
-                      check=manager_mode)(
+                      check=(manager_mode, skills))(
                         M("Create", m="create"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
@@ -1071,23 +1074,25 @@ class S3OptionsMenu(object):
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
+        skills = lambda i: settings.get_hrm_use_skills()
+        certificates = lambda i: settings.get_hrm_use_certificates()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
         show_staff = lambda i: settings.get_hrm_show_staff()
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary",
-                      check=[manager_mode])(
+                      check=(manager_mode))(
                         M("Create", m="create"),
-                        M("Search by skills", f="competency"),
+                        M("Search by skills", f="competency", check=skills),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
                     M("Staff & Volunteers (Combined)",
                       c="vol", f="human_resource", m="summary",
-                      check=[manager_mode, show_staff]),
+                      check=(manager_mode, show_staff)),
                     M(teams, f="group",
-                      check=[manager_mode, use_teams])(
+                      check=(manager_mode, use_teams))(
                         M("Create", m="create"),
                         M("Search Members", f="group_membership"),
                         M("Import", f="group_membership", m="import"),
@@ -1117,7 +1122,7 @@ class S3OptionsMenu(object):
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
-                      check=manager_mode)(
+                      check=(manager_mode, certificates))(
                         M("Create", m="create"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
@@ -1460,7 +1465,11 @@ class S3OptionsMenu(object):
                         M("Map", m="map"),
                         M("Import", m="import")
                     ),
-                    M("Facilities", f="facility", m="summary")(
+                    M("Facilities", f="facility")(
+                        M("Create", m="create"),
+                        M("Import", m="import"),
+                    ),
+                    M("Resource Inventory", f="resource")(
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
