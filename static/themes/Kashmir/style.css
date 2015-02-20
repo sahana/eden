@@ -253,6 +253,13 @@ textarea {
 #rheader a.th img {
   height: 60px;
 }
+#rheader table {
+  margin-bottom: 10px;
+  border: none;
+}
+#rheader table tr {
+  background: none;
+}
 
 /* RHeader Tabs */
 div.tabs {
