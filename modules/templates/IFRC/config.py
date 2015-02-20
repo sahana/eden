@@ -1343,6 +1343,23 @@ def config(settings):
                    )
 
     # -----------------------------------------------------------------------------
+    def emergency_contact_represent(row):
+        """
+            Representation of Emergency Contacts (S3Represent label renderer)
+
+            @param row: the row
+        """
+
+        items = [row["pr_contact_emergency.name"]]
+        relationship = row["pr_contact_emergency.relationship"]
+        if relationship:
+            items.append(" (%s)" % relationship)
+        phone_number = row["pr_contact_emergency.phone"]
+        if phone_number:
+            items.append(": %s" % phone_number)
+        return "".join(items)
+
+    # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         controller = current.request.controller
@@ -1509,6 +1526,14 @@ def config(settings):
                                                          },
                                               ))
 
+                # Representation of emergency contacts
+                from s3 import S3Represent
+                field = s3db.pr_contact_emergency.id
+                field.represent = S3Represent(lookup="pr_contact_emergency",
+                                              fields=("name", "relationship", "phone"),
+                                              labels=emergency_contact_represent,
+                                              )
+
                 # Custom list fields for RDRT
                 phone_label = settings.get_ui_label_mobile_phone()
                 list_fields = ["person_id",
@@ -1531,7 +1556,7 @@ def config(settings):
                                (T("Passport Issuer"), "person_id$passport.ia_name"),
                                (T("Passport Date"), "person_id$passport.valid_from"),
                                (T("Passport Expires"), "person_id$passport.valid_until"),
-                               # @todo: Emergency Contacts
+                               (T("Emergency Contacts"), "person_id$contact_emergency.id"),
                                "person_id$physical_description.blood_type",
                                ]
                 resource.configure(filter_widgets = filters,
@@ -3135,6 +3160,5 @@ def config(settings):
         r.table.date.requires = r.table.date.requires.other
 
     settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
-
 
 # END =========================================================================
