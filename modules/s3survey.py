@@ -1410,26 +1410,68 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         #    return (row+self.xlsMargin[1]+mergeLV+mergeWV, col+self.xlsMargin[0]+max(mergeLH,mergeWH))
 
     # -------------------------------------------------------------------------
-    def writeToRTF(self, ss, langDict):
+    @staticmethod
+    def _writeToRTF(ss, langDict, full_name, paragraph=None,
+                    para_list=[],
+                    question_name=""):
         """
             Function to write the basic question details to a rtf document.
 
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
+
+            @param ss: StyleSheet object
+            @param langDict: Dictionary of languages
+            @param full_name: Question name(label)
+            @param paragraph: Add paragraph from S3QuestionTypeTextWidget
+            @param para_list: List of paragraphs from S3QuestionTypeOptionWidget
+            @param question_name: Name of question from S3QuestionTypeGridWidget 
         """
         from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
         from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
 
-        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
-        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
+        thin_edge  = BorderPS(width=20, style=BorderPS.SINGLE)
+        thin_frame  = FramePS(thin_edge, thin_edge, thin_edge, thin_edge)
         line = []
+
+        if question_name:
+            p = Paragraph(ss.ParagraphStyles.NormalCentre)
+            p.append(B(question_name))
+            line.append(Cell(p, thin_frame, span = 2))
+            return line
+
         p = Paragraph(ss.ParagraphStyles.Normal)
-        p.append(B(str(self.fullName())))
-        line.append(Cell(p, thin_frame))
-        p = Paragraph(ss.ParagraphStyles.NormalGrey)
-        p.append()
-        line.append(Cell(p, thin_frame))
+        p.append(B(str(full_name)))
+
+        if paragraph:
+            line.append(Cell(p, paragraph, paragraph, paragraph, thin_frame))
+        else:
+            line.append(Cell(p, thin_frame))
+
+        if para_list:
+            paras = []
+            for option in para_list:
+                p = Paragraph(ss.ParagraphStyles.Normal)
+                p.append(survey_T(option, langDict))
+                paras.append(p)
+            line.append(Cell(thin_frame, *paras))
+        else:
+            p = Paragraph(ss.ParagraphStyles.NormalGrey)
+            p.append("")
+            line.append(Cell(p, thin_frame))
+
         return line
+
+    # -------------------------------------------------------------------------
+    def writeQuestionToRTF(self, ss, langDict):
+        """
+            Wrapper function for _writeToRTF
+
+            @param ss: StyleSheet object
+            @param langDict: Dictionary of languages
+        """
+        full_name = self.fullName()
+        return self._writeToRTF(ss, langDict, full_name)
 
     # -------------------------------------------------------------------------
     def verifyCoords(self, endrow, endcol):
@@ -1514,28 +1556,22 @@ class S3QuestionTypeTextWidget(S3QuestionTypeAbstractWidget):
         return True
 
     # -------------------------------------------------------------------------
-    def writeToRTF(self, ss, langDict):
+    def writeQuestionToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
 
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
-        """
-        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
-        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
 
-        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
-        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
-        line = []
-        p = Paragraph(ss.ParagraphStyles.Normal)
-        p.append(B(str(self.fullName())))
-        # Add some spacing to increase the text size
-        p2 = Paragraph(ss.ParagraphStyles.Normal)
-        line.append(Cell(p,p2,p2,p2, thin_frame))
-        p = Paragraph(ss.ParagraphStyles.NormalGrey)
-        p.append("")
-        line.append(Cell(p, thin_frame))
-        return line
+            @param ss: StyleSheet object
+            @param langDict: Dictionary of languages
+        """
+        from gluon.contrib.pyrtf.Elements import Paragraph
+        paragraph = Paragraph(ss.ParagraphStyles.Normal)
+        full_name = self.fullName()
+
+        return self._writeToRTF(ss, langDict, full_name,
+                                paragraph=paragraph)
 
 # =============================================================================
 class S3QuestionTypeStringWidget(S3QuestionTypeAbstractWidget):
@@ -1993,31 +2029,21 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
         return (endrow, endcol)
 
     # -------------------------------------------------------------------------
-    def writeToRTF(self, ss, langDict):
+    def writeQuestionToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
 
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
+
+            @param ss: StyleSheet object
+            @param langDict: Dictionary of languages
         """
-        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
-        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
+        para_list = self.getList()
+        full_name = self.fullName()
 
-        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
-        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
-        line = []
-        p = Paragraph(ss.ParagraphStyles.Normal)
-        p.append(B(str(self.fullName())))
-        line.append(Cell(p, thin_frame))
-        list = self.getList()
-        paras = []
-        for option in list:
-            p = Paragraph(ss.ParagraphStyles.Normal)
-            p.append(survey_T(option, langDict))
-            paras.append(p)
-        line.append(Cell(thin_frame, *paras))
-        return line
-
+        return self._writeToRTF(ss, langDict, full_name,
+                                para_list=para_list)
 
     ######################################################################
     # Functions not fully implemented or used
@@ -2537,23 +2563,21 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         return (row, endcol)
 
     # -------------------------------------------------------------------------
-    def writeToRTF(self, ss, langDict):
+    def writeQuestionToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
 
             This will just display the grid name, following this will be the
             grid child objects.
-        """
-        from gluon.contrib.pyrtf.Elements import Paragraph, Cell, B
-        from gluon.contrib.pyrtf.PropertySets import BorderPS, FramePS
 
-        thin_edge  = BorderPS( width=20, style=BorderPS.SINGLE )
-        thin_frame  = FramePS( thin_edge,  thin_edge,  thin_edge,  thin_edge )
-        line = []
-        p = Paragraph(ss.ParagraphStyles.NormalCentre)
-        p.append(B(self.question.name))
-        line.append(Cell(p, thin_frame, span=2))
-        return line
+            @param ss: StyleSheet object
+            @param langDict: Dictionary of languages
+        """
+        question_name = self.question.name
+        full_name = self.fullName()
+
+        return self._writeToRTF(ss, langDict, full_name,
+                                question_name=question_name)
 
     # -------------------------------------------------------------------------
     def insertChildren(self, record, metadata):
@@ -2719,14 +2743,17 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
         return (row, col)
 
     # -------------------------------------------------------------------------
-    def writeToRTF(self, ss, langDict):
+    def writeQuestionToRTF(self, ss, langDict):
         """
             Function to write the basic question details to a rtf document.
 
             The basic details will be written to Cell objects that can be
             added to a row in a table object.
+
+            @param ss: StyleSheet object
+            @param langDict: Dictionary of languages
         """
-        return self.realWidget().writeToRTF(ss,langDict)
+        return self.realWidget().writeQuestionToRTF(ss, langDict)
 
 
 ###############################################################################

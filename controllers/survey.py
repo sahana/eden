@@ -138,7 +138,7 @@ def template():
         #                       dict(label=str(T("Display")),
         #                            _class="action-btn",
         #                            url=URL(c=module,
-        #                                    f="templateRead",
+        #                                    f="template_read",
         #                                    args=["[id]"])
         #                           ),
         #                      ]
@@ -170,8 +170,9 @@ def template():
     return output
 
 # -----------------------------------------------------------------------------
-def templateRead():
+def template_read():
     """
+        Show the details of all the questions of a particular template
     """
 
     if len(get_vars) > 0:
@@ -202,8 +203,9 @@ def templateRead():
     return output
 
 # -----------------------------------------------------------------------------
-def templateSummary():
+def template_summary():
     """
+        Show section-wise summary of questions of a template
     """
 
     # Load Model
@@ -234,7 +236,7 @@ def templateSummary():
 
     output = s3_rest_controller("survey", "template",
                                 method = "list",
-                                rheader=s3.survey_template_rheader
+                                rheader=s3db.survey_template_rheader,
                                 )
     s3.actions = None
     return output
@@ -502,7 +504,7 @@ def series_export_word(widgetList, langDict, title, logo):
     sortedwidgetList = sorted(widgetList.values(),
                               key=lambda widget: widget.question.posn)
     for widget in sortedwidgetList:
-        line = widget.writeToRTF(ss, langDict)
+        line = widget.writeQuestionToRTF(ss, langDict)
         try:
             AddRow(*line)
         except:

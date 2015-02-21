@@ -530,8 +530,8 @@ def survey_template_rheader(r, tabs=[]):
 
             # Tabs
             tabs = [(T("Basic Details"), "read"),
-                    (T("Question Details"),"templateRead/"),
-                    (T("Question Summary"),"templateSummary/"),
+                    (T("Question Details"),"template_read/"),
+                    (T("Question Summary"),"template_summary/"),
                     #(T("Sections"), "section"),
                     ]
             if current.auth.s3_has_permission("create", "survey_translate"):
@@ -723,7 +723,7 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                 form.append(P())
                 form.append(HR(_width="90%"))
                 form.append(P())
-            div = DIV(_class="survey_scrollable")
+            div = DIV()
             table = TABLE()
             div.append(table)
             form.append(div)
@@ -1007,7 +1007,7 @@ class S3SurveyQuestionModel(S3Model):
             @todo: add the full name if it is a grid question BUT not displayed
                   as part of a grid,
                   e.g. "Currently known Displaced", rather than just "Displaced"
-                  see controller... templateRead() for an example not in the grid
+                  see controller... template_read() for an example not in the grid
         """
 
         if value == "L0" or value == "L1" or \
