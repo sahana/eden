@@ -126,7 +126,7 @@ OpenLayers.ElementsIndexer = OpenLayers.Class({
             this.order.splice(arrayIndex, 1);
             delete this.indices[nodeId];
             
-            // Reset the maxium z-index based on the last item in the 
+            // Reset the maximum z-index based on the last item in the 
             // order array.
             if (this.order.length > 0) {
                 var lastId = this.order[this.order.length - 1];

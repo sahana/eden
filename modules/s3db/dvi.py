@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 """ Sahana Eden Disaster Victim Identification Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -28,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DVIModel"]
+__all__ = ("S3DVIModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -38,14 +37,14 @@ from s3layouts import S3AddResourceLink
 # =============================================================================
 class S3DVIModel(S3Model):
 
-    names = ["dvi_recreq",
+    names = ("dvi_recreq",
              "dvi_body",
              "dvi_morgue",
              "dvi_checklist",
              "dvi_effects",
              "dvi_identification",
              "dvi_id_status",
-             ]
+             )
 
     def model(self):
 
@@ -106,7 +105,7 @@ class S3DVIModel(S3Model):
                                                            T("Please give an estimated figure about how many bodies have been found.")))),
                      Field("bodies_recovered", "integer",
                            label = T("Bodies recovered"),
-                           requires = IS_NULL_OR(IS_INT_IN_RANGE(0, 99999)),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999)),
                            represent = lambda v, row=None: IS_INT_AMOUNT.represent(v),
                            default = 0),
                      Field("description", "text"),
@@ -122,13 +121,11 @@ class S3DVIModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Body Recovery Request"),
+            label_create = T("Body Recovery Request"),
             title_display = T("Request Details"),
             title_list = T("Body Recovery Requests"),
             title_update = T("Update Request"),
-            subtitle_create = T("Add New Request"),
             label_list_button = T("List Requests"),
-            label_create_button = T("Add Request"),
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Recovery Request added"),
             msg_record_modified = T("Recovery Request updated"),
@@ -149,7 +146,7 @@ class S3DVIModel(S3Model):
 
         # Reusable fields
         dvi_recreq_id = S3ReusableField("dvi_recreq_id", "reference %s" % tablename,
-                                        requires = IS_NULL_OR(IS_ONE_OF(db,
+                                        requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                         "dvi_recreq.id",
                                                         "[%(marker)s] %(date)s: %(bodies_found)s bodies")),
                                         represent = lambda id: id,
@@ -183,20 +180,18 @@ class S3DVIModel(S3Model):
 
         # Reusable Field
         morgue_id = S3ReusableField("morgue_id", "reference %s" % tablename,
-                                    requires = IS_NULL_OR(IS_ONE_OF(db,
+                                    requires = IS_EMPTY_OR(IS_ONE_OF(db,
                                                     "dvi_morgue.id", "%(name)s")),
                                     represent = self.morgue_represent,
                                     ondelete = "RESTRICT")
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Morgue"),
+            label_create = T("Create Morgue"),
             title_display = T("Morgue Details"),
             title_list = T("Morgues"),
             title_update = T("Update Morgue Details"),
-            subtitle_create = T("Add New Morgue"),
             label_list_button = T("List Morgues"),
-            label_create_button = T("Add Morgue"),
             label_delete_button = T("Delete Morgue"),
             msg_record_created = T("Morgue added"),
             msg_record_modified = T("Morgue updated"),
@@ -251,13 +246,11 @@ class S3DVIModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Dead Body Report"),
+            label_create = T("Create Dead Body Report"),
             title_display = T("Dead Body Details"),
             title_list = T("Dead Body Reports"),
             title_update = T("Edit Dead Body Details"),
-            subtitle_create = T("Add New Report"),
             label_list_button = T("List Reports"),
-            label_create_button = T("Add Report"),
             label_delete_button = T("Delete Report"),
             msg_record_created = T("Dead body report added"),
             msg_record_modified = T("Dead body report updated"),
@@ -331,15 +324,12 @@ class S3DVIModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        CREATE_CHECKLIST = T("Create Checklist")
         crud_strings[tablename] = Storage(
-            title_create = CREATE_CHECKLIST,
+            label_create = T("Create Checklist"),
             title_display = T("Checklist of Operations"),
             title_list = T("Checklists"),
             title_update = T("Update Task Status"),
-            subtitle_create = T("New Checklist"),
             label_list_button = T("List Checklists"),
-            label_create_button = CREATE_CHECKLIST,
             msg_record_created = T("Checklist created"),
             msg_record_modified = T("Checklist updated"),
             msg_record_deleted = T("Checklist deleted"),
@@ -362,15 +352,13 @@ class S3DVIModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PERSONAL_EFFECTS = T("Add Personal Effects")
+        ADD_PERSONAL_EFFECTS = T("Create Personal Effects")
         crud_strings[tablename] = Storage(
-            title_create = ADD_PERSONAL_EFFECTS,
+            label_create = ADD_PERSONAL_EFFECTS,
             title_display = T("Personal Effects Details"),
             title_list = T("Personal Effects"),
             title_update = T("Edit Personal Effects Details"),
-            subtitle_create = T("Add New Entry"),
             label_list_button = T("List Personal Effects"),
-            label_create_button = ADD_PERSONAL_EFFECTS,
             msg_record_created = T("Record added"),
             msg_record_modified = T("Record updated"),
             msg_record_deleted = T("Record deleted"),
@@ -425,13 +413,11 @@ class S3DVIModel(S3Model):
  
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Identification Report"),
+            label_create = T("Create Identification Report"),
             title_display = T("Identification Report"),
             title_list = T("Identification Reports"),
             title_update = T("Edit Identification Report"),
-            subtitle_create = T("Add New Report"),
             label_list_button = T("List Reports"),
-            label_create_button = T("Add Identification Report"),
             msg_record_created = T("Report added"),
             msg_record_modified = T("Report updated"),
             msg_record_deleted = T("Report deleted"),
@@ -439,8 +425,9 @@ class S3DVIModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  mark_required = ["identity", "identified_by"],
-                  list_fields = ["id"])
+                  mark_required = ("identity", "identified_by"),
+                  list_fields = ["id"],
+                  )
 
 
         # ---------------------------------------------------------------------

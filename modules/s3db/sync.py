@@ -2,7 +2,7 @@
 
 """ Sahana Eden Synchronization
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,28 +27,29 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["SyncDataModel",
+__all__ = ("SyncDataModel",
            "sync_rheader",
            "sync_now",
            "sync_job_reset"
-           ]
+           )
 
 from gluon import *
-from gluon.dal import Row
 from gluon.storage import Storage
+
+from s3dal import Row
 from ..s3 import *
 
 # =============================================================================
 class SyncDataModel(S3Model):
 
-    names = ["sync_config",
+    names = ("sync_config",
              "sync_status",
              "sync_repository",
              "sync_task",
              "sync_resource_filter",
              "sync_job",
              "sync_log"
-             ]
+             )
 
     def model(self):
 
@@ -131,95 +132,110 @@ class SyncDataModel(S3Model):
         sync_repository_types = {
             "eden": "Sahana Eden",
             "ccrm": "CiviCRM",
+            "wrike": "Wrike",
+            "mcb": "Mariner CommandBridge",
         }
-
+        password_widget = S3PasswordWidget()
         tablename = "sync_repository"
         define_table(tablename,
-                     Field("name",
-                           length=64,
-                           notnull=True),
+                     Field("name", length=64, notnull=True,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Repository Name"),
+                                                T("Name of the repository (for you own reference)"))),
+                           ),
                      Field("apitype",
                            label=T("Repository Type"),
                            requires = IS_IN_SET(sync_repository_types),
                            default = "eden",
-                          represent = lambda opt: \
-                                      NONE if not opt else \
-                                      sync_repository_types.get(opt, NONE)),
+                           represent = lambda opt: \
+                                       NONE if not opt else \
+                                       sync_repository_types.get(opt, NONE),
+                           ),
                      Field("url",
                            label="URL",
                            requires = IS_EMPTY_OR(
-                                      IS_NOT_IN_DB(db, "sync_repository.url"))),
-                     Field("username"),
-                     Field("password", "password"),
+                                      IS_NOT_IN_DB(db, "sync_repository.url")),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Repository Base URL"),
+                                                T("Base URL of the remote Sahana Eden instance including application path, e.g. http://www.example.org/eden"))),
+                           ),
+                     Field("username",
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Username"),
+                                                T("Username to use for authentication at the remote site."))),
+                           ),
+                     Field("password", "password",
+                           widget = password_widget,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Password"),
+                                                T("Password to use for authentication at the remote site."))),
+                           ),
+                     Field("client_id",
+                           label = T("Client ID"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Client ID"),
+                                                T("The client ID to use for authentication at the remote site (if required for this type of repository)."))),
+                           ),
+                     Field("client_secret", "password",
+                           widget = password_widget,
+                           label = T("Client Secret"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Client Secret"),
+                                                T("The client secret to use for authentication at the remote site (if required for this type of repository)."))),
+                           ),
                      Field("site_key",
-                           label = T("Site Key")),
+                           label = T("Site Key"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Site Key"),
+                                                T("Site Key which this site uses to authenticate at the remote site (if required for this type of repository)."))),
+                           ),
+                     Field("refresh_token",
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("proxy",
                            label=T("Proxy Server URL"),
-                           requires=IS_EMPTY_OR(IS_URL(mode="generic"))),
+                           requires=IS_EMPTY_OR(IS_URL(mode="generic")),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Proxy Server URL"),
+                                                T("URL of the proxy server to connect to the repository (leave empty for default proxy)"))),
+                           ),
                      Field("last_status",
                            readable=False,
                            writable=False,
-                           label=T("Last status")),
+                           label=T("Last status"),
+                           ),
                      Field("accept_push", "boolean",
                            represent = s3_yes_no_represent,
                            default=False,
-                           label=T("Accept Push")),
+                           label=T("Accept Push"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Accept Push"),
+                                                T("Accept unsolicited data transmissions from the repository."))),
+                           ),
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),
                      Field.Method("last_push_time",
                                   self.sync_repository_last_push_time),
                      *s3_meta_fields())
 
-        # Field configuration
-        # @todo: make in-line
-        table = db[tablename]
-        table.uuid.label = "UUID"
-        table.uuid.readable = True
-        table.uuid.writable = True
-
-        table.name.comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (
-                                    T("Repository Name"),
-                                    T("Name of the repository (for you own reference)")))
-        table.url.comment = DIV(_class="tooltip",
-                                _title="%s|%s" % (
-                                    T("Repository Base URL"),
-                                    T("Base URL of the remote Sahana Eden instance including application path, e.g. http://www.example.org/eden")))
-        table.proxy.comment = DIV(_class="tooltip",
-                                  _title="%s|%s" % (
-                                    T("Proxy Server URL"),
-                                    T("URL of the proxy server to connect to the repository (leave empty for default proxy)")))
-        table.username.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Username"),
-                                        T("Username to use for authentication at the remote site.")))
-        table.password.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Password"),
-                                        T("Password to use for authentication at the remote site.")))
-        table.site_key.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Site Key"),
-                                        T("Site Key which this site uses to authenticate at the remote site (if required for this type of repository).")))
-        table.uuid.comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (
-                                    T("Repository UUID"),
-                                    T("Identifier which the remote site uses to authenticate at this site when sending synchronization requests.")))
-        table.accept_push.comment = DIV(_class="tooltip",
-                                        _title="%s|%s" % (
-                                            T("Accept Push"),
-                                            T("Accept unsolicited data transmissions from the repository.")))
-
         # CRUD Strings
-        ADD_REPOSITORY = T("Add Repository")
+        ADD_REPOSITORY = T("Create Repository")
         crud_strings[tablename] = Storage(
-            title_create = ADD_REPOSITORY,
+            label_create = ADD_REPOSITORY,
             title_display = T("Repository Configuration"),
             title_list = T("Repositories"),
             title_update = T("Edit Repository Configuration"),
-            subtitle_create = T("Add Repository"),
             label_list_button = T("List Repositories"),
-            label_create_button = ADD_REPOSITORY,
             msg_record_created = T("Repository configured"),
             msg_record_modified = T("Repository configuration updated"),
             msg_record_deleted = T("Repository configuration deleted"),
@@ -232,12 +248,18 @@ class SyncDataModel(S3Model):
                                "accept_push",
                                (T("Last Pull"), "last_pull_time"),
                                (T("Last Push"), "last_push_time"),
-                              ],
+                               ],
                   onaccept=self.sync_repository_onaccept,
                   ondelete=self.sync_repository_ondelete,
-                  create_next=URL(c="sync", f="repository", args=["[id]",
-                                                                  "task"]),
-                  update_next=URL(c="sync", f="repository", args=["[id]"]))
+                  create_next=URL(c="sync",
+                                  f="repository",
+                                  args=["[id]", "task"],
+                                  ),
+                  update_next=URL(c="sync",
+                                  f="repository",
+                                  args=["[id]"],
+                                  )
+                  )
 
         set_method("sync", "repository", method="now", action=sync_now)
 
@@ -384,15 +406,13 @@ class SyncDataModel(S3Model):
                                                 T("Under which condition a local record shall be updated if it also has been modified locally since the last synchronization")))
 
         # CRUD Strings
-        ADD_TASK = T("Add Resource")
+        ADD_TASK = T("Create Resource")
         crud_strings[tablename] = Storage(
-            title_create = ADD_TASK,
+            label_create = ADD_TASK,
             title_display = T("Resource Configuration"),
             title_list = T("Resources"),
             title_update = T("Edit Resource Configuration"),
-            subtitle_create = ADD_TASK,
             label_list_button = T("List Resources"),
-            label_create_button = ADD_TASK,
             msg_record_created = T("Resource configured"),
             msg_record_modified = T("Resource configuration updated"),
             msg_record_deleted = T("Resource configuration deleted"),
@@ -450,15 +470,13 @@ class SyncDataModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_JOB = T("Add Job")
+        ADD_JOB = T("Create Job")
         crud_strings[tablename] = Storage(
-            title_create = ADD_JOB,
+            label_create = ADD_JOB,
             title_display = T("Synchronization Job"),
             title_list = T("Synchronization Schedule"),
             title_update = T("Edit Job"),
-            subtitle_create = ADD_JOB,
             label_list_button = T("List Jobs"),
-            label_create_button = ADD_JOB,
             msg_record_created = T("Job added"),
             msg_record_modified = T("Job updated"),
             msg_record_deleted = T("Job deleted"),
@@ -655,7 +673,7 @@ class SyncDataModel(S3Model):
             repository = current.db(query).select(limitby=(0, 1)).first()
             if repository and repository.url:
                 from s3.s3sync import S3SyncRepository
-                connector = S3SyncRepository.factory(repository)
+                connector = S3SyncRepository(repository)
                 success = connector.register()
                 if not success:
                     current.response.warning = \

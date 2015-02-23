@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -37,17 +37,16 @@ from uuid import uuid4
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
-#from gluon.dal import Field
 #from gluon.html import *
 #from gluon.validators import *
-from gluon.dal import Query, SQLCustomType
 from gluon.storage import Storage
 from gluon.languages import lazyT
 
+from s3dal import Query, SQLCustomType
 from s3navigation import S3ScriptItem
-from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode
+from s3utils import S3DateTime, s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATETIME
-from s3widgets import S3AutocompleteWidget, S3DateWidget, S3DateTimeWidget
+from s3widgets import S3DateWidget, S3DateTimeWidget
 
 try:
     db = current.db
@@ -159,8 +158,12 @@ class S3ReusableField(object):
 
         ia = Storage(self.attr)
 
+        DEFAULT = "default"
+        widgets = ia.pop("widgets", {})
+
         if attr:
-            if not attr.get("empty", True):
+            empty = attr.pop("empty", True)
+            if not empty:
                 requires = ia.requires
                 if requires:
                     if not isinstance(requires, (list, tuple)):
@@ -170,9 +173,22 @@ class S3ReusableField(object):
                         if isinstance(r, IS_EMPTY_OR):
                             requires = r.other
                             ia.update(requires=requires)
-            if "empty" in attr:
-                del attr["empty"]
+            widget = attr.pop("widget", DEFAULT)
             ia.update(**attr)
+        else:
+            widget = DEFAULT
+
+        if isinstance(widget, basestring):
+            if widget == DEFAULT and "widget" in ia:
+                widget = ia.widget
+            else:
+                if not isinstance(widgets, dict):
+                    widgets = {DEFAULT: widgets}
+                if widget != DEFAULT and widget not in widgets:
+                    raise NameError("Undefined widget: %s" % widget)
+                else:
+                    widget = widgets.get(widget)
+        ia.widget = widget
 
         if "script" in ia:
             if ia.script:
@@ -206,7 +222,7 @@ class S3Represent(object):
         @group Internal Methods: _setup,
                                  _lookup
     """
-    
+
     def __init__(self,
                  lookup=None,
                  key=None,
@@ -265,7 +281,9 @@ class S3Represent(object):
         self.queries = 0
         self.lazy = []
         self.lazy_show_link = False
-        
+
+        self.rows = {}
+
         # Attributes to simulate being a function for sqlhtml's represent()
         # Make sure we indicate only 1 position argument
         self.func_code = Storage(co_argcount = 1)
@@ -329,14 +347,14 @@ class S3Represent(object):
             output = current.T(v)
         else:
             output = v
-            
+
         if prefix and self.hierarchy:
             return self.htemplate % (prefix, output)
-                
+
         return output
 
     # -------------------------------------------------------------------------
-    def link(self, k, v, rows=None):
+    def link(self, k, v, row=None):
         """
             Represent a (key, value) as hypertext link.
 
@@ -349,8 +367,7 @@ class S3Represent(object):
 
             @param k: the key
             @param v: the representation of the key
-            @param rows: the rows (unused in the base class but can be used in
-                                   custom links)
+            @param row: the row with this key (unused in the base class)
         """
 
         if self.linkto:
@@ -389,7 +406,8 @@ class S3Represent(object):
             rows = [row] if row is not None else None
             items = self._lookup([value], rows=rows)
             if value in items:
-                r = self.link(value, items[value], rows) \
+                k, v = value, items[value]
+                r = self.link(k, v, row=self.rows.get(k)) \
                     if show_link else items[value]
             else:
                 r = self.default
@@ -432,16 +450,17 @@ class S3Represent(object):
             items = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = [[link(v, s3_unicode(items[v]), rows), ", "]
-                          if v in items else [default, ", "]
-                          for v in values]
+                rows = self.rows
+                labels = [[link(k, s3_unicode(items[k]), row=rows.get(k)), ", "]
+                          if k in items else [default, ", "]
+                          for k in values]
                 if labels:
                     return TAG[""](list(chain.from_iterable(labels))[:-1])
                 else:
                     return ""
             else:
-                labels = [s3_unicode(items[v])
-                          if v in items else default for v in values]
+                labels = [s3_unicode(items[k])
+                          if k in items else default for k in values]
                 if labels:
                     return ", ".join(labels)
         return self.none
@@ -452,7 +471,7 @@ class S3Represent(object):
             Represent multiple values as dict {value: representation}
 
             @param values: list of values
-            @param rows: the referenced rows (if values are foreign keys)
+            @param rows: the rows
             @param show_link: render each representation as link
 
             @return: a dict {value: representation}
@@ -469,7 +488,14 @@ class S3Represent(object):
         # Get the values
         if rows and self.table:
             key = self.key
-            values = [row[key] for row in rows]
+            _rows = self.rows
+            values = set()
+            add_value = values.add
+            for row in rows:
+                value = row[key]
+                _rows[value] = row
+                add_value(value)
+            values = list(values)
         elif self.list_type and list_type:
             try:
                 hasnone = None in values
@@ -488,10 +514,12 @@ class S3Represent(object):
             labels = self._lookup(values, rows=rows)
             if show_link:
                 link = self.link
-                labels = dict([(v, link(v, r, rows)) for v, r in labels.items()])
-            for v in values:
-                if v not in labels:
-                    labels[v] = self.default
+                rows = self.rows
+                labels = dict((k, link(k, v, rows.get(k)))
+                               for k, v in labels.items())
+            for k in values:
+                if k not in labels:
+                    labels[k] = self.default
         else:
             labels = {}
         labels[None] = self.none
@@ -590,20 +618,28 @@ class S3Represent(object):
         """
 
         theset = self.theset
-        
+
+        keys = {}
         items = {}
         lookup = {}
 
         # Check whether values are already in theset
-        for v in values:
+        table = self.table
+        for _v in values:
+            v = _v
+            if v is not None and table and isinstance(v, basestring):
+                try:
+                    v = int(_v)
+                except ValueError:
+                    pass
+            keys[v] = _v
             if v is None:
-                items[v] = self.none
+                items[_v] = self.none
             elif v in theset:
-                items[v] = theset[v]
+                items[_v] = theset[v]
             else:
                 lookup[v] = True
-                
-        table = self.table
+
         if table is None or not lookup:
             return items
 
@@ -614,8 +650,10 @@ class S3Represent(object):
             if h.config:
                 def lookup_parent(node_id):
                     parent = h.parent(node_id)
-                    if parent and parent not in theset:
-                        lookup[parent] = True
+                    if parent and \
+                       parent not in theset and \
+                       parent not in lookup:
+                        lookup[parent] = False
                         lookup_parent(parent)
                     return
                 for node_id in lookup.keys():
@@ -637,12 +675,14 @@ class S3Represent(object):
         pop = lookup.pop
         represent_row = self.represent_row
         if rows and not self.custom_lookup:
+            _rows = self.rows
             for row in rows:
                 k = row[key]
+                _rows[k] = row
                 if k not in theset:
                     theset[k] = represent_row(row)
                 if pop(k, None):
-                    items[k] = theset[k]
+                    items[keys.get(k, k)] = theset[k]
 
         # Retrieve additional rows as needed
         if lookup:
@@ -658,23 +698,25 @@ class S3Represent(object):
             else:
                 fields = []
             rows = self.lookup_rows(key, lookup.keys(), fields=fields)
+            rows = dict((row[key], row) for row in rows)
+            self.rows.update(rows)
             if h:
-                rows = dict((row[key], row) for row in rows)
                 represent_path = self._represent_path
                 for k, row in rows.items():
-                    lookup.pop(k, None)
-                    items[k] = represent_path(k, row, rows=rows, hierarchy=h)
+                    if lookup.pop(k, None):
+                        items[keys.get(k, k)] = represent_path(k,
+                                                               row,
+                                                               rows=rows,
+                                                               hierarchy=h)
             else:
-                for row in rows:
-                    k = row[key]
+                for k, row in rows.items():
                     lookup.pop(k, None)
-                    items[k] = theset[k] = represent_row(row)
+                    items[keys.get(k, k)] = theset[k] = represent_row(row)
 
         if lookup:
             for k in lookup:
-                items[k] = self.default
+                items[keys.get(k, k)] = self.default
 
-        # Done
         return items
 
     # -------------------------------------------------------------------------
@@ -693,12 +735,12 @@ class S3Represent(object):
 
         if value in theset:
             return theset[value]
-            
+
         represent_row = self.represent_row
 
         prefix = None
         parent = hierarchy.parent(value)
-        
+
         if parent:
             if parent in theset:
                 prefix = theset[parent]
@@ -798,8 +840,7 @@ class S3RepresentLazy(object):
 
         # Render value
         text = self.represent()
-        if hasattr(text, "xml"):
-            text = s3_unicode(text)
+        text = s3_unicode(text)
 
         # Strip markup + XML-escape
         if text and "<" in text:
@@ -998,8 +1039,6 @@ def s3_meta_fields():
         Normal meta-fields added to every table
     """
 
-    utable = current.auth.settings.table_user
-
     # Approver of a record
     s3_meta_approved_by = S3ReusableField("approved_by", "integer",
                                           readable=False,
@@ -1036,7 +1075,7 @@ def s3_role_required():
     represent = S3Represent(lookup="auth_group", fields=["role"])
     f = S3ReusableField("role_required", gtable,
             sortby="role",
-            requires = IS_NULL_OR(
+            requires = IS_EMPTY_OR(
                         IS_ONE_OF(current.db, "auth_group.id",
                                   represent,
                                   zero=T("Public"))),
@@ -1059,8 +1098,6 @@ def s3_roles_permitted(name="roles_permitted", **attr):
         - used by CMS
     """
 
-    from s3validators import IS_ONE_OF
-
     T = current.T
     represent = S3Represent(lookup="auth_group", fields=["role"])
     if "label" not in attr:
@@ -1070,10 +1107,10 @@ def s3_roles_permitted(name="roles_permitted", **attr):
     if "represent" not in attr:
         attr["represent"] = represent
     if "requires" not in attr:
-        attr["requires"] = IS_NULL_OR(IS_ONE_OF(current.db,
-                                                "auth_group.id",
-                                                represent,
-                                                multiple=True))
+        attr["requires"] = IS_EMPTY_OR(IS_ONE_OF(current.db,
+                                                 "auth_group.id",
+                                                 represent,
+                                                 multiple=True))
     if "comment" not in attr:
         attr["comment"] = DIV(_class="tooltip",
                               _title="%s|%s" % (T("Roles Permitted"),
@@ -1098,7 +1135,8 @@ def s3_comments(name="comments", **attr):
         attr["label"] = T("Comments")
     if "represent" not in attr:
         # Support HTML markup
-        attr["represent"] = lambda comments: XML(comments) or current.messages["NONE"]
+        attr["represent"] = lambda comments: \
+            XML(comments) if comments else current.messages["NONE"]
     if "widget" not in attr:
         attr["widget"] = s3_comments_widget
     if "comment" not in attr:
@@ -1130,7 +1168,7 @@ def s3_currency(name="currency", **attr):
         attr["requires"] = IS_IN_SET(currency_opts.keys(),
                                      zero=None)
     if "writable" not in attr:
-         attr["writable"] = settings.get_fin_currency_writable()
+        attr["writable"] = settings.get_fin_currency_writable()
 
     f = S3ReusableField(name, length=3,
                         **attr)
@@ -1145,6 +1183,14 @@ def s3_date(name="date", **attr):
             default == "now" (in addition to usual meanings)
             past = x months
             future = x months
+            start_field = "selector" for start field
+            default_interval = x months from start date
+            default_explicit = Bool for explicit default
+
+        start_field and default_interval should be given together
+
+        @ToDo: Different default field name in case we need to start supporting
+               Oracle, where 'date' is a reserved word
     """
 
     if "past" in attr:
@@ -1152,6 +1198,7 @@ def s3_date(name="date", **attr):
         del attr["past"]
     else:
         past = None
+
     if "future" in attr:
         future = attr["future"]
         del attr["future"]
@@ -1251,15 +1298,30 @@ def s3_date(name="date", **attr):
         else:
             # Default
             attr["requires"] = IS_EMPTY_OR(requires)
+
     if "widget" not in attr:
-        if past is None and future is None:
-            attr["widget"] = S3DateWidget()
-        elif past is None:
-            attr["widget"] = S3DateWidget(future=future)
-        elif future is None:
-            attr["widget"] = S3DateWidget(past=past)
-        else:
-            attr["widget"] = S3DateWidget(past=past, future=future)
+        # Widget Options
+        widget_option = {}
+
+        if "start_field" in attr:
+            widget_option["start_field"] = attr["start_field"]
+            del attr["start_field"]
+
+        if "default_interval" in attr:
+            widget_option["default_interval"] = attr["default_interval"]
+            del attr["default_interval"]
+
+        if "default_explicit" in attr:
+            widget_option["default_explicit"] = attr["default_explicit"]
+            del attr["default_explicit"]
+
+        if future:
+            widget_option["future"] = future
+
+        if past:
+            widget_option["past"] = past
+
+        attr["widget"] = S3DateWidget(**widget_option)
 
     f = S3ReusableField(name, "date", **attr)
     return f()
@@ -1267,7 +1329,7 @@ def s3_date(name="date", **attr):
 # =============================================================================
 def s3_datetime(name="date", **attr):
     """
-        Return a standard Datetime field
+        Return a standard DateTime field
 
         Additional options to normal S3ReusableField:
             default = "now" (in addition to usual meanings)
@@ -1275,6 +1337,9 @@ def s3_datetime(name="date", **attr):
             widget = "date" (in addition to usual meanings)
             past = x hours
             future = x hours
+
+        @ToDo: Different default field name in case we need to start supporting
+               Oracle, where 'date' is a reserved word
     """
 
     if "past" in attr:

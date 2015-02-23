@@ -2,7 +2,7 @@
 
 """ Sahana Eden Situation Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SituationModel"]
+__all__ = ("S3SituationModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -36,12 +36,14 @@ from ..s3 import *
 # =============================================================================
 class S3SituationModel(S3Model):
     """
+        Situation Super Entity & Presence tables for Trackable resources
     """
 
-    names = ["sit_situation",
+    names = ("sit_situation",
              "sit_trackable",
              "sit_presence",
-             ]
+             "sit_location",
+             )
 
     def model(self):
 
@@ -80,16 +82,19 @@ class S3SituationModel(S3Model):
         #   - add as super-entity in configure (super_entity=s3db.sit_trackable)
         #
         trackable_types = Storage(asset_asset = T("Asset"),
-                                  pr_person = T("Person"),
                                   dvi_body = T("Dead Body"),
+                                  event_resource = T("Event Resource"),
+                                  hrm_human_resource = T("Human Resource"),
+                                  pr_person = T("Person"),
                                   )
 
         tablename = "sit_trackable"
         super_entity(tablename, "track_id",
                      trackable_types,
                      Field("track_timestmp", "datetime",
-                           readable=False,
-                           writable=False),
+                           readable = False,
+                           writable = False,
+                           ),
                      )
 
         configure(tablename,
@@ -101,7 +106,7 @@ class S3SituationModel(S3Model):
         # Components
         self.add_components(tablename,
                             # Presence
-                            sit_presence=self.super_key("sit_trackable"),
+                            sit_presence = self.super_key("sit_trackable"),
                             )
 
         # ---------------------------------------------------------------------
@@ -113,10 +118,24 @@ class S3SituationModel(S3Model):
         tablename = "sit_presence"
         self.define_table(tablename,
                           self.super_link("track_id", "sit_trackable"),
-                          Field("timestmp", "datetime",
-                                label = T("Date/Time"),
+                          s3_datetime("timestmp",
+                                      label = T("Date/Time"),
+                                      ),
+                          location_id(
+                            widget = S3LocationSelector(show_address = False,
+                                                        show_postcode = False,
+                                                        show_latlon = True,
+                                                        ),
+                            ),
+                          Field("direction",
+                                label = T("Direction"),
                                 ),
-                          location_id(),
+                          Field("speed",
+                                label = T("Speed"),
+                                ),
+                          Field("accuracy",
+                                label = T("Accuracy"),
+                                ),
                           Field("interlock",
                                 readable = False,
                                 writable = False,
@@ -126,6 +145,22 @@ class S3SituationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(sit_location = self.sit_location,
+                    )
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def sit_location(row, tablename):
+        """
+            Virtual Field to return the current location of a Trackable
+            @ToDo: Bulk
+            @ToDo: Also show Timestamp of when seen there
+        """
+
+        s3db = current.s3db
+        tracker = S3Tracker()(s3db[tablename], row[tablename].id)
+        location = tracker.get_location(as_rows=True).first()
+
+        return s3db.gis_location_represent(None, row=location)
 
 # END =========================================================================

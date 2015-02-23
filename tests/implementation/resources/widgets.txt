@@ -1,0 +1,64 @@
+*** Settings ***
+Documentation       Keywords for UI widgets
+
+*** Variables ***
+
+*** Keywords ***
+
+#Resource: widegts.txt; Keyword: Select From MultiSelect
+Open MultiSelect
+    [Arguments]  ${selector}
+    [Documentation]  Opens the jQuery UI MultiSelect Menu for _selector_
+    Page Should Contain Element  jquery=#${selector} + button.ui-multiselect  Multiselect not found for "${selector}"
+    ${active}=  Execute JavaScript  return $('#${selector} + button.ui-multiselect').hasClass('ui-state-active');
+    Return From Keyword If  ${active} == ${true}  # already open
+    Click Button  jquery=#${selector} + button.ui-multiselect
+
+#Resource: widegts.txt; Keyword: Select From MultiSelect
+Close MultiSelect
+    [Arguments]  ${selector}
+    [Documentation]  Closes the jQuery UI MultiSelect Menu for _selector_
+    Page Should Contain Element  jquery=#${selector} + button.ui-multiselect  Multiselect not found for "${selector}"
+    ${active}=  Execute JavaScript  return $('#${selector} + button.ui-multiselect').hasClass('ui-state-active');
+    Return From Keyword If  ${active} == ${false}  # already closed
+    Click Button  jquery=#${selector} + button.ui-multiselect
+
+#Testsuite:hrm; Testcase:Finding Staff By Organization
+Select From MultiSelect
+    [Arguments]  ${selector}  ${label}
+    [Documentation]  Selects option _label_ from the jQuery UI MultiSelect Menu for _selector_
+    Open MultiSelect  ${selector}
+    ${count}=  Execute JavaScript  return $('input[id^="ui-multiselect-${selector}-option"]')
+               ...                 .filter(function(){return $(this).parent().text().indexOf("${label}") >= 0;})
+               ...                 .each(function(){if (!$(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
+    Should Be True  ${count} >= ${1}  Option not found: "${label}"
+    Close MultiSelect  ${selector}
+
+#Usage similar to the keyword: Select From Multiselect
+Deselect From MultiSelect
+    [Arguments]  ${selector}  ${label}
+    [Documentation]  De-selects option _label_ from the jQuery UI MultiSelect Menu for _selector_
+    Open MultiSelect  ${selector}
+    ${count}=  Execute JavaScript  return $('input[id^="ui-multiselect-${selector}-option"]')
+               ...                 .filter(function(){return $(this).parent().text().indexOf("${label}") >= 0;})
+               ...                 .each(function(){if ($(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
+    Should Be True  ${count} >= ${1}  Option not found: "${label}"
+    Close MultiSelect  ${selector}
+
+#Usage similar to the keyword: Select From Multiselect
+Select All From MultiSelect
+    [Arguments]  ${selector}
+    [Documentation]  Selects all options from the jQuery UI MultiSelect Menu for _selector_
+    Open MultiSelect  ${selector}
+    ${count}=  Execute JavaScript  return $('input[type="checkbox"][id^="ui-multiselect-${selector}-option"]')
+               ...                 .each(function(){if (!$(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
+    Close MultiSelect  ${selector}
+
+#Usage similar to the keyword: Select From Multiselect
+Deselect All From MultiSelect
+    [Arguments]  ${selector}
+    [Documentation]  De-selects all options from the jQuery UI MultiSelect Menu for _selector_
+    Open MultiSelect  ${selector}
+    ${count}=  Execute JavaScript  return $('input[type="checkbox"][id^="ui-multiselect-${selector}-option"]')
+               ...                 .each(function(){if ($(this).prop("checked"))$(this).trigger("click.multiselect");}).length;
+    Close MultiSelect  ${selector}

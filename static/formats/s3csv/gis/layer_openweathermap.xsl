@@ -49,7 +49,6 @@
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
         </resource>
 
         <resource name="gis_layer_config">
@@ -72,6 +71,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
         </resource>

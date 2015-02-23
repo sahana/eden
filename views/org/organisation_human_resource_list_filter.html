@@ -1,0 +1,4 @@
+{{extend "layout.html"}}
+{{try:}}{{=sform}}{{except:}}{{pass}}
+{{include "hrm/org_choose.html"}}
+{{include response.s3.views.get("list_filter.html", "_list_filter.html")}}

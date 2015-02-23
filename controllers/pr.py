@@ -2,8 +2,6 @@
 
 """
     Person Registry, Controllers
-
-    @see: U{http://eden.sahanafoundation.org/wiki/BluePrintVITA}
 """
 
 module = request.controller
@@ -118,11 +116,6 @@ def person():
     set_org_dependent_field("pr_person_details", "affiliations")
     set_org_dependent_field("pr_person_details", "company")
 
-    # Custom Method for Contacts
-    s3db.set_method(module, resourcename,
-                    method="contacts",
-                    action=s3db.pr_contacts)
-
     def prep(r):
         if r.representation == "json" and \
            not r.component and session.s3.filter_staff:
@@ -138,102 +131,108 @@ def person():
 
                 # S3SQLCustomForm breaks popup return, so disable
                 s3db.clear_config("pr_person", "crud_form")
+            if r.component:
+                component_name = r.component_name
+                if component_name == "config":
+                    ctable = s3db.gis_config
+                    s3db.gis_config_form_setup()
+                    # Name will be generated from person's name.
+                    field = ctable.name
+                    field.readable = field.writable = False
+                    # Hide Location
+                    field = ctable.region_location_id
+                    field.readable = field.writable = False
 
-            if r.component_name == "config":
-                _config = s3db.gis_config
-                s3db.gis_config_form_setup()
-                # Name will be generated from person's name.
-                _config.name.readable = _config.name.writable = False
-                # Hide Location
-                _config.region_location_id.readable = _config.region_location_id.writable = False
+                elif component_name == "competency":
+                    ctable = s3db.hrm_competency
+                    ctable.organisation_id.writable = False
+                    ctable.skill_id.comment = None
 
-            elif r.component_name == "competency":
-                ctable = s3db.hrm_competency
-                ctable.organisation_id.writable = False
-                ctable.skill_id.comment = None
-
-            elif r.component_name == "saved_search":
-                if r.method == "load":
-                    if r.component_id:
-                        table = db.pr_saved_search
-                        record = db(table.id == r.component_id).select(table.url,
-                                                                       limitby=(0, 1)
-                                                                       ).first()
-                        if record:
-                            redirect(record.url)
-                        else:
-                            raise HTTP(404)
+                elif component_name == "group_membership":
+                    s3db.configure("pr_group_membership",
+                                   list_fields = ["id",
+                                                  "group_id",
+                                                  "group_head",
+                                                  "comments",
+                                                  ],
+                                   )
 
         return True
     s3.prep = prep
 
-    # def postp(r, output):
-        # if r.component_name == "saved_search" and r.method in (None, "search"):
-            # s3_action_buttons(r)
-            # s3.actions.append(
-                # dict(url=URL(args=r.args + ["[id]", "load"]),
-                     # label=str(T("Load")),
-                     # _class="action-btn")
-            # )
-        # return output
-    # s3.postp = postp
-
-    s3db.configure("pr_group_membership",
-                   list_fields=["id",
-                                "group_id",
-                                "group_head",
-                                "comments",
-                                ])
-
-    # Basic tabs
+    # Tabs
     tabs = [(T("Basic Details"), None),
             (T("Address"), "address"),
             #(T("Contacts"), "contact"),
-            (T("Contact Details"), "contacts"),
-            (T("Images"), "image"),
-            (T("Identity"), "identity"),
-            (T("Education"), "education"),
-            (T("Groups"), "group_membership"),
-            (T("Journal"), "note"),
-            (T("Skills"), "competency"),
-            (T("Training"), "training"),
-            (T("Saved Searches"), "saved_search"),
             ]
 
-    # Configuration tabs
-    tabs.append((T("Map Settings"), "config"))
+    set_method = s3db.set_method
+    contacts_tabs = settings.get_pr_contacts_tabs()
+    if "all" in contacts_tabs:
+        s3db.set_method(module, resourcename,
+                        method = "contacts",
+                        action = s3db.pr_Contacts)
+        tabs.append((T("Contacts"), "contacts"))
+    if "public" in contacts_tabs:
+        s3db.set_method(module, resourcename,
+                        method = "public_contacts",
+                        action = s3db.pr_Contacts)
+        tabs.append((T("Public Contacts"), "public_contacts"))
+    if "private" in contacts_tabs and auth.is_logged_in():
+        s3db.set_method(module, resourcename,
+                        method = "private_contacts",
+                        action = s3db.pr_Contacts)
+        tabs.append((T("Private Contacts"), "private_contacts"))
 
-    s3db.configure("pr_person", listadd=False, insertable=True)
+    tabs += [(T("Images"), "image"),
+             (T("Identity"), "identity"),
+             (T("Education"), "education"),
+             (T("Groups"), "group_membership"),
+             (T("Journal"), "note"),
+             (T("Skills"), "competency"),
+             (T("Training"), "training"),
+             (T("Map Settings"), "config"),
+             ]
 
-    output = s3_rest_controller(main="first_name",
-                                extra="last_name",
-                                rheader=lambda r: \
-                                        s3db.pr_rheader(r, tabs=tabs))
+    s3db.configure("pr_person",
+                   insertable = True,
+                   listadd = False,
+                   )
+
+    output = s3_rest_controller(main = "first_name",
+                                extra = "last_name",
+                                rheader = lambda r: \
+                                            s3db.pr_rheader(r, tabs=tabs))
 
     return output
 
 # -----------------------------------------------------------------------------
 def address():
-    """
-        RESTful controller to allow creating/editing of address records within
-        contacts()
-    """
+    """ RESTful CRUD controller """
 
     # CRUD pre-process
     def prep(r):
-        get_vars = request.get_vars
         person_id = get_vars.get("person", None)
         if person_id:
-            # Currently no other options available, but we could create hrm
-            # & vol specific versions
+            # Coming from s3.contacts.js [s3db.pr_contacts()]
+            # - currently not used as can't load Google Maps properly
+            # Lookup the controller
             controller = get_vars.get("controller", "pr")
+            # Lookup the access
+            access = get_vars.get("access", None)
+            if access is None:
+                method = "contacts"
+            elif access == "1":
+                method = "private_contacts"
+            elif access == "2":
+                method = "public_contacts"
             s3db.configure("pr_address",
-                            create_next=URL(c=controller,
-                                            f="person",
-                                            args=[person_id, "contacts"]),
-                            update_next=URL(c=controller,
-                                            f="person",
-                                            args=[person_id, "contacts"])
+                            create_next = URL(c=controller,
+                                              f="person",
+                                              args=[person_id, method]),
+                            update_next = URL(c=controller,
+                                              f="person",
+                                              args=[person_id, method])
                             )
             if r.method == "create":
                 table = s3db.pr_person
@@ -242,11 +241,20 @@ def address():
                                                          ).first().pe_id
                 s3db.pr_address.pe_id.default = pe_id
 
-        elif r.method in ("create", "create.popup"):
-            # Coming from Profile page
-            pe_id = get_vars.get("~.pe_id", None)
-            if pe_id:
-                s3db.pr_address.pe_id.default = pe_id
+        else:
+            field = s3db.pr_address.pe_id
+            if r.method == "create":
+                pe_id = get_vars.get("~.pe_id", None)
+                if pe_id:
+                    # Coming from Profile page
+                    field.default = pe_id
+                else:
+                    field.label = T("Entity")
+                    field.readable = field.writable = True
+            else:
+                # No known workflow uses this
+                field.label = T("Entity")
+                field.readable = field.writable = True
 
         return True
     s3.prep = prep
@@ -256,39 +264,67 @@ def address():
 
 # -----------------------------------------------------------------------------
 def contact():
-    """
-        RESTful controller to allow creating/editing of contact records within
-        contacts()
-    """
+    """ RESTful CRUD controller """
 
     # CRUD pre-process
     def prep(r):
-        get_vars = request.get_vars
         person_id = get_vars.get("person", None)
         if person_id:
-            # Currently no other options available, but we could create hrm
-            # & vol specific versions
+            # Coming from s3.contacts.js [s3db.pr_Contacts()]
+            # Lookup the controller
             controller = get_vars.get("controller", "pr")
+            # Lookup the access
+            access = get_vars.get("access", None)
+            if access is None:
+                method = "contacts"
+            elif access == "1":
+                method = "private_contacts"
+            elif access == "2":
+                method = "public_contacts"
             s3db.configure("pr_contact",
-                           create_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, "contacts"]),
-                           update_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, "contacts"])
+                           create_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, method]),
+                           update_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, method])
                            )
             if r.method == "create":
                 table = s3db.pr_person
                 pe_id = db(table.id == person_id).select(table.pe_id,
                                                          limitby=(0, 1)
                                                          ).first().pe_id
-                s3db.pr_contact.pe_id.default = pe_id
-
-        elif r.method in ("create", "create.popup"):
-            # Coming from Profile page
-            pe_id = get_vars.get("~.pe_id", None)
-            if pe_id:
-                s3db.pr_contact.pe_id.default = pe_id
+                table = s3db.pr_contact
+                table.pe_id.default = pe_id
+                # Public or Private?
+                if access:
+                    table.access.default = access
+        else:
+            field = s3db.pr_contact.pe_id
+            if r.method in ("create", "create.popup"):
+                # Coming from Profile page
+                pe_id = get_vars.get("~.pe_id", None)
+                if pe_id:
+                    field.default = pe_id
+                else:
+                    field.label = T("Entity")
+                    field.readable = field.writable = True
+            else:
+                # @ToDo: Document which workflow uses this?
+                field.label = T("Entity")
+                field.readable = field.writable = True
+                from s3 import S3TextFilter, S3OptionsFilter
+                filter_widgets = [S3TextFilter(["value",
+                                                "comments",
+                                                ],
+                                               label = T("Search"),
+                                               comment = T("You can search by value or comments."),
+                                               ),
+                                  S3OptionsFilter("contact_method"),
+                                  ]
+                s3db.configure("pr_contact",
+                               filter_widgets = filter_widgets,
+                               )
 
         return True
     s3.prep = prep
@@ -305,17 +341,24 @@ def contact_emergency():
 
     # CRUD pre-process
     def prep(r):
-        get_vars = request.get_vars
-        controller = get_vars.get("controller", "pr")
         person_id = get_vars.get("person", None)
         if person_id:
+            controller = get_vars.get("controller", "pr")
+            # Lookup the access
+            access = get_vars.get("access", None)
+            if access is None:
+                method = "contacts"
+            elif access == "1":
+                method = "private_contacts"
+            elif access == "2":
+                method = "public_contacts"
             s3db.configure("pr_contact_emergency",
                            create_next=URL(c=controller,
                                            f="person",
-                                           args=[person_id, "contacts"]),
+                                           args=[person_id, method]),
                            update_next=URL(c=controller,
                                            f="person",
-                                           args=[person_id, "contacts"])
+                                           args=[person_id, method])
                            )
             if r.method == "create":
                 table = s3db.pr_person
@@ -323,6 +366,17 @@ def contact_emergency():
                 pe_id = db(query).select(table.pe_id,
                                          limitby=(0, 1)).first().pe_id
                 s3db.pr_contact_emergency.pe_id.default = pe_id
+        else:
+            field = s3db.pr_contact_emergency.pe_id
+            if r.method == "create" and r.representation == "popup":
+                # Coming from Profile page
+                pe_id = get_vars.get("~.pe_id", None)
+                if pe_id:
+                    field.default = pe_id
+                else:
+                    field.label = T("Entity")
+                    field.readable = field.writable = True
+
         return True
     s3.prep = prep
 
@@ -341,14 +395,25 @@ def person_search():
     return s3_rest_controller(module, "person")
 
 # -----------------------------------------------------------------------------
+def check_duplicates():
+    """
+        Person REST controller
+        - limited to just check_duplicates for use in S3AddPersonWidget2
+        - allows differential access permissions
+    """
+
+    s3.prep = lambda r: r.method == "check_duplicates"
+    return s3_rest_controller(module, "person")
+
+# -----------------------------------------------------------------------------
 def group():
     """ RESTful CRUD controller """
 
-    tablename = "pr_group"
-    table = s3db[tablename]
+    FS = s3base.S3FieldSelector
+    s3.filter = (FS("group.system") == False) # do not show system groups
 
-    s3.filter = (table.system == False) # do not show system groups
-
+    # Modify list_fields for the component tab
+    table = s3db.pr_group_membership
     s3db.configure("pr_group_membership",
                    list_fields = ["id",
                                   "person_id",
@@ -381,7 +446,7 @@ def education():
     def prep(r):
         if r.method in ("create", "create.popup", "update", "update.popup"):
             # Coming from Profile page?
-            person_id = request.get_vars.get("~.person_id", None)
+            person_id = get_vars.get("~.person_id", None)
             if person_id:
                 field = s3db.pr_education.person_id
                 field.default = person_id
@@ -391,6 +456,12 @@ def education():
     s3.prep = prep
 
     return s3_rest_controller("pr", "education")
+
+# -----------------------------------------------------------------------------
+def education_level():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller("pr", "education_level")
 
 # -----------------------------------------------------------------------------
 #def contact():
@@ -459,7 +530,7 @@ def tooltip():
 # =============================================================================
 def filter():
     """
-        REST controller for new S3Filter saved searches
+        REST controller for saved filters
     """
 
     # Page length
@@ -483,14 +554,6 @@ def filter():
 
     output = s3_rest_controller()
     return output
-
-# -----------------------------------------------------------------------------
-def saved_search():
-    """
-        REST controller for old S3Search saved searches
-    """
-
-    return s3_rest_controller()
 
 # =============================================================================
 def human_resource():

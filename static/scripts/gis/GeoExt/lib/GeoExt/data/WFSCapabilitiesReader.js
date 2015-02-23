@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2008-2011 The Open Source Geospatial Foundation
+ * Copyright (c) 2008-2012 The Open Source Geospatial Foundation
  * 
  * Published under the BSD license.
  * See http://svn.geoext.org/core/trunk/geoext/license.txt for the full text
@@ -98,8 +98,13 @@ Ext.extend(GeoExt.data.WFSCapabilitiesReader, Ext.data.DataReader, {
         var featureType, values, field, v, parts, layer;
         var layerOptions, protocolOptions;
 
+        var url = (parseFloat(data.version) >= 1.1) ? 
+            data.operationsMetadata && data.operationsMetadata["GetFeature"].dcp.http.post[0].url :
+                data.capability.request.getfeature.href.post;
+
         var protocolDefaults = {
-            url: data.capability.request.getfeature.href.post
+            url: url,
+            version : data.version
         };
 
         var records = [];

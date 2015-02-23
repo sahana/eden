@@ -109,6 +109,10 @@ div#rheader td {
 }
 div#rheader th {
 }
+.rheader-avatar {
+    float: left;
+    clear: right;
+}
 
 /* Tabs */
 div.tabs {
@@ -502,20 +506,11 @@ table.dataTable thead th {
 div#table-container th {
 
 }
-div#table-container th.rtotal {
-}
 div#table-container tr.even td {
 
 }
 div#table-container tr.odd td {
 
-}
-div#table-container tr.odd td.rtotal,
-div#table-container tr.even td.rtotal {
-}
-div#table-container tr.totals_row {
-}
-div#table-container td.totals_header {
 }
 
 .list_formats {

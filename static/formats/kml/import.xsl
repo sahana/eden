@@ -10,7 +10,7 @@
          http://schemas.opengis.net/kml/2.2.0/
          http://code.google.com/apis/kml/documentation/kmlreference.html
 
-         Copyright (c) 2011-13 Sahana Software Foundation
+         Copyright (c) 2011-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -102,6 +102,11 @@
                     <xsl:call-template name="feed"/>
                 </xsl:when>
 
+                <!-- Hazards -->
+                <xsl:when test="$name='risk'">
+                    <xsl:call-template name="hazards"/>
+                </xsl:when>
+
                 <!-- Hospitals -->
                 <xsl:when test="$name='hospital'">
                     <xsl:call-template name="hospitals"/>
@@ -186,6 +191,38 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="hazards">
+        <xsl:for-each select="//kml:Placemark">
+            <xsl:call-template name="hazard"/>
+       </xsl:for-each>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="hazard">
+        <resource name="vulnerability_risk">
+            <xsl:variable name="comments">
+                <xsl:value-of select="./kml:description/text()"/>
+            </xsl:variable>
+
+            <data field="name">
+                <xsl:value-of select="./kml:name/text()"/>
+            </data>
+            <xsl:if test="$comments!=''">
+                <data field="comments">
+                    <!-- @ToDo: Cleanup HTML? -->
+                    <xsl:value-of select="$comments"/>
+                </data>
+            </xsl:if>
+
+            <!-- Location Info -->
+            <reference field="location_id" resource="gis_location">
+                <xsl:call-template name="location"/>
+            </reference>
+
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="hospitals">
         <xsl:for-each select="//kml:Placemark">
             <xsl:call-template name="hospital"/>
@@ -195,14 +232,20 @@
     <!-- ****************************************************************** -->
     <xsl:template name="hospital">
         <resource name="hms_hospital">
+            <xsl:variable name="comments">
+                <xsl:value-of select="./kml:description/text()"/>
+            </xsl:variable>
+
 
             <data field="name">
                 <xsl:value-of select="./kml:name/text()"/>
             </data>
-            <data field="comments">
-                <!-- @ToDo: Cleanup HTML? -->
-                <xsl:value-of select="./kml:description/text()"/>
-            </data>
+            <xsl:if test="$comments!=''">
+                <data field="comments">
+                    <!-- @ToDo: Cleanup HTML? -->
+                    <xsl:value-of select="$comments"/>
+                </data>
+            </xsl:if>
 
             <!-- Location Info -->
             <reference field="location_id" resource="gis_location">
@@ -222,17 +265,21 @@
     <!-- ****************************************************************** -->
     <xsl:template name="shelter">
         <resource name="cr_shelter">
-
+            <xsl:variable name="comments">
+                <xsl:value-of select="./kml:description/text()"/>
+            </xsl:variable>
 
             <xsl:choose>
                 <xsl:when test="$xsltmode != 'extended'">
                     <data field="name">
                         <xsl:value-of select="./kml:name/text()"/>
                     </data>
-                    <data field="comments">
-                        <!-- @ToDo: Cleanup HTML? -->
-                        <xsl:value-of select="./kml:description/text()"/>
-                    </data>
+                    <xsl:if test="$comments!=''">
+                        <data field="comments">
+                            <!-- @ToDo: Cleanup HTML? -->
+                            <xsl:value-of select="$comments"/>
+                        </data>
+                    </xsl:if>
                 </xsl:when>
             </xsl:choose>
 
@@ -362,24 +409,254 @@
 
             <!-- Handle Points -->
             <xsl:for-each select="./kml:Point">
-                <xsl:call-template name="point"/>
+                <xsl:call-template name="Point">
+                     <xsl:with-param name="coordinates" select="normalize-space(./kml:coordinates/text())"/>
+                </xsl:call-template>
             </xsl:for-each>
 
             <!-- Handle Linestrings -->
-            <!--
             <xsl:for-each select="./kml:LineString">
-                <xsl:call-template name="linestring"/>
+                <xsl:call-template name="LineString">
+                     <xsl:with-param name="coordinates" select="normalize-space(./kml:coordinates/text())"/>
+                </xsl:call-template>
             </xsl:for-each>
-            -->
 
-            <!-- Handle Polygons -->
-            <!--
+            <!-- Handle Polygons
             <xsl:for-each select="./kml:Polygon">
-                <xsl:call-template name="polygon"/>
+                <xsl:call-template name="Polygon"/>
+            </xsl:for-each> -->
+
+            <!-- Handle MultiGeometry -->
+            <xsl:for-each select="./kml:MultiGeometry">
+                <xsl:call-template name="MultiGeometry"/>
             </xsl:for-each>
-            -->
 
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Point">
+        <xsl:param name="coordinates"/>
+
+        <data field="gis_feature_type">1</data>
+        <data field="lat">
+            <xsl:call-template name="lat">
+                <xsl:with-param name="coordinates" select="$coordinates"/>
+            </xsl:call-template>
+        </data>
+        <data field="lon">
+            <xsl:call-template name="lon">
+                <xsl:with-param name="coordinates" select="$coordinates"/>
+            </xsl:call-template>
+        </data>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="point">
+        <xsl:param name="coordinates"/>
+
+        <xsl:text>POINT(</xsl:text>
+        <xsl:call-template name="coordinates">
+            <xsl:with-param name="list" select="$coordinates"/>
+        </xsl:call-template>
+        <xsl:text>)</xsl:text>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="LineString">
+        <xsl:param name="coordinates"/>
+
+        <data field="gis_feature_type">2</data>
+        <data field="wkt">
+            <xsl:call-template name="linestring">
+                <xsl:with-param name="coordinates" select="$coordinates"/>
+            </xsl:call-template>
+        </data>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="linestring">
+        <xsl:param name="coordinates"/>
+
+        <xsl:text>LINESTRING(</xsl:text>
+        <xsl:call-template name="coordinates">
+            <xsl:with-param name="list" select="$coordinates"/>
+        </xsl:call-template>
+        <xsl:text>)</xsl:text>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Polygon">
+        <xsl:param name="coordinates"/>
+
+        <data field="gis_feature_type">3</data>
+        <data field="wkt">
+            <xsl:call-template name="polygon">
+                <xsl:with-param name="coordinates" select="$coordinates"/>
+            </xsl:call-template>
+        </data>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="polygon">
+        <xsl:param name="coordinates"/>
+
+        <!-- @ToDo Convert Coordinates to build WKT string -->
+        <!-- http://code.google.com/apis/kml/documentation/kml_tut.html#polygons -->
+        <!-- http://en.wikipedia.org/wiki/Well-known_text -->
+        <xsl:text>POLYGON((</xsl:text>
+        <xsl:call-template name="coordinates">
+            <xsl:with-param name="list" select="$coordinates"/>
+        </xsl:call-template>
+        <xsl:text>))</xsl:text>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="MultiGeometry">
+        <data field="gis_feature_type">7</data>
+        <data field="wkt">
+            <xsl:text>GEOMETRYCOLLECTION(</xsl:text>
+
+             <!-- Handle Points -->
+            <xsl:for-each select="./kml:Point">
+                <xsl:call-template name="point">
+                    <xsl:with-param name="coordinates" select="normalize-space(./kml:coordinates/text())"/>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Handle Linestrings -->
+            <xsl:for-each select="./kml:LineString">
+                <xsl:call-template name="linestring">
+                    <xsl:with-param name="coordinates" select="normalize-space(./kml:coordinates/text())"/>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Handle Polygons
+            <xsl:for-each select="./kml:Polygon">
+                <xsl:call-template name="polygon">
+                    <xsl:with-param name="coordinates" select="normalize-space(./kml:coordinates/text())"/>
+                </xsl:call-template>
+            </xsl:for-each> -->
+
+            <xsl:text>)</xsl:text>
+        </data>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="coordinates">
+        <xsl:param name="list"/>
+        <xsl:param name="listsep" select="' '"/>
+        <xsl:choose>
+            <xsl:when test="contains ($list, $listsep)">
+                <!-- Additional Coordinate present -->
+                <xsl:variable name="head">
+                    <xsl:value-of select="substring-before($list, $listsep)"/>
+                </xsl:variable>
+                <xsl:variable name="tail">
+                    <xsl:value-of select="substring-after($list, $listsep)"/>
+                </xsl:variable>
+                <xsl:call-template name="coordinate">
+                    <xsl:with-param name="pair" select="normalize-space($head)"/>
+                </xsl:call-template>
+                <xsl:text>, </xsl:text>
+                <xsl:call-template name="coordinates">
+                    <xsl:with-param name="list" select="$tail"/>
+                    <xsl:with-param name="listsep" select="$listsep"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:call-template name="coordinate">
+                    <xsl:with-param name="pair" select="normalize-space($list)"/>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="coordinate">
+        <xsl:param name="pair"/>
+        <!-- Lon -->
+        <xsl:value-of select="substring-before($pair, ',')"/>
+        <xsl:text> </xsl:text>
+        <!-- Lat -->
+        <xsl:choose>
+            <xsl:when test="contains (substring-after($pair, ','), ',')">
+                <!-- Altitude field present -->
+                <xsl:value-of select="substring-before(substring-after($pair, ','), ',')"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Altitude field not present -->
+                <xsl:value-of select="substring-after($pair, ',')"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="lon">
+        <xsl:param name="coordinates"/>
+        <xsl:call-template name="left-trim">
+            <xsl:with-param name="s" select="substring-before($coordinates, ',')"/>
+        </xsl:call-template>
+    </xsl:template>
+
+    <xsl:template name="lat">
+        <xsl:param name="coordinates"/>
+        <xsl:choose>
+            <xsl:when test="contains (substring-after($coordinates, ','), ',')">
+                <!-- Altitude field present -->
+                <xsl:value-of select="substring-before(substring-after($coordinates, ','), ',')"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- Altitude field not present -->
+                <xsl:call-template name="right-trim">
+                    <xsl:with-param name="s" select="substring-after($coordinates, ',')"/>
+                </xsl:call-template>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+
+    <xsl:template name="left-trim">
+      <xsl:param name="s" />
+      <xsl:choose>
+        <xsl:when test="substring($s, 1, 1) = ''">
+          <xsl:value-of select="$s"/>
+        </xsl:when>
+        <xsl:when test="normalize-space(substring($s, 1, 1)) = ''">
+          <xsl:call-template name="left-trim">
+            <xsl:with-param name="s" select="substring($s, 2)" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$s" />
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:template>
+
+    <xsl:template name="right-trim">
+      <xsl:param name="s" />
+      <xsl:choose>
+        <xsl:when test="substring($s, 1, 1) = ''">
+          <xsl:value-of select="$s"/>
+        </xsl:when>
+        <xsl:when test="normalize-space(substring($s, string-length($s))) = ''">
+          <xsl:call-template name="right-trim">
+            <xsl:with-param name="s" select="substring($s, 1, string-length($s) - 1)" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$s" />
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:template>
+
+    <!-- Convert a string to uppercase -->
+    <xsl:template name="uppercase">
+        <xsl:param name="string"/>
+        <xsl:value-of select="translate($string,
+            'abcdefghijklmnopqrstuvwxyzáéíóúàèìòùäöüåâêîôûãẽĩõũø',
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÀÈÌÒÙÄÖÜÅÂÊÎÔÛÃẼĨÕŨØ')"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -483,115 +760,6 @@
                 </resource>
             </xsl:if>
         </xsl:for-each>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="point">
-        <data field="gis_feature_type">1</data>
-        <data field="lat">
-            <xsl:call-template name="lat">
-                <xsl:with-param name="coordinate" select="./kml:coordinates/text()"/>
-            </xsl:call-template>
-        </data>
-        <data field="lon">
-            <xsl:call-template name="lon">
-                <xsl:with-param name="coordinate" select="./kml:coordinates/text()"/>
-            </xsl:call-template>
-        </data>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="linestring">
-        <data field="gis_feature_type">2</data>
-        <data field="wkt">
-            <xsl:text>LINESTRING(</xsl:text>
-            <!-- @ToDo Convert Coordinates to build WKT string -->
-            <!-- http://code.google.com/apis/kml/documentation/kml_tut.html#paths -->
-            <!-- http://en.wikipedia.org/wiki/Well-known_text -->
-            <xsl:value-of select="./kml:coordinates/text()"/>
-            <xsl:text>)</xsl:text>
-        </data>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="polygon">
-        <data field="gis_feature_type">3</data>
-        <data field="wkt">
-            <xsl:text>POLYGON((</xsl:text>
-            <!-- @ToDo Convert Coordinates to build WKT string -->
-            <!-- http://code.google.com/apis/kml/documentation/kml_tut.html#polygons -->
-            <!-- http://en.wikipedia.org/wiki/Well-known_text -->
-            <xsl:value-of select="./kml:coordinates/text()"/>
-            <xsl:text>))</xsl:text>
-        </data>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="lon">
-        <xsl:param name="coordinate"/>
-        <xsl:call-template name="left-trim">
-            <xsl:with-param name="s" select="substring-before($coordinate, ',')"/>
-        </xsl:call-template>
-    </xsl:template>
-
-    <xsl:template name="lat">
-        <xsl:param name="coordinate"/>
-        <xsl:choose>
-            <xsl:when test="contains (substring-after($coordinate, ','), ',')">
-                <!-- Altitude field present -->
-                <xsl:value-of select="substring-before(substring-after($coordinate, ','), ',')"/>
-            </xsl:when>
-            <xsl:otherwise>
-                <!-- Altitude field not present -->
-                <xsl:call-template name="right-trim">
-                    <xsl:with-param name="s" select="substring-after($coordinate, ',')"/>
-                </xsl:call-template>
-            </xsl:otherwise>
-        </xsl:choose>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-
-    <xsl:template name="left-trim">
-      <xsl:param name="s" />
-      <xsl:choose>
-        <xsl:when test="substring($s, 1, 1) = ''">
-          <xsl:value-of select="$s"/>
-        </xsl:when>
-        <xsl:when test="normalize-space(substring($s, 1, 1)) = ''">
-          <xsl:call-template name="left-trim">
-            <xsl:with-param name="s" select="substring($s, 2)" />
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="$s" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:template>
-
-    <xsl:template name="right-trim">
-      <xsl:param name="s" />
-      <xsl:choose>
-        <xsl:when test="substring($s, 1, 1) = ''">
-          <xsl:value-of select="$s"/>
-        </xsl:when>
-        <xsl:when test="normalize-space(substring($s, string-length($s))) = ''">
-          <xsl:call-template name="right-trim">
-            <xsl:with-param name="s" select="substring($s, 1, string-length($s) - 1)" />
-          </xsl:call-template>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="$s" />
-        </xsl:otherwise>
-      </xsl:choose>
-    </xsl:template>
-
-    <!-- Convert a string to uppercase -->
-    <xsl:template name="uppercase">
-        <xsl:param name="string"/>
-        <xsl:value-of select="translate($string,
-            'abcdefghijklmnopqrstuvwxyzáéíóúàèìòùäöüåâêîôûãẽĩõũø',
-            'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÀÈÌÒÙÄÖÜÅÂÊÎÔÛÃẼĨÕŨØ')"/>
     </xsl:template>
 
     <!-- ****************************************************************** -->

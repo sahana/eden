@@ -12,9 +12,9 @@
          Comments.............string..........Comments
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
+    <xsl:import href="../commons.xsl"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:output method="xml"/>
 
     <!-- Indexes for faster processing -->
     <xsl:key name="region" match="row" use="col[@field='Parent']"/>

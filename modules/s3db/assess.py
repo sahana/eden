@@ -2,7 +2,7 @@
 
 """ Sahana Eden Assessments Model
 
-    @copyright: 2012-13 (c) Sahana Software Foundation
+    @copyright: 2012-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,9 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AssessBuildingModel",
+__all__ = ("S3Assess24HModel",
+           "S3AssessBuildingModel",
            "S3AssessCanvassModel",
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -38,36 +39,7 @@ from ..s3 import *
 
 T = current.T
 
-assess_additional_needs_opts = {
-    1 : T("Shelter"),
-    2 : T("Information -Mold -FEMA -Legal"),
-    3 : T("Other"),
-    4 : T("Food"),
-    }
-
-assess_construction_type_opts = {
-    1 : T("Concrete"),
-    2 : T("Brick"),
-    3 : T("Wood Frame"),
-    4 : T("Metal Stud"),
-    4 : T("Other"),
-    }
-
-assess_damage_opts = {
-    1 : T("Primarily Flood"),
-    2 : T("Wind/Wind driven rain"),
-    3 : T("Other"),
-    }
-
-assess_insurance_opts = {
-    1 : T("Property"),
-    2 : T("Flood (Structure)"),
-    3 : T("Wind/Hurricane"),
-    4 : T("Sewer Back-up"),
-    5 : T("Flood (Contents)"),
-    6 : T("NONE"),
-    }
-
+# Common to both Building & Canvass
 assess_property_type_opts = {
     1 : T("Single Family"),
     2 : T("Multi-Family/Apts"),
@@ -75,91 +47,90 @@ assess_property_type_opts = {
     4 : T("Business"),
     }
 
-assess_tools_opts = {
-    1 : T("Pump/Hoses"),
-    2 : T("Flat bar"),
-    3 : T("Dust pan"),
-    4 : T("Large pails"),
-    5 : T("Long pry bar"),
-    6 : T("Brooms"),
-    7 : T("Shovels"),
-    8 : T("Pick axe"),
-    9 : T("Trash bags"),
-    10 : T("Wheelbarrows"),
-    11 : T("Hammers"),
-    12 : T("Cleaning Supplies"),
-    13 : T("Crowbar"),
-    14 : T("Sledgehammer"),
-    15 : "",
-    16 : T("Nail pullers/cat's claws"),
-    17 : T("Generator"),
-    18 : T("Screwdrivers"),
-    19 : T("Chalk line"),
-    20 : T("Portable lights"),
-    21 : T("Wrench"),
-    22 : T("Sawzall"),
-    23 : T("Extension cords"),
-    24 : "",
-    25 : T("Utility knives"),
-    26 : T("Headlamps"),
-    21 : "",
-    }
+# =============================================================================
+class S3Assess24HModel(S3Model):
+    """
+        IFRC 24H Assessment form
+    """
 
-assess_mold_removal_opts = {
-    1 : T("Wire brush"),
-    2 : T("Demolding solution"),
-    3 : T("Tyvek suits"),
-    4 : T("Grinder"),
-    5 : T("Paint brushes"),
-    6 : T("Goggles"),
-    7 : T("Shop vac + HEPA filter"),
-    8 : T("Cloth rags"),
-    9 : T("Rubber gloves"),
-    10 : T("Ladder/step stool"),
-    11 : T("Kllz"),
-    #12 : T("Ladder/step stool""),
-    }
+    names = ("assess_24h",
+             )
 
-assess_personal_protection_opts = {
-    1 : T("N95 Dust masks"),
-    2 : T("Rubber Boots"),
-    4 : T("Respirators"),
-    5 : T("Work gloves"),
-    7 : T("Safety glasses"),
-    8 : T("Hard hats"),
-    10 : T("Boots"),
-    11 : T("Ear plugs"),
-    }
+    def model(self):
 
-#assess_skills_required_opts = {
-#    1 : T("Pump equipment"),
-#    2 : T("Mold removal"),
-#    3 : T("Demolition/gutting"),
-#    4 : T("Construction"),
-#    }
+        T = current.T
+        s3 = current.response.s3
 
-#assess_special_skills_opts = {
-#    1 : T("Plumber"),
-#    2 : T("Engineer"),
-#    3 : T("Electrician"),
-#    4 : T("Other"),
-#    }
+        if s3.bulk:
+            # Don't default the Team leader name for Bulk Imports
+            default_person = None
+        else:
+            default_person = current.auth.s3_logged_in_person()
 
-assess_vulnerability_opts = {
-    1 : T("Elderly"),
-    2 : T("Disabled"),
-    3 : T("Small Children"),
-    4 : T("Single Female Head of Household"),
-    }
+        # ---------------------------------------------------------------------
+        # IFRC 24H Assessment
+        #
+        tablename = "assess_24h"
+        self.define_table(tablename,
+                          self.pr_person_id(
+                            default = default_person,
+                            label = ("Name of Assessment Team Leader"),
+                            ),
+                          s3_date(default = "now"),
+                          self.gis_location_id(
+                            widget = S3LocationSelector(show_map = False),
+                            ),
+                          Field("inhabitants", "integer",
+                                label = T("Approximate number of inhabitants"),
+                                ),
+                          Field("inhabitants", "integer",
+                                label = T("Approximate number of inhabitants"),
+                                ),
+                          self.pr_person_id("contact_id",
+                            comment = None,
+                            label = ("Name of contact person in the community"),
+                            requires = IS_ADD_PERSON_WIDGET2(),
+                            widget = S3AddPersonWidget2(),
+                            ),
+                          Field("injured", "integer",
+                                label = T("# Injured"),
+                                ),
+                          Field("dead", "integer",
+                                label = T("# Dead"),
+                                ),
+                          Field("missing", "integer",
+                                label = T("# Missing"),
+                                ),
+                          Field("minor_damage", "integer",
+                                label = T("# Minor Damage"),
+                                ),
+                          Field("moderate_damage", "integer",
+                                label = T("# Moderate Damage"),
+                                ),
+                          Field("destroyed", "integer",
+                                label = T("# Destroyed"),
+                                ),
+                          # tbc if-useful
+                          *s3_meta_fields())
 
-assess_work_requested_opts = {
-    1 : T("Pump out water"),
-    2 : T("Mud/sand removal"),
-    3 : T("Demolition/Gutting"),
-    4 : T("Clean up debris"),
-    5 : T("Mold removal"),
-    6 : T("Sanitization"),
-    }
+        # CRUD Strings
+        s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Assessment"),
+            title_display = T("Assessment Details"),
+            title_list = T("Assessments"),
+            title_update = T("Edit Assessment"),
+            label_list_button = T("List Assessments"),
+            label_delete_button = T("Delete Assessment"),
+            msg_record_created = T("Assessment added"),
+            msg_record_modified = T("Assessment updated"),
+            msg_record_deleted = T("Assessment deleted"),
+            msg_list_empty = T("No Assessments found")
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return dict()
 
 # =============================================================================
 class S3AssessBuildingModel(S3Model):
@@ -167,9 +138,9 @@ class S3AssessBuildingModel(S3Model):
         Building Damage Assessment form
     """
 
-    names = ["assess_building",
+    names = ("assess_building",
              "assess_building_rheader",
-             ]
+             )
 
     def model(self):
 
@@ -210,7 +181,7 @@ class S3AssessBuildingModel(S3Model):
         on_off_opts = {
             1 : T("On"),
             2 : T("Off"),
-            } 
+            }
         ownership_opts = {
             1: T("Rent"),
             2: T("Own"),
@@ -218,6 +189,122 @@ class S3AssessBuildingModel(S3Model):
         yes_no_opts = {
             1: T("Yes"),
             2: T("No"),
+            }
+
+        assess_additional_needs_opts = {
+            1 : T("Shelter"),
+            2 : T("Information -Mold -FEMA -Legal"),
+            3 : T("Other"),
+            4 : T("Food"),
+            }
+
+        assess_construction_type_opts = {
+            1 : T("Concrete"),
+            2 : T("Brick"),
+            3 : T("Wood Frame"),
+            4 : T("Metal Stud"),
+            4 : T("Other"),
+            }
+
+        assess_damage_opts = {
+            1 : T("Primarily Flood"),
+            2 : T("Wind/Wind driven rain"),
+            3 : T("Other"),
+            }
+
+        assess_insurance_opts = {
+            1 : T("Property"),
+            2 : T("Flood (Structure)"),
+            3 : T("Wind/Hurricane"),
+            4 : T("Sewer Back-up"),
+            5 : T("Flood (Contents)"),
+            6 : T("NONE"),
+            }
+
+        #assess_tools_opts = {
+        #    1 : T("Pump/Hoses"),
+        #    2 : T("Flat bar"),
+        #    3 : T("Dust pan"),
+        #    4 : T("Large pails"),
+        #    5 : T("Long pry bar"),
+        #    6 : T("Brooms"),
+        #    7 : T("Shovels"),
+        #    8 : T("Pick axe"),
+        #    9 : T("Trash bags"),
+        #    10 : T("Wheelbarrows"),
+        #    11 : T("Hammers"),
+        #    12 : T("Cleaning Supplies"),
+        #    13 : T("Crowbar"),
+        #    14 : T("Sledgehammer"),
+        #    15 : "",
+        #    16 : T("Nail pullers/cat's claws"),
+        #    17 : T("Generator"),
+        #    18 : T("Screwdrivers"),
+        #    19 : T("Chalk line"),
+        #    20 : T("Portable lights"),
+        #    21 : T("Wrench"),
+        #    22 : T("Sawzall"),
+        #    23 : T("Extension cords"),
+        #    24 : "",
+        #    25 : T("Utility knives"),
+        #    26 : T("Headlamps"),
+        #    21 : "",
+        #    }
+
+        #assess_mold_removal_opts = {
+        #    1 : T("Wire brush"),
+        #    2 : T("Demolding solution"),
+        #    3 : T("Tyvek suits"),
+        #    4 : T("Grinder"),
+        #    5 : T("Paint brushes"),
+        #    6 : T("Goggles"),
+        #    7 : T("Shop vac + HEPA filter"),
+        #    8 : T("Cloth rags"),
+        #    9 : T("Rubber gloves"),
+        #    10 : T("Ladder/step stool"),
+        #    11 : T("Kllz"),
+        #    #12 : T("Ladder/step stool""),
+        #    }
+
+        #assess_personal_protection_opts = {
+        #    1 : T("N95 Dust masks"),
+        #    2 : T("Rubber Boots"),
+        #    4 : T("Respirators"),
+        #    5 : T("Work gloves"),
+        #    7 : T("Safety glasses"),
+        #    8 : T("Hard hats"),
+        #    10 : T("Boots"),
+        #    11 : T("Ear plugs"),
+        #    }
+
+        #assess_skills_required_opts = {
+        #    1 : T("Pump equipment"),
+        #    2 : T("Mold removal"),
+        #    3 : T("Demolition/gutting"),
+        #    4 : T("Construction"),
+        #    }
+
+        #assess_special_skills_opts = {
+        #    1 : T("Plumber"),
+        #    2 : T("Engineer"),
+        #    3 : T("Electrician"),
+        #    4 : T("Other"),
+        #    }
+
+        assess_vulnerability_opts = {
+            1 : T("Elderly"),
+            2 : T("Disabled"),
+            3 : T("Small Children"),
+            4 : T("Single Female Head of Household"),
+            }
+
+        assess_work_requested_opts = {
+            1 : T("Pump out water"),
+            2 : T("Mud/sand removal"),
+            3 : T("Demolition/Gutting"),
+            4 : T("Clean up debris"),
+            5 : T("Mold removal"),
+            6 : T("Sanitization"),
             }
 
         tablename = "assess_building"
@@ -278,7 +365,7 @@ class S3AssessBuildingModel(S3Model):
                                 represent = lambda v: v or NONE,
                                 label=T("Name")),
                           Field("phone",
-                                requires=IS_NULL_OR(s3_phone_requires),
+                                requires=IS_EMPTY_OR(s3_phone_requires),
                                 represent = lambda v: v or NONE,
                                 label=T("Phone Number")),
                           Field("contact_other",
@@ -649,15 +736,12 @@ class S3AssessBuildingModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ASSESS = T("Add Assessment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ASSESS,
+            label_create = T("Create Assessment"),
             title_display = T("Assessment Details"),
             title_list = T("Assessments"),
             title_update = T("Edit Assessment"),
-            subtitle_create = T("Add New Assessment"),
             label_list_button = T("List Assessments"),
-            label_create_button = ADD_ASSESS,
             label_delete_button = T("Delete Assessment"),
             msg_record_created = T("Assessment added"),
             msg_record_modified = T("Assessment updated"),
@@ -738,7 +822,7 @@ class S3AssessBuildingModel(S3Model):
     @staticmethod
     def assess_building_rheader(r):
         """ Resource Header """
-        
+
         if r.representation != "html" or r.method == "import" or not r.record:
             # RHeaders only used in interactive views
             return None
@@ -910,8 +994,9 @@ class S3AssessBuildingModel(S3Model):
                           ),
                        ),
                     )
-        
+
         WORK_ORDER = current.T("Work Order")
+        from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(r,
                         method = "read",
@@ -930,8 +1015,7 @@ class S3AssessCanvassModel(S3Model):
         Building Canvassing form
     """
 
-    names = ["assess_canvass",
-             ]
+    names = ("assess_canvass",)
 
     def model(self):
 
@@ -974,15 +1058,12 @@ class S3AssessCanvassModel(S3Model):
                                   *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ASSESS = T("Add Assessment")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_ASSESS,
+            label_create = T("Create Assessment"),
             title_display = T("Assessment Details"),
             title_list = T("Assessments"),
             title_update = T("Edit Assessment"),
-            subtitle_create = T("Add New Assessment"),
             label_list_button = T("List Assessments"),
-            label_create_button = ADD_ASSESS,
             label_delete_button = T("Delete Assessment"),
             msg_record_created = T("Assessment added"),
             msg_record_modified = T("Assessment updated"),

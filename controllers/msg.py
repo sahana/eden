@@ -65,9 +65,10 @@ def message():
     s3.postp = postp
 
     s3db.configure(tablename,
-                   deletable=False,
-                   insertable=False,
-                   editable=False)
+                   deletable = False,
+                   editable = False,
+                   insertable = False,
+                   )
 
     return s3_rest_controller()
 
@@ -82,14 +83,12 @@ def mark_sender():
     except:
         raise SyntaxError
 
-    db = current.db
-    s3db = current.s3db
     mtable = s3db.msg_message
     stable = s3db.msg_sender
 
     # @ToDo: Replace 2 queries with Join
     srecord = db(mtable.id == mid).select(mtable.from_address,
-                                          limitby=(0,1)
+                                          limitby=(0, 1)
                                           ).first()
     sender = srecord.from_address
     record = db(stable.sender == sender).select(stable.id,
@@ -148,9 +147,10 @@ def outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False)
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   )
 
     return s3_rest_controller()
 
@@ -193,11 +193,12 @@ def email_outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   listadd=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
                    list_fields = ["id",
+                                  "date",
                                   "to_address",
                                   "subject",
                                   "body",
@@ -205,6 +206,57 @@ def email_outbox():
                    )
 
     return s3_rest_controller(module, "email")
+
+# -----------------------------------------------------------------------------
+def facebook_outbox():
+    """
+        RESTful CRUD controller for the Facebook Outbox
+        - all Outbound Facebook Messages are visible here
+    """
+
+    if not auth.s3_logged_in():
+        session.error = T("Requires Login!")
+        redirect(URL(c="default", f="user", args="login"))
+
+    tablename = "msg_facebook"
+    table = s3db.msg_facebook
+    s3.filter = (table.inbound == False)
+    table.inbound.readable = False
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Post Details"),
+        title_list = T("Sent Posts"),
+        label_list_button = T("View Sent Posts"),
+        label_delete_button = T("Delete Post"),
+        msg_record_deleted = T("Post deleted"),
+        msg_list_empty = T("No Posts currently in Outbox")
+    )
+
+    #def postp(r, output):
+    #    if isinstance(output, dict):
+    #        add_btn = A(T("Compose"),
+    #                    _class="action-btn",
+    #                    _href=URL(f="compose")
+    #                    )
+    #        output["rheader"] = add_btn
+    #    return output
+    #s3.postp = postp
+
+    s3db.configure(tablename,
+                   # Permissions-based
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
+                   list_fields = ["id",
+                                  "date",
+                                  #"to_address",
+                                  "body",
+                                  ],
+                   )
+
+    return s3_rest_controller(module, "facebook")
 
 # -----------------------------------------------------------------------------
 def sms_outbox():
@@ -245,11 +297,12 @@ def sms_outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   listadd=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
                    list_fields = ["id",
+                                  "date",
                                   "to_address",
                                   "body",
                                   ],
@@ -296,11 +349,12 @@ def twitter_outbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   listadd=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
                    list_fields = ["id",
+                                  "date",
                                   "to_address",
                                   "body",
                                   ],
@@ -336,10 +390,11 @@ def inbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "channel_id",
                                   "from_address",
                                   "body",
@@ -359,10 +414,23 @@ def email_inbox():
         session.error = T("Requires Login!")
         redirect(URL(c="default", f="user", args="login"))
 
+    s3.filter = (FS("inbound") == True)
+
+    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+    crud_form = S3SQLCustomForm("date",
+                                "subject",
+                                "from_address",
+                                "body",
+                                S3SQLInlineComponent(
+                                    "attachment",
+                                    name = "document_id",
+                                    label = T("Attachments"),
+                                    fields = ["document_id",
+                                              ],
+                                    ),                                                                
+                                )
+
     tablename = "msg_email"
-    table = s3db.msg_email
-    s3.filter = (table.inbound == True)
-    table.inbound.readable = False
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
@@ -375,16 +443,26 @@ def email_inbox():
     )
 
     s3db.configure(tablename,
+                   crud_form = crud_form,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "from_address",
                                   "subject",
                                   "body",
+                                  (T("Attachments"), "attachment.document_id"),
                                   ],
                    )
+
+    def prep(r):
+        s3db.msg_email.inbound.readable = False
+        if r.id:
+            s3db.msg_attachment.document_id.label = ""
+        return True
+    s3.prep = prep
 
     return s3_rest_controller(module, "email")
 
@@ -395,7 +473,7 @@ def rss():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_rss"
@@ -417,10 +495,11 @@ def rss():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "body",
                                   ],
                    )
@@ -455,10 +534,11 @@ def sms_inbox():
 
     s3db.configure(tablename,
                    # Permissions-based
-                   #deletable=False,
-                   insertable=False,
-                   editable=False,
+                   #deletable = False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "from_address",
                                   "body",
                                   ],
@@ -475,9 +555,10 @@ def twitter():
     """
 
     s3db.configure("msg_twitter",
-                   insertable=False,
-                   editable=False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "from_address",
                                   "to_address",
                                   "body",
@@ -513,9 +594,10 @@ def twitter_inbox():
     )
 
     s3db.configure(tablename,
-                   insertable=False,
-                   editable=False,
+                   editable = False,
+                   insertable = False,
                    list_fields = ["id",
+                                  "date",
                                   "from_address",
                                   "body",
                                   ],
@@ -591,48 +673,18 @@ def tropo():
 def sms_outbound_gateway():
     """ SMS Outbound Gateway selection for the messaging framework """
 
-    tablename = "%s_%s" % (module, resourcename)
-    table = s3db[tablename]
-    table.outgoing_sms_handler.label = T("Outgoing SMS Handler")
-    table.outgoing_sms_handler.comment = DIV(DIV(_class="tooltip",
-        _title="%s|%s" % (T("Outgoing SMS Handler"),
-                          T("Selects what type of gateway to use for outbound SMS"))))
     # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMS Outbound Gateway"),
-        msg_record_modified = T("SMS Outbound Gateway updated")
-    )
-
-    def prep(r):
-        if r.http == "POST":
-            # Go to the details page for the chosen SMS Gateway
-            outgoing_sms_handler = request.post_vars.get("outgoing_sms_handler",
-                                                         None)
-            if outgoing_sms_handler == "WEB_API":
-                s3db.configure(tablename,
-                               update_next = URL(f="sms_webapi_channel",
-                                                 args=[1, "update"]))
-            elif outgoing_sms_handler == "SMTP":
-                s3db.configure(tablename,
-                               update_next = URL(f="sms_smtp_channel",
-                                                 args=[1, "update"]))
-            elif outgoing_sms_handler == "MODEM":
-                s3db.configure(tablename,
-                               update_next = URL(f="sms_modem_channel",
-                                                 args=[1, "update"]))
-            elif outgoing_sms_handler == "TROPO":
-                s3db.configure(tablename,
-                               update_next = URL(f="tropo_channel",
-                                                 args=[1, "update"]))
-            else:
-                s3db.configure(tablename,
-                               update_next = URL(args=[1, "update"]))
-        return True
-    s3.prep = prep
-
-    s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False)
+    s3.crud_strings["msg_sms_outbound_gateway"] = Storage(
+        label_create=T("Create SMS Outbound Gateway"),
+        title_display=T("SMS Outbound Gateway Details"),
+        title_list=T("SMS Outbound Gateways"),
+        title_update=T("Edit SMS Outbound Gateway"),
+        label_list_button=T("List SMS Outbound Gateways"),
+        label_delete_button=T("Delete SMS Outbound Gateway"),
+        msg_record_created=T("SMS Outbound Gateway added"),
+        msg_record_modified=T("SMS Outbound Gateway updated"),
+        msg_record_deleted=T("SMS Outbound Gateway deleted"),
+        msg_list_empty=T("No SMS Outbound Gateways currently registered"))
 
     return s3_rest_controller()
 
@@ -653,7 +705,7 @@ def email_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_email_channel"
@@ -674,15 +726,12 @@ def email_channel():
                                                              T("If this is set to True then mails will be deleted from the server after downloading.")))
 
     # CRUD Strings
-    ADD_EMAIL_ACCOUNT = T("Add Email Account")
     s3.crud_strings[tablename] = Storage(
         title_display = T("Email Settings"),
         title_list = T("Email Accounts"),
-        title_create = ADD_EMAIL_ACCOUNT,
+        label_create = T("Add Email Account"),
         title_update = T("Edit Email Settings"),
         label_list_button = T("View Email Accounts"),
-        label_create_button = ADD_EMAIL_ACCOUNT,
-        subtitle_create = T("Add New Email Account"),
         msg_record_created = T("Account added"),
         msg_record_deleted = T("Email Account deleted"),
         msg_list_empty = T("No Accounts currently defined"),
@@ -724,6 +773,67 @@ def email_channel():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def facebook_channel():
+    """
+        RESTful CRUD controller for Facebook channels
+            - appears in the administration menu
+    """
+
+    if not auth.s3_has_role(ADMIN):
+        session.error = ERROR.UNAUTHORISED
+        redirect(URL(f="index"))
+
+    tablename = "msg_facebook_channel"
+    table = s3db[tablename]
+
+    # CRUD Strings
+    s3.crud_strings[tablename] = Storage(
+        title_display = T("Facebook Settings"),
+        title_list = T("Facebook Accounts"),
+        label_create = T("Add Facebook Account"),
+        title_update = T("Edit Facebook Settings"),
+        label_list_button = T("View Facebook Accounts"),
+        msg_record_created = T("Account added"),
+        msg_record_deleted = T("Facebook Account deleted"),
+        msg_list_empty = T("No Accounts currently defined"),
+        msg_record_modified = T("Facebook Settings updated")
+        )
+
+    def postp(r, output):
+        if r.interactive:
+            # Normal Action Buttons
+            s3_action_buttons(r)
+            # Custom Action Buttons for Enable/Disable
+            table = r.table
+            query = (table.deleted == False)
+            rows = db(query).select(table.id,
+                                    table.enabled,
+                                    )
+            restrict_e = [str(row.id) for row in rows if not row.enabled]
+            restrict_d = [str(row.id) for row in rows if row.enabled]
+
+            s3.actions += [dict(label=str(T("Enable")),
+                                _class="action-btn",
+                                url=URL(args=["[id]", "enable"]),
+                                restrict = restrict_e),
+                           dict(label=str(T("Disable")),
+                                _class="action-btn",
+                                url = URL(args = ["[id]", "disable"]),
+                                restrict = restrict_d),
+                           ]
+            #if not s3task._is_alive():
+            #    # No Scheduler Running
+            #    s3.actions += [dict(label=str(T("Poll")),
+            #                        _class="action-btn",
+            #                        url = URL(args = ["[id]", "poll"]),
+            #                        restrict = restrict_d)
+            #                   ]
+        return output
+    s3.postp = postp
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def mcommons_channel():
     """
         RESTful CRUD controller for Mobile Commons SMS Channels
@@ -731,7 +841,7 @@ def mcommons_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_mcommons_channel"
@@ -740,7 +850,7 @@ def mcommons_channel():
     table.name.label = T("Account Name")
     table.name.comment = DIV(_class="tooltip",
                              _title="%s|%s" % (T("Account Name"),
-                                               T("Name for your Twilio Account.")))
+                                               T("Name for your Mobile Commons Account")))
 
     table.campaign_id.label = T("Campaign ID")
 
@@ -758,10 +868,9 @@ def mcommons_channel():
     s3.crud_strings[tablename] = Storage(
         title_display = T("Mobile Commons Setting Details"),
         title_list = T("Mobile Commons Settings"),
-        title_create = T("Add Mobile Commons Settings"),
+        label_create = T("Add Mobile Commons Settings"),
         title_update = T("Edit Mobile Commons Settings"),
         label_list_button = T("View Mobile Commons Settings"),
-        label_create_button = T("Add Mobile Commons Settings"),
         msg_record_created = T("Mobile Commons Setting added"),
         msg_record_deleted = T("Mobile Commons Setting deleted"),
         msg_list_empty = T("No Mobile Commons Settings currently defined"),
@@ -811,7 +920,7 @@ def rss_channel():
 
     if not auth.s3_has_role(ADMIN):
 
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_rss_channel"
@@ -829,20 +938,25 @@ def rss_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_display = T("RSS Setting Details"),
-        title_list = T("RSS Settings"),
-        title_create = T("Add RSS Settings"),
-        title_update = T("Edit RSS Settings"),
-        label_list_button = T("View RSS Settings"),
-        label_create_button = T("Add RSS Settings"),
-        msg_record_created = T("Setting added"),
-        msg_record_deleted = T("RSS Setting deleted"),
-        msg_list_empty = T("No Settings currently defined"),
-        msg_record_modified = T("RSS settings updated")
-        )
+        title_display = T("RSS Channel Details"),
+        title_list = T("RSS Channels"),
+        label_create = T("Add RSS Channel"),
+        title_update = T("Edit RSS Channel"),
+        label_list_button = T("View RSS Channels"),
+        msg_record_created = T("Channel added"),
+        msg_record_deleted = T("RSS Channel deleted"),
+        msg_list_empty = T("No RSS Channels currently defined"),
+        msg_record_modified = T("RSS Channel updated"))
 
-    #response.menu_options = admin_menu_options
-    s3db.configure(tablename, listadd=True, deletable=True)
+    def status_represent(v):
+        try:
+            v = int(v)
+        except:
+            # Text
+            return v
+        return "There have been no new entries for %s requests" % v
+
+    s3db.msg_channel_status.status.represent = status_represent
 
     def postp(r, output):
         if r.interactive:
@@ -886,7 +1000,7 @@ def twilio_channel():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     tablename = "msg_twilio_channel"
@@ -907,17 +1021,15 @@ def twilio_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_display = T("Twilio Setting Details"),
-        title_list = T("Twilio Settings"),
-        title_create = T("Add Twilio Settings"),
-        title_update = T("Edit Twilio Settings"),
-        label_list_button = T("View Twilio Settings"),
-        label_create_button = T("Add Twilio Settings"),
-        msg_record_created = T("Twilio Setting added"),
-        msg_record_deleted = T("Twilio Setting deleted"),
-        msg_list_empty = T("No Twilio Settings currently defined"),
-        msg_record_modified = T("Twilio settings updated")
-        )
+        title_display = T("Twilio Channel Details"),
+        title_list = T("Twilio Channels"),
+        label_create = T("Add Twilio Channel"),
+        title_update = T("Edit Twilio Channel"),
+        label_list_button = T("View Twilio Channels"),
+        msg_record_created = T("Twilio Channel added"),
+        msg_record_deleted = T("Twilio Channel deleted"),
+        msg_record_modified = T("Twilio Channel updated"),
+        msg_list_empty = T("No Twilio Channels currently defined"))
 
     def postp(r, output):
         if r.interactive:
@@ -985,25 +1097,17 @@ def sms_modem_channel():
                                                   T("Unselect to disable the modem")))
 
     # CRUD Strings
-    ADD_SETTING = T("Add Setting")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_SETTING,
-        title_display = T("Setting Details"),
-        title_list = T("Settings"),
-        title_update = T("Edit Modem Settings"),
-        label_list_button = T("View Settings"),
-        label_create_button = ADD_SETTING,
-        msg_record_created = T("Setting added"),
-        msg_record_modified = T("Modem settings updated"),
-        msg_record_deleted = T("Setting deleted"),
-        msg_list_empty = T("No Settings currently defined")
-    )
+        label_create = T("Add Modem Channel"),
+        title_display = T("Modem Channel Details"),
+        title_list = T("Modem Channels"),
+        title_update = T("Edit Modem Channel"),
+        label_list_button = T("View Modem Channels"),
+        msg_record_created = T("Modem Channel added"),
+        msg_record_modified = T("Modem Channel updated"),
+        msg_record_deleted = T("Modem Channel deleted"),
+        msg_list_empty = T("No Modem Channels currently defined"))
 
-    s3db.configure(tablename,
-                   #deletable=False,
-                   #listadd=False,
-                   #update_next = URL(args=[1, "update"])
-                   )
     return s3_rest_controller()
 
 #------------------------------------------------------------------------------
@@ -1012,8 +1116,6 @@ def sms_smtp_channel():
     """
         RESTful CRUD controller for SMTP to SMS Outbound channels
         - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
     """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1033,14 +1135,19 @@ def sms_smtp_channel():
                                                   T("Unselect to disable this SMTP service")))
 
     # CRUD Strings
-    s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit SMTP to SMS Settings"),
-        msg_record_modified = T("SMTP to SMS settings updated"),
-    )
+    s3.crud_strings["msg_sms_outbound_gateway"] = Storage(
+        label_create=T("Create SMTP to SMS Channel"),
+        title_display=T("SMTP to SMS Channel Details"),
+        title_list=T("SMTP to SMS Channels"),
+        title_update=T("Edit SMTP to SMS Channel"),
+        label_list_button=T("List SMTP to SMS Channels"),
+        label_delete_button=T("Delete SMTP to SMS Channel"),
+        msg_record_created=T("SMTP to SMS Channel added"),
+        msg_record_modified=T("SMTP to SMS Channel updated"),
+        msg_record_deleted=T("SMTP to SMS Channel deleted"),
+        msg_list_empty=T("No SMTP to SMS Channels currently registered"))
 
     s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False,
                    update_next = URL(args=[1, "update"]))
 
     return s3_rest_controller()
@@ -1051,8 +1158,6 @@ def sms_webapi_channel():
     """
         RESTful CRUD controller for Web API channels
         - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
     """
 
     tablename = "%s_%s" % (module, resourcename)
@@ -1088,14 +1193,16 @@ def sms_webapi_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Web API Settings"),
-        msg_record_modified = T("Web API settings updated"),
-    )
-
-    s3db.configure(tablename,
-                   deletable=False,
-                   listadd=False,
-                   update_next = URL(args=[1, "update"]))
+        label_create=T("Create Web API Channel"),
+        title_display=T("Web API Channel Details"),
+        title_list=T("Web API Channels"),
+        title_update=T("Edit Web API Channel"),
+        label_list_button=T("List Web API Channels"),
+        label_delete_button=T("Delete Web API Channel"),
+        msg_record_created=T("Web API Channel added"),
+        msg_record_modified=T("Web API Channel updated"),
+        msg_record_deleted=T("Web API Channel deleted"),
+        msg_list_empty=T("No Web API Channels currently registered"))
 
     return s3_rest_controller()
 
@@ -1105,8 +1212,6 @@ def tropo_channel():
     """
         RESTful CRUD controller for Tropo channels
         - appears in the administration menu
-        Only 1 of these normally in existence
-            @ToDo: Don't enforce
     """
 
     tablename = "msg_tropo_channel"
@@ -1120,15 +1225,16 @@ def tropo_channel():
     #table.token_voice.comment = DIV(DIV(_class="stickytip",_title=T("Tropo Voice Token") + "|" + T("The token associated with this application on") + " <a href='https://www.tropo.com/docs/scripting/troposessionapi.htm' target=_blank>Tropo.com</a>"))
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
-        title_update = T("Edit Tropo Settings"),
-        msg_record_modified = T("Tropo settings updated"),
-    )
-
-    s3db.configure(tablename,
-                   deletable = False,
-                   listadd = False,
-                   update_next = URL(args=[1, "update"]),
-                   )
+        label_create=T("Create Tropo Channel"),
+        title_display=T("Tropo Channel Details"),
+        title_list=T("Tropo Channels"),
+        title_update=T("Edit Tropo Channel"),
+        label_list_button=T("List Tropo Channels"),
+        label_delete_button=T("Delete Tropo Channel"),
+        msg_record_created=T("Tropo Channel added"),
+        msg_record_modified=T("Tropo Channel updated"),
+        msg_record_deleted=T("Tropo Channel deleted"),
+        msg_list_empty=T("No Tropo Channels currently registered"))
 
     return s3_rest_controller()
 
@@ -1231,8 +1337,9 @@ def twitter_channel():
     s3.postp = postp
 
     s3db.configure(tablename,
-                   listadd=False,
-                   deletable=False)
+                   listadd = False,
+                   deletable = False,
+                   )
 
     return s3_rest_controller(deduplicate="", list_btn="")
 
@@ -1313,7 +1420,7 @@ def twitter_search():
 
         try:
             supported_languages = map(lambda x: str(x["code"]), twitter_api.supported_languages())
-        except tweepy.TweepError:
+        except (tweepy.TweepError, AttributeError):
             # List according to Twitter 1.1 API https://dev.twitter.com/docs/api/1.1/get/help/languages
             pass
 
@@ -1351,10 +1458,9 @@ def twitter_search():
     s3.crud_strings[tablename] = Storage(
         title_display = T("Twitter Search Queries"),
         title_list = T("Twitter Search Queries"),
-        title_create = T("Add Twitter Search Query"),
+        label_create = T("Add Twitter Search Query"),
         title_update = T("Edit Twitter Search Query"),
         label_list_button = T("View Queries"),
-        label_create_button = T("Add Query"),
         msg_record_created = T("Query added"),
         msg_record_deleted = T("Query deleted"),
         msg_list_empty = T("No Query currently defined"),
@@ -1431,7 +1537,7 @@ def twitter_result():
     s3.crud_strings[tablename] = Storage(
         title_display = T("Twitter Search Results"),
         title_list = T("Twitter Search Results"),
-        label_list_button = T("View Tweet"),
+        label_list_button = T("View Tweets"),
         msg_record_deleted = T("Tweet deleted"),
         msg_list_empty = T("No Tweets Available."),
         )
@@ -1439,7 +1545,7 @@ def twitter_result():
     from s3.s3filter import S3DateFilter, S3TextFilter
 
     filter_widgets = [
-        S3DateFilter("created_on",
+        S3DateFilter("date",
                      label=T("Tweeted On"),
                      hide_time=True,
                      _class="date-filter-class",
@@ -1453,7 +1559,7 @@ def twitter_result():
         ]
 
     report_fields = ["search_id",
-                     "created_on",
+                     "date",
                      "lang",
                      ]
 
@@ -1467,7 +1573,6 @@ def twitter_result():
             totals=True,
         )
     )
-
     s3db.configure(tablename,
                    deletable=False,
                    editable=False,
@@ -1475,6 +1580,42 @@ def twitter_result():
                    filter_widgets=filter_widgets,
                    report_options=report_options,
                    )
+
+    def postp(r, output):
+        if r.id or r.method in ("read", "display"):
+            # Display the Tweet as an Embedded tweet
+            record = output["item"].record
+            # Tweet link
+            twitter_url = "https://twitter.com/%s/statuses/%s" % (record.from_address, 
+                                                                  record.tweet_id)
+            script_url = "https://platform.twitter.com/widgets.js"
+            # Themeable Throbber
+            throbber = DIV(_class = "s3-twitter-throbber",
+                           )
+            # Display throbber while Tweet loads
+            tweet_container = DIV(throbber,
+                                  _class = "s3-twitter-container",
+                                  )
+            tweet_user = TAG[""](A(_href = twitter_url,
+                                   _style = "display: none"),
+                                 )
+            # Configure Tweet display
+            attributes = {"_width": "350px",
+                          "_data-conversation": "none",
+                          "_class": "twitter-tweet",
+                          "lang": record.lang,
+                          } 
+            tweet = TAG["blockquote"](tweet_container,
+                                      tweet_user,
+                                      SCRIPT(_src = script_url,
+                                             _charset = "utf-8"),
+                                      **attributes
+                                      ) 
+            # Insert tweet 
+            output["item"] = tweet
+        return output
+    
+    s3.postp = postp
 
     return s3_rest_controller()
 
@@ -1491,10 +1632,9 @@ def sender():
     s3.crud_strings[tablename] = Storage(
         title_display = T("Whitelisted Senders"),
         title_list = T("Whitelisted Senders"),
-        title_create = T("Whitelist a Sender"),
+        label_create = T("Whitelist a Sender"),
         title_update = T("Edit Sender Priority"),
         label_list_button = T("View Sender Priority"),
-        label_create_button = T("Add a Whitelisted Sender"),
         msg_record_created = T("Sender Whitelisted"),
         msg_record_deleted = T("Sender deleted"),
         msg_list_empty = T("No Senders Whitelisted"),
@@ -1529,7 +1669,7 @@ def parser():
     """
 
     if not auth.s3_has_role(ADMIN):
-        session.error = UNAUTHORISED
+        session.error = ERROR.UNAUTHORISED
         redirect(URL(f="index"))
 
     def prep(r):
@@ -1538,10 +1678,9 @@ def parser():
             s3.crud_strings["msg_parser"] = Storage(
                 title_display = T("Parser Connection Details"),
                 title_list = T("Parser Connections"),
-                title_create = T("Connect Parser"),
+                label_create = T("Connect Parser"),
                 title_update = T("Edit Parser Connection"),
                 label_list_button = T("View Parser Connections"),
-                label_create_button = T("Connect New Parser"),
                 msg_record_created = T("Parser connected"),
                 msg_record_deleted = T("Parser connection removed"),
                 msg_record_modified = T("Parser connection updated"),
@@ -1552,7 +1691,7 @@ def parser():
             import sys
 
             template = settings.get_msg_parser()
-            module_name = "applications.%s.private.templates.%s.parser" % \
+            module_name = "applications.%s.modules.templates.%s.parser" % \
                 (appname, template)
             __import__(module_name)
             mymodule = sys.modules[module_name]
@@ -1575,7 +1714,7 @@ def parser():
                                                   sort = True,
                                                   )
             table.function_name.requires = IS_IN_SET(parse_opts,
-                                                     zero=None)
+                                                     zero = None)
         return True
     s3.prep = prep
 
@@ -1714,7 +1853,7 @@ def search():
     # JQuery UI Autocomplete uses 'term' instead of 'value'
     # (old JQuery Autocomplete uses 'q' instead of 'value')
     value = request.vars.term or request.vars.q
-    type = request.get_vars.get("type", None)
+    type = get_vars.get("type", None)
     if value:
         # Call the search function
         if type:
@@ -1830,6 +1969,168 @@ def process_twitter_outbox():
     """ Send Pending Twitter Messages """
 
     msg.process_outbox(contact_method = "TWITTER")
+
+# =============================================================================
+# Enabled only for testing:
+#
+@auth.s3_requires_membership(1)
+def facebook_post():
+    """ Post to Facebook """
+
+    title = T("Post to Facebook")
+
+    # Test the formstyle
+    formstyle = s3.crud.formstyle
+    row = formstyle("test", "test", "test", "test")
+    if isinstance(row, tuple):
+        # Formstyle with separate row for label (e.g. default Eden formstyle)
+        tuple_rows = True
+    else:
+        # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+        tuple_rows = False
+
+    form_rows = []
+    comment = ""
+
+    _id = "channel_id"
+    label = LABEL("%s:" % T("Channel"))
+
+    table = s3db.msg_facebook_channel
+    query = (table.deleted == False) & \
+            (table.enabled == True)
+    rows = db(query).select(table.channel_id, table.name)
+    options = [OPTION(row.name, _value=row.channel_id) for row in rows]
+    channel_select = SELECT(_name = "channel_id",
+                            _id = _id,
+                            *options
+                            )
+    widget = channel_select
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "post"
+    label = LABEL("%s:" % T("Contents"))
+    widget = TEXTAREA(_name = "post",
+                      )
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "submit"
+    label = ""
+    widget = INPUT(_type="submit", _value=T("Post"))
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    if tuple_rows:
+        # Assume TRs
+        form = FORM(TABLE(*form_rows))
+    else:
+        form = FORM(*form_rows)
+
+    if form.accepts(request.vars, session):
+        form_vars = form.vars
+        channel_id = form_vars.get("channel_id")
+        post = form_vars.get("post")
+        if channel_id and post:
+            msg.post_to_facebook(post, channel_id)
+
+    output = dict(form = form,
+                  title = title,
+                  )
+    return output
+
+# =============================================================================
+# Enabled only for testing:
+#
+@auth.s3_requires_membership(1)
+def twitter_post():
+    """ Post to Twitter """
+
+    title = T("Post to Twitter")
+
+    # Test the formstyle
+    formstyle = s3.crud.formstyle
+    row = formstyle("test", "test", "test", "test")
+    if isinstance(row, tuple):
+        # Formstyle with separate row for label (e.g. default Eden formstyle)
+        tuple_rows = True
+    else:
+        # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+        tuple_rows = False
+
+    form_rows = []
+    comment = ""
+
+    _id = "channel_id"
+    label = LABEL("%s:" % T("Channel"))
+
+    table = s3db.msg_twitter_channel
+    query = (table.deleted == False) & \
+            (table.enabled == True)
+    rows = db(query).select(table.channel_id, table.name)
+    options = [OPTION(row.name, _value=row.channel_id) for row in rows]
+    channel_select = SELECT(_name = "channel_id",
+                            _id = _id,
+                            *options
+                            )
+    widget = channel_select
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "post"
+    label = LABEL("%s:" % T("Contents"))
+    widget = TEXTAREA(_name = "post",
+                      )
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    _id = "submit"
+    label = ""
+    widget = INPUT(_type="submit", _value=T("Post"))
+    row = formstyle("%s__row" % _id, label, widget, comment)
+    if tuple_rows:
+        form_rows.append(row[0])
+        form_rows.append(row[1])
+    else:
+        form_rows.append(row)
+
+    if tuple_rows:
+        # Assume TRs
+        form = FORM(TABLE(*form_rows))
+    else:
+        form = FORM(*form_rows)
+
+    if form.accepts(request.vars, session):
+        form_vars = form.vars
+        channel_id = form_vars.get("channel_id")
+        post = form_vars.get("post")
+        if channel_id and post:
+            msg.send_tweet(post)
+
+    output = dict(form = form,
+                  title = title,
+                  )
+    return output
 
 # =============================================================================
 # Enabled only for testing:

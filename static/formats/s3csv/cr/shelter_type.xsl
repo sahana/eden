@@ -7,7 +7,7 @@
          
          CSV column...........Format..........Content
 
-         Name.................string..........Service Name
+         Name.................string..........Type Name
          Comments.............string..........Comments
 
     *********************************************************************** -->

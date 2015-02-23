@@ -1,0 +1,83 @@
+// ht http://codepen.io/BJack/pen/bwKqv
+
+.diagram {
+  clear: both;
+  position: relative;
+  height: 175px;
+  text-align: center;
+  .bar {
+    appearance:none;
+    border: 0;
+    width: 75%;
+    margin: 0 12.5%;
+    position: relative;
+    top: 109px;
+    color: #fff;
+    color: rgba(255,255,255,.5);
+    height: 2px;
+  }
+  .bar::-webkit-progress-value{ /* Changes line color */
+    background: $white;
+    background: rgba(255,255,255,.5);
+    transition: all 0.4s ease-in-out;
+  }
+  .bar::-webkit-progress-bar{ /* Changes background color */
+    background: $white;
+    background: rgba(255,255,255,.5);
+  }
+  a {
+    display: inline;
+    position: absolute;
+    left: 0%;
+    top: 0;
+    width: 25%;
+    cursor: pointer;
+    transition: all 0.4s ease-in-out;
+    line-height: 1.3;
+    color: #A9B8D9;
+  }
+  .second{
+    left: 25%;
+  }
+  .third{
+    left: 50%;
+  }
+  .fourth{
+    left: 75%;
+  }
+  .border-change{
+    border-color:#fff;
+    transition: all 0.4s ease-in-out;
+  }
+  img {
+    display: block;
+    width: 100%;
+    max-width: 100px;
+    height: auto;
+    margin: 0 auto;
+    opacity: .5;
+    transition: all .3s ease;
+  }
+  .dot {
+    height: 12px;
+    width: 12px;
+    border-radius: 100%;
+    border: 3px solid #A9B8D9;
+    background: #A9B8D9;
+    line-height: 10px;
+    clear: both;
+    display: block;
+    margin: 5px auto;
+    transition: all .3s ease;
+  }
+  a:hover {
+    color: $white;
+    img {
+      opacity: 1;
+    }
+    .dot {
+      border-color: $white;
+      background: $white;
+    }
+  }
+}

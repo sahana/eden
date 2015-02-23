@@ -1,0 +1,2 @@
+Name,Controller,Function,Marker,Popup Format,Attributes,Visible,Enabled
+Projects,project,location,project,{name} (T('Project'))<br />{location_id}<br />{multi_activity_type_id},"name,location_id,multi_activity_type_id",True,True

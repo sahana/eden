@@ -2,7 +2,7 @@
 
 """ Sahana Eden Auth Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3AuthModel",
-           "S3UserOptions",
+__all__ = ("S3AuthModel",
+           "S3AuthUserOptions",
            "auth_user_options_get_osm"
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -39,7 +39,7 @@ from ..s3 import *
 # =============================================================================
 class S3AuthModel(S3Model):
 
-    names = ["auth_organisation"]
+    names = ("auth_organisation",)
 
     def model(self):
 
@@ -72,13 +72,13 @@ class S3AuthModel(S3Model):
                                             _title="%s|%s" % (current.messages.ORGANISATION,
                                                                 ORG_HELP))),
                           Field("domain",
-                                label=T("Domain"),
+                                label = T("Domain"),
                                 comment=DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Domain"),
                                                                 DOMAIN_HELP))),
                           Field("approver",
-                                label=T("Approver"),
-                                requires=IS_NULL_OR(IS_EMAIL()),
+                                label = T("Approver"),
+                                requires = IS_EMPTY_OR(IS_EMAIL()),
                                 comment=DIV(_class="tooltip",
                                             _title="%s|%s" % (T("Approver"),
                                                                 APPROVER_HELP))),
@@ -92,9 +92,9 @@ class S3AuthModel(S3Model):
 
 
 # =============================================================================
-class S3UserOptions(S3Model):
+class S3AuthUserOptions(S3Model):
 
-    names = ["auth_user_options"]
+    names = ("auth_user_options",)
 
     def model(self):
 
@@ -106,15 +106,17 @@ class S3UserOptions(S3Model):
                           Field("osm_oauth_consumer_key",
                                 label = T("OpenStreetMap OAuth Consumer Key"),
                                 comment = DIV(_class="stickytip",
-                                                _title="%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
-                                                                     T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreet server.") % \
-                                                                            dict(name_short=current.deployment_settings.get_system_name_short()),
-                                                                     T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
-                                                                            dict(url=A("http://www.openstreetmap.org",
-                                                                                        _href="http://www.openstreetmap.org",
-                                                                                        _target="blank"))))),
+                                              _title="%s|%s|%s" % (T("OpenStreetMap OAuth Consumer Key"),
+                                                                   T("In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.") % \
+                                                                        dict(name_short=current.deployment_settings.get_system_name_short()),
+                                                                   T("Go to %(url)s, sign up & then register your application. You can put any URL in & you only need to select the 'modify the map' permission.") % \
+                                                                        dict(url=A("http://www.openstreetmap.org",
+                                                                                   _href="http://www.openstreetmap.org",
+                                                                                   _target="blank"))))
+                                ),
                           Field("osm_oauth_consumer_secret",
-                                label = T("OpenStreetMap OAuth Consumer Secret")),
+                                label = T("OpenStreetMap OAuth Consumer Secret"),
+                                ),
                           *s3_meta_fields())
                           
         return {}

@@ -1,0 +1,9 @@
+UUID,Name,OU,OU Type,Region Country,Default Country,Default L1,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker,WMS Browser
+SITE_DEFAULT,Default,,,,,,3,48.2825,-109.29166,900913,-20,90,-180,-50,marker_red,
+,WGS84,,,,,,3,48.2825,-109.29166,4326,-20,90,-180,-50,,http://preview.grid.unep.ch:8080/geoserver/ows?service=WMS&request=GetCapabilities
+,AS,American Samoa,organisation,AS,AS,,11,-14.21756,-169.54496,900913,-20,-10,-180,-160,,
+,MP,Northern Mariana Islands,organisation,MP,MP,,10,15.048688,145.64064,900913,10,20,140,150,,
+,PR,Puerto Rico,organisation,PR,PR,,8,18.0426229,-65.94508,900913,16,20,-70,-60,,
+,US,American Red Cross,organisation,US,US,,3,48.2825,-109.29166,900913,-20,90,-180,-50,,
+,Crossroads Division,Crossroads Division,organisation,,US,,6,41.2832969699,-83.6056028125,900913,0,90,-180,-50,,
+,Northwest Ohio Region,Northwest Ohio Region,organisation,,US,Ohio,8,41.1140417057,-83.7992368457,900913,0,90,-180,-50,,

@@ -1,0 +1,15 @@
+<div class='row'>
+ <div class='span3'>
+  <div id='filter-form' class='side-filter form-container'>
+   <fieldset>
+    <legend>{{=T("Filter Options")}}</legend>
+   </fieldset>
+   {{try:}}{{=filter_form}}{{except:}}{{pass}}
+  </div>
+ </div>
+ <div class='span9'>
+  <div id='summary-common'>
+   {{try:}}{{for section in common:}}{{=section}}{{pass}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>

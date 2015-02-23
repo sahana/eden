@@ -1,3 +1,0 @@
-UUID,Name,Region Country,Default Country,Default L1,Zoom,Lat,Lon,Projection,Symbology,LatMin,LatMax,LonMin,LonMax,Geocoder,WMS Browser
-SITE_DEFAULT,Default,,US,Washington,9,47.709,-122.5252,900913,DRMP,-90,90,-180,180,True,
-,US,US,US,,9,47.709,-122.5252,900913,DRMP,-90,90,-180,180,True,

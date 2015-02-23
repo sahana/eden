@@ -1,0 +1,2 @@
+Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Style,Folder,Visible,Enabled,Style
+Alerts,,cap,alert,marker_red,,"{name} (T('Alert'))","name,cap_info.priority",~.is_template=False,,,True,,"[{'prop':'priority','cat':'Urgent','externalGraphic':'img/markers/CAP/urgent.png'},{'prop':'priority','cat':'High','externalGraphic':'img/markers/CAP/high.png'},{'prop':'priority','cat':'Low','externalGraphic':'img/markers/CAP/low.png'},{'prop':'priority','cat':'Undefined','externalGraphic':'img/markers/CAP/undefined.png'}]"

@@ -13,7 +13,6 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
-from gluon.dal import Expression
 
 from Cache import *
 from DSL.Units import MeaninglessUnitsException
@@ -24,6 +23,8 @@ from . import (
     units_in_out,
     start_month_0_indexed
 )
+
+from s3dal import Row
 
 def round_to_4_sd(x):
     if x == 0:

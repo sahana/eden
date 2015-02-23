@@ -1,0 +1,6 @@
+Incident,Organisation,First Name,Last Name,Status,Budget,Start,End,OneTimeCost,DailyCost
+Thunderstorm,American Red Cross of Northwest Ohio,James,Taylor,Active,Thunderstorm,2014-07-14,2014-09-14,100,200
+Thunderstorm,Hancock County,Alexander,Moore,Active,Thunderstorm,2014-07-14,2014-09-14,800,200
+Thunderstorm,West Central Ohio,Gavin,Garcia,Active,Thunderstorm,2014-07-15,2014-09-14,100,400
+Thunderstorm,West Central Ohio,Ella,Bailey,Active,Thunderstorm,2014-07-15,2014-09-14,100,280
+Thunderstorm,American Red Cross of Northwest Ohio,David,Wright,Active,Thunderstorm,2014-07-15,2014-09-14,80,130

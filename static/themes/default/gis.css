@@ -7,6 +7,10 @@
     overflow: hidden;
     clear: right;
 }
+.map_wrapper.fullscreen {
+    /* Allow legendPanel to be visible */
+    overflow: visible;
+}
 /* Allow LayerTree to Scroll */
 .gis_west .x-panel-body {
     overflow-y: auto;
@@ -24,6 +28,11 @@ form .map_loader {
 
 .x-form-item-label {
     margin: 0 0 0 4px;
+}
+
+/* Override widgets.css */
+.form-container form tr.x-toolbar-left-row td {
+    padding: 0;
 }
 
 /* Main Map */
@@ -55,12 +64,27 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     margin-top: -10px;
 }
 
+.gis-map-window.x-resizable-pinned .x-window-tl {
+    height: 0;
+}
+
 /* Location Selector Widget */
 .form-container form button.gis_loc_select_btn {
     padding: 4px;
 }
 .form-container form button.gis_loc_select_btn i.icon-map {
     padding-right: 2px;
+}
+
+/* gis_LocationRepresent with icon to display the feature */
+.gis-display-feature i.icon-map-marker {
+    cursor: pointer;
+    cursor: hand;
+    padding-left: 5px;
+}
+
+.embeddedComponent .map_wrapper {
+    width: 100%;
 }
 
 .gis_coord_wrap .decimal {
@@ -101,6 +125,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 .x-tree-node-ct {
     margin: 0;
 }
+/* Override NVD3 (now done in there)
+svg[id^=OpenLayers] {
+    height: auto;
+    width: auto;
+} */
 
 /* Legend */
 .map_legend_div {
@@ -109,12 +138,35 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     right: 0;
 }
 
-.map_legend_div.fullscreen {
+.map_wrapper.fullscreen .map_legend_div {
     z-index: 9100;
-    margin-bottom: -600px;
+}
+/* A4 is 595 x 842 at 72 dpi */
+.map_wrapper.a4 .map_legend_div {
+    margin-bottom: -440px;
+}
+/* A3 is 842 x 1191 at 72 dpi */
+.map_wrapper.a3 .map_legend_div {
+    margin-bottom: -687px;
+    right: -140px;
+}
+/* A2 is 1191 x 1684 at 72 dpi */
+.map_wrapper.a2 .map_legend_div {
+    margin-bottom: -1036px;
+    right: -530px;
+}
+/* A1 is 1684 x 2384 at 72 dpi */
+.map_wrapper.a1 .map_legend_div {
+    margin-bottom: -1529px;
+    right: -2130px;
+}
+/* A0 is 2384 x 3375 at 72 dpi */
+.map_wrapper.a0 .map_legend_div {
+    margin-bottom: -2229px;
+    right: -3125px;
 }
 .map_legend_panel {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     border: solid;
     border-radius: 5px 0 0 5px;
     padding: 1px;
@@ -129,7 +181,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     border: none;
 }
 .map_legend_tab {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     border: solid;
     border-width: 2px;
     margin-top: 5px;
@@ -160,6 +212,13 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     /* http://fortawesome.github.io/Font-Awesome/icon/double-angle-right/ */
     content: "\f101";
 }
+.map_wrapper.print .map_legend_tab {
+    height: 0;
+}
+.map_wrapper.print .map_legend_tab.right:before,
+.map_wrapper.print .map_legend_tab.left:before {
+    content: normal;
+}
 .gis_legend_title {
     font-weight: bold;
     margin-top: 10px;
@@ -181,7 +240,7 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 
 /* Save Panel */
 .map_save_panel {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     position: absolute;
     top: 0;
     right: 0;
@@ -192,15 +251,20 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     /*width: 210px;*/
     width: auto;
 }
-.map_save_panel.fullscreen {
+.map_wrapper.fullscreen .map_save_panel {
     z-index: 9100;
-    margin-top: -50px;
+    margin-top: -100px;
+}
+.map_wrapper.print .map_save_button {
+    height: 0;
+    width: 0;
+    visibility: hidden;
 }
 .map_save_panel.off {
     visibility: hidden;
 }
 .map_save_button {
-    background-color: #FBFBFB;
+    background-color: #fbfbfb;
     padding: 5px;
     border: solid;
     border-radius: 5px 5px 5px 5px;
@@ -263,14 +327,26 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 .olLayerGoogleCopyright {
     right: 3px;
     bottom: 2px;
-    left: auto;  
+    left: auto;
 }
 .olLayerGooglePoweredBy {
     left: 2px;
-    bottom: 2px;   
+    bottom: 2px;
 }
 .olForeignContainer div.olControlMousePosition {
     bottom: 28px;
+}
+
+/* Tooltips */
+.gis_tooltip {
+    /* Need to over-ride the element.style */
+    opacity: 0.7 !important;
+}
+.gis_tooltip_content {
+    /*background-color: #ffffcb;*/
+    overflow: hidden;
+    padding: 3px;
+    margin: 10px;
 }
 
 /* Popups */
@@ -396,6 +472,11 @@ body.rtl .map_home .gis_fullscreen_map-btn {
     height: 20px !important;
     width: 20px !important;
 }
+.mappnlcntr .print {
+    background-image: url(../../img/silk/printer.png) !important;
+    height: 20px !important;
+    width: 20px !important;
+}
 .mappnlcntr .save {
     background-image: url(../../img/ext/save.gif) !important;
     height: 20px !important;
@@ -435,6 +516,9 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 }
 .gxp-icon-layerproperties {
     background-image: url(../../img/silk/wrench.png) !important;
+}
+.icon-clearlayers {
+    background-image: url(../../img/silk/eye.png);
 }
 .mappnlcntr .movefeature {
     background-image: url(../../img/gis/arrow_refresh.png) !important;
@@ -487,9 +571,9 @@ body.rtl .map_home .gis_fullscreen_map-btn {
   width: 20px !important;
 }
 */
- 
+
 /* Print Preview
-.x-btn .icon-print { 
+.x-btn .icon-print {
     background-image: url(../../img/silk/printer.png);
 }
 
@@ -504,9 +588,9 @@ body.rtl .map_home .gis_fullscreen_map-btn {
 }
 
 .gx-map-overlay {
-    z-index: 1000; 
-    position: absolute; 
-    right: 10px; 
+    z-index: 1000;
+    position: absolute;
+    right: 10px;
     bottom: 10px;
     text-align: left;
 }

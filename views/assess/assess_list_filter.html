@@ -1,0 +1,11 @@
+{{extend "layout.html"}}
+{{include "_list_filter.html"}}
+{{try:}}
+{{incident = s3base.s3_get_last_record_id("irs_ireport")}}
+<script type="text/javascript">//<![CDATA[
+$(function() {
+    //$('#assess_assess_incident_id').val({{=incident}});
+});
+//]]></script>
+{{except:}}
+{{pass}}

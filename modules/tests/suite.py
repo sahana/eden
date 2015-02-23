@@ -31,9 +31,9 @@ from tests.person import *
 
 def loadAllTests():
 
-    # Run the file private/templates/<current_template>/tests.py to get tests list.
+    # Run the file modules/templates/<current_template>/tests.py to get tests list.
     path = os.path.join(request.folder,
-                        "private", "templates",
+                        "modules", "templates",
                         settings.get_template(),
                         "tests.py")
     if os.path.exists(path):
@@ -41,7 +41,7 @@ def loadAllTests():
     else:
         # Fallback to the default template tests.
         path = os.path.join(request.folder,
-                            "private", "templates",
+                            "modules", "templates",
                             "default",
                             "tests.py")
         settings.exec_template(path)

@@ -3,7 +3,7 @@
 .map_home {
     /* With side menu
     margin: 10px -15px 0 -16px; */
-    margin: 0;
+    margin: 0 0 0 -16px;
 }
 
 /* Over-ride Ext */
@@ -13,6 +13,9 @@
 .map_wrapper span a {
     /* For Catalogue Tabs */
     color: #fff;
+}
+.map_wrapper table td {
+    border: 0;
 }
 .map_wrapper td {
     padding: 0;
@@ -32,11 +35,6 @@
 }
 .gis-map-window  td:first-child {
     background: none repeat scroll 0 0 transparent;
-}
-
-/* ID => 1 map/page but alternatives ugly - see s3.gis.js */
-#map_panel table td {
-    border: 0;
 }
 
 table.x-toolbar-ct {

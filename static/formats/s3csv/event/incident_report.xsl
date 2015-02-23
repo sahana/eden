@@ -9,10 +9,10 @@
          Name.................................event_incident_report.name
          Type.................................event_incident_report.incident_type_id
          Date.................................event_incident_report.datetime
-         Reported By First Name...................person_id.first_name
-         Reported By Last Name....................person_id.first_name
-         Reported By Phone........................person_id -> pr_contact.value
-         Reported By Email........................person_id -> pr_contact.value
+         Reported By First Name...............person_id.first_name
+         Reported By Last Name................person_id.first_name
+         Reported By Phone....................person_id -> pr_contact.value
+         Reported By Email....................person_id -> pr_contact.value
          Organisation Group...................event_incident_report_group.group_id  
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode

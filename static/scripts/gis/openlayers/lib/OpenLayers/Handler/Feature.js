@@ -5,7 +5,7 @@
 
 
 /**
- * @requires OpenLayers/Handler.js
+ * requires OpenLayers/Handler.js
  */
 
 /**

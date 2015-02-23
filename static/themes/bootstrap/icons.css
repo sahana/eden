@@ -209,16 +209,7 @@ you can use the generic selector below, but it's slower:
 */
 
 /* Update Cards */
-.card-header .icon-activity,
-.card-header .icon-alert,
-.card-header .icon-assessment,
-.card-header .icon-incident, 
-.card-header .icon-offer,
-.card-header .icon-news,
-.card-header .icon-plan,
-.card-header .icon-request,
-.card-header .icon-report,
-.card-header .icon-training_material {
+.card-header .icon {
     font-size: 14px;
     display: inline-block;
     color: #413b3b;
@@ -247,4 +238,12 @@ you can use the generic selector below, but it's slower:
 .icon-resource:before {
     /* icon-truck */
     content: "\f0d1";
+}
+.icon-caret-down:before {
+  /* Used for filter forms, profile update form and AddPersonWidget2 deduplicator */
+  content: "\f0d7";
+}
+.icon-caret-up:before {
+  /* Used for filter forms and profile update form */
+  content: "\f0d8";
 }

@@ -13,7 +13,7 @@
          Contact Last Name....................person_id.first_name
          Contact Phone........................person_id -> pr_contact.value
          Contact Email........................person_id -> pr_contact.value
-         Organisation Group...................stats_people_group.group_id  
+         Organisation Group...................stats_people_group.group_id
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
          Country.................optional.....gis_location.L0 Name or ISO2
@@ -22,6 +22,7 @@
          L3......................optional.....gis_location.L3
          Lat..................................gis_location.lat
          Lon..................................gis_location.lon
+         WKT..................................gis_location.wkt
          Comments.............................stats_people.comments
 
     *********************************************************************** -->
@@ -32,6 +33,24 @@
 
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
+
+    <xsl:variable name="Country">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Country</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Lat">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lat</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:variable name="Lon">
+        <xsl:call-template name="ResolveColumnHeader">
+            <xsl:with-param name="colname">Lon</xsl:with-param>
+        </xsl:call-template>
+    </xsl:variable>
 
     <xsl:variable name="Postcode">
         <xsl:call-template name="ResolveColumnHeader">
@@ -48,13 +67,13 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Type -->
+            <!-- Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
                                                                        col[@field='Type'])[1])]">
                 <xsl:call-template name="Type"/>
             </xsl:for-each>
 
-            <!-- Organisation Group -->
+            <!-- Organisation Groups -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation_group',
                                                                        col[@field='Organisation Group'])[1])]">
                 <xsl:call-template name="OrganisationGroup"/>
@@ -83,7 +102,7 @@
             </xsl:if>
 
             <!-- Person -->
-            <xsl:if test="col[@field='Contact First Name']">
+            <xsl:if test="col[@field='Contact First Name']!=''">
                 <reference field="person_id" resource="pr_person">
                     <resource name="pr_person">
                         <data field="first_name"><xsl:value-of select="col[@field='Contact First Name']"/></data>
@@ -126,6 +145,7 @@
                     <xsl:value-of select="concat('Location:', col[@field='Address'], 
                                                               col[@field='Lat'], 
                                                               col[@field='Lon'],
+                                                              col[@field='WKT'],
                                                               col[@field='L3']
                                                               )"/>
                 </xsl:attribute>
@@ -136,13 +156,6 @@
         </resource>
         
         <xsl:call-template name="Locations"/>
-
-        <!-- Polygon -->
-        <xsl:if test="col[@field='WKT']!=''">
-            <resource name="gis_location">
-                <xsl:call-template name="Location"/>
-            </resource>
-        </xsl:if>
 
     </xsl:template>
 
@@ -185,7 +198,17 @@
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
-
+        <xsl:variable name="wkt" select="col[@field='WKT']/text()"/>
+        <xsl:variable name="lat">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lat"/>
+            </xsl:call-template>
+        </xsl:variable>
+        <xsl:variable name="lon">
+            <xsl:call-template name="GetColumnValue">
+                <xsl:with-param name="colhdrs" select="$Lon"/>
+            </xsl:call-template>
+        </xsl:variable>
         <xsl:variable name="postcode">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$Postcode"/>
@@ -332,8 +355,9 @@
         <resource name="gis_location">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('Location:', col[@field='Address'], 
-                                                          col[@field='Lat'], 
-                                                          col[@field='Lon'],
+                                                          $lat, 
+                                                          $lon,
+                                                          $wkt,
                                                           col[@field='L3'])"/>
             </xsl:attribute>
             <xsl:choose>
@@ -375,12 +399,15 @@
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
             <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
-            <xsl:if test="col[@field='Lat']!=''">
-                <data field="lat"><xsl:value-of select="col[@field='Lat']"/></data>
-            </xsl:if>
-            <xsl:if test="col[@field='Lon']!=''">
-                <data field="lon"><xsl:value-of select="col[@field='Lon']"/></data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$wkt!=''">
+                    <data field="wkt"><xsl:value-of select="$wkt"/></data>
+                </xsl:when>
+                <xsl:when test="$lat!='' and $lon!=''">
+                    <data field="lat"><xsl:value-of select="$lat"/></data>
+                    <data field="lon"><xsl:value-of select="$lon"/></data>
+                </xsl:when>
+            </xsl:choose>
         </resource>
 
     </xsl:template>

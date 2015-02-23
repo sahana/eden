@@ -123,6 +123,55 @@ gxp.util = {
         return a.href;
     },
 
+    /** api: function[throttle]
+     *  :arg func: ``Function``
+     *  :arg interval: ``Integer``
+     *  :arg scope: ``Object``
+     *  :return: ``Function``
+     *
+     *  Returns a function, that, when invoked, will only be triggered at 
+     *  most once during a given window of time.
+     */
+    throttle: (function() {
+        // taken from ExtJS 4.1
+        // TODO remove when we upgrade to ExtJS 4.1 or higher.
+        /**
+         * Creates a throttled version of the passed function which, when called repeatedly and
+         * rapidly, invokes the passed function only after a certain interval has elapsed since the
+         * previous invocation.
+         *
+         * This is useful for wrapping functions which may be called repeatedly, such as
+         * a handler of a mouse move event when the processing is expensive.
+         *
+         * @param {Function} fn The function to execute at a regular time interval.
+         * @param {Number} interval The interval **in milliseconds** on which the passed function is executed.
+         * @param {Object} scope (optional) The scope (`this` reference) in which
+         * the passed function is executed. If omitted, defaults to the scope specified by the caller.
+         * @returns {Function} A function which invokes the passed function at the specified interval.
+         */
+        var createThrottled = function(fn, interval, scope) {
+            var lastCallTime, elapsed, lastArgs, timer, execute = function() {
+                fn.apply(scope || this, lastArgs);
+                lastCallTime = new Date().getTime();
+            };
+
+            return function() {
+                elapsed = new Date().getTime() - lastCallTime;
+                lastArgs = arguments;
+
+                clearTimeout(timer);
+                if (!lastCallTime || (elapsed >= interval)) {
+                    execute();
+                } else {
+                    timer = setTimeout(execute, interval - elapsed);
+                }
+            };
+        };
+        return function(func, interval, scope) {
+            return createThrottled(func, interval, scope);
+        };
+    })(),
+
     /** api: function[md5]
      *  :arg data: ``String``
      *  :returns: ``String`` md5 hash

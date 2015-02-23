@@ -98,7 +98,7 @@ def assess_tables():
                  *s3_meta_fields())
 
     assess_id = S3ReusableField("assess_id", "reference %s" % tablename,
-                                requires = IS_NULL_OR(
+                                requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "assess_assess.id", "%(id)s")
                                             ),
                                 represent = lambda id: id,
@@ -108,13 +108,11 @@ def assess_tables():
     # CRUD strings
     ADD_ASSESSMENT = T("Add Assessment")
     crud_strings[tablename] = Storage(
-        title_create = ADD_ASSESSMENT,
+        label_create = ADD_ASSESSMENT,
         title_display = T("Assessment Details"),
         title_list = T("Assessments"),
         title_update = T("Edit Assessment"),
-        subtitle_create = T("Add New Assessment"),
         label_list_button = T("List Assessments"),
-        label_create_button = ADD_ASSESSMENT,
         label_delete_button = T("Delete Assessment"),
         msg_record_created = T("Assessment added"),
         msg_record_modified = T("Assessment updated"),
@@ -142,13 +140,11 @@ def assess_tables():
     # CRUD strings
     ADD_BASELINE_TYPE = T("Add Baseline Type")
     crud_strings[tablename] = Storage(
-        title_create = ADD_BASELINE_TYPE,
+        label_create = ADD_BASELINE_TYPE,
         title_display = T("Baseline Type Details"),
         title_list = T("Baseline Types"),
         title_update = T("Edit Baseline Type"),
-        subtitle_create = T("Add New Baseline Type"),
         label_list_button = T("List Baseline Types"),
-        label_create_button = ADD_BASELINE_TYPE,
         label_delete_button = T("Delete Baseline Type"),
         msg_record_created = T("Baseline Type added"),
         msg_record_modified = T("Baseline Type updated"),
@@ -169,10 +165,10 @@ def assess_tables():
     represent = S3Represent(tablename)
     baseline_type_id = S3ReusableField("baseline_type_id", "reference %s" % tablename,
                                        sortby="name",
-                                       requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                       "assess_baseline_type.id",
-                                                                       represent,
-                                                                       sort=True)),
+                                       requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                                        "assess_baseline_type.id",
+                                                                        represent,
+                                                                        sort=True)),
                                        represent = represent,
                                        label = T("Baseline Type"),
                                        comment = baseline_type_comment(),
@@ -194,13 +190,11 @@ def assess_tables():
     # CRUD strings
     ADD_BASELINE = T("Add Baseline")
     crud_strings[tablename] = Storage(
-        title_create = ADD_BASELINE,
+        label_create = ADD_BASELINE,
         title_display = T("Baselines Details"),
         title_list = T("Baselines"),
         title_update = T("Edit Baseline"),
-        subtitle_create = T("Add New Baseline"),
         label_list_button = T("List Baselines"),
-        label_create_button = ADD_BASELINE,
         label_delete_button = T("Delete Baseline"),
         msg_record_created = T("Baseline added"),
         msg_record_modified = T("Baseline updated"),
@@ -232,13 +226,11 @@ def assess_tables():
     # CRUD strings
     ADD_ASSESS_SUMMARY = T("Add Assessment Summary")
     crud_strings[tablename] = Storage(
-        title_create = ADD_ASSESS_SUMMARY,
+        label_create = ADD_ASSESS_SUMMARY,
         title_display = T("Assessment Summary Details"),
         title_list = T("Assessment Summaries"),
         title_update = T("Edit Assessment Summary"),
-        subtitle_create = T("Add New Assessment Summary"),
         label_list_button = T("List Assessment Summaries"),
-        label_create_button = ADD_ASSESS_SUMMARY,
         label_delete_button = T("Delete Assessment Summary"),
         msg_record_created = T("Assessment Summary added"),
         msg_record_modified = T("Assessment Summary updated"),
@@ -274,13 +266,11 @@ def rat_tables():
     # Section CRUD strings
     ADD_SECTION = T("Add Section")
     rat_section_crud_strings = Storage(
-        title_create = ADD_SECTION,
+        label_create = ADD_SECTION,
         title_display = T("Section Details"),
         title_list = T("Sections"),
         title_update = "",
-        subtitle_create = "",
         label_list_button = T("List Sections"),
-        label_create_button = ADD_SECTION,
         label_delete_button = T("Delete Section"),
         msg_record_created = T("Section updated"),
         msg_record_modified = T("Section updated"),
@@ -409,26 +399,26 @@ def rat_tables():
                  human_resource_id("staff2_id", label=T("Staff2")),
                  Field("interview_location", "list:integer",
                        label = T("Interview taking place at"),
-                       requires = IS_NULL_OR(IS_IN_SET(rat_interview_location_opts,
-                                                       multiple=True,
-                                                       zero=None)),
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_interview_location_opts,
+                                                        multiple=True,
+                                                        zero=None)),
                        #widget = SQLFORM.widgets.checkboxes.widget,
                        represent = lambda opt, set=rat_interview_location_opts: \
                                       rat_represent_multiple(set, opt),
                        comment = "(%s)" % T("Select all that apply")),
                  Field("interviewee", "list:integer",
                        label = T("Person interviewed"),
-                       requires = IS_NULL_OR(IS_IN_SET(rat_interviewee_opts,
-                                                    multiple=True,
-                                                    zero=None)),
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_interviewee_opts,
+                                                        multiple=True,
+                                                        zero=None)),
                        #widget = SQLFORM.widgets.checkboxes.widget,
                       represent = lambda opt, set=rat_interviewee_opts: \
                                     rat_represent_multiple(set, opt),
                        comment = "(%s)" % T("Select all that apply")),
                  Field("accessibility", "integer",
                        label = T("Accessibility of Affected Location"),
-                       requires = IS_NULL_OR(IS_IN_SET(rat_accessibility_opts,
-                                                      zero=None)),
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_accessibility_opts,
+                                                        zero=None)),
                        represent = lambda opt: rat_accessibility_opts.get(opt, opt)),
                  s3_comments(),
                  #document_id(),  # Better to have multiple Documents on a Tab
@@ -438,13 +428,11 @@ def rat_tables():
     # CRUD strings
     ADD_ASSESSMENT = T("Add Rapid Assessment")
     crud_strings[tablename] = Storage(
-        title_create = ADD_ASSESSMENT,
+        label_create = ADD_ASSESSMENT,
         title_display = T("Rapid Assessment Details"),
         title_list = T("Rapid Assessments"),
         title_update = T("Edit Rapid Assessment"),
-        subtitle_create = T("Add New Rapid Assessment"),
         label_list_button = T("List Rapid Assessments"),
-        label_create_button = ADD_ASSESSMENT,
         label_delete_button = T("Delete Rapid Assessment"),
         msg_record_created = T("Rapid Assessment added"),
         msg_record_modified = T("Rapid Assessment updated"),
@@ -503,7 +491,7 @@ def rat_tables():
     # -------------------------------------------------------------------------
     # re-usable field
     assessment_id = S3ReusableField("assessment_id", "reference %s" % tablename,
-                                    requires = IS_NULL_OR(
+                                    requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "assess_rat.id",
                                                           rat_represent,
                                                           orderby="assess_rat.id")
@@ -676,9 +664,9 @@ def rat_tables():
                                    "Number of houses damaged, but usable",
                                    "How many houses suffered damage but remain usable (usable = windows broken, cracks in walls, roof slightly damaged)?")),
                          Field("houses_salvmat", "list:integer",
-                               requires = IS_NULL_OR(IS_IN_SET(rat_houses_salvmat_types,
-                                                               multiple=True,
-                                                               zero=None)),
+                               requires = IS_EMPTY_OR(IS_IN_SET(rat_houses_salvmat_types,
+                                                                multiple=True,
+                                                                zero=None)),
                                represent = lambda opt, set=rat_houses_salvmat_types: \
                                                rat_represent_multiple(set, opt),
                                **rat_label_and_tooltip(
@@ -1775,9 +1763,9 @@ def rat_tables():
                 return None
             else:
                 # Other formats?
-                raise HTTP(501, body=BADFORMAT)
+                raise HTTP(501, ERROR.BAD_FORMAT)
         else:
-            raise HTTP(501, body=BADMETHOD)
+            raise HTTP(501, ERROR.BAD_METHOD)
 
 
     s3db.set_method("assess", "rat",
@@ -1805,13 +1793,11 @@ define_table(tablename,
 
 # CRUD strings
 crud_strings[tablename] = Storage(
-    title_create = T("Add Population Statistic"),
+    label_create = T("Add Population Statistic"),
     title_display = T("Population Statistic Details"),
     title_list = T("Population Statistics"),
     title_update = T("Edit Population Statistic"),
-    subtitle_create = T("Add New Population Statistic"),
     label_list_button = T("List Population Statistics"),
-    label_create_button = T("Add Population Statistic"),
     label_delete_button = T("Delete Population Statistic"),
     msg_record_created = T("Population Statistic added"),
     msg_record_modified = T("Population Statistic updated"),
@@ -1849,13 +1835,11 @@ def impact_tables():
     # CRUD strings
     ADD_IMPACT_TYPE = T("Add Impact Type")
     s3.crud_strings[tablename] = Storage(
-        title_create = ADD_IMPACT_TYPE,
+        label_create = ADD_IMPACT_TYPE,
         title_display = T("Impact Type Details"),
         title_list = T("Impact Types"),
         title_update = T("Edit Impact Type"),
-        subtitle_create = T("Add New Impact Type"),
         label_list_button = T("List Impact Types"),
-        label_create_button = ADD_IMPACT_TYPE,
         label_delete_button = T("Delete Impact Type"),
         msg_record_created = T("Impact Type added"),
         msg_record_modified = T("Impact Type updated"),
@@ -1875,7 +1859,7 @@ def impact_tables():
     represent = S3Represent(tablename)
     impact_type_id = S3ReusableField("impact_type_id", "reference %s" % tablename,
                                      sortby="name",
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "impact_type.id",
                                                               represent,
@@ -1907,13 +1891,11 @@ def impact_tables():
     # CRUD strings
     ADD_IMPACT = T("Add Impact")
     crud_strings[tablename] = Storage(
-        title_create = ADD_IMPACT,
+        label_create = ADD_IMPACT,
         title_display = T("Impact Details"),
         title_list = T("Impacts"),
         title_update = T("Edit Impact"),
-        subtitle_create = T("Add New Impact"),
         label_list_button = T("List Impacts"),
-        label_create_button = ADD_IMPACT,
         label_delete_button = T("Delete Impact"),
         msg_record_created = T("Impact added"),
         msg_record_modified = T("Impact updated"),
@@ -1957,9 +1939,9 @@ def rat():
     table = db[tablename]
 
     # Villages only
-    #table.location_id.requires = IS_NULL_OR(IS_ONE_OF(db(db.gis_location.level == "L5"),
-    #                                                  "gis_location.id",
-    #                                                  repr_select, sort=True))
+    #table.location_id.requires = IS_EMPTY_OR(IS_ONE_OF(db(db.gis_location.level == "L5"),
+    #                                                   "gis_location.id",
+    #                                                   repr_select, sort=True))
 
     # Subheadings in forms:
     configure("assess_section2",

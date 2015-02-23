@@ -1,0 +1,103 @@
+{{extend "layout.html"}}{{theme=response.s3.theme}}
+
+<div class = 'title'>
+ <h2>Regional Office for Caucasus and Central Asia (ROCCA)</h2>
+ <h1>Humanitarian Data Platform</h1>
+</div>
+
+    <!-- Carousel
+    ================================================== -->
+    <div id='ocharocca-carousel' class='carousel slide' data-ride='carousel'>
+      <!-- Indicators -->
+      <ol class='carousel-indicators'>
+        <li data-target='#ocharocca-carousel' data-slide-to='0' class='active'></li>
+        <li data-target='#ocharocca-carousel' data-slide-to='1'></li>
+        <li data-target='#ocharocca-carousel' data-slide-to='2'></li>
+      </ol>
+      <div class='carousel-inner'>
+        <div class='item active'>
+          <div class='carousel-caption'>
+            <h2>Data Repository</h2>
+            <p>Source for all geographic, demographic, baseline and disaster data</p>
+          </div>
+          <a href='/{{=appname}}/stats/demographic_data/summary'>
+           <img src='/{{=appname}}/static/themes/OCHAROCCA/img/table.png' alt='{{=T("Table")}}'>
+          </a>
+        </div>
+        <div class='item'>
+          <div class='carousel-caption'>
+            <h2>Maps</h2>
+            <p>View maps of demographic and baselines to support vulnerability analysis and situational awareness</p>
+             <a class='link' href='/{{=appname}}/stats/demographic_data/summary#map' role='button'>
+              <h3>View Maps</h3>
+             </a>
+          </div>
+          <a href='/{{=appname}}/stats/demographic_data/summary#map'>
+           <img src='/{{=appname}}/static/themes/OCHAROCCA/img/map.png' alt='{{=T("Maps")}}'>
+          </a>
+        </div>
+        <div class='item'>
+          <div class='carousel-caption'>
+            <h2>Charts</h2>
+            <p>View charts of demographic and baselines to support vulnerability analysis and situational awareness</p>
+             <a class='link' href='/{{=appname}}/stats/demographic_data/summary#charts' role='button'>
+              <h3>View Charts</h3>
+             </a>
+          </div>
+          <a href='/{{=appname}}/stats/demographic_data/summary#charts'>
+           <img src='/{{=appname}}/static/themes/OCHAROCCA/img/chart.png' alt='{{=T("Charts")}}'>
+          </a>
+        </div>
+      </div>
+      <a class='carousel-control left' href='#ocharocca-carousel' data-slide='prev'>&lsaquo;</a>
+      <a class='carousel-control right' href='#ocharocca-carousel' data-slide='next'>&rsaquo;</a>
+    </div><!-- /.carousel -->
+
+
+<div class='homepage countries'>
+  <!-- <div class='span2'>Offset </div>-->
+  {{for country in response.countries:}}
+    <div class='country {{=country["code"]}}'>
+      <img src='/{{=appname}}/static/themes/OCHAROCCA/img/{{=country["code"]}}.png' class='flag'/>
+      <h3>{{=country["name"]}}</h3>
+    </div>
+  {{pass}}
+</div>
+
+<div class='homepage menus'> 
+  <div class='menu'>
+   <a href='/{{=appname}}/gis/location/summary'>
+     <h3><span class='badge location throbber'></span>Administrative Areas</h3>
+     <p><span class='badge gis_location_L0 throbber'></span> Country</p>
+     <p><span class='badge gis_location_L1 throbber'></span> Admin 1</p>
+     <p><span class='badge gis_location_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge gis_location_L3 throbber'></span> Admin 3</p>
+     <p><span class='badge gis_location_L4 throbber'></span> Admin 4</p>
+   </a>
+  </div>
+  <div class='menu'>
+   <a href='/{{=appname}}/stats/demographic_data/summary'>
+     <h3>Demographic Data</h3>
+     <p><span class='badge stats_demographic_data_L0 throbber'></span> Country</p>
+     <p><span class='badge stats_demographic_data_L1 throbber'></span> Admin 1</p>
+     <p><span class='badge stats_demographic_data_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge stats_demographic_data_L3 throbber'></span> Admin 3</p>
+     <p><span class='badge stats_demographic_data_L4 throbber'></span> Admin 4</p>
+   </a>
+  </div>
+  <div class='menu'>
+   <a href='/{{=appname}}/vulnerability/data/summary'>
+     <h3>Baseline Data</h3>
+     <p><span class='badge vulnerability_data_L0 throbber'></span> Country</p>
+     <p><span class='badge vulnerability_data_L1 throbber'></span> Admin 1</p>
+     <p><span class='badge vulnerability_data_L2 throbber'></span> Admin 2</p>
+     <p><span class='badge vulnerability_data_L3 throbber'></span> Admin 3</p>
+     <p><span class='badge vulnerability_data_L4 throbber'></span> Admin 4</p>
+   </a>
+  </div>
+  <div class='menu'>
+   <a href='/{{=appname}}/event/event/summary'>
+     <h3><span class='badge event_event throbber'></span>Disasters</h3>
+   </a>
+  </div>
+</div>

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Fire Models
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,13 +27,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3FireModel",
+__all__ = ("S3FireModel",
            "S3FireStationModel",
-           ]
+           )
 
 from gluon import *
-from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
@@ -43,9 +43,9 @@ class S3FireModel(S3Model):
         Fire Zones: Burn Perimeter, Burnt zone, Evacuation Zone, etc
     """
 
-    names = ["fire_zone_type",
+    names = ("fire_zone_type",
              "fire_zone",
-             ]
+             )
 
     def model(self):
 
@@ -60,7 +60,9 @@ class S3FireModel(S3Model):
         tablename = "fire_zone_type"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      # @ToDo: Currently unused - apply in layer_feature for now
                      Field("style", "text",
                            label=T("Style")),
@@ -68,16 +70,14 @@ class S3FireModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_ZONE_TYPE = T("Add Zone Type")
+        ADD_ZONE_TYPE = T("Create Zone Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ZONE_TYPE,
+            label_create = ADD_ZONE_TYPE,
             title_display = T("Zone Type Details"),
             title_list = T("Zone Types"),
             title_update = T("Edit Zone Type"),
             title_upload = T("Import Zone Types"),
-            subtitle_create = T("Add New Zone Type"),
             label_list_button = T("List Zone Types"),
-            label_create_button = T("Add New Zone Type"),
             label_delete_button = T("Delete Zone Type"),
             msg_record_created = T("Zone Type added"),
             msg_record_modified = T("Zone Type updated"),
@@ -95,9 +95,11 @@ class S3FireModel(S3Model):
         tablename = "fire_zone"
         define_table(tablename,
                      Field("name",
-                           label=T("Name")),
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("zone_type_id", db.fire_zone_type,
-                           requires = IS_NULL_OR(
+                           requires = IS_EMPTY_OR(
                                          IS_ONE_OF(db, "fire_zone_type.id",
                                                    zone_type_represent,
                                                    sort=True)),
@@ -108,24 +110,22 @@ class S3FireModel(S3Model):
                                                        tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
                            label=T("Type")),
                      self.gis_location_id(
-                       widget = S3LocationSelectorWidget2(
-                           catalog_layers=True,
-                           polygons=True
-                           )
-                       ),
+                       widget = S3LocationSelector(catalog_layers = True,
+                                                   points = False,
+                                                   polygons = True,
+                                                   )
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Zone"),
+            label_create = T("Create Zone"),
             title_display = T("Zone Details"),
             title_list = T("Zones"),
             title_update = T("Edit Zone"),
             title_upload = T("Import Zones"),
-            subtitle_create = T("Add New Zone"),
             label_list_button = T("List Zones"),
-            label_create_button = T("Add New Zone"),
             label_delete_button = T("Delete Zone"),
             msg_record_created = T("Zone added"),
             msg_record_modified = T("Zone updated"),
@@ -146,14 +146,13 @@ class S3FireModel(S3Model):
             @param item: the S3ImportItem to check
         """
 
-        if item.tablename == "fire_zone_type":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
+        table = item.table
+        query = (table.name == item.data.name)
+        row = current.db(query).select(table.id,
+                                       limitby=(0, 1)).first()
+        if row:
+            item.id = row.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3FireStationModel(S3Model):
@@ -162,12 +161,13 @@ class S3FireStationModel(S3Model):
         http://eden.sahanafoundation.org/wiki/Deployments/Bombeiros
     """
 
-    names = ["fire_station",
+    names = ("fire_station",
              "fire_station_vehicle",
              "fire_water_source",
              "fire_hazard_point",
-             "fire_staff_on_duty"
-             ]
+             "fire_staff_on_duty",
+             "fire_shift_staff",
+             )
 
     def model(self):
 
@@ -179,8 +179,6 @@ class S3FireStationModel(S3Model):
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
         human_resource_id = self.hrm_human_resource_id
-        ireport_id = self.irs_ireport_id
-        vehicle_id = self.vehicle_vehicle_id
 
         add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
@@ -189,44 +187,53 @@ class S3FireStationModel(S3Model):
         # =====================================================================
         # Fire Station
         #
-        fire_station_types = {
-            1: T("Fire Station"),
-            9: T("Unknown type of facility"),
-        }
+        fire_station_types = {1: T("Fire Station"),
+                              9: T("Unknown type of facility"),
+                              }
 
         tablename = "fire_station"
         define_table(tablename,
                      self.super_link("site_id", "org_site"),
                      Field("name", notnull=True, length=64,
-                           label = T("Name")),
+                           label = T("Name"),
+                           ),
                      Field("code", unique=True, length=64,
-                           label = T("Code")),
+                           label = T("Code"),
+                           ),
                      Field("facility_type", "integer",
-                           label = T("Facility Type"),
-                           requires = IS_NULL_OR(IS_IN_SET(fire_station_types)),
                            default = 1,
+                           label = T("Facility Type"),
                            represent = lambda opt: \
-                                       fire_station_types.get(opt, T("not specified"))
+                                       fire_station_types.get(opt, T("not specified")),
+                           requires = IS_EMPTY_OR(IS_IN_SET(fire_station_types)),
                            ),
                      organisation_id(),
                      location_id(),
-                     Field("phone", label = T("Phone"),
-                           requires = IS_NULL_OR(s3_phone_requires)),
-                     Field("website", label=T("Website"),
-                           requires = IS_NULL_OR(IS_URL()),
-                           represent = lambda url: s3_url_represent(url)),
-                     Field("email", label = T("Email"),
-                           requires = IS_NULL_OR(IS_EMAIL())
+                     Field("phone",
+                           label = T("Phone"),
+                           requires = IS_EMPTY_OR(s3_phone_requires),
                            ),
-                     Field("fax", label = T("Fax"),
-                           requires = IS_NULL_OR(s3_phone_requires)),
+                     Field("website",
+                           label = T("Website"),
+                           represent = lambda url: s3_url_represent(url),
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           ),
+                     Field("email",
+                           label = T("Email"),
+                           requires = IS_EMPTY_OR(IS_EMAIL()),
+                           ),
+                     Field("fax",
+                           label = T("Fax"),
+                           requires = IS_EMPTY_OR(s3_phone_requires),
+                           ),
                      Field("obsolete", "boolean",
+                           default = False,
                            label = T("Obsolete"),
                            represent = lambda opt: \
                                        (opt and [T("Obsolete")] or [current.messages["NONE"]])[0],
-                           default = False,
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -235,26 +242,23 @@ class S3FireStationModel(S3Model):
                        )
 
         station_id = S3ReusableField("station_id", "reference %s" % tablename,
-                                     requires = IS_NULL_OR(
+                                     label = T("Station"),
+                                     ondelete = "CASCADE",
+                                     represent = self.fire_station_represent,
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "fire_station.id",
                                                               self.fire_station_represent)),
-                                     represent = self.fire_station_represent,
-                                     label = T("Station"),
-                                     ondelete = "CASCADE"
                                      )
 
         # CRUD strings
-        ADD_FIRE_STATION = T("Add Fire Station")
         crud_strings[tablename] = Storage(
-            title_create = ADD_FIRE_STATION,
+            label_create = T("Create Fire Station"),
             title_display = T("Fire Station Details"),
             title_list = T("Fire Stations"),
             title_update = T("Edit Station Details"),
             title_upload = T("Upload Fire Stations List"),
             title_map = T("Map of Fire Stations"),
-            subtitle_create = T("Add New Fire Station"),
             label_list_button = T("List Fire Stations"),
-            label_create_button = ADD_FIRE_STATION,
             label_delete_button = T("Delete Fire Station"),
             msg_record_created = T("Fire Station added"),
             msg_record_modified = T("Fire Station updated"),
@@ -264,36 +268,35 @@ class S3FireStationModel(S3Model):
 
         # Components
         add_components(tablename,
-                       vehicle_vehicle={"link": "fire_station_vehicle",
-                                        "joinby": "station_id",
-                                        "key": "vehicle_id",
-                                        "actuate": "replace",
-                                       },
-                       fire_shift="station_id",
-                       fire_shift_staff="station_id",
-                      )
+                       vehicle_vehicle = {"link": "fire_station_vehicle",
+                                          "joinby": "station_id",
+                                          "key": "vehicle_id",
+                                          "actuate": "replace",
+                                          },
+                       fire_shift = "station_id",
+                       fire_shift_staff = "station_id",
+                       )
 
         # =====================================================================
         # Vehicles of Fire stations
         #
         tablename = "fire_station_vehicle"
         define_table(tablename,
-                     station_id(),
-                     vehicle_id(),
+                     station_id(empty = False),
+                     self.vehicle_vehicle_id(empty = False,
+                                             ondelete = "CASCADE",
+                                             ),
                      *s3_meta_fields()
                      )
 
         # CRUD strings
-        ADD_VEHICLE = T("Add Vehicle")
         crud_strings[tablename] = Storage(
-            title_create = ADD_VEHICLE,
+            label_create = T("Add Vehicle"),
             title_display = T("Vehicle Details"),
             title_list = T("Vehicles"),
             title_update = T("Edit Vehicle Details"),
             title_upload = T("Upload Vehicles List"),
-            subtitle_create = T("Add New Vehicle"),
             label_list_button = T("List Vehicles"),
-            label_create_button = ADD_VEHICLE,
             label_delete_button = T("Delete Vehicle"),
             msg_record_created = T("Vehicle added"),
             msg_record_modified = T("Vehicle updated"),
@@ -302,15 +305,19 @@ class S3FireStationModel(S3Model):
             msg_list_empty = T("No Vehicles currently registered"))
 
         self.set_method("fire", "station",
-                        method="vehicle_report",
-                        action=self.vehicle_report)
+                        method = "vehicle_report",
+                        action = self.vehicle_report,
+                        )
 
         # =====================================================================
         # Water Sources
         #
         tablename = "fire_water_source"
         define_table(tablename,
-                     Field("name", "string"),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      location_id(),
                      #Field("good_for_human_usage", "boolean"),
                      #Field("fresh", "boolean"),
@@ -358,7 +365,10 @@ class S3FireStationModel(S3Model):
         tablename = "fire_hazard_point"
         define_table(tablename,
                      location_id(),
-                     Field("name", "string"),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      # What are the Org & Person for? Contacts?
                      organisation_id(),
                      person_id(),
@@ -373,29 +383,31 @@ class S3FireStationModel(S3Model):
                      station_id(),
                      Field("name"),
                      s3_datetime("start_time",
-                                 empty=False,
-                                 default="now"
+                                 empty = False,
+                                 default = "now"
                                  ),
                      s3_datetime("end_time",
-                                 empty=False,
-                                 default="now"
+                                 empty = False,
+                                 default = "now"
                                  ),
                      *s3_meta_fields())
 
         shift_id = S3ReusableField("shift_id", "reference %s" % tablename,
-                                   requires = IS_NULL_OR(
+                                   label = T("Shift"),
+                                   ondelete = "CASCADE",
+                                   represent = self.fire_shift_represent,
+                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "fire_shift.id",
                                                           self.fire_shift_represent)),
-                                   represent = self.fire_shift_represent,
-                                   label = T("Shift"),
-                                   ondelete = "CASCADE")
+                                   )
 
         # ---------------------------------------------------------------------
         tablename = "fire_shift_staff"
         define_table(tablename,
                      station_id(),
                      #shift_id(),
-                     human_resource_id(),
+                     human_resource_id(empty = False,
+                                       ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

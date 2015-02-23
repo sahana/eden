@@ -20,7 +20,9 @@ GeoExt.Lang.add("pl", {
         panelTitleText: "Tytuł",
         layerSelectionText: "Pokaż dostępne warstwy z:",
         doneText: "Gotowe",
-        uploadText: "Wyślij dane"
+        uploadText: "Wyślij dane",
+        addFeedActionMenuText: "Add feeds",
+        searchText: "Search for layers"
     },
     
     "gxp.plugins.BingSource.prototype": {
@@ -31,8 +33,13 @@ GeoExt.Lang.add("pl", {
     },    
 
     "gxp.plugins.FeatureEditor.prototype": {
+        splitButtonText: "Edit",
+        createFeatureActionText: "Create",
+        editFeatureActionText: "Modify",
         createFeatureActionTip: "Utwórz nowy obiekt",
-        editFeatureActionTip: "Edytuj istniejący obiekt"
+        editFeatureActionTip: "Edytuj istniejący obiekt",
+        commitTitle: "Commit message",
+        commitText: "Please enter a commit message for this edit:"
     },
     
     "gxp.plugins.FeatureGrid.prototype": {
@@ -42,8 +49,7 @@ GeoExt.Lang.add("pl", {
         zoomPageExtentTip: "Powiększ do zasięgu strony",
         nextPageTip: "Następna strona",
         lastPageTip: "Ostatnia strona",
-        totalMsg: "Razem: {0} wierszy"
-
+        totalMsg: "Features {1} to {2} of {0}"
     },
     
     "gxp.plugins.GoogleEarth.prototype": {
@@ -71,12 +77,17 @@ GeoExt.Lang.add("pl", {
         baseNodeText: "Mapa referencyjna"
     },
 
+    "gxp.plugins.LayerManager.prototype": {
+        baseNodeText: "Mapa referencyjna"
+    },
+
     "gxp.plugins.Legend.prototype": {
         menuText: "Legenda mapy",
         tooltip: "Legenda mapy"
     },
 
     "gxp.plugins.Measure.prototype": {
+        buttonText: "Pomiary",
         lengthMenuText: "Długość",
         areaMenuText: "Powierzchnia",
         lengthTooltip: "Pomiar odległości",
@@ -98,11 +109,12 @@ GeoExt.Lang.add("pl", {
 
     "gxp.plugins.OSMSource.prototype": {
         title: "OpenStreetMap",
-        mapnikAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>",
+        mapnikAttribution: "&copy; <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors",
         osmarenderAttribution: "Data CC-By-SA by <a href='http://openstreetmap.org/'>OpenStreetMap</a>"
     },
 
     "gxp.plugins.Print.prototype": {
+        buttonText:"Drukuj",
         menuText: "Drukuj",
         tooltip: "Drukuj",
         previewText: "Podgląd wydruku",
@@ -122,8 +134,7 @@ GeoExt.Lang.add("pl", {
         queryActionText: "Wyszukaj",
         queryMenuText: "Przeszukaj warstwę",
         queryActionTip: "Przeszukaj zaznaczoną warstwę",
-        queryByLocationText: "Przeszukaj po współrzędnych",
-        currentTextText: "Aktualny obszar",
+        queryByLocationText: "Query by current map extent",
         queryByAttributesText: "Przeszukaj po atrybutach",
         queryMsg: "Przeszukiwanie...",
         cancelButtonText: "Anuluj",
@@ -142,13 +153,16 @@ GeoExt.Lang.add("pl", {
     },
 
     "gxp.plugins.WMSGetFeatureInfo.prototype": {
+        buttonText:"Identify",
         infoActionTip: "Info o obiekcie",
         popupTitle: "Info o obiekcie"
     },
 
     "gxp.plugins.Zoom.prototype": {
+        zoomMenuText: "Zoom Box",
         zoomInMenuText: "Powiększ",
         zoomOutMenuText: "Pomniejsz",
+        zoomTooltip: "Zoom by dragging a box",
         zoomInTooltip: "Powiększ",
         zoomOutTooltip: "Pomniejsz"
     },
@@ -277,6 +291,7 @@ GeoExt.Lang.add("pl", {
     },
     
     "gxp.WMSLayerPanel.prototype": {
+        attributionText: "Attribution",
         aboutText: "O",
         titleText: "Tytuł",
         nameText: "Nazwa",
@@ -287,9 +302,19 @@ GeoExt.Lang.add("pl", {
         transparentText: "Przeźr.",
         cacheText: "Cache",
         cacheFieldText: "Użyj wersji cache",
-        stylesText: "Style",
+        stylesText: "Dostępne Style",
         infoFormatText: "Info format",
-        infoFormatEmptyText: "Select a format"
+        infoFormatEmptyText: "Select a format",
+        displayOptionsText: "Display options",
+        queryText: "Limit with filters",
+        scaleText: "Limit by scale",
+        minScaleText: "Min scale",
+        maxScaleText: "Max scale",
+        switchToFilterBuilderText: "Switch back to filter builder",
+        cqlPrefixText: "or ",
+        cqlText: "use CQL filter instead",
+        singleTileText: "Single tile",
+        singleTileFieldText: "Use a single tile"
     },
 
     "gxp.EmbedMapDialog.prototype": {
@@ -338,13 +363,17 @@ GeoExt.Lang.add("pl", {
         fileLabel: "Dane",
         fieldEmptyText: "Wskaż lokalizację danych...",
         uploadText: "Prześlij",
+        uploadFailedText: "Upload failed",
+        processingUploadText: "Processing upload...",
+        importText: "Importing upload...",
         waitMsgText: "Przesyłanie danych...",
         invalidFileExtensionText: "Typ pliku musi być jednym z poniższych: ",
         optionsText: "Opcje",
         workspaceLabel: "Obszar roboczy",
         workspaceEmptyText: "Domyślny obszar roboczy",
         dataStoreLabel: "Magazyn danych",
-        dataStoreEmptyText: "Domyślny magazyn danych"
+        dataStoreEmptyText: "Create new store",
+        defaultDataStoreEmptyText: "Domyślny magazyn danych"
     },
     
     "gxp.NewSourceDialog.prototype": {
@@ -357,6 +386,23 @@ GeoExt.Lang.add("pl", {
 
     "gxp.ScaleOverlay.prototype": { 
         zoomLevelText: "Poziom powiększenia"
+    },
+
+    "gxp.Viewer.prototype": {
+        saveErrorText: "Trouble saving: "
+    },
+
+    "gxp.FeedSourceDialog.prototype": {
+        feedTypeText: "Źródło",
+        addPicasaText: "Picasa zdjęcia",
+        addYouTubeText: "YouTube Videos",
+        addRSSText: "Inne GeoRSS",
+        addFeedText: "Dodaj do mapy",
+        addTitleText: "Tytuł",
+        keywordText: "Słowo",
+        doneText: "Gotowe",
+        titleText: "Dodaj kanały",
+        maxResultsText: "Rzeczy Max"
     }
 
 });

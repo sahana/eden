@@ -2,7 +2,7 @@
 
 """ OCR Utility Functions
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["OCRDataModel", "ocr_buttons"]
+__all__ = ("OCRDataModel",
+           "ocr_buttons",
+           )
 
 import os
 
@@ -37,13 +39,15 @@ from ..s3 import *
 
 # =============================================================================
 class OCRDataModel(S3Model):
+    """
+    """
 
-    names = ["ocr_meta",
+    names = ("ocr_meta",
              "ocr_payload",
              "ocr_form_status",
              "ocr_field_crops",
              "ocr_data_xml",
-            ]
+             )
 
     def model(self):
 

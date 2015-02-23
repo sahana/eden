@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: (c) 2010-2013 Sahana Software Foundation
+    @copyright: (c) 2010-2015 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -29,9 +29,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["FaceBookAccount",
+__all__ = ("FaceBookAccount",
            "GooglePlusAccount",
-           ]
+           )
 
 import time
 import urllib
@@ -57,7 +57,7 @@ class FaceBookAccount(OAuthAccount):
     TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
 
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, channel):
 
         from facebook import GraphAPI, GraphAPIError
 
@@ -69,8 +69,8 @@ class FaceBookAccount(OAuthAccount):
                  response=current.response,
                  session=current.session,
                  HTTP=HTTP)
-        client = current.auth.settings.facebook
-        OAuthAccount.__init__(self, g, client["id"], client["secret"],
+
+        OAuthAccount.__init__(self, g, channel.app_id, channel.app_secret,
                               self.AUTH_URL, self.TOKEN_URL,
                               scope="email,user_about_me,user_location,user_photos,user_relationships,user_birthday,user_website,create_event,user_events,publish_stream")
         self.graph = None
@@ -176,7 +176,7 @@ class GooglePlusAccount(OAuthAccount):
     API_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
 
     # -------------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, channel):
 
         request = current.request
         settings = current.deployment_settings
@@ -186,12 +186,10 @@ class GooglePlusAccount(OAuthAccount):
                  session=current.session,
                  HTTP=HTTP)
 
-        client = current.auth.settings.google
-
         self.globals = g
-        self.client = client
-        self.client_id = client["id"]
-        self.client_secret = client["secret"]
+        self.client = channel
+        self.client_id = channel["id"]
+        self.client_secret = channel["secret"]
         self.auth_url = self.AUTH_URL
         self.args = dict(
                 scope = "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile",

@@ -19,10 +19,10 @@
          Comments................scenario_scenario.comments
 
     *********************************************************************** -->
+    <xsl:import href="../commons.xsl"/>
+    <xsl:import href="../../xml/countries.xsl"/>
+    
     <xsl:output method="xml"/>
-
-    <xsl:include href="../commons.xsl"/>
-    <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Indexes for faster processing -->
     <xsl:key name="category" match="row" use="col[@field='Category']"/>

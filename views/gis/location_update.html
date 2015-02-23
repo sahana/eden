@@ -1,6 +1,6 @@
 {{extend "layout.html"}}
-<div class="list_formats">
-	Export to:
+<div class='list_formats'>
+	{{=T("Export as")}}:
  <a href='{{=URL(args=r.id)}}.gpx' title='{{=T("Export in GPX format")}}'><img src='/{{=appname}}/static/img/gpx_icon.png'/></a>
  {{if r.record.level:}}
  <a href='{{=URL(args=[r.id, "export_poi"])}}.kml' title='{{=T("Export in KML format")}}'><img src='/{{=appname}}/static/img/kml_icon.png'/></a>
@@ -9,6 +9,7 @@
  <a href='{{=URL(args=r.id)}}.kml' title='{{=T("Export in KML format")}}'><img src='/{{=appname}}/static/img/kml_icon.png'/></a>
  <a href='{{=URL(args=r.id)}}.osm' title='{{=T("Export in OSM format")}}'><img src='/{{=appname}}/static/img/osm_icon.png'/></a>
  {{pass}}
+ <a href='{{=URL(args=r.id)}}.shp' title='{{=T("Export in SHP format")}}'><img src='/{{=appname}}/static/img/shp_icon.png'/></a>
 </div>
 {{include "_update.html"}}
 <p>&nbsp;</p>

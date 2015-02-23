@@ -49,9 +49,9 @@
 <table>
  <thead>
   <tr>
-    <th>{{=foreign_object_label}}</th>
-    <th>Module</th>
-    <th>Access Level</th>
+    <th>{{try:}}{{=foreign_object_label}}{{except:}}{{pass}}</th>
+    <th>{{=T("Module")}}</th>
+    <th>{{=T("Access Level")}}</th>
   </tr>
  </thead>
 {{if globals().get("pagination_list", False):}}

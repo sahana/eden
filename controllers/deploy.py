@@ -109,14 +109,19 @@ def mission():
                               # (rheader includes the title)
                               notitle=lambda r: {"title": ""} \
                                              if r.component else None,
-                              rheader=s3db.deploy_rheader)
+                              rheader=s3db.deploy_rheader,
+                              )
 
 # =============================================================================
 def response_message():
-    """ RESTful CRUD Controller """
+    """
+        RESTful CRUD Controller
+        - can't be called 'response' as this clobbbers web2py global!
+    """
 
     return s3_rest_controller("deploy", "response",
-                              custom_crud_buttons = {"list_btn": None})
+                              custom_crud_buttons = {"list_btn": None},
+                              )
 
 # =============================================================================
 def human_resource():
@@ -131,9 +136,11 @@ def human_resource():
 
     # Add deploy_alert_recipient as component so that we filter by it
     s3db.add_components("hrm_human_resource",
-                        deploy_alert_recipient="human_resource_id")
+                        deploy_alert_recipient = "human_resource_id",
+                        )
 
-    q = s3base.S3FieldSelector("application.active") == True
+    # Filter to just Deployables
+    q = FS("application.active") != None
     output = s3db.hrm_human_resource_controller(extra_filter=q)
     return output
 
@@ -178,15 +185,19 @@ def application():
     settings.search.filter_manager = True
 
     def prep(r):
-        if not r.method:
+        if not r.method and r.representation != "s3json":
             r.method = "select"
         if r.method == "select":
             r.custom_action = s3db.deploy_apply
         return True
     s3.prep = prep
 
-    #return s3db.hrm_human_resource_controller()
-    return s3_rest_controller("hrm", "human_resource")
+    if "delete" in request.args or \
+       request.env.request_method == "POST" and auth.permission.format=="s3json":
+        return s3_rest_controller()
+    else:
+        #return s3db.hrm_human_resource_controller()
+        return s3_rest_controller("hrm", "human_resource")
 
 # -----------------------------------------------------------------------------
 def assignment():
@@ -230,10 +241,10 @@ def assignment():
                     get_vars = {}
                     if popup:
                         method = "update.popup"
-                        refresh = request.get_vars.get("refresh", None)
+                        refresh = get_vars.get("refresh", None)
                         if refresh:
                             get_vars["refresh"] = refresh
-                        record = request.get_vars.get("record", None)
+                        record = get_vars.get("record", None)
                         if record:
                             get_vars["record"] = record
                     else:
@@ -252,13 +263,13 @@ def assignment():
                 if hr:
                     get_vars = {"mission_id": r.record.mission_id,
                                 }
-                    
+
                     if popup:
                         method = "create.popup"
-                        refresh = request.get_vars.get("refresh", None)
+                        refresh = get_vars.get("refresh", None)
                         if refresh:
                             get_vars["refresh"] = refresh
-                        record = request.get_vars.get("record", None)
+                        record = get_vars.get("record", None)
                         if record:
                             get_vars["record"] = record
                     else:
@@ -320,7 +331,7 @@ def hr_search():
     """
 
     # Filter to just deployables (RDRT Members)
-    s3.filter = s3base.S3FieldSelector("application.active") == True
+    s3.filter = FS("application.active") == True
 
     s3.prep = lambda r: r.method == "search_ac"
 
@@ -335,7 +346,7 @@ def person_search():
     """
 
     # Filter to just deployables (RDRT Members)
-    s3.filter = s3base.S3FieldSelector("application.active") == True
+    s3.filter = FS("application.active") == True
 
     s3.prep = lambda r: r.method == "search_ac"
 
@@ -466,50 +477,57 @@ def alert():
     def postp(r, output):
         if r.component:
             if r.component_name == "select":
-                s3.actions = [dict(label=str(READ),
-                                   _class="action-btn read",
-                                   url=URL(f="human_resource",
-                                           args=["[id]", "profile"]))]
+                s3.actions = [{"label": str(READ),
+                               "url": URL(f="human_resource",
+                                          args=["[id]", "profile"],
+                                          ),
+                               "_class": "action-btn read",
+                               }
+                              ]
             if r.component_name == "recipient":
-                # Open should open the member profile, not the link
-                s3.actions = [dict(label=str(READ),
-                                   _class="action-btn read",
-                                   url=URL(f="human_resource",
-                                           args=["profile"],
-                                           vars={"alert_recipient.id": "[id]"}))]
-                if not r.record.message_id:
-                    # Delete should remove the Link, not the Member
-                    s3.actions.append(dict(label=str(DELETE),
-                                           _class="delete-btn",
-                                           url=URL(f="alert",
-                                                   args=[r.id,
-                                                         "recipient",
-                                                         "[id]",
-                                                         "delete"])))
+                # Open should open the HR profile, not the link
+                open_url = URL(f="human_resource",
+                               args=["profile"],
+                               vars={"alert_recipient.id": "[id]"},
+                               )
+                # Delete should delete the link, not the HR profile
+                delete_url = URL(f="alert",
+                                 args=[r.id, "recipient", "[id]", "delete"],
+                                 )
+                s3_action_buttons(r,
+                                  read_url = open_url,
+                                  update_url = open_url,
+                                  delete_url = delete_url,
+                                  # Can't delete recipients after the alert
+                                  # has been sent:
+                                  deletable = not r.record.message_id
+                                  )
         else:
             # Delete should only be possible if the Alert hasn't yet been sent
             table = r.table
-            rows = db(table.message_id == None).select(table.id)
+            query = auth.s3_accessible_query("delete", "deploy_alert") & \
+                    (table.message_id == None)
+            rows = db(query).select(table.id)
             restrict = [str(row.id) for row in rows]
-            s3.actions = [dict(label=str(READ),
-                               _class="action-btn read",
-                               url=URL(f="alert",
-                                       args="[id]")),
-                          dict(label=str(DELETE),
-                               _class="delete-btn",
-                               restrict=restrict,
-                               url=URL(f="alert",
-                                       args=["[id]", "delete"])),
+            s3.actions = [{"label": str(READ),
+                           "url": URL(f="alert", args="[id]"),
+                           "_class": "action-btn read",
+                           },
+                          {"label": str(DELETE),
+                           "url": URL(f="alert", args=["[id]", "delete"]),
+                           "restrict": restrict,
+                           "_class": "delete-btn",
+                           },
                           ]
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader=s3db.deploy_rheader,
+    return s3_rest_controller(rheader = s3db.deploy_rheader,
                               # Show filter only on recipient tab
-                              hide_filter={"recipient": False,
-                                           "_default": True,
-                                          }
-                             )
+                              hide_filter = {"recipient": False,
+                                             "_default": True,
+                                             }
+                              )
 
 # -----------------------------------------------------------------------------
 def email_inbox():
@@ -535,13 +553,35 @@ def email_inbox():
     table.channel_id.readable = False
     table.to_address.readable = False
 
-    from s3.s3resource import S3FieldSelector
-    s3.filter = (S3FieldSelector("response.id") == None) & \
-                (S3FieldSelector("inbound") == True)
+    from s3.s3query import FS
+    s3.filter = (FS("response.id") == None) & \
+                (FS("inbound") == True)
+
+    from s3.s3forms import S3SQLCustomForm, S3SQLInlineComponent
+    crud_form = S3SQLCustomForm("date",
+                                "subject",
+                                "from_address",
+                                "body",
+                                S3SQLInlineComponent(
+                                    "attachment",
+                                    name = "document_id",
+                                    label = T("Attachments"),
+                                    fields = ["document_id",
+                                              ],
+                                    ),
+                                )
 
     s3db.configure(tablename,
+                   crud_form = crud_form,
                    editable = False,
                    insertable = False,
+                   list_fields = ["id",
+                                  "date",
+                                  "from_address",
+                                  "subject",
+                                  "body",
+                                  (T("Attachments"), "attachment.document_id"),
+                                  ],
                    )
 
     # CRUD Strings
@@ -556,32 +596,39 @@ def email_inbox():
     )
 
     def prep(r):
-        if r.component and r.component.alias == "select":
-            if not r.method:
-                r.method = "select"
-            if r.method == "select":
-                r.custom_action = s3db.deploy_response_select_mission
+        # Decode subject and sender fields
+        decode = current.msg.decode_email
+        if r.id:
+            s3db.msg_attachment.document_id.label = ""
+            if r.component and r.component.alias == "select":
+                if not r.method:
+                    r.method = "select"
+                if r.method == "select":
+                    r.custom_action = s3db.deploy_response_select_mission
+            represent = lambda string: decode(string)
+        elif not r.method and r.representation in ("html", "aadata"):
+            # Use custom data table method
+            r.method = "inbox"
+            r.custom_action = s3db.deploy_Inbox()
+            represent = lambda string: s3base.s3_datatable_truncate(decode(string))
+        table = r.resource.table
+        table.subject.represent = represent
+        table.from_address.represent = represent
         return True
     s3.prep = prep
 
     def postp(r, output):
-        if r.interactive:
-            # Normal Action Buttons
-            s3_action_buttons(r)
-            # Custom Action Buttons
-            s3.actions += [dict(label=str(T("Link to Mission")),
-                                _class="action-btn link",
-                                url=URL(f="email_inbox",
-                                        args=["[id]", "select"])),
-                           ]
-
-            if r.id:
-                s3.rfooter = s3base.S3CRUD.crud_button(T("Link to Mission"),
-                                                       _href=URL(f="email_inbox",
-                                                                 args=[r.id,
-                                                                       "select"]),
-                                                       _class="action-btn link",
-                                                       )
+        if r.interactive and r.record and not r.component:
+            # Custom CRUD button for linking the message to mission
+            authorised = auth.s3_has_permission("create", "deploy_response")
+            if authorised:
+                s3.rfooter = s3base.S3CRUD.crud_button(
+                                        T("Link to Mission"),
+                                        _href=URL(f="email_inbox",
+                                                  args=[r.id, "select"],
+                                                  ),
+                                        _class="action-btn link",
+                                        )
         return output
     s3.postp = postp
 
@@ -599,7 +646,8 @@ def email_channel():
         table = r.table
         tablename = "msg_email_channel"
         s3db.configure(tablename,
-                       deletable=False)
+                       deletable = False,
+                       )
 
         if not r.id:
             # Have we got a channel defined?
@@ -632,11 +680,9 @@ def email_channel():
             s3.crud_strings[tablename] = Storage(
                 title_display = T("Email Settings"),
                 title_list = T("Email Accounts"),
-                title_create = ADD_EMAIL_ACCOUNT,
+                label_create = ADD_EMAIL_ACCOUNT,
                 title_update = T("Edit Email Settings"),
                 label_list_button = T("View Email Accounts"),
-                label_create_button = ADD_EMAIL_ACCOUNT,
-                subtitle_create = T("Add New Email Account"),
                 msg_record_created = T("Account added"),
                 msg_record_deleted = T("Email Account deleted"),
                 msg_list_empty = T("No Accounts currently defined"),
@@ -658,5 +704,24 @@ def email_channel():
     s3.postp = postp
 
     return s3_rest_controller("msg")
+
+# =============================================================================
+def alert_recipient():
+    """
+        RESTful CRUD controller for options.s3json lookups
+        - needed for adding recipients
+    """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Messaging
+# =============================================================================
+def compose():
+    """ Send message to people/teams """
+
+    return s3db.hrm_compose()
 
 # END =========================================================================

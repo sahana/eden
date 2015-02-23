@@ -1,32 +1,39 @@
 // Simple plugin to Ajax-refresh a datatable. This also allows to
-// change the sAjaxSource URL for that table (e.g. in order to
+// change the Ajax Source URL for that table (e.g. in order to
 // update URL filters). Use e.g. in a onclick-handler like:
 //    dt = $('#<list_id>').dataTable();
-//    dt.fnReloadAjax(<new URL>);
+//    dt.reloadAjax(<new URL>);
 //
-$.fn.dataTableExt.oApi.fnReloadAjax = function(oSettings, sNewSource) {
-    if ( sNewSource != 'undefined' && sNewSource != null ) {
-        // sNewSource is a string containing the new Ajax-URL for
+
+var tableIdReverse = function(id) {
+    
+    return -1;
+};
+
+$.fn.dataTableExt.oApi.reloadAjax = function(settings, newSource) {
+
+    if ( typeof newSource != 'undefined' && newSource != null ) {
+        // newSource is a string containing the new Ajax-URL for
         // this instance, so override the previous setting
-        oSettings.sAjaxSource = sNewSource;
+        S3.dataTables.ajax_urls[settings.nTable.id] = newSource;
     }
     // Show the "Processing..." box
-    this.oApi._fnProcessingDisplay( oSettings, true );
+    this.oApi._fnProcessingDisplay( settings, true );
 
     var that = this;
-    // Call fnServerData with empty aoData to trigger the pipeline
+    // Call ajax with empty data to trigger the pipeline
     // script, clear the table cache and run the following callback
-    oSettings.fnServerData( oSettings.sAjaxSource, [], function(json) {
+    settings.ajax( [], function(json) {
 
         // Clear the table
-        that.oApi._fnClearTable( oSettings );
+        that.oApi._fnClearTable( settings );
 
         // Trigger the pipeline script again (this time without callback),
         // in  order to re-load the table data from the server:
         that.fnDraw();
 
         // Remove the "Processing..." box
-        that.oApi._fnProcessingDisplay( oSettings, false );
+        that.oApi._fnProcessingDisplay( settings, false );
 
-    }, oSettings );
+    }, settings );
 }

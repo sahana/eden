@@ -1,26 +1,29 @@
 <div class='row'>
- <div class='span3'>
-  <div id='list-filter' class='side-filter'>
-   {{=list_filter_form}}
-  </div>
+ <a id='list-filter-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Filter Options")}}' data-on='{{=T("Hide Filter Options")}}'>{{=T("Show Filter Options")}}</a>
+ <div id='list-filter' class='medium-4 large-3 columns hide-for-small side-filter'>
+  {{=list_filter_form}}
  </div>
- <div class='span6'>
-  <div class='list_formats'>
-   <!-- @ToDo: Read Filter Status -->
-   <div class='export_xls' title='{{=T("Export in XLS format")}}' onclick="window.open('/{{=appname}}/cms/newsfeed.xls');">
+ <div class='large-6 medium-7 small-12 columns end'>
+  <div class='row'>
+   {{if current.auth.s3_has_permission("update", "cms_post"):}}
+   <a id='cms_post_create' href='/{{=appname}}/cms/newsfeed/create.popup?refresh=datalist' class='btn btn-primary main-add s3_modal' role='button' title='{{=T("Add New Information")}}'>
+    <i class='icon icon-plus-sign big-add'></i>
+   </a>
+   {{pass}}
   </div>
+  <div class='row'>
+   <div class='small-10 columns'>
+    <h4 class='latest-updates'>{{=response.s3.crud_strings["cms_post"].title_list}}</h4>
+   </div>
+   <div class='list_formats small-2 columns'>
+     <!-- @ToDo: Read Filter Status -->
+     <div class='export_xls' title='{{=T("Export in XLS format")}}' onclick="window.open('/{{=appname}}/cms/newsfeed.xls');"></div>
+   </div>
   </div>
-  {{if current.auth.s3_has_permission("update", "cms_post"):}}
-  <a id='cms_post_create' href='/{{=appname}}/cms/newsfeed/create.popup?refresh=datalist' class='btn btn-primary main-add s3_modal' role='button' title='{{=T("Add New Information")}}'>
-   <i class='icon icon-plus-sign big-add'></i>
-  </a>
-  {{pass}}
-  <h4 class='latest-updates'>{{=response.s3.crud_strings["cms_post"].title_list}}</h4>
-  <div class="card-holder-home">
-   {{=items}}
+  <div class='row'>
+   <div class="card-holder-home">
+    {{=items}}
+   </div>
   </div>
- </div>
- <div class='span3'>
-  <!-- DRMP uses this for Disasters -->
  </div>
 </div>

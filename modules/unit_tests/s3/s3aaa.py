@@ -3,7 +3,7 @@
 # S3AAA Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3aaa.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3aaa.py
 #
 import unittest
 
@@ -69,6 +69,79 @@ class AuthUtilsTests(unittest.TestCase):
         # Logout
         auth.s3_impersonate(None)
 
+    # -------------------------------------------------------------------------
+    def testFail(self):
+        """ Test authorization failure for RFC1945/2617 compliance """
+
+        auth = current.auth
+        
+        # Save current request format
+        f = auth.permission.format
+
+        assertEqual = self.assertEqual
+        assertIn = self.assertIn
+        try:
+            # Interactive => redirects to login page
+            auth.permission.format = "html"
+            auth.s3_impersonate(None)
+            try:
+                auth.permission.fail()
+            except HTTP, e:
+                assertEqual(e.status, 303)
+                headers = e.headers
+                assertIn("Location", headers)
+                location = headers["Location"].split("?", 1)[0]
+                assertEqual(location, URL(c="default", 
+                                          f="user", 
+                                          args=["login"]))
+            else:
+                raise AssertionError("No HTTP status raised")
+
+            # Non-interactive => raises 401 including challenge
+            auth.permission.format = "xml"
+            auth.s3_impersonate(None)
+            try:
+                auth.permission.fail()
+            except HTTP, e:
+                assertEqual(e.status, 401)
+                headers = e.headers
+                assertIn("WWW-Authenticate", headers)
+            else:
+                raise AssertionError("No HTTP status raised")
+                
+            # Non-interactive => raises 403 if logged in
+            auth.permission.format = "xml"
+            auth.s3_impersonate("admin@example.com")
+            try:
+                auth.permission.fail()
+            except HTTP, e:
+                assertEqual(e.status, 403)
+                headers = e.headers
+                # No Auth challenge with 403
+                self.assertNotIn("WWW-Authenticate", headers)
+            else:
+                raise AssertionError("No HTTP status raised")
+
+            # auth.s3_logged_in() MUST NOT raise a challenge
+            msg = "s3_logged_in must not raise HTTP Auth challenge"
+            auth.permission.format = "xml"
+            auth.s3_impersonate(None)
+            try:
+                basic = auth.s3_logged_in()
+            except HTTP:
+                raise AssertionError(msg)
+            # ...especially not in interactive requests!
+            auth.permission.format = "html"
+            auth.s3_impersonate(None)
+            try:
+                basic = auth.s3_logged_in()
+            except HTTP:
+                raise AssertionError(msg)
+
+        finally:
+            auth.s3_impersonate(None)
+            auth.permission.format = f
+        
 # =============================================================================
 class SetRolesTests(unittest.TestCase):
     """ Test AuthS3.set_roles """
@@ -1864,6 +1937,23 @@ class HasPermissionTests(unittest.TestCase):
         s3db.pr_remove_affiliation(self.org[2], user, role="TestStaff")
         auth.s3_withdraw_role(auth.user.id, self.editor, for_pe=[])
 
+    # -------------------------------------------------------------------------
+    def testWithUnavailableTable(self):
+        
+        auth = current.auth
+        s3db = current.s3db
+
+        has_permission = auth.s3_has_permission
+        c = "org"
+        f = "permission_test"
+        tablename = "org_permission_unavailable"
+
+        auth.s3_impersonate(None)
+        permitted = has_permission("read", c=c, f=f, table=tablename)
+        
+        # Should return None if the table doesn't exist
+        self.assertEqual(permitted, None)
+        
     ## -------------------------------------------------------------------------
     #def testPerformance(self):
         #""" Test has_permission performance """

@@ -31,7 +31,26 @@ def index():
 def budget():
     """ RESTful CRUD controller """
 
+    def prep(r):
+        if r.method == "timeplot" and \
+           r.get_vars.get("component") == "allocation":
+            # Disregard unterminated allocations (those without start date)
+            query = (FS("allocation.start_date") != None)
+            r.resource.add_component_filter("allocation", query)
+        return True
+    s3.prep = prep
+
     return s3_rest_controller(rheader=s3db.budget_rheader)
+
+# =============================================================================
+def allocation():
+    """
+        REST controller for budget_allocation
+
+        @status: experimental, not for production use
+    """
+
+    return s3_rest_controller()
 
 # =============================================================================
 def location():
@@ -48,8 +67,8 @@ def item():
     """ REST controller for items """
 
     # @todo: link to supply items
-    
-    s3.formats.pdf = URL(f="item_export_pdf")
+
+    #s3.formats.pdf = URL(f="item_export_pdf")
 
     return s3_rest_controller()
 
@@ -57,8 +76,8 @@ def item():
 def kit():
     """ REST controller for kits """
 
-    s3.formats.pdf = URL(f="kit_export_pdf")
-    s3.formats.xls = URL(f="kit_export_xls")
+    #s3.formats.pdf = URL(f="kit_export_pdf")
+    #s3.formats.xls = URL(f="kit_export_xls")
 
     if len(request.args) == 2:
         s3db.configure("budget_kit",
@@ -166,7 +185,7 @@ def parameter():
             output["buttons"].pop("list_btn", None)
         return output
     s3.postp = postp
-    
+
     r = s3_request(args=[str(record_id)])
     return r()
 
@@ -177,10 +196,11 @@ def kit_export_xls():
         Sheet 1 is a list of Kits
         Then there is a separate sheet per kit, listing it's component items
     """
+
     try:
         import xlwt
     except ImportError:
-        session.error = XLWT_ERROR
+        session.error = "xlwt module not available within the running Python - this needs installing for XLS output!"
         redirect(URL(c="kit"))
 
     import cStringIO
@@ -268,13 +288,13 @@ def kit_export_pdf():
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.enums import TA_CENTER, TA_RIGHT
     except ImportError:
-        session.error = REPORTLAB_ERROR
+        session.error = "Python needs the ReportLab module installed for PDF export"
         redirect(URL(c="kit"))
     try:
         from geraldo import Report, ReportBand, SubReport, Label, ObjectValue, SystemField, landscape, BAND_WIDTH
         from geraldo.generators import PDFGenerator
     except ImportError:
-        session.error = GERALDO_ERROR
+        session.error = "Python needs the Geraldo module installed for PDF export"
         redirect(URL(c="kit"))
 
     table = db.budget_kit
@@ -437,13 +457,13 @@ def item_export_pdf():
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.enums import TA_CENTER, TA_RIGHT
     except ImportError:
-        session.error = REPORTLAB_ERROR
+        session.error = "Python needs the ReportLab module installed for PDF export"
         redirect(URL(c="item"))
     try:
         from geraldo import Report, ReportBand, ReportGroup, Label, ObjectValue, SystemField, landscape, BAND_WIDTH
         from geraldo.generators import PDFGenerator
     except ImportError:
-        session.error = GERALDO_ERROR
+        session.error = "Python needs the Geraldo module installed for PDF export"
         redirect(URL(c="item"))
 
     table = db.budget_item

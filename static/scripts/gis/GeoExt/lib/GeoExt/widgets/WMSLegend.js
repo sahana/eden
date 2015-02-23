@@ -145,6 +145,9 @@ GeoExt.WMSLegend = Ext.extend(GeoExt.LayerLegend, {
                     }
                 }
             }
+            if (url) {
+                url = decodeURIComponent(url);
+            }
         }
         if(!url) {
             url = layer.getFullRequestString({
@@ -166,7 +169,12 @@ GeoExt.WMSLegend = Ext.extend(GeoExt.LayerLegend, {
             // update legend after a forced layer redraw
             params._OLSALT = layer.params._OLSALT;
         }
-        url = Ext.urlAppend(url, Ext.urlEncode(params));
+        var appendParams = Ext.urlEncode(params);
+        var formatRegEx = /([&\?]?)format=[^&]*&?/i;
+        if (formatRegEx.test(appendParams) && formatRegEx.test(url)) {
+            url = url.replace(formatRegEx, '$1');
+        }
+        url = OpenLayers.Util.urlAppend(url, appendParams);
         if (url.toLowerCase().indexOf("request=getlegendgraphic") != -1) {
             if (url.toLowerCase().indexOf("format=") == -1) {
                 url = Ext.urlAppend(url, "FORMAT=image%2Fgif");
@@ -196,34 +204,20 @@ GeoExt.WMSLegend = Ext.extend(GeoExt.LayerLegend, {
         }
         GeoExt.WMSLegend.superclass.update.apply(this, arguments);
 
-        var layerNames, layerName, i, len;
-
-        layerNames = [layer.params.LAYERS].join(",").split(",");
-
-        var destroyList = [];
+        var layerNames = [layer.params.LAYERS].join(",").split(",").reverse();
         var textCmp = this.items.find(function(item){
             return item.isXType('label');
         });
+
+        // Always remove all the element to keep the right order
         this.items.each(function(cmp) {
-            i = layerNames.indexOf(cmp.itemId);
-            if(i < 0 && cmp != textCmp) {
-                destroyList.push(cmp);
-            } else if(cmp !== textCmp){
-                layerName = layerNames[i];
-                var newUrl = this.getLegendUrl(layerName, layerNames);
-                if(!OpenLayers.Util.isEquivalentUrl(newUrl, cmp.url)) {
-                    cmp.setUrl(newUrl);
-                }
+            if (cmp != textCmp) {
+                this.remove(cmp);
+                cmp.destroy();
             }
         }, this);
-        for(i = 0, len = destroyList.length; i<len; i++) {
-            var cmp = destroyList[i];
-            // cmp.destroy() does not remove the cmp from
-            // its parent container!
-            this.remove(cmp);
-            cmp.destroy();
-        }
 
+        var layerName, i, len;
         for(i = 0, len = layerNames.length; i<len; i++) {
             layerName = layerNames[i];
             if(!this.items || !this.getComponent(layerName)) {

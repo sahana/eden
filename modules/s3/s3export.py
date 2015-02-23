@@ -6,7 +6,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -31,7 +31,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Exporter"]
+__all__ = ("S3Exporter",)
 
 from gluon import current
 from gluon.storage import Storage
@@ -43,17 +43,6 @@ class S3Exporter(object):
     """
         Exporter toolkit
     """
-
-    def __init__(self):
-        """ Constructor """
-
-        T = current.T
-
-        self.ERROR = Storage(
-            REPORTLAB_ERROR = T("%(module)s not installed") % dict(module="ReportLab"),
-            NO_RECORDS = T("No records in this resource"),
-            XLWT_ERROR = T("%(module)s not installed") % dict(module="xlwt"),
-        )
 
     # -------------------------------------------------------------------------
     def csv(self, resource):
@@ -85,7 +74,8 @@ class S3Exporter(object):
              start=None,
              limit=None,
              fields=None,
-             orderby=None):
+             orderby=None,
+             tooltip=None):
         """
             Export a resource as JSON
 
@@ -95,10 +85,37 @@ class S3Exporter(object):
             @param fields: list of field selectors for fields to include in
                            the export (None for all fields)
             @param orderby: ORDERBY expression
+            @param tooltip: additional tooltip field, either a field selector 
+                            or an expression "f(k,v)" where f is a function
+                            name that can be looked up from s3db, and k,v are
+                            field selectors for the row, f will be called with
+                            a list of tuples (k,v) for each row and is expected
+                            to return a dict {k:tooltip} => used by
+                            filterOptionsS3 to extract onhover-tooltips for
+                            Ajax-update of options
         """
 
         if fields is None:
             fields = [f.name for f in resource.table if f.readable]
+
+        tooltip_function = None
+        if tooltip:
+            if type(tooltip) is list:
+                tooltip = tooltip[-1]
+            import re
+            match = re.match("(\w+)\((\w+),(\w+)\)", tooltip)
+            if match:
+                function_name, kname, vname = match.groups()
+                # Try resolve the function name
+                tooltip_function = current.s3db.get(function_name)
+                if tooltip_function:
+                    if kname not in fields:
+                        fields.append(kname)
+                    if vname not in fields:
+                        fields.append(vname)
+            else:
+                if tooltip not in fields:
+                    fields.append(tooltip)
 
         # Get the rows and return as json
         rows = resource.select(fields,
@@ -106,6 +123,61 @@ class S3Exporter(object):
                                limit=limit,
                                orderby=orderby,
                                as_rows=True)
+
+        if tooltip:
+            import sys
+            from s3utils import s3_unicode
+            if tooltip_function:
+                # Resolve key and value names against the resource
+                try:
+                    krfield = resource.resolve_selector(kname)
+                    vrfield = resource.resolve_selector(vname)
+                except (AttributeError, SyntaxError):
+                    current.log.error(sys.exc_info()[1])
+                else:
+                    # Extract key and value fields from each row and
+                    # build options dict for function call
+                    options = []
+                    items = {}
+                    for row in rows:
+                        try:
+                            k = krfield.extract(row)
+                        except KeyError:
+                            break
+                        try:
+                            v = vrfield.extract(row)
+                        except KeyError:
+                            break
+                        items[k] = row
+                        options.append((k, v))
+                    # Call tooltip rendering function
+                    try:
+                        tooltips = tooltip_function(options)
+                    except:
+                        current.log.error(sys.exc_info()[1])
+                    else:
+                        # Add tooltips as "_tooltip" to the corresponding rows
+                        if isinstance(tooltips, dict):
+                            for k, v in tooltips.items():
+                                if k in items:
+                                    items[k]["_tooltip"] = s3_unicode(v)
+                pass
+            else:
+                # Resolve the tooltip field name against the resource
+                try:
+                    tooltip_rfield = resource.resolve_selector(tooltip)
+                except (AttributeError, SyntaxError):
+                    current.log.error(sys.exc_info()[1])
+                else:
+                    # Extract the tooltip field from each row
+                    # and add it as _tooltip
+                    for row in rows:
+                        try:
+                            value = tooltip_rfield.extract(row)
+                        except KeyError:
+                            break
+                        if value:
+                            row["_tooltip"] = s3_unicode(value)
 
         response = current.response
         if response:

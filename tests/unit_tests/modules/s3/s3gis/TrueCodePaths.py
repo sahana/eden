@@ -72,6 +72,7 @@ class TrueCodePaths(unittest.TestCase):
             "S3.i18n.gis_save = 'Save: Default Lat, Lon & Zoom for the Viewport';",
             "S3.i18n.gis_potlatch = 'Edit the OpenStreetMap data for this area';",
             "S3.i18n.gis_current_location = 'Current Location';",
+            "S3.i18n.gis_add_resources = 'Add Resources';",
             """if (typeof(printCapabilities) != 'undefined') {
             // info.json from script headers OK
             printProvider = new GeoExt.data.PrintProvider({

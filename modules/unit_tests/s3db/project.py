@@ -9,7 +9,8 @@ import unittest
 
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Row
+
+from s3dal import Row
 from eden.project import S3ProjectActivityModel
 
 

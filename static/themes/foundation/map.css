@@ -1,0 +1,45 @@
+/* Map */
+
+/* Over-ride Foundation */
+.gis-map-window table,
+.map_wrapper table {
+    background: none;
+    border: none;
+    margin-bottom: 0;
+}
+.gis-map-window table tr:nth-of-type(2n),
+.map_wrapper table tr:nth-of-type(2n) {
+    background-color: inherit;
+}
+.gis-map-window table tr th,
+.gis-map-window table tr td,
+.map_wrapper table tr th,
+.map_wrapper table tr td {
+    color: inherit;
+    font-size: inherit;
+    padding: 0;
+}
+.gis-map-window input[type="text"],
+.gis-map-window input[type="checkbox"],
+.gis-map-window input[type="radio"],
+.map_wrapper input[type="text"],
+.map_wrapper input[type="checkbox"],
+.map_wrapper input[type="radio"] {
+    margin: 0;
+    padding: 0;
+}
+.x-form-element input[type="text"] {
+    display: inline;
+    font-size: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+.map_legend_tab.right{
+    float: left !important;
+}
+
+/* Over-ride Style */
+#contents .map_wrapper a:not(.action-btn):not(.delete-btn) {
+    text-decoration: none;
+}

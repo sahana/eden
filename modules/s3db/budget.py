@@ -2,7 +2,7 @@
 
 """ Sahana Eden Budget Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,22 +27,25 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3BudgetModel",
+__all__ = ("S3BudgetModel",
            "S3BudgetKitModel",
            "S3BudgetBundleModel",
+           "S3BudgetAllocationModel",
            "budget_rheader",
-          ]
+           "budget_CostItemRepresent",
+           )
 
 from gluon import *
-from gluon.dal import Row
 from gluon.storage import Storage
+
 from ..s3 import *
+from s3dal import Row
 from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3BudgetModel(S3Model):
 
-    names = ["budget_budget",
+    names = ("budget_budget",
              "budget_parameter",
              "budget_location",
              "budget_budget_id",
@@ -50,7 +53,7 @@ class S3BudgetModel(S3Model):
              "budget_staff",
              "budget_budget_staff",
              "budget_staff_id",
-            ]
+             )
 
     def model(self):
 
@@ -64,19 +67,21 @@ class S3BudgetModel(S3Model):
 
         db = current.db
 
+        status_opts = {1: T("Draft"),
+                       2: T("Approved"),
+                       3: T("Rejected"),
+                       }
+
         # ---------------------------------------------------------------------
         # Budgets
         #
         tablename = "budget_budget"
         define_table(tablename,
-                     Field("name",
-                           length = 128,
-                           notnull = True,
-                           unique = True,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.name" % tablename),
                            #            ],
-                           label = T("Name"),
                            ),
                      Field("description",
                            label = T("Description"),
@@ -91,20 +96,28 @@ class S3BudgetModel(S3Model):
                            label = T("Total Recurring Costs"),
                            writable = False,
                            ),
+                     Field("total_volume", "double",
+                           default = 0.0,
+                           label = T("Total Volume"),
+                           ),
+                     Field("status", "integer",
+                           default = 1,
+                           represent = lambda opt: \
+                            status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(status_opts),
+                           ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
 
         # CRUD Strings
-        ADD_BUDGET = T("Add Budget")
+        ADD_BUDGET = T("Create Budget")
         crud_strings[tablename] = Storage(
-            title_create = ADD_BUDGET,
+            label_create = ADD_BUDGET,
             title_display = T("Budget Details"),
             title_list = T("Budgets"),
             title_update = T("Edit Budget"),
-            subtitle_create = T("Add New Budget"),
             label_list_button = T("List Budgets"),
-            label_create_button = ADD_BUDGET,
             label_delete_button = T("Delete Budget"),
             msg_record_created = T("Budget added"),
             msg_record_modified = T("Budget updated"),
@@ -113,43 +126,46 @@ class S3BudgetModel(S3Model):
         )
 
         # Represent
-        budget_budget_represent = S3Represent(lookup=tablename)
+        budget_budget_represent = S3Represent(lookup=tablename, show_link=True)
 
         # Reusable Field
         budget_budget_id = S3ReusableField("budget_id", "reference %s" % tablename,
-                                requires = IS_ONE_OF(db, "budget_budget.id",
-                                                     budget_budget_represent,
-                                                    ),
-                                represent = budget_budget_represent,
-                                label = T("Budget"),
-                                comment = S3AddResourceLink(
-                                            c = "budget",
-                                            f = "budget",
-                                            label = T("Add Budget"),
-                                            title = T("Budget"),
-                                            tooltip = T("You can add a new budget by clicking link 'Add Budget'.")
-                                          ),
-                                ondelete = "CASCADE",
-                           )
+            label = T("Budget"),
+            ondelete = "CASCADE",
+            represent = budget_budget_represent,
+            requires = IS_ONE_OF(db, "budget_budget.id",
+                                 budget_budget_represent,
+                                 ),
+            comment = S3AddResourceLink(
+                c = "budget",
+                f = "budget",
+                label = ADD_BUDGET,
+                title = T("Budget"),
+                tooltip = T("You can create a new budget by clicking link '%s'.") % ADD_BUDGET
+                ),
+            )
 
         add_components(tablename,
                        # Staff
-                       budget_staff={"link": "budget_budget_staff",
-                                     "joinby": "budget_id",
-                                     "key": "staff_id",
-                                     "actuate": "link",
-                                    },
+                       budget_staff = {"link": "budget_budget_staff",
+                                       "joinby": "budget_id",
+                                       "key": "staff_id",
+                                       "actuate": "link",
+                                       },
                        # Bundles
-                       budget_bundle={"link": "budget_budget_bundle",
-                                      "joinby": "budget_id",
-                                      "key": "bundle_id",
-                                      "actuate": "link",
-                                     },
-                      )
+                       budget_bundle = {"link": "budget_budget_bundle",
+                                        "joinby": "budget_id",
+                                        "key": "bundle_id",
+                                        "actuate": "link",
+                                        },
+                       # Allocations
+                       budget_allocation = "budget_id",
+                       )
 
         # Configuration
         configure(tablename,
-                  onaccept = self.budget_budget_onaccept)
+                  onaccept = self.budget_budget_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Parameters (currently unused)
@@ -158,29 +174,25 @@ class S3BudgetModel(S3Model):
         #
         tablename = "budget_parameter"
         define_table(tablename,
-                     Field("shipping", "double",
+                     Field("shipping", "double", notnull=True,
                            default = 15.0,
-                           requires = IS_FLOAT_IN_RANGE(0, 100),
-                           notnull = True,
                            label = T("Shipping cost"),
-                           ),
-                     Field("logistics", "double",
-                           default = 0.0,
                            requires = IS_FLOAT_IN_RANGE(0, 100),
-                           notnull = True,
+                           ),
+                     Field("logistics", "double", notnull=True,
+                           default = 0.0,
                            label = T("Procurement & Logistics cost"),
+                           requires = IS_FLOAT_IN_RANGE(0, 100),
                            ),
-                     Field("admin", "double",
+                     Field("admin", "double", notnull=True,
                            default = 0.0,
-                           requires = IS_FLOAT_IN_RANGE(0, 100),
-                           notnull = True,
                            label = T("Administrative support cost"),
-                           ),
-                     Field("indirect", "double",
-                           default = 7.0,
                            requires = IS_FLOAT_IN_RANGE(0, 100),
-                           notnull = True,
+                           ),
+                     Field("indirect", "double", notnull=True,
+                           default = 7.0,
                            label = T("Indirect support cost HQ"),
+                           requires = IS_FLOAT_IN_RANGE(0, 100),
                            ),
                      *s3_meta_fields())
 
@@ -195,14 +207,11 @@ class S3BudgetModel(S3Model):
         #
         tablename = "budget_location"
         define_table(tablename,
-                     Field("code",
-                           length = 3,
-                           notnull = True,
-                           unique = True,
+                     Field("code", length=3, notnull=True, unique=True,
+                           label = T("Code"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
                            #            ],
-                           label = T("Code"),
                            ),
                      Field("description",
                            label = T("Description"),
@@ -221,15 +230,13 @@ class S3BudgetModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_LOCATION = T("Add Location")
+        ADD_LOCATION = T("Create Location")
         crud_strings[tablename] = Storage(
-            title_create = ADD_LOCATION,
+            label_create = ADD_LOCATION,
             title_display = T("Location Details"),
             title_list = T("Locations"),
             title_update = T("Edit Location"),
-            subtitle_create = T("Add New Location"),
             label_list_button = T("List Locations"),
-            label_create_button = ADD_LOCATION,
             label_delete_button = T("Delete Location"),
             msg_record_created = T("Location added"),
             msg_record_modified = T("Location updated"),
@@ -243,48 +250,44 @@ class S3BudgetModel(S3Model):
 
         # Reusable Field
         budget_location_id = S3ReusableField("location_id", "reference %s" % tablename,
-                                requires = IS_ONE_OF(db, "budget_location.id",
-                                                     budget_location_represent,
-                                                    ),
-                                represent = budget_location_represent,
-                                label = T("Location"),
-                                comment = S3AddResourceLink(
-                                            c = "budget",
-                                            f = "location",
-                                            label = T("Add Location"),
-                                            title = T("Location"),
-                                            tooltip = T("You can add a new location by clicking link 'Add Location'.")
-                                          ),
-                                ondelete = "CASCADE",
-                             )
+            label = T("Location"),
+            ondelete = "CASCADE",
+            represent = budget_location_represent,
+            requires = IS_ONE_OF(db, "budget_location.id",
+                                 budget_location_represent,
+                                 ),
+            comment = S3AddResourceLink(
+                c = "budget",
+                f = "location",
+                label = ADD_LOCATION,
+                title = T("Location"),
+                tooltip = T("You can create a new location by clicking link '%s'.") % ADD_LOCATION
+                ),
+            )
 
         # Configuration
         configure(tablename,
-                  update_onaccept = self.budget_location_onaccept)
+                  update_onaccept = self.budget_location_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Staff Types
         #
         tablename = "budget_staff"
         define_table(tablename,
-                     Field("name",
-                           length = 128,
-                           notnull = True,
-                           unique = True,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.name" % tablename),
                            #            ],
-                           label = T("Name"),
                            ),
-                     Field("grade",
-                           notnull = True,
-                           requires = IS_NOT_EMPTY(),
+                     Field("grade", notnull=True,
                            label = T("Grade"),
-                           ),
-                     Field("salary", "integer",
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("salary", "integer", notnull=True,
                            label = T("Monthly Salary"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_currency(),
                      Field("travel", "integer",
@@ -304,15 +307,13 @@ class S3BudgetModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_STAFF_TYPE = T("Add Staff Type")
+        ADD_STAFF_TYPE = T("Create Staff Type")
         crud_strings[tablename] = Storage(
-            title_create = ADD_STAFF_TYPE,
+            label_create = ADD_STAFF_TYPE,
             title_display = T("Staff Type Details"),
             title_list = T("Staff Types"),
             title_update = T("Edit Staff Type"),
-            subtitle_create = T("Add New Staff Type"),
             label_list_button = T("List Staff Types"),
-            label_create_button = ADD_STAFF_TYPE,
             label_delete_button = T("Delete Staff Type"),
             msg_record_created = T("Staff Type added"),
             msg_record_modified = T("Staff Type updated"),
@@ -326,24 +327,25 @@ class S3BudgetModel(S3Model):
 
         # Reusable Field
         budget_staff_id = S3ReusableField("staff_id", "reference %s" % tablename,
-                                requires = IS_ONE_OF(db, "budget_staff.id",
-                                                     budget_staff_represent,
-                                                    ),
-                                represent = budget_staff_represent,
-                                label = T("Staff"),
-                                comment = S3AddResourceLink(
-                                            c = "budget",
-                                            f = "staff",
-                                            label = T("Add Staff"),
-                                            title = T("Staff"),
-                                            tooltip = T("You can add new staff by clicking link 'Add Staff'.")
-                                          ),
-                                ondelete = "RESTRICT",
-                          )
+            label = T("Staff"),
+            ondelete = "RESTRICT",
+            represent = budget_staff_represent,
+            requires = IS_ONE_OF(db, "budget_staff.id",
+                                 budget_staff_represent,
+                                 ),
+            comment = S3AddResourceLink(
+                c = "budget",
+                f = "staff",
+                label = ADD_STAFF_TYPE,
+                title = T("Staff"),
+                tooltip = T("You can create new staff by clicking link '%s'.") % ADD_STAFF_TYPE
+                ),
+            )
 
         # Configuration
         configure(tablename,
-                  update_onaccept = self.budget_staff_onaccept)
+                  update_onaccept = self.budget_staff_onaccept,
+                  )
 
         # ---------------------------------------------------------------------
         # Budget<>Staff Many2Many
@@ -354,24 +356,23 @@ class S3BudgetModel(S3Model):
                      self.project_project_id(),
                      budget_location_id(),
                      budget_staff_id(),
-                     Field("quantity", "integer",
-                           requires = IS_NOT_EMPTY(),
-                           label = T("Quantity"),
+                     Field("quantity", "integer", notnull=True,
                            default = 1,
-                           notnull = True,
-                           ),
-                     Field("months", "integer",
+                           label = T("Quantity"),
                            requires = IS_NOT_EMPTY(),
-                           label = T("Months"),
+                           ),
+                     Field("months", "integer", notnull=True,
                            default = 3,
-                           notnull = True,
+                           label = T("Months"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      *s3_meta_fields())
 
         # Configuration
         configure(tablename,
                   onaccept = self.budget_budget_staff_onaccept,
-                  ondelete = self.budget_budget_staff_ondelete)
+                  ondelete = self.budget_budget_staff_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -379,7 +380,7 @@ class S3BudgetModel(S3Model):
         return dict(budget_budget_id = budget_budget_id,
                     budget_location_id = budget_location_id,
                     budget_staff_id=budget_staff_id,
-                   )
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -387,20 +388,14 @@ class S3BudgetModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        budget_budget_id = S3ReusableField("budget_id", "integer",
-                                           readable = False,
-                                           writable = False)
-        budget_location_id = S3ReusableField("location_id", "integer",
-                                             readable = False,
-                                             writable = False)
-        budget_staff_id = S3ReusableField("staff_id", "integer",
-                                          readable = False,
-                                          writable = False)
-                                             
-        return dict(budget_budget_id = budget_budget_id,
-                    budget_location_id = budget_location_id,
-                    budget_staff_id = budget_staff_id,
-                   )
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return dict(budget_budget_id = lambda **attr: dummy("budget_id"),
+                    budget_location_id = lambda **attr: dummy("location_id"),
+                    budget_staff_id = lambda **attr: dummy("staff_id"),
+                    )
                    
     # -------------------------------------------------------------------------
     @staticmethod
@@ -410,9 +405,9 @@ class S3BudgetModel(S3Model):
         """
 
         try:
-            budget_id = form.vars.id
+           budget_id = form.vars.id
         except:
-            return
+           return
         budget_budget_totals(budget_id)
         return
         
@@ -470,7 +465,7 @@ class S3BudgetModel(S3Model):
         table = current.s3db.budget_budget_staff
         row = current.db(table.id == record_id).select(table.budget_id,
                                                        limitby=(0, 1)).first()
-        if record:
+        if row:
             budget_budget_totals(row.budget_id)
         return
 
@@ -499,12 +494,12 @@ class S3BudgetModel(S3Model):
 # =============================================================================
 class S3BudgetKitModel(S3Model):
 
-    names = ["budget_kit",
+    names = ("budget_kit",
              "budget_item",
              "budget_kit_item",
              "budget_kit_id",
              "budget_item_id",
-            ]
+             )
     
     def model(self):
 
@@ -525,51 +520,46 @@ class S3BudgetKitModel(S3Model):
         #
         tablename = "budget_kit"
         define_table(tablename,
-                     Field("code",
-                           length = 128,
-                           notnull = True,
-                           unique = True,
+                     Field("code", length=128, notnull=True, unique=True,
+                           label = T("Code"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
                            #            ],
-                           label = T("Code"),
                            ),
                      Field("description",
                            label = T("Description"),
                            ),
                      Field("total_unit_cost", "double",
                            default = 0.0,
-                           writable = False,
                            label = T("Total Unit Cost"),
+                           writable = False,
                            ),
                      Field("total_monthly_cost", "double",
                            default = 0.0,
-                           writable = False,
                            label = T("Total Monthly Cost"),
+                           writable = False,
                            ),
                      Field("total_minute_cost", "double",
                            default = 0.0,
-                           writable = False,
                            label = T("Total Cost per Minute"),
+                           writable = False,
                            ),
                      Field("total_megabyte_cost", "double",
                            default = 0.0,
-                           writable = False,
                            label = T("Total Cost per Megabyte"),
+                           writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_KIT = T("Add Kit")
+        ADD_KIT = T("Create Kit")
         crud_strings[tablename] = Storage(
-            title_create = ADD_KIT,
+            label_create = ADD_KIT,
             title_display = T("Kit Details"),
             title_list = T("Kits"),
             title_update = T("Edit Kit"),
-            subtitle_create = T("Add New Kit"),
             label_list_button = T("List Kits"),
-            label_create_button = ADD_KIT,
             label_delete_button = T("Delete Kit"),
             msg_record_created = T("Kit added"),
             msg_record_modified = T("Kit updated"),
@@ -582,96 +572,90 @@ class S3BudgetKitModel(S3Model):
                              
         # Reusable Field
         budget_kit_id = S3ReusableField("kit_id", "reference %s" % tablename,
-                                requires = IS_ONE_OF(db, "budget_kit.id",
-                                                     budget_kit_represent,
-                                                    ),
-                                represent = budget_kit_represent,
-                                label = T("Kit"),
-                                comment = S3AddResourceLink(
-                                            c = "budget",
-                                            f = "kit",
-                                            label = T("Add kit"),
-                                            title = T("Kit"),
-                                            tooltip = T("You can add a new kit by clicking link 'Add Kit'.")
-                                          ),
-                                ondelete = "RESTRICT",
-                             )
+            ondelete = "RESTRICT",
+            label = T("Kit"),
+            represent = budget_kit_represent,
+            requires = IS_ONE_OF(db, "budget_kit.id",
+                                 budget_kit_represent,
+                                 ),
+            comment = S3AddResourceLink(
+                c = "budget",
+                f = "kit",
+                label = ADD_KIT,
+                title = T("Kit"),
+                tooltip = T("You can create a new kit by clicking link '%s'.") % ADD_KIT
+                ),
+            )
 
         # Configuration
         configure(tablename,
                   onaccept = self.budget_kit_onaccept,
-                 )
+                  )
 
         # Components
         add_components(tablename,
                        # Items
-                       budget_item={"link": "budget_kit_item",
-                                    "joinby": "kit_id",
-                                    "key": "item_id",
-                                    "actuate": "link",
-                                   },
-                      )
+                       budget_item = {"link": "budget_kit_item",
+                                      "joinby": "kit_id",
+                                      "key": "item_id",
+                                      "actuate": "link",
+                                      },
+                       )
 
         # ---------------------------------------------------------------------
         # Items
         #
-        budget_cost_type_opts = {1:T("One-time"),
-                                 2:T("Recurring"),
+        budget_cost_type_opts = {1: T("One-time"),
+                                 2: T("Recurring"),
                                 }
                                 
-        budget_category_type_opts = {1:T("Consumable"),
-                                     2:T("Satellite"),
-                                     3:"HF",
-                                     4:"VHF",
-                                     5:T("Telephony"),
-                                     6:"WLAN",
-                                     7:T("Network"),
-                                     8:T("Generator"),
-                                     9:T("Electrical"),
-                                     10:T("Vehicle"),
-                                     11:"GPS",
-                                     12:T("Tools"),
-                                     13:"IT",
-                                     14:"ICT",
-                                     15:"TC",
-                                     16:T("Stationery"),
-                                     17:T("Relief"),
-                                     18:T("Miscellaneous"),
-                                     19:T("Running Cost"),
-                                    }
+        budget_category_type_opts = {1: T("Consumable"),
+                                     2: T("Satellite"),
+                                     3: "HF",
+                                     4: "VHF",
+                                     5: T("Telephony"),
+                                     6: "WLAN",
+                                     7: T("Network"),
+                                     8: T("Generator"),
+                                     9: T("Electrical"),
+                                     10: T("Vehicle"),
+                                     11: "GPS",
+                                     12: T("Tools"),
+                                     13: "IT",
+                                     14: "ICT",
+                                     15: "TC",
+                                     16: T("Stationery"),
+                                     17: T("Relief"),
+                                     18: T("Miscellaneous"),
+                                     19: T("Running Cost"),
+                                     }
             
         tablename = "budget_item"
         define_table(tablename,
-                     Field("category_type", "integer",
-                           notnull = True,
-                           requires = IS_IN_SET(budget_category_type_opts, zero=None),
+                     Field("category_type", "integer", notnull=True,
                            #default = 1,
                            label = T("Category"),
                            represent = lambda opt: \
-                                       budget_category_type_opts.get(opt, UNKNOWN_OPT)
+                                       budget_category_type_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(budget_category_type_opts, zero=None),
                            ),
-                     Field("code",
-                           length = 128,
-                           notnull = True,
-                           unique = True,
+                     Field("code", length=128, notnull=True, unique=True,
+                           label = T("Code"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.code" % tablename),
                            #            ],
-                           label = T("Code"),
                            ),
-                     Field("description",
-                           notnull = True,
-                           requires = IS_NOT_EMPTY(),
+                     Field("description", notnull=True,
                            label = T("Description"),
+                           requires = IS_NOT_EMPTY(),
                            ),
-                     Field("cost_type", "integer",
-                           notnull = True,
-                           requires = IS_IN_SET(budget_cost_type_opts,
-                                                zero=None),
+                     Field("cost_type", "integer", notnull=True,
                            #default = 1,
                            label = T("Cost Type"),
                            represent = lambda opt: \
-                                       budget_cost_type_opts.get(opt, UNKNOWN_OPT)
+                                       budget_cost_type_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(budget_cost_type_opts,
+                                                zero=None),
                            ),
                      Field("unit_cost", "double",
                            default = 0.00,
@@ -693,15 +677,13 @@ class S3BudgetKitModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_ITEM = T("Add Item")
+        ADD_ITEM = T("Create Item")
         crud_strings[tablename] = Storage(
-            title_create = ADD_ITEM,
+            label_create = ADD_ITEM,
             title_display = T("Item Details"),
             title_list = T("Items"),
             title_update = T("Edit Item"),
-            subtitle_create = T("Add New Item"),
             label_list_button = T("List Items"),
-            label_create_button = ADD_ITEM,
             label_delete_button = T("Delete Item"),
             label_search_button = T("Search Items"),
             msg_record_created = T("Item added"),
@@ -716,28 +698,28 @@ class S3BudgetKitModel(S3Model):
 
         # Reusable Field
         budget_item_id = S3ReusableField("item_id", "reference %s" % tablename,
-                                requires = IS_ONE_OF(db, "budget_item.id",
-                                                     budget_item_represent,
-                                                    ),
-                                represent = budget_item_represent,
-                                label = T("Item"),
-                                comment = S3AddResourceLink(
-                                            c = "budget",
-                                            f = "item",
-                                            label = T("Add item"),
-                                            title = T("Item"),
-                                            tooltip = T("You can add a new item by clicking link 'Add Item'.")
-                                          ),
-                                ondelete = "RESTRICT",
-                             )
+            label = T("Item"),
+            ondelete = "RESTRICT",
+            represent = budget_item_represent,
+            requires = IS_ONE_OF(db, "budget_item.id",
+                                 budget_item_represent,
+                                 ),
+            comment = S3AddResourceLink(
+                c = "budget",
+                f = "item",
+                label = ADD_ITEM,
+                title = T("Item"),
+                tooltip = T("You can create a new item by clicking link '%s'.") % ADD_ITEM
+                ),
+            )
 
         # Configuration
         configure(tablename,
-                  onaccept = self.budget_item_onaccept,
                   main = "code",
                   extra = "description",
+                  onaccept = self.budget_item_onaccept,
                   orderby = "budget_item.category_type",
-                 )
+                  )
 
         # ---------------------------------------------------------------------
         # Kit<>Item Many2Many
@@ -746,25 +728,24 @@ class S3BudgetKitModel(S3Model):
         define_table(tablename,
                      budget_kit_id(),
                      budget_item_id(),
-                     Field("quantity", "integer",
+                     Field("quantity", "integer", notnull=True,
                            default = 1,
-                           notnull = True,
-                           requires = IS_NOT_EMPTY(),
                            label = T("Quantity"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      *s3_meta_fields())
 
         configure(tablename,
                   onaccept = self.budget_kit_item_onaccept,
                   ondelete = self.budget_kit_item_ondelete,
-                 )
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(budget_kit_id = budget_kit_id,
                     budget_item_id = budget_item_id,
-                   )
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -772,16 +753,13 @@ class S3BudgetKitModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        budget_kit_id = S3ReusableField("kit_id", "integer",
-                                        readable = False,
-                                        writable = False)
-        budget_item_id = S3ReusableField("item_id", "integer",
-                                         readable = False,
-                                         writable = False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-        return dict(budget_kit_id = budget_kit_id,
-                    budget_item_id = budget_item_id,
-                   )
+        return dict(budget_kit_id = lambda **attr: dummy("kit_id"),
+                    budget_item_id = lambda **attr: dummy("item_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -886,12 +864,12 @@ class S3BudgetKitModel(S3Model):
 class S3BudgetBundleModel(S3Model):
     """ Model for Budget Bundles """
 
-    names = ["budget_bundle",
+    names = ("budget_bundle",
              "budget_bundle_kit",
              "budget_bundle_item",
              "budget_budget_bundle",
              "budget_bundle_id",
-            ]
+             )
 
     def model(self):
 
@@ -910,41 +888,36 @@ class S3BudgetBundleModel(S3Model):
         #
         tablename = "budget_bundle"
         define_table(tablename,
-                     Field("name",
-                           length = 128,
-                           notnull = True,
-                           unique = True,
+                     Field("name", length=128, notnull=True, unique=True,
+                           label = T("Name"),
                            #requires = [IS_NOT_EMPTY(),
                            #            IS_NOT_ONE_OF(db, "%s.name" % tablename),
                            #            ],
-                           label = T("Name"),
                            ),
                      Field("description",
                            label = T("Description"),
                            ),
                      Field("total_unit_cost", "double",
                            default = 0.0,
-                           writable = False,
                            label = T("One time cost"),
+                           writable = False,
                            ),
                      Field("total_monthly_cost", "double",
                            default = 0.0,
-                           writable = False,
                            label = T("Recurring cost"),
+                           writable = False,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_BUNDLE = T("Add Bundle")
+        ADD_BUNDLE = T("Create Bundle")
         crud_strings[tablename] = Storage(
-            title_create = ADD_BUNDLE,
+            label_create = ADD_BUNDLE,
             title_display = T("Bundle Details"),
             title_list = T("Bundles"),
             title_update = T("Edit Bundle"),
-            subtitle_create = T("Add New Bundle"),
             label_list_button = T("List Bundles"),
-            label_create_button = ADD_BUNDLE,
             label_delete_button = T("Delete Bundle"),
             msg_record_created = T("Bundle added"),
             msg_record_modified = T("Bundle updated"),
@@ -954,23 +927,24 @@ class S3BudgetBundleModel(S3Model):
 
         # Configuration
         configure(tablename,
-                  onaccept = self.budget_bundle_onaccept)
+                  onaccept = self.budget_bundle_onaccept,
+                  )
 
         # Components
         add_components(tablename,
                        # Items
-                       budget_item={"link": "budget_bundle_item",
-                                    "joinby": "bundle_id",
-                                    "key": "item_id",
-                                    "actuate": "link",
-                                   },
+                       budget_item = {"link": "budget_bundle_item",
+                                      "joinby": "bundle_id",
+                                      "key": "item_id",
+                                      "actuate": "link",
+                                      },
                        # Kits
-                       budget_kit={"link": "budget_bundle_kit",
-                                   "joinby": "bundle_id",
-                                   "key": "kit_id",
-                                   "actuate": "link",
-                                  },
-                      )
+                       budget_kit = {"link": "budget_bundle_kit",
+                                     "joinby": "bundle_id",
+                                     "key": "kit_id",
+                                     "actuate": "link",
+                                     },
+                       )
 
         # Represent
         budget_bundle_represent = S3Represent(lookup=tablename,
@@ -978,20 +952,20 @@ class S3BudgetBundleModel(S3Model):
 
         # Reusable Field
         budget_bundle_id = S3ReusableField("bundle_id", "reference %s" % tablename,
-                                requires = IS_ONE_OF(db, "budget_bundle.id",
-                                                     budget_bundle_represent,
-                                                    ),
-                                represent = budget_bundle_represent,
-                                label = T("Bundle"),
-                                comment = S3AddResourceLink(
-                                            c = "budget",
-                                            f = "bundle",
-                                            label = T("Add Bundle"),
-                                            title = T("Bundle"),
-                                            tooltip = T("You can add a new bundle by clicking link 'Add Bundle'.")
-                                          ),
-                                ondelete = "RESTRICT",
-                             )
+            label = T("Bundle"),
+            ondelete = "RESTRICT",
+            represent = budget_bundle_represent,
+            requires = IS_ONE_OF(db, "budget_bundle.id",
+                                 budget_bundle_represent,
+                                 ),
+            comment = S3AddResourceLink(
+                c = "budget",
+                f = "bundle",
+                label = ADD_BUNDLE,
+                title = T("Bundle"),
+                tooltip = T("You can create a new bundle by clicking link '%s'.") % ADD_BUNDLE
+                ),
+            )
 
         # ---------------------------------------------------------------------
         # Bundle<>Kit Many2Many
@@ -1000,32 +974,42 @@ class S3BudgetBundleModel(S3Model):
         define_table(tablename,
                      budget_bundle_id(),
                      self.budget_kit_id(),
-                     Field("quantity", "integer",
+                     Field("quantity", "integer", notnull=True,
                            default = 1,
-                           notnull = True,
-                           requires = IS_NOT_EMPTY(),
                            label = T("Quantity"),
-                           ),
-                     Field("minutes", "integer",
-                           default = 0,
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("minutes", "integer", notnull=True,
+                           default = 0,
                            label = T("Minutes per Month"),
-                           ),
-                     Field("megabytes", "integer",
-                           default = 0,
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("megabytes", "integer", notnull=True,
+                           default = 0,
                            label = T("Megabytes per Month"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Kit"),
+            title_display = T("Kit Details"),
+            title_list = T("Kits"),
+            title_update = T("Edit Kit"),
+            label_list_button = T("List Kits"),
+            label_delete_button = T("Remove Kit"),
+            msg_record_created = T("Kit added"),
+            msg_record_modified = T("Kit updated"),
+            msg_record_deleted = T("Kit removed"),
+            msg_list_empty = T("No Kits currently registered in this bundle"),
+        )
 
         # Configuration
         configure(tablename,
                   onaccept = self.budget_bundle_kit_onaccept,
-                  ondelete = self.budget_bundle_kit_ondelete)
+                  ondelete = self.budget_bundle_kit_ondelete,
+                  )
         
         # ---------------------------------------------------------------------
         # Bundle<>Item Many2Many
@@ -1034,32 +1018,42 @@ class S3BudgetBundleModel(S3Model):
         define_table(tablename,
                      budget_bundle_id(),
                      self.budget_item_id(),
-                     Field("quantity", "integer",
+                     Field("quantity", "integer", notnull=True,
                            default = 1,
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
                            label = T("Quantity"),
                            ),
-                     Field("minutes", "integer",
+                     Field("minutes", "integer", notnull=True,
                            default = 0,
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
                            label = T("Minutes per Month"),
                            ),
-                     Field("megabytes", "integer",
+                     Field("megabytes", "integer", notnull=True,
                            default = 0,
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
                            label = T("Megabytes per Month"),
                            ),
                      *s3_meta_fields())
-
-        # @todo: CRUD Strings
+                     
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Item"),
+            title_display = T("Item Details"),
+            title_list = T("Items"),
+            title_update = T("Edit Item"),
+            label_list_button = T("List Items"),
+            label_delete_button = T("Remove Item"),
+            msg_record_created = T("Item added"),
+            msg_record_modified = T("Item updated"),
+            msg_record_deleted = T("Item removed"),
+            msg_list_empty = T("No Items currently registered in this bundle"),
+        )
 
         # Configuration
         configure(tablename,
                   onaccept = self.budget_bundle_item_onaccept,
-                  ondelete = self.budget_bundle_item_ondelete)
+                  ondelete = self.budget_bundle_item_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Budget<>Bundle Many2Many
@@ -1070,32 +1064,43 @@ class S3BudgetBundleModel(S3Model):
                      self.project_project_id(),
                      self.budget_location_id(),
                      budget_bundle_id(),
-                     Field("quantity", "integer",
+                     Field("quantity", "integer", notnull=True,
                            default = 1,
-                           notnull = True,
-                           requires = IS_NOT_EMPTY(),
                            label = T("Quantity"),
-                           ),
-                     Field("months", "integer",
-                           default = 3,
-                           notnull = True,
                            requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("months", "integer", notnull=True,
+                           default = 3,
                            label = T("Months"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      *s3_meta_fields())
 
-        # @todo: CRUD Strings
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Bundle"),
+            title_display = T("Bundle Details"),
+            title_list = T("Budget Bundles"),
+            title_update = T("Edit Bundle"),
+            label_list_button = T("List Bundles"),
+            label_delete_button = T("Remove Bundle"),
+            msg_record_created = T("Bundle added"),
+            msg_record_modified = T("Bundle updated"),
+            msg_record_deleted = T("Bundle removed"),
+            msg_list_empty = T("No Bundles currently registered in this Budget"),
+        )
 
         # Configuration
         configure(tablename,
                   onaccept = self.budget_budget_bundle_onaccept,
-                  ondelete = self.budget_budget_bundle_ondelete)
+                  ondelete = self.budget_budget_bundle_ondelete,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(budget_bundle_id = budget_bundle_id,
-                   )
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):
@@ -1103,12 +1108,12 @@ class S3BudgetBundleModel(S3Model):
             Safe defaults for model-global names in case module is disabled
         """
 
-        budget_bundle_id = S3ReusableField("bundle_id", "integer",
-                                           readable = False,
-                                           writable = False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-        return dict(budget_bundle_id = budget_bundle_id,
-                   )
+        return dict(budget_bundle_id = lambda **attr: dummy("bundle_id"),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1242,6 +1247,285 @@ class S3BudgetBundleModel(S3Model):
             if budget_id:
                 budget_budget_totals(budget_id)
         return
+
+# =============================================================================
+class S3BudgetAllocationModel(S3Model):
+    """
+        Model for Budget Allocation
+
+        @status: experimental, not for production use
+    """
+
+    names = ("budget_allocation",
+             "budget_cost_item",
+             )
+
+    def model(self):
+
+        T = current.T
+  
+        # ---------------------------------------------------------------------
+        # Budget allocatable (super-entity for resource assignments that
+        # can be linked to a budget)
+        entity_types = Storage(event_asset = T("Event Asset"),
+                               event_human_resource = T("Event Human Resource"),
+                               event_site = T("Event Facility"),
+                               #project_asset = T("Project Asset"),
+                               project_human_resource = T("Project Human Resource"),
+                               #project_site = T("Project Facility"),
+                               )
+
+        tablename = "budget_cost_item"
+        self.super_entity(tablename, "cost_item_id", entity_types)
+
+        self.add_components(tablename,
+                            budget_allocation = "cost_item_id",
+                            )
+
+        # @todo: implement S3Represent for cost_item_id
+
+        # ---------------------------------------------------------------------
+        # Budget allocation (links a resource assignment to a budget)
+        #
+        tablename = "budget_allocation"
+        self.define_table(tablename,
+                          self.budget_budget_id(),
+                          # Component not instance
+                          self.super_link("cost_item_id", "budget_cost_item",
+                                          readable = True,
+                                          writable = True,
+                                          represent = self.budget_CostItemRepresent(),
+                                          ),
+                          # @ToDo: s3_datetime
+                          s3_date("start_date",
+                                  label = T("Start Date")
+                                  ),
+                          s3_date("end_date",
+                                  label = T("End Date"),
+                                  start_field = "budget_allocation_start_date",
+                                  default_interval = 12,
+                                  ),
+                          Field("unit_cost", "double",
+                                default = 0.00,
+                                label = T("One-Time Cost"),
+                                ),
+                          # @ToDo: make the Time Unit configurable
+                          Field("daily_cost", "double",
+                                default = 0.00,
+                                label = T("Daily Cost"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.budget_allocation_duplicate,
+                       timeplot_options = {
+                            "defaults": {
+                                "baseline": "budget_id$total_volume",
+                                "fact": "cumulate(unit_cost,daily_cost,days)",
+                                "slots": "",
+                                "start": "",
+                                "end": "+1month",
+                            },
+                       },
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """
+            Safe defaults for model-global names in case module is disabled
+        """
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_allocation_duplicate(item):
+        """
+            Import item de-duplication
+
+            @todo: additionally have an onaccept sanitizing overlapping
+                   allocations? (may be too simple, though)
+        """
+
+        data = item.data
+        budget_id = data.get("budget_id")
+        cost_item_id = data.get("cost_item_id")
+
+        if budget_id and cost_item_id:
+            table = item.table
+
+            start_date = data.get("start_date")
+            end_date = data.get("end_date")
+
+            # Regard same budget_id and cost_item_id, and with
+            # start_date = None or same start_date as match
+            query = (table.budget_id == budget_id) & \
+                    (table.cost_item_id == cost_item_id) & \
+                    ((table.start_date == None) | \
+                     (table.start_date == start_date))
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
+class budget_CostItemRepresent(S3Represent):
+    """ Representation of Cost Items """
+
+    # -------------------------------------------------------------------------
+    def __init__(self, show_link=False):
+        """
+            Constructor
+        """
+
+        super(budget_CostItemRepresent, self).__init__(lookup="budget_cost_item",
+                                                       key="cost_item_id",
+                                                       show_link=show_link,
+                                                       )
+
+        s3db = current.s3db
+        self.represent = {
+            "asset_id": s3db.asset_AssetRepresent(show_link=False),
+            "site_id": s3db.org_SiteRepresent(show_link=False),
+            "human_resource_id": s3db.hrm_HumanResourceRepresent(show_link=False),
+        }
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup function
+
+            @param key: the key field
+            @param values: the values to look up
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        instance_fields = {
+            "event_asset": ["incident_id", "asset_id"],
+            "event_site": ["incident_id", "site_id"],
+            "event_human_resource": ["incident_id", "human_resource_id"],
+        }
+
+        # Get all super-entity rows
+        etable = s3db.budget_cost_item
+        rows = db(key.belongs(values)).select(key,
+                                              etable.instance_type)
+        self.queries += 1
+
+        # Sort the super-entity rows by instance type
+        keyname = key.name
+        types = {}
+        for row in rows:
+            instance_type = row.instance_type
+            cost_item_id = row[keyname]
+            if instance_type not in types:
+                types[instance_type] = {cost_item_id: row}
+            else:
+                types[instance_type][cost_item_id] = row
+
+        # Get all instance records (per instance type)
+        results = []
+        append = results.append
+        for instance_type in types:
+
+            # Determine instance table
+            table = s3db.table(instance_type)
+            if not table:
+                continue
+
+            # Determine instance fields
+            fields = []
+            bulk_repr = {}
+            if instance_type in instance_fields:
+                for fname in instance_fields[instance_type]:
+                    field = table[fname]
+                    # Supports bulk representation?
+                    if fname in self.represent:
+                        represent = self.represent[fname]
+                    else:
+                        represent = field.represent
+                    if represent and hasattr(represent, "bulk"):
+                        bulk_repr[fname] = {"method": represent, "values": []}
+                    fields.append(field)
+            else:
+                continue
+            fields.insert(0, table[keyname])
+
+            # Extract instance rows
+            query = (table[keyname].belongs(types[instance_type].keys()))
+            rows = db(query).select(*fields)
+            self.queries += 1
+
+            # Construct result rows
+            sdata = types[instance_type]
+            for row in rows:
+                for fname, frepr in bulk_repr.items():
+                    frepr["values"].append(row[fname])
+                # Construct a new Row which contains both, the super-entity
+                # record and the instance record:
+                append(Row(budget_cost_item = sdata[row[keyname]],
+                           **{instance_type: row}))
+
+            # Bulk representation of instance fields:
+            # The results are stored in S3Represent instance, and there they
+            # will be re-used for single-value representation in represent_row
+            for fname, frepr in bulk_repr.items():
+                frepr["method"].bulk(frepr["values"])
+
+        return results
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        s3db = current.s3db
+
+        cost_item = row.budget_cost_item
+        instance_type = cost_item.instance_type
+
+        # Type-specific representation
+        item = object.__getattribute__(row, instance_type)
+        if instance_type == "event_asset":
+            table = s3db.event_asset
+            repr_str = "%s - %s" % \
+                       (table.incident_id.represent(item.incident_id),
+                        self.represent["asset_id"](item.asset_id),
+                        )
+        elif instance_type == "event_site":
+            table = s3db.event_site
+            repr_str = "%s - %s" % \
+                       (table.incident_id.represent(item.incident_id),
+                        self.represent["site_id"](item.site_id),
+                        )
+        elif instance_type == "event_human_resource":
+            table = s3db.event_human_resource
+            repr_str = "%s - %s" % \
+                        (table.incident_id.represent(item.incident_id),
+                         self.represent["human_resource_id"](item.human_resource_id),
+                         )
+        else:
+            # Unknown instance type
+            etable = s3db.budget_cost_item
+            instance_type_nice = etable.instance_type.represent(instance_type)
+            repr_str = "%s #%s" % (instance_type_nice,
+                                   cost_item.cost_item_id,
+                                   )
+        return repr_str
 
 # =============================================================================
 def budget_kit_totals(kit_id):
@@ -1472,17 +1756,23 @@ def budget_rheader(r):
     resourcename = r.name
 
     if resourcename == "budget":
+
+        tpvars = dict(r.get_vars)
+        tpvars["component"] = "allocation"
         
         tabs = [(T("Basic Details"), None),
                 (T("Staff"), "staff"),
                 (T("Bundles"), "bundle"),
-               ]
+                (T("Allocation"), "allocation"),
+                (T("Report"), "timeplot", tpvars),
+                ]
                
         rheader_fields = [["name"],
                           ["description"],
+                          ["total_volume"],
                           ["total_onetime_costs"],
                           ["total_recurring_costs"],
-                         ]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
         
     elif resourcename == "bundle":
@@ -1490,26 +1780,26 @@ def budget_rheader(r):
         tabs = [(T("Basic Details"), None),
                 (T("Kits"), "kit"),
                 (T("Items"), "item"),
-               ]
+                ]
 
         rheader_fields = [["name"],
                           ["description"],
                           ["total_unit_cost"],
                           ["total_monthly_cost"],
-                         ]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename == "kit":
 
         tabs = [(T("Basic Details"), None),
                 (T("Items"), "item"),
-               ]
+                ]
 
         rheader_fields = [["code"],
                           ["description"],
                           ["total_unit_cost"],
                           ["total_monthly_cost"],
-                         ]
+                          ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     return rheader

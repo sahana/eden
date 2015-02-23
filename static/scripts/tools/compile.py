@@ -21,19 +21,23 @@ if theme != "default":
     for view in ["create.html",
                  #"delete.html",
                  "display.html",
+                 "iframe.html",
                  "list.html",
-                 "list_create.html",
                  "list_filter.html",
                  "map.html",
+                 #"merge.html",
+                 "plain.html",
                  "popup.html",
                  "profile.html",
                  "report.html",
                  #"review.html",
                  "summary.html",
+                 #"timeplot.html",
                  "update.html",
                  ]:
-        if exists(join(folder, "private", "templates", theme, "views", "_%s" % view)):
-            views[view] = "../private/templates/%s/views/_%s" % (theme, view)
+        location = current.deployment_settings.get_template_location()
+        if exists(join(folder, location, "templates", theme, "views", "_%s" % view)):
+            views[view] = "../%s/templates/%s/views/_%s" % (location, theme, view)
 
 def apath(path="", r=None):
     """

@@ -4,7 +4,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -46,98 +46,151 @@ class SECTION(DIV):
     tag = "section"
 
 # =============================================================================
-def formstyle_default(form, fields, *args, **kwargs):
+def formstyle_bootstrap(form, fields, *args, **kwargs):
     """
-        Default Eden Form Style (Labels above the Inputs)
+        Formstyle for Bootstrap 2.x themes: http://getbootstrap.com/2.3.2/
     """
 
-    def render_row(row_id, label, widget, comment, hidden=False):
-        
-        row = []
-        _class = "hide" if hidden else None
-            
-        # Label on the 1st row
-        row.append(TR(TD(label, _class = "w2p_fl"),
-                      TD(""),
-                      _id = row_id + "1",
-                      _class = _class))
-                      
-        # Widget & Comment on the 2nd Row
-        row.append(TR(widget,
-                      TD(comment, _class = "w2p_fc"),
-                      _id = row_id,
-                      _class = _class))
-                      
-        return tuple(row)
+    def render_row(id, label, controls, help, hidden=False):
+        # Based on web2py/gluon/sqhtml.py
+        # wrappers
+        _help = DIV(help, _class="help-block")
+        # embed _help into _controls
+        _controls = DIV(controls, _help, _class="controls")
+        # submit unflag by default
+        _submit = False
+
+        element = None
+        if isinstance(controls, INPUT):
+            controls.add_class("span4")
+            element = controls
+        elif hasattr(controls, "element"):
+            element = controls.element("input")
+        if element:
+            if element["_type"] == "submit":
+                # flag submit button
+                _submit = True
+                element["_class"] = "btn btn-primary"
+            elif element["_type"] == "file":
+                element["_class"] = "input-file"
+
+        # For password fields, which are wrapped in a CAT object.
+        if isinstance(controls, CAT) and isinstance(controls[0], INPUT):
+            controls[0].add_class("span4")
+
+        if isinstance(controls, SELECT):
+            controls.add_class("span4")
+
+        if isinstance(controls, TEXTAREA):
+            controls.add_class("span4")
+
+        if isinstance(label, LABEL):
+            label["_class"] = "control-label"
+
+        _class = "hide " if hidden else ""
+
+        if _submit:
+            # submit button has unwrapped label and controls, different class
+            return DIV(label, controls, _class="%sform-actions" % _class, _id=id)
+            # unflag submit (possible side effect)
+            _submit = False
+        else:
+            # unwrapped label
+            return DIV(label, _controls, _class="%scontrol-group" % _class, _id=id)
 
     if args:
-        # Old-style, single-row call:
-        hidden = kwargs.get("hidden", False)
-        return render_row(form, fields, args[0], args[1], hidden=hidden)
-    else:
-        # New-style, all-rows call:
-        parent = TABLE()
-        for row_id, label, widget, comment in fields:
-            rows = render_row(row_id, label, widget, comment)
-            parent.append(rows[0])
-            parent.append(rows[1])
-        return parent
-
-# =============================================================================
-def formstyle_default_inline(form, fields, *args, **kwargs):
-    """
-        Default Eden Form Style (In-Line Labels)
-    """
-
-    def render_row(row_id, label, widget, comment, hidden=False):
-
-        _class = "hide" if hidden else None
-
-        row = TR(TD(label, _class = "w2p_fl"),
-                 TD(widget),
-                 _id = row_id,
-                 _class = _class)
-
+        row_id = form
+        label = fields
+        widget, comment = args
         if comment:
-            row.append(TD(DIV(_class = "tooltip",
-                              _title = "%s|%s" % (label, comment)),
-                          _class="w2p_fc"))
-        return row
-
-    if args:
-        # Old-style, single-row call:
+            comment = DIV(_class = "tooltip",
+                          _title = "%s|%s" % (label, comment))
         hidden = kwargs.get("hidden", False)
-        return render_row(form, fields, args[0], args[1], hidden=hidden)
+        return render_row(row_id, label, widget, comment, hidden)
     else:
-        # New-style, all-rows call:
-        parent = TABLE()
+        form.add_class("form-horizontal")
+        parent = FIELDSET()
         for row_id, label, widget, comment in fields:
-            row = render_row(row_id, label, widget, comment)
-            parent.append(row)
+            parent.append(render_row(row_id, label, widget, comment))
         return parent
 
 # =============================================================================
 def formstyle_foundation(form, fields, *args, **kwargs):
     """
-        Formstyle for foundation themes (Labels above Inputs)
+        Formstyle for Foundation 5 themes: http://foundation.zurb.com
+        - Labels above the Inputs
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
-        if isinstance(widget, INPUT):
-            if widget['_type'] == 'submit':
-                widget['_class'] = 'small primary button'
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
 
         _class = "form-row row hide" if hidden else "form-row row"
-        widget_col = DIV(label,
-                         DIV(widget,
-                             _class="controls",
-                             ),
-                         _class="small-6 columns",
-                         )
-        comment_col = DIV(render_tooltip(label, comment),
-                          _class="small-6 columns inline-tooltip",
-                          )
-        return DIV(widget_col, comment_col, _class=_class, _id=row_id)
+        hints = DIV(render_tooltip(label, comment), _class="inline-tooltip")
+        controls = DIV(label,
+                       DIV(widget, hints, _class="controls"),
+                       _class="small-12 columns",
+                       )
+        return DIV(controls, _class=_class, _id=row_id)
+
+    if args:
+        row_id = form
+        label = fields
+        widget, comment = args
+        hidden = kwargs.get("hidden", False)
+        return render_row(row_id, label, widget, comment, hidden)
+    else:
+        parent = TAG[""]()
+        for row_id, label, widget, comment in fields:
+            parent.append(render_row(row_id, label, widget, comment))
+        return parent
+
+# =============================================================================
+def formstyle_foundation_2col(form, fields, *args, **kwargs):
+    """
+        Formstyle for Foundation 5 themes: http://foundation.zurb.com
+        - Labels beside the Inputs
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        # Inspect widget
+        columns = None
+        if hasattr(widget, "element"):
+            # Check for widget columns width override
+            attr = widget.element().attributes
+            if "s3cols" in attr:
+                columns = attr["s3cols"] or columns
+            # Set additional CSS classes for submit button
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
+
+        # Render tooltip
+        hints = render_tooltip(label, comment)
+
+        # Wrap the label
+        if isinstance(label, LABEL):
+            label.add_class("right inline")
+        else:
+            label = LABEL(label, _class="right inline")
+        label = DIV(label, _class="small-2 columns")
+
+        # Wrap the controls
+        if columns is None:
+            _columns = "small-10 columns"
+        else:
+            _columns = "small-%s columns end" % columns
+        controls = DIV(widget, hints, _class=_columns)
+
+        # Render the row
+        _class = "form-row row"
+        if hidden:
+            _class = "%s hide" % _class
+        return DIV(label, controls, _class=_class, _id=row_id)
 
     if args:
         row_id = form
@@ -154,27 +207,36 @@ def formstyle_foundation(form, fields, *args, **kwargs):
 # =============================================================================
 def formstyle_foundation_inline(form, fields, *args, **kwargs):
     """
-        Formstyle for foundation themes (In-Line Labels)
+        Formstyle for Foundation 5 themes (In-Line Labels)
     """
 
     def render_row(row_id, label, widget, comment, hidden=False):
-        
-        if isinstance(widget, INPUT):
-            if widget['_type'] == 'submit':
-                widget['_class'] = 'small primary button'
+
+        if hasattr(widget, "element"):
+            submit = widget.element("input", _type="submit")
+            if submit:
+                submit.add_class("small primary button")
 
         if isinstance(label, LABEL):
             label.add_class("left inline")
-                
-        label_col = DIV(label, _class="small-2 columns")
-        controls_col = DIV(widget, _class="small-6 columns controls")
-        comments_col = DIV(render_tooltip(label, comment),
-                           _class="small-4 columns inline-tooltip")
+
+        controls_col = DIV(widget, _class="medium-10 columns controls")
+        if label:
+            label_col = DIV(label, _class="medium-2 columns")
+        else:
+            label_col = ""
+            controls_col.add_class("medium-offset-2")
+
+        if comment:
+            comment = render_tooltip(label,
+                                     comment,
+                                     _class="inline-tooltip tooltip",
+                                     )
+            controls_col.append(comment)
 
         _class = "form-row row hide" if hidden else "form-row row"
         return DIV(label_col,
                    controls_col,
-                   comments_col,
                    _class=_class, _id=row_id)
 
     if args:
@@ -190,7 +252,80 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
         return parent
 
 # =============================================================================
-def render_tooltip(label, comment):
+def formstyle_table(form, fields, *args, **kwargs):
+    """
+        Old Default Eden Form Style (TRs not DIVs, Labels above the Inputs)
+        - still used by IFRC
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        row = []
+        _class = "hide" if hidden else None
+
+        # Label on the 1st row
+        row.append(TR(TD(label, _class="w2p_fl"),
+                      TD(""),
+                      _id = row_id + "1",
+                      _class=_class))
+
+        # Widget & Comment on the 2nd Row
+        row.append(TR(widget,
+                      TD(comment, _class="w2p_fc"),
+                      _id=row_id,
+                      _class=_class))
+
+        return tuple(row)
+
+    if args:
+        # Old-style, single-row call:
+        hidden = kwargs.get("hidden", False)
+        return render_row(form, fields, args[0], args[1], hidden=hidden)
+    else:
+        # New-style, all-rows call:
+        parent = TABLE()
+        for row_id, label, widget, comment in fields:
+            rows = render_row(row_id, label, widget, comment)
+            parent.append(rows[0])
+            parent.append(rows[1])
+        return parent
+
+# =============================================================================
+def formstyle_table_inline(form, fields, *args, **kwargs):
+    """
+        Old Default Eden Form Style (In-Line Labels)
+        - still used by IFRC
+    """
+
+    def render_row(row_id, label, widget, comment, hidden=False):
+
+        _class = "hide" if hidden else None
+
+        row = TR(TD(label, _class="w2p_fl"),
+                 TD(widget),
+                 _id=row_id,
+                 _class=_class)
+
+        if comment:
+            row.append(TD(DIV(_class="tooltip",
+                              _title="%s|%s" % (label, comment)),
+                          _class="w2p_fc"))
+        return row
+
+    if args:
+        # Old-style, single-row call:
+        hidden = kwargs.get("hidden", False)
+        return render_row(form, fields, args[0], args[1], hidden=hidden)
+    else:
+        # New-style, all-rows call:
+        parent = TABLE()
+        for row_id, label, widget, comment in fields:
+            row = render_row(row_id, label, widget, comment)
+            parent.append(row)
+        return parent
+
+# =============================================================================
+def render_tooltip(label, comment, _class="tooltip"):
     """ Render a tooltip for a form field """
 
     if not comment:
@@ -198,10 +333,10 @@ def render_tooltip(label, comment):
     elif isinstance(comment, (lazyT, basestring)):
         if hasattr(label, "flatten"):
             label = label.flatten().strip("*")
-        tooltip = DIV(_class = "tooltip",
+        tooltip = DIV(_class = _class,
                       _title = "%s|%s" % (label, comment))
     else:
         tooltip = comment
     return tooltip
-    
+
 # END =========================================================================

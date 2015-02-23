@@ -28,9 +28,9 @@
 # - all other names in the name list will be added to response.s3
 #   if their names start with the module prefix plus underscore
 #
-__all__ = ["SkeletonDataModel",
+__all__ = ("SkeletonDataModel",
            "skeleton_example_represent"
-           ]
+           )
 
 # The following import statements are needed in almost every model
 # (you may need more than this in your particular case). To
@@ -56,8 +56,9 @@ class S3SkeletonDataModel(S3Model):
     # variable, then this class will serve as a fallback model for this module
     # in case a requested name cannot be found in one of the other model classes
     #
-    names = ["skeleton_example",
-             "skeleton_example_id"]
+    names = ("skeleton_example",
+             "skeleton_example_id",
+             )
 
     # Define a function model() which takes no parameters (except self):
     def model(self):
@@ -116,8 +117,8 @@ class S3SkeletonDataModel(S3Model):
         # -> make sure you prefix their names properly with the module prefix:
         skeleton_example_id = S3ReusableField("skeleton_example_id", "reference %s" % tablename,
                                                label = T("Skeleton Example"),
-                                               requires = IS_NULL_OR(IS_ONE_OF(db,
-                                                                     "skeleton_example.id")))
+                                               requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                                      "skeleton_example.id")))
 
         # Pass names back to global scope (s3.*)
         return dict(

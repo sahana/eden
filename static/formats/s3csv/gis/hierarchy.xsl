@@ -20,10 +20,10 @@
          Edit L4..............boolean.........gis_hierarchy.edit_L4
 
     *********************************************************************** -->
+    <xsl:import href="../commons.xsl"/>
+    <xsl:import href="../../xml/countries.xsl"/>
+    
     <xsl:output method="xml"/>
-
-    <xsl:include href="../commons.xsl"/>
-    <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">

@@ -1,0 +1,77 @@
+Organisation,Name,Code,Type,SubType,Building,Address,Postcode,Country,L1,L2,L3,Lat,Lon
+Southeast Louisiana,5001,5001,DCRN,Mobile,,300 Ashland Way,70447,US,Louisiana,Saint Tammany,Madisonville,30.4318999984,-90.1906999983
+South Texas,5002,5002,DCRN,Mobile,,6914 W Expressway 83,78552,US,Texas,Cameron,Harlingen,26.1873000006,-97.7549000014
+Greater Houston Area,5003,5003,DCRN,Mobile,,2700 SW Freeway,77098,US,Texas,Okaloosa,Houston,30.720400002,-86.5694000011
+American Red Cross of Northwest Florida,5003,5003,DCRN,Mobile,,4100 S Ferdon Blvd,32536,US,Florida,Harris,Crestview,29.7362999992,-95.4162999984
+Cape Fear,5004,5004,DCRN,Mobile,,1102 S 16th St.,28401,US,North Carolina,New Hanover,Wilmington,34.2228999995,-77.9274999983
+Carolina Lowcountry,5005,5005,DCRN,Mobile,,8085 Rivers Ave,29406,US,South Carolina,Charleston,North Charleston,32.9536999987,-80.0443999995
+Southeastern Virginia,5006,5006,DCRN,Mobile,,611 W Brambleton Ave,23510,US,Virginia,Norfolk,Norfolk,36.8581000007,-76.3026
+Alabama Gulf Coast,5007,5007,DCRN,Mobile,,35 N Sage Ave,36607,US,Alabama,Mobile,Mobile,30.6913000009,-88.1145999986
+Broward County,5008,5008,DCRN,Mobile,,6710 W Sunrise Blvd,33313,US,Florida,Broward,Plantation,26.1382,-80.2388000003
+Tampa Bay,5010,5010,DCRN,Mobile,,3310 W Main St.,33607,US,Florida,Hillsborough,Tampa,27.9569000006,-82.4985000008
+Southeast Georgia,5011,5011,DCRN,Mobile,,41 Park Of Commerce Blvd,31405,US,Georgia,Chatham,Savannah,32.0683999991,-81.1645999996
+South Mississippi,5012,5012,DCRN,Mobile,,2782 Fernwood Rd,39531,US,Mississippi,Harrison,Biloxi,30.3988000004,-88.9994000008
+Central Panhandle,5013,5013,DCRN,Mobile,,430 E 15th St,32405,US,Florida,Bay,Panama City,30.1750000009,-85.6543000004
+Puerto Rico,5014,5014,DCRN,Mobile,,Centro Medico,902,PR,San Juan,Rio Piedras,,18.3924000003,-66.0754999999
+Puerto Rico,5015,5015,DCRN,Mobile,,Centro Medico,902,PR,San Juan,Rio Piedras,,18.3924000003,-66.0754999999
+Coastal Bend-Texas,5016,5016,DCRN,Mobile,,1721 S Brownlee Blvd,78404,US,Texas,Nueces,Corpus Christi,27.7720000001,-97.4026000014
+Southwest Florida,5020,5020,DCRN,Mobile,,2905 59th St. W,34209,US,Florida,Manatee,Bradenton,27.4750000014,-82.6204999983
+South Mississippi,5022,5022,DCRN,Mobile,,1096 Jackson Ave,39568,US,Mississippi,Jackson,Pascagoula,30.3656000009,-88.5533000003
+Southwest Florida,5023,5023,DCRN,Mobile,,2001 Cantu Ct.,34232,US,Florida,Sarasota,Sarasota,27.3183000014,-82.4494999986
+North Treasure Coast,5024,5024,DCRN,Mobile,,2506 17th Ave,32960,US,Florida,Indian River,Vero Beach,27.6444999982,-80.4022999999
+American Red Cross Greater Palm Beach Area,5025,5025,DCRN,Mobile,,825 Fern St,33401,US,Florida,Palm Beach,West Palm Beach,26.7107999992,-80.0601999981
+Space Coast,5026,5026,DCRN,Mobile,,1700 Cedar St.,32955,US,Florida,Brevard,Rockledge,28.3284999988,-80.7373999993
+American Red Cross of Greater Miami and the Keys,5027,5027,DCRN,Mobile,,335 SW 27thAve,33135,US,Florida,Miami-Dade,Miami,25.7688999997,-80.2386000003
+American Red Cross on Long Island,5050,5050,DCRN,Mobile,,95 Horseblock Rd.,11980,US,New York,Suffolk,Yaphank,40.8104000016,-72.9483000006
+Greater Kansas City,6001,6001,DCRN,Semi,,211 W Armour Blvd,64111,US,Missouri,Jackson,Kansas City,39.0639000015,-94.5881000009
+Capital Area,6002,6002,DCRN,Semi,,4655 Sherwood Common Blvd,70816,US,Louisiana,East Baton Rouge,Baton Rouge,30.4063000011,-91.0573999995
+American Red Cross of Central Texas,6003,6003,DCRN,Semi,,2218 Pershing Dr.,78723,US,Texas,Travis,Austin,30.288400002,-97.6986000017
+Central North Carolina,6004,6004,DCRN,Semi,,4737 University Dr.,27707,US,North Carolina,Durham,Durham,35.9541000018,-78.9660999997
+Central South Carolina,6005,6005,DCRN,Semi,,2751 Bull St.,29201,US,South Carolina,Richland,Columbia,34.0227000004,-81.0377000013
+Mid Florida Region,6006,6006,DCRN,Semi,,5 N Bumby Ave,32803,US,Florida,Orange,Orlando,28.5428000018,-81.3515000012
+American Red Cross of Central Alabama,6007,6007,DCRN,Semi,,5015 Woods Crossing,36106,US,Alabama,Montgomery,Montgomery,32.3524000009,-86.2604999993
+Capital Area,6008,6008,DCRN,Semi,,1115 Easterwood Dr.,32311,US,Florida,Leon,Tallahassee,30.4420000016,-84.2186000016
+Metropolitan Atlanta,6009,6009,DCRN,Semi,,1955 Monroe Dr.,30324,US,Georgia,Fulton,Atlanta,33.8079000006,-84.3753999993
+North American Mission Board,6010,6010,DCRN,Semi,,4200 North Point Pkwy,30022,US,Georgia,Fulton,Alpharetta,34.0643000008,-84.2635000013
+Mississippi Capital River,6011,6011,DCRN,Semi,,875 Riverside Dr.,39202,US,Mississippi,Hinds,Jackson,32.3233,-90.1735999991
+Florida's Coast to Coast,6013,6013,DCRN,Semi,,341 White St.,32114,US,Florida,Volusia,Daytona Beach,29.2067000009,-81.0481999999
+American Red Cross of Lee County,6014,6014,DCRN,Semi,,6310 Techster Boulevard,33912,US,Florida,Lee,Ft. Myers,26.5412999989,-81.8306999986
+Polk County,6015,6015,DCRN,Semi,,147 Ave A Nw,33881,US,Florida,Polk,Winter Haven,28.0229999982,-81.7283999996
+Collier County,6016,6016,DCRN,Semi,,2610 Northbrooke Plaza Dr.,34119,US,Florida,Collier,Naples,26.2747999986,-81.7410999984
+American Red Cross on Long Island,6017,6017,DCRN,Semi,,195 Willis Ave,11706,US,New York,Nassau,Mineola,40.7457999998,-73.6394999994
+Martin County,6018,6018,DCRN,Semi,,2750 S Kanner Hwy,34994,US,Florida,Martin,Stuart,27.1713999992,-80.2525999997
+Northeast Florida,6019,6019,DCRN,Semi,,751 Riverside Ave,32204,US,Florida,Duval,Jacksonville,30.315900002,-81.6759000011
+American Samoa,SDA of San Diego,AS,DFSC,,,,,AS,Eastern District,Ma'oputasi,Pago Pago,-14.3520000019,-170.745099999
+Metropolitan Atlanta,Fort Gillem Army Depot,AT,DFSC,,Bldg 212,4576 North 2nd St.,30297,US,Georgia,Clayton,Forest Park,33.6288999989,-84.3187000004
+American Red Cross of Central Texas,Austin,AU,DFSC,DSMC,Suite 140,6404 Old Burleson Rd.,78744,US,Texas,Travis,Austin,30.2047000005,-97.7135000006
+Louisiana Capital Area,BR,BR,DFSC,DROHQ,,9598 Cortana Place,70806,US,Louisiana,East Baton Rouge,Baton Rouge,30.4583999998,-91.0969000014
+Connecticut,Charter Oak,CC,DFSC,,,480 Hayden Station Road,6095,US,Connecticut,Hartford,Windsor,41.8989999999,-72.6484999991
+Mid-Atlantic Division,CP,CP,DFSC,,,1061 Carolina Pines Road,29016,US,South Carolina,Richland,Columbia,34.1785999981,-80.9657000007
+Southwest and Rocky Mountain Division,DA,DA,DFSC,,,5151 Norwood Road,75247,US,Texas,Dallas,Dallas,32.8119000009,-96.8902999981
+Guam,DE,DE,DFSC,,,Liguan Avenue,96929,GU,Guam,,,13.509300001,144.834800001
+Dayton Area,Wright Patterson AFB,DT,DFSC,,Area C Bldg. 258 Doo,5237 Cooper St.,45433,US,Ohio,Greene,Dayton,39.8143999987,-84.032900002
+Metropolitan Atlanta,FP,FP,DFSC,,,5165 Kennedy Road,30297,US,Georgia,Clayton,Forest Park,33.6134999993,-84.3922000007
+Greater Carolinas,GC,GC,DFSC,,,2425 Park Road,28236,US,North Carolina,Mecklenburg,Charlotte,35.1972999985,-80.8511999998
+Greensboro,GN,GN,DFSC,,,4524 Green Point Drive,27410,US,North Carolina,Guilford,Greensboro,36.0643000008,-79.9534999987
+Guam,GU,GU,DFSC,,Building 285,Route 4,96910,GU,Guam,,,13.4648999979,144.7617
+Hawaii State,West Loch Military Facility,HA,DFSC,,Bldg 421,4th St.,96706,US,Hawaii,Honolulu,Ewa Beach,31.3495000002,-157.997099999
+South Mississippi,HT,HT,DFSC,DROHQ,,95 W. L. Runnels Industrial D,39401,US,Mississippi,Forrest,Hattiesburg,31.2060999985,-89.2690999993
+American Red Cross of Greater Indianapolis,IN,IN,DFSC,,,29 North Tibbs Street,46222,US,Indiana,Marion,Indianapolis,39.7655000016,-86.2120999989
+American Red Cross of the Susquehanna Valley,Armstrong World Industries Wh,LC,DFSC,,Bldg. 1B,Route 441,17547,US,Pennsylvania,Lancaster,Marietta,40.0733000001,-76.5843999981
+Midland Empire,Hillyard Industries,MO,DFSC,,,310 North 4th Street,64501,US,Missouri,Buchanan,St. Joseph,39.7683999986,-94.8554000001
+American Red Cross of Central Alabama,MT,MT,DFSC,DROHQ,,2333 East South Blvd,36116,US,Alabama,Montgomery,Montgomery,32.3271999993,-86.2619000004
+American Red Cross of Greater Indianapolis,NB,NB,DFSC,,,15325 Herriman Blvd.,46060,US,Indiana,Hamilton,Noblesville,40.0126999989,-86.0056000021
+Jersey Coast,Jersey Coast,NJ,DFSC,,,1540 West Park Avenue,7724,US,New Jersey,Monmouth,Tinton Falls,40.2564999985,-74.0908999999
+American Red Cross of Central Florida,OR,OR,DFSC,,,264 Andes Avenue,32807,US,Florida,Orange,Orlando,28.5419000012,-81.318999998
+American Red Cross of Greater Arkansas,PB,PB,DFSC,,,233 Mulberry Street,71601,US,Arkansas,Jefferson,Pine Bluff,34.2281000017,-92.015900001
+American Red Cross of Northwest Florida,U.S. Naval Air Station,PF,DFSC,,,190 Radford Blvd,32505,US,Florida,Escambia,Pensacola,30.3557999994,-87.273800001
+Puerto Rico,Corujo Industrial Park,PU,DFSC,,,"State Road #, Km 15.26",936,PR,Bayamon,Bayamon,,18.3792000005,-66.1429999996
+Greater Richmond,RD,RD,DFSC,DROHQ,,4441 Carolina Avenue,23222,US,Virginia,Henrico,Richmond,37.5967999994,-77.4127000015
+Northern Nevada,Reno DFSC,RE,DFSC,,,400 Parr Blvd.,89512,US,Nevada,Washoe,Reno,39.5698999986,-119.8145
+San Antonio Area,Ft. Sam Houston,SA,DFSC,,,Corner of Parker & 12 Sts.,78234,US,Texas,Bexar,San Antonio,29.4453000018,-98.4448999983
+Northern Mariana Islands,SN,SN,DFSC,,,Airport Road,96950,MP,Saipan,San Vicente,,15.1262999995,145.7234
+American Red Cross of the Virgin Islands,St. Croix,SS,DFSC,DFST,,"65 Castne Caokley, Christians",823,VI,St. Croix,,,17.7472000014,-64.7193999996
+American Red Cross Saint Louis Area,SU,SU,DFSC,,,4300 Planned Industrial,63120,US,Missouri,Saint Louis,St. Louis,38.6900999991,-90.2617999983
+American Red Cross in the National Capital Region,Savage,SV,DFSC,,,8840 Greenwood Place,20763,US,Maryland,Howard,Savage,39.1295999998,-76.8126999995
+Benton-Franklin County,Umatilla Army Depot,UT,DFSC,,,78798 Ordnance Rd,97838,US,Oregon,Umatilla,Hermiston,45.8090999984,-119.425099999
+American Red Cross of the Virgin Islands,St. Thomas,VI,DFSC,DFST,,8000 Nisky Center,802,VI,St. Thomas,,,18.3462000008,-64.9294999985

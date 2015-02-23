@@ -1,6 +1,6 @@
 @charset "UTF-8";
 
-/*** General Overrides ***/
+/*
 table tr th.edit-delete-col {
     background: url(../IFRC/img/edit_delete.png) no-repeat bottom;
 }
@@ -27,4 +27,20 @@ table tr th.edit-delete-col {
 }
 .submit-search {
     background: url(../IFRC/img/search_but.png) no-repeat;
+}*/
+
+/* Allow space for 'Subscription' */
+#header #personal-menu li {
+    padding: 5px 6px 0;
+}
+
+/* Survey */
+#export_xls_btn {
+    color: #333 !important;
+}
+
+/* For the Mission Profile page */
+/* @ToDo: Responsive */
+.span12 {
+  width: 770px;
 }

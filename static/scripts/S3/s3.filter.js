@@ -21,7 +21,7 @@ S3.search = {};
             if (result.search(/\,/) != -1) {
                 result = '"' + result + '"';
             }
-            return result
+            return result;
         } else {
             return (value);
         }
@@ -70,22 +70,24 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.options-filter, .location-filter').each(function() {
+            $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
-                $this = $(this)
                 $this.val('');
-                if ($this.hasClass('groupedopts-filter-widget') && typeof $this.groupedopts != 'undefined') {
+                if ($this.hasClass('groupedopts-filter-widget') && 
+                    $this.groupedopts('instance')) {
                     $this.groupedopts('refresh');
                 } else
-                if ($this.hasClass('multiselect-filter-widget') && typeof $this.multiselect != 'undefined') {
+                if ($this.hasClass('multiselect-filter-widget') && 
+                    $this.multiselect('instance')) {
                     $this.multiselect('refresh');
                 }
             } else {
-                var id = $(this).attr('id');
+                var id = $this.attr('id');
                 $("input[name='" + id + "']:checked").each(function() {
                     $(this).click();
                 });
             }
-            if ($(this).hasClass('location-filter')) {
+            if ($this.hasClass('location-filter')) {
                 hierarchical_location_change(this);
             }
         });
@@ -357,7 +359,7 @@ S3.search = {};
         return queries;
     };
 
-    // Pass to global scope to be called by s3.jquery.ui.pivottable.js
+    // Pass to global scope to be called by s3.ui.pivottable.js
     S3.search.getCurrentFilters = getCurrentFilters;
 
     /**
@@ -464,11 +466,11 @@ S3.search = {};
                     }
                     $this.val(values);
                     if ($this.hasClass('groupedopts-filter-widget') &&
-                        typeof $this.groupedopts != 'undefined') {
+                        $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') &&
-                        typeof $this.multiselect != 'undefined') {
+                    if ($this.hasClass('multiselect-filter-widget') && 
+                        $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
                 }
@@ -554,12 +556,12 @@ S3.search = {};
                         toggleAdvanced(form);
                     }
                     $this.val(values);
-                    if ($this.hasClass('groupedopts-filter-widget') &&
-                        typeof $this.groupedopts != 'undefined') {
+                    if ($this.hasClass('groupedopts-filter-widget') && 
+                        $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') &&
-                        typeof $this.multiselect != 'undefined') {
+                    if ($this.hasClass('multiselect-filter-widget') && 
+                        $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
                     hierarchical_location_change(this);
@@ -613,7 +615,7 @@ S3.search = {};
                 var qstr = url_parts[1];
                 var a = qstr.split('&'), b, c;
                 for (i=0; i<a.length; i++) {
-                    var b = a[i].split('=');
+                    b = a[i].split('=');
                     if (b.length > 1) {
                         c = decodeURIComponent(b[0]);
                         if (c != name) {
@@ -676,8 +678,10 @@ S3.search = {};
 
         var query = [];
 
-        if (url_parts.length > 1) {
-
+        if (S3.search.stripFilters == 1) {
+            // Strip existing URL filters
+        } else if (url_parts.length > 1) {
+            // Keep existing URL filters
             var qstr = url_parts[1];
             var url_vars = qstr.split('&');
 
@@ -783,10 +787,12 @@ S3.search = {};
                         }
 
                         // Refresh UI widgets
-                        if (widget.hasClass('groupedopts-filter-widget') && typeof widget.groupedopts != 'undefined') {
+                        if (widget.hasClass('groupedopts-filter-widget') && 
+                            widget.groupedopts('instance')) {
                             widget.groupedopts('refresh');
                         } else
-                        if (widget.hasClass('multiselect-filter-widget') && typeof widget.multiselect != 'undefined') {
+                        if (widget.hasClass('multiselect-filter-widget') && 
+                            widget.multiselect('instance')) {
                             widget.multiselect('refresh');
                         }
 
@@ -830,6 +836,25 @@ S3.search = {};
                 msg = jqXHR.responseText;
             }
             console.log(msg);
+        });
+    };
+
+    /**
+     * Update export format URLs in a datatable
+     *
+     * @param {jQuery} dt - the datatable
+     * @param {object} queries - the filter queries
+     */
+    var updateFormatURLs = function(dt, queries) {
+
+        $('#' + dt[0].id).closest('.dt-wrapper')
+                         .find('.dt-export')
+                         .each(function() {
+            var $this = $(this);
+            var url = $this.data('url');
+            if (url) {
+                $this.data('url', filterURL(url, queries));
+            }
         });
     };
 
@@ -883,7 +908,7 @@ S3.search = {};
         for (target_id in targets) {
             t = $('#' + target_id);
             if (!t.is(':visible')) {
-                continue
+                continue;
             }
             target_data = targets[target_id];
             t = $('#' + target_id);
@@ -893,21 +918,8 @@ S3.search = {};
             } else if (t.hasClass('dataTable')) {
                 var dt = t.dataTable();
                 // Refresh Data
-                dt.fnReloadAjax(target_data['ajaxurl']);
-                // Update Export Formats
-                var $this,
-                    s,
-                    parts;
-                $('#' + dt[0].id + '_list_formats div').each(function() {
-                    $this = $(this);
-                    s = $this.attr('onclick');
-                    parts = s.split("','");
-                    url = parts[2].split("');")[0];
-                    url = filterURL(url, queries);
-                    parts[2] = url + "');";
-                    s = parts.join("','");
-                    $this.attr('onclick', s);
-                });
+                dt.reloadAjax(target_data['ajaxurl']);
+                updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                     $(this).val(target_data['ajaxurl']);
                 });
@@ -915,6 +927,8 @@ S3.search = {};
                 S3.gis.refreshLayer('search_results');
             } else if (t.hasClass('pt-container')) {
                 t.pivottable('reload', null, target_data['queries']);
+            } else if (t.hasClass('tp-container')) {
+                t.timeplot('reload', null, target_data['queries']);
             }
         }
     };
@@ -984,6 +998,7 @@ S3.search = {};
                 t = $('#' + target_id);
                 if (t.hasClass('dl') ||
                     t.hasClass('pt-container') ||
+                    t.hasClass('tp-container') ||
                     t.hasClass('map_wrapper')) {
                     // These targets handle their AjaxURL themselves
                     ajaxurl = null;
@@ -996,7 +1011,7 @@ S3.search = {};
                         if (typeof ajaxurl != 'undefined') {
                             ajaxurl = filterURL(ajaxurl, q);
                         } else {
-                            continue
+                            continue;
                         }
                     }
                 } else {
@@ -1009,6 +1024,19 @@ S3.search = {};
                 };
             }
         }
+
+        /**
+         * Helper method to trigger re-calculation of column width in
+         * responsive data tables after unhiding them
+         *
+         * @param {jQuery} datatable - the datatable
+         */
+        var recalcResponsive = function(datatable) {
+            var dt = $(datatable).DataTable();
+            if (dt && dt.responsive) {
+                dt.responsive.recalc();
+            }
+        };
 
         // Initialise jQueryUI Tabs
         $('#summary-tabs').tabs({
@@ -1055,10 +1083,20 @@ S3.search = {};
                     // Update all just-unhidden widgets which have pending updates
                     updatePendingTargets(form);
                 }
+                newPanel.find('table.dataTable.display.responsive')
+                        .each(function() {
+                    recalcResponsive(this);
+                });
             }
         }).css({visibility: 'visible'});
+
         // Activate not called? Unhide initial section anyway:
-        $('.ui-tabs-panel[aria-hidden="false"]').first().removeClass('hide');
+        $('.ui-tabs-panel[aria-hidden="false"]').first()
+                                                .removeClass('hide')
+                                                .find('table.dataTable.display.responsive')
+                                                .each(function() {
+                                                    recalcResponsive(this);
+                                                });
     };
 
     /**
@@ -1101,11 +1139,13 @@ S3.search = {};
                 if (undefined === gis.maps[map_id]) {
                     // Instantiate the map (can't be done when the DIV is hidden)
                     var options = gis.options[map_id];
-                    gis.show_map(map_id, options);
-                    // Get the current Filters
-                    var queries = getCurrentFilters($('#' + form));
-                    // Load the layer
-                    gis.refreshLayer('search_results', queries);
+                    if (undefined != options) {
+                        gis.show_map(map_id, options);
+                        // Get the current Filters
+                        var queries = getCurrentFilters($('#' + form));
+                        // Load the layer
+                        gis.refreshLayer('search_results', queries);
+                    }
                 }
             }
         }
@@ -1133,9 +1173,42 @@ S3.search = {};
      */
     var hierarchical_location_change = function(widget) {
         var name = widget.name;
-        var values = $('#' + name).val();
         var base = name.slice(0, -1);
         var level = parseInt(name.slice(-1));
+        var $widget = $('#' + name);
+        var values = $widget.val();
+        if (values) {
+            // Show the next widget down
+            var fn = base.replace(/-/g, '_') + (level + 1);
+            S3[fn]();
+            $('#' + base + (level + 1)).next('.ui-multiselect').show();
+        } else {
+            // Hide the next widget down
+            var next_widget = $widget.next('.ui-multiselect').next('.location-filter').next('.ui-multiselect');
+            if (next_widget.length) {
+                next_widget.hide();
+                // Hide the next widget down
+                next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
+                if (next_widget.length) {
+                    next_widget.hide();
+                    // Hide the next widget down
+                    next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
+                    if (next_widget.length) {
+                        next_widget.hide();
+                        // Hide the next widget down
+                        next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
+                        if (next_widget.length) {
+                            next_widget.hide();
+                            // Hide the next widget down
+                            next_widget = next_widget.next('.location-filter').next('.ui-multiselect');
+                            if (next_widget.length) {
+                                next_widget.hide();
+                            }
+                        }
+                    }
+                }
+            }
+        }
         var hierarchy = S3.location_filter_hierarchy;
         if (S3.location_name_l10n != undefined) {
             var translate = true;
@@ -1308,14 +1381,14 @@ S3.search = {};
                     }
                 }
                 select.html(_options);
-                if (select.hasClass('groupedopts-filter-widget') &&
-                    typeof select.groupedopts != 'undefined') {
+                if (select.hasClass('groupedopts-filter-widget') && 
+                    select.groupedopts('instance')) {
                     try {
                         select.groupedopts('refresh');
                     } catch(e) { }
                 } else
-                if (select.hasClass('multiselect-filter-widget') &&
-                    typeof select.multiselect != 'undefined') {
+                if (select.hasClass('multiselect-filter-widget') && 
+                    select.multiselect('instance')) {
                     select.multiselect('refresh');
                 }
                 if (l === (level + 1)) {
@@ -1333,7 +1406,10 @@ S3.search = {};
     };
 
     var filterSubmit = function(filter_form) {
-        
+
+        // Hide any warnings (e.g. 'Too Many Features')
+        S3.hideAlerts('warning');
+
         var form_id = filter_form.attr('id'),
             url = filter_form.find('input.filter-submit-url[type="hidden"]').val(),
             queries = getCurrentFilters(filter_form);
@@ -1403,6 +1479,9 @@ S3.search = {};
                 } else if (t.hasClass('pt-container')) {
                     // PivotTables do not need page reload
                     needs_reload = false;
+                } else if (t.hasClass('tp-container')) {
+                    // TimePlots do not need page reload
+                    needs_reload = false;
                 } else {
                     // all other targets need page reload
                     if (visible) {
@@ -1427,7 +1506,7 @@ S3.search = {};
 
             // Ajax-update all visible targets
             for (i=0; i < targets.length; i++) {
-                target_id = targets[i]
+                target_id = targets[i];
                 t = $('#' + target_id);
                 if (!t.is(':visible')) {
                     continue;
@@ -1436,21 +1515,8 @@ S3.search = {};
 //                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable();
-                    dt.fnReloadAjax(dt_ajaxurl[target_id]);
-                    // Update Export Formats
-                    var $this,
-                        s,
-                        parts;
-                    $('#' + dt[0].id + '_list_formats div').each(function() {
-                        $this = $(this);
-                        s = $this.attr('onclick');
-                        parts = s.split("','");
-                        url = parts[2].split("');")[0];
-                        url = filterURL(url, queries);
-                        parts[2] = url + "');";
-                        s = parts.join("','");
-                        $this.attr('onclick', s);
-                    });
+                    dt.reloadAjax(dt_ajaxurl[target_id]);
+                    updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                         $(this).val(dt_ajaxurl[target_id]);
                     });
@@ -1458,6 +1524,8 @@ S3.search = {};
                     S3.gis.refreshLayer('search_results', queries);
                 } else if (t.hasClass('pt-container')) {
                     t.pivottable('reload', null, queries);
+                } else if (t.hasClass('tp-container')) {
+                    t.timeplot('reload', null, queries);
                 }
             }
         } else {
@@ -1465,7 +1533,7 @@ S3.search = {};
             url = filterURL(url, queries);
             window.location.href = url;
         }
-    }
+    };
 
     var toggleAdvanced = function(form) {
 
@@ -1485,11 +1553,11 @@ S3.search = {};
                             selector.addClass('active');
                             // Refresh the contents
                             if (selector.hasClass('groupedopts-filter-widget') &&
-                                typeof selector.groupedopts != 'undefined') {
+                                selector.groupedopts('instance')) {
                                 selector.groupedopts('refresh');
                             } else
                             if (selector.hasClass('multiselect-filter-widget') &&
-                                typeof selector.multiselect != 'undefined') {
+                                selector.multiselect('instance')) {
                                 selector.multiselect('refresh');
                             }
                         });
@@ -1505,13 +1573,13 @@ S3.search = {};
             }
         });
         
-        var $btn = $($form.find('.filter-advanced'));
+        var $btn = $($form.find('.filter-advanced-label'));
         if (hidden) {
             // Change label to label_off
-            $btn.attr('value', $btn.attr('label_off'));
+            $btn.text($btn.data('off')).siblings().toggle();
         } else {
             // Change label to label_on
-            $btn.attr('value', $btn.attr('label_on'));
+            $btn.text($btn.data('on')).siblings().toggle();
         }
         
     };
@@ -1545,7 +1613,7 @@ S3.search = {};
 
         // Clear all filters
         $('.filter-clear').click(function() {
-            var form = $(this).closest('form.filter-form');
+            var form = $(this).closest('.filter-form');
             clearFilters(form);
         });
 
@@ -1557,7 +1625,7 @@ S3.search = {};
 
         // Filter-form submission
         $('.filter-submit').click(function() {
-            filterSubmit($(this).closest('form.filter-form'));
+            filterSubmit($(this).closest('.filter-form'));
         });
 
         // Advanced button

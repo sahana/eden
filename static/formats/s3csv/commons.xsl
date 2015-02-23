@@ -184,5 +184,32 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <!-- Convert a string to uppercase
+
+         @param string: the string
+    -->
+
+    <xsl:template name="uppercase">
+
+        <xsl:param name="string"/>
+        <xsl:value-of select="translate($string,
+            'abcdefghijklmnopqrstuvwxyzáéíóúàèìòùäöüåâêîôûãẽĩõũø',
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÀÈÌÒÙÄÖÜÅÂÊÎÔÛÃẼĨÕŨØ')"/>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Create an organisation entry for the current row -->
+
+    <xsl:template name="Organisation">
+
+        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+
+        <resource name="org_organisation">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$OrgName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$OrgName"/></data>
+        </resource>
+    </xsl:template>
 
 </xsl:stylesheet>

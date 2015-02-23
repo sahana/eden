@@ -13,38 +13,33 @@ def maintenance(period="daily"):
         - these are read from the template
     """
 
-    mod = "applications.%s.private.templates.%s.maintenance as maintenance" % \
-                    (appname, settings.get_template())
-    try:
-        exec("import %s" % mod)
-    except ImportError, e:
-        # No Custom Maintenance available, use the default
-        exec("import applications.%s.private.templates.default.maintenance as maintenance" % appname)
+    maintenance = None
+    result = "NotImplementedError"
 
-    if period == "daily":
-        result = maintenance.Daily()()
-    else:
-        result = "NotImplementedError"
+    template = settings.get_template()
+    if template != "default":
+        # Try import maintenance routine from template
+        package = "applications.%s.%s.templates.%s" % \
+                  (appname, settings.get_template_location(), template)
+        name = "maintenance"
+        try:
+            maintenance = getattr(__import__(package, fromlist=[name]), name)
+        except (ImportError, AttributeError):
+            pass
+    if maintenance is None:
+        try:
+            # Fallback to default maintenance routine
+            from templates.default import maintenance
+        except ImportError:
+            pass
+    if maintenance is not None:
+        if period == "daily":
+            result = maintenance.Daily()()
+        db.commit()
 
-    db.commit()
     return result
 
 tasks["maintenance"] = maintenance
-
-# -----------------------------------------------------------------------------
-def crop_image(path, x1, y1, x2, y2, width):
-    """
-        Crop Image - used by S3ImageCropWidget through IS_PROCESSED_IMAGE
-    """
-    from PIL import Image
-    image = Image.open(path)
-
-    scale_factor = image.size[0] / float(width)
-
-    points = map(int, map(lambda a: a * scale_factor, (x1, y1, x2, y2)))
-    image.crop(points).save(path)
-
-tasks["crop_image"] = crop_image
 
 # -----------------------------------------------------------------------------
 if settings.has_module("doc"):
@@ -283,21 +278,6 @@ if settings.has_module("msg"):
 
     tasks["msg_parse"] = msg_parse
 
-    # --------------------------------------------------------------------------
-    def msg_search_subscription_notifications(frequency, user_id=None):
-        """
-            Search Subscriptions & send Notifications.
-            @ToDo: Deprecate
-        """
-        if user_id:
-            auth.s3_impersonate(user_id)
-        # Run the Task & return the result
-        result = s3db.msg_search_subscription_notifications(frequency=frequency)
-        db.commit()
-        return result
-
-    tasks["msg_search_subscription_notifications"] = msg_search_subscription_notifications
-
     # -------------------------------------------------------------------------
     def notify_check_subscriptions(user_id=None):
         """
@@ -345,7 +325,135 @@ if settings.has_module("req"):
     tasks["req_add_from_template"] = req_add_from_template
 
 # -----------------------------------------------------------------------------
+if settings.has_module("setup"):
+
+    def deploy(playbook, private_key, host=["127.0.0.1"], only_tags="all", user_id=None):
+
+        pb = s3db.setup_create_playbook(playbook, host, private_key, only_tags)
+        pb.run()
+
+        processed_hosts = sorted(pb.stats.processed.keys())
+
+        for h in processed_hosts:
+            t = pb.stats.summarize(h)
+            if t["failures"] > 0:
+                raise Exception("One of the tasks failed")
+            elif t["unreachable"] > 0:
+                raise Exception("Host unreachable")
+
+    tasks["deploy"] = deploy
+
+    def setup_management(_type, instance_id, deployment_id, user_id=None):
+        import ansible.runner
+        s3db = current.s3db
+        db = current.db
+
+        # get all servers associated
+        stable = s3db.setup_server
+        servers = db(stable.deployment_id == deployment_id).select(stable.role,
+                                                                   stable.host_ip,
+                                                                   orderby=stable.role
+                                                                   )
+
+        # get deployment
+
+        dtable = s3db.setup_deployment
+        deployment = db(dtable.id == deployment_id).select(dtable.private_key,
+                                                           dtable.remote_user,
+                                                           limitby=(0, 1)).first()
+        private_key = os.path.join(current.request.folder, "uploads", deployment.private_key)
+
+        hosts = [server.host_ip for server in servers]
+        inventory = ansible.inventory.Inventory(hosts)
+
+        tasks = []
+        runner = ansible.runner.Runner
+
+        itable = s3db.setup_instance
+        instance = db(itable.id == instance_id).select(itable.type,
+                                                       limitby=(0, 1)).first()
+        instance_types = ["prod", "test", "demo"]
+
+        if _type == "clean":
+
+            host_ip = servers[0].host_ip
+
+            arguments = [dict(module_name = "service",
+                              module_args={"name": "uwsgi",
+                                           "status": "stop",
+                                           },
+                              remote_user=deployment.remote_user,
+                              private_key_file=private_key,
+                              pattern=host_ip,
+                              inventory=inventory,
+                              sudo=True
+                              ),
+                          dict(module_name = "command",
+                              module_args="clean %s" % instance_types[instance.type - 1],
+                              remote_user=deployment.remote_user,
+                              private_key_file=private_key,
+                              pattern=host_ip,
+                              inventory=inventory,
+                              sudo=True
+                              ),
+                          dict(module_name = "command",
+                              module_args="clean_eden %s" % instance_types[instance.type - 1],
+                              remote_user=deployment.remote_user,
+                              private_key_file=private_key,
+                              pattern=servers[0].host_ip,
+                              inventory=inventory,
+                              sudo=True
+                              ),
+                          dict(module_name = "service",
+                              module_args={"name": "uwsgi",
+                                           "status": "start",
+                                           },
+                              remote_user=deployment.remote_user,
+                              private_key_file=private_key,
+                              pattern=host_ip,
+                              inventory=inventory,
+                              sudo=True
+                              ),
+                          ]
+
+            if len(servers) > 1:
+                host_ip = servers[2].host_ip
+                arguments[0]["pattern"] = host_ip
+                arguments[2]["pattern"] = host_ip
+                arguments[3]["pattern"] = host_ip
+
+            for argument in arguments:
+                tasks.append(runner(**argument))
+
+            # run the tasks
+            for task in tasks:
+                response = task.run()
+                if response["dark"]:
+                    raise Exception("Error contacting the server")
+
+        elif _type == "eden":
+            argument = dict(module_name="command",
+                            module_args="pull %s" % [instance_types[instance.type - 1]],
+                            remote_user=deployment.remote_user,
+                            private_key_file=private_key,
+                            pattern=servers[0].host_ip,
+                            inventory=inventory,
+                            sudo=True
+                            )
+
+            if len(servers) > 1:
+                argument["pattern"] = servers[2].host_ip
+
+            task = runner(**argument)
+            response = task.run()
+            if response["dark"]:
+                raise Exception("Error contacting the server")
+
+    tasks["setup_management"] = setup_management
+
+# --------------------e--------------------------------------------------------
 if settings.has_module("stats"):
+
     def stats_demographic_update_aggregates(records=None, user_id=None):
         """
             Update the stats_demographic_aggregate table for the given
@@ -365,6 +473,7 @@ if settings.has_module("stats"):
 
     tasks["stats_demographic_update_aggregates"] = stats_demographic_update_aggregates
 
+    # -------------------------------------------------------------------------
     def stats_demographic_update_location_aggregate(location_level,
                                                     root_location_id,
                                                     parameter_id,
@@ -397,6 +506,7 @@ if settings.has_module("stats"):
 
     tasks["stats_demographic_update_location_aggregate"] = stats_demographic_update_location_aggregate
 
+    # -------------------------------------------------------------------------
     if settings.has_module("vulnerability"):
 
         def vulnerability_update_aggregates(records=None, user_id=None):
@@ -417,6 +527,7 @@ if settings.has_module("stats"):
 
         tasks["vulnerability_update_aggregates"] = vulnerability_update_aggregates
 
+        # ---------------------------------------------------------------------
         def vulnerability_update_location_aggregate(#location_level,
                                                     root_location_id,
                                                     parameter_id,
@@ -449,10 +560,61 @@ if settings.has_module("stats"):
 
         tasks["vulnerability_update_location_aggregate"] = vulnerability_update_location_aggregate
 
+# --------------------e--------------------------------------------------------
+if settings.has_module("disease"):
+
+    def disease_stats_update_aggregates(records=None, all=False, user_id=None):
+        """
+            Update the disease_stats_aggregate table for the given
+            disease_stats_data record(s)
+
+            @param records: JSON of Rows of disease_stats_data records to
+                            update aggregates for
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.disease_stats_update_aggregates(records, all)
+        db.commit()
+        return result
+
+    tasks["disease_stats_update_aggregates"] = disease_stats_update_aggregates
+
+    # -------------------------------------------------------------------------
+    def disease_stats_update_location_aggregates(location_id,
+                                                 children,
+                                                 parameter_id,
+                                                 dates,
+                                                 user_id=None):
+        """
+            Update the disease_stats_aggregate table for the given location and parameter
+            - called from within disease_stats_update_aggregates
+
+            @param location_id: location to aggregate at
+            @param children: locations to aggregate from
+            @param parameter_id: parameter to aggregate
+            @param dates: dates to aggregate for
+            @param user_id: calling request's auth.user.id or None
+        """
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+        # Run the Task & return the result
+        result = s3db.disease_stats_update_location_aggregates(location_id,
+                                                               children,
+                                                               parameter_id,
+                                                               dates,
+                                                               )
+        db.commit()
+        return result
+
+    tasks["disease_stats_update_location_aggregates"] = disease_stats_update_location_aggregates
+
 # -----------------------------------------------------------------------------
 if settings.has_module("sync"):
 
-    # -----------------------------------------------------------------------------
     def sync_synchronize(repository_id, user_id=None, manual=False):
         """
             Run all tasks for a repository, to be called from scheduler

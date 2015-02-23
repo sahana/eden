@@ -1,0 +1,20 @@
+.ui-dialog {
+    width: 320px !important;
+}
+
+.form-container form input.string, .form-container form textarea {
+    width: 220px;
+}
+
+.form-container form input.date {
+    width: auto;
+}
+
+.box_top, .box_top_inner {
+    border: 0;
+}
+
+.box_top label, .box_top_inner label {
+    margin-left: 0;
+    padding: 0;
+}

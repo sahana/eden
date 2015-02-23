@@ -2,7 +2,7 @@
 
 """ S3 Pivot Table Reports Method
 
-    @copyright: 2011-2013 (c) Sahana Software Foundation
+    @copyright: 2011-2015 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{Python 2.6}} <http://www.python.org>}
@@ -27,10 +27,9 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: work in progress
 """
 
+import os
 import re
 
 try:
@@ -44,12 +43,18 @@ except ImportError:
 from gluon import current
 from gluon.storage import Storage
 from gluon.html import *
+from gluon.languages import regex_translate
 from gluon.sqlhtml import OptionsWidget
 from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
+from s3query import FS
 from s3rest import S3Method
+from s3xml import S3XMLFormat
 
 layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
+
+# Compact JSON encoding
+SEPARATORS = (",", ":")
 
 # =============================================================================
 class S3Report(S3Method):
@@ -65,7 +70,10 @@ class S3Report(S3Method):
         """
 
         if r.http == "GET":
-            output = self.report(r, **attr)
+            if r.representation == "geojson":
+                output = self.geojson(r, **attr)
+            else:
+                output = self.report(r, **attr)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
@@ -92,7 +100,7 @@ class S3Report(S3Method):
                 from s3filter import S3FilterForm
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
-                
+
         # Filter
         response = current.response
         s3_filter = response.s3.filter
@@ -123,15 +131,15 @@ class S3Report(S3Method):
 
         # Generate the pivot table
         if get_vars:
-            
+
             rows = get_vars.get("rows", None)
             cols = get_vars.get("cols", None)
             layer = get_vars.get("fact", "id")
 
-            # Backward-compatiblity: alternative "aggregate" option
             if layer is not None:
                 m = layer_pattern.match(layer)
                 if m is None:
+                    # Backward-compatiblity: alternative "aggregate" option
                     selector = layer
                     if get_vars and "aggregate" in get_vars:
                         method = get_vars["aggregate"]
@@ -163,8 +171,6 @@ class S3Report(S3Method):
         if r.representation in ("html", "iframe"):
 
             tablename = resource.tablename
-            
-            output["title"] = self.crud_string(tablename, "title_report")
 
             # Filter widgets
             if show_filter_form:
@@ -193,39 +199,241 @@ class S3Report(S3Method):
             # Generate the report form
             ajax_vars = Storage(r.get_vars)
             ajax_vars.update(get_vars)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
+            filter_url = r.url(method="",
+                               representation="",
+                               vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                        if k not in report_vars)))
             ajaxurl = attr.get("ajaxurl", r.url(method="report",
                                                 representation="json",
                                                 vars=ajax_vars))
-                                                
-            output["form"] = S3ReportForm(resource) \
-                                    .html(pivotdata,
-                                          get_vars = get_vars,
-                                          filter_widgets = filter_widgets,
-                                          ajaxurl = ajaxurl,
-                                          filter_url = filter_url,
-                                          widget_id = widget_id)
+
+            output = S3ReportForm(resource).html(pivotdata,
+                                                 get_vars = get_vars,
+                                                 filter_widgets = filter_widgets,
+                                                 ajaxurl = ajaxurl,
+                                                 filter_url = filter_url,
+                                                 widget_id = widget_id)
+
+            output["title"] = self.crud_string(tablename, "title_report")
+            output["report_type"] = "pivottable"
+
+            # Detect and store theme-specific inner layout
+            self._view(r, "pivottable.html")
 
             # View
             response.view = self._view(r, "report.html")
 
         elif r.representation == "json":
 
-            output = json.dumps(pivotdata)
+            output = json.dumps(pivotdata, separators=SEPARATORS)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
-            
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def geojson(self, r, **attr):
+        """
+            Render the pivot table data as a dict ready to be exported as
+            GeoJSON for display on a Map.
+
+            @param r: the S3Request instance
+            @param attr: controller attributes for the request
+        """
+
+        resource = self.resource
+        response = current.response
+        s3 = response.s3
+
+        # Set response headers
+        response.headers["Content-Type"] = s3.content_type.get("geojson",
+                                                               "application/json")
+
+        # Filter
+        s3_filter = s3.filter
+        if s3_filter is not None:
+            resource.add_filter(s3_filter)
+
+        if not resource.count():
+            # No Data
+            return json.dumps({})
+
+        # Extract the relevant GET vars
+        get_vars = r.get_vars
+        layer_id = r.get_vars.get("layer", None)
+        level = get_vars.get("level", "L0")
+
+        # Fall back to report options defaults
+        get_config = resource.get_config
+        report_options = get_config("report_options", {})
+        defaults = report_options.get("defaults", {})
+
+        # The rows dimension
+        context = get_config("context")
+        if context and "location" in context:
+            # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
+            rows = "(location)$%s" % level
+        else:
+            # Fallback to location_id
+            rows = "location_id$%s" % level
+            # Fallback we can add if-required
+            #rows = "site_id$location_id$%s" % level
+
+        # Filter out null values
+        resource.add_filter(FS(rows) != None)
+
+        # Set XSLT stylesheet
+        stylesheet = os.path.join(r.folder, r.XSLT_PATH, "geojson", "export.xsl")
+
+        # Do we have any data at this level of aggregation?
+        fallback_to_points = True # @ToDo: deployment_setting?
+        output = None
+        if fallback_to_points:
+            if resource.count() == 0:
+                # Show Points
+                resource.clear_query()
+                # Apply URL filters (especially BBOX)
+                resource.build_query(filter=s3_filter, vars=get_vars)
+
+                # Extract the Location Data
+                xmlformat = S3XMLFormat(stylesheet)
+                include, exclude = xmlformat.get_fields(resource.tablename)
+                resource.load(fields=include,
+                              skip=exclude,
+                              start=0,
+                              limit=None,
+                              orderby=None,
+                              virtual=False,
+                              cacheable=True)
+                gis = current.gis
+                attr_fields = []
+                style = gis.get_style(layer_id=layer_id,
+                                      aggregate=False)
+                popup_format = style.popup_format
+                if popup_format:
+                    if "T(" in popup_format:
+                        # i18n
+                        T = current.T
+                        items = regex_translate.findall(popup_format)
+                        for item in items:
+                            titem = str(T(item[1:-1]))
+                            popup_format = popup_format.replace("T(%s)" % item,
+                                                                titem)
+                        style.popup_format = popup_format
+                    # Extract the attr_fields
+                    parts = popup_format.split("{")
+                    # Skip the first part
+                    parts = parts[1:]
+                    for part in parts:
+                        attribute = part.split("}")[0]
+                        attr_fields.append(attribute)
+                    attr_fields = ",".join(attr_fields)
+
+                location_data = gis.get_location_data(resource,
+                                                      attr_fields=attr_fields)
+
+                # Export as GeoJSON
+                current.xml.show_ids = True
+                output = resource.export_xml(fields=include,
+                                             mcomponents=None,
+                                             references=[],
+                                             stylesheet=stylesheet,
+                                             as_json=True,
+                                             location_data=location_data,
+                                             map_data=dict(style=style),
+                                             )
+                # Transformation error?
+                if not output:
+                    r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
+
+        else:
+            while resource.count() == 0:
+                # Try a lower level of aggregation
+                level = int(level[1:])
+                if level == 0:
+                    # Nothing we can display
+                    return json.dumps({})
+                resource.clear_query()
+                # Apply URL filters (especially BBOX)
+                resource.build_query(filter=s3_filter, vars=get_vars)
+                level = "L%s" % (level - 1)
+                if context and "location" in context:
+                    # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
+                    rows = "(location)$%s" % level
+                else:
+                    # Fallback to location_id
+                    rows = "location_id$%s" % level
+                    # Fallback we can add if-required
+                    #rows = "site_id$location_id$%s" % level
+                resource.add_filter(FS(rows) != None)
+
+        if not output:
+            # Build the Pivot Table
+            cols = None
+            layer = get_vars.get("fact",
+                                 defaults.get("fact",
+                                              "count(id)"))
+            m = layer_pattern.match(layer)
+            selector, method = m.group(2), m.group(1)
+            prefix = resource.prefix_selector
+            selector = prefix(selector)
+            layer = (selector, method)
+            pivottable = resource.pivottable(rows, cols, [layer])
+
+            # Extract the Location Data
+            #attr_fields = []
+            style = current.gis.get_style(layer_id=layer_id,
+                                          aggregate=True)
+            popup_format = style.popup_format
+            if popup_format:
+                if"T(" in popup_format:
+                    # i18n
+                    T = current.T
+                    items = regex_translate.findall(popup_format)
+                    for item in items:
+                        titem = str(T(item[1:-1]))
+                        popup_format = popup_format.replace("T(%s)" % item,
+                                                            titem)
+                    style.popup_format = popup_format
+                    # Extract the attr_fields
+                    # No need as defaulted inside S3PivotTable.geojson()
+                    #parts = popup_format.split("{")
+                    ## Skip the first part
+                    #parts = parts[1:]
+                    #for part in parts:
+                    #    attribute = part.split("}")[0]
+                    #    attr_fields.append(attribute)
+                    #attr_fields = ",".join(attr_fields)
+
+            ids, location_data = pivottable.geojson(layer=layer, level=level)
+
+            # Export as GeoJSON
+            current.xml.show_ids = True
+            gresource = current.s3db.resource("gis_location", id=ids)
+            output = gresource.export_xml(fields=[],
+                                          mcomponents=None,
+                                          references=[],
+                                          stylesheet=stylesheet,
+                                          as_json=True,
+                                          location_data=location_data,
+                                          # Tell the client that we are
+                                          # displaying aggregated data and
+                                          # the level it is aggregated at
+                                          map_data=dict(level=int(level[1:]),
+                                                        style=style),
+                                          )
+            # Transformation error?
+            if not output:
+                r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
+
         return output
 
     # -------------------------------------------------------------------------
     def widget(self, r, method=None, widget_id=None, visible=True, **attr):
         """
             Pivot table report widget
-        
+
             @param r: the S3Request
             @param method: the widget method
             @param widget_id: the widget ID
@@ -262,7 +470,7 @@ class S3Report(S3Method):
                               defaults.get("chart", None))
         get_vars["table"] = r.get_vars.get("table",
                               defaults.get("table", None))
-                              
+
         # Generate the pivot table
         if get_vars:
 
@@ -312,10 +520,11 @@ class S3Report(S3Method):
             ajax_vars.update(get_vars)
             filter_form = attr.get("filter_form", None)
             filter_tab = attr.get("filter_tab", None)
-            filter_url = url=r.url(method="",
-                                   representation="",
-                                   vars=ajax_vars.fromkeys((k for k in ajax_vars
-                                                            if k not in report_vars)))
+            filter_url = r.url(method="",
+                               representation="",
+                               vars=ajax_vars.fromkeys((k for k in ajax_vars
+                                                        if k not in report_vars)),
+                               )
             ajaxurl = attr.get("ajaxurl", r.url(method="report",
                                                 representation="json",
                                                 vars=ajax_vars))
@@ -327,6 +536,13 @@ class S3Report(S3Method):
                                                  filter_form = filter_form,
                                                  filter_tab = filter_tab,
                                                  widget_id = widget_id)
+
+            # Detect and store theme-specific inner layout
+            view = self._view(r, "pivottable.html")
+
+            # Render inner layout (outer page layout is set by S3Summary)
+            output["title"] = None
+            output = XML(current.response.render(view, output))
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -352,7 +568,7 @@ class S3ReportForm(object):
              filter_tab=None,
              widget_id=None):
         """
-            Render the form for the report 
+            Render the form for the report
 
             @param get_vars: the GET vars if the request (as dict)
             @param widget_id: the HTML element base ID for the widgets
@@ -366,11 +582,7 @@ class S3ReportForm(object):
                                              widget_id = widget_id)
 
         # Pivot data
-        if pivotdata is not None:
-            labels = pivotdata["labels"]
-        else:
-            labels = None
-        hidden = {"pivotdata": json.dumps(pivotdata)}
+        hidden = {"pivotdata": json.dumps(pivotdata, separators=SEPARATORS)}
 
         empty = T("No report specified.")
         hide = T("Hide Table")
@@ -406,47 +618,26 @@ class S3ReportForm(object):
         else:
             submit = ""
 
-        # General layout (@todo: make configurable)
-        form = DIV(DIV(FORM(filter_options,
-                            report_options,
-                            submit,
-                            hidden = hidden,
-                            _class = "pt-form",
-                            _id = "%s-pt-form" % widget_id,
-                            ),
-                       _class="pt-form-container form-container",
-                       ),
-                   DIV(IMG(_src=throbber,
-                           _alt=current.T("Processing"),
-                           _class="pt-throbber"),
-                       DIV(DIV(_class="pt-chart-controls"),
-                           DIV(DIV(_class="pt-hide-chart"),
-                               DIV(_class="pt-chart-title"),
-                               DIV(_class="pt-chart"),
-                               _class="pt-chart-contents"
-                           ),
-                           _class="pt-chart-container"
-                       ),
-                       DIV(hide,
-                           _class="pt-toggle-table pt-hide-table"),
-                       DIV(show,
-                           _class="pt-toggle-table pt-show-table"),
-                       DIV(DIV(_class="pt-table-controls"),
-                           DIV(DIV(_class="pt-table"),
-                               _class="pt-table-contents"
-                           ),
-                           _class="pt-table-container"
-                       ),
-                       DIV(empty, _class="pt-empty"),
-                   ),
-                   _class="pt-container",
-                   _id=widget_id
-               )
+        # Form
+        form = FORM(filter_options,
+                    report_options,
+                    submit,
+                    hidden = hidden,
+                    _class = "pt-form",
+                    _id = "%s-pt-form" % widget_id,
+                    )
 
-        # Settings
+        # View variables
+        output = {"form": form,
+                  "throbber": throbber,
+                  "hide": hide,
+                  "show": show,
+                  "empty": empty,
+                  "widget_id": widget_id,
+                  }
+
+        # Script options
         settings = current.deployment_settings
-
-        # Default options
         opts = {
             #"renderFilter": True,
             #"collapseFilter": False,
@@ -463,15 +654,18 @@ class S3ReportForm(object):
             "renderChart": True,
             "collapseChart": True,
             "defaultChart": None,
-            
+
             "exploreChart": True,
             "filterURL": filter_url,
             "filterTab": filter_tab,
             "filterForm": filter_form,
 
             "autoSubmit": settings.get_ui_report_auto_submit(),
-        }
 
+            "thousandSeparator": settings.get_L10n_thousands_separator(),
+            "thousandGrouping": settings.get_L10n_thousands_grouping(),
+            "textAll": str(T("All")),
+        }
         chart_opt = get_vars["chart"]
         if chart_opt is not None:
             if str(chart_opt).lower() in ("0", "off", "false"):
@@ -493,13 +687,14 @@ class S3ReportForm(object):
         s3 = current.response.s3
         scripts = s3.scripts
         if s3.debug:
-            script = "/%s/static/scripts/S3/s3.jquery.ui.pivottable.js" % appname
+            # @todo: support CDN
+            script = "/%s/static/scripts/d3/d3.js" % appname
             if script not in scripts:
                 scripts.append(script)
-            script = "/%s/static/scripts/flot/jquery.flot.js" % appname
+            script = "/%s/static/scripts/d3/nv.d3.js" % appname
             if script not in scripts:
                 scripts.append(script)
-            script = "/%s/static/scripts/flot/jquery.flot.pie.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.pivottable.js" % appname
             if script not in scripts:
                 scripts.append(script)
         else:
@@ -510,12 +705,12 @@ class S3ReportForm(object):
         script = '''$('#%(widget_id)s').pivottable(%(opts)s)''' % \
                                         dict(widget_id = widget_id,
                                              opts = json.dumps(opts,
-                                                               separators=(",", ":")),
+                                                               separators=SEPARATORS),
                                              )
 
         s3.jquery_ready.append(script)
 
-        return form
+        return output
 
     # -------------------------------------------------------------------------
     def report_options(self, get_vars=None, widget_id="pivottable"):
@@ -536,72 +731,83 @@ class S3ReportForm(object):
         resource = self.resource
         get_config = resource.get_config
         options = get_config("report_options")
-        report_formstyle = get_config("report_formstyle", None)
 
+        # Specific formstyle?
+        settings = current.deployment_settings
+        formstyle = settings.get_ui_report_formstyle()
+        # Fall back to inline-variant of current formstyle
+        if formstyle is None:
+            formstyle = settings.get_ui_inline_formstyle()
+
+        # Helper for labels
         label = lambda s, **attr: LABEL("%s:" % s, **attr)
 
-        if report_formstyle:
-            # @ToDo: Full formstyle support
-            selectors = DIV()
-        else:
-            selectors = TABLE()
+        formfields = []
 
         # Layer selector
         layer_id = "%s-fact" % widget_id
-        layer, single = self.layer_options(options=options,
-                                           get_vars=get_vars,
-                                           widget_id=layer_id)
-        single_opt = {"_class": "pt-fact-single-option"} if single else {}
-        if layer:
-            selectors.append(TR(TD(label(FACT, _for=layer_id)),
-                                TD(layer),
-                                **single_opt
-                               )
-                             )
+        layer_widget = self.layer_options(options=options,
+                                          get_vars=get_vars,
+                                          widget_id=layer_id)
+        formfields.append((layer_id + "-row",
+                           label(FACT, _for=layer_id),
+                           layer_widget,
+                           "",
+                           ))
 
         # Rows/Columns selectors
         axis_options = self.axis_options
         rows_id = "%s-rows" % widget_id
         cols_id = "%s-cols" % widget_id
-        select_rows = axis_options("rows",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=rows_id)
-        select_cols = axis_options("cols",
-                                   options=options,
-                                   get_vars=get_vars,
-                                   widget_id=cols_id)
-
-        selectors.append(TR(TD(label(ROWS, _for=rows_id)),
-                            TD(select_rows),
-                            TD(label(COLS, _for=cols_id)),
-                            TD(select_cols)
-                           )
-                        )
+        rows_options = axis_options("rows",
+                                    options=options,
+                                    get_vars=get_vars,
+                                    widget_id=rows_id)
+        cols_options = axis_options("cols",
+                                    options=options,
+                                    get_vars=get_vars,
+                                    widget_id=cols_id)
+        axis_widget = DIV(rows_options,
+                          label(COLS, _for=cols_id),
+                          cols_options,
+                          _class="pt-axis-options",
+                          )
+        formfields.append(("%s-axis-row" % widget_id,
+                           label(ROWS, _for=rows_id),
+                           axis_widget,
+                           "",
+                           ))
 
         # Show Totals switch
-        show_totals_id = "%s-totals" % widget_id
         show_totals = True
         if get_vars and "totals" in get_vars and \
            str(get_vars["totals"]).lower() in ("0", "false", "off"):
             show_totals = False
         self.show_totals = show_totals
 
-        selectors.append(TR(TD(label(SHOW_TOTALS, _for=show_totals_id)),
-                            TD(INPUT(_type="checkbox",
-                                     _id=show_totals_id,
-                                     _name="totals",
-                                     _class="pt-totals",
-                                     value=show_totals
-                                    )
-                              ),
-                            _class = "pt-show-totals-option"
-                           )
-                         )
+        show_totals_id = "%s-totals" % widget_id
+        totals_widget = INPUT(_type="checkbox",
+                              _id=show_totals_id,
+                              _name="totals",
+                              _class="pt-totals",
+                              value=show_totals
+                              )
 
-        # Render field set
+        formfields.append(("%s-show-totals-row" % widget_id,
+                           label(SHOW_TOTALS, _for=show_totals_id),
+                           totals_widget,
+                           "",
+                           ))
+
+        try:
+            widgets = formstyle(FIELDSET(), formfields)
+        except:
+            # Old style (should be avoided)
+            widgets = TAG[""]([formstyle(*formfield) for formfield in formfields])
+
+        # Render fieldset
         fieldset = self._fieldset(T("Report Options"),
-                                  selectors,
+                                  widgets,
                                   _id="%s-options" % widget_id)
 
         return fieldset
@@ -704,8 +910,16 @@ class S3ReportForm(object):
         T = current.T
         RECORDS = T("Records")
         mname = S3PivotTable._get_method_label
+
+        def layer_label(rfield, method):
+            """ Helper to construct a layer label """
+            mlabel = mname(method)
+            flabel = rfield.label if rfield.label != "Id" else RECORDS
+            # @ToDo: Exclude this string from admin/translate exports
+            return T("%s (%s)") % (flabel, mlabel)
+
         prefix = resource.prefix_selector
-        
+
         layer_opts = []
         for layer in layers:
 
@@ -719,7 +933,7 @@ class S3ReportForm(object):
                 s, m = match.group(2), match.group(1)
             else:
                 m = None
-                
+
             # Resolve the selector
             selector = prefix(s)
             rfield = resource.resolve_selector(selector)
@@ -758,12 +972,12 @@ class S3ReportForm(object):
                     mopts = ["count", "list"]
                 for method in mopts:
                     if method in methods:
-                        mlabel = mname(method)
-                        flabel = rfield.label if rfield.label != "Id" else RECORDS
-                        label = T("%s (%s)") % (flabel, mlabel)
+                        label = layer_label(rfield, method)
                         layer_opts.append(("%s(%s)" % (method, selector), label))
             else:
                 # Explicit method specified
+                if label is None:
+                    label = layer_label(rfield, m)
                 layer_opts.append(("%s(%s)" % (m, selector), label))
 
         # Get current value
@@ -787,8 +1001,8 @@ class S3ReportForm(object):
                              INPUT(_type="hidden",
                                    _id=widget_id,
                                    _name=widget_id,
-                                   _value=default[0]))
-            single = True
+                                   _value=default[0],
+                                   _class="pt-fact-single-option"))
         else:
             # Render Selector
             dummy_field = Storage(name="fact",
@@ -798,9 +1012,8 @@ class S3ReportForm(object):
                                           _id=widget_id,
                                           _name="fact",
                                           _class="pt-fact")
-            single = False
-            
-        return widget, single
+
+        return widget
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -817,7 +1030,7 @@ class S3ReportForm(object):
         T = current.T
         SHOW = T("Show")
         HIDE = T("Hide")
-        
+
         return FIELDSET(LEGEND(title,
                                BUTTON(SHOW,
                                       _type="button",

@@ -142,6 +142,7 @@
          @param list: the string containing the list
          @param sep: the list separator
          @param arg: argument to be passed on to the "resource" template
+                     to allow differentiation
     -->
     <xsl:template name="splitList">
 
@@ -182,6 +183,292 @@
 
     </xsl:template>
 
+    <!-- ****************************************************************** -->
+    <!-- splitMultiList: split a hierarchical set of string with lists into
+         items and call a template with the name "multiResource" with each item
+         as parameter "item". The "multiResource" template is to be defined in
+         the calling stylesheet.
+
+         @param list: the string containing the list
+         @param list2: the string containing the list
+         @param list3: the string containing the list
+         @param sep: the primary list separator
+         @param sep2: the secondary list separator
+         @param sep3: the tertiary list separator
+         @param arg: argument to be passed on to the "multiResource" template
+                     to allow differentiation
+    -->
+    <xsl:template name="splitMultiList">
+
+        <xsl:param name="arg"/>
+        <xsl:param name="list"/>
+        <xsl:param name="list2"/>
+        <xsl:param name="list3"/>
+        <xsl:param name="listsep" select="','"/>
+        <xsl:param name="listsep2" select="';'"/>
+        <xsl:param name="listsep3" select="':'"/>
+
+        <xsl:choose>
+            <!-- Unwrap level 1 -->
+            <xsl:when test="contains($list, $listsep)">
+                <xsl:variable name="head">
+                    <xsl:value-of select="substring-before($list, $listsep)"/>
+                </xsl:variable>
+                <xsl:variable name="head2">
+                    <xsl:choose>
+                        <xsl:when test="contains($list2, $listsep2)">
+                            <xsl:value-of select="substring-before($list2, $listsep2)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$list2"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:variable name="head3">
+                    <xsl:choose>
+                        <xsl:when test="contains($list3, $listsep3)">
+                            <xsl:value-of select="substring-before($list3, $listsep3)"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$list3"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:variable name="tail">
+                    <xsl:value-of select="substring-after($list, $listsep)"/>
+                </xsl:variable>
+                <xsl:variable name="tail2">
+                    <xsl:choose>
+                        <xsl:when test="contains($list2, $listsep2)">
+                            <xsl:value-of select="substring-after($list2, $listsep2)"/>
+                        </xsl:when>
+                        <!-- Otherwise Blank -->
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:variable name="tail3">
+                    <xsl:choose>
+                        <xsl:when test="contains($list3, $listsep3)">
+                            <xsl:value-of select="substring-after($list3, $listsep3)"/>
+                        </xsl:when>
+                        <!-- Otherwise Blank -->
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:call-template name="splitMultiList">
+                    <xsl:with-param name="arg" select="$arg"/>
+                    <xsl:with-param name="list" select="$head"/>
+                    <xsl:with-param name="list2" select="$head2"/>
+                    <xsl:with-param name="list3" select="$head3"/>
+                    <xsl:with-param name="listsep" select="$listsep"/>
+                    <xsl:with-param name="listsep2" select="$listsep2"/>
+                    <xsl:with-param name="listsep3" select="$listsep3"/>
+                </xsl:call-template>
+                <xsl:call-template name="splitMultiList">
+                    <xsl:with-param name="arg" select="$arg"/>
+                    <xsl:with-param name="list" select="$tail"/>
+                    <xsl:with-param name="list2" select="$tail2"/>
+                    <xsl:with-param name="list3" select="$tail3"/>
+                    <xsl:with-param name="listsep" select="$listsep"/>
+                    <xsl:with-param name="listsep2" select="$listsep2"/>
+                    <xsl:with-param name="listsep3" select="$listsep3"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:if test="normalize-space($list)!=''">
+                    <!-- Top-level is single -->
+                    <xsl:choose>
+                        <xsl:when test="$list2!=''">
+                            <!-- Analyse 2nd level -->
+                            <xsl:choose>
+                                <xsl:when test="contains($list2, $listsep)">
+                                    <xsl:variable name="head2">
+                                        <xsl:value-of select="substring-before($list2, $listsep)"/>
+                                    </xsl:variable>
+                                    <xsl:variable name="head3">
+                                        <xsl:choose>
+                                            <xsl:when test="contains($list3, $listsep3)">
+                                                <xsl:value-of select="substring-before($list3, $listsep2)"/>
+                                            </xsl:when>
+                                            <xsl:otherwise>
+                                                <xsl:value-of select="$list3"/>
+                                            </xsl:otherwise>
+                                        </xsl:choose>
+                                    </xsl:variable>
+                                    <xsl:variable name="tail2">
+                                        <xsl:value-of select="substring-after($list2, $listsep)"/>
+                                    </xsl:variable>
+                                    <xsl:variable name="tail3">
+                                        <xsl:choose>
+                                            <xsl:when test="contains($list3, $listsep3)">
+                                                <xsl:value-of select="substring-after($list3, $listsep2)"/>
+                                            </xsl:when>
+                                            <!-- Otherwise Blank -->
+                                        </xsl:choose>
+                                    </xsl:variable>
+                                    <xsl:call-template name="splitMultiList">
+                                        <xsl:with-param name="arg" select="$arg"/>
+                                        <xsl:with-param name="list" select="$list"/>
+                                        <xsl:with-param name="list2" select="$head2"/>
+                                        <xsl:with-param name="list3" select="$head3"/>
+                                        <xsl:with-param name="listsep" select="$listsep"/>
+                                        <xsl:with-param name="listsep2" select="$listsep2"/>
+                                        <xsl:with-param name="listsep3" select="$listsep3"/>
+                                    </xsl:call-template>
+                                    <xsl:call-template name="splitMultiList">
+                                        <xsl:with-param name="arg" select="$arg"/>
+                                        <xsl:with-param name="list" select="$list"/>
+                                        <xsl:with-param name="list2" select="$tail2"/>
+                                        <xsl:with-param name="list3" select="$tail3"/>
+                                        <xsl:with-param name="listsep" select="$listsep"/>
+                                        <xsl:with-param name="listsep2" select="$listsep2"/>
+                                        <xsl:with-param name="listsep3" select="$listsep3"/>
+                                    </xsl:call-template>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <!-- 2nd-level is (now) single -->
+                                    <xsl:choose>
+                                        <xsl:when test="$list3!=''">
+                                            <!-- Analyse 3rd level -->
+                                            <xsl:choose>
+                                                <xsl:when test="contains($list3, $listsep)">
+                                                    <xsl:variable name="head3">
+                                                        <xsl:value-of select="substring-before($list3, $listsep)"/>
+                                                    </xsl:variable>
+                                                    <xsl:variable name="tail3">
+                                                        <xsl:value-of select="substring-after($list3, $listsep)"/>
+                                                    </xsl:variable>
+                                                    <xsl:call-template name="splitMultiList">
+                                                        <xsl:with-param name="arg" select="$arg"/>
+                                                        <xsl:with-param name="list" select="$list"/>
+                                                        <xsl:with-param name="list2" select="$list2"/>
+                                                        <xsl:with-param name="list3" select="$head3"/>
+                                                        <xsl:with-param name="listsep" select="$listsep"/>
+                                                        <xsl:with-param name="listsep2" select="$listsep2"/>
+                                                        <xsl:with-param name="listsep3" select="$listsep3"/>
+                                                    </xsl:call-template>
+                                                    <xsl:call-template name="splitMultiList">
+                                                        <xsl:with-param name="arg" select="$arg"/>
+                                                        <xsl:with-param name="list" select="$list"/>
+                                                        <xsl:with-param name="list2" select="$list2"/>
+                                                        <xsl:with-param name="list3" select="$tail3"/>
+                                                        <xsl:with-param name="listsep" select="$listsep"/>
+                                                        <xsl:with-param name="listsep2" select="$listsep2"/>
+                                                        <xsl:with-param name="listsep3" select="$listsep3"/>
+                                                    </xsl:call-template>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <!-- 3rd-level is (now) single -->
+                                                    <xsl:call-template name="resource">
+                                                        <xsl:with-param name="arg" select="$arg"/>
+                                                        <xsl:with-param name="item" select="normalize-space($list)"/>
+                                                        <xsl:with-param name="item2" select="normalize-space($list2)"/>
+                                                        <xsl:with-param name="item3" select="normalize-space($list3)"/>
+                                                    </xsl:call-template>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <!-- 1st/2nd levels only -->
+                                            <xsl:call-template name="resource">
+                                                <xsl:with-param name="arg" select="$arg"/>
+                                                <xsl:with-param name="item" select="normalize-space($list)"/>
+                                                <xsl:with-param name="item2" select="normalize-space($list2)"/>
+                                            </xsl:call-template>
+                                        </xsl:otherwise>
+                                    </xsl:choose>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <!-- Top-level only -->
+                            <xsl:call-template name="resource">
+                                <xsl:with-param name="arg" select="$arg"/>
+                                <xsl:with-param name="item" select="normalize-space($list)"/>
+                            </xsl:call-template>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:if>
+            </xsl:otherwise>
+        </xsl:choose>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- quoteSplit: split a set of strings that are seperated with a space
+         and may or may not be enclosed within "".
+         eg: This is "a string" . 
+         output: ["This", "is", "a string"]
+
+         @param string: the string containing the input
+         @param inside_quotes: quotes on an inside string
+    -->
+    <xsl:template name="quoteSplit">
+        <xsl:param name="string"/>
+        
+        <xsl:param name="inside_quotes" select="false"/>
+        <xsl:variable name="normalized" select="normalize-space($string)"/>
+
+        <xsl:choose>
+            <xsl:when test="$normalized=''">
+                <xsl:value-of select="''"/>
+            </xsl:when>
+            <xsl:when test="contains($normalized, '&quot;')">
+                <xsl:variable name="head" select="substring-before($normalized, '&quot;')"/>
+                <xsl:variable name="tail" select="substring-after($normalized, '&quot;')"/>
+                <xsl:variable name="newhead">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$head"/>
+                        <xsl:with-param name="inside_quotes" select="$inside_quotes"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:variable name="newtail">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$tail"/>
+                        <xsl:with-param name="inside_quotes" select="not($inside_quotes)"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:choose>
+                    <xsl:when test="$newhead!='' and $newtail!=''">
+                        <xsl:value-of select="concat($newhead, ',', $newtail)"/>
+                    </xsl:when>
+                    <xsl:when test="$newhead!=''">
+                        <xsl:value-of select="$newhead"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$newtail"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+            <xsl:when test="contains($normalized, ' ') and not($inside_quotes)">
+                <xsl:variable name="head" select="substring-before($normalized, ' ')"/>
+                <xsl:variable name="tail" select="substring-after($normalized, ' ')"/>
+                <xsl:variable name="newhead">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$head"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:variable name="newtail">
+                    <xsl:call-template name="quote">
+                        <xsl:with-param name="string" select="$tail"/>
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:choose>
+                    <xsl:when test="$newhead!='' and $newtail!=''">
+                        <xsl:value-of select="concat($newhead, ',', $newtail)"/>
+                    </xsl:when>
+                    <xsl:when test="$newhead!=''">
+                        <xsl:value-of select="$newhead"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="$newtail"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="concat('&quot;', $normalized, '&quot;')"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    
     <!-- ****************************************************************** -->
     <!-- Quote list: split a string with a list into its items and construct
          a new list with the same items quoted

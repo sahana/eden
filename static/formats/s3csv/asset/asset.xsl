@@ -7,6 +7,7 @@
 
          CSV fields:
          Organisation....................organisation_id.name & asset_log.organisation_id.name
+         Team............................group.group_id.name
          Acronym.........................organisation_id.acronym & asset_log.organisation_id.acronym
          Facility........................site_id & asset_log.site_id
          Facility Code...................site_id.code & asset_log.site_id.code
@@ -48,6 +49,7 @@
     <xsl:output method="xml"/>
 
     <xsl:key name="organisations" match="row" use="col[@field='Organisation']/text()"/>
+    <xsl:key name="groups" match="row" use="col[@field='Team']/text()"/>
     <xsl:key name="sites" match="row" use="concat(col[@field='Organisation']/text(), '|',
                                                   col[@field='Facility']/text(), '|',
                                                   col[@field='Facility Code']/text(), '|',
@@ -80,6 +82,13 @@
                     <xsl:with-param name="OrgName" select="col[@field='Organisation']/text()"/>
                     <xsl:with-param name="OrgAcronym" select="col[@field='Acronym']/text()"/>
                 </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Teams -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('groups',
+                                                        col[@field='Team']/text())[1])]">
+                <xsl:call-template name="Team"/>
             </xsl:for-each>
 
             <!-- Sites -->
@@ -156,6 +165,7 @@
     <xsl:template match="row">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="TeamName" select="col[@field='Team']/text()"/>
         <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
         <xsl:variable name="FacilityCode" select="col[@field='Facility Code']/text()"/>
         <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
@@ -235,6 +245,16 @@
                     <xsl:value-of select="$OrgName"/>
                 </xsl:attribute>
             </reference>
+            <!-- Team -->
+            <xsl:if test="$TeamName!=''">
+                <resource name="asset_group">
+                    <reference field="group_id" name="pr_group">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$TeamName"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
             <!-- Site -->
             <reference field="site_id">
                 <xsl:attribute name="resource">
@@ -333,6 +353,22 @@
                 <data field="acronym"><xsl:value-of select="$OrgAcronym"/></data>
             </xsl:if>
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Team">
+
+        <xsl:variable name="TeamName" select="col[@field='Team']/text()"/>
+
+        <xsl:if test="$TeamName!=''">
+            <resource name="pr_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$TeamName"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$TeamName"/></data>
+                <data field="group_type"><xsl:text>3</xsl:text></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

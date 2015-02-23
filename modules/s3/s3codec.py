@@ -2,7 +2,7 @@
 
 """ S3 Encoder/Decoder Base Class
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Codec"]
+__all__ = ("S3Codec",)
 
 import datetime
 try:
@@ -52,6 +52,8 @@ from xml.sax.saxutils import escape, unescape
 from gluon import current
 from gluon.storage import Storage
 
+from s3utils import s3_unicode
+
 # =============================================================================
 class S3Codec(object):
     """
@@ -69,10 +71,10 @@ class S3Codec(object):
     def get_codec(format):
 
         # Import the codec classes
-        from codecs import S3SHP
-        from codecs import S3SVG
-        from codecs import S3XLS
-        from codecs import S3RL_PDF
+        from s3codecs import S3SHP
+        from s3codecs import S3SVG
+        from s3codecs import S3XLS
+        from s3codecs import S3RL_PDF
 
         # Register the codec classes
         CODECS = Storage(
@@ -155,7 +157,11 @@ class S3Codec(object):
 
             @param dtstr: the date/time string
         """
-        DEFAULT = datetime.datetime.utcnow()
+
+        # Default seconds/microseconds=zero
+        DEFAULT = datetime.datetime.utcnow().replace(second=0,
+                                                     microsecond=0)
+
         dt = dateutil.parser.parse(dtstr, default=DEFAULT)
         if dt.tzinfo is None:
             try:
@@ -163,7 +169,7 @@ class S3Codec(object):
                                            default=DEFAULT)
             except:
                 # time part missing?
-                dt = dateutil.parser.parse(dtstr + " 00:00 +0000",
+                dt = dateutil.parser.parse(dtstr + " 00:00:00 +0000",
                                            default=DEFAULT)
         return dt
 
@@ -258,7 +264,7 @@ class S3Codec(object):
 
         tree = kwargs.get("tree", None)
         if message:
-            output["message"] = unicode(message)
+            output["message"] = s3_unicode(message)
         for k, v in kwargs.items():
             if k != "tree":
                 output[k] = v

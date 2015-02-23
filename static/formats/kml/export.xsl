@@ -104,11 +104,11 @@
     <xsl:template match="resource[@name='hms_hospital']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
+            <xsl:if test="./map[1]/@lon != 'null'">
             <Style id="hospital">
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
@@ -157,9 +157,9 @@
                     </description>
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -185,17 +185,17 @@
     <xsl:template match="resource[@name='hrm_human_resource']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
-                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+            <xsl:if test="./map[1]/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
                 <Placemark>
                     <name><xsl:value-of select="reference[@field='person_id']/text()"/></name>
-                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <styleUrl>#<xsl:value-of select="@uuid"/></styleUrl>
                     <description>
                         <xsl:text>&lt;table&gt;&lt;tr&gt;</xsl:text>
                         <xsl:text>&lt;td&gt;&lt;a href=</xsl:text>
@@ -221,9 +221,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -252,17 +252,17 @@
     <xsl:template match="resource[@name='org_office']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
-                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+            <xsl:if test="./map[1]/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
                 <Placemark>
                     <name><xsl:value-of select="data[@field='name']"/></name>
-                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <styleUrl>#<xsl:value-of select="@uuid"/></styleUrl>
                     <description>
                         <xsl:text>&lt;table&gt;&lt;tr&gt;</xsl:text>
                         <xsl:text>&lt;td&gt;&lt;a href=</xsl:text>
@@ -286,9 +286,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -301,17 +301,17 @@
     <xsl:template match="resource[@name='gis_poi']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
-                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+            <xsl:if test="./map[1]/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
                 <Placemark>
                     <name><xsl:value-of select="data[@field='name']"/></name>
-                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <styleUrl>#<xsl:value-of select="@uuid"/></styleUrl>
                     <description>
                         <xsl:text>&lt;table&gt;</xsl:text>
                         <xsl:if test="./data[@field='comments'] != 'null'">
@@ -327,9 +327,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -342,17 +342,17 @@
     <xsl:template match="resource[@name='inv_warehouse']">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
-                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+            <xsl:if test="./map[1]/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
                 <Placemark>
                     <name><xsl:value-of select="data[@field='name']"/></name>
-                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <styleUrl>#<xsl:value-of select="@uuid"/></styleUrl>
                     <description>
                         <xsl:text>&lt;table&gt;&lt;tr&gt;</xsl:text>
                         <xsl:text>&lt;td&gt;&lt;a href=</xsl:text>
@@ -376,9 +376,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -394,17 +394,17 @@
         <xsl:param name="item_url"/>
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
-                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+            <xsl:if test="./map[1]/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
                 <Placemark>
                     <name><xsl:value-of select="$item_name"/></name>
-                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <styleUrl>#<xsl:value-of select="@uuid"/></styleUrl>
                     <description>
                         <xsl:text>&lt;table&gt;&lt;tr&gt;</xsl:text>
                         <xsl:text>&lt;td&gt;&lt;a href=</xsl:text>
@@ -447,9 +447,9 @@
 
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>
@@ -462,23 +462,23 @@
     <xsl:template match="resource">
         <xsl:if test="./reference[@field='location_id']">
             <!-- Skip records without LatLon -->
-            <xsl:if test="./reference[@field='location_id']/@lon != 'null'">
-                <Style><xsl:attribute name="id"><xsl:value-of select="reference[@field='location_id']/@uuid"/></xsl:attribute>
+            <xsl:if test="./map[1]/@lon != 'null'">
+                <Style><xsl:attribute name="id"><xsl:value-of select="@uuid"/></xsl:attribute>
                     <IconStyle>
                         <Icon>
-                            <href><xsl:value-of select="reference[@field='location_id']/@marker"/></href>
+                            <href><xsl:value-of select="@marker"/></href>
                         </Icon>
                     </IconStyle>
                 </Style>
                 <Placemark>
                     <name><xsl:value-of select="data[@field='name']"/></name>
-                    <styleUrl>#<xsl:value-of select="reference[@field='location_id']/@uuid"/></styleUrl>
+                    <styleUrl>#<xsl:value-of select="@uuid"/></styleUrl>
                     <description><xsl:value-of select="@url"/></description>
                     <Point>
                         <coordinates>
-                            <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                            <xsl:value-of select="map[1]/@lon"/>
                             <xsl:text>,</xsl:text>
-                            <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                            <xsl:value-of select="map[1]/@lat"/>
                         </coordinates>
                     </Point>
                 </Placemark>

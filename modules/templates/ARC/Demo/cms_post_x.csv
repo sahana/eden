@@ -1,0 +1,23 @@
+Series,Title,Body,Country,L1,L2,L3,Lat ,Lon,Comments,Organisation,Author,Date,Attachment,Events,Expired
+Tweet,,Tornado Warning for Putnam and Findlay Counties in OH until 8:00 PM EDT http://www.weather.com/weather/alerts,US,Ohio,,,,,,,@TWCBreaking,2014-07-14 09:30,,,
+Activity,Initiating preparedness activities,Teams in the area have been alerted and put on standby ,,,,,,,,Hancock County,,,,,,Actual RC chapter - could be a tweet from @HancockRedCross
+Activity,,Alert acknowledged,,,,,,,,American Red Cross of Northwest Ohio,,,,,,Actual RC chapter
+Activity,,Emergency Teams on Standby,,,,,,,,American Red Cross of Northeast Indiana,,,,,,Actual RC chapter
+Activity,,Preparing for Storm,,,,,,,,West Central Ohio,,,,,,Actual RC chapter
+Activity,,Shelter Activated,US,Ohio,Hancock,Findlay,41.04471497,-83.65097638,,Hancock County,,2014-07-14 13:30,,,,
+Activity,,Local Staff on Standby,US,Ohio,Hancock,Findlay,41.04471497,-83.65097638,,Hancock County,,2014-07-14 13:30,,,,
+Activity,,Local Response Team on Alert,US,Ohio,Hancock,Findlay,41.04471497,-83.65097638,,Hancock County,,2014-07-14  13:30:00,,,,
+Activity,,Partners Notified,US,Ohio,Hancock,Findlay,41.04471497,-83.65097638,,Hancock County,,2014-07-14  13:30:00,,,,
+Activity,,All Local Schools Notified,US,Ohio,Lucas,Toledo,41.67746744,-83.61874223,,American Red Cross of Northwest Ohio,,2014-07-14  14:10:00,,,,
+Activity,,Emergency Teams Moblized,US,Ohio,Lucas,Toledo,41.67746744,-83.61874223,,American Red Cross of Northwest Ohio,,2014-07-14  14:20:00,,,,
+Activity,,Local Salvation Army Chapter contacted,US,Indiana,Allen,Fort Wayne,41.11853107,-85.12372756,,American Red Cross of Northeast Indiana,,2014-07-14  14:30:00,,,,
+Activity,,"Emergency Response Vehicle check complete - Gas, Oil & Engine Start",US,Indiana,Allen,Fort Wayne,41.11853107,-85.12372756,,American Red Cross of Northeast Indiana,,2014-07-14  14:40:00,,,,
+Activity,,Emergency rations moved out of storage,US,Ohio,Allen,Lima,40.73331023,-84.11918468,,West Central Ohio,,2014-07-14  15:00:00,,,,
+Report,Red Cross Report,"Heavy rains, High winds, On lockdown waiting for Tornado warning to pass",US,Ohio,Hancock,Findlay,41.04471497,-83.65097638,,Hancock County,,2014-07-14  15:00:00,,,,
+Report,County Report,Seek refuge in basement / tornado shelter immediately,,,,,,,,Ohio Emergency Management Agency,,2014-07-14  16:14:00,,,,
+Report,County Report,Tornado Warning in Effect. Stay indoors away from windows,,,,,,,,Indiana Department of Homeland Security ,,2014-07-14  17:12:00,,,,
+Report,Red Cross Report,"Storm has passed, receiving reports of damage in Van Wert",US,Ohio,Lucas,Toledo,41.67746744,-83.61874223,,American Red Cross of Northwest Ohio,,2014-07-14  18:15:00,,,,Hancock deliberately missing - what happened to them?
+Report,Red Cross Report,Mobilizing response teams to survey damage ,US,Indiana,Allen,Fort Wayne,41.11853107,-85.12372756,,American Red Cross of Northeast Indiana,,2014-07-14  18:30:00,,,,
+Report,Red Cross Report,Assessment team travelling along 224,US,Ohio,Allen,Lima,40.73331023,-84.11918468,,West Central Ohio,,2014-07-14  18:45:00,,,,
+Report,County Report,Tornado Warning Lifted. Reports of major damage across Putnam and Hancock counties,,,,,,,,Ohio Emergency Management Agency,,2014-07-14  19:00:00,,,,
+Report,County Report,Tornado Warning Lifted.,,,,,,,,Indiana Department of Homeland Security ,,2014-07-14  19:15:00,,,,

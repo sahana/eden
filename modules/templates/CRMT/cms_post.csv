@@ -1,0 +1,7 @@
+Module,Resource,Name,Body
+org,organisation,Organizations Summary Page Header,"Find partners in each key sector: 1) local leaders 2) cultural/faith 3) volunteer 4) government 5) business. Include schools, offices, parks, shops, and shelters."
+org,facility,Locations Summary Page Header,"Map places which are important to community resilience such as bridges, water storage tanks, assembly points and flood channels"
+project,activity,Activities Summary Page Header,Track the events which are planned within your community that will help strengthen it in the face of disasters
+stats,people,People Summary Page Header,Identify the different groups of people who live in your community
+vulnerability,evac_route,Evacuation Routes Summary Page Header,Identify the roads and routes to get people to safety in case of certain emergencies
+vulnerability,risk,Risks Summary Page Header,View the environmental factors or situations which pose as dangers to your community

@@ -19,6 +19,7 @@
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
          Religion.......................optional.....person_details religion
+         Religion other.................optional.....person_details religion_other
          Blood Type.....................optional.....pr_physical_description blood_type
          National ID....................optional.....person identity type = 2, value
          Passport No....................optional.....person identity type = 1, value
@@ -85,9 +86,20 @@
     </xsl:variable>
 
     <!-- ****************************************************************** -->
+    <!-- Indexes for faster processing -->
+    <xsl:key name="education_level" match="row"
+             use="col[@field='Education Level']"/>
+
+    <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
+            <!-- Education Levels -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('education_level',
+                                                                   col[@field='Education Level'])[1])]">
+                <xsl:call-template name="EducationLevel"/>
+            </xsl:for-each>
+
             <!-- Process all table rows for person records -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
@@ -145,6 +157,9 @@
                             </xsl:with-param>
                         </xsl:call-template>
                     </data>
+	            </xsl:if>
+	            <xsl:if test="col[@field='Religion other']!=''">
+	                <data field="religion_other"><xsl:value-of select="col[@field='Religion other']"/></data>
 	            </xsl:if>
 	            <xsl:variable name="l0">
                     <xsl:choose>
@@ -701,6 +716,20 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="EducationLevel">
+        <xsl:variable name="Level" select="col[@field='Education Level']"/>
+
+        <xsl:if test="$Level!=''">
+            <resource name="pr_education_level">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Level"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Level"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Education">
 
         <xsl:param name="level"/>
@@ -712,9 +741,11 @@
 
         <xsl:if test="$name and $name!=''">
             <resource name="pr_education">
-                <data field="level">
-                    <xsl:value-of select="$level"/>
-                </data>
+                <reference field="level_id" resource="pr_education_level">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$level"/>
+                    </xsl:attribute>
+                </reference>
                 <data field="award">
                     <xsl:value-of select="$name"/>
                 </data>

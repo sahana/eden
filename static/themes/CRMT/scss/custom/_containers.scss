@@ -1,0 +1,88 @@
+
+// grid containers
+
+.row {
+  background: $beige;
+  padding: $space $space-34;
+}
+@media #{$medium-up} {
+  .row {padding: $space-32 $space;}
+}
+@media #{$large-up} {
+  .row {padding: $space-double 100px;}
+}
+
+header.row {
+  padding-bottom: 0;
+}
+
+.row .row {
+  padding: 0;
+  background: transparent;  
+}
+
+
+
+// tabs
+
+.tabs-header {
+  padding-top: $space;
+  padding-bottom: 0;
+}
+
+.tabs-content {
+  padding-top: 0;
+  margin-bottom: 0;
+  > .content {
+    padding: 0;
+    background: $white;
+  }
+}
+
+.maps-inner {
+  padding: $space;
+}
+
+
+
+// table
+
+
+@media #{$large-up} {
+  .data-header .button {float: right;}
+}
+
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: $space-34;
+}
+
+
+.data-sort {
+  padding: $space-34 $space 0;
+}
+
+.data-filter {
+  border-top: 2px solid $wave;
+  padding: $space-half 0;
+}
+
+
+
+// blog
+
+.blog {
+  padding-top: 0;
+}
+
+.blog article {
+  padding: $space-32 $space $space 0;
+  img {
+    width: 50%;
+    height: auto;
+    float: right;
+    margin: 0 0 $space-half $space;
+  }
+}

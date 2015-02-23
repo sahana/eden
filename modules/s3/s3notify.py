@@ -2,7 +2,7 @@
 
 """ S3 Notifications
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,6 +34,7 @@ import urlparse
 import urllib2
 from urllib import urlencode
 from uuid import uuid4
+import string
 
 try:
     from cStringIO import StringIO # Faster, where available
@@ -47,7 +48,7 @@ except ImportError:
         import simplejson as json # try external module
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
-        
+
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import fetch
@@ -153,7 +154,7 @@ class S3Notifications(object):
         lookup_url = "%s/%s/%s" % (public_url,
                                    current.request.application,
                                    r.url.lstrip("/"))
-                                   
+
         # Break up the URL into its components
         purl = list(urlparse.urlparse(lookup_url))
 
@@ -196,7 +197,7 @@ class S3Notifications(object):
                                         query,   # query
                                         purl[5], # fragment
                                         ])
-                                       
+
         # Serialize data for send (avoid second lookup in send)
         data = json.dumps({"pe_id": s.pe_id,
                            "notify_on": s.notify_on,
@@ -309,7 +310,7 @@ class S3Notifications(object):
         settings = current.deployment_settings
 
         page_url = subscription["page_url"]
-        
+
         crud_strings = current.response.s3.crud_strings.get(resource.tablename)
         if crud_strings:
             resource_name = crud_strings.title_list
@@ -349,12 +350,12 @@ class S3Notifications(object):
         if email_format != "html" or "EMAIL" not in methods or len(methods) > 1:
             contents["text"] = renderer(resource, data, meta_data, "text")
             contents["default"] = contents["text"]
-        
+
         # Subject line
         subject = get_config("notify_subject")
         if not subject:
             subject = settings.get_msg_notify_subject()
-            
+
         from string import Template
         subject = Template(subject).safe_substitute(S="%(systemname)s",
                                                     s="%(systemname_short)s",
@@ -376,7 +377,7 @@ class S3Notifications(object):
         # Render and send the message(s)
         theme = settings.get_template()
         prefix = resource.get_config("notify_template", "notify")
-        
+
         send = current.msg.send_by_pe_id
 
         success = False
@@ -385,14 +386,15 @@ class S3Notifications(object):
         for method in methods:
 
             error = None
-            
+
             # Get the message template
             template = None
             filenames = ["%s_%s.html" % (prefix, method.lower())]
             if method == "EMAIL" and email_format:
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
             if theme != "default":
-                path = join("private", "templates", theme, "views", "msg")
+                location = settings.get_template_location()
+                path = join(location, "templates", theme, "views", "msg")
                 template = get_template(path, filenames)
             if template is None:
                 path = join("views", "msg")
@@ -405,7 +407,7 @@ class S3Notifications(object):
                 output = contents["html"]
             else:
                 output = contents["text"]
-                
+
             # Render the message
             try:
                 message = current.response.render(template, output)
@@ -428,7 +430,7 @@ class S3Notifications(object):
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
                 sent = False
-                
+
             if sent:
                 # Successful if at least one notification went out
                 success = True
@@ -553,7 +555,7 @@ class S3Notifications(object):
         if format == "html":
             # Pre-formatted HTML
             colnames = []
-            
+
             new_headers = TR()
             mod_headers = TR()
             for rfield in rfields:

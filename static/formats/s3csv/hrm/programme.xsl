@@ -12,6 +12,8 @@
          Organisation....................hrm_programme.owned_by_entity
 
     *********************************************************************** -->
+    <xsl:import href="../commons.xsl"/>
+
     <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
@@ -49,18 +51,6 @@
                     <xsl:value-of select="col[@field='Organisation']"/>
                 </xsl:attribute>
             </reference>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Organisation">
-
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="col[@field='Organisation']"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="col[@field='Organisation']"/></data>
         </resource>
 
     </xsl:template>

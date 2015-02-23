@@ -7,8 +7,8 @@
  */
 
 /**
- * @require OpenLayers.Format.WPSExecute.js
- * @require util/style.js
+ * @require OpenLayers/Format/WPSExecute.js
+ * @requires util/style.js
  */
 
 /** api: (define)

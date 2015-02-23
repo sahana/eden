@@ -41,19 +41,12 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
 
-        <xsl:variable name="Layer" select="col[@field='Name']/text()"/>
         <xsl:variable name="Config" select="col[@field='Config']/text()"/>
 
         <resource name="gis_layer_theme">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Layer"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Layer"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <xsl:if test="col[@field='Description']!=''">
                 <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            </xsl:if>
-            <xsl:if test="col[@field='Folder']!=''">
-                <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Date']!=''">
                 <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
@@ -61,31 +54,58 @@
             <xsl:if test="col[@field='Opacity']!=''">
                 <data field="opacity"><xsl:value-of select="col[@field='Opacity']"/></data>
             </xsl:if>
-        </resource>
 
-        <resource name="gis_layer_config">
-            <reference field="layer_id" resource="gis_layer_theme">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Layer"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="config_id" resource="gis_config">
-                <xsl:choose>
-                    <xsl:when test="$Config!=''">
+            <resource name="gis_layer_config">
+                <reference field="config_id" resource="gis_config">
+                    <xsl:choose>
+                        <xsl:when test="$Config!=''">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$Config"/>
+                            </xsl:attribute>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="'SITE_DEFAULT'"/>
+                            </xsl:attribute>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </reference>
+                <xsl:if test="col[@field='Folder']!=''">
+                    <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
+                </xsl:if>
+                <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
+                <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
+            </resource>
+
+            <resource name="gis_style">
+                <!-- @ToDo: Allow restricting the style to a specific Config
+                <xsl:if test="$Config!=''">
+                    <reference field="config_id" resource="gis_config">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="$Config"/>
                         </xsl:attribute>
+                    </reference>
+                </xsl:if> -->
+                <xsl:if test="col[@field='Opacity']!=''">
+                    <data field="opacity"><xsl:value-of select="col[@field='Opacity']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Popup Format']!=''">
+                    <data field="popup_format"><xsl:value-of select="col[@field='Popup Format']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Style']!=''">
+                    <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
+                </xsl:if>
+                <xsl:choose>
+                    <xsl:when test="col[@field='Cluster Threshold']!=''">
+                        <data field="cluster_threshold"><xsl:value-of select="col[@field='Cluster Threshold']"/></data>
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:attribute name="uuid">
-                            <xsl:value-of select="'SITE_DEFAULT'"/>
-                        </xsl:attribute>
+                        <!-- Disable Clustering by Default -->
+                        <data field="cluster_threshold">0</data>
                     </xsl:otherwise>
                 </xsl:choose>
-            </reference>
-            <data field="style"><xsl:value-of select="col[@field='Style']"/></data>
-            <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
-            <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
+            </resource>
+
         </resource>
 
     </xsl:template>

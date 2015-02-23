@@ -8,6 +8,7 @@
 
          CSV fields:
          Name....................inv_warehouse
+         Type....................inv_warehouse_type
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
          #Type....................inv_warehouse_type
@@ -28,10 +29,11 @@
          Comments................inv_warehouse
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
-    <xsl:include href="../commons.xsl"/>
-    <xsl:include href="../../xml/countries.xsl"/>
+    <xsl:import href="../commons.xsl"/>
+    <xsl:import href="../../xml/countries.xsl"/>
 
+    <xsl:output method="xml"/>
+    
     <!-- ****************************************************************** -->
     <!-- Lookup column names -->
 
@@ -63,10 +65,10 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Warehouse Types
+            <!-- Warehouse Types -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('warehouse_type', col[@field='Type'])[1])]">
                 <xsl:call-template name="WarehouseType" />
-            </xsl:for-each> -->
+            </xsl:for-each>
 
             <!-- Top-level Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
@@ -127,13 +129,13 @@
                 </xsl:attribute>
             </reference>
 
-            <!--<xsl:if test="col[@field='Type']!=''">
-                <reference field="office_type_id" resource="inv_warehouse_type">
+            <xsl:if test="col[@field='Type']!=''">
+                <reference field="warehouse_type_id" resource="inv_warehouse_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('WarehouseType:', col[@field='Type'])"/>
                     </xsl:attribute>
                 </reference>
-            </xsl:if>-->
+            </xsl:if>
 
             <!-- Warehouse data -->
             <data field="name"><xsl:value-of select="$WarehouseName"/></data>

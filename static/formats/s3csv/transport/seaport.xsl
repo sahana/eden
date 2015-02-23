@@ -21,10 +21,10 @@
          Comments................transport_seaport.comments
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
+    <xsl:import href="../commons.xsl"/>
+    <xsl:import href="../../xml/countries.xsl"/>
 
-    <xsl:include href="../commons.xsl"/>
-    <xsl:include href="../../xml/countries.xsl"/>
+    <xsl:output method="xml"/>
 
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
 

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Procurement Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,9 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ProcurementModel",
+__all__ = ("S3ProcurementModel",
            "proc_rheader"
-           ]
+           )
 
 from gluon import *
 from gluon.storage import Storage
@@ -53,9 +53,9 @@ class S3ProcurementModel(S3Model):
             Purchase Orders (PO)
     """
 
-    names = ["proc_plan",
+    names = ("proc_plan",
              "proc_plan_item"
-             ]
+             )
 
     def model(self):
 
@@ -91,7 +91,7 @@ class S3ProcurementModel(S3Model):
                                      #widget = S3SiteAutocompleteWidget(),
                                      #comment = DIV(_class="tooltip",
                                      #              _title="%s|%s" % (T("Inventory"),
-                                     #                                T("Enter some characters to bring up a list of possible matches"))),
+                                     #                                messages.AUTOCOMPLETE_HELP)),
                                      represent=self.org_site_represent),
                      # @ToDo: Link the Plan to a Project or Activity (if that module is enabled)
                      #project_id(),
@@ -105,7 +105,7 @@ class S3ProcurementModel(S3Model):
                      # @ToDo: Filter to orgs of type 'supplier'
                      self.org_organisation_id(label=T("Supplier")),
                      Field("shipping", "integer",
-                           requires = IS_NULL_OR(IS_IN_SET(proc_shipping_opts)),
+                           requires = IS_EMPTY_OR(IS_IN_SET(proc_shipping_opts)),
                            represent = lambda opt: \
                                        proc_shipping_opts.get(opt,
                                                               messages.UNKNOWN_OPT),
@@ -118,13 +118,11 @@ class S3ProcurementModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Procurement Plan"),
+            label_create = T("Add Procurement Plan"),
             title_display = T("Procurement Plan Details"),
             title_list = T("Procurement Plans"),
             title_update = T("Edit Procurement Plan"),
-            subtitle_create = T("Add Procurement Plan"),
             label_list_button = T("List Procurement Plans"),
-            label_create_button = T("Add Procurement Plan"),
             label_delete_button = T("Delete Procurement Plan"),
             msg_record_created = T("Procurement Plan added"),
             msg_record_modified = T("Procurement Plan updated"),
@@ -141,7 +139,7 @@ class S3ProcurementModel(S3Model):
 
         plan_id = S3ReusableField("plan_id", "reference %s" % tablename,
                                   sortby="date",
-                                  requires = IS_NULL_OR(
+                                  requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "proc_plan.id",
                                                           self.proc_plan_represent,
                                                           orderby="proc_plan.date",
@@ -186,13 +184,11 @@ class S3ProcurementModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            title_create = T("Add Item to Procurement Plan"),
+            label_create = T("Add Item to Procurement Plan"),
             title_display = T("Procurement Plan Item Details"),
             title_list = T("Items in Procurement Plan"),
             title_update = T("Edit Procurement Plan Item"),
-            subtitle_create = T("Add Item to Procurement Plan"),
             label_list_button = T("List Items in Procurement Plan"),
-            label_create_button = T("Add Item to Procurement Plan"),
             label_delete_button = T("Remove Item from Procurement Plan"),
             msg_record_created = T("Item added to Procurement Plan"),
             msg_record_modified = T("Procurement Plan Item updated"),

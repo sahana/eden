@@ -1,0 +1,77 @@
+{{extend "layout.html"}}{{theme=response.s3.theme}}
+
+<h1>About</h1>
+<div class="row">
+  <div class="span6">
+    <p>Sahana is a component of the Puget Sound Maritime Common Operating Picture (MCOP) platform in both Large scale disaster management and Coordination of day-to-day activities and operations.</p>
+  </div>
+  <div class="span6">
+    <p>Sahana integrates and shares data with other systems to provide multistakeholder situational awareness:
+    <ul>
+      <li>Tasks from Wrike</li>
+      <li>Tasks are mapped and published to CommandBridge</li>
+    </ul>
+  </div>
+</div>
+<br>
+<div class="row links">
+  <div class="span4">
+    <a href='/{{=appname}}/event/incident/datalist'>
+     <h3 ><i class='icon-incident'></i> {{=T("Incidents")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Incidents</p>
+    <a href='/{{=appname}}/cms/post/datalist'>
+     <h3 ><i class='icon-alert'></i> {{=T("Alerts")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Alerts</p>
+    <a href='/{{=appname}}/project/task/summary'>
+     <h3 ><i class='icon-tasks'></i> {{=T("Tasks")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Tasks. These tasks can be imported from Wrike and mapped within Sahana</p>
+  </div>
+  <div class="span4">
+    <a href='/{{=appname}}/gis/inex'>
+     <h3 ><i class='icon-globe'></i> {{=T("Map")}}</h3>
+    </a>
+    <p>Sahana's map provides situational awareness of all information</p>
+    <a href='/{{=appname}}/org/resource/summary'>
+     <h3 ><i class='icon-wrench'></i> {{=T("Resource Inventory")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Resource Inventories</p>
+    <a href='/{{=appname}}/event/resource/summary'>
+     <h3 ><i class='icon-signout'></i> {{=T("Responding Resources")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Resources Responding to Incidents</p>
+   </div>
+  <div class="span4">
+    <a href='/{{=appname}}/pr/person/'>
+     <h3 ><i class='icon-user'></i> {{=T("Contact Directory")}}</h3>
+    </a>
+    <p>Sahana can be used to manage a Contact Directory</p>
+    <a href='/{{=appname}}/org/organisation/datalist'>
+     <h3 ><i class='icon-sitemap'></i> {{=T("Stakeholders")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Stakeholders</p>
+    <a href='/{{=appname}}/org/facility/summary'>
+     <h3 ><i class='icon-building'></i> {{=T("Facilities")}}</h3>
+    </a>
+    <p>Sahana can be used to manage Facilities</p>
+   </div>
+</div>
+<p>For more information please contact:</p>
+<div class="row">
+  <div class="span3">
+  Reuben Omelanchuk<br>
+  MCOP Project Director<br>
+  Seattle Police Department<br>
+  <i class='icon-phone'></i> Office:  206-255-7593<br>
+  <i class='icon-envelope-alt'></i> <a href='mailto:reuben.omelanchuk@seattle.gov'>reuben.omelanchuk@seattle.gov</a><br>
+  </div>
+  <div class="span3">
+  Bob Pessemier<br>
+  MCOP Project Consultant<br>
+  Pessemier Consulting Services<br>
+  <i class='icon-phone'></i> Office:  425-654-1066<br>
+  <i class='icon-envelope-alt'></i> <a href='mailto:bobp@psmcop.org'>bobp@psmcop.org</a><br>
+  </div>
+</div>

@@ -1,3 +1,15 @@
+.homepage-row {
+    padding: 24px 18px; 
+    background-color: #fbfbfb;
+}
+
+@media only screen and (min-width: 40.063em) {
+  .homapage-row {
+    padding: 36px 24px; } }
+@media only screen and (min-width: 64.063em) {
+  .homepage-row {
+    padding: 48px 100px; } }
+
 .inline-throbber {
     background-image: url(../../img/sunflower_fade_indicator.gif);
 }
@@ -8,4 +20,130 @@
 .layer_throbber,
 .map_loader {
     background-image: url(../../img/sunflower_spin_throbber.gif);
+}
+
+#content h2 {
+    background-color: #ebebeb;
+}
+#footer {
+    background-color: #ebebeb;
+}
+.footer-link,
+.footer-link:hover {
+    background-color: transparent;
+    color: #04a4a4;
+    font-size: 0.8rem;
+}
+.sidebar nav {
+    background-color: #ebebeb;
+}
+.side-nav li > a:not(.button) {
+    background-color: #ebebeb;
+    color: #5d5d5d;
+    padding: 3px;
+}
+.side-nav li.heading > a:not(button) {
+    background-color: #ebebeb;
+    color: #666666;
+    padding: 6px 3px 3px 6px;
+}
+.top-bar-section ul li > a {
+    font-size: 0.8525rem;
+}
+.controls {
+    white-space: pre-line;
+}
+#assign-role {
+    outline: 0;
+}
+#assign-role span {
+    margin-left: 8px;
+}
+#assign-container {
+    margin-left: 1%;
+}
+.about-row {
+    background-color: #fbfbfb;
+}
+#deploy-div,
+#contribute-div {
+    background-color: #f3f3f3;
+    box-shadow: -8px 9px 0 -4px #dadadc;
+}
+#contribute-div {
+    padding: 2%;
+}
+.about-row h2,
+.about-row a,
+.about-row i, 
+.about-row p {
+    color: #222222;
+}
+#wiki-develop {
+    font-size: 1.23rem;
+    color: teal;
+}
+.about-row p {
+    font-size: 1.25rem;
+}
+.about-row a {
+    font-size: 1rem;
+}
+#updates-feed {
+    background-color: #ffffff;
+}
+#updates-feed a {
+    color: blue;
+}
+#updates-feed i {
+    color: inherit;
+}
+.task-btn {
+    background-color: #ffffff;
+    box-shadow: -2px 0 0 0 #04a4a4;
+    margin-left: 5px;
+    font-size: 0.9rem !important;
+    border-radius: 3px;
+}
+
+.deploy-btn,
+.deploy-btn:active {
+    box-shadow: 0 0 1px 0 #b2b2b2;
+    background-color: transparent;
+}
+.deploy-btn:hover {
+    box-shadow: 0px 3px 0px 0 #b2b2b2;
+    background-color: transparent;
+    color: #04a4a4;
+}
+.contribute-btn {
+    margin-left: 1px !important;
+}
+.contribute-btn a {
+    font-size: 0.9rem !important;
+}
+#assign-role {
+    background-color: #2e6e88;
+}
+#assign-role i,
+#assign-role span {
+    font-size: 0.9rem;
+}
+/* Sunflower Throbber */
+.s3-twitter-throbber {
+    background-image: url(../../img/sunflower_spin_throbber.gif);
+    background-repeat: no-repeat;
+}
+.row.pr-contact {
+    margin-left: 0;
+}
+.pr-contact-data,
+.pr-emergency-data {
+    width: 480px;
+}
+.pr-contact-data,
+.pr-emergency-data,
+.pr-contact-actions {
+    display: inline-block;
+    vertical-align: top;
 }

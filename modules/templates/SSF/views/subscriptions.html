@@ -1,0 +1,10 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='small-12 large-12 medium-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+ <hr> 
+ <div class='small-12 large-12 medium-12 columns'>
+ {{try:}}{{=form}}{{except:}}{{pass}}
+ </div>
+</div>

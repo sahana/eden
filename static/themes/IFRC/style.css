@@ -22,7 +22,7 @@ p .left {margin:1.5em 1.5em 1.5em 0;padding:0;}
 .right {float:right !important;}
 p .right {margin:1.5em 0 1.5em 1.5em;padding:0;}
 a:focus, a:hover {color:#09f;}
-a {color:#0065A6;text-decoration:none;}
+a {color:#0065A6;text-decoration:none;cursor:pointer;}
 p a{color:#eb033b;}
 blockquote {margin:1.5em;color:#666;font-style:italic;}
 strong, dfn {font-weight:bold;}
@@ -242,8 +242,20 @@ form.inline p {margin-bottom:0;}
     text-indent: -99999px;
 }
 
-hr {border-width:0px;border-bottom:1px #ccc dashed;color:#b5b5b5;clear:both;float:none;height:1px;margin:10px 0}
-hr.space {background:#fff;color:#fff;visibility:hidden;}
+hr {
+    border-width: 0;
+    border-bottom: 1px #ccc dashed;
+    color: #b5b5b5;
+    clear: both;
+    float: none;
+    height: 1px;
+    margin: 10px 0
+}
+hr.space {
+    background: #fff;
+    color: #fff;
+    visibility: hidden;
+}
 
 ol, ul {
     padding-left: 1em;
@@ -327,6 +339,13 @@ div.form-container form fieldset input.errorfield {
     background-color: #dc032e;
 }
 
+/* Required Field indicator */
+.error,
+.req,
+.req_key {
+    color: #dc032e;
+}
+
 /*
 table.dataTable td.actions {
     max-width: 55px;
@@ -397,4 +416,69 @@ button.alert-send-btn:enabled {
 /* Field tweaks */
 #asset_asset_sub_defaultitem__row #sub_defaultitem_defaultitem_i_quantity_edit_none {
     width: 35px;
+}
+
+/* Hierarchy widgets: normally auto-expanded, but org hierarchy
+   has too many root nodes, so we need to limit height somehow.
+   This conflicts with bootstrap popovers, therefore made
+   theme-specific here:
+*/
+.s3-hierarchy-tree.jstree {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+/* Styling Improvements
+.filter-form td, #filter_options td {
+    border: none;
+}
+
+#summary-tabs,
+#summary-tabs .ui-widget-header {
+    border: none;
+    background: none;
+}
+
+#summary-sections {
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    background-color: #fcf9ed;
+    margin-bottom: 10px
+} */
+
+#summary-tab-headers {
+    margin-left: 5px;
+}
+
+#summary-sections #table-container {
+    margin-bottom: 20px
+}
+
+.pr-contacts-wrapper h2 {
+    margin-top: 8px;
+}
+.pr-contact-data,
+.pr-emergency-data,
+.pr-contact-actions {
+    display: inline-block;
+}
+.pr-contacts h3,
+.pr-emergency-contacts .pr-emergency-contact,
+.pr-contacts .pr-contact {
+  margin-top: 12px;
+  padding-bottom: 0 !important;
+}
+.pr-contacts .pr-contact-subtitle {
+    font-size: small;
+    font-style: italic;
+    color: #7f7f7f;
+}
+.pr-contact-data,
+.pr-emergency-data {
+    width: 400px;
+    vertical-align: top;
+}
+
+.profile-sub-header .icon {
+    margin-right: 8px;
 }

@@ -17,15 +17,20 @@ def index():
     return s3db.cms_index(module)
 
 # -----------------------------------------------------------------------------
-def flood_gauge():
+def debris_basin():
+    """ Debris Basins, RESTful controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def gauge():
     """ Flood Gauges, RESTful controller """
 
     # Pre-processor
     def prep(r):
         if r.interactive:
             pass
-        elif r.representation == "plain" and \
-             r.method !="search":
+        elif r.representation == "plain":
             # Map Popups
             r.table.image_url.readable = False
         return True
@@ -35,8 +40,7 @@ def flood_gauge():
     def postp(r, output):
         if r.interactive:
             pass
-        elif r.representation == "plain" and \
-             r.method !="search":
+        elif r.representation == "plain":
             # Map Popups
             # use the Image URL
             # @ToDo: The default photo not the 1st

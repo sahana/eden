@@ -1,0 +1,23 @@
+{{extend "layout.html"}}
+<header class='row'>
+ <a href='{{=URL(c="cms", f="post", args="create")}}' class='button alert right'>{{=T("Share your story")}}</a>
+ <h1>{{=T("Resilience Stories")}}</h1>
+ <hr />
+</header>
+<div class='row blog'>
+ <div id='dl-container' class='large-9 columns' role='content'>
+  {{=items}}
+ </div>
+ <aside class='large-3 columns'>
+  <h5>{{=T("Categories")}}</h5>
+  <div id='list-filter' class='form-container'>
+   {{=list_filter_form}}
+  </div>
+  <div class='panel'>
+   <h5>{{=T("About")}}</h5>
+   <p>{{=T("Learn from and connect with other Los Angeles coalitions successfully increasing their resilience to disaster and other threats.")}}</p>
+   <a href='{{=URL(c="cms", f="post", args="create")}}'>{{=T("Share your story")}} →</a>
+  </div>
+ </aside>
+</div>
+{{include "dataLists.html"}}

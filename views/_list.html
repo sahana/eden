@@ -1,20 +1,44 @@
-{{try:}}{{=H2(title)}}{{except:}}{{pass}}
-<div id='rheader'>
-{{try:}}{{=XML(rheader)}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
 </div>
-<div id='component'>
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
 {{except:}}
+ </div>
 </div>
-<div>
+<div class='row'>
 {{pass}}
-<div id='map'></div>
-<div id='list-btn-add'>
-{{try:}}{{=add_btn}}{{except:}}{{pass}}
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div id='map' class='small-12 columns'></div>
+  </div>
+  <div class='row'>
+   <div class='small-12 columns'>
+    <div id='list-btn-add'>
+     {{try:}}{{=buttons["add_btn"]}}{{except:}}{{pass}}
+    </div>
+   </div>
+  </div>
+  <div class='row'>
+   {{try:}}{{items = items}}
+    <div id='table-container' class='small-12 columns'>
+     {{=items}}
+    </div>
+   {{except:}}{{pass}}
+  </div>
+ </div>
 </div>
-<div id='table-container'>
-{{try:}}{{=items}}
+<div class='row'>
+ {{if s3.rfooter:}}
+  <div id='rfooter' class='small-12 columns'>
+   {{=XML(s3.rfooter)}}
+  </div>
+ {{pass}}
 </div>
-{{except:}}{{pass}}
-</div>
-{{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
 {{include "dataTables.html"}}

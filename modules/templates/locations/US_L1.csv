@@ -1,0 +1,55 @@
+Country,L1,L1 KV:state,L1 KV:FIPS
+US,Alabama,AL,01
+US,Alaska,AK,02
+US,Armed Forces Pacific,AP,
+US,Arizona,AZ,04
+US,Arkansas,AR,05
+US,California,CA,06
+US,Colorado,CO,08
+US,Connecticut,CT,09
+US,Delaware,DE,10
+US,District of Columbia,DC,11
+US,Florida,FL,12
+US,Georgia,GA,13
+GU,Guam,GU,66
+US,Hawaii,HI,15
+US,Idaho,ID,16
+US,Illinois,IL,17
+US,Indiana,IN,18
+US,Iowa,IA,19
+US,Kansas,KS,20
+US,Kentucky,KY,21
+US,Louisiana,LA,22
+US,Maine,ME,23
+US,Maryland,MD,24
+US,Massachusetts,MA,25
+US,Michigan,MI,26
+US,Minnesota,MN,27
+US,Mississippi,MS,28
+US,Missouri,MO,29
+US,Montana,MT,30
+US,Nebraska,NE,31
+US,Nevada,NV,32
+US,New Hampshire,NH,33
+US,New Jersey,NJ,34
+US,New Mexico,NM,35
+US,New York,NY,36
+US,North Carolina,NC,37
+US,North Dakota,ND,38
+US,Ohio,OH,39
+US,Oklahoma,OK,40
+US,Oregon,OR,41
+US,Pennsylvania,PA,42
+US,Rhode Island,RI,44
+US,South Carolina,SC,45
+US,South Dakota,SD,46
+US,Tennessee,TN,47
+US,Texas,TX,48
+US,Utah,UT,49
+US,Vermont,VT,50
+US,Virginia,VA,51
+VI,Virgin Islands,VI,78
+US,Washington,WA,53
+US,West Virginia,WV,54
+US,Wisconsin,WI,55
+US,Wyoming,WY,56

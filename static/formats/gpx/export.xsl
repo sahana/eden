@@ -4,10 +4,9 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- **********************************************************************
-
          GPX Export Template for S3XRC
 
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -76,7 +75,7 @@
                     <xsl:attribute name="lon"><xsl:value-of select="data[@field='lon']"/></xsl:attribute>
                     <name><xsl:value-of select="data[@field='name']"/></name>
                     <desc><xsl:value-of select="@url"/></desc>
-                    <sym><xsl:value-of select="@sym"/></sym>
+                    <sym><xsl:value-of select="map[1]/@sym"/></sym>
                 </wpt>
             </xsl:otherwise>
         </xsl:choose>
@@ -86,8 +85,8 @@
     <xsl:template match="resource[@name='hms_hospital']">
         <xsl:if test="reference[@field='location_id']">
             <wpt>
-                <xsl:attribute name="lat"><xsl:value-of select="reference[@field='location_id']/@lat"/></xsl:attribute>
-                <xsl:attribute name="lon"><xsl:value-of select="reference[@field='location_id']/@lon"/></xsl:attribute>
+                <xsl:attribute name="lat"><xsl:value-of select="map[1]/@lat"/></xsl:attribute>
+                <xsl:attribute name="lon"><xsl:value-of select="map[1]/@lon"/></xsl:attribute>
                 <name><xsl:value-of select="data[@field='name']"/></name>
                 <desc>
                     <xsl:if test="reference[@field='organisation_id']/text()">
@@ -96,17 +95,17 @@
                     </xsl:if>
                     <xsl:value-of select="data[@field='facility_type']"/>
                 </desc>
-                <sym><xsl:value-of select="reference[@field='location_id']/@sym"/></sym>
+                <sym><xsl:value-of select="map[1]/@sym"/></sym>
             </wpt>
         </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
-        <xsl:if test="reference[@field='location_id']">
+        <xsl:if test="map[1]/@lat!=''">
             <wpt>
-                <xsl:attribute name="lat"><xsl:value-of select="reference[@field='location_id']/@lat"/></xsl:attribute>
-                <xsl:attribute name="lon"><xsl:value-of select="reference[@field='location_id']/@lon"/></xsl:attribute>
+                <xsl:attribute name="lat"><xsl:value-of select="map[1]/@lat"/></xsl:attribute>
+                <xsl:attribute name="lon"><xsl:value-of select="map[1]/@lon"/></xsl:attribute>
                 <name><xsl:value-of select="data[@field='name']"/></name>
                 <desc>
                     <xsl:if test="reference[@field='organisation_id']/text()">
@@ -115,7 +114,7 @@
                     </xsl:if>
                     <xsl:value-of select="data[@field='type']"/>
                 </desc>
-                <sym><xsl:value-of select="reference[@field='location_id']/@sym"/></sym>
+                <sym><xsl:value-of select="map[1]/@sym"/></sym>
             </wpt>
         </xsl:if>
     </xsl:template>

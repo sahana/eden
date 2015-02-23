@@ -12,20 +12,20 @@
      * Parameters:
      * fieldname - {String} A unique fieldname for a person_id or human_resource_id field
      */
-    S3.addPersonWidget = function(fieldname) {
+    S3.addPersonWidget = function(fieldname, lookup_duplicates) {
         // Function to be called by S3AddPersonWidget2
 
         var selector = '#' + fieldname;
         var real_input = $(selector);
         var real_row = $(selector + '__row');
 
+        var title_row = $(selector + '_title__row');
         var error_row = real_input.next('.error_wrapper');
 
         var div_style = real_row.hasClass('control-group') // Bootstrap
                         || real_row.hasClass('form-row'); // Foundation
         if (div_style) {
             // Move the user-visible rows underneath the real (hidden) one
-            var title_row = $(selector + '_title__row');
             var org_row = $(selector + '_organisation_id__row');
             var name_row = $(selector + '_full_name__row');
             var date_of_birth_row = $(selector + '_date_of_birth__row');
@@ -45,8 +45,8 @@
                     .after(date_of_birth_row)
                     .after(name_row)
                     .after(org_row)
-                    .after(title_row)
-                    .after(error_row);
+                    .after(error_row)
+                    .after(title_row);
 
             title_row.removeClass('hide').show();
             org_row.removeClass('hide').show();
@@ -59,10 +59,11 @@
             email_row.removeClass('hide').show();
             box_bottom.removeClass('hide').show();
         } else {
-            // Hide the main row & move out the Error
+            // Hide the main row & move out the Error underneath the top of the widget
             $(selector + '__row1').hide();
             real_row.hide()
-                    .after(error_row);
+                    .after(error_row)
+                    .after(title_row);
         }
 
         var value = real_input.val();
@@ -94,6 +95,40 @@
             cancel(fieldname);
         });
 
+        if (lookup_duplicates) {
+            // Add place to store results
+            var results = '<div id="' + fieldname + '_duplicates" class="req"></div>';
+            if (div_style) {
+                // Bootstrap / Foundation
+                $(selector + '_box_bottom').before(results);
+            } else {
+                // Default formstyle
+                $(selector + '_box_bottom1').before(results);
+            }
+            var dupes_count = $(selector + '_duplicates');
+            dupes_count.data('results', [])
+                       .click(function() {
+                // Open up the full list of results
+                display_duplicates(fieldname);
+            });
+            // Check for Duplicates whenever any of the person fields are changed
+            $(selector + '_full_name' + ',' +
+              selector + '_date_of_birth' + ',' +
+              selector + '_gender' + ',' +
+              selector + '_occupation' + ',' +
+              selector + '_mobile_phone' + ',' +
+              selector + '_home_phone' + ',' +
+              selector + '_email').change(function() {
+                check_duplicates(fieldname);
+            });
+            real_input.change(function() {
+                if (real_input.val()) {
+                    // Clear the duplicate results
+                    clear_duplicates(fieldname);
+                }
+            });
+        }
+
         $(selector + '_organisation_id').change(function() {
             // HR: If there is an organisation selected then use this as a filter for the Autocomplete
             var organisation_id = $(this).val();
@@ -110,8 +145,20 @@
             real_input.data('url', url);
         });
 
-        $('form').submit(function() {
+        real_input.closest('form').submit(function() {
             // The form is being submitted
+
+            // Do we have any duplicates found which we should force the user to review?
+            if (lookup_duplicates) {
+                if (dupes_count.data('results').length) {
+                    // Mark that we're coming from a form submission
+                    dupes_count.data('submit', true);
+                    // Open up the list of results
+                    display_duplicates(fieldname);
+                    // Prevent form submission
+                    return false;
+                }
+            }
 
             // Do the normal form-submission tasks
             // @ToDo: Look to have this happen automatically
@@ -119,8 +166,10 @@
             // http://api.jquery.com/bind/
             S3ClearNavigateAwayConfirm();
 
-            // Ensure that all fields aren't disabled (to avoid wiping their contents)
-            enable_person_fields(fieldname);
+            if (!real_input.val()) {
+                // Ensure that all fields aren't disabled (to avoid wiping their contents)
+                enable_person_fields(fieldname);
+            }
 
             // Allow the Form's Save to continue
             return true;
@@ -165,7 +214,7 @@
         $(selector + '_mobile_phone').prop('disabled', false);
         $(selector + '_home_phone').prop('disabled', false);
         $(selector + '_email').prop('disabled', false);
-    }
+    };
 
     var disable_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
@@ -173,6 +222,7 @@
         $(selector + '_full_name').prop('disabled', true);
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
+        $(selector + '_date_of_birth__row .ui-datepicker-trigger').hide();
         $(selector + '_occupation').prop('disabled', true);
         $(selector + '_mobile_phone').prop('disabled', true);
         $(selector + '_home_phone').prop('disabled', true);
@@ -181,7 +231,7 @@
         $(selector + '_edit_bar .icon-edit').removeClass('hide').show();
         // Hide the cancel button
         $(selector + '_edit_bar .icon-remove').hide();
-    }
+    };
 
     var edit = function(fieldname) {
         var selector = '#' + fieldname;
@@ -194,7 +244,7 @@
         $(selector + '_edit_bar .icon-edit').hide();
         // Show the cancel button
         $(selector + '_edit_bar .icon-remove').removeClass('hide').show();
-    }
+    };
 
     var cancel = function(fieldname) {
         var selector = '#' + fieldname;
@@ -207,6 +257,7 @@
             $(selector + '_full_name').prop('disabled', true).val(existing.full_name);
             $(selector + '_gender').prop('disabled', true).val(existing.gender);
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
+            $(selector + '_date_of_birth__row .ui-datepicker-trigger').show();
             $(selector + '_occupation').prop('disabled', true).val(existing.occupation);
             $(selector + '_mobile_phone').prop('disabled', true).val(existing.mobile_phone);
             $(selector + '_home_phone').prop('disabled', true).val(existing.home_phone);
@@ -221,7 +272,7 @@
             $(selector + '_full_name').prop('disabled', false).val('');
             clear_person_fields(fieldname);
         }
-    }
+    };
 
     var clear_person_fields = function(fieldname) {
         var selector = '#' + fieldname;
@@ -231,41 +282,30 @@
         $(selector + '_organisation_id').prop('disabled', false).val('');
         $(selector + '_gender').prop('disabled', false).val('');
         $(selector + '_date_of_birth').prop('disabled', false).val('');
+        $(selector + '_date_of_birth__row .ui-datepicker-trigger').show();
         $(selector + '_occupation').prop('disabled', false).val('');
         $(selector + '_mobile_phone').prop('disabled', false).val('');
         $(selector + '_home_phone').prop('disabled', false).val('');
         $(selector + '_email').prop('disabled', false).val('');
         // Hide the edit bar
         //$(selector + '_edit_bar').hide();
-    }
+    };
 
     var represent_person = function(item) {
         if (item.label != undefined) {
             // No Match
             return item.label;
         }
-        var name = item.first;
-        if (item.middle) {
-            name += ' ' + item.middle;
-        }
-        if (item.last) {
-            name += ' ' + item.last;
-        }
+        var name = item.name;
         return name;
-    }
+    };
 
     var represent_hr = function(item) {
         if (item.label != undefined) {
             // No Match
             return item.label;
         }
-        var name = item.first;
-        if (item.middle) {
-            name += ' ' + item.middle;
-        }
-        if (item.last) {
-            name += ' ' + item.last;
-        }
+        var name = item.name;
         var org = item.org;
         var job = item.job;
         if (org || job) {
@@ -280,7 +320,7 @@
             }
         }
         return name;
-    }
+    };
 
     var enable_autocomplete = function(fieldname) {
         var selector = '#' + fieldname;
@@ -383,7 +423,7 @@
                 real_input.val('').change();
             }
         });
-    }
+    };
 
     // Called on post-process by the Autocomplete Widget
     var select_person = function(fieldname, id) {
@@ -397,20 +437,6 @@
         var url = S3.Ap.concat('/' + controller + '/' + fn + '/' + id + '/lookup');
         $.getJSONS3(url, function(data) {
             try {
-                /* We have these already from the search_ac
-                var names = [];
-                if (data.hasOwnProperty('first_name')) {
-                    names.push(data['first_name']);
-                }
-                if (data.hasOwnProperty('middle_name')) {
-                    names.push(data['middle_name']);
-                }
-                if (data.hasOwnProperty('last_name')) {
-                    names.push(data['last_name']);
-                }
-                var full_name = names.join(' ');
-                name_input.val(full_name); */
-
                 // Already done by ac, yet gets lost due to {} returning True
                 real_input.val(id);
 
@@ -427,7 +453,7 @@
                 clear_person_fields(fieldname);
             }
         });
-    }
+    };
 
     // Lookup the Site Contact Person for a Site
     // Up to the calling function (external) as to whether this is only done
@@ -441,17 +467,7 @@
         var url = S3.Ap.concat('/org/site/' + site_id + '/site_contact_person');
         $.getJSONS3(url, function(data) {
             try {
-                var names = [];
-                if (data.hasOwnProperty('first_name')) {
-                    names.push(data['first_name']);
-                }
-                if (data.hasOwnProperty('middle_name')) {
-                    names.push(data['middle_name']);
-                }
-                if (data.hasOwnProperty('last_name')) {
-                    names.push(data['last_name']);
-                }
-                var full_name = names.join(' ');
+                var full_name = data['name'];
                 name_input.val(full_name);
 
                 var id = data['id'];
@@ -469,7 +485,7 @@
                 clear_person_fields(fieldname);
             }
         });
-    }
+    };
 
     // Process the response from pr_person_lookup, hrm_lookup or site_contact_person
     var process_reponse = function(data, fieldname) {
@@ -483,23 +499,23 @@
             $(selector + '_email').val(email);
             existing['email'] = email;
         }
-        if (data.hasOwnProperty('mobile_phone')) {
-            var mobile_phone = data['mobile_phone'];
+        if (data.hasOwnProperty('mphone')) {
+            var mobile_phone = data['mphone'];
             $(selector + '_mobile_phone').val(mobile_phone);
             existing['mobile_phone'] = mobile_phone;
         }
-        if (data.hasOwnProperty('home_phone')) {
-            var home_phone = data['home_phone'];
+        if (data.hasOwnProperty('hphone')) {
+            var home_phone = data['hphone'];
             $(selector + '_home_phone').val(home_phone);
             existing['home_phone'] = home_phone;
         }
-        if (data.hasOwnProperty('gender')) {
-            var gender = data['gender'];
+        if (data.hasOwnProperty('sex')) {
+            var gender = data['sex'];
             $(selector + '_gender').val(gender);
             existing['gender'] = gender;
         }
-        if (data.hasOwnProperty('date_of_birth')) {
-            var date_of_birth = data['date_of_birth'];
+        if (data.hasOwnProperty('dob')) {
+            var date_of_birth = data['dob'];
             $(selector + '_date_of_birth').val(date_of_birth);
             existing['date_of_birth'] = date_of_birth;
         }
@@ -508,13 +524,172 @@
             $(selector + '_occupation').val(occupation);
             existing['occupation'] = occupation;
         }
-        if (data.hasOwnProperty('organisation_id')) {
-            var organisation_id = data['organisation_id'];
+        if (data.hasOwnProperty('org_id')) {
+            var organisation_id = data['org_id'];
             $(selector + '_organisation_id').val(organisation_id);
             existing['organisation_id'] = organisation_id;
         }
 
         disable_person_fields(fieldname);
-    }
+    };
+
+    /**
+     * Check for duplicates
+     */
+    var check_duplicates = function(fieldname) {
+
+        var selector = '#' + fieldname;
+        var real_input = $(selector);
+        if (real_input.val()) {
+            // User has selected an entry, so no need for additional deduplication checks
+            return;
+        }
+        var name = $(selector + '_full_name').val();
+        if (!name) {
+            // Nothing we can lookup yet
+            return;
+        }
+        var data = {name: name};
+        var dob = $(selector + '_date_of_birth').val();
+        if (dob) {
+            data['dob'] = dob;
+        }
+        var gender = $(selector + '_gender').val();
+        if (gender) {
+            data['sex'] = gender;
+        }
+        var occupation = $(selector + '_occupation').val();
+        if (occupation) {
+            data['occupation'] = occupation;
+        }
+        var mobile_phone = $(selector + '_mobile_phone').val();
+        if (mobile_phone) {
+            data['mphone'] = mobile_phone;
+        }
+        var home_phone = $(selector + '_home_phone').val();
+        if (home_phone) {
+            data['hphone'] = home_phone;
+        }
+        var email = $(selector + '_email').val();
+        if (email) {
+            data['email'] = email;
+        }
+        var url = S3.Ap.concat('/pr/person/check_duplicates');
+        $.ajaxS3({
+            url: url,
+            data: data,
+            type: 'POST',
+            dataType: 'json',
+            success: function(data) {
+                // Remove old results
+                $(selector + '_results').remove();
+                if (data.length) {
+                    // Display new count
+                    var count = i18n.dupes_found.replace('_NUM_', data.length);
+                    $(selector + '_duplicates').html(count + ' <i class="icon-caret-down"> </i>')
+                                               .show()
+                                               .data('results', data);
+                } else {
+                    // Clear old count
+                    $(selector + '_duplicates').data('results', [])
+                                               .hide();
+                }
+            }
+        });
+    };
+
+    /**
+     * Display duplicates
+     */
+    var display_duplicates = function(fieldname) {
+
+        var selector = '#' + fieldname;
+
+        if ($(selector + '_results').length) {
+            // Already showing
+            return;
+        }
+
+        var dupes_count = $(selector + '_duplicates');
+        var items = dupes_count.data('results');
+        var card,
+            item,
+            name,
+            options = '<div id="' + fieldname + '_results">',
+            len_items = items.length;
+        for (var i=0; i < len_items; i++) {
+            item = items[i];
+            name = item.name;
+            card = '<div class="dl-item" data-id=' + item.id + ' data-name="' + name + '">';
+            card += '<a class="fleft"><img width=50 height=50 src="';
+            if (item.image) {
+                S3.Ap.concat('/default/download/' + item.image)
+            } else {
+                // Default placeholder
+                card += S3.Ap.concat('/static/img/blank-user.gif');
+            }
+            card += '" class="media-object"></a><div>';
+            if (item.org) {
+                card += '<div class="card_1_line">' + item.org + '</div>';
+            }
+            card += '<div class="card_1_line">' + name + '</div>';
+            if (item.dob) {
+                card += '<div class="card_1_line">' + item.dob + '</div>';
+            }
+            if (item.email) {
+                card += '<div class="card_1_line">' + item.email + '</div>';
+            }
+            if (item.phone) {
+                card += '<div class="card_1_line">' + item.phone + '</div>';
+            }
+            // Buttons default to type=submit if not set explicitly
+            card += '<button type="button" class="fright"><i class="icon icon-ok"> </i> ' + i18n.Yes + '</button></div></div>';
+            options += card;
+        }
+        // Buttons default to type=submit if not set explicitly
+        options += '<div class="dl-item"><button type="button" class="fright"><i class="icon icon-remove"> </i> ' + i18n.No + '</button></div></div>';
+        dupes_count.after(options);
+
+        // Scroll to this section
+        $('html,body').animate({scrollTop: dupes_count.offset().top}, 250);
+
+        // Add Event Handler to handle clicks
+        $(selector + '_results .dl-item').click(function() {
+            $this = $(this);
+            name = $this.attr('data-name');
+            if (name) {
+                // Yes: Select this person
+                $(selector + '_full_name').val(name);
+                var person_id = $this.attr('data-id');
+                // Remove results
+                clear_duplicates(fieldname);
+                if (dupes_count.data('submit')) {
+                    // Set to this value
+                    $(selector).val(person_id);
+                    // Complete form submission
+                    dupes_count.closest('form').submit();
+                } else {
+                    select_person(fieldname, person_id);
+                }
+            } else {
+                // No: Remove results
+                clear_duplicates(fieldname);
+                if (dupes_count.data('submit')) {
+                    // Complete form submission
+                    dupes_count.closest('form').submit();
+                }
+            }
+        });
+    };
+
+    /**
+     * Clear duplicates
+     */
+    var clear_duplicates = function(fieldname) {
+        var selector = '#' + fieldname;
+        $(selector + '_duplicates').data('results', [])
+                                   .empty();
+        $(selector + '_results').remove();
+    };
 
 }());

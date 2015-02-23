@@ -3,12 +3,11 @@
 # REST Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3rest.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3rest.py
 #
 import unittest
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Query
 from s3.s3rest import S3Request
 
 # =============================================================================

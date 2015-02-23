@@ -27,9 +27,9 @@ def document():
         s3db.gis_location_filter(r)
 
         if r.method in ("create", "create.popup"):
-            # Coming from Profile page
-            doc_id = request.get_vars.get("~.doc_id", None)
+            doc_id = get_vars.get("~.doc_id", None)
             if doc_id:
+                # Coming from Profile page
                 s3db.doc_document.doc_id.default = doc_id
 
         return True
@@ -103,7 +103,7 @@ def document_tabs(r):
                     (table.document_id == r.id)
             tab_count = db(query).count()
             if tab_count == 0:
-                label = crud_string(tablename, "title_create")
+                label = crud_string(tablename, "label_create")
             elif tab_count == 1:
                 label = tab_opt["one_title"]
             else:
@@ -111,20 +111,6 @@ def document_tabs(r):
             tabs.append( (label, tab_opt["resource"] ) )
 
     return tabs
-
-# =============================================================================
-def source():
-    """ RESTful CRUD controller """
-
-    # Pre-processor
-    def prep(r):
-        # Location Filter
-        s3db.gis_location_filter(r)
-        return True
-    s3.prep = prep
-
-    output = s3_rest_controller()
-    return output
 
 # =============================================================================
 def image():
@@ -136,30 +122,16 @@ def image():
         s3db.gis_location_filter(r)
 
         if r.method in ("create", "create.popup"):
-            # Coming from Profile page
-            doc_id = request.get_vars.get("~.doc_id", None)
+            doc_id = get_vars.get("~.doc_id", None)
             if doc_id:
+                # Coming from Profile page
                 s3db.doc_image.doc_id.default = doc_id
 
         return True
     s3.prep = prep
 
-    def postp(r, output):
-        if r.method == "update" and r.http == "POST":
-            points = r.vars.get("imagecrop-points")
-            if not points:
-                return output
-            filename = r.resource.records()[0]["file"]
-            points = map(float, points.split(","))
-            path = os.path.join(request.folder, "uploads", "images", filename)
-            current.s3task.async("crop_image",
-                args=[path] + points + [S3ImageCropWidget.DEFAULT_WIDTH])
-        return output
-    s3.postp = postp
-
     output = s3_rest_controller()
     return output
-
 
 # =============================================================================
 def bulk_upload():
@@ -234,5 +206,11 @@ def upload_bulk():
 
     response.headers["Content-Type"] = "text/html"  # This is what the file-uploader widget expects
     return json.dumps(msg)
+
+# -----------------------------------------------------------------------------
+def sitrep():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
 
 # END =========================================================================

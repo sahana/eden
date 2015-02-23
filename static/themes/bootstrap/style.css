@@ -72,6 +72,7 @@ input[class*="span"],
 select[class*="span"],
 textarea[class*="span"] {
     width: auto;
+    display: inline-block /*don't wrap help-block*/
 }
 
 /* Web2Py styles Inputs as x-large, which don't match other form inputs */
@@ -111,7 +112,12 @@ div.dl {
 .dl-2-cols {
     margin-left: 0;
 }
-.dl-col-0 {
+.dl-2-cols.dl-col-0,
+.dl-3-cols.dl-col-0,
+.dl-3-cols.dl-col-1,
+.dl-4-cols.dl-col-0,
+.dl-4-cols.dl-col-1,
+.dl-4-cols.dl-col-2 {
     margin-right: 8px;
 }
 
@@ -128,18 +134,6 @@ div.dl {
 /* Need long form to override widgets.css on normal button margin */
 .form-container form button.ui-datepicker-trigger {
     margin-left: 10px;
-}
-
-/* Match .btn.btn-primary */
-.delete-btn {
-    background-color: #006DCC;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    border-width: 1px;
-    border-radius: 4px 4px 4px 4px;
-    color: #FFFFFF;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-    line-height: 20px;
-    padding: 4px 12px;
 }
 
 /* Push down below Nav  */
@@ -182,6 +176,12 @@ a.btn.btn-primary.main-add {
     top: 24px;
 }
 
+/* GeoNames Search Results */
+.x-combo-list h1 {
+    font: 12px tahoma,arial,helvetica,sans-serif;
+    margin: 0;
+}
+
 /* Add button on Updates page & Disaster selection screen */
 a i.icon.icon-plus-sign.big-add:hover {
     text-decoration: none;
@@ -217,9 +217,15 @@ a i.icon.icon-plus-sign.big-add:hover {
     border-right: none;
 }
 
+/* in widgets.css
 .ui-dialog {
-	width: 600px !important;
+	width: 750px !important;
 	padding: 0;
+} */
+
+.popup .form-container form.form-horizontal {
+    border: none;
+    box-shadow: none;
 }
 
 /* Page Elements */
@@ -242,11 +248,14 @@ a i.icon.icon-plus-sign.big-add:hover {
     box-shadow: 0 1px 1px #aaaaa7;
 }
 
+div.form-container {
+    margin-bottom: 0;
+}
+
 div.form-container form.form-horizontal,
 form#datalist-filter-form,
 form#datatable-filter-form {
-    padding-top: 7px;
-    padding-left: 9px;
+    padding: 15px 5px 0 9px;
 }
 
 #list-filter {
@@ -263,7 +272,7 @@ form#datatable-filter-form {
 }
 
 #summary-tab-headers a {
-    border-color: #B2B2B2;
+    border-color: #b2b2b2;
 }
 
 #summary-tab-headers .ui-tabs-active a {
@@ -301,7 +310,7 @@ form.form-horizontal.project_project {
 
 /* Override Bootstrap */
 .form-horizontal .control-group {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 .form-horizontal .control-label {
     font-weight: bold;
@@ -313,10 +322,22 @@ body.rtl .form-horizontal .control-label {
     margin-top: 4px;
 }
 
-.form-container .help-block div {
-    position: relative;
-    top: -8px;
-    margin-bottom: -12px;
+.form-horizontal div.controls .help-block {
+    display: inline-block;
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+.s3_add_resource_link {
+    float: left;
+    margin: 8px 0 -8px 5px;
+}
+
+.form-container div.tooltip  {
+    float: left;
+    margin: 10px 0 -10px 5px;
+    background: url("../../img/help_on.gif") no-repeat scroll;
+    width: 20px;
 }
 
 /* Don't apply if s3.cancel=True */
@@ -331,37 +352,57 @@ body.rtl .form-horizontal .control-label {
     margin-right: -15px;
 }
 
+a.cancel-form-btn,
 #submit_record__row .btn-primary {
     padding: 5px 20px;
-    margin-left: 240px;
-    margin-right: 240px;
+    margin-left: 10px;
+    float: left;
+}
+
+a.cancel-form-btn {
+    margin-left: 40px;
+    margin-top: 6px;
+    text-decoration: none;
 }
 
 #delete-btn, 
 #edit-btn.btn.btn-primary,
 #show-add-btn {
-    padding: 1px 6px;
-    font-size: 10.5px;
+    padding: 2px 8px;
     -webkit-border-radius: 3px;
        -moz-border-radius: 3px;
             border-radius: 3px;
 }
 
-a.action-btn {
+/* Match .btn.btn-primary */
+a.cancel-form-btn,
+.action-btn,
+a.delete-btn {
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-radius: 4px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
     display: inline-block;
     *display: inline;
     padding: 1px 6px;
     margin-bottom: 0;
     *margin-left: .3em;
-    margin-right: -2px;
     font-size: 10.5px;
     line-height: 20px;
     *line-height: 20px;
-    color: #333333;
-    text-align: center;
-    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     vertical-align: middle;
     cursor: pointer;
+}
+.action-btn i.icon,
+a.delete-btn i.icon {
+    font-size: 13px;
+}
+
+.action-btn {
+    text-align: center;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
     background-color: #f5f5f5;
     *background-color: #e6e6e6;
     background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
@@ -370,14 +411,8 @@ a.action-btn {
     background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
     background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
     background-repeat: repeat-x;
-    border: 1px solid #bbbbbb;
     *border: 0;
-    border-color: #e6e6e6 #e6e6e6 #bfbfbf;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
     border-bottom-color: #a2a2a2;
-    -webkit-border-radius: 4px;
-     -moz-border-radius: 4px;
-          border-radius: 4px;
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
     *zoom: 1;
@@ -385,8 +420,9 @@ a.action-btn {
      -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
 }
- 
-a.action-btn:hover {
+
+.action-btn:hover,
+.action-btn:focus {
     color: #333333;
     text-decoration: none;
     background-color: #e6e6e6;
@@ -399,11 +435,26 @@ a.action-btn:hover {
           transition: background-position 0.1s linear;
 }
 
+a.cancel-form-btn,
+a.delete-btn,
 #delete-btn {
     color: #ffffff;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-color: #da4f49;
     *background-color: #bd362f;
+}
+
+a.cancel-form-btn:hover,
+a.delete-btn:hover,
+#delete-btn:hover{
+    color: #ffffff;
+    background-color: #bd362f;
+    *background-color: #a9302a;
+}
+
+a.cancel-form-btn,
+#delete-btn {
+    font-size: 13px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
     background-image: -moz-linear-gradient(top, #ee5f5b, #bd362f);
     background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#bd362f));
     background-image: -webkit-linear-gradient(top, #ee5f5b, #bd362f);
@@ -416,29 +467,22 @@ a.action-btn:hover {
     filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
 }
 
-#delete-btn:hover{
-    color: #ffffff;
-    background-color: #bd362f;
-    *background-color: #a9302a;
-}
-
 /* Required Fields */
 /* Better solution will be to use inline 'Optional' hints:
 http://www.usabilitycounts.com/2009/11/18/form-design-and-the-fallacy-of-the-required-field/
 http://uxmovement.com/forms/always-mark-optional-form-fields-not-required-ones/ */
-b.red {
+.req_key {
     position: absolute;
     z-index: 1;
-    margin-left: 7px;
-    /* This pushed it 'out of the way' on NYC so not easy to see (CRMT just pads it down a little, still looking worse, DRMP looks awful with this)
-    float: right;
-    margin-right: 7px;*/
-    margin-top: 5px;
+    margin: 7px 0 0 7px;
     font-size: 12px;
+}
+#component .req_key {
+    margin-top: 25px;
 }
 
 #last_update {
-    color: #D35400;
+    color: #d35400;
 }
 
 #markDuplicate {
@@ -450,14 +494,14 @@ b.red {
 }
 
 /* Location Selector */
-form.form-horizontal #map_panel {
+form.form-horizontal .map_wrapper {
     margin-left: 30px;	
     margin-bottom: 10px;
 }
 
 /* Help Tooltips */
 .cluetip-default{
-    background-color: #ffffff;
+    background-color: #fff;
     border: 1px solid #ccc;
     border: 1px solid rgba(0, 0, 0, 0.2);
     -webkit-border-radius: 6px;
@@ -504,8 +548,6 @@ form.form-horizontal #map_panel {
 table.embeddedComponent {
     border: 0;
     display: inline-block;
-    margin-bottom: 10px;
-    margin-top: 1px;
     border-radius: 4px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
@@ -528,8 +570,9 @@ table.embeddedComponent td {
 }
 
 table.embeddedComponent .add-row td {
-    padding-top: 5px;
+    padding: 0 10px 0 0;
 }
+
 .inline-add {
     background-image: url(../../img/bootstrap/add.png);
 }
@@ -627,8 +670,8 @@ label.ui-corner-all span {
 }
 
 .ui-widget-header {
-    border-color: #BBBBBB;
-    margin-bottom: 0px;
+    border-color: #bbb;
+    margin-bottom: 0;
     background: none;
     font-weight: normal;
 }
@@ -636,8 +679,26 @@ label.ui-corner-all span {
 .ui-widget-header .ui-icon-check,
 .ui-widget-header .ui-icon-closethick { 
     background: none;
-    height: 0px;
-    width: 0px;
+    height: 0;
+    width: 0;
+}
+
+.ui-multiselect-filter input {
+    width: 160px;
+    margin: 0;
+}
+
+.ui-widget-header.ui-corner-all.ui-multiselect-header.ui-helper-clearfix.ui-multiselect-hasfilter {
+    border: none;
+}
+
+.ui-multiselect-menu .ui-multiselect-checkboxes label {
+    margin-left: 0;
+    padding: 0 5px 6px 5px !important;
+}
+
+.ui-multiselect-checkboxes label.ui-state-hover {
+    border: 1px solid #aaa;
 }
 
 /* Responsive styling */
@@ -697,10 +758,9 @@ label.ui-corner-all span {
 #datatable_filter label {
     position: relative;
     padding-right: 25px;
-    margin-bottom: -37px;
     font-weight: bold;
-    margin-top: 7px;
-    margin-left: 13px;
+    margin-left: 10px;
+    margin-bottom: -5px;
 }
 
 .dataTables_info {
@@ -723,6 +783,7 @@ label.ui-corner-all span {
 
 .dataTables_length label select {
     width: auto;
+    margin-bottom: 0;
 }
 
 .dataTables_info,
@@ -737,20 +798,19 @@ label.ui-corner-all span {
 }
 
 .dataTables_info {
-    margin-top: 7px;
+    margin: 5px 30px 0px 5px;
 }
 
 .dataTables_wrapper {
     clear: none;
 }
 
-.list_formats {
-    margin-right: 20px;
-    top: 10px;
+.dt-export-options {
+    margin-right: 5px;
     font-size: 12px;
     padding: 0;
     position: relative;
-    z-index: 1000;
+    z-index: 1;
 }
 
 .dataTable thead tr {
@@ -776,7 +836,7 @@ label.ui-corner-all span {
 #table-container tr.odd td {
     border: 1px solid #d9d8d8;
     border-left: none;
-    padding: 10px 10px 10px 7px;
+    padding: 7px 0 7px 5px;
     font-size: 13px;
 }
 
@@ -844,26 +904,35 @@ label.ui-corner-all span {
     margin-right: auto;
 }
 
-#submit_record__row td.w2p_fw {
-    padding-top: 15px;
-    padding-left: 12px;
+/* Login page */
+.auth_login .control-label {
+    width: 80px;
 }
 
-/* Login page */
+.auth_login .controls {
+    margin-left: 90px;
+    white-space: pre;
+}
+
 #auth_user_email,
 #auth_user_password,
 #auth_user_password_two {
-    /*width: 100%;*/
     width: 300px;
-    margin-left: 10px;
-    margin-bottom: 10px;
 }
 
-#auth_user_remember__row td.w2p_fw div label {
-    width: 80%;
-    margin-left: 30px;
+#auth_user_remember__row label {
+    margin-left: 28px;
     margin-top: -19px;
-    margin-bottom: 10px;
+}
+
+.form-container .auth_login #submit_record__row .btn-primary {
+    margin-left: -70px;
+    margin-right: 0;
+}
+
+.dropdown-menu #register-btn {
+    /* Layout on page needs fixing */
+    display: none;
 }
 
 #email__error,
@@ -878,6 +947,74 @@ label.ui-corner-all span {
     background-color: #f2dedd;
 }
 
+.dropdown-menu input.btn {
+    /* Make appear on same row */
+    position: relative;
+    left: 150px;
+    top: -58px;
+}
+@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+    /* IE 10 */
+    .dropdown-menu form {
+        height: 100px;
+    }
+    .dropdown-menu input.btn {
+        left: 268px;
+    }
+}
+
+
+/* Registration Page */
+.auth_change_password .control-label,
+.auth_reset_password .control-label,
+.auth_register .control-label {
+    width: 140px;
+}
+
+.auth_change_password .controls,
+.auth_reset_password .controls,
+.auth_register .controls {
+    margin-left: 150px;
+}
+
+.auth_change_password #submit_record__row .btn-primary,
+.auth_register #submit_record__row .btn-primary {
+    margin-left: -10px;
+    margin-right: 0;
+}
+
+#auth_user_first_name,
+#auth_user_last_name,
+#auth_user_home,
+#auth_user_mobile,
+#auth_user_language,
+#auth_user_organisation_id,
+#auth_user_org_group_id,
+#auth_user_utc_offset {
+    width: 300px;
+}
+
+.password-min-char {
+    font-size: 12px;
+}
+
+#password-strength {
+    margin-left: 5px;
+    padding-left: 5px;
+}
+
+.password-strength-bar {
+    color: #2d2d2c;
+    padding-left: 12px;
+    border-radius: 3px;
+}
+
+.auth_change_password #submit_record__row .btn-primary,
+.auth_reset_password #submit_record__row .btn-primary {
+    margin-left: 10px;
+}
+
+/* Other pages */
 #acronym__error,
 #body__error,
 #name__error,
@@ -898,72 +1035,15 @@ label.ui-corner-all span {
     width: 277px !important;
 }
 
-#submit_record__row td.w2p_fw input.btn.btn-primary {
-    margin-right: 30px;
-    width: auto;
-    margin-bottom: 1px;
-    margin-left: 19px;
-}
-a#register-btn.action-lnk {
-    margin-left: -1px;
-}
-#submit_record__row td.w2p_fw {
-    padding-top: 5px;
-    padding-left: 10px;
-    position: relative;
-    left: -17px;
-}
-
-/* Registration Screen */
-
-#auth_user_first_name,
-#auth_user_last_name,
-#auth_user_mobile,
-#auth_user_language,
-#auth_user_utc_offset {
-    /*width: 100%;*/
-    width: 300px;
-    margin-left: 10px;
-    margin-bottom: 10px;
-}
-
-#auth_user_organisation_id__label {
-    width: 100px;
-}
-
-#auth_user_organisation_id {
-    margin-left: 10px;
-    width: 300px;
-}
-
-#auth_user_utc_offset__row td.w2p_fc div.tooltip {
-    margin-left: 15px;
-}
-
-span.password-min-char {
-    font-size: 12px;
-}
-
-div#password-strength {
-    margin-left: 5px;
-    padding-left: 5px;
-}
-
-span.password-strength-bar {
-    color: #2d2d2c;
-    padding-left: 12px;
-    border-radius: 3px;
-}
-
-div.toggle-div {
+/.toggle-div {
     cursor: pointer;
 }
-span.toggle-text i {
+.toggle-text i {
     margin-right: 5px;
 }
 
-/* Contacts Page */
-.form-container #pr_person_sub_human_resourcehuman_resource__label {
+* Contacts Page */
+#pr_person_sub_human_resourcehuman_resource__label {
     /* Hide the colon */
     display: none;
 }

@@ -2,7 +2,7 @@
 
 """ S3 Framework Tables
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3HierarchyModel"]
+__all__ = ("S3HierarchyModel",)
 
 from gluon import *
 from ..s3 import *
@@ -36,7 +36,7 @@ from ..s3 import *
 class S3HierarchyModel(S3Model):
     """ Model for stored object hierarchies, experimental """
 
-    names = ["s3_hierarchy"]
+    names = ("s3_hierarchy",)
 
     def model(self):
 

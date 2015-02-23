@@ -1,0 +1,83 @@
+{{extend "layout.html"}}{{theme=response.s3.theme}}
+
+<div class='row intro-row homepage-row'>
+  <div class='small-12 medium-2 large-2 columns'>
+    <img src='/{{=appname}}/static/themes/{{=theme}}/img/logo.png' alt=''/>
+  </div>
+  <div class='small-12 medium-10 large-10 columns'>
+    <div class='row'>
+      <h2 id='homepage-title'> {{=title}}</h2>
+      <hr>
+      <div class='panel'>
+        <p>
+        {{=T("Sahana Sunflower is the Sahana Software Foundation’s Community Management Tool. It is built using the Sahana Eden Open Source Disaster Management Platform.")}}
+        </p>
+        <div>
+          {{if not auth.is_logged_in():}}
+          <a class='button small radius' href='/{{=appname}}/default/user/login' role='button'>
+            {{=T("Login")}}
+          </a>
+          <a class='button small info radius' href='/{{=appname}}/default/user/register' role='button'>
+            {{=T("Register")}}
+          </a>
+          {{else:}}
+          <a class='button small radius' role='button' href='/{{=appname}}/pr/person/{{=s3_logged_in_person()}}'>
+            {{=T("Profile")}}
+          </a>
+          {{pass}}
+        </div>
+      </div>    
+    </div>
+  </div>
+</div>
+<div class='row about-row homepage-row'>
+  <div class='small-12 medium-12 large-7 columns'>
+    <div class='row' id='contribute-div'>
+    <h2>{{=ICON("contribute")}} {{=T("Contribute")}}</h2>
+    <p>New ?<a href="http://eden.sahanafoundation.org/wiki/Develop" target="_blank" id="wiki-develop"> Get started</a></p>
+        <div class='row contribute-btn'>
+          <a href='/{{=appname}}/project/task/create?bug=1' class='button alert tiny radius' role='button'>Report a Bug</a>
+          <a href='/{{=appname}}/project/task?~.status__belongs=2,3,4,11' class='button tiny radius' role='button'>Request Support</a>
+          <a href='/{{=appname}}/project/task/create?featureRequest=1' class='button tiny radius' role='button'>Feature Request</a>
+        </div>
+      <hr>
+      <div>
+        <h3>{{=ICON("tasks")}} {{=T("Tasks")}}</h3>
+        <a role='button' class='button tiny task-btn'>Create Task</a>
+        <a role='button' class='button tiny task-btn'>Work on a task</a>
+        <a role='button' class='button tiny task-btn'>My Tasks</a>
+      </div>
+    </div>
+    
+    <hr>
+    <div class='row'>
+        <div class='large-12 columns' id='deploy-div'>
+            <h2>{{=ICON("deploy")}} {{=T("Deploy")}}</h2>
+            <div>
+                <a class='button task-btn' href='http://eden.sahanafoundation.org/wiki/Use' target="_blank">Deploy Sahana Eden</a>
+            </div>  
+            <div>
+                <a class='button task-btn' href='http://eden.sahanafoundation.org/wiki/Deployments' target='_blank'>Learn about past deployments<a>
+            </div>
+            <div>
+                <a class='button task-btn' href='https://groups.google.com/forum/#!forum/sahana-eden' target='_blank'>Join the Community</a>
+            </div>
+        </div>
+    </div>
+  </div>
+  <hr class='show-for-small'/>
+  <hr class='show-for-medium'/>
+  <div class='small-12 medium-12 large-5 columns' id="updates-feed"> 
+    <h4>{{=ICON("rss")}}<b> {{=T("Updates Feed")}}</b></h4>
+    <div class='well'>
+     <div id='feed-control'>
+      <span>{{=T("Loading")}}...</span>
+     </div>
+     <div> &nbsp;
+       <a id='feed-url' type='button' class='pull-right btn btn-lg btn-primary' target='_blank'>
+        <i class='icon-rss'></i>
+       </a>
+     </div>
+    </div>
+  </div>
+</div>

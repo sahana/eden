@@ -3,7 +3,7 @@
 # S3XML Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3xml.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3xml.py
 #
 import unittest
 from gluon import *
@@ -16,10 +16,10 @@ except:
 
 from lxml import etree
 
-from s3.s3xml import S3XMLFormat
+from s3 import S3Hierarchy, s3_meta_fields, S3Represent, S3XMLFormat, IS_ONE_OF
 
 # =============================================================================
-class S3TreeBuilderTests(unittest.TestCase):
+class TreeBuilderTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testEmptyTree(self):
@@ -52,7 +52,7 @@ class S3TreeBuilderTests(unittest.TestCase):
         self.assertTrue("lonmax" in attrib)
 
 # =============================================================================
-class S3JSONMessageTests(unittest.TestCase):
+class JSONMessageTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testDefaultSuccessMessage(self):
@@ -178,7 +178,7 @@ class S3JSONMessageTests(unittest.TestCase):
         self.assertEqual(tree["test"], "value")
 
 # =============================================================================
-class S3XMLFormatTests(unittest.TestCase):
+class XMLFormatTests(unittest.TestCase):
     """ Test S3XMLFormat helper class """
 
     # -------------------------------------------------------------------------
@@ -264,6 +264,600 @@ class S3XMLFormatTests(unittest.TestCase):
         self.assertEqual(root.text, "Test")
 
 # =============================================================================
+class GetFieldOptionsTests(unittest.TestCase):
+    """ Test field options introspection method """
+
+    options = {1: "fixed option 1",
+               2: "fixed option 2",
+               3: "fixed option 3",
+               }
+
+    uuids = ("OPTION1", "OPTION2")
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        db = current.db
+        s3db = current.s3db
+
+        s3db.define_table("fotest_lookup_table",
+                          Field("name"),
+                          Field("parent", "reference fotest_lookup_table"),
+                          *s3_meta_fields())
+
+        data = ({"name": "option1", "uuid": cls.uuids[0]},
+                {"name": "option2", "uuid": cls.uuids[1]},
+                )
+
+        table = db.fotest_lookup_table
+        for item in data:
+            table.insert(**item)
+
+        options = cls.options
+        represent = S3Represent(lookup="fotest_lookup_table")
+        s3db.define_table("fotest_table",
+                          Field("fixed_set", "integer",
+                                requires = IS_EMPTY_OR(IS_IN_SET(options)),
+                                represent = S3Represent(options=options),
+                                ),
+                          Field("lookup", "reference fotest_lookup_table",
+                                requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db,
+                                                          "fotest_lookup_table.id",
+                                                          represent,
+                                                          )),
+                                represent = represent,
+                                ),
+                          Field("noopts"),
+                          *s3_meta_fields())
+        db.commit()
+                          
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        # Rollback
+        db = current.db
+        db.fotest_table.drop()
+        db.fotest_lookup_table.drop()
+        db.commit()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        # Override Auth
+        current.auth.override = True
+
+        db = current.db
+        table = db.fotest_lookup_table
+        self.records = db(table.uuid.belongs(self.uuids)).select().as_dict()
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        # Delete child node (if exists)
+        db = current.db
+        table = db.fotest_lookup_table
+        db(table.uuid == "OPTION3").delete()
+        
+        # Restore Auth
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testFixedOptionsSet(self):
+        """ Test options lookup with fixed options set (dict) """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        table = current.db.fotest_table
+
+        xml = current.xml
+        fo = xml.get_field_options(table, "fixed_set")
+        
+        assertTrue(isinstance(fo, etree._Element))
+        assertEqual(fo.tag, "select")
+
+        ATTRIBUTE = xml.ATTRIBUTE
+        VALUE = ATTRIBUTE.value
+        options = self.options
+        
+        has_empty = False
+        self.assertEqual(len(fo), len(options) + 1)
+        for opt in fo:
+            assertEqual(opt.tag, "option")
+            
+            attr = opt.attrib
+            assertTrue(VALUE in attr)
+            
+            value = attr[VALUE]
+            if value == "":
+                has_empty = True
+                assertEqual(opt.text, "")
+                continue
+            else:
+                value = int(value)
+                
+            assertTrue(value in options)
+            assertEqual(opt.text, options[value])
+            
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testForeignKey(self):
+        """ Test options lookup with foreign key constraint """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        table = current.db.fotest_table
+
+        xml = current.xml
+        fo = xml.get_field_options(table, "lookup")
+
+        assertTrue(isinstance(fo, etree._Element))
+        assertEqual(fo.tag, "select")
+
+        ATTRIBUTE = xml.ATTRIBUTE
+        VALUE = ATTRIBUTE.value
+        options = self.records
+
+        has_empty = False
+        self.assertEqual(len(fo), len(options) + 1)
+        for opt in fo:
+            assertEqual(opt.tag, "option")
+
+            attr = opt.attrib
+            assertTrue(VALUE in attr)
+
+            value = attr[VALUE]
+            if value == "":
+                has_empty = True
+                assertEqual(opt.text, "")
+                continue
+            else:
+                value = int(value)
+
+            assertTrue(value in options)
+            assertEqual(opt.text, options[value]["name"])
+
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testFieldWithoutOptions(self):
+        """ Test options lookup for field without options """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        table = current.db.fotest_table
+
+        xml = current.xml
+        fo = xml.get_field_options(table, "noopts")
+
+        assertTrue(isinstance(fo, etree._Element))
+        assertEqual(fo.tag, "select")
+        assertEqual(len(fo), 0,
+                    msg = "Options reported for field without options")
+
+    # -------------------------------------------------------------------------
+    def testShowUIDs(self):
+        """ Test options lookup with foreign key constraint including UIDs """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        table = current.db.fotest_table
+
+        xml = current.xml
+        fo = xml.get_field_options(table, "lookup", show_uids=True)
+
+        assertTrue(isinstance(fo, etree._Element))
+        assertEqual(fo.tag, "select")
+
+        ATTRIBUTE = xml.ATTRIBUTE
+        VALUE = ATTRIBUTE.value
+        UID = xml.UID
+        options = self.records
+
+        has_empty = False
+        self.assertEqual(len(fo), len(options) + 1)
+        for opt in fo:
+            assertEqual(opt.tag, "option")
+
+            attr = opt.attrib
+            assertTrue(VALUE in attr)
+
+            value = attr[VALUE]
+            if value == "":
+                has_empty = True
+                self.assertFalse(UID in attr)
+                assertEqual(opt.text, "")
+                continue
+            else:
+                value = int(value)
+
+            assertTrue(UID in attr)
+            assertEqual(attr[UID], options[value]["uuid"])
+            assertTrue(value in options)
+            assertEqual(opt.text, options[value]["name"])
+
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testWithHierarchyInfo(self):
+        """ Test options lookup with foreign key constraint with hierarchy info """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        db = current.db
+        s3db = current.s3db
+        table = db.fotest_lookup_table
+
+        # Configure parent-field
+        represent = S3Represent(lookup="fotest_lookup_table")
+        table.parent.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db,
+                                                "fotest_lookup_table.id",
+                                                represent,
+                                                ))
+        table.parent.requires = represent
+
+        # Configure hierarchy
+        s3db.configure("fotest_lookup_table", hierarchy="parent")
+        S3Hierarchy.dirty("fotest_lookup_table")
+
+        # Insert a child node
+        options = dict(self.records)
+        child_node = {"name": "option3",
+                      "uuid": "OPTION3",
+                      "parent": options.keys()[0],
+                      }
+        child_id = table.insert(**child_node)
+        options[child_id] = child_node
+
+        xml = current.xml
+        table = db.fotest_table
+        fo = xml.get_field_options(table, "lookup", show_uids=True, hierarchy=True)
+
+        assertTrue(isinstance(fo, etree._Element))
+        assertEqual(fo.tag, "select")
+
+        ATTRIBUTE = xml.ATTRIBUTE
+        VALUE = ATTRIBUTE.value
+        PARENT = ATTRIBUTE.parent
+        UID = xml.UID
+        
+        has_empty = False
+        self.assertEqual(len(fo), len(options) + 1)
+        for opt in fo:
+            assertEqual(opt.tag, "option")
+
+            attr = opt.attrib
+            assertTrue(VALUE in attr)
+
+            value = attr[VALUE]
+            if value == "":
+                has_empty = True
+                self.assertFalse(UID in attr)
+                assertEqual(opt.text, "")
+                continue
+            else:
+                value = int(value)
+
+            assertTrue(UID in attr)
+            assertEqual(attr[UID], options[value]["uuid"])
+            assertTrue(value in options)
+            assertEqual(opt.text, options[value]["name"])
+
+            if "parent" in options[value] and options[value]["parent"]:
+                assertTrue(PARENT in attr)
+                assertEqual(attr[PARENT], str(options[value]["parent"]))
+
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testExportOptionsXML(self):
+        """ Test Export Options (all options, XML) """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        options = dict(self.records)
+        
+        # Request options
+        resource = current.s3db.resource("fotest_table")
+        result = resource.export_options(fields=["lookup"])
+        fo = etree.XML(result)
+
+        # Inspect result
+        xml = current.xml
+        ATTRIBUTE = xml.ATTRIBUTE
+        VALUE = ATTRIBUTE.value
+        UID = xml.UID
+
+        has_empty = False
+        self.assertEqual(len(fo), len(options) + 1)
+        for opt in fo:
+            assertEqual(opt.tag, "option")
+            attr = opt.attrib
+            assertTrue(VALUE in attr)
+            value = attr[VALUE]
+            if value == "":
+                has_empty = True
+                self.assertFalse(UID in attr)
+                assertEqual(opt.text, None)
+                continue
+            else:
+                value = int(value)
+            assertTrue(value in options)
+            assertEqual(opt.text, options[value]["name"])
+            
+        assertTrue(has_empty, msg="Empty-option missing")
+        
+    # -------------------------------------------------------------------------
+    def testExportOptionsXMLHierarchy(self):
+        """ Test Export Options (all options, XML+hierarchy) """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        # Configure parent-field
+        db = current.db
+        table = db.fotest_lookup_table
+        represent = S3Represent(lookup="fotest_lookup_table")
+        table.parent.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db,
+                                                "fotest_lookup_table.id",
+                                                represent,
+                                                ))
+        table.parent.requires = represent
+
+        # Configure hierarchy
+        s3db = current.s3db
+        s3db.configure("fotest_lookup_table", hierarchy="parent")
+        S3Hierarchy.dirty("fotest_lookup_table")
+
+        # Insert a child node
+        options = dict(self.records)
+        child_node = {"name": "option3",
+                      "uuid": "OPTION3",
+                      "parent": options.keys()[0],
+                      }
+        child_id = table.insert(**child_node)
+        options[child_id] = child_node
+
+        # Request options
+        resource = s3db.resource("fotest_table")
+        result = resource.export_options(fields=["lookup"], hierarchy=True)
+        fo = etree.XML(result)
+
+        # Inspect result
+        xml = current.xml
+        ATTRIBUTE = xml.ATTRIBUTE
+        VALUE = ATTRIBUTE.value
+        PARENT = ATTRIBUTE.parent
+        UID = xml.UID
+
+        has_empty = False
+        self.assertEqual(len(fo), len(options) + 1)
+        for opt in fo:
+            assertEqual(opt.tag, "option")
+
+            attr = opt.attrib
+            assertTrue(VALUE in attr)
+
+            value = attr[VALUE]
+            if value == "":
+                has_empty = True
+                self.assertFalse(UID in attr)
+                assertEqual(opt.text, None)
+                continue
+            else:
+                value = int(value)
+
+            assertTrue(value in options)
+            assertEqual(opt.text, options[value]["name"])
+            
+            if "parent" in options[value] and options[value]["parent"]:
+                assertTrue(PARENT in attr)
+                assertEqual(attr[PARENT], str(options[value]["parent"]))
+
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testExportOptionsAllOptsJSON(self):
+        """ Test export options, JSON, all options """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        options = dict(self.records)
+
+        # Request options
+        resource = current.s3db.resource("fotest_table")
+        result = resource.export_options(fields=["lookup"],
+                                         as_json=True)
+        fo = json.loads(result)
+
+        # Inspect result
+        has_empty = False
+        assertTrue(isinstance(fo, dict))
+        assertTrue("option" in fo)
+        assertTrue(isinstance(fo["option"], list))
+        assertEqual(len(fo["option"]), len(options) + 1)
+        for opt in fo["option"]:
+            value = opt["@value"]
+            if value == "":
+                has_empty = True
+                self.assertFalse("$" in opt)
+                continue
+            else:
+                value = int(value)
+            assertTrue(value in options)
+            assertEqual(opt["$"], options[value]["name"])
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testExportOptionsAllOptsJSONHierarchy(self):
+        """ Test export options, JSON, all options+hierarchy """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        # Configure parent-field
+        db = current.db
+        table = db.fotest_lookup_table
+        represent = S3Represent(lookup="fotest_lookup_table")
+        table.parent.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db,
+                                                "fotest_lookup_table.id",
+                                                represent,
+                                                ))
+        table.parent.requires = represent
+
+        # Configure hierarchy
+        s3db = current.s3db
+        s3db.configure("fotest_lookup_table", hierarchy="parent")
+        S3Hierarchy.dirty("fotest_lookup_table")
+
+        # Insert a child node
+        options = dict(self.records)
+        child_node = {"name": "option3",
+                      "uuid": "OPTION3",
+                      "parent": options.keys()[0],
+                      }
+        child_id = table.insert(**child_node)
+        options[child_id] = child_node
+
+        # Request options
+        resource = s3db.resource("fotest_table")
+        result = resource.export_options(fields=["lookup"],
+                                         hierarchy=True,
+                                         as_json=True)
+        fo = json.loads(result)
+
+        # Inspect result
+        has_empty = False
+        assertTrue(isinstance(fo, dict))
+        assertTrue("option" in fo)
+        assertTrue(isinstance(fo["option"], list))
+        assertEqual(len(fo["option"]), len(options) + 1)
+        for opt in fo["option"]:
+            value = opt["@value"]
+            if value == "":
+                has_empty = True
+                self.assertFalse("$" in opt)
+                continue
+            else:
+                value = int(value)
+            assertTrue(value in options)
+            assertEqual(opt["$"], options[value]["name"])
+            if "parent" in options[value] and options[value]["parent"]:
+                assertTrue("@parent" in opt)
+                assertEqual(opt["@parent"], str(options[value]["parent"]))
+
+        assertTrue(has_empty, msg="Empty-option missing")
+
+    # -------------------------------------------------------------------------
+    def testExportOptionsLastOptJSON(self):
+        """ Test export of last option, JSON """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        options = dict(self.records)
+
+        # Get the last record
+        db = current.db
+        table = db.fotest_lookup_table
+        last = db(table.id>0).select(limitby=(0, 1),
+                                     orderby=~table.id).first()
+        self.assertNotEqual(last, None)
+
+        # Request last option
+        resource = current.s3db.resource("fotest_table")
+        result = resource.export_options(fields=["lookup"],
+                                         only_last=True,
+                                         as_json=True)
+        fo = json.loads(result)
+
+        # Inspect result
+        assertTrue(isinstance(fo, dict))
+        
+        assertTrue("option" in fo)
+        assertTrue(isinstance(fo["option"], list))
+        assertEqual(len(fo["option"]), 1)
+        
+        opt = fo["option"][0]
+        value = opt["@value"]
+        assertEqual(options[value]["uuid"], last.uuid)
+        assertEqual(opt["$"], options[value]["name"])
+
+    # -------------------------------------------------------------------------
+    def testExportOptionsLastOptJSONHierarchy(self):
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        db = current.db
+        s3db = current.s3db
+        
+        # Configure parent-field
+        table = db.fotest_lookup_table
+        represent = S3Represent(lookup="fotest_lookup_table")
+        table.parent.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db,
+                                                "fotest_lookup_table.id",
+                                                represent,
+                                                ))
+        table.parent.requires = represent
+
+        # Configure hierarchy
+        s3db.configure("fotest_lookup_table", hierarchy="parent")
+        S3Hierarchy.dirty("fotest_lookup_table")
+
+        # Insert a child node
+        options = dict(self.records)
+        child_node = {"name": "option3",
+                      "uuid": "OPTION3",
+                      "parent": options.keys()[0],
+                      }
+        child_id = table.insert(**child_node)
+        options[child_id] = child_node
+
+        # Get the last record
+        table = db.fotest_lookup_table
+        last = db(table.id>0).select(limitby=(0, 1),
+                                     orderby=~table.id).first()
+        self.assertNotEqual(last, None)
+
+        # Request last option
+        resource = s3db.resource("fotest_table")
+        result = resource.export_options(fields=["lookup"],
+                                         only_last=True,
+                                         hierarchy=True,
+                                         as_json=True)
+        fo = json.loads(result)
+
+        # Inspect result
+        assertTrue(isinstance(fo, dict))
+        
+        assertTrue("option" in fo)
+        assertTrue(isinstance(fo["option"], list))
+        assertEqual(len(fo["option"]), 1)
+        
+        opt = fo["option"][0]
+        value = opt["@value"]
+        assertEqual(options[value]["uuid"], last.uuid)
+        assertEqual(opt["$"], options[value]["name"])
+        
+        assertTrue("@parent" in opt)
+        assertEqual(opt["@parent"], str(options[value]["parent"]))
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -279,9 +873,10 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
-        S3TreeBuilderTests,
-        S3JSONMessageTests,
-        S3XMLFormatTests,
+        TreeBuilderTests,
+        JSONMessageTests,
+        XMLFormatTests,
+        GetFieldOptionsTests,
     )
 
 # END ========================================================================

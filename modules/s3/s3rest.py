@@ -2,7 +2,7 @@
 
 """ S3 RESTful API
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,6 +27,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3Request",
+           "S3Method",
+           "s3_request",
+           )
+
 import datetime
 import os
 import re
@@ -48,7 +53,6 @@ except ImportError:
 
 from gluon import *
 # Here are dependencies listed for reference:
-#from gluon.dal import Field
 #from gluon.globals import current
 #from gluon.html import A, DIV, URL
 #from gluon.http import HTTP, redirect
@@ -56,7 +60,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3resource import S3Resource
-from s3utils import s3_store_last_record_id, s3_remove_last_record_id
+from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
 
 REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
 
@@ -109,7 +113,6 @@ class S3Request(object):
         """
 
         # Common settings
-        self.UNAUTHORISED = current.T("Not Authorized")
 
         # XSLT Paths
         self.XSLT_PATH = "static/formats"
@@ -117,7 +120,7 @@ class S3Request(object):
 
         # Attached files
         self.files = Storage()
-        
+
         # Allow override of controller/function
         self.controller = c or self.controller
         self.function = f or self.function
@@ -154,7 +157,7 @@ class S3Request(object):
             self.vars = vars
             self.get_vars = vars
             self.post_vars = Storage()
-            
+
         self.extension = extension or current.request.extension
         self.http = http or current.request.env.request_method
 
@@ -170,17 +173,17 @@ class S3Request(object):
         # Parse the request
         self.__parse()
         self.custom_action = None
-        vars = Storage(self.get_vars)
+        get_vars = Storage(self.get_vars)
 
         # Interactive representation format?
         self.interactive = self.representation in self.INTERACTIVE_FORMATS
 
         # Show information on deleted records?
         include_deleted = False
-        if self.representation == "xml" and "include_deleted" in vars:
+        if self.representation == "xml" and "include_deleted" in get_vars:
             include_deleted = True
-        if "components" in vars:
-            cnames = vars["components"]
+        if "components" in get_vars:
+            cnames = get_vars["components"]
             if isinstance(cnames, list):
                 cnames = ",".join(cnames)
             cnames = cnames.split(",")
@@ -194,14 +197,14 @@ class S3Request(object):
         component_id = self.component_id
         if component_name and component_id:
             varname = "%s.id" % component_name
-            if varname in vars:
-                var = vars[varname]
+            if varname in get_vars:
+                var = get_vars[varname]
                 if not isinstance(var, (list, tuple)):
                     var = [var]
                 var.append(component_id)
-                vars[varname] = var
+                get_vars[varname] = var
             else:
-                vars[varname] = component_id
+                get_vars[varname] = component_id
 
         # Define the target resource
         _filter = current.response.s3.filter
@@ -218,7 +221,7 @@ class S3Request(object):
         self.resource = S3Resource(tablename,
                                    id=self.id,
                                    filter=_filter,
-                                   vars=vars,
+                                   vars=get_vars,
                                    components=components,
                                    approved=approved,
                                    unapproved=unapproved,
@@ -232,14 +235,14 @@ class S3Request(object):
 
         # Try to load the master record
         self.record = None
-        uid = self.vars.get("%s.uid" % self.name, None)
+        uid = self.vars.get("%s.uid" % self.name)
         if self.id or uid and not isinstance(uid, (list, tuple)):
             # Single record expected
             self.resource.load()
             if len(self.resource) == 1:
                 self.record = self.resource.records().first()
-                id = table._id.name
-                self.id = self.record[id]
+                _id = table._id.name
+                self.id = self.record[_id]
                 s3_store_last_record_id(self.tablename, self.id)
             else:
                 error = current.ERROR.BAD_RECORD
@@ -257,7 +260,7 @@ class S3Request(object):
         self.multiple = True # @todo: deprecate
 
         if self.component_name:
-            c = self.resource.components.get(self.component_name, None)
+            c = self.resource.components.get(self.component_name)
             if c:
                 self.component = c
                 self.pkey, self.fkey = c.pkey, c.fkey # @todo: deprecate
@@ -419,7 +422,7 @@ class S3Request(object):
             resource = self.resource
         prefix, name = self.prefix, self.name
         component_name = self.component_name
-                
+
         custom_action = current.s3db.get_method(prefix,
                                                 name,
                                                 component_name=component_name,
@@ -430,7 +433,7 @@ class S3Request(object):
 
         if method and custom_action:
             handler = custom_action
-            
+
         if http == "GET":
             if not method:
                 if resource.count() == 1:
@@ -439,21 +442,21 @@ class S3Request(object):
                     method = "list"
             transform = self.transformable()
             handler = self.get_handler(method, transform=transform)
-            
+
         elif http == "PUT":
             transform = self.transformable(method="import")
             handler = self.get_handler(method, transform=transform)
-            
+
         elif http == "POST":
             transform = self.transformable(method="import")
             return self.get_handler(method, transform=transform)
-                
+
         elif http == "DELETE":
             if method:
                 return self.get_handler(method)
             else:
                 return self.get_handler("delete")
-                
+
         else:
             return None
 
@@ -524,16 +527,11 @@ class S3Request(object):
             if not self.component_id:
                 self.component_id = f[2][1]
 
-        # ?format= overrides extensions
-        if "format" in self.vars:
-            ext = self.vars["format"]
-            if isinstance(ext, list):
-                ext = ext[-1]
-            representation = ext or representation
-        if not representation:
-            self.representation = self.DEFAULT_REPRESENTATION
+        representation = s3_get_extension(self)
+        if representation:
+            self.representation = representation
         else:
-            self.representation = representation.lower()
+            self.representation = self.DEFAULT_REPRESENTATION
         return
 
     # -------------------------------------------------------------------------
@@ -564,20 +562,21 @@ class S3Request(object):
                 if self.vars is not None and count == 1:
                     self.resource.load()
                     self.record = self.resource._rows[0]
+                    self.id = self.record.id
                 else:
                     #current.session.error = current.ERROR.BAD_RECORD
                     redirect(URL(r=self, c=self.prefix, f=self.name))
 
         # Pre-process
         if s3 is not None:
-            preprocess = s3.get("prep", None)
+            preprocess = s3.get("prep")
         if preprocess:
             pre = preprocess(self)
             # Re-read representation after preprocess:
             representation = self.representation
             if pre and isinstance(pre, dict):
                 bypass = pre.get("bypass", False) is True
-                output = pre.get("output", None)
+                output = pre.get("output")
                 if not bypass:
                     success = pre.get("success", True)
                     if not success:
@@ -638,7 +637,7 @@ class S3Request(object):
 
         # Post-process
         if s3 is not None:
-            postprocess = s3.get("postp", None)
+            postprocess = s3.get("postp")
         if postprocess is not None:
             output = postprocess(self, output)
         if output is not None and isinstance(output, dict):
@@ -650,11 +649,13 @@ class S3Request(object):
         if self.next is not None and \
            (self.http != "GET" or self.method == "clear"):
             if isinstance(output, dict):
-                form = output.get("form", None)
+                form = output.get("form")
                 if form:
                     if not hasattr(form, "errors"):
-                        form = form[0]
-                    if form.errors:
+                        # Form embedded in a DIV together with other components
+                        form = form.elements('form', first_only=True)
+                        form = form[0] if form else None
+                    if form and form.errors:
                         return output
 
             session = current.session
@@ -717,12 +718,9 @@ class S3Request(object):
 
         elif method == "clear" and not self.component:
             s3_remove_last_record_id(self.tablename)
-            if "_next" in self.vars:
-                request_vars = dict(_next=self._next)
-            else:
-                request_vars = {}
             self.next = URL(r=self, f=self.name)
             return lambda r, **attr: None
+
         elif self.transformable():
             transform = True
 
@@ -788,17 +786,17 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
+        get_vars = r.get_vars
         args = Storage()
 
         # Slicing
-        start = _vars.get("start", None)
+        start = get_vars.get("start")
         if start is not None:
             try:
                 start = int(start)
             except ValueError:
                 start = None
-        limit = _vars.get("limit", None)
+        limit = get_vars.get("limit")
         if limit is not None:
             try:
                 limit = int(limit)
@@ -806,7 +804,7 @@ class S3Request(object):
                 limit = None
 
         # msince
-        msince = _vars.get("msince", None)
+        msince = get_vars.get("msince")
         if msince is not None:
             tfmt = current.xml.ISOFORMAT
             try:
@@ -817,26 +815,26 @@ class S3Request(object):
                 msince = None
 
         # Show IDs (default: False)
-        if "show_ids" in _vars:
-            if _vars["show_ids"].lower() == "true":
+        if "show_ids" in get_vars:
+            if get_vars["show_ids"].lower() == "true":
                 current.xml.show_ids = True
 
         # Show URLs (default: True)
-        if "show_urls" in _vars:
-            if _vars["show_urls"].lower() == "false":
+        if "show_urls" in get_vars:
+            if get_vars["show_urls"].lower() == "false":
                 current.xml.show_urls = False
 
         # Maxbounds (default: False)
         maxbounds = False
-        if "maxbounds" in _vars:
-            if _vars["maxbounds"].lower() == "true":
+        if "maxbounds" in get_vars:
+            if get_vars["maxbounds"].lower() == "true":
                 maxbounds = True
         if r.representation in ("gpx", "osm"):
             maxbounds = True
 
         # Components of the master resource (tablenames)
-        if "mcomponents" in _vars:
-            mcomponents = _vars["mcomponents"]
+        if "mcomponents" in get_vars:
+            mcomponents = get_vars["mcomponents"]
             if str(mcomponents).lower() == "none":
                 mcomponents = None
             elif not isinstance(mcomponents, list):
@@ -845,8 +843,8 @@ class S3Request(object):
             mcomponents = [] # all
 
         # Components of referenced resources (tablenames)
-        if "rcomponents" in _vars:
-            rcomponents = _vars["rcomponents"]
+        if "rcomponents" in get_vars:
+            rcomponents = get_vars["rcomponents"]
             if str(rcomponents).lower() == "none":
                 rcomponents = None
             elif not isinstance(rcomponents, list):
@@ -855,15 +853,15 @@ class S3Request(object):
             rcomponents = None
 
         # Maximum reference resolution depth
-        if "maxdepth" in _vars:
+        if "maxdepth" in get_vars:
             try:
-                args["maxdepth"] = int(_vars["maxdepth"])
+                args["maxdepth"] = int(get_vars["maxdepth"])
             except ValueError:
                 pass
 
         # References to resolve (field names)
-        if "references" in _vars:
-            references = _vars["references"]
+        if "references" in get_vars:
+            references = get_vars["references"]
             if str(references).lower() == "none":
                 references = []
             elif not isinstance(references, list):
@@ -872,8 +870,8 @@ class S3Request(object):
             references = None # all
 
         # Export field selection
-        if "fields" in _vars:
-            fields = _vars["fields"]
+        if "fields" in get_vars:
+            fields = get_vars["fields"]
             if str(fields).lower() == "none":
                 fields = []
             elif not isinstance(fields, list):
@@ -891,7 +889,7 @@ class S3Request(object):
                             component=r.component.tablename)
                 if r.component.alias:
                     args.update(alias=r.component.alias)
-            mode = _vars.get("xsltmode", None)
+            mode = get_vars.get("xsltmode")
             if mode is not None:
                 args.update(mode=mode)
 
@@ -939,19 +937,19 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
+        get_vars = r.get_vars
 
         # Skip invalid records?
-        if "ignore_errors" in _vars:
+        if "ignore_errors" in get_vars:
             ignore_errors = True
         else:
             ignore_errors = False
 
         # Find all source names in the URL vars
-        def findnames(_vars, name):
+        def findnames(get_vars, name):
             nlist = []
-            if name in _vars:
-                names = _vars[name]
+            if name in get_vars:
+                names = get_vars[name]
                 if isinstance(names, (list, tuple)):
                     names = ",".join(names)
                 names = names.split(",")
@@ -961,8 +959,8 @@ class S3Request(object):
                     else:
                         nlist.append([None, n])
             return nlist
-        filenames = findnames(_vars, "filename")
-        fetchurls = findnames(_vars, "fetchurl")
+        filenames = findnames(get_vars, "filename")
+        fetchurls = findnames(get_vars, "fetchurl")
         source_url = None
 
         # Get the source(s)
@@ -1008,13 +1006,13 @@ class S3Request(object):
         stylesheet = r.stylesheet(method="import")
         # Target IDs
         if r.method == "create":
-            id = None
+            _id = None
         else:
-            id = r.id
+            _id = r.id
 
         # Transformation mode?
-        if "xsltmode" in _vars:
-            args = dict(xsltmode=_vars["xsltmode"])
+        if "xsltmode" in get_vars:
+            args = dict(xsltmode=get_vars["xsltmode"])
         else:
             args = dict()
         # These 3 options are called by gis.show_map() & read by the
@@ -1023,11 +1021,11 @@ class S3Request(object):
         if source_url:
             args["source_url"] = source_url
         # Data Field: For GeoRSS/KML Feed popups
-        if "data_field" in _vars:
-            args["data_field"] = _vars["data_field"]
+        if "data_field" in get_vars:
+            args["data_field"] = get_vars["data_field"]
         # Image Field: For GeoRSS/KML Feed popups
-        if "image_field" in _vars:
-            args["image_field"] = _vars["image_field"]
+        if "image_field" in get_vars:
+            args["image_field"] = get_vars["image_field"]
 
         # Format type?
         if format in json_formats:
@@ -1039,7 +1037,7 @@ class S3Request(object):
 
         try:
             output = r.resource.import_xml(source,
-                                           id=id,
+                                           id=_id,
                                            format=format,
                                            files=r.files,
                                            stylesheet=stylesheet,
@@ -1073,10 +1071,10 @@ class S3Request(object):
         else:
             as_json = False
             content_type = "text/xml"
-        _vars = r.get_vars
-        meta = str(_vars.get("meta", False)).lower() == "true"
-        opts = str(_vars.get("options", False)).lower() == "true"
-        refs = str(_vars.get("references", False)).lower() == "true"
+        get_vars = r.get_vars
+        meta = str(get_vars.get("meta", False)).lower() == "true"
+        opts = str(get_vars.get("options", False)).lower() == "true"
+        refs = str(get_vars.get("references", False)).lower() == "true"
         stylesheet = r.stylesheet()
         output = r.resource.export_struct(meta=meta,
                                           options=opts,
@@ -1123,9 +1121,9 @@ class S3Request(object):
             @param attr: controller attributes
         """
 
-        _vars = r.get_vars
-        if "field" in _vars:
-            items = _vars["field"]
+        get_vars = r.get_vars
+        if "field" in get_vars:
+            items = get_vars["field"]
             if not isinstance(items, (list, tuple)):
                 items = [items]
             fields = []
@@ -1136,33 +1134,43 @@ class S3Request(object):
                     add_fields(f)
         else:
             fields = None
-        only_last = False
-        if "only_last" in _vars:
-            only_last = _vars["only_last"]
-        show_uids = False
-        if "show_uids" in _vars:
-            v = _vars["show_uids"]
-            if isinstance(v, (list, tuple)):
-                v = v[-1]
-            if v.lower() == "true":
-                show_uids = True
-        component = r.component_name
+
+        if "hierarchy" in get_vars:
+            hierarchy = get_vars["hierarchy"].lower() not in ("false", "0")
+        else:
+            hierarchy = False
+
+        if "only_last" in get_vars:
+            only_last = get_vars["only_last"].lower() not in ("false", "0")
+        else:
+            only_last = False
+
+        if "show_uids" in get_vars:
+            show_uids = get_vars["show_uids"].lower() not in ("false", "0")
+        else:
+            show_uids = False
+
         representation = r.representation
         if representation == "xml":
-            output = r.resource.export_options(component=component,
-                                               fields=fields,
-                                               show_uids=show_uids)
+            only_last = False
+            as_json = False
             content_type = "text/xml"
         elif representation == "s3json":
-            output = r.resource.export_options(component=component,
-                                               fields=fields,
-                                               only_last=only_last,
-                                               as_json=True)
+            show_uids = False
+            as_json = True
             content_type = "application/json"
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
-        response = current.response
-        response.headers["Content-Type"] = content_type
+
+        component = r.component_name
+        output = r.resource.export_options(component=component,
+                                           fields=fields,
+                                           show_uids=show_uids,
+                                           only_last=only_last,
+                                           hierarchy=hierarchy,
+                                           as_json=as_json)
+
+        current.response.headers["Content-Type"] = content_type
         return output
 
     # -------------------------------------------------------------------------
@@ -1183,13 +1191,13 @@ class S3Request(object):
             Called upon S3Request.<key> - looks up the value for the <key>
             attribute. Falls back to current.request if the attribute is
             not defined in this S3Request.
-            
+
             @param key: the key to lookup
         """
 
         if key in self.__dict__:
             return self.__dict__[key]
-            
+
         sentinel = object()
         value = getattr(current.request, key, sentinel)
         if value is sentinel:
@@ -1209,7 +1217,7 @@ class S3Request(object):
 
         stylesheet = self.stylesheet(method=method, skip_error=True)
 
-        if self.representation != "xml" and not stylesheet:
+        if not stylesheet and self.representation != "xml":
             return False
         else:
             return True
@@ -1296,7 +1304,8 @@ class S3Request(object):
             target=None,
             method=None,
             representation=None,
-            vars=None):
+            vars=None,
+            host=None):
         """
             Returns the URL of this request, use parameters to override
             current requests attributes:
@@ -1312,6 +1321,7 @@ class S3Request(object):
             @param method: the URL method
             @param representation: the representation for the URL
             @param vars: the URL query variables
+            @param host: string to force absolute URL with host (True means http_host)
 
             Particular behavior:
                 - changing the master record ID resets the component ID
@@ -1331,7 +1341,6 @@ class S3Request(object):
             del vars["format"]
 
         args = []
-        read = False
 
         cname = self.component_name
 
@@ -1376,7 +1385,7 @@ class S3Request(object):
             component = None
         if cname and cname != component or not component:
             component_id = 0
-        
+
         # component_id
         if component_id is None:
             component_id = self.component_id
@@ -1413,7 +1422,9 @@ class S3Request(object):
         return URL(r=self,
                    c=self.controller,
                    f=f,
-                   args=args, vars=vars)
+                   args=args,
+                   vars=vars,
+                   host=host)
 
     # -------------------------------------------------------------------------
     def target(self):
@@ -1502,15 +1513,15 @@ class S3Request(object):
         """
 
         self.files = Storage()
-        content_type = self.env.get("content_type", None)
+        content_type = self.env.get("content_type")
 
         source = []
         if content_type and content_type.startswith("multipart/"):
             import cgi
             ext = ".%s" % self.representation
-            vars = self.post_vars
-            for v in vars:
-                p = vars[v]
+            post_vars = self.post_vars
+            for v in post_vars:
+                p = post_vars[v]
                 if isinstance(p, cgi.FieldStorage) and p.filename:
                     self.files[p.filename] = p.file
                     if p.filename.endswith(ext):
@@ -1538,7 +1549,7 @@ class S3Request(object):
                                 - master
                                 - active component
                                 - active link table
-                              (in this order) 
+                              (in this order)
 
             Resource customization functions can be defined like:
 
@@ -1553,13 +1564,13 @@ class S3Request(object):
 
             @note: the hook itself can call r.customise_resource in order
                    to cascade customizations as necessary
-            @note: if a table is customized that is not currently loaded,
+            @note: if a table is customised that is not currently loaded,
                    then it will be loaded for this process
         """
 
         if tablename is None:
             customise = self.customise_resource
-            
+
             customise(self.resource.tablename)
             component = self.component
             if component:
@@ -1570,8 +1581,9 @@ class S3Request(object):
         else:
             # Always load the model first (otherwise it would
             # override the custom settings when loaded later)
-            if tablename not in current.db:
-                table = db.table(tablename)
+            db = current.db
+            if tablename not in db:
+                db.table(tablename)
             customise = current.deployment_settings.customise_resource(tablename)
             if customise:
                 customise(self, tablename)
@@ -1598,7 +1610,7 @@ class S3Method(object):
 
             @param r: the S3Request
             @param method: the method established by the REST interface
-            @param as_widget: render as widget (to embed in another method)
+            @param widget_id: widget ID
             @param attr: dict of parameters for the method handler
 
             @return: output object to send to the view
@@ -1665,7 +1677,7 @@ class S3Method(object):
             #                           use special alias _default
             #                           to specify an alternative
             #                           default
-            #   
+            #
             hide_filter = attr.get("hide_filter")
             if isinstance(hide_filter, dict):
                 component_name = r.component_name
@@ -1725,9 +1737,9 @@ class S3Method(object):
         """
             Stub, to be implemented in subclass. This method is used
             by other method handlers to embed this method as widget.
-            
+
             @note:
-            
+
                 For "html" format, the widget method must return an XML
                 component that can be embedded in a DIV. If a dict is
                 returned, it will be rendered against the view template
@@ -1783,7 +1795,7 @@ class S3Method(object):
 
         if not method:
             method = self.method
-        if method in ("list", "search", "datatable", "datalist"):
+        if method in ("list", "datatable", "datalist"):
             # Rest handled in S3Permission.METHODS
             method = "read"
 
@@ -1803,7 +1815,7 @@ class S3Method(object):
 
                 if not master_access:
                     return False
-                    
+
         return has_permission(method, table, record_id=record_id)
 
     # -------------------------------------------------------------------------
@@ -1859,25 +1871,42 @@ class S3Method(object):
             @param default: name of the default view template
         """
 
-        request = r
-        folder = request.folder
-        prefix = request.controller
+        folder = r.folder
+        prefix = r.controller
 
         exists = os.path.exists
         join = os.path.join
 
-        views = current.response.s3.views
-        theme = current.deployment_settings.get_theme()
+        settings = current.deployment_settings
+        theme = settings.get_theme()
+        location = settings.get_template_location()
         if theme != "default":
-            if "/" in default:
-                subfolder, _default = default.split("/", 1)
+            # See if there is a Custom View for this Theme
+            view = join(folder, location, "templates", theme, "views",
+                        "%s_%s_%s" % (prefix, r.name, default))
+            if exists(view):
+                # There is a view specific to this page
+                # NB This should normally include {{extend layout.html}}
+                # Pass view as file not str to work in compiled mode
+                return open(view, "rb")
             else:
-                subfolder = ""
-                _default = default
-            if exists(join(folder, "private", "templates", theme, "views", subfolder, "_%s" % _default)):
-                if subfolder:
-                    subfolder = "%s/" % subfolder
-                views[default] = "../private/templates/%s/views/%s_%s" % (theme, subfolder, _default)
+                if "/" in default:
+                    subfolder, _default = default.split("/", 1)
+                else:
+                    subfolder = ""
+                    _default = default
+                if exists(join(folder, location, "templates", theme, "views",
+                               subfolder, "_%s" % _default)):
+                    # There is a general view for this page type
+                    # NB This should not include {{extend layout.html}}
+                    if subfolder:
+                        subfolder = "%s/" % subfolder
+                    # Pass this mapping to the View
+                    current.response.s3.views[default] = \
+                        "../%s/templates/%s/views/%s_%s" % (location,
+                                                            theme,
+                                                            subfolder,
+                                                            _default)
 
         if r.component:
             view = "%s_%s_%s" % (r.name, r.component_name, default)
@@ -1962,7 +1991,7 @@ class S3Method(object):
         _crud_strings = crud_strings.get(tablename, crud_strings)
         return _crud_strings.get(name,
                                  # Default fallback
-                                 crud_strings.get(name, None))
+                                 crud_strings.get(name))
 
 # =============================================================================
 # Global functions

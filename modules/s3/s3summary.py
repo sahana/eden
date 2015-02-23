@@ -2,7 +2,7 @@
 
 """ Resource Summary Pages
 
-    @copyright: 2013 (c) Sahana Software Foundation
+    @copyright: 2013-15 (c) Sahana Software Foundation
     @license: MIT
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
@@ -29,8 +29,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from gluon import *
-from gluon.storage import Storage
+from gluon import current, A, DIV, LI, UL
 
 from s3filter import S3FilterForm
 from s3gis import MAP
@@ -67,7 +66,6 @@ class S3Summary(S3Method):
 
         output = {}
         response = current.response
-        s3 = response.s3
         resource = self.resource
         get_config = resource.get_config
 
@@ -106,7 +104,7 @@ class S3Summary(S3Method):
 
         # Dynamic filtering (e.g. plot-click in report widget)
         attr["filter_form"] = form_id = "summary-filter-form"
-        
+
         for section in config:
 
             common = section.get("common")
@@ -114,15 +112,13 @@ class S3Summary(S3Method):
             # Section container
             section_id = section["name"]
             s = DIV(_class="section-container", _id=section_id)
-            
+
             if not common:
                 # Label
                 label = section["label"]
                 translate = section.get("translate", True)
                 if isinstance(label, basestring) and translate:
-                    self.label = current.T(label)
-                else:
-                    self.label = label
+                    label = current.T(label)
 
                 # Add tab
                 tablist.append(LI(A(label, _href="#%s" % section_id)))
@@ -166,7 +162,7 @@ class S3Summary(S3Method):
                         if method == "datatable":
                             # Assume that we have a FilterForm, so disable Quick Search
                             dtargs = attr.get("dtargs", {})
-                            dtargs["dt_bFilter"] = "false"
+                            dtargs["dt_searching"] = "false"
                             attr["dtargs"] = dtargs
                         content = handler(r,
                                           method=method,
@@ -245,9 +241,12 @@ class S3Summary(S3Method):
                                              vars={},
                                              representation="options"))
 
+            filter_clear = get_config("filter_clear",
+                                      current.deployment_settings.get_ui_filter_clear())
             filter_formstyle = get_config("filter_formstyle")
             filter_submit = get_config("filter_submit", True)
             filter_form = S3FilterForm(filter_widgets,
+                                       clear=filter_clear,
                                        formstyle=filter_formstyle,
                                        submit=filter_submit,
                                        ajax=filter_ajax,
@@ -274,11 +273,11 @@ class S3Summary(S3Method):
             # which are rendered empty and need a trigger to Ajax-load
             # their data layer (e.g. maps, reports):
             pending = ",".join(pending) if pending else "null"
-            
+
             # Render the Sections as Tabs
             script = '''S3.search.summary_tabs("%s",%s,"%s")''' % \
                      (form_id, active_tab, pending)
-            s3.jquery_ready.append(script)
+            response.s3.jquery_ready.append(script)
 
         if active_map:
             # If there is a map on the active tab then we need to add

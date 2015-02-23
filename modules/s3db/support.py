@@ -2,7 +2,7 @@
 
 """ Sahana Eden Support Requests
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3SupportModel"]
+__all__ = ("S3SupportModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -43,7 +43,7 @@ class S3SupportModel(S3Model):
                  a central ticketing system
     """
 
-    names = ["support_req"]
+    names = ("support_req",)
 
     def model(self):
 
@@ -89,13 +89,11 @@ class S3SupportModel(S3Model):
         # CRUD strings
         ADD_REQUEST = T("New Support Request")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_REQUEST,
+            label_create = ADD_REQUEST,
             title_display = T("Request Details"),
             title_list = T("Support Requests"),
             title_update = T("Edit Request"),
-            subtitle_create = T("Add New Request"),
             label_list_button = T("List Support Requests"),
-            label_create_button = ADD_REQUEST,
             label_delete_button = T("Delete Request"),
             msg_record_created = T("Request added"),
             msg_record_modified = T("Request updated"),

@@ -1,7 +1,3 @@
-body {
-    padding: 60px 20px 10px 20px; /* Test this with other templates as this should be sufficient to avoid the top nav menu + give side padding */
-}
-
 .navbar-inner {
     background: #37518b;
     border: none;
@@ -25,6 +21,11 @@ body {
     float: left
 }
 
+#register-btn {
+    margin-left: 15px !important;
+}
+
+/*
 .btn-login, .btn-register {
     float: right;
     margin-top: 10px !important;
@@ -33,6 +34,7 @@ body {
 .btn-register {
     clear: right;
 }
+*/
 .homepage.row {
     clear: both;
 }
@@ -44,20 +46,34 @@ body {
     /*text-shadow: 2px 2px 1px black;*/
 }
 
-.title h1, .title h2 {
-    background: url('../../img/semi_white_75.png');
-    display: table;
-}
-.title h1 {
-    font-size: 50px;
-    padding: 15px 10px 5px 10px;
-    margin-bottom: 10px;
+
+
+.sahana_logo {
+    float: left;
+    height: 100px;
 }
 
-.title h2 {
-    font-size: 25px;
-    padding: 10px 10px 0px 10px;
-    margin-bottom: 10px;
+.title h1 {
+    float: left;
+    font-size: 80px;
+    line-height: 80px;
+    margin: 0;
+    padding: 20px 0 0;
+}
+
+.mcop_logo {
+    float: left;
+    clear: left;
+    width: 150px;
+    margin: 0 5px 10px 15px;
+}
+
+.header h2 {
+    float: left;
+    font-size: 20px;
+    line-height: 25px;
+    padding: 0;
+    margin: 0 0 0 10px;
 }
 
 h1, h2, h3 {
@@ -76,26 +92,67 @@ h3 {
     font-size: 25px;
     line-height: 35px;
 }
-.homepage .link {
-    padding: 5px 10px 5px 10px;
-    margin: 5px 0;
-    background: url('../../img/semi_white_75.png');
+.title {
+    padding-top: 30px;
 }
 
-.homepage .link:hover {
-    background-color: white;
+.header {
+    background: url('../../img/semi_white_75.png');
+    margin: 0;
 }
-.homepage .link:hover h3,
-.homepage .link:hover a {
-    color: #182640;
+
+.header .intro {
+    padding: 10px 15px;
+}
+
+.header .intro a {
+    color: #37518b;
+}
+
+.intro p,
+.intro ul {
+    clear: both;
+    margin-bottom: 5px;
+}
+
+.header {
+    margin-bottom: 20px;
+}
+
+ol, ul {
+    list-style: disc;
+}
+
+div.link {
+    float: left;
+}
+
+.homepage .icon-plus-sign.small-add {
+    top: 7px;
+}
+
+.homepage .map {
+    margin-bottom: 15px;
+}
+
+.link:hover h3,
+.link:hover a,
+.links a:hover {
+    color: #37518b;
     text-decoration:none;
 }
 
-.dl {
+.links a:hover h3 {
+    color: inherit;
+}
+
+.homepage .dl {
     padding: 5px 2px;
 }
 
-
+.dl-empty {
+    clear: both;
+}
 
 .thumbnail {
     background: url('../../img/semi_white_75.png') !important;
@@ -113,18 +170,197 @@ h3 {
 .cms-edit {
     display: none;
 }
+
+/* RSS Feed */
+#feed-control {
+    clear: both;
+}
+
+.gfg-title,
+.gfg-entry,
+.gfg-subtitle {
+    display: none;
+}
+
+
+.gfg-listentry {
+    background: url('../../img/semi_white_75.png');
+    margin-bottom: 5px;
+    padding: 3px;
+}
+
+/* Customise Datalist Cards */
+#cms_post_datalist .card-title,
+.card-header > .icon, 
+.homepage .card-header > .icon,
+#profile-list-project_project-3 .card-header > .icon,
+#profile-list-org_resource-2 img,
+#profile-list-project_project-3 img, 
+#profile-list-project_task-0 .task_project_title {
+    display: none;
+}
+
 /***********************************************/
-h2, #list-btn-add {
-    float: left
+
+h2 {
+    float: left;
+    margin-right: 15px;
 }
 
 #list-btn-add {
-    margin: 15px 0 0 15px;
+    margin-top: 15px;
+}
+
+#show-add-btn {
+    margin-bottom: 10px;
+}
+
+#map {
+    float:left;
 }
 
 #list-add,
-#summary-common,
+#filter-form,
 #table-container,
 .form-container {
     clear: both;
+}
+
+.card-header {
+    padding: 1px 3px;
+}
+
+.card-holder .location-title {
+    /* border-left: 1px solid rgba(0, 0, 0, 0.1);
+    margin-left: 10px; */
+    border-left: None;
+    margin-left: 0;
+    padding-bottom: 7px;
+    padding-left: 5px;
+    padding-top: 7px;
+    text-shadow: 0 1px 0 #FFFFFF;
+    width: 10px;
+}
+
+.card-header .location-title {
+    border-left: None;
+    margin-left: 0;
+    padding-left: 5px;
+}
+
+.date-title {
+    padding-bottom: 5px;
+    padding-top: 6px;
+}
+
+.media .card-title {
+    font-size: 18px;
+    letter-spacing: 0;
+    text-shadow: None;
+    margin-bottom: 5px;
+}
+
+.media .card-subtitle {
+    font-size: 12px;
+    font-style: italic;
+    /*margin: -4px 0 4px;*/
+    margin-bottom: 4px;
+}
+.media .card-subtitle a:hover{
+    text-decoration: none;
+}
+
+/* @ToDo: Move to default/tasks.css ? */
+.task_priority,
+.task_name,
+.task_status {
+    float: left;
+    clear: right;
+}
+
+.task_priority {
+    margin-right: 3px;
+    margin-top: 3px;
+}
+
+.task_status {
+    float: right;
+    margin-left: 5px;
+    padding: 2px 3px;
+}
+
+.edit-bar {
+    position: static;
+}
+
+.dl-row {
+    padding-right: 12px;
+}
+
+.dl-1-cols {
+    width: 100%;
+}
+
+
+
+.card-holder {
+    display: block;
+    width: auto;
+}
+
+.s3_add_resource_link,
+.action-lnk {
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 4px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    line-height: 20px;
+    display: inline-block;
+    *display: inline;
+    padding: 1px 6px;
+    *margin-left: .3em;
+    margin-right: -2px;
+    font-size: 13px;
+    line-height: 20px;
+    *line-height: 20px;
+    vertical-align: middle;
+    cursor: pointer;
+    text-align: center;
+    color: #333333;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    background-color: #f5f5f5;
+    *background-color: #e6e6e6;
+    background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+    background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+    background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+    background-repeat: repeat-x;
+    border-bottom-color: #a2a2a2;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffffff', endColorstr='#ffe6e6e6', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    *zoom: 1;
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+     -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.s3_add_resource_link:hover,
+.action-lnk:hover {
+    color: #333333;
+    text-decoration: none;
+    background-color: #e6e6e6;
+    *background-color: #d9d9d9;
+    /* Buttons in IE7 don't get borders, so darken on hover */
+    background-position: 0 -15px;
+    -webkit-transition: background-position 0.1s linear;
+     -moz-transition: background-position 0.1s linear;
+       -o-transition: background-position 0.1s linear;
+          transition: background-position 0.1s linear;
+}
+
+/* Incidents profile Header */
+.profile-header .attachments {
+    margin-top: -20px;
 }

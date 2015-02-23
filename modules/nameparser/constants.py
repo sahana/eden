@@ -5,6 +5,7 @@ re_spaces = re.compile(r"\s+", re.U)
 re_word = re.compile(r"\w+", re.U)
 re_mac = re.compile(r'^(ma?c)(\w+)', re.I | re.U)
 re_initial = re.compile(r'^(\w\.|[A-Z])?$', re.U)
+re_nickname = re.compile(r'\s*?[\("](.+?)[\)"]', re.U)
 
 # do not include things that could also be first names, e.g. "dean"
 # many of these from wikipedia: https://en.wikipedia.org/wiki/Title
@@ -37,7 +38,7 @@ TITLES = set([
     'cardinal','servant','venerable','blessed','saint','member','solicitor',
     'mufti','grand','chancellor','barrister','bailiff','attorney','advocate',
     'deacon','archdeacon','acolyte','elder','minister','monsignor','almoner',
-    'prof','colonel','general','commodore','air','corporal','staff','mate',
+    'prof','colonel','general','commodore','air','corporal','staff',
     'chief','first','sergeant','sergeant','admiral','high','rear','brigadier',
     'captain','group','commander','commander-in-chief','wing','general',
     'adjutant','director','generalissimo','resident','surgeon','officer',
@@ -62,7 +63,7 @@ TITLES = set([
     'his','her','kingdom','royal',
 ])
 
-# PUNC_TITLES could be names or titles, but if they have period at the end they're a title
+# PUNC_TITLES could be names or titles, but if they have a period at the end they're a title
 PUNC_TITLES = ('hon.',)
 
 # words that prefix last names. Can be chained like "de la Vega"

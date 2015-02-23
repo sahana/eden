@@ -8,8 +8,8 @@
 if request.is_local:
     # This is a request made from the local server
 
-    f = request.get_vars.get("format", None)
-    auth_token = request.get_vars.get("subscription", None)
+    f = get_vars.get("format", None)
+    auth_token = get_vars.get("subscription", None)
     if auth_token and f == "msg":
         # Subscription lookup request
         rtable = s3db.pr_subscription_resource
@@ -28,26 +28,6 @@ if request.is_local:
         else:
             # Anonymous request
             auth.s3_impersonate(None)
-    else:
-
-        # @todo: deprecate this:
-        search_subscription = request.get_vars.get("search_subscription", None)
-        if search_subscription:
-            # We're doing a request for a saved search
-            table = s3db.pr_saved_search
-            search = db(table.auth_token == search_subscription).select(table.pe_id,
-                                                                        limitby=(0, 1)
-                                                                        ).first()
-            if search:
-                # Impersonate user
-                user_id = auth.s3_get_user_id(pe_id=search.pe_id)
-
-                if user_id:
-                    # Impersonate the user who is subscribed to this saved search
-                    auth.s3_impersonate(user_id)
-                else:
-                    # Request is ANONYMOUS
-                    auth.s3_impersonate(None)
 
 # =============================================================================
 # Check Permissions & fail as early as we can
@@ -71,30 +51,36 @@ S3OptionsMenu = default_menus.S3OptionsMenu
 
 current.menu = Storage(options=None, override={})
 if auth.permission.format in ("html"):
+
     menus = None
     theme = settings.get_theme()
+    location = settings.get_template_location()
+    package = "applications.%s.%s.templates.%%s.menus" % (appname, location)
     if theme != "default":
-        # If there is a custom Theme, then attempot to load a custom menu from it
-        menus = "applications.%s.private.templates.%s.menus" % \
-                (appname, theme)
+        # Custom theme => try loading menus from theme
+        menus = package % theme
     else:
         template = settings.get_template()
         if template != "default":
-            # If there is a custom Template, then attempt to load a custom menu from it
-            menus = "applications.%s.private.templates.%s.menus" % \
-                    (appname, template)
+            # Custom template => try loading menus from template
+            menus = package % template
+
     if menus:
         try:
-            exec("import %s as deployment_menus" % menus)
+            deployment_menus = __import__(menus,
+                                          fromlist=["S3MainMenu",
+                                                    "S3OptionsMenu",
+                                                    ],
+                                          )
         except ImportError:
             pass
         else:
-            if "S3MainMenu" in deployment_menus.__dict__:
+            if hasattr(deployment_menus, "S3MainMenu"):
                 S3MainMenu = deployment_menus.S3MainMenu
-
-            if "S3OptionsMenu" in deployment_menus.__dict__:
+            if hasattr(deployment_menus, "S3OptionsMenu"):
                 S3OptionsMenu = deployment_menus.S3OptionsMenu
 
+    # Instantiate main menu
     main = S3MainMenu.menu()
 else:
     main = None
@@ -139,103 +125,6 @@ def s3_get_utc_offset():
 
 # Store last value in session
 session.s3.utc_offset = s3_get_utc_offset()
-
-# =============================================================================
-# CRUD functions
-#
-def s3_barchart(r, **attr):
-    """
-        Provide simple barcharts for resource attributes
-        SVG representation uses the SaVaGe library
-        Need to request a specific value to graph in request.vars
-
-        used as REST method handler for S3Resources
-
-        @todo: replace by a S3MethodHandler
-    """
-
-    # Get all the variables and format them if needed
-    valKey = r.vars.get("value")
-
-    nameKey = r.vars.get("name")
-    if not nameKey and r.table.get("name"):
-        # Try defaulting to the most-commonly used:
-        nameKey = "name"
-
-    # The parameter value is required; it must be provided
-    # The parameter name is optional; it is useful, but we don't need it
-    # Here we check to make sure we can find value in the table,
-    # and name (if it was provided)
-    if not r.table.get(valKey):
-        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message="Need a Value for the Y axis"))
-    elif nameKey and not r.table.get(nameKey):
-        raise HTTP (400, current.xml.json_message(success=False, status_code="400", message=nameKey + " attribute not found in this resource."))
-
-    start = request.vars.get("start")
-    if start:
-        start = int(start)
-
-    limit = r.vars.get("limit")
-    if limit:
-        limit = int(limit)
-
-    settings = r.vars.get("settings")
-    if settings:
-        settings = json.loads(settings)
-    else:
-        settings = {}
-
-    if r.representation.lower() == "svg":
-        r.response.headers["Content-Type"] = "image/svg+xml"
-
-        from savage import graph
-        bar = graph.BarGraph(settings=settings)
-
-        title = deployment_settings.modules.get(module).name_nice
-        bar.setTitle(title)
-
-        if nameKey:
-            xlabel = r.table.get(nameKey).label
-            if xlabel:
-                bar.setXLabel(str(xlabel))
-            else:
-                bar.setXLabel(nameKey)
-
-        ylabel = r.table.get(valKey).label
-        if ylabel:
-            bar.setYLabel(str(ylabel))
-        else:
-            bar.setYLabel(valKey)
-
-        try:
-            records = r.resource.load(start, limit)
-            for entry in r.resource:
-                val = entry[valKey]
-
-                # Can't graph None type
-                if not val is None:
-                    if nameKey:
-                        name = entry[nameKey]
-                    else:
-                        name = None
-                    bar.addBar(name, val)
-            return bar.save()
-        # If the field that was provided was not numeric, we have problems
-        except ValueError:
-            raise HTTP(400, "Bad Request")
-    else:
-        raise HTTP(501, body=BADFORMAT)
-
-
-# -----------------------------------------------------------------------------
-def s3_guided_tour(output):
-    """
-        Helper function to attach a guided tour (if required) to the output
-    """
-    if request.get_vars.tour:
-        output = s3db.tour_builder(output)
-
-    return output
 
 # -----------------------------------------------------------------------------
 def s3_rest_controller(prefix=None, resourcename=None, **attr):
@@ -301,7 +190,6 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
 
     # Configure standard method handlers
     set_handler = r.set_handler
-    set_handler("barchart", s3_barchart)
     from s3db.cms import S3CMS
     set_handler("cms", S3CMS)
     set_handler("compose", s3base.S3Compose)
@@ -311,14 +199,17 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                                             vars={"from_record":r.id})))
     set_handler("deduplicate", s3base.S3Merge)
     set_handler("filter", s3base.S3Filter)
+    set_handler("hierarchy", s3base.S3HierarchyCRUD)
     set_handler("import", s3base.S3Importer)
+    set_handler("xform", s3base.S3XForms)
     set_handler("map", s3base.S3Map)
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)
+    set_handler("report", s3base.S3Report, transform=True)
     set_handler("timeplot", s3base.S3TimePlot) # temporary setting for testing
     set_handler("search_ac", s3base.search_ac)
     set_handler("summary", s3base.S3Summary)
-    
+
     # Don't load S3PDF unless needed (very slow import with Reportlab)
     method = r.method
     if method == "import" and r.representation == "pdf":
@@ -327,17 +218,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                     http = ["GET", "POST"],
                     representation="pdf")
 
-    # Plugin OrgRoleManager where appropriate
-    if r.record and auth.user is not None and \
-       r.tablename in s3base.S3OrgRoleManager.ENTITY_TYPES:
-
-        sr = auth.get_system_roles()
-        realms = auth.user.realms or Storage()
-
-        if sr.ADMIN in realms or sr.ORG_ADMIN in realms and \
-           (realms[sr.ORG_ADMIN] is None or \
-            r.record.pe_id in realms[sr.ORG_ADMIN]):
-            r.set_handler("roles", s3base.S3OrgRoleManager())
+    # Plugin OrgRoleManager when appropriate
+    s3base.S3OrgRoleManager.set_method(r)
 
     # Execute the request
     output = r(**attr)
@@ -349,7 +231,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                   "datatable",
                   "datatable_f",
                   "summary"):
-                      
+
         if s3.actions is None:
 
             # Add default action buttons
@@ -389,16 +271,16 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                               )
 
             # Override Add-button, link to native controller and put
-            # the primary key into vars for automatic linking
+            # the primary key into get_vars for automatic linking
             if native and not listadd and \
                s3_has_permission("create", tablename):
                 label = s3base.S3CRUD.crud_string(tablename,
-                                                  "label_create_button")
+                                                  "label_create")
                 hook = r.resource.components[name]
                 fkey = "%s.%s" % (name, hook.fkey)
-                vars = request.vars.copy()
-                vars.update({fkey: r.record[hook.fkey]})
-                url = URL(prefix, name, args=["create"], vars=vars)
+                get_vars_copy = get_vars.copy()
+                get_vars_copy.update({fkey: r.record[hook.fkey]})
+                url = URL(prefix, name, args=["create"], vars=get_vars_copy)
                 add_btn = A(label, _href=url, _class="action-btn")
                 output.update(add_btn=add_btn)
 
@@ -409,7 +291,8 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
                         "deduplicate"):
         s3.actions = None
 
-    output = s3_guided_tour(output)
+    if get_vars.tour:
+        output = s3db.tour_builder(output)
 
     return output
 

@@ -1,0 +1,38 @@
+
+// SPACING
+
+$tracking: 2px;
+$tracking-tight: 1px;
+$tracking-loose: 3px;
+
+$space: 24px; // equal to line-height for vertical rhythm
+$space-double: $space * 2;
+$space-32: $space * 3/2;
+$space-34: $space * 3/4;
+$space-half: $space / 2;
+$space-third: $space / 3;
+$space-fourth: $space / 4;
+
+
+// COLOR
+
+// Tutorial: how to use color variables properly:
+// http://sachagreif.com/sass-color-variables/
+
+$headline-color: $jet;
+$text-color: $tuatara;
+
+
+
+// BORDERS
+
+$frame-border: 5px solid $white;
+
+
+// LAYERS
+
+$layer1: 1; // content
+$layer2: 2; // hovers
+$layer3: 3; // cloak
+$layer4: 4; // lightbox
+$layer5: 5; // lightbox content

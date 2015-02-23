@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# S3Resource Unit Tests
+# S3DataTable Unit Tests
 #
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3datatable.py
@@ -9,7 +9,6 @@ import unittest
 import datetime
 from gluon import *
 from gluon.storage import Storage
-from gluon.dal import Row
 
 from s3.s3data import S3DataTable
 

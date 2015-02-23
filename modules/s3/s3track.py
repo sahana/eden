@@ -2,7 +2,7 @@
 
 """ Simple Generic Location Tracking System
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -28,11 +28,19 @@
 
 """
 
-from gluon import current
-from gluon.dal import Table, Rows, Row
 from datetime import datetime, timedelta
 
-__all__ = ["S3Tracker"]
+from gluon import current
+from gluon.storage import Storage
+from gluon.html import *
+
+from s3dal import Table, Rows, Row
+from s3rest import S3Method
+
+__all__ = ("S3Tracker",
+           "S3CheckInMethod",
+           "S3CheckOutMethod",
+           )
 
 UID = "uuid"                # field name for UIDs
 
@@ -249,6 +257,8 @@ class S3Trackable(object):
             @param exclude: interlocks to break at (avoids circular check-ins)
 
             @return: a location record, or a list of location records (if multiple)
+
+            @ToDo: Also show Timestamp of when seen there
         """
 
         db = current.db
@@ -479,11 +489,12 @@ class S3Trackable(object):
                     continue
                 tablename, record_id = presence.interlock.split(",", 1)
                 trackable = S3Trackable(tablename=tablename, record_id=record_id)
-                location = trackable.get_location(timestmp=timestmp,
+                location = trackable.get_location(_fields=["id"],
+                                                  timestmp=timestmp,
                                                   as_rows=True).first()
                 if timestmp - presence.timestmp < timedelta(seconds=1):
                     timestmp = timestmp + timedelta(seconds=1)
-                data = dict(location_id=location,
+                data = dict(location_id=location.id,
                             timestmp=timestmp,
                             interlock=None)
                 data.update({TRACK_ID:r[TRACK_ID]})
@@ -602,19 +613,23 @@ class S3Trackable(object):
 
         # Update records with track ID
         # => this can happen table-wise = less queries
-        track_ids = [r[TRACK_ID] for r in self.records
-                                      if TRACK_ID in r]
+        track_ids = [r[TRACK_ID] for r in self.records if TRACK_ID in r]
         rows = db(self.table[TRACK_ID].belongs(track_ids)).select()
+
         tables = []
+        append = tables.append
+        types = set()
+        seen = types.add
         for r in rows:
             instance_type = r.instance_type
-            table = s3db[instance_type]
-            if instance_type not in tables and \
-               LOCATION_ID in table.fields:
-                   tables.append(table)
-            else:
-                # No location ID in this type => ignore gracefully
-                continue
+            if instance_type not in types:
+                seen(instance_type)
+                table = s3db[instance_type]
+                if instance_type not in tables and LOCATION_ID in table.fields:
+                    append(table)
+                else:
+                    # No location ID in this type => ignore gracefully
+                    continue
 
         # Location specified => update all base locations
         for table in tables:
@@ -646,7 +661,7 @@ class S3Trackable(object):
 # =============================================================================
 class S3Tracker(object):
     """
-        S3 Tracking system, can be instantiated once as global "s3tracker" object
+        S3 Tracking system, can be instantiated once as global 's3tracker' object
     """
 
     def __init__(self):
@@ -697,5 +712,202 @@ class S3Tracker(object):
             to the given instance at the given time
         """
         raise NotImplementedError
+
+# =============================================================================
+class S3CheckInMethod(S3Method):
+    """
+        Custom Method to allow a trackable resource to check-in
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_method(r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html":
+
+            T = current.T
+            s3db = current.s3db
+            response = current.response
+            table = r.table
+            tracker = S3Trackable(table, record_id=r.id)
+
+            title = T("Check-In")
+
+            get_vars = r.get_vars
+
+            # Are we being passed a location_id?
+            location_id = get_vars.get("location_id", None)
+            if not location_id:
+                # Are we being passed a lat and lon?
+                lat = get_vars.get("lat", None)
+                if lat is not None:
+                    lon = get_vars.get("lon", None)
+                    if lon is not None:
+                        form_vars = Storage(lat = float(lat),
+                                            lon = float(lon),
+                                            )
+                        form = Storage(vars=form_vars)
+                        s3db.gis_location_onvalidation(form)
+                        location_id = s3db.gis_location.insert(**form_vars)
+
+
+            form = None
+            if not location_id:
+                # Give the user a form to check-in
+
+                # Test the formstyle
+                formstyle = current.deployment_settings.get_ui_formstyle()
+                row = formstyle("test", "test", "test", "test")
+                if isinstance(row, tuple):
+                    # Formstyle with separate row for label (e.g. default Eden formstyle)
+                    tuple_rows = True
+                else:
+                    # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+                    tuple_rows = False
+
+                form_rows = []
+                comment = ""
+
+                _id = "location_id"
+                label = LABEL("%s:" % T("Location"))
+
+                from s3.s3widgets import S3LocationSelector
+                field = table.location_id
+                #value = tracker.get_location(_fields=["id"],
+                #                             as_rows=True).first().id
+                value = None # We always want to create a new Location, not update the existing one
+                widget = S3LocationSelector(show_latlon = True)(field, value)
+
+                row = formstyle("%s__row" % _id, label, widget, comment)
+                if tuple_rows:
+                    form_rows.append(row[0])
+                    form_rows.append(row[1])
+                else:
+                    form_rows.append(row)
+
+                _id = "submit"
+                label = ""
+                widget = INPUT(_type="submit", _value=T("Check-In"))
+                row = formstyle("%s__row" % _id, label, widget, comment)
+                if tuple_rows:
+                    form_rows.append(row[0])
+                    form_rows.append(row[1])
+                else:
+                    form_rows.append(row)
+
+                if tuple_rows:
+                    # Assume TRs
+                    form = FORM(TABLE(*form_rows))
+                else:
+                    form = FORM(*form_rows)
+
+                if form.accepts(current.request.vars, current.session):
+                    location_id = form.vars.get("location_id", None)
+
+            if location_id:
+                # We're not Checking-in in S3Track terms (that's about interlocking with another object)
+                #tracker.check_in()
+                #timestmp = form.vars.get("timestmp", None)
+                #if timestmp:
+                #    # @ToDo: Convert from string
+                #    pass
+                #tracker.set_location(location_id, timestmp=timestmp)
+                tracker.set_location(location_id)
+                response.confirmation = T("Checked-In successfully!")
+
+            response.view = "check-in.html"
+            output = dict(form = form,
+                          title = title,
+                          )
+            return output
+
+        # @ToDo: JSON representation for check-in from mobile devices
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class S3CheckOutMethod(S3Method):
+    """
+        Custom Method to allow a trackable resource to check-out
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_method(r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html":
+
+            T = current.T
+            s3db = current.s3db
+            response = current.response
+            tracker = S3Trackable(r.table, record_id=r.id)
+
+            title = T("Check-Out")
+
+            # Give the user a form to check-out
+
+            # Test the formstyle
+            formstyle = current.deployment_settings.get_ui_formstyle()
+            row = formstyle("test", "test", "test", "test")
+            if isinstance(row, tuple):
+                # Formstyle with separate row for label (e.g. default Eden formstyle)
+                tuple_rows = True
+            else:
+                # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+                tuple_rows = False
+
+            form_rows = []
+            comment = ""
+
+            _id = "submit"
+            label = ""
+            widget = INPUT(_type="submit", _value=T("Check-Out"))
+            row = formstyle("%s__row" % _id, label, widget, comment)
+            if tuple_rows:
+                form_rows.append(row[0])
+                form_rows.append(row[1])
+            else:
+                form_rows.append(row)
+
+            if tuple_rows:
+                # Assume TRs
+                form = FORM(TABLE(*form_rows))
+            else:
+                form = FORM(*form_rows)
+
+            if form.accepts(current.request.vars, current.session):
+                # Check-Out
+                # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
+                # What we're doing is saying that we're now back at our base location
+                #tracker.check_out()
+                #timestmp = form_vars.get("timestmp", None)
+                #if timestmp:
+                #    # @ToDo: Convert from string
+                #    pass
+                #tracker.set_location(r.record.location_id, timestmp=timestmp)
+                tracker.set_location(r.record.location_id)
+                response.confirmation = T("Checked-Out successfully!")
+
+            response.view = "check-in.html"
+            output = dict(form = form,
+                          title = title,
+                          )
+            return output
+
+        # @ToDo: JSON representation for check-out from mobile devices
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

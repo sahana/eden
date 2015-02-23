@@ -35,13 +35,6 @@ s3.download_url = "%s/default/download" % s3.base_url
 # Global variables
 
 # Strings to i18n
-messages["UNAUTHORISED"] = "Not authorised!"
-messages["BADFORMAT"] = "Unsupported data format!"
-messages["BADMETHOD"] = "Unsupported method!"
-messages["BADRECORD"] = "Record not found!"
-messages["INVALIDREQUEST"] = "Invalid request!"
-messages["XLWT_ERROR"] = "xlwt module not available within the running Python - this needs installing for XLS output!"
-messages["REPORTLAB_ERROR"] = "ReportLab module not available within the running Python - this needs installing for PDF output!"
 # Common Labels
 #messages["BREADCRUMB"] = ">> "
 messages["UNKNOWN_OPT"] = "Unknown"
@@ -51,11 +44,12 @@ messages["UPDATE"] = settings.get_ui_label_update()
 messages["DELETE"] = "Delete"
 messages["COPY"] = "Copy"
 messages["NOT_APPLICABLE"] = "N/A"
-messages["ADD_PERSON"] = "Add Person"
-messages["ADD_LOCATION"] = "Add Location"
+messages["ADD_PERSON"] = "Create a Person"
+messages["ADD_LOCATION"] = "Create Location"
 messages["SELECT_LOCATION"] = "Select a location"
 messages["COUNTRY"] = "Country"
 messages["ORGANISATION"] = "Organization"
+messages["AUTOCOMPLETE_HELP"] = "Enter some characters to bring up a list of possible matches"
 
 for u in messages:
     if isinstance(messages[u], str):
@@ -70,22 +64,23 @@ s3.crud_labels = Storage(READ=READ,
                          )
 
 # Error Messages
-ERROR["BAD_RECORD"] = messages["BADRECORD"]
-ERROR["BAD_METHOD"] = messages["BADMETHOD"]
-ERROR["METHOD_DISABLED"] = "Method disabled"
-ERROR["BAD_FORMAT"] = messages["BADFORMAT"]
+ERROR["BAD_RECORD"] = "Record not found!"
+ERROR["BAD_METHOD"] = "Unsupported method!"
+ERROR["BAD_FORMAT"] = "Unsupported data format!"
 ERROR["BAD_REQUEST"] = "Invalid request"
+ERROR["BAD_SOURCE"] = "Invalid source"
 ERROR["BAD_TEMPLATE"] = "XSLT stylesheet not found"
 ERROR["BAD_RESOURCE"] = "Nonexistent or invalid resource"
+ERROR["DATA_IMPORT_ERROR"] = "Data import error"
+ERROR["INTEGRITY_ERROR"] = "Integrity error: record can not be deleted while it is referenced by other records"
+ERROR["METHOD_DISABLED"] = "Method disabled"
+ERROR["NO_MATCH"] = "No matching element found in the data source"
+ERROR["NOT_IMPLEMENTED"] = "Not implemented"
+ERROR["NOT_PERMITTED"] = "Operation not permitted"
 ERROR["PARSE_ERROR"] = "XML parse error"
 ERROR["TRANSFORMATION_ERROR"] = "XSLT transformation error"
-ERROR["BAD_SOURCE"] = "Invalid source"
-ERROR["NO_MATCH"] = "No matching element found in the data source"
+ERROR["UNAUTHORISED"] = "Not Authorized"
 ERROR["VALIDATION_ERROR"] = "Validation error"
-ERROR["DATA_IMPORT_ERROR"] = "Data import error"
-ERROR["NOT_PERMITTED"] = "Operation not permitted"
-ERROR["NOT_IMPLEMENTED"] = "Not implemented"
-ERROR["INTEGRITY_ERROR"] = "Integrity error: record can not be deleted while it is referenced by other records"
         
 # To get included in <HEAD>
 s3.stylesheets = []
@@ -101,10 +96,10 @@ s3.jquery_ready = []
 s3.l10n_languages = settings.get_L10n_languages()
 
 # Default strings are in US English
-T.current_languages = ["en", "en-us"]
+T.current_languages = ("en", "en-us")
 # Check if user has selected a specific language
-if request.get_vars._language:
-    language = request.get_vars._language
+if get_vars._language:
+    language = get_vars._language
     session.s3.language = language
 elif session.s3.language:
     # Use the last-selected language
@@ -137,9 +132,7 @@ else:
     s3.language = "%s_%s" % (lang_parts[0], lang_parts[1].upper())
 
 # List of Languages which use a Right-to-Left script (Arabic, Hebrew, Farsi, Urdu)
-s3_rtl_languages = ["ur", "ar"]
-
-if T.accepted_language in s3_rtl_languages:
+if language in ("ar", "prs", "ps", "ur"):
     s3.rtl = True
 else:
     s3.rtl = False
@@ -151,9 +144,6 @@ _settings = auth.settings
 _settings.lock_keys = False
 
 _settings.expiration = 28800  # seconds
-
-_settings.facebook = settings.get_auth_facebook()
-_settings.google = settings.get_auth_google()
 
 if settings.get_auth_openid():
     # Requires http://pypi.python.org/pypi/python-openid/
@@ -298,20 +288,18 @@ s3.csv_formats = ["hrf", "s3csv"]
 s3.ROWSPERPAGE = 20
 
 # Valid Extensions for Image Upload fields
-s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "tif", "TIF", "tiff", "TIFF", "bmp", "BMP", "raw", "RAW"]
+s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG"]
 
 # Default CRUD strings
 ADD_RECORD = T("Add Record")
 s3.crud_strings = Storage(
-    title_create = ADD_RECORD,
+    label_create = ADD_RECORD,
     title_display = T("Record Details"),
     title_list = T("Records"),
     title_update = T("Edit Record"),
     title_map = T("Map"),
     title_report = T("Report"),
-    subtitle_create = T("Add New Record"),
     label_list_button = T("List Records"),
-    label_create_button = ADD_RECORD,
     label_delete_button = T("Delete Record"),
     msg_record_created = T("Record added"),
     msg_record_modified = T("Record updated"),

@@ -1,0 +1,88 @@
+{{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
+{{if ltype == "datalist":}}
+ {{if s3.dl_rowsize == 2:}}
+  {{try:}}{{if list_filter_form:}}
+  <div id='list-filter' class='form-container'>
+  {{=list_filter_form}}
+  </div>
+  {{pass}}
+  {{except:}}{{pass}}
+  {{try:}}{{items = items}}
+  <div id='dl-container'>
+  {{=items}}
+  </div>
+  {{except:}}{{pass}}
+ {{else:}}
+  <div class='row'>
+   <div class='span4'>
+    {{try:}}{{if list_filter_form:}}
+    <div id='list-filter' class='side-filter'>
+    {{=list_filter_form}}
+    </div>
+    {{pass}}
+    {{except:}}{{pass}}
+   </div>
+   <div class='span7'>
+    <div class='list_formats'>
+     <!-- @ToDo: Read Filter Status -->
+     <div class='export_xls' title='{{=T("Export in XLS format")}}' onclick="window.open('/{{=appname}}/{{=request.controller}}/{{=request.function}}.xls');">
+    </div>
+    </div>
+    {{if current.auth.s3_has_permission("update", r.tablename):}}
+    <a id='cms_post_create' href='/{{=appname}}/{{=request.controller}}/{{=request.function}}/create.popup?refresh=datalist' class='btn btn-primary main-add s3_modal' role='button' title='{{=response.s3.crud_strings[r.tablename].label_create}}'>
+     <i class='icon icon-plus-sign big-add'></i>
+    </a>
+    {{pass}}
+    <h4 class='latest-updates'>{{=response.s3.crud_strings[r.tablename].title_list}}</h4>
+    <div class="card-holder-home">
+     {{=items}}
+    </div>
+   </div>
+  </div>
+  {{pass}}
+  {{include "dataLists.html"}}
+{{else:}}
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+  <div id='rheader'>
+  {{try:}}{{=XML(rheader)}}
+  </div>
+  <div id='component'>
+  {{except:}}
+  </div>
+  <div>
+  {{pass}}
+  <div id='map'></div>
+  <div id='list-btn-add'>
+  {{try:}}{{=showadd_btn}}{{hide_listadd = True}}
+  {{except:}}{{hide_listadd = False}}{{pass}}
+  </div>
+  <div id='list-add'>
+  {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+  {{try:}}{{=addheader}}{{except:}}{{pass}}
+  {{include "key.html"}}
+  <div class='form-container'>
+  {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+  </div>
+  {{try:}}{{if list_filter_form:}}
+  <div id='list-filter' class='form-container'>
+  {{=list_filter_form}}
+  </div>
+  {{pass}}
+  {{except:}}{{pass}}
+  {{try:}}{{items = items}}
+  <div id='table-container'>
+  {{=items}}
+  </div>
+  {{except:}}{{pass}}
+  </div>
+  {{if s3.rfooter:}}<div id='rfooter'>{{=XML(s3.rfooter)}}</div>{{pass}}
+  {{include "dataTables.html"}}
+  {{if r.http == "POST" or not hide_listadd:}}
+  {{script = '''$('#list-add').show()
+  $('#show-add-btn').hide()'''}}
+  {{else:}}
+  {{script = '''$('#show-add-btn').click(function(){$('#list-add').show()
+   $('#show-add-btn').hide()})'''}}
+  {{pass}}{{s3.jquery_ready.append(script)}}
+{{pass}}

@@ -1,0 +1,3 @@
+UUID,Name,EPSG,maxExtent,proj4js,units
+"www.sahanafoundation.org/GIS-PROJECTION-900913","Spherical Mercator",900913,"-20037508, -20037508, 20037508, 20037508.34","","m"
+"www.sahanafoundation.org/GIS-PROJECTION-4326",WGS84,4326,"-180,-90,180,90","","degrees"

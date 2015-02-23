@@ -1,9 +1,17 @@
 @charset "UTF-8";
 
+.pull-left {
+    float: left;
+}
+
 /* Profile Page */
 
 .profile-header {
     padding-bottom: 20px;
+}
+
+.profile-header .pull-left img {
+    margin-right: 10px;
 }
 
 .profile-header-label{
@@ -20,7 +28,7 @@ h4.profile-sub-header {
     color: #666;
     text-align: left;
     font-weight: bold;
-    font-style: normal;	
+    font-style: normal;
     padding: 6px 6px 6px 9px;
     border-radius: 5px 5px 0 0;
     background: rgba(255,255,255,1);
@@ -30,7 +38,7 @@ h4.profile-sub-header {
     background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
     background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
     background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
     -moz-box-shadow: 0 -1px 3px #d7d7d6;
     -webkit-box-shadow: 0 -1px 3px #d7d7d6;
     box-shadow: 0 -1px 3px #d7d7d6;
@@ -161,6 +169,7 @@ div.media a.pull-left img.media-object {
     float: right;
 }
 
+/* @todo: switch to font-awesome, move specialist CSS to icons.css */
 .icon {
     display: inline-block;
     width: 14px;
@@ -194,48 +203,48 @@ div.media a.pull-left img.media-object {
     /* Color doesn't work with Images, only with Fonts */
     color: #E74C3C;
 }
-.edit-bar .icon-edit:before,
-.edit-bar .icon-file-alt:before,
-.edit-bar .icon-trash:before {
+.icon-edit:before,
+.icon-file-alt:before,
+.icon-trash:before {
     /* Override font-awesome icons */
     content: none;
 }
 
-.icon.icon-file-alt {
+.icon-file-alt {
     background: url(img/file.png) no-repeat;
 }
-.icon.icon-edit {
+.icon-edit {
     background: url(img/pencil.png) no-repeat;
 }
-.icon.icon-search {
+.icon-search {
     background: url(img/magnifier.png) no-repeat;
 }
-.icon.icon-trash {
+.icon-trash {
     background: url(img/trashbin.png) no-repeat;
 }
 
-.icon.icon-deploy,
-.icon.icon-deployed {
+.icon-deploy,
+.icon-deployed {
     margin-left: 2px;
     margin-right: 4px;
     background: url(img/deploy.png) no-repeat;
 }
-.icon.icon-deploy {
+.icon-deploy {
     background-position: -14px 0;
 }
-.icon.icon-deployed {
+.icon-deployed {
     background-position: 0 0;
 }
 
-.icon.icon-sent,
-.icon.icon-unsent {
+.icon-sent,
+.icon-unsent {
     margin-right: 4px;
     background: url(img/deploy.png) no-repeat;
 }
-.icon.icon-unsent {
+.icon-unsent {
     background-position: -28px 0;
 }
-.icon.icon-sent {
+.icon-sent {
     background-position: 0 0;
 }
 

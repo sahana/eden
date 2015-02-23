@@ -2,7 +2,7 @@
 
 """ Sahana Eden Disaster Victim Registration Model
 
-    @copyright: 2012-13 (c) Sahana Software Foundation
+    @copyright: 2012-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3DVRModel"]
+__all__ = ("S3DVRModel",)
 
 from gluon import *
 from gluon.storage import Storage
@@ -41,8 +41,7 @@ class S3DVRModel(S3Model):
             &/or Distributions of Relief Items
     """
 
-    names = ["dvr_case",
-             ]
+    names = ("dvr_case",)
 
     def model(self):
 
@@ -79,7 +78,7 @@ class S3DVRModel(S3Model):
                           ),
                           self.gis_location_id(label = T("Home Address")),
                           Field("damage", "integer",
-                                requires = IS_NULL_OR(IS_IN_SET(dvr_damage_opts)),
+                                requires = IS_EMPTY_OR(IS_IN_SET(dvr_damage_opts)),
                                 represent = lambda opt: \
                                     dvr_damage_opts.get(opt, UNKNOWN_OPT),
                                 label= T("Damage Assessment")),
@@ -88,7 +87,7 @@ class S3DVRModel(S3Model):
                                 label = T("Insurance")),
                           Field("status", "integer",
                                 default = 1,
-                                requires = IS_NULL_OR(IS_IN_SET(dvr_status_opts)),
+                                requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
                                 represent = lambda opt: \
                                     dvr_status_opts.get(opt, UNKNOWN_OPT),
                                 label= T("Status")),
@@ -96,15 +95,13 @@ class S3DVRModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CASE = T("Add Case")
+        ADD_CASE = T("Create Case")
         current.response.s3.crud_strings[tablename] = Storage(
-            title_create = ADD_CASE,
+            label_create = ADD_CASE,
             title_display = T("Case Details"),
             title_list = T("Cases"),
             title_update = T("Edit Case"),
-            subtitle_create = T("Add New Case"),
             label_list_button = T("List Cases"),
-            label_create_button = ADD_CASE,
             label_delete_button = T("Delete Case"),
             msg_record_created = T("Case added"),
             msg_record_modified = T("Case updated"),

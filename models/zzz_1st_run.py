@@ -105,30 +105,12 @@ if len(pop_list) > 0:
                              timeout=300, # seconds
                              repeats=0    # unlimited
                              )
-        # Old saved search notifications
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"hourly"},
-        #                     period=3600,
-        #                     timeout=300,
-        #                     repeats=0
-        #                     )
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"daily"},
-        #                     period=86400,
-        #                     timeout=300,
-        #                     repeats=0
-        #                     )
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"weekly"},
-        #                     period=604800,
-        #                     timeout=300,
-        #                     repeats=0
-        #                     )
-        #s3task.schedule_task("msg_search_subscription_notifications",
-        #                     vars={"frequency":"monthly"},
-        #                     period=2419200,
-        #                     timeout=300,
-        #                     repeats=0
+        # Tweets every minute
+        #s3task.schedule_task("msg_process_outbox",
+        #                     vars={"contact_method":"TWITTER"},
+        #                     period=120,  # seconds
+        #                     timeout=120, # seconds
+        #                     repeats=0    # unlimited
         #                     )
 
         # Subscription notifications
@@ -151,6 +133,8 @@ if len(pop_list) > 0:
 
     # Override authorization
     auth.override = True
+    # No location tree updates
+    gis.disable_update_location_tree = True
 
     # Load all Models to ensure all DB tables present
     s3db.load_all_models()
@@ -166,32 +150,6 @@ if len(pop_list) > 0:
 
     # Synchronisation
     db.sync_config.insert() # Defaults are fine
-
-    # Person Registry
-    tablename = "pr_person"
-    # Add extra indexes on search fields
-    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
-    field = "first_name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-    field = "middle_name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-    field = "last_name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
-
-    # GIS
-    # L0 Countries
-    resource = s3db.resource("gis_location")
-    stylesheet = path_join(request_folder, "static", "formats", "s3csv", "gis", "location.xsl")
-    import_file = path_join(request_folder, "private", "templates", "locations", "countries.csv")
-    File = open(import_file, "r")
-    resource.import_xml(File, format="csv", stylesheet=stylesheet)
-    db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
-    db.commit()
-    # Add extra index on search field
-    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
-    tablename = "gis_location"
-    field = "name"
-    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
 
     # Messaging Module
     if has_module("msg"):
@@ -209,21 +167,6 @@ if len(pop_list) > 0:
                           )
         update_super(table, dict(id=id))
         # Need entries for the Settings/1/Update URLs to work
-        table = db.msg_sms_outbound_gateway
-        id = table.insert(outgoing_sms_handler = "WEB_API")
-        update_super(table, dict(id=id))
-        table = db.msg_sms_modem_channel
-        id = table.insert(modem_baud = 115200)
-        update_super(table, dict(id=id))
-        table = db.msg_sms_webapi_channel
-        id = table.insert(to_variable = "to")
-        update_super(table, dict(id=id))
-        table = db.msg_sms_smtp_channel
-        id = table.insert(address="changeme")
-        update_super(table, dict(id=id))
-        table = db.msg_tropo_channel
-        id = table.insert(token_messaging = "")
-        update_super(table, dict(id=id))
         table = db.msg_twitter_channel
         id = table.insert(enabled = False)
         update_super(table, dict(id=id))
@@ -235,10 +178,6 @@ if len(pop_list) > 0:
     # Climate Module
     if has_module("climate"):
         s3db.climate_first_run()
-
-    # CAP module
-    if has_module("cap"):
-        db.cap_alert.insert(template_title="Default", is_template=True)
 
     # Incident Reporting System
     if has_module("irs"):
@@ -266,10 +205,13 @@ if len(pop_list) > 0:
     # Create the bulk Importer object
     bi = s3base.S3BulkImporter()
 
-    s3.import_role = bi.import_role
-    s3.import_user = bi.import_user
+    # Register handlers
+    s3.import_font = bi.import_font
     s3.import_image = bi.import_image
     s3.import_remote_csv = bi.import_remote_csv
+    s3.import_role = bi.import_role
+    s3.import_script = bi.import_script
+    s3.import_user = bi.import_user
 
     # Relax strict email-matching rule for import updates of person records
     email_required = settings.get_pr_import_update_requires_email()
@@ -279,6 +221,9 @@ if len(pop_list) > 0:
     s3db.configure("auth_user",
                    onaccept = lambda form: auth.s3_approve_user(form.vars))
     s3db.add_components("auth_user", auth_membership="user_id")
+
+    # Flag that Assets are being imported, not synced
+    s3.asset_import = True
 
     # Allow population via shell scripts
     if not request.env.request_method:
@@ -293,19 +238,25 @@ if len(pop_list) > 0:
         if pop_setting == 1:
             # Populate with the default data
             path = path_join(request_folder,
-                             "private",
+                             "modules",
                              "templates",
                              "default")
             bi.perform_tasks(path)
         else:
             path = path_join(request_folder,
-                             "private",
+                             "modules",
                              "templates",
                              pop_setting)
-            if os.path.exists(path):
-                bi.perform_tasks(path)
-            else:
-                print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
+            if not os.path.exists(path):
+                # Legacy template?
+                path = path_join(request_folder,
+                                 "private",
+                                 "templates",
+                                 pop_setting)
+                if not os.path.exists(path):
+                    print >> sys.stderr, "Unable to install data %s no valid directory found" % pop_setting
+                    continue
+            bi.perform_tasks(path)
 
         grandTotalEnd = datetime.datetime.now()
         duration = grandTotalEnd - grandTotalStart
@@ -335,12 +286,25 @@ if len(pop_list) > 0:
 
     # Restore Auth
     auth.override = False
+    # Enable location tree updates
+    gis.disable_update_location_tree = False
 
     # Update Location Tree (disabled during prepop)
     start = datetime.datetime.now()
     gis.update_location_tree()
     end = datetime.datetime.now()
     print >> sys.stdout, "Location Tree update completed in %s" % (end - start)
+
+    # Countries are only editable by MapAdmin
+    db(db.gis_location.level == "L0").update(owned_by_group=map_admin)
+
+    if has_module("disease"):
+        # Populate disease_stats_aggregate (disabled during prepop)
+        # - needs to be done after locations
+        start = datetime.datetime.now()
+        s3db.disease_stats_rebuild_all_aggregates()
+        end = datetime.datetime.now()
+        print >> sys.stdout, "Disease Statistics data aggregation completed in %s" % (end - start)
 
     if has_module("stats"):
         # Populate stats_demographic_aggregate (disabled during prepop)
@@ -367,6 +331,35 @@ if len(pop_list) > 0:
     except AttributeError:
         # older Python
         print >> sys.stdout, "Pre-populate completed in %s" % duration
+
+    # =========================================================================
+    # Indexes
+    #
+
+    # Person Registry
+    tablename = "pr_person"
+    # Add extra indexes on search fields
+    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
+    field = "first_name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+    field = "middle_name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+    field = "last_name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+
+    # GIS
+    # Add extra index on search field
+    # Should work for our 3 supported databases: sqlite, MySQL & PostgreSQL
+    tablename = "gis_location"
+    field = "name"
+    db.executesql("CREATE INDEX %s__idx on %s(%s);" % (field, tablename, field))
+    if settings.get_gis_spatialdb():
+        # Add Spatial Index (PostgreSQL-only currently)
+        db.executesql("CREATE INDEX gis_location_gist on %s USING GIST (the_geom);" % tablename)
+        # Ensure the Planner takes this into consideration
+        # Vacuum cannot run in a transaction block
+        # autovacuum should be on anyway so will run ANALYZE after 50 rows inserted/updated/deleted
+        #db.executesql("VACUUM ANALYZE;")
 
     # Restore view
     response.view = "default/index.html"

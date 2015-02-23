@@ -1,0 +1,2 @@
+First Name,Last Name,Email,Resource,URL,Filter,Notify On,Frequency,Method
+Jill,Dando,crossroads@aidiq.com,cms_post,"default/index/newsfeed","[['series_id__belongs','1']]",,immediately,

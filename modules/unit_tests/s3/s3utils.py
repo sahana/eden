@@ -3,10 +3,10 @@
 # Utils Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/tests/unit_tests/modules/s3/s3utils.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3utils.py
 #
 import unittest
-from gluon.dal import Query
+
 from s3.s3utils import *
 from s3.s3data import S3DataTable
 

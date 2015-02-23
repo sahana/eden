@@ -4,10 +4,9 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- **********************************************************************
-
          GeoRSS Export Templates for S3XRC
 
-         Copyright (c) 2011 Sahana Software Foundation
+         Copyright (c) 2011-14 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -75,15 +74,15 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="resource">
-        <xsl:if test="reference[@field='location_id']">
+        <xsl:if test="map[1]/@lat!=''">
             <entry>
                 <title><xsl:value-of select="data[@field='name']"/></title>
                 <link href="{@url}"/>
                 <id><xsl:value-of select="@uuid"/></id>
                 <georss:point>
-                    <xsl:value-of select="reference[@field='location_id']/@lat"/>
+                    <xsl:value-of select="map[1]/@lat"/>
                     <xsl:text> </xsl:text>
-                    <xsl:value-of select="reference[@field='location_id']/@lon"/>
+                    <xsl:value-of select="map[1]/@lon"/>
                 </georss:point>
             </entry>
         </xsl:if>

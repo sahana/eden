@@ -1,0 +1,102 @@
+
+// first row
+
+.dashboard-maps {
+  background: $midnight;
+  text-align: center;
+  padding-bottom: 0!important;
+  .row-title{
+    color: $white;
+    margin-bottom: $space-half;
+  }
+  .make-map {
+    margin-bottom: 0;
+  }
+}
+
+.maps-title {
+  color: $white;
+  margin-bottom: $space;
+  a {
+    font-size: 75%;
+    padding: 0 $space;
+  }
+}
+
+
+
+// carousel
+
+.orbit-container {
+  overflow: visible;
+  .orbit-prev {
+    left: -25%;
+    span {
+      right: 45%;
+    }
+  }  
+  .orbit-next {
+    right: -25%;
+  }  
+  a.orbit-next, 
+  a.orbit-prev {
+    width: 48px;
+    height: 48px;
+    border-radius: 100%;
+  }
+  .orbit-slides-container {
+    width: 100%;
+    overflow: hidden;
+  }
+  img {
+    border: $frame-border;
+  }
+}
+
+.orbit-bullets li {
+  margin-right: 12px;
+}
+
+
+// lists
+
+.dashboard-lists {
+  margin-top: -$space;
+  background: $navy;
+  padding-bottom: 0 !important;
+  text-align: center;
+  .inner {
+    background: $white;
+    padding: $space $space 0;
+  }
+  .lined {
+    text-align: left;
+  }
+}
+
+
+// stats
+
+.dashboard-stats {
+  background: $wave;
+  div {
+    text-align: center;
+  }
+}
+.stat-title {
+  padding: 8px 0;
+  background: $white;
+  background: rgba(255,255,255,.5);
+  margin-bottom: 0;
+  font-size: 0.75rem;
+  cursor: help;
+}
+.stat-number {
+  padding: 0 10px 10px;
+  background: $white;
+  margin-bottom: -5px;
+  font-size: 300%;
+}
+
+
+

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Incident Reporting Model
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,10 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3IRSModel",
+__all__ = ("S3IRSModel",
            "S3IRSResponseModel",
            "irs_rheader"
-           ]
+           )
 
 try:
     import json # try stdlib (Python 2.6)
@@ -46,14 +46,17 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3AddResourceLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3IRSModel(S3Model):
 
-    names = ["irs_icategory",
+    names = ("irs_icategory",
              "irs_ireport",
              "irs_ireport_person",
              "irs_ireport_id"
-             ]
+             )
 
     def model(self):
 
@@ -205,7 +208,7 @@ class S3IRSModel(S3Model):
             "other.buildingCollapsed": T("Building Collapsed"),
             "other.peopleTrapped": T("People Trapped"),
             "other.powerFailure": T("Power Failure"),
-        }
+            }
 
         # This Table defines which Categories are visible to end-users
         tablename = "irs_icategory"
@@ -253,10 +256,10 @@ class S3IRSModel(S3Model):
                            label = T("Category"),
                            # The full set available to Admins & Imports/Exports
                            # (users use the subset by over-riding this in the Controller)
-                           requires = IS_NULL_OR(IS_IN_SET_LAZY(lambda: \
+                           requires = IS_EMPTY_OR(IS_IN_SET_LAZY(lambda: \
                                       sort_dict_by_values(irs_incident_type_opts))),
                            # Use this instead if a simpler set of Options required
-                           #requires = IS_NULL_OR(IS_IN_SET(irs_incident_type_opts)),
+                           #requires = IS_EMPTY_OR(IS_IN_SET(irs_incident_type_opts)),
                            represent = lambda opt: \
                                        irs_incident_type_opts.get(opt, opt)),
                      self.hrm_human_resource_id(
@@ -287,6 +290,7 @@ class S3IRSModel(S3Model):
                                  ),
                      self.gis_location_id(),
                      # Very basic Impact Assessment
+                     # @ToDo: Use Stats_Impact component instead
                      Field("affected", "integer",
                            label=T("Number of People Affected"),
                            represent = lambda val: val or T("unknown"),
@@ -337,18 +341,17 @@ class S3IRSModel(S3Model):
                            ),
                      s3_comments(),
                      *s3_meta_fields())
+
         # CRUD strings
-        ADD_INC_REPORT = T("Add Incident Report")
+        ADD_INC_REPORT = T("Create Incident Report")
         crud_strings[tablename] = Storage(
-            title_create = ADD_INC_REPORT,
+            label_create = ADD_INC_REPORT,
             title_display = T("Incident Report Details"),
             title_list = T("Incident Reports"),
             title_update = T("Edit Incident Report"),
             title_upload = T("Import Incident Reports"),
             title_map = T("Map of Incident Reports"),
-            subtitle_create = T("Add New Incident Report"),
             label_list_button = T("List Incident Reports"),
-            label_create_button = ADD_INC_REPORT,
             label_delete_button = T("Delete Incident Report"),
             msg_record_created = T("Incident Report added"),
             msg_record_modified = T("Incident Report updated"),
@@ -356,11 +359,7 @@ class S3IRSModel(S3Model):
             msg_list_empty = T("No Incident Reports currently registered"))
 
         # Which levels of Hierarchy are we using?
-        hierarchy = current.gis.get_location_hierarchy()
-        levels = hierarchy.keys()
-        if len(settings.get_gis_countries()) == 1 or \
-           s3.gis.config.region_location_id:
-            levels.remove("L0")
+        levels = current.gis.get_relevant_hierarchy_levels()
 
         filter_widgets = [
             S3TextFilter(["name",
@@ -372,21 +371,16 @@ class S3IRSModel(S3Model):
                         _class="filter-search",
                          ),
             S3LocationFilter("location_id",
-                             #label=T("Location"),
-                             levels=levels,
-                             widget="multiselect",
-                             cols=3,
-                             #hidden=True,
+                             levels = levels,
+                             #hidden = True,
                              ),
             S3OptionsFilter("category",
-                            #label=T("Category"),
-                            widget="multiselect",
-                            #hidden=True,
+                            #hidden = True,
                             ),
             S3DateFilter("datetime",
-                         label=T("Date"),
-                         hide_time=True,
-                         #hidden=True,
+                         label = T("Date"),
+                         hide_time = True,
+                         #hidden = True,
                          ),
             ]
 
@@ -411,7 +405,7 @@ class S3IRSModel(S3Model):
                                  "injured",
                                  "verified",
                                  "message",
-                                ],
+                                 ],
                  report_options = Storage(rows = report_fields,
                                           cols = report_fields,
                                           fact = [(T("Number of Incidents"), "count(id)"),
@@ -474,7 +468,7 @@ class S3IRSModel(S3Model):
                       )
                       
         ireport_id = S3ReusableField("ireport_id", "reference %s" % tablename,
-                                     requires = IS_NULL_OR(
+                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "irs_ireport.id",
                                                               self.irs_ireport_represent)),
@@ -482,19 +476,18 @@ class S3IRSModel(S3Model):
                                      label = T("Incident"),
                                      ondelete = "CASCADE")
 
-        # ---------------------------------------------------------------------
         # Custom Methods
         set_method("irs", "ireport",
-                   method="dispatch",
+                   method = "dispatch",
                    action=self.irs_dispatch)
 
         set_method("irs", "ireport",
-                   method="timeline",
-                   action=self.irs_timeline)
+                   method = "timeline",
+                   action = self.irs_timeline)
 
         set_method("irs", "ireport",
-                   method="ushahidi",
-                   action=self.irs_ushahidi_import)
+                   method = "ushahidi",
+                   action = self.irs_ushahidi_import)
 
         if settings.has_module("fire"):
             create_next = URL(args=["[id]", "human_resource"])
@@ -771,7 +764,7 @@ class S3IRSModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -860,7 +853,7 @@ class S3IRSModel(S3Model):
                                #"color" : "blue',
                             })
             data["events"] = events
-            data = json.dumps(data)
+            data = json.dumps(data, separators=SEPARATORS)
 
             code = "".join((
 '''S3.timeline.data=''', data, '''
@@ -888,7 +881,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -988,7 +981,7 @@ S3.timeline.now="''', now.isoformat(), '''"
             return output
 
         else:
-            raise HTTP(501, current.messages.BADMETHOD)
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3IRSResponseModel(S3Model):
@@ -1001,10 +994,10 @@ class S3IRSResponseModel(S3Model):
         @ToDo: Replace with Deployment module
     """
 
-    names = ["irs_ireport_human_resource",
+    names = ("irs_ireport_human_resource",
              "irs_ireport_vehicle",
              "irs_ireport_vehicle_human_resource"
-             ]
+             )
 
     def model(self):
 
@@ -1088,7 +1081,7 @@ class S3IRSResponseModel(S3Model):
                      ireport_id(),
                      asset_id(label = T("Vehicle"),
                               # Limit Vehicles to those which are not already assigned to an Incident
-                              requires=self.irs_vehicle_requires,
+                              requires = self.irs_vehicle_requires,
                               comment = S3AddResourceLink(
                                  c="vehicle",
                                  f="vehicle",
@@ -1096,9 +1089,9 @@ class S3IRSResponseModel(S3Model):
                                  tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
                               ),
                      s3_datetime("datetime",
-                                 label=T("Dispatch Time"),
-                                 default="now",
-                                 future=0,
+                                 default = "now",
+                                 future = 0,
+                                 label = T("Dispatch Time"),
                                  ),
                      self.super_link("site_id", "org_site",
                                      label = T("Fire Station"),
@@ -1106,7 +1099,8 @@ class S3IRSResponseModel(S3Model):
                                      # Populated from fire_station_vehicle
                                      #writable = True
                                      ),
-                     self.gis_location_id(label=T("Destination")),
+                     self.gis_location_id(label = T("Destination"),
+                                          ),
                      Field("closed",
                            # @ToDo: Close all assignments when Incident closed
                            readable=False,
@@ -1132,7 +1126,7 @@ class S3IRSResponseModel(S3Model):
                                        ),
                      asset_id(label=T("Vehicle"),
                               # @ToDo: Limit to Vehicles which are assigned to this Incident
-                              requires = IS_NULL_OR(
+                              requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "asset_asset.id",
                                                       self.asset_represent,
                                                       filterby="type",
@@ -1179,11 +1173,11 @@ class S3IRSResponseModel(S3Model):
                  (ltable.closed == True) | \
                  (ltable.deleted == True))
         left = ltable.on(table.id == ltable.asset_id)
-        requires = IS_NULL_OR(IS_ONE_OF(current.db(query),
-                                        "asset_asset.id",
-                                        asset_represent,
-                                        left=left,
-                                        sort=True))
+        requires = IS_EMPTY_OR(IS_ONE_OF(current.db(query),
+                                         "asset_asset.id",
+                                         asset_represent,
+                                         left=left,
+                                         sort=True))
         return requires
 
     # -------------------------------------------------------------------------
@@ -1258,7 +1252,7 @@ def irs_rheader(r, tabs=[]):
             #                          args="create",
             #                          vars={"format":"popup",
             #                                "caller":"irs_ireport"}),
-            #                _title=T("Add Task"))
+            #                _title=T("Create Task"))
             rheader = DIV(TABLE(
                             TR(
                                 TH("%s: " % table.name.label), report.name,

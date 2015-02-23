@@ -1,0 +1,4 @@
+*** Settings ***
+Resource  ../resources/main.txt
+Suite Setup  Start Testing
+Suite Teardown  End Testing

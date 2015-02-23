@@ -1,6 +1,6 @@
 """ Sahana Eden Test Framework
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -536,7 +536,7 @@ class BrokenLinkTest(Web2UnitTest):
         total = len(linktimes)
         average = numpy.mean(linktimes)
         std = numpy.std(linktimes)
-        msg = "%s links visited with an average time of %s and standard deviation of %s" % (total, average, std)
+        msg = "%s links visited with an average time of %.3f and standard deviation of %.3f" % (total, average, std)
         self.reporter(msg)
 
     def scatterplot(self):

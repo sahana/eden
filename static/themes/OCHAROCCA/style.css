@@ -1,0 +1,256 @@
+/* OCHA Colours:
+background: #002D80;
+background: #026CB6;
+background: #66B2FF
+background: #99CCFF
+background: #CCE6FF
+*/
+
+.navbar-inner {
+    background: #026CB6;
+    border: none;
+}
+.navbar .nav > li > a {
+    border-left: 1px solid #99CCFF;
+}
+
+.navbar .nav > li:last-child {
+    border-right: 1px solid #99CCFF;
+}
+
+.navbar .nav > li > a:hover {
+    background: #002D80;
+    box-shadow: none;
+}
+
+/* Homepage -  Could this be made generic?*/
+
+.btn-login, .btn-register {
+    float: right;
+    margin-top: 10px !important;
+}
+
+.btn-register {
+    clear: right;
+}
+.homepage.row {
+    clear: both;
+}
+
+ h1, h2, h3 {
+    font-family: NeoSans;
+    font-weight: normal;
+    color: #444444;
+    /*text-shadow: 2px 2px 1px black;*/
+}
+
+.title {
+    width: 100%;
+}
+
+.title h1, .title h2 {
+    width: 100%;
+    text-align: center;
+}
+
+
+.title h1 {
+    font-size: 50px;
+    padding: 10px 0;
+    margin: 0 0 15px 0;
+}
+
+.title h2 {
+    font-size: 20px;
+    line-height: 30px;
+    padding: 10px 0 0;
+    margin: 0;
+}
+
+#ocharocca-carousel {
+    margin: -120px 0 20px;
+    padding-top: 110px;
+}
+
+#ocharocca-carousel .carousel-inner {
+    margin: 0 auto;
+    width: 720px;
+}
+
+#ocharocca-carousel img {
+    float: left;
+    height: 200px;
+}
+
+#ocharocca-carousel .carousel-caption {
+    float: left;
+    position: relative;
+    top: 0;
+    width: 300px;
+    margin: 0 30px 0 0;
+}
+
+#ocharocca-carousel .carousel-caption p {
+    color: black;
+    font: 300 18px/20px 'Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+    padding: 0 0 20px 0;
+    padding-bottom: 10px;
+    text-shadow: none;
+    clear: both;
+}
+
+h1, h2, h3 {
+    text-shadow: none
+}
+a {
+    color: #444444;
+}
+
+h2 {
+    float: left;
+}
+
+h3 {
+    margin: 0;
+    padding:0;
+    font-family: NeoSans;
+    font-weight: normal;
+    color: #444444;
+    font-size: 18px;
+    line-height: 35px;
+}
+.homepage .link {
+    padding: 5px 10px 5px 10px;
+    margin: 5px 0;
+    background: url('../../img/semi_white_75.png');
+}
+
+.homepage .link:hover {
+    background-color: white;
+}
+.homepage .link:hover h3,
+.homepage .link:hover a {
+    color: #182640;
+    text-decoration:none;
+}
+
+.dl {
+    padding: 5px 2px;
+}
+
+.thumbnail {
+    background: url('../../img/semi_white_75.png') !important;
+/*
+        border: none ;
+    border-radius: 0;
+    box-shadow: none;
+    */
+}
+
+.thumbnail:hover {
+    background-color: white !important;
+}
+
+.cms-edit {
+    display: none;
+}
+/***********************************************/
+/*h2, #list-btn-add {
+    float: left
+}
+*/
+.summary-import {
+    margin: 15px 0 0 15px;
+}
+
+#list-add,
+#summary-common,
+#table-container,
+.form-container {
+    clear: both;
+}
+
+
+/***********************************************/
+.homepage {
+    clear: both;
+    padding: 0 0;
+}
+
+.countries {
+    height: 85px;
+}
+
+.link:hover {
+    text-decoration: none;
+}
+
+.link h3 {
+    background: #66B2FF;
+    padding: 0 10px;
+    text-align: center;
+    width: 100px;
+}
+
+.menus {
+    margin: 0 1.25% 50px 1.25%;
+    padding: 20px 0;
+    height: 220px;
+    text-align: center;
+    background: #66B2FF;
+}
+
+.country,
+.menu {
+    float: left;
+}
+
+.country {
+    width: 7.6%;
+    margin: 0 1.25%;
+    padding: 10px 0.5% 5px;
+    background: #66B2FF;
+    text-align: center;
+    height: 55px;
+}
+.menu {
+    width: 25%;
+}
+
+
+.menu a{
+    text-decoration: none;
+}
+    
+.flag {
+    height: 20px;
+}
+
+.country.tm h3 {
+    font-size: 15px;
+}
+/*
+.link  h3:hover,
+.country:hover,
+.menu h3:hover {
+    background: #99CCFF;
+} */
+
+.badge {
+    line-height: 25px;
+    font-size: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    width: auto;
+}
+
+/* Carousel */
+.carousel-control {
+    background-color: rgba(0, 0, 0, 0);
+    border: 0 none;
+    font-size: 120px;
+    height: 80px;
+    margin-top: 0;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    z-index: 10;
+}

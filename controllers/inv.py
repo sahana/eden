@@ -45,9 +45,8 @@ def index2():
         # Start of TEST CODE for multiple dataTables,
         #this also required views/inv/index.html to be modified
         from s3.s3data import S3DataTable
-        vars = request.get_vars
         representation = request.extension
-        if representation == "html" or request.vars.id == "warehouse_list_1":
+        if representation == "html" or get_vars.id == "warehouse_list_1":
             resource = s3db.resource("inv_warehouse")
             totalrows = resource.count()
             list_fields = ["id",
@@ -56,11 +55,11 @@ def index2():
                            ]
             orderby = "inv_warehouse.name asc"
             if representation == "aadata":
-                query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                 if orderby is None:
                     orderby = default_orderby
-            start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-            limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
+            start = int(get_vars.displayStart) if get_vars.displayStart else 0
+            limit = int(get_vars.pageLength) if get_vars.pageLength else s3.ROWSPERPAGE
             data = resource.select(list_fields,
                                    start=start,
                                    limit=limit,
@@ -78,23 +77,23 @@ def index2():
                 warehouses = dt.html(totalrows,
                                      filteredrows,
                                      "warehouse_list_1",
-                                     dt_bFilter="true",
-                                     dt_group=2,
                                      dt_ajax_url=URL(c="inv",
                                                   f="index2",
                                                   extension="aadata",
                                                   vars={"id":"warehouse_list_1"},
                                                   ),
+                                     dt_group=2,
+                                     dt_searching="true",
                                      )
             else:
                 warehouse = dt.json(totalrows,
                                     filteredrows,
                                     "warehouse_list_1",
-                                    int(request.vars.sEcho),
+                                    int(get_vars.draw),
                                     )
                 return warehouse
         # Second Table
-        if representation == "html" or request.vars.id == "inventory_list_1":
+        if representation == "html" or get_vars.id == "inventory_list_1":
             if "Adjust" in request.post_vars:
                 if request.post_vars.selected == "":
                     inventory = "Well you could have selected something :("
@@ -114,7 +113,7 @@ def index2():
                                ]
                 orderby = "inv_inv_item.site_id asc"
                 if representation == "aadata":
-                    query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                    query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                     if orderby is None:
                         orderby = default_orderby
                 site_list = {}
@@ -138,8 +137,8 @@ def index2():
                     formatted_site_list[str(repr(key))] = value
                 if isinstance(orderby, bool):
                     orderby = [table.site_id, stable.name, ~table.quantity]
-                start = int(vars.iDisplayStart) if vars.iDisplayStart else 0
-                limit = int(vars.iDisplayLength) if vars.iDisplayLength else s3.ROWSPERPAGE
+                start = int(get_vars.displayStart) if get_vars.displayStart else 0
+                limit = int(get_vars.pageLength) if get_vars.pageLength else s3.ROWSPERPAGE
                 data = resource.select(list_fields,
                                        orderby=orderby,
                                        start=start,
@@ -153,7 +152,7 @@ def index2():
                                  )
                 custom_actions = [dict(label=str(T("Warehouse")),
                                   _class="action-icon",
-                                  icon="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
+                                  img="/%s/static/img/markers/gis_marker.image.Agri_Commercial_Food_Distribution_Center_S1.png" % appname,
                                   url=URL(c="inv", f="warehouse",
                                           args=["[id]", "update"]
                                           )
@@ -175,9 +174,6 @@ def index2():
                     inventory = dt.html(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
-                                        dt_bFilter="true",
-                                        dt_group=[1,2],
-                                        dt_group_totals=[formatted_site_list],
                                         dt_action_col=-1,
                                         dt_ajax_url=URL(c="inv",
                                                      f="index2",
@@ -185,6 +181,9 @@ def index2():
                                                      vars={"id":"inventory_list_1"},
                                                      ),
                                         dt_bulk_actions = "Adjust",
+                                        dt_group=[1,2],
+                                        dt_group_totals=[formatted_site_list],
+                                        dt_searching="true",
                                         dt_styles = {"dtdisable": errorList,
                                                      "dtwarning": warningList,
                                                      "dtalert": alertList,
@@ -201,7 +200,7 @@ def index2():
                     inventory = dt.json(totalrows,
                                         filteredrows,
                                         "inventory_list_1",
-                                        int(request.vars.sEcho),
+                                        int(get_vars.draw),
                                         dt_action_col=-1,
                                         dt_bulk_actions = "Adjust",
                                         dt_group_totals=[formatted_site_list],
@@ -224,7 +223,7 @@ def index2():
                                )
                     return output
         # Third table
-        if representation == "html" or request.vars.id == "supply_list_1":
+        if representation == "html" or get_vars.id == "supply_list_1":
             resource = s3db.resource("supply_item")
             list_fields = ["id",
                            "name",
@@ -233,7 +232,7 @@ def index2():
                            ]
             orderby = "inv_inv_item.site_id asc"
             if representation == "aadata":
-                query, orderby, left = resource.datatable_filter(list_fields, request.get_vars)
+                query, orderby, left = resource.datatable_filter(list_fields, get_vars)
                 if orderby is None:
                     orderby = default_orderby
             data = resource.select(list_fields,
@@ -250,19 +249,19 @@ def index2():
                 supply_items = dt.html(numrows,
                                        numrows,
                                        "supply_list_1",
-                                       dt_displayLength=10,
                                        dt_action_col=1,
                                        dt_ajax_url=URL(c="inv",
                                                        f="index2",
                                                        extension="aadata",
                                                        vars={"id": "supply_list_1"},
                                                        ),
+                                       dt_pageLength=10,
                                        )
             else:
                 supply_items = dt.json(numrows,
                                        numrows,
                                        "supply_list_1",
-                                       int(request.vars.sEcho),
+                                       int(get_vars.draw),
                                        dt_action_col=1,
                                        )
                 return supply_items
@@ -282,8 +281,8 @@ def warehouse():
         RESTful CRUD controller
     """
 
-    if "viewing" in request.get_vars:
-        viewing = request.get_vars.viewing
+    if "viewing" in get_vars:
+        viewing = get_vars.viewing
         tn, id = viewing.split(".", 1)
         if tn == "inv_warehouse":
             request.args.insert(0, id)
@@ -300,7 +299,8 @@ def warehouse():
                 list_fields = s3db.get_config("inv_inv_item", "list_fields")
                 try:
                     list_fields.remove("site_id")
-                    s3db.configure("inv_inv_item", list_fields=list_fields)
+                    s3db.configure("inv_inv_item",
+                                   list_fields = list_fields)
                 except:
                     pass
 
@@ -368,28 +368,34 @@ def warehouse():
         return output
     s3.postp = postp
 
-    if "extra_data" in request.get_vars:
+    if "extra_data" in get_vars:
         resourcename = "inv_item"
     else:
         resourcename = "warehouse"
     csv_stylesheet = "%s.xsl" % resourcename
 
     output = s3_rest_controller(module, resourcename,
-                                rheader=s3db.inv_rheader,
-                                hide_filter = {"inv_item": False,
-                                               "_default": True,
-                                              },
-                                csv_template = resourcename,
-                                csv_stylesheet = csv_stylesheet,
+                                #hide_filter = {"inv_item": False,
+                                #               "_default": True,
+                                #               },
                                 # Extra fields for CSV uploads:
                                 #csv_extra_fields = [
                                 #         dict(label="Organisation",
                                 #         field=s3db.org_organisation_id(comment=None))
                                 #]
+                                csv_stylesheet = csv_stylesheet,
+                                csv_template = resourcename,
+                                rheader = s3db.inv_rheader,
                                 )
-    if "add_btn" in output:
-        del output["add_btn"]
     return output
+
+# -----------------------------------------------------------------------------
+def warehouse_type():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def supplier():
@@ -397,27 +403,24 @@ def supplier():
         Filtered version of the organisation() REST controller
     """
 
-    request.get_vars["organisation.organisation_type_id$name"] = "Supplier"
+    get_vars["organisation_type.name"] = "Supplier"
 
     # Load model
     table = s3db.org_organisation
 
     # Modify CRUD Strings
-    ADD_SUPPLIER = T("Add Supplier")
     s3.crud_strings.org_organisation = Storage(
-        title_create=ADD_SUPPLIER,
-        title_display=T("Supplier Details"),
-        title_list=T("Suppliers"),
-        title_update=T("Edit Supplier"),
-        title_upload=T("Import Suppliers"),
-        subtitle_create=ADD_SUPPLIER,
-        label_list_button=T("List Suppliers"),
-        label_create_button=ADD_SUPPLIER,
-        label_delete_button=T("Delete Supplier"),
-        msg_record_created=T("Supplier added"),
-        msg_record_modified=T("Supplier updated"),
-        msg_record_deleted=T("Supplier deleted"),
-        msg_list_empty=T("No Suppliers currently registered")
+        label_create = T("Create Supplier"),
+        title_display = T("Supplier Details"),
+        title_list = T("Suppliers"),
+        title_update = T("Edit Supplier"),
+        title_upload = T("Import Suppliers"),
+        label_list_button = T("List Suppliers"),
+        label_delete_button = T("Delete Supplier"),
+        msg_record_created = T("Supplier added"),
+        msg_record_modified = T("Supplier updated"),
+        msg_record_deleted = T("Supplier deleted"),
+        msg_list_empty = T("No Suppliers currently registered")
         )
 
     # Modify filter_widgets
@@ -434,7 +437,7 @@ def inv_item():
     """ REST Controller """
 
     # If this url has a viewing track items then redirect to track_movement
-    viewing = request.get_vars.get("viewing", None)
+    viewing = get_vars.get("viewing", None)
     if viewing:
         tn, id = viewing.split(".", 1)
         if tn == "inv_track_item":
@@ -457,7 +460,7 @@ def inv_item():
 
     s3.crud_strings[tablename].msg_list_empty = T("No Stock currently registered")
 
-    report = request.get_vars.get("report")
+    report = get_vars.get("report")
     if report == "mon":
             s3.crud_strings[tablename].update(dict(
                 title_list = T("Monetization Report"),
@@ -515,7 +518,6 @@ def inv_item():
             Deletes all Stock records of the organisation/branch
             before processing a new data import
         """
-        request = current.request
         resource, tree = data
         xml = current.xml
         tag = xml.TAG
@@ -549,17 +551,19 @@ def inv_item():
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: dict(ReplaceOption=T("Remove existing data before import"))
 
-    output = s3_rest_controller(rheader=s3db.inv_rheader,
-                                #csv_extra_fields = [dict(label="Organisation",
+    output = s3_rest_controller(#csv_extra_fields = [dict(label="Organisation",
                                 #                         field=s3db.org_organisation_id(comment=None))
                                 #                    ],
                                 pdf_paper_alignment = "Landscape",
                                 pdf_table_autogrow = "B",
                                 pdf_groupby = "site_id, item_id",
                                 pdf_orderby = "expiry_date, supply_org_id",
+                                rheader=s3db.inv_rheader,
                                 )
+
     if "add_btn" in output and not settings.get_inv_direct_stock_edits():
         del output["add_btn"]
+
     return output
 
 # -----------------------------------------------------------------------------
@@ -577,8 +581,8 @@ def track_movement():
 
     def prep(r):
         if r.interactive:
-            if "viewing" in request.vars:
-                dummy, item_id = request.vars.viewing.split(".")
+            if "viewing" in get_vars:
+                dummy, item_id = get_vars.viewing.split(".")
                 if item_id != "None":
                     filter = (table.send_inv_item_id == item_id ) | \
                              (table.recv_inv_item_id == item_id)
@@ -587,7 +591,7 @@ def track_movement():
     s3.prep = prep
 
     output = s3_rest_controller("inv", "track_item",
-                                rheader=s3db.inv_rheader,
+                                rheader = s3db.inv_rheader,
                                 )
     if "add_btn" in output:
         del output["add_btn"]
@@ -803,7 +807,7 @@ def send_cancel():
 
     inv_ship_status = s3db.inv_ship_status
     if send_record.status != inv_ship_status["SENT"]:
-        session.error = T("This shipment has not been sent - it has NOT been canceled because can still be edited.")
+        session.error = T("This shipment has not been sent - it has NOT been canceled because it can still be edited.")
 
     if session.error:
         redirect(URL(c="inv", f="send",
@@ -969,9 +973,8 @@ def recv():
 
     def prep(r):
         record = r.record
-        if (record and
-            (record.status != SHIP_STATUS_IN_PROCESS and
-             record.status != SHIP_STATUS_SENT)):
+        if record and \
+           record.status not in (SHIP_STATUS_IN_PROCESS, SHIP_STATUS_SENT):
             # Now that the shipment has been sent
             # lock the record so that it can't be meddled with
             s3db.configure("inv_recv",
@@ -980,12 +983,16 @@ def recv():
                            editable = False,
                            listadd = False,
                            )
-        if r.component and r.component.name == "track_item":
-            # Set the track_item attributes
-            # Can only create or delete track items for a recv record if the status is preparing
+        component = r.component
+        if record and component and component.name == "track_item":
+            # Can only create or delete track items for a recv record
+            # if the status is preparing:
             if r.method == "create" or r.method == "delete":
                 if record.status != SHIP_STATUS_IN_PROCESS:
                     return False
+
+            # Configure which fields in track_item are readable/writable
+            # depending on status:
             if r.component_id:
                 track_record = db(tracktable.id == r.component_id).select(tracktable.status,
                                                                           limitby=(0, 1)
@@ -995,14 +1002,16 @@ def recv():
                 set_track_attr(TRACK_STATUS_PREPARING)
                 tracktable.status.readable = False
 
-            if r.record and r.record.status == SHIP_STATUS_IN_PROCESS:
+            # Adjust CRUD strings
+            if record.status == SHIP_STATUS_IN_PROCESS:
                 s3.crud_strings.inv_recv.title_update = \
                 s3.crud_strings.inv_recv.title_display = T("Process Received Shipment")
-                
+
             # Default the Supplier/Donor to the Org sending the shipment
             tracktable.supply_org_id.default = record.organisation_id
         else:
-            # Set the recv attributes
+            # Configure which fields in inv_recv are readable/writable
+            # depending on status
             if r.id:
                 record = db(recvtable.id == r.id).select(recvtable.status,
                                                          limitby=(0, 1)
@@ -1021,7 +1030,7 @@ def recv():
         record = db(recvtable.id == request.args[0]).select(recvtable.status,
                                                             limitby=(0, 1)
                                                             ).first()
-        status = record.status
+        status = record.status if record else None
         if status == SHIP_STATUS_SENT:
             list_fields = ["id",
                            "status",
@@ -1052,7 +1061,7 @@ def recv():
                            listadd = False,
                            )
 
-    output = s3_rest_controller(rheader=s3db.inv_recv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_recv_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -1240,7 +1249,7 @@ def recv_cancel():
 
     inv_ship_status = s3db.inv_ship_status
     if recv_record.status != inv_ship_status["RECEIVED"]:
-        session.error = T("This shipment has not been received - it has NOT been canceled because can still be edited.")
+        session.error = T("This shipment has not been received - it has NOT been canceled because it can still be edited.")
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     stable = s3db.inv_send
@@ -1327,7 +1336,7 @@ def track_item():
                    deletable=False,
                    )
 
-    report = request.get_vars.get("report")
+    report = get_vars.get("report")
     if report == "rel":
         # Summary of Releases
         s3.crud_strings["inv_track_item"] = Storage(title_list = T("Summary of Releases"),
@@ -1351,7 +1360,7 @@ def track_item():
                        orderby = "inv_send.site_id",
                        sort = True
                       )
-        s3.filter = (s3base.S3FieldSelector("send_id") != None)
+        s3.filter = (FS("send_id") != None)
 
     elif report == "inc":
         # Summary of Incoming Supplies
@@ -1376,7 +1385,7 @@ def track_item():
                                         ],
                         orderby = "inv_recv.recipient_id",
                         )
-        s3.filter = (s3base.S3FieldSelector("recv_id") != None)
+        s3.filter = (FS("recv_id") != None)
 
     elif report == "util":
         # Utilization Report
@@ -1399,7 +1408,7 @@ def track_item():
                                         ]
                         )
 
-        s3.filter = (s3base.S3FieldSelector("item_id") != None)
+        s3.filter = (FS("item_id") != None)
 
     elif report == "exp":
         # Expiration Report
@@ -1418,9 +1427,9 @@ def track_item():
                                         (T("Total Cost"), "total_value"),
                                         ]
                         )
-        s3.filter = (s3base.S3FieldSelector("expiry_date") != None)
+        s3.filter = (FS("expiry_date") != None)
 
-    output = s3_rest_controller(rheader=s3db.inv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_rheader)
     return output
 
 # =============================================================================
@@ -1461,17 +1470,17 @@ def adj():
                     table.site_id.writable = False
                     table.comments.writable = False
                 else:
-                    if "item" in request.vars and "site" in request.vars:
+                    if "item" in get_vars and "site" in get_vars:
                         # create a adj record with a single adj_item record
                         adj_id = table.insert(adjuster_id = auth.s3_logged_in_person(),
-                                              site_id = request.vars.site,
+                                              site_id = get_vars.site,
                                               adjustment_date = request.utcnow,
                                               status = 0,
                                               category = 1,
                                               comments = "Single item adjustment"
                                               )
                         inv_item_table = s3db.inv_inv_item
-                        inv_item = inv_item_table[request.vars.item]
+                        inv_item = inv_item_table[get_vars.item]
                         adjitemtable = s3db.inv_adj_item
                         adj_item_id = adjitemtable.insert(reason = 0,
                                     adj_id = adj_id,
@@ -1497,9 +1506,9 @@ def adj():
                                              "update"]))
                     else:
                         table.comments.default = "Complete Stock Adjustment"
-                        if "site" in request.vars:
+                        if "site" in get_vars:
                             table.site_id.writable = True
-                            table.site_id.default = request.vars.site
+                            table.site_id.default = get_vars.site
         return True
     s3.prep = prep
 
@@ -1674,10 +1683,14 @@ def facility_type():
 
 # -----------------------------------------------------------------------------
 def incoming():
-    """ Incoming Shipments """
+    """
+        Incoming Shipments for Sites
 
-    # Defined in the Model for use from Multiple Controllers for unified menus
-    return inv_incoming()
+        Used from Requests rheader when looking at Transport Status
+    """
+
+    # @ToDo: Create this function!
+    return s3db.inv_incoming()
 
 # -----------------------------------------------------------------------------
 def req_match():

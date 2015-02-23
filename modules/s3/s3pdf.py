@@ -15,7 +15,7 @@
     process being removed at a later stage.
     ######################################################################
 
-    @copyright: 2011-13 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -40,7 +40,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3PDF"]
+__all__ = ("S3PDF",)
 
 import os
 import sys
@@ -2027,7 +2027,7 @@ class S3PDF(S3Method):
         self.output = StringIO()
         self.layoutEtree = etree.Element("s3ocrlayout")
         try:
-            pdfTitle = current.response.s3.crud_strings[self.tablename].title_create.decode("utf-8")
+            pdfTitle = current.response.s3.crud_strings[self.tablename].label_create.decode("utf-8")
         except:
             pdfTitle = self.resource.tablename
 
@@ -2093,7 +2093,7 @@ class S3PDF(S3Method):
         """
 
         r = self.r
-        
+
         s3xml_etree = self.resource.export_struct(options=True,
                                                   references=True,
                                                   stylesheet=None,
@@ -3151,9 +3151,9 @@ class S3PDFDataSource:
 
         # Retrieve the resource contents
         table = resource.table
-        lfields, joins, left, distinct = resource.resolve_selectors(list_fields)
-        fields = [f for f in lfields if f.show]
-        headers = [f.label for f in lfields if f.show]
+        rfields = resource.resolve_selectors(list_fields)[0]
+        fields = [f for f in rfields if f.show]
+        headers = [f.label for f in rfields if f.show]
         if orderby != None:
             orderby = fields[0].field
         self.records = resource.select(list_fields,

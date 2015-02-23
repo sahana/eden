@@ -131,12 +131,15 @@
                     <xsl:value-of select="$role"/>
                 </xsl:attribute>
             </reference>
-            <xsl:if test="$realm='0'">
-                <data field="pe_id" value="0"/>
-            </xsl:if>
-            <xsl:if test="contains($realm, '=')">
-                <data field="pe_id"><xsl:value-of select="$realm"/></data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$realm='0'">
+                    <data field="pe_id" value="0"/>
+                </xsl:when>
+                <!-- e.g. org_organisation.name=Viet Nam Red Cross -->
+                <xsl:when test="contains($realm, '=')">
+                    <data field="pe_id"><xsl:value-of select="$realm"/></data>
+                </xsl:when>
+            </xsl:choose>
         </resource>
 
     </xsl:template>

@@ -14,12 +14,18 @@ if not settings.has_module(module):
 
 # -----------------------------------------------------------------------------
 def index():
-
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    return s3db.cms_index(module, alt_function="index_alt")
+
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Module homepage for non-Admin users when no CMS content found
+    """
+
+    # Just redirect to the list of Events
+    redirect(URL(f="event"))
 
 # -----------------------------------------------------------------------------
 def create():
@@ -48,14 +54,24 @@ def event():
 
             elif r.method == "update":
                 # Can't change details after event activation
-                r.table.exercise.writable = False
-                r.table.exercise.comment = None
-                r.table.zero_hour.writable = False
+                table = r.table
+                table.exercise.writable = False
+                table.exercise.comment = None
+                table.start_date.writable = False
 
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=event_rheader)
+    def postp(r, output):
+        if r.interactive:
+            if not r.component:
+                # Set the minimum end_date to the same as the start_date
+                s3.jquery_ready.append(
+'''S3.start_end_date('event_event_start_date','event_event_end_date')''')
+        return output
+    s3.postp = postp
+
+    output = s3_rest_controller(rheader = s3db.event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -82,25 +98,24 @@ def incident():
 
     # Pre-process
     def prep(r):
-        if r.interactive:
+        if r.interactive or r.representation == "aadata":
             if r.component:
-                if r.component.name == "config":
+                if r.component.alias == "assign":
+                    if not r.method:
+                        r.method = "assign"
+                    if r.method == "assign":
+                        r.custom_action = s3db.hrm_AssignMethod(component="assign")
+                if r.component_name == "config":
                     s3db.configure("gis_config",
-                                   deletable=False)
+                                   deletable = False,
+                                   )
                     s3.crud.submit_button = T("Update")
-                elif r.component.name == "human_resource":
-                    s3db.configure("event_human_resource",
-                                   list_fields=["human_resource_id"])
+                elif r.component_name in ("asset", "human_resource", "organisation", "site"):
                     s3.crud.submit_button = T("Assign")
                     s3.crud_labels["DELETE"] = T("Remove")
-                elif r.component.name == "asset":
-                    s3db.configure("event_asset",
-                                   list_fields=["asset_id"])
-                    s3.crud.submit_button = T("Assign")
-                    s3.crud_labels["DELETE"] = T("Remove")
-                else:
-                    s3.crud.submit_button = T("Assign")
-                    s3.crud_labels["DELETE"] = T("Remove")
+                #else:
+                #    s3.crud.submit_button = T("Assign")
+                #    s3.crud_labels["DELETE"] = T("Remove")
 
             elif r.method != "update" and r.method != "read":
                 # Create or ListCreate
@@ -108,10 +123,11 @@ def incident():
 
             elif r.method == "update":
                 # Can't change details after event activation
-                r.table.scenario_id.writable = False
-                r.table.exercise.writable = False
-                r.table.exercise.comment = None
-                r.table.zero_hour.writable = False
+                table = r.table
+                table.scenario_id.writable = False
+                table.exercise.writable = False
+                table.exercise.comment = None
+                table.zero_hour.writable = False
 
         return True
     s3.prep = prep
@@ -122,8 +138,9 @@ def incident():
         if r.interactive:
             if r.component:
                 if r.component.name == "human_resource":
-                    update_url = URL(c="hrm", f="human_resource", args=["[id]"])
-                    s3_action_buttons(r, update_url=update_url)
+                    #update_url = URL(c="hrm", f="human_resource", args=["[id]"])
+                    #s3_action_buttons(r, update_url=update_url)
+                    s3_action_buttons(r)
                     if "msg" in settings.modules:
                         s3base.S3CRUD.action_button(url = URL(f="compose",
                                                               vars = {"hrm_id": "[id]"}),
@@ -132,7 +149,7 @@ def incident():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader=event_rheader)
+    output = s3_rest_controller(rheader = s3db.event_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -141,77 +158,69 @@ def incident_report():
         RESTful CRUD controller
     """
 
+    def prep(r):
+        if r.http == "GET":
+            if r.method in ("create", "create.popup"):
+                # Lat/Lon from Feature?
+                # @ToDo: S3PoIWidget() instead to pickup the passed Lat/Lon/WKT
+                field = r.table.location_id
+                lat = get_vars.get("lat", None)
+                if lat is not None:
+                    lon = get_vars.get("lon", None)
+                    if lon is not None:
+                        form_vars = Storage(lat = float(lat),
+                                            lon = float(lon),
+                                            )
+                        form = Storage(vars=form_vars)
+                        s3db.gis_location_onvalidation(form)
+                        id = s3db.gis_location.insert(**form_vars)
+                        field.default = id
+                # WKT from Feature?
+                wkt = get_vars.get("wkt", None)
+                if wkt is not None:
+                    form_vars = Storage(wkt = wkt,
+                                        )
+                    form = Storage(vars = form_vars)
+                    s3db.gis_location_onvalidation(form)
+                    id = s3db.gis_location.insert(**form_vars)
+                    field.default = id
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def event_rheader(r):
-    """ Resource headers for component views """
+def resource():
+    """
+        RESTful CRUD controller
+    """
 
-    rheader = None
+    def prep(r):
+        if r.interactive:
+            if r.method in ("create", "update"):
+                table = r.table
+                if r.method == "create":
+                    # Enable Location field
+                    field = table.location_id
+                    field.readable = field.writable = True
 
-    if r.representation == "html":
+                get_vars = r.get_vars
+                # Context from a Profile page?"
+                #location_id = get_vars.get("(location)", None)
+                #if location_id:
+                #    field = table.location_id
+                #    field.default = location_id
+                #    field.readable = field.writable = False
+                incident_id = get_vars.get("~.(incident)", None)
+                if incident_id:
+                    field = table.incident_id
+                    field.default = incident_id
+                    field.readable = field.writable = False
+        return True
+    s3.prep = prep
 
-        if r.name == "event":
-            # Event Controller
-            tabs = [(T("Event Details"), None)]
-            #if settings.has_module("req"):
-            #    tabs.append((T("Requests"), "req"))
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            event = r.record
-            if event:
-                if event.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if event.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % T("Name")),
-                                       event.name),
-                                       TH("%s: " % T("Comments")),
-                                       event.comments,
-                                    TR(TH("%s: " % T("Zero Hour")),
-                                       event.zero_hour),
-                                    TR(closed),
-                                    ), rheader_tabs)
-
-        if r.name == "incident":
-            # Incident Controller
-            tabs = [(T("Incident Details"), None)]
-            if settings.has_module("project"):
-                tabs.append((T("Tasks"), "task"))
-            if settings.has_module("hrm"):
-                tabs.append((T("Human Resources"), "human_resource"))
-            if settings.has_module("asset"):
-                tabs.append((T("Assets"), "asset"))
-            tabs.append((T("Facilities"), "site"))
-            tabs.append((T("Map Configuration"), "config"))
-            rheader_tabs = s3_rheader_tabs(r, tabs)
-
-            record = r.record
-            if record:
-                if record.exercise:
-                    exercise = TH(T("EXERCISE"))
-                else:
-                    exercise = TH()
-                if record.closed:
-                    closed = TH(T("CLOSED"))
-                else:
-                    closed = TH()
-                rheader = DIV(TABLE(TR(exercise),
-                                    TR(TH("%s: " % T("Name")),
-                                       record.name),
-                                       TH("%s: " % T("Comments")),
-                                       record.comments,
-                                    TR(TH("%s: " % T("Zero Hour")),
-                                       record.zero_hour),
-                                    TR(closed),
-                                    ), rheader_tabs)
-
-    return rheader
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def person():

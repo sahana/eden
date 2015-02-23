@@ -1,0 +1,9 @@
+Warehouse,Organisation,Category,Category Code,Catalog,Item Code,Item Name,Units,Brand,Model,Year,Pack,Pack Quantity,Weight,Length,Width,Height,Volume,Tracking Number,Bin,Supplier/Donor,Owned By (Organization/Branch),Expiry Date,Quantity,Unit Value,Currency,Comments
+"Batwara Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Blankets,Piece,,,,Roll,10,,,,,,,,,"Revive Kashmir Inc.",,500,7,USD,
+"Batwara Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Jerry Cans,Piece,,,,Case,6,,,,,,,,,"Revive Kashmir Inc.",,100,2,USD,
+"Batwara Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Kitchen Sets,Unit,,,,Box,10,,,,,,,,,"Revive Kashmir Inc.",,50,15,USD,
+"Batwara Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Plastic Sheets,m2,,,,Roll,100,,,,,,,,,"Revive Kashmir Inc.",,800,1,USD,
+"Bemina Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Blankets,Piece,,,,Roll,10,,,,,,,,,"Revive Kashmir Inc.",,600,3,USD,
+"Bemina Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Kitchen Sets,Unit,,,,Box,10,,,,,,,,,"Revive Kashmir Inc.",,75,18,USD,
+"Bemina Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Hygiene Kits,Unit,,,,Box,25,,,,,,,,,"Revive Kashmir Inc.",,75,20,USD,
+"Bemina Warehouse","Revive Kashmir Inc.",Relief Item,,Standard,,Plastic Sheets,m2,,,,Roll,100,,,,,,,,,"Revive Kashmir Inc.",,2000,1,USD,

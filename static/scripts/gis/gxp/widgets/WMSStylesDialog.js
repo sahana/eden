@@ -7,10 +7,12 @@
  */
 
 /**
- * @require util.js
- * @require widgets/RulePanel.js
- * @require widgets/StylePropertiesDialog.js
- * @require OpenLayers/Renderer.js
+ * @requires util.js
+ * @requires widgets/RulePanel.js
+ * @requires widgets/StylePropertiesDialog.js
+ * @require OpenLayers/Renderer/SVG.js
+ * @require OpenLayers/Renderer/VML.js
+ * @require OpenLayers/Renderer/Canvas.js
  * @require OpenLayers/Style2.js
  * @require OpenLayers/Format/SLD/v1_0_0_GeoServer.js
  * @require GeoExt/data/AttributeStore.js
@@ -89,6 +91,10 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
      stylesFieldsetTitle: "Styles",
     /** api: config[rulesFieldsetTitle] (i18n) */
      rulesFieldsetTitle: "Rules",
+    /** api: config[errorTitle] (i18n) */
+     errorTitle: "Error saving style",
+    /** api: config[errorMsg] (i18n) */
+     errorMsg: "There was an error saving the style back to the server.",
 
     //TODO create a StylesStore which can read styles using GetStyles. Create
     // subclasses for that store with writing capabilities, e.g.
@@ -180,7 +186,7 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
      *  add the dialogue to a container.
      */
     dialogCls: Ext.Window,
-        
+
     /** private: method[initComponent]
      */
     initComponent: function() {
@@ -305,6 +311,15 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
         this.on({
             "beforesaved": function() { this._saving = true; },
             "saved": function() { delete this._saving; },
+            "savefailed": function() { 
+                Ext.Msg.show({
+                    title: this.errorTitle,
+                    msg: this.errorMsg,
+                    icon: Ext.MessageBox.ERROR,
+                    buttons: {ok: true}
+                });
+                delete this._saving; 
+            },
             "render": function() {
                 gxp.util.dispatch([this.getStyles], function() {
                     this.enable();
@@ -350,7 +365,7 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
                 iconCls: "cancel",
                 handler: function() {
                     styleProperties.propertiesDialog.userStyle = userStyle;
-                    styleProperties.close();
+                    styleProperties.destroy();
                     if (prevStyle) {
                         this._cancelling = true;
                         this.stylesStore.remove(this.selectedStyle);
@@ -366,7 +381,7 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
                 text: this.saveText,
                 iconCls: "save",
                 handler: function() {
-                    styleProperties.close();
+                    styleProperties.destroy();
                 }
             }]
         };
@@ -389,7 +404,7 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
                 }
             },
             listeners: {
-                "close": function() {
+                "beforedestroy": function() {
                     this.selectedStyle.set(
                         "userStyle",
                         styleProperties.propertiesDialog.userStyle);
@@ -459,7 +474,9 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
      *  the last rule.
      */
     updateRuleRemoveButton: function() {
-        this.items.get(3).items.get(1).setDisabled(!this.selectedRule);
+        this.items.get(3).items.get(1).setDisabled(
+            !this.selectedRule || this.items.get(2).items.get(0).rules.length < 2
+        );
     },
     
     /** private: method[createRule]
@@ -547,7 +564,9 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
     /** private: method[removeRule]
      */
     removeRule: function() {
-        this.selectedStyle.get("userStyle").rules.remove(this.selectedRule);
+        var selectedRule = this.selectedRule;
+        this.items.get(2).items.get(0).unselect();
+        this.selectedStyle.get("userStyle").rules.remove(selectedRule);
         // mark the style as modified
         this.afterRuleChange();
     },
@@ -576,8 +595,9 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
             title: String.format(this.ruleWindowTitle,
                 rule.title || rule.name || this.newRuleText),
             shortTitle: rule.title || rule.name || this.newRuleText,
-            width: 340,
-            autoHeight: true,
+            layout: "fit",
+            width: 320,
+            height: 450,
             modal: true,
             items: [{
                 xtype: "gxp_rulepanel",
@@ -615,13 +635,13 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
                 iconCls: "cancel",
                 handler: function() {
                     this.saveRule(ruleDlg.rulePanel, origRule);
-                    ruleDlg.close();
+                    ruleDlg.destroy();
                 },
                 scope: this
             }, {
                 text: this.saveText,
                 iconCls: "save",
-                handler: function() { ruleDlg.close(); }
+                handler: function() { ruleDlg.destroy(); }
             }]
         });
         this.showDlg(ruleDlg);
@@ -708,7 +728,7 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
             this.stylesStore.removeAll();
             this.selectedStyle = null;
             
-            var userStyle, record, index;
+            var userStyle, record, index, defaultStyle;
             for (var i=0, len=userStyles.length; i<len; ++i) {
                 userStyle = userStyles[i];
                 // remove existing record - this way we replace styles from
@@ -728,6 +748,14 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
                             (!initialStyle && userStyle.isDefault === true))) {
                     this.selectedStyle = record;
                 }
+                if (userStyle.isDefault === true) {
+                    defaultStyle = record;
+                }
+            }
+            // fallback to the default style, this can happen when the layer referenced
+            // a non-existing style as initialStyle
+            if (!this.selectedStyle) {
+                this.selectedStyle = defaultStyle;
             }
             
             this.addRulesFieldSet();
@@ -737,6 +765,9 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
             layerParams.SLD_BODY && this.markModified();
         }
         catch(e) {
+            if (window.console) {
+                console.warn(e.message);
+            }
             this.setupNonEditable();
         }
     },
@@ -839,7 +870,7 @@ gxp.WMSStylesDialog = Ext.extend(Ext.Container, {
     /** private: method[createStylesStore]
      */
     createStylesStore: function(callback) {
-        var styles = this.layerRecord.get("styles");
+        var styles = this.layerRecord.get("styles") || [];
         this.stylesStore = new Ext.data.JsonStore({
             data: {
                 styles: styles

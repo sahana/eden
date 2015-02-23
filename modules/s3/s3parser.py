@@ -2,10 +2,10 @@
 # vim: ai ts=4 sts=4 et sw=4 encoding=utf-8
 
 """
-   This file imports the Message parsers from the core code
-   and links them with the respective parsing tasks defined in msg_parser
+   This file parses messages using functions defined in in the template's
+   parser.py
 
-   @copyright: 2012-13 (c) Sahana Software Foundation
+   @copyright: 2012-15 (c) Sahana Software Foundation
    @license: MIT
 
    Permission is hereby granted, free of charge, to any person
@@ -30,7 +30,7 @@
    OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Parsing"]
+__all__ = ("S3Parsing",)
 
 import sys
 
@@ -83,7 +83,7 @@ class S3Parsing(object):
 
         # Load the Parser template for this deployment
         template = current.deployment_settings.get_msg_parser()
-        module_name = "applications.%s.private.templates.%s.parser" \
+        module_name = "applications.%s.modules.templates.%s.parser" \
             % (current.request.application, template)
         __import__(module_name)
         mymodule = sys.modules[module_name]
@@ -117,15 +117,15 @@ class S3Parsing(object):
         login = False
         email = None
         password = None
-        
+
         if "LOGIN" in [word.upper() for word in words]:
-            login = True 
+            login = True
         if len(words) == 2 and login:
             password = words[1]
         elif len(words) == 3 and login:
             email = words[1]
             password = words[2]
-        if login:    
+        if login:
             if password and not email:
                 email = message.from_address
             return email, password
@@ -136,7 +136,7 @@ class S3Parsing(object):
     @staticmethod
     def is_session_alive(from_address):
         """
-            Check whether there is an alive sessions from the same sender
+            Check whether there is an alive session from the same sender
         """
 
         email = None
@@ -157,7 +157,7 @@ class S3Parsing(object):
                 email = record.email
                 break
             else:
-                record.update_record(is_expired = True) 
+                record.update_record(is_expired = True)
 
         return email
 

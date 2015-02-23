@@ -7,14 +7,15 @@
 
          CSV column...........Format..........Content
 
-         Name.................string..........Event Type Name
+         Type.................string..........Event Type Name
+         SubType..............string..........Event Type Name @ToDo
          Comments.............string..........Comments
          KV:XX................................Key,Value (Key = XX in column name, value = cell in row) <- Not yet supported by Model
 
     *********************************************************************** -->
-    <xsl:output method="xml"/>
+    <xsl:import href="../commons.xsl"/>
 
-    <xsl:include href="../commons.xsl"/>
+    <xsl:output method="xml"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -27,8 +28,10 @@
 
     <xsl:template match="row">
         <resource name="event_event_type">
-            <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            <data field="name"><xsl:value-of select="col[@field='Type']"/></data>
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>

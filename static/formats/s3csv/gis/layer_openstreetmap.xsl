@@ -55,7 +55,6 @@
             <data field="name"><xsl:value-of select="$Layer"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
             <data field="base"><xsl:value-of select="col[@field='Base']"/></data>
-            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="url1"><xsl:value-of select="col[@field='URL']"/></data>
             <data field="url2"><xsl:value-of select="col[@field='URL2']"/></data>
             <data field="url3"><xsl:value-of select="col[@field='URL3']"/></data>
@@ -83,6 +82,7 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </reference>
+            <data field="dir"><xsl:value-of select="col[@field='Folder']"/></data>
             <data field="enabled"><xsl:value-of select="col[@field='Enabled']"/></data>
             <data field="visible"><xsl:value-of select="col[@field='Visible']"/></data>
             <xsl:if test="col[@field='Default']!=''">

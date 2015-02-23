@@ -23,6 +23,12 @@
     margin: -2px 6px 6px -2px;
 }
 
+.card-title2 {
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    padding-left: 10px;
+    margin-left: 10px;
+}
+
 .media-body a span.date-title {
     border-left: none;
     margin-left: 0;
@@ -42,13 +48,9 @@
 
 .date-title.event {
     font: 600 14px 'Helvetica Neue',Arial,sans-serif;
-    list-style: none outside none;
-    padding-left: 10px;
     color: #666;
     border-left: none;
     margin-left: 0;
-    padding-top: 10px;
-    padding-bottom: 9px;
 }
 
 .location-title {
@@ -106,6 +108,7 @@ a h5.media-heading:hover {
 .edit-bar .icon-bookmark,
 .edit-bar .icon-bookmark-empty,
 .edit-bar .icon-edit,
+.edit-bar .icon-link,
 .edit-bar .icon-file-alt,
 .edit-bar .icon-paperclip,
 .edit-bar .icon-trash,
@@ -118,6 +121,7 @@ a h5.media-heading:hover {
 .edit-bar .icon-bookmark:hover,
 .edit-bar .icon-bookmark-empty:hover,
 .edit-bar .icon-edit:hover,
+.edit-bar .icon-link:hover,
 .edit-bar .icon-file-alt:hover,
 .edit-bar .icon-paperclip:hover {
     color: #0095fe;

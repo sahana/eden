@@ -7,6 +7,60 @@
 module = request.controller
 
 # -----------------------------------------------------------------------------
+def forms():
+    """ Controller to download form list and individual forms """
+
+    from s3 import S3XForms
+
+    if request.env.request_method != "GET":
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
+    args = request.args
+    if len(args):
+        # Individual form
+        tablename = args[0]
+        if "." in tablename:
+            tablename, extension = tablename.split(".", 1)
+        else:
+            extension = "xhtml"
+        try:
+            prefix, name = tablename.split("_", 1)
+        except ValueError:
+            # Invalid tablename
+            raise HTTP(404, current.error.BAD_RESOURCE)
+        method = ["xform.%s" % extension]
+        if len(args) > 1:
+            method.insert(0, args[1])
+        r = s3_request(prefix, name,
+                       args = method,
+                       extension = None,
+                       )
+        r.set_handler("xform", S3XForms)
+        output = r()
+    else:
+        # Form list
+        xforms = S3XForms.formlist()
+        if not xforms:
+            raise HTTP(404, current.T("No XForms configured on this server"))
+
+        formlist = TAG.forms()
+        for url, title in xforms:
+            formlist.append(TAG.form(title, _url=url))
+
+        response.headers["Content-Type"] = "text/xml"
+        response.view = "xforms/formlist.xml"
+        output = {"formlist": formlist}
+
+    return output
+
+# -----------------------------------------------------------------------------
+#def submission():
+    #""" Controller to submit xforms instances """
+
+    ## @todo: implement
+    #raise NotImplementedError
+
+# -----------------------------------------------------------------------------
 def create():
     """
         Given a Table, returns an XForms to create an instance:
@@ -19,6 +73,8 @@ def create():
         IS_EMAIL
         IS_DATE_IN_RANGE
         IS_DATETIME_IN_RANGE
+
+        @todo: deprecate
     """
 
     try:
@@ -68,6 +124,8 @@ def uses_requirement(requirement, field):
     """
         Check if a given database field uses the specified requirement
         (IS_IN_SET, IS_INT_IN_RANGE, etc)
+
+        @todo: deprecate
     """
 
     if hasattr(field.requires, "other") or requirement in str(field.requires):
@@ -82,6 +140,8 @@ def uses_requirement(requirement, field):
 def generate_instance(table, fieldname):
     """
         Generates XML for the instance of the specified field.
+
+        @todo: deprecate
     """
 
     if table[fieldname].default:
@@ -95,6 +155,8 @@ def generate_instance(table, fieldname):
 def generate_bindings(table, fieldname, ref):
     """
         Generates the XML for bindings for the specified database field.
+
+        @todo: deprecate
     """
 
     field = table[fieldname]
@@ -162,6 +224,8 @@ def generate_bindings(table, fieldname, ref):
 def generate_controllers(table, fieldname, ref):
     """
         Generates the controllers XML for the database table field.
+
+        @todo: deprecate
     """
 
     itext_list = [] # Internationalization
@@ -253,6 +317,8 @@ def generate_controllers(table, fieldname, ref):
 def csvdata(nodelist):
     """
         Returns the data in the given node as a comma separated string
+
+        @todo: deprecate
     """
 
     data = ""
@@ -268,6 +334,8 @@ def csvdata(nodelist):
 def csvheader(parent, nodelist):
     """
         Gives the header for the CSV
+
+        @todo: deprecate
     """
 
     header = ""
@@ -281,6 +349,8 @@ def importxml(db, xmlinput):
     """
         Converts the XML to a CSV compatible with the import_from_csv_file of web2py
         @ToDo: rewrite this to go via S3Resource for proper Auth checking, Audit.
+
+        @todo: deprecate
     """
 
     import cStringIO
@@ -303,6 +373,9 @@ def importxml(db, xmlinput):
 # -----------------------------------------------------------------------------
 @auth.s3_requires_membership(1)
 def post():
+    """
+        @todo: deprecate
+    """
     data = importxml(db, request.body.read())
     return data
 
@@ -311,6 +384,8 @@ def formList():
     """
         Generates a list of Xforms based on database tables for ODK Collect
         http://code.google.com/p/opendatakit/
+
+        @todo: deprecate
     """
 
     # Test statements
@@ -334,6 +409,8 @@ def submission():
     """
         Allows for submission of Xforms by ODK Collect
         http://code.google.com/p/opendatakit/
+
+        @todo: re-implement in S3XForms, deprecate
     """
 
     # @ToDo: Something better than this crude check
@@ -356,6 +433,8 @@ def submission():
 
         if isinstance(xmlinput, basestring):
             xmlinput = StringIO(xmlinput)
+    elif request.env.request_method == "HEAD":
+        raise HTTP(204)
     else:
         raise HTTP(400, "Invalid Request: Expected an XForm")
 
@@ -369,13 +448,13 @@ def submission():
 
     try:
         result = resource.import_xml(source=tree, stylesheet=stylesheet)
-    except IOError, SyntaxError:
+    except (IOError, SyntaxError):
         raise HTTP(500, "Internal server error")
 
     # Parse response
     status = json.loads(result)["statuscode"]
 
-    if status == 200:
+    if status == "200":
         r = HTTP(201, "Saved") # ODK Collect only accepts 201
         r.headers["Location"] = request.env.http_host
         raise r
@@ -388,6 +467,8 @@ def submission_old():
     """
         Allows for submission of xforms by ODK Collect
         http://code.google.com/p/opendatakit/
+
+        @todo: deprecate
     """
     response.headers["Content-Type"] = "text/xml"
     xml = str(request.post_vars.xml_submission_file.value)
@@ -402,6 +483,8 @@ def submission_old():
 def get_name(tablename):
     """
         Generates a pretty(er) name from a database table name.
+
+        @todo: deprecate
     """
 
     return tablename[tablename.find("_") + 1:].replace("_", " ").capitalize()

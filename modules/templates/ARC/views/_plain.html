@@ -1,0 +1,11 @@
+{{if response.error:}}<div class='alert alert-error'>{{=response.error}}</div>{{pass}}
+{{if response.warning:}}<div class='alert alert-warning'>{{=response.warning}}</div>{{pass}}
+{{if response.information:}}<div class='alert alert-info'>{{=response.information}}</div>{{pass}}
+{{if response.confirmation:}}<div class='alert alert-success'>{{=response.confirmation}}</div>{{pass}}
+{{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
+{{try:}}{{=B(title)}}<br />{{except:}}{{pass}}
+{{try:}}{{=details_btn}}{{except:}}{{pass}}
+<div id='plain'>
+{{try:}}{{=item}}{{except:}}{{pass}}
+{{try:}}{{image}}<div class='image-container'>{{=image}}</div>{{except:}}{{pass}}
+</div>

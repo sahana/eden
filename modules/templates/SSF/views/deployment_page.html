@@ -1,0 +1,75 @@
+{{extend "layout.html"}}
+<div class='item-container'>
+
+ <a class='button action-btn' href='/eden/project/project/{{=r.id}}' id='edit-btn'>Open</a>
+ <a class='button delete-btn' href='/eden/project/project/{{=r.id}}/delete' id='delete-btn'>Delete Deployment</a>
+ <a class='button action-btn' href='/eden/project/project?sector.name=None,Deployment' id='list-btn'>List Deployments</a>
+ <div class='row'>
+  <div>
+    <h2>{{=deployment_name}}</h2>
+    <div class='row'>
+     <div>
+      <h4>{{=org_name}}</h4>
+     </div>
+     <div>
+      {{for location in locations:}}
+       <div class='row'>
+        <h4>{{=location}}</h4>
+       </div>
+      {{pass}}
+     </div>
+    </div>
+    <div class='row'>
+     <div>
+      <h4>{{=T("Description")}}</h4>
+      <div style='white-space:pre-line'>
+      {{=description}}
+      </div>
+     </div>
+    </div>
+  </div>
+  <div>
+   Carousel here
+  </div>
+ </div>
+
+ <div class='row'>
+  <div>
+   <div class='row'>
+    <div>
+     <h4>{{=T("Get Involved")}}</h4>
+     <div class='row'>
+      <div>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task?~.status__belongs=2,3,4,11'><i class='icon-pencil icon-white'></i> {{=T("Work on a Task")}}</a>
+       </br></br>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task/create?bug=1'><i class='icon-pencil icon-white'></i> {{=T("Report a Bug")}}</a>
+       </br></br>
+      </div>
+       <div>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task/create?featureRequest=1'><i class='icon-pencil icon-white'></i> {{=T("Request a Feature")}}</a>
+       </br></br>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task/create?support=1'><i class='icon-pencil icon-white'></i> {{=T("Request Support")}}</a>
+      </div>
+     </div>
+    </div>
+
+    <div>
+     {{if links:}}
+      <h4>{{=T("Useful Links")}}</h4>
+      {{for link in links:}}
+      <a href='{{=link[1]}}'>{{=link[0]}}</a>
+      </br>
+      {{pass}}
+     {{pass}}
+     {{if files:}}
+      <h4>{{=T("Useful Attachments")}}</h4>
+      {{for file in files:}}
+      <a href='/{{=appname}}/default/download/{{=file[1]}}'>{{=file[0]}}</a>
+      </br>
+      {{pass}}
+     {{pass}}
+    </div>
+   </div>
+  </div>
+ </div>
+</div>

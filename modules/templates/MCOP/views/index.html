@@ -1,0 +1,57 @@
+{{extend "layout.html"}}
+<div class = 'row header'>
+ <div class='span5 title'>
+  <img class='sahana_logo'src='/eden/static/img/sahanalarge_14.png' alt='Sahana'>
+  <h1>Sahana</h1>
+ </div>
+ <div class='span6'> 
+  <div class='intro'>
+   <img class='mcop_logo' src='/{{=appname}}/static/themes/MCOP/img/mcop_logo.png' alt='{{=T("MCOP")}}'>
+   <h2>{{=T("Puget Sound")}}<br>{{=T("Maritime Common Operating Picture")}}</h2>
+   <p>Sahana is a component of the Puget Sound Maritime Common Operating Picture (MCOP) platform in both large scale disaster management and coordination of day-to-day activities and operations. <a href='/{{=appname}}/default/about'>More...</a></p>
+  </div>
+ </div>
+</div>
+<div class='row homepage'>
+  <div class='span3'>
+   <div class='link'>
+    <a href='/{{=appname}}/event/incident/datalist'>
+     <h3 ><i class='icon-incident'></i> {{=T("Incidents")}}</h3>
+    </a>
+   </div>
+    <a class='s3_modal' title='Create Incident' href='/{{=appname}}/event/incident/create.popup?refresh=event_incident_datalist' data-w2p_disable_with='default'>
+      <i class='icon icon-plus-sign small-add'></i>
+    </a>
+   {{=event_incident_datalist}}
+   <div class='link'>
+    <h3 ><i class='icon-news'></i> {{=T("MCOP News")}}</h3>
+   </div>
+   <div id='feed-control'>
+    <div class='throbber'></div>
+   </div>
+  </div>
+  <div class='span6 map'>
+   {{=XML(map)}}
+  </div>
+  <div class='span3'>
+   <div class='link'> 
+    <a href='/{{=appname}}/cms/post/datalist'>
+     <h3 ><i class='icon-alert'></i> {{=T("Alerts")}}</h3>
+    </a>
+   </div>
+    <a class='s3_modal' title='Create Alert' href='/{{=appname}}/cms/post/create.popup?refresh=cms_post_datalist' data-w2p_disable_with='default'>
+      <i class='icon icon-plus-sign small-add'></i>
+    </a>
+   {{=cms_post_datalist}}
+   <div class='link'>
+    <a href='/{{=appname}}/project/task/datalist'>
+     <h3 ><i class='icon-tasks'></i> {{=T("Tasks")}}</h3>
+    </a>
+   </div>
+    <a class='s3_modal' title='Create Task' href='/{{=appname}}/project/task/create.popup?refresh=project_task_datalist' data-w2p_disable_with='default'>
+      <i class='icon icon-plus-sign small-add'></i>
+    </a>
+   {{=project_task_datalist}}
+  </div>
+</div>
+{{include "dataLists.html"}}

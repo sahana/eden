@@ -1,0 +1,895 @@
+Country,L1,Demographic,Date,Value,Source,Source URL
+LR,Bomi,Annual GrowthRate (%),2008,0.9,Open Data for Africa,opendataforafrica.org
+LR,Bomi,Average Household Size,2008,3.4,Open Data for Africa,opendataforafrica.org
+LR,Bomi,Population Density,2008,109,Open Data for Africa,opendataforafrica.org
+LR,Bomi,Population Total,2008,84119,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 0-4 years - Female",2008,7490,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 0-4 years - Male",2008,7759,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 0-4 years - Total",2008,15249,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 10-14 years - Female",2008,4048,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 10-14 years - Male",2008,4769,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 10-14 years - Total",2008,8817,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 15-19 years - Female",2008,3474,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 15-19 years - Male",2008,3575,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 15-19 years - Total",2008,7049,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 20-24 years - Female",2008,4156,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 20-24 years - Male",2008,3275,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 20-24 years - Total",2008,7431,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 25-29 years - Female",2008,3421,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 25-29 years - Male",2008,3460,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 25-29 years - Total",2008,6881,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 30-34 years - Female",2008,2444,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 30-34 years - Male",2008,2561,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 30-34 years - Total",2008,5005,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 35-39 years - Female",2008,2416,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 35-39 years - Male",2008,2536,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 35-39 years - Total",2008,4952,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 40-44 years - Female",2008,1677,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 40-44 years - Male",2008,2058,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 40-44 years - Total",2008,3735,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 45-49 years - Female",2008,1395,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 45-49 years - Male",2008,1610,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 45-49 years - Total",2008,3005,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 5-9 years - Female",2008,6324,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 5-9 years - Male",2008,6605,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 5-9 years - Total",2008,12929,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 50-54 years - Female",2008,1004,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 50-54 years - Male",2008,1158,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 50-54 years - Total",2008,2162,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 55-59 years - Female",2008,665,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 55-59 years - Male",2008,872,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 55-59 years - Total",2008,1537,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 60-64 years - Female",2008,889,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 60-64 years - Male",2008,814,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 60-64 years - Total",2008,1703,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 65-69 years - Female",2008,645,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 65-69 years - Male",2008,627,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 65-69 years - Total",2008,1272,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 70-74 years - Female",2008,421,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 70-74 years - Male",2008,389,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 70-74 years - Total",2008,810,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 75-79 years - Female",2008,325,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 75-79 years - Male",2008,419,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 75-79 years - Total",2008,744,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 80-84 years - Female",2008,161,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 80-84 years - Male",2008,157,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 80-84 years - Total",2008,318,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 85 years and over - Female",2008,224,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 85 years and over - Male",2008,296,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, 85 years and over - Total",2008,520,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, Female Total",2008,41179,Open Data for Africa,opendataforafrica.org
+LR,Bomi,"Population, Male Total",2008,42940,Open Data for Africa,opendataforafrica.org
+LR,Bong,Annual GrowthRate (%),2008,1,Open Data for Africa,opendataforafrica.org
+LR,Bong,Average Household Size,2008,4.7,Open Data for Africa,opendataforafrica.org
+LR,Bong,Population Density,2008,97,Open Data for Africa,opendataforafrica.org
+LR,Bong,Population Total,2008,178483,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 0-4 years - Female",2008,29648,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 0-4 years - Male",2008,30787,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 0-4 years - Total",2008,60435,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 10-14 years - Female",2008,15827,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 10-14 years - Male",2008,18714,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 10-14 years - Total",2008,34541,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 15-19 years - Female",2008,14899,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 15-19 years - Male",2008,14529,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 15-19 years - Total",2008,29428,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 20-24 years - Female",2008,16773,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 20-24 years - Male",2008,12583,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 20-24 years - Total",2008,29356,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 25-29 years - Female",2008,14503,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 25-29 years - Male",2008,12185,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 25-29 years - Total",2008,26688,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 30-34 years - Female",2008,11152,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 30-34 years - Male",2008,9337,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 30-34 years - Total",2008,20489,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 35-39 years - Female",2008,10612,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 35-39 years - Male",2008,9553,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 35-39 years - Total",2008,20165,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 45-49 years - Female",2008,5929,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 45-49 years - Male",2008,6424,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 45-49 years - Total",2008,12353,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 5-9 years - Female",2008,24083,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 5-9 years - Male",2008,25617,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 5-9 years - Total",2008,49700,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 50-54 years - Female",2008,4114,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 50-54 years - Male",2008,4158,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 50-54 years - Total",2008,8272,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 55-59 years - Female",2008,3038,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 55-59 years - Male",2008,3112,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 55-59 years - Total",2008,6150,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 60-64 years - Female",2008,3157,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 60-64 years - Male",2008,2717,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 60-64 years - Total",2008,5874,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 65-69 years - Female",2008,2683,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 65-69 years - Male",2008,2470,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 65-69 years - Total",2008,5153,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 70-74 years - Female",2008,1528,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 70-74 years - Male",2008,1446,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 70-74 years - Total",2008,2974,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 75-79 years - Female",2008,1455,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 75-79 years - Male",2008,1572,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 75-79 years - Total",2008,3027,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 80-84 years - Female",2008,659,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 80-84 years - Male",2008,631,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 80-84 years - Total",2008,1290,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 85 years and over - Female",2008,1098,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 85 years and over - Male",2008,1203,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, 85 years and over - Total",2008,2301,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, Female Total",2008,93730,Open Data for Africa,opendataforafrica.org
+LR,Bong,"Population, Male Total",2008,84753,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,Annual GrowthRate (%),2008,2.3,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,Average Household Size,2008,5.6,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,Population Density,2008,22,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,Population Total,2008,83388,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 0-4 years - Female",2008,5908,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 0-4 years - Male",2008,6269,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 0-4 years - Total",2008,12177,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 10-14 years - Female",2008,5025,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 10-14 years - Male",2008,5422,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 10-14 years - Total",2008,10447,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 15-19 years - Female",2008,4371,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 15-19 years - Male",2008,4882,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 15-19 years - Total",2008,9253,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 20-24 years - Female",2008,3811,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 20-24 years - Male",2008,3790,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 20-24 years - Total",2008,7601,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 25-29 years - Female",2008,3198,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 25-29 years - Male",2008,3761,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 25-29 years - Total",2008,6959,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 30-34 years - Female",2008,2314,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 30-34 years - Male",2008,2757,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 30-34 years - Total",2008,5071,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 35-39 years - Female",2008,2427,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 35-39 years - Male",2008,2598,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 35-39 years - Total",2008,5025,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 40-44 years - Female",2008,1596,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 40-44 years - Male",2008,2133,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 40-44 years - Total",2008,3729,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 45-49 years - Female",2008,1319,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 45-49 years - Male",2008,1776,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 45-49 years - Total",2008,3095,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 5-9 years - Female",2008,6191,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 5-9 years - Male",2008,6301,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 5-9 years - Total",2008,12492,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 50-54 years - Female",2008,775,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 50-54 years - Male",2008,1114,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 50-54 years - Total",2008,1889,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 55-59 years - Female",2008,660,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 55-59 years - Male",2008,860,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 55-59 years - Total",2008,1520,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 60-64 years - Female",2008,663,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 60-64 years - Male",2008,717,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 60-64 years - Total",2008,1380,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 65-69 years - Female",2008,574,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 65-69 years - Male",2008,617,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 65-69 years - Total",2008,1191,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 70-74 years - Female",2008,206,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 70-74 years - Male",2008,322,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 70-74 years - Total",2008,528,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 75-79 years - Female",2008,224,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 75-79 years - Male",2008,309,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 75-79 years - Total",2008,533,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 80-84 years - Female",2008,89,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 80-84 years - Male",2008,111,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 80-84 years - Total",2008,200,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 85 years and over - Female",2008,131,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 85 years and over - Male",2008,167,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, 85 years and over - Total",2008,298,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, Female Total",2008,39482,Open Data for Africa,opendataforafrica.org
+LR,Gbarpolu,"Population, Male Total",2008,43906,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,Annual GrowthRate (%),2008,1.4,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,Average Household Size,2008,5.4,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,Population Density,2008,73,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,Population Total,2008,221693,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 0-4 years - Female",2008,19549,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 0-4 years - Male",2008,20093,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 0-4 years - Total",2008,39642,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 10-14 years - Female",2008,10439,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 10-14 years - Male",2008,11990,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 10-14 years - Total",2008,22429,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 15-19 years - Female",2008,9277,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 15-19 years - Male",2008,8856,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 15-19 years - Total",2008,18133,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 20-24 years - Female",2008,10622,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 20-24 years - Male",2008,8194,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 20-24 years - Total",2008,18816,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 25-29 years - Female",2008,9450,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 25-29 years - Male",2008,8267,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 25-29 years - Total",2008,17717,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 30-34 years - Female",2008,7166,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 30-34 years - Male",2008,6544,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 30-34 years - Total",2008,13710,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 35-39 years - Female",2008,7631,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 35-39 years - Male",2008,6920,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 35-39 years - Total",2008,14551,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 40-44 years - Female",2008,5216,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 40-44 years - Male",2008,5874,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 40-44 years - Total",2008,11090,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 45-49 years - Female",2008,4025,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 45-49 years - Male",2008,4747,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 45-49 years - Total",2008,8772,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 5-9 years - Female",2008,15634,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 5-9 years - Male",2008,16604,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 5-9 years - Total",2008,32238,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 50-54 years - Female",2008,2741,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 50-54 years - Male",2008,3317,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 50-54 years - Total",2008,6058,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 55-59 years - Female",2008,2146,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 55-59 years - Male",2008,2431,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 55-59 years - Total",2008,4577,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 60-64 years - Female",2008,2215,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 60-64 years - Male",2008,2209,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 60-64 years - Total",2008,4424,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 65-69 years - Female",2008,1723,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 65-69 years - Male",2008,1671,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 65-69 years - Total",2008,3394,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 70-74 years - Female",2008,1015,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 70-74 years - Male",2008,1030,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 70-74 years - Total",2008,2045,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 75-79 years - Female",2008,825,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 75-79 years - Male",2008,1017,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 75-79 years - Total",2008,1842,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 80-84 years - Female",2008,468,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 80-84 years - Male",2008,412,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 80-84 years - Total",2008,880,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 85 years and over - Female",2008,638,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 85 years and over - Male",2008,737,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, 85 years and over - Total",2008,1375,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, Female Total",2008,110780,Open Data for Africa,opendataforafrica.org
+LR,Grand Bassa,"Population, Male Total",2008,110913,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,Annual GrowthRate (%),2008,2,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,Average Household Size,2008,4.8,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,Population Density,2008,65,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,Population Total,2008,127076,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 0-4 years - Female",2008,10615,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 0-4 years - Male",2008,10814,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 0-4 years - Total",2008,21429,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 10-14 years - Female",2008,6345,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 10-14 years - Male",2008,7625,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 10-14 years - Total",2008,13970,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 15-19 years - Female",2008,6586,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 15-19 years - Male",2008,7058,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 15-19 years - Total",2008,13644,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 20-24 years - Female",2008,6132,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 20-24 years - Male",2008,5473,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 20-24 years - Total",2008,11605,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 25-29 years - Female",2008,5556,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 25-29 years - Male",2008,5460,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 25-29 years - Total",2008,11016,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 30-34 years - Female",2008,3667,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 30-34 years - Male",2008,4037,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 30-34 years - Total",2008,7704,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 35-39 years - Female",2008,3683,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 35-39 years - Male",2008,3793,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 35-39 years - Total",2008,7476,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 40-44 years - Female",2008,2450,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 40-44 years - Male",2008,2786,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 40-44 years - Total",2008,5236,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 45-49 years - Female",2008,1867,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 45-49 years - Male",2008,2274,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 45-49 years - Total",2008,4141,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 5-9 years - Female",2008,9369,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 5-9 years - Male",2008,10166,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 5-9 years - Total",2008,19535,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 50-54 years - Female",2008,1248,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 50-54 years - Male",2008,1545,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 50-54 years - Total",2008,2793,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 55-59 years - Female",2008,836,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 55-59 years - Male",2008,1089,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 55-59 years - Total",2008,1925,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 60-64 years - Female",2008,982,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 60-64 years - Male",2008,1081,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 60-64 years - Total",2008,2063,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 65-69 years - Female",2008,715,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 65-69 years - Male",2008,847,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 65-69 years - Total",2008,1562,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 70-74 years - Female",2008,419,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 70-74 years - Male",2008,526,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 70-74 years - Total",2008,945,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 75-79 years - Female",2008,416,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 75-79 years - Male",2008,564,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 75-79 years - Total",2008,980,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 80-84 years - Female",2008,244,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 80-84 years - Male",2008,227,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 80-84 years - Total",2008,471,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 85 years and over - Female",2008,267,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 85 years and over - Male",2008,314,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, 85 years and over - Total",2008,581,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, Female Total",2008,61397,Open Data for Africa,opendataforafrica.org
+LR,Grand Cape Mount,"Population, Male Total",2008,65679,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,Annual GrowthRate (%),2008,2.9,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,Average Household Size,2008,7.6,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,Population Density,2008,31,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,Population Total,2008,125258,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 0-4 years - Female",2008,7398,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 0-4 years - Male",2008,7766,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 0-4 years - Total",2008,15164,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 10-14 years - Female",2008,7439,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 10-14 years - Male",2008,8607,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 10-14 years - Total",2008,16046,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 15-19 years - Female",2008,7839,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 15-19 years - Male",2008,9324,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 15-19 years - Total",2008,17163,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 20-24 years - Female",2008,7119,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 20-24 years - Male",2008,7819,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 20-24 years - Total",2008,14938,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 25-29 years - Female",2008,5339,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 25-29 years - Male",2008,5686,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 25-29 years - Total",2008,11025,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 30-34 years - Female",2008,3777,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 30-34 years - Male",2008,4179,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 30-34 years - Total",2008,7956,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 35-39 years - Female",2008,3463,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 35-39 years - Male",2008,3317,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 35-39 years - Total",2008,6780,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 40-44 years - Female",2008,2561,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 40-44 years - Male",2008,2686,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 40-44 years - Total",2008,5247,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 45-49 years - Female",2008,2129,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 45-49 years - Male",2008,2060,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 45-49 years - Total",2008,4189,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 5-9 years - Female",2008,7768,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 5-9 years - Male",2008,8156,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 5-9 years - Total",2008,15924,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 50-54 years - Female",2008,1443,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 50-54 years - Male",2008,1479,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 50-54 years - Total",2008,2922,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 55-59 years - Female",2008,895,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 55-59 years - Male",2008,1005,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 55-59 years - Total",2008,1900,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 60-64 years - Female",2008,1022,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 60-64 years - Male",2008,992,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 60-64 years - Total",2008,2014,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 65-69 years - Female",2008,665,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 65-69 years - Male",2008,603,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 65-69 years - Total",2008,1268,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 70-74 years - Female",2008,457,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 70-74 years - Male",2008,459,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 70-74 years - Total",2008,916,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 75-79 years - Female",2008,406,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 75-79 years - Male",2008,388,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 75-79 years - Total",2008,794,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 80-84 years - Female",2008,247,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 80-84 years - Male",2008,174,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 80-84 years - Total",2008,421,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 85 years and over - Female",2008,297,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 85 years and over - Male",2008,294,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, 85 years and over - Total",2008,591,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, Female Total",2008,60264,Open Data for Africa,opendataforafrica.org
+LR,Grand Gedeh,"Population, Male Total",2008,64994,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,Annual GrowthRate (%),2008,-0.4,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,Average Household Size,2008,5.3,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,Population Density,2008,38,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,Population Total,2008,57913,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 0-4 years - Female",2008,4571,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 0-4 years - Male",2008,4959,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 0-4 years - Total",2008,9530,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 10-14 years - Female",2008,3266,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 10-14 years - Male",2008,4073,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 10-14 years - Total",2008,7339,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 15-19 years - Female",2008,2838,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 15-19 years - Male",2008,3433,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 15-19 years - Total",2008,6271,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 20-24 years - Female",2008,2736,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 20-24 years - Male",2008,2622,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 20-24 years - Total",2008,5358,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 25-29 years - Female",2008,2202,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 25-29 years - Male",2008,2058,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 25-29 years - Total",2008,4260,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 30-34 years - Female",2008,1755,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 30-34 years - Male",2008,1652,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 30-34 years - Total",2008,3407,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 35-39 years - Female",2008,1467,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 35-39 years - Male",2008,1415,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 35-39 years - Total",2008,2882,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 40-44 years - Female",2008,1183,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 40-44 years - Male",2008,1194,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 40-44 years - Total",2008,2377,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 45-49 years - Female",2008,1013,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 45-49 years - Male",2008,877,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 45-49 years - Total",2008,1890,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 5-9 years - Female",2008,4514,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 5-9 years - Male",2008,4814,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 5-9 years - Total",2008,9328,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 50-54 years - Female",2008,765,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 50-54 years - Male",2008,689,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 50-54 years - Total",2008,1454,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 55-59 years - Female",2008,503,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 55-59 years - Male",2008,559,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 55-59 years - Total",2008,1062,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 60-64 years - Female",2008,586,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 60-64 years - Male",2008,477,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 60-64 years - Total",2008,1063,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 65-69 years - Female",2008,345,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 65-69 years - Male",2008,289,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 65-69 years - Total",2008,634,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 70-74 years - Female",2008,203,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 70-74 years - Male",2008,208,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 70-74 years - Total",2008,411,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 75-79 years - Female",2008,167,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 75-79 years - Male",2008,190,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 75-79 years - Total",2008,357,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 80-84 years - Female",2008,91,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 80-84 years - Male",2008,79,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 80-84 years - Total",2008,170,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 85 years and over - Female",2008,60,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 85 years and over - Male",2008,60,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, 85 years and over - Total",2008,120,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, Female Total",2008,28265,Open Data for Africa,opendataforafrica.org
+LR,Grand Kru,"Population, Male Total",2008,29648,Open Data for Africa,opendataforafrica.org
+LR,Lofa,Annual GrowthRate (%),2008,1.3,Open Data for Africa,opendataforafrica.org
+LR,Lofa,Average Household Size,2008,4.4,Open Data for Africa,opendataforafrica.org
+LR,Lofa,Population Density,2008,70,Open Data for Africa,opendataforafrica.org
+LR,Lofa,Population Total,2008,276863,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 0-4 years - Female",2008,22756,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 0-4 years - Male",2008,22304,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 0-4 years - Total",2008,45060,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 10-14 years - Female",2008,14872,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 10-14 years - Male",2008,16392,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 10-14 years - Total",2008,31264,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 15-19 years - Female",2008,14766,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 15-19 years - Male",2008,15178,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 15-19 years - Total",2008,29944,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 20-24 years - Female",2008,12808,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 20-24 years - Male",2008,10570,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 20-24 years - Total",2008,23378,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 25-29 years - Female",2008,12871,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 25-29 years - Male",2008,10187,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 25-29 years - Total",2008,23058,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 30-34 years - Female",2008,9074,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 30-34 years - Male",2008,7562,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 30-34 years - Total",2008,16636,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 35-39 years - Female",2008,8441,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 35-39 years - Male",2008,7182,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 35-39 years - Total",2008,15623,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 40-44 years - Female",2008,5796,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 40-44 years - Male",2008,5273,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 40-44 years - Total",2008,11069,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 45-49 years - Female",2008,4485,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 45-49 years - Male",2008,4371,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 45-49 years - Total",2008,8856,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 5-9 years - Female",2008,21411,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 5-9 years - Male",2008,21979,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 5-9 years - Total",2008,43390,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 50-54 years - Female",2008,3332,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 50-54 years - Male",2008,2780,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 50-54 years - Total",2008,6112,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 55-59 years - Female",2008,1966,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 55-59 years - Male",2008,1930,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 55-59 years - Total",2008,3896,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 60-64 years - Female",2008,2828,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 60-64 years - Male",2008,1758,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 60-64 years - Total",2008,4586,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 65-69 years - Female",2008,2127,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 65-69 years - Male",2008,1553,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 65-69 years - Total",2008,3680,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 70-74 years - Female",2008,1855,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 70-74 years - Male",2008,1132,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 70-74 years - Total",2008,2987,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 75-79 years - Female",2008,1429,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 75-79 years - Male",2008,1266,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 75-79 years - Total",2008,2695,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 80-84 years - Female",2008,1080,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 80-84 years - Male",2008,809,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 80-84 years - Total",2008,1889,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 85 years and over - Female",2008,1355,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 85 years and over - Male",2008,1385,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, 85 years and over - Total",2008,2740,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, Female Total",2008,143252,Open Data for Africa,opendataforafrica.org
+LR,Lofa,"Population, Male Total",2008,133611,Open Data for Africa,opendataforafrica.org
+LR,Margibi,Annual GrowthRate (%),2008,1.1,Open Data for Africa,opendataforafrica.org
+LR,Margibi,Average Household Size,2008,4.8,Open Data for Africa,opendataforafrica.org
+LR,Margibi,Population Density,2008,198,Open Data for Africa,opendataforafrica.org
+LR,Margibi,Population Total,2008,209923,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 0-4 years - Female",2008,16276,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 0-4 years - Male",2008,16797,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 0-4 years - Total",2008,33073,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 10-14 years - Female",2008,12950,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 10-14 years - Male",2008,12840,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 10-14 years - Total",2008,25790,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 15-19 years - Female",2008,10417,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 15-19 years - Male",2008,10261,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 15-19 years - Total",2008,20678,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 20-24 years - Female",2008,11028,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 20-24 years - Male",2008,9432,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 20-24 years - Total",2008,20460,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 25-29 years - Female",2008,8694,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 25-29 years - Male",2008,8475,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 25-29 years - Total",2008,17169,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 30-34 years - Female",2008,6628,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 30-34 years - Male",2008,6316,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 30-34 years - Total",2008,12944,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 35-39 years - Female",2008,6578,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 35-39 years - Male",2008,6301,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 35-39 years - Total",2008,12879,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 45-49 years - Female",2008,3247,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 45-49 years - Male",2008,4577,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 45-49 years - Total",2008,7824,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 5-9 years - Female",2008,15565,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 5-9 years - Male",2008,15182,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 5-9 years - Total",2008,30747,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 50-54 years - Female",2008,2057,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 50-54 years - Male",2008,3105,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 50-54 years - Total",2008,5162,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 55-59 years - Female",2008,1447,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 55-59 years - Male",2008,2074,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 55-59 years - Total",2008,3521,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 60-64 years - Female",2008,1381,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 60-64 years - Male",2008,1712,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 60-64 years - Total",2008,3093,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 65-69 years - Female",2008,1127,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 65-69 years - Male",2008,1206,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 65-69 years - Total",2008,2333,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 70-74 years - Female",2008,651,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 70-74 years - Male",2008,708,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 70-74 years - Total",2008,1359,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 75-79 years - Female",2008,655,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 75-79 years - Male",2008,651,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 75-79 years - Total",2008,1306,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 80-84 years - Female",2008,334,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 80-84 years - Male",2008,312,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 80-84 years - Total",2008,646,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 85 years and over - Female",2008,542,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 85 years and over - Male",2008,546,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, 85 years and over - Total",2008,1088,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, Female Total",2008,104083,Open Data for Africa,opendataforafrica.org
+LR,Margibi,"Population, Male Total",2008,105840,Open Data for Africa,opendataforafrica.org
+LR,Maryland,Annual GrowthRate (%),2008,2.8,Open Data for Africa,opendataforafrica.org
+LR,Maryland,Average Household Size,2008,7.8,Open Data for Africa,opendataforafrica.org
+LR,Maryland,Population Density,2008,154,Open Data for Africa,opendataforafrica.org
+LR,Maryland,Population Total,2008,135938,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 0-4 years - Female",2008,9463,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 0-4 years - Male",2008,9939,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 0-4 years - Total",2008,19402,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 10-14 years - Female",2008,9452,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 10-14 years - Male",2008,10793,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 10-14 years - Total",2008,20245,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 15-19 years - Female",2008,8184,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 15-19 years - Male",2008,9694,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 15-19 years - Total",2008,17878,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 20-24 years - Female",2008,6472,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 20-24 years - Male",2008,7173,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 20-24 years - Total",2008,13645,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 25-29 years - Female",2008,4771,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 25-29 years - Male",2008,4889,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 25-29 years - Total",2008,9660,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 30-34 years - Female",2008,3720,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 30-34 years - Male",2008,3658,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 30-34 years - Total",2008,7378,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 35-39 years - Female",2008,3454,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 35-39 years - Male",2008,3232,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 35-39 years - Total",2008,6686,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 40-44 years - Female",2008,2562,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 40-44 years - Male",2008,2695,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 40-44 years - Total",2008,5257,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 45-49 years - Female",2008,1855,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 45-49 years - Male",2008,2185,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 45-49 years - Total",2008,4040,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 5-9 years - Female",2008,10391,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 5-9 years - Male",2008,11039,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 5-9 years - Total",2008,21430,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 50-54 years - Female",2008,1294,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 50-54 years - Male",2008,1629,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 50-54 years - Total",2008,2923,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 55-59 years - Female",2008,960,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 55-59 years - Male",2008,1216,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 55-59 years - Total",2008,2176,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 60-64 years - Female",2008,1030,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 60-64 years - Male",2008,1014,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 60-64 years - Total",2008,2044,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 65-69 years - Female",2008,558,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 65-69 years - Male",2008,618,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 65-69 years - Total",2008,1176,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 70-74 years - Female",2008,413,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 70-74 years - Male",2008,461,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 70-74 years - Total",2008,874,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 75-79 years - Female",2008,232,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 75-79 years - Male",2008,329,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 75-79 years - Total",2008,561,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 80-84 years - Female",2008,155,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 80-84 years - Male",2008,161,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 80-84 years - Total",2008,316,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 85 years and over - Female",2008,117,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 85 years and over - Male",2008,130,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, 85 years and over - Total",2008,247,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, Female Total",2008,65083,Open Data for Africa,opendataforafrica.org
+LR,Maryland,"Population, Male Total",2008,70855,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,Annual GrowthRate (%),2008,3.5,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,Average Household Size,2008,4.7,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,Population Density,2008,1553,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,Population Total,2008,1118241,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 0-4 years - Female",2008,72950,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 0-4 years - Male",2008,73324,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 0-4 years - Total",2008,146274,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 10-14 years - Female",2008,77566,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 10-14 years - Male",2008,66783,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 10-14 years - Total",2008,144349,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 15-19 years - Female",2008,69255,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 15-19 years - Male",2008,63364,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 15-19 years - Total",2008,132619,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 20-24 years - Female",2008,65924,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 20-24 years - Male",2008,60860,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 20-24 years - Total",2008,126784,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 25-29 years - Female",2008,53585,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 25-29 years - Male",2008,51807,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 25-29 years - Total",2008,105392,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 30-34 years - Female",2008,39233,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 30-34 years - Male",2008,38389,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 30-34 years - Total",2008,77622,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 35-39 years - Female",2008,34071,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 35-39 years - Male",2008,33830,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 35-39 years - Total",2008,67901,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 40-44 years - Female",2008,23651,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 40-44 years - Male",2008,28096,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 40-44 years - Total",2008,51747,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 45-49 years - Female",2008,16439,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 45-49 years - Male",2008,20649,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 45-49 years - Total",2008,37088,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 5-9 years - Female",2008,77223,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 5-9 years - Male",2008,69286,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 5-9 years - Total",2008,146509,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 50-54 years - Female",2008,11017,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 50-54 years - Male",2008,15086,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 50-54 years - Total",2008,26103,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 55-59 years - Female",2008,6895,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 55-59 years - Male",2008,9742,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 55-59 years - Total",2008,16637,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 60-64 years - Female",2008,6866,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 60-64 years - Male",2008,6844,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 60-64 years - Total",2008,13710,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 65-69 years - Female",2008,4997,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 65-69 years - Male",2008,4647,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 65-69 years - Total",2008,9644,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 70-74 years - Female",2008,3303,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 70-74 years - Male",2008,2927,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 70-74 years - Total",2008,6230,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 75-79 years - Female",2008,2495,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 75-79 years - Male",2008,2028,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 75-79 years - Total",2008,4523,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 80-84 years - Female",2008,1336,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 80-84 years - Male",2008,907,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 80-84 years - Total",2008,2243,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 85 years and over - Female",2008,1702,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 85 years and over - Male",2008,1164,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, 85 years and over - Total",2008,2866,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, Female Total",2008,568508,Open Data for Africa,opendataforafrica.org
+LR,Montserrado,"Population, Male Total",2008,549733,Open Data for Africa,opendataforafrica.org
+LR,Nimba,Annual GrowthRate (%),2008,1.7,Open Data for Africa,opendataforafrica.org
+LR,Nimba,Average Household Size,2008,5.9,Open Data for Africa,opendataforafrica.org
+LR,Nimba,Population Density,2008,105,Open Data for Africa,opendataforafrica.org
+LR,Nimba,Population Total,2008,462026,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 0-4 years - Female",2008,38674,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 0-4 years - Male",2008,39679,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 0-4 years - Total",2008,78353,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 10-14 years - Female",2008,26160,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 10-14 years - Male",2008,30174,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 10-14 years - Total",2008,56334,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 15-19 years - Female",2008,23211,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 15-19 years - Male",2008,25413,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 15-19 years - Total",2008,48624,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 20-24 years - Female",2008,22712,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 20-24 years - Male",2008,19333,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 20-24 years - Total",2008,42045,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 25-29 years - Female",2008,17649,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 25-29 years - Male",2008,15134,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 25-29 years - Total",2008,32783,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 30-34 years - Female",2008,14349,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 30-34 years - Male",2008,12689,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 30-34 years - Total",2008,27038,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 35-39 years - Female",2008,13144,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 35-39 years - Male",2008,11394,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 35-39 years - Total",2008,24538,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 40-44 years - Female",2008,10414,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 40-44 years - Male",2008,9989,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 40-44 years - Total",2008,20403,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 45-49 years - Female",2008,7426,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 45-49 years - Male",2008,7782,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 45-49 years - Total",2008,15208,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 5-9 years - Female",2008,34051,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 5-9 years - Male",2008,35593,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 5-9 years - Total",2008,69644,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 50-54 years - Female",2008,5586,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 50-54 years - Male",2008,5703,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 50-54 years - Total",2008,11289,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 55-59 years - Female",2008,3561,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 55-59 years - Male",2008,3804,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 55-59 years - Total",2008,7365,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 60-64 years - Female",2008,3925,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 60-64 years - Male",2008,3221,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 60-64 years - Total",2008,7146,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 65-69 years - Female",2008,3184,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 65-69 years - Male",2008,2767,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 65-69 years - Total",2008,5951,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 70-74 years - Female",2008,2277,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 70-74 years - Male",2008,1948,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 70-74 years - Total",2008,4225,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 75-79 years - Female",2008,2152,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 75-79 years - Male",2008,2188,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 75-79 years - Total",2008,4340,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 80-84 years - Female",2008,1447,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 80-84 years - Male",2008,1116,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 80-84 years - Total",2008,2563,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 85 years and over - Female",2008,1991,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 85 years and over - Male",2008,2186,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, 85 years and over - Total",2008,4177,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, Female Total",2008,231913,Open Data for Africa,opendataforafrica.org
+LR,Nimba,"Population, Male Total",2008,230113,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,Annual GrowthRate (%),2008,2.3,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,Average Household Size,2008,4.5,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,Population Density,2008,30,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,Population Total,2008,71509,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 0-4 years - Female",2008,5657,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 0-4 years - Male",2008,5864,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 0-4 years - Total",2008,11521,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 10-14 years - Female",2008,3825,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 10-14 years - Male",2008,4764,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 10-14 years - Total",2008,8589,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 15-19 years - Female",2008,3187,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 15-19 years - Male",2008,3609,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 15-19 years - Total",2008,6796,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 20-24 years - Female",2008,3196,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 20-24 years - Male",2008,2891,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 20-24 years - Total",2008,6087,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 25-29 years - Female",2008,3048,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 25-29 years - Male",2008,2999,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 25-29 years - Total",2008,6047,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 30-34 years - Female",2008,2110,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 30-34 years - Male",2008,2197,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 30-34 years - Total",2008,4307,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 35-39 years - Female",2008,2395,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 35-39 years - Male",2008,2316,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 35-39 years - Total",2008,4711,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 40-44 years - Female",2008,1488,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 40-44 years - Male",2008,1802,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 40-44 years - Total",2008,3290,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 45-49 years - Female",2008,1239,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 45-49 years - Male",2008,1506,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 45-49 years - Total",2008,2745,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 5-9 years - Female",2008,5154,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 5-9 years - Male",2008,5804,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 5-9 years - Total",2008,10958,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 50-54 years - Female",2008,802,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 50-54 years - Male",2008,952,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 50-54 years - Total",2008,1754,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 55-59 years - Female",2008,531,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 55-59 years - Male",2008,719,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 55-59 years - Total",2008,1250,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 60-64 years - Female",2008,534,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 60-64 years - Male",2008,527,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 60-64 years - Total",2008,1061,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 65-69 years - Female",2008,425,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 65-69 years - Male",2008,447,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 65-69 years - Total",2008,872,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 70-74 years - Female",2008,205,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 70-74 years - Male",2008,273,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 70-74 years - Total",2008,478,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 75-79 years - Female",2008,225,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 75-79 years - Male",2008,247,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 75-79 years - Total",2008,472,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 80-84 years - Female",2008,124,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 80-84 years - Male",2008,115,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 80-84 years - Total",2008,239,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 85 years and over - Female",2008,140,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 85 years and over - Male",2008,192,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, 85 years and over - Total",2008,332,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, Female Total",2008,34285,Open Data for Africa,opendataforafrica.org
+LR,Rivercess,"Population, Male Total",2008,37224,Open Data for Africa,opendataforafrica.org
+LR,River Gee,Annual GrowthRate (%),2008,2.2,Open Data for Africa,opendataforafrica.org
+LR,River Gee,Average Household Size,2008,7,Open Data for Africa,opendataforafrica.org
+LR,River Gee,Population Density,2008,34,Open Data for Africa,opendataforafrica.org
+LR,River Gee,Population Total,2008,66789,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 0-4 years - Female",2008,5225,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 0-4 years - Male",2008,5734,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 0-4 years - Total",2008,10959,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 10-14 years - Female",2008,4203,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 10-14 years - Male",2008,5039,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 10-14 years - Total",2008,9242,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 15-19 years - Female",2008,3211,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 15-19 years - Male",2008,4061,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 15-19 years - Total",2008,7272,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 20-24 years - Female",2008,2932,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 20-24 years - Male",2008,2867,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 20-24 years - Total",2008,5799,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 25-29 years - Female",2008,2524,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 25-29 years - Male",2008,2302,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 25-29 years - Total",2008,4826,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 30-34 years - Female",2008,1874,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 30-34 years - Male",2008,1865,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 30-34 years - Total",2008,3739,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 35-39 years - Female",2008,1750,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 35-39 years - Male",2008,1757,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 35-39 years - Total",2008,3507,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 40-44 years - Female",2008,1315,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 40-44 years - Male",2008,1418,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 40-44 years - Total",2008,2733,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 45-49 years - Female",2008,985,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 45-49 years - Male",2008,1110,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 45-49 years - Total",2008,2095,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 5-9 years - Female",2008,5205,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 5-9 years - Male",2008,5879,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 5-9 years - Total",2008,11084,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 50-54 years - Female",2008,758,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 50-54 years - Male",2008,738,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 50-54 years - Total",2008,1496,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 55-59 years - Female",2008,603,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 55-59 years - Male",2008,651,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 55-59 years - Total",2008,1254,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 60-64 years - Female",2008,549,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 60-64 years - Male",2008,527,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 60-64 years - Total",2008,1076,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 65-69 years - Female",2008,323,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 65-69 years - Male",2008,377,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 65-69 years - Total",2008,700,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 70-74 years - Female",2008,201,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 70-74 years - Male",2008,234,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 70-74 years - Total",2008,435,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 75-79 years - Female",2008,131,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 75-79 years - Male",2008,162,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 75-79 years - Total",2008,293,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 80-84 years - Female",2008,67,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 80-84 years - Male",2008,72,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 80-84 years - Total",2008,139,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 85 years and over - Female",2008,70,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 85 years and over - Male",2008,70,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, 85 years and over - Total",2008,140,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, Female Total",2008,31926,Open Data for Africa,opendataforafrica.org
+LR,River Gee,"Population, Male Total",2008,34863,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,Annual GrowthRate (%),2008,2.1,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,Average Household Size,2008,5.8,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,Population Density,2008,27,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,Population Total,2008,102391,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 0-4 years - Female",2008,7731,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 0-4 years - Male",2008,8476,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 0-4 years - Total",2008,16207,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 10-14 years - Female",2008,5390,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 10-14 years - Male",2008,6874,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 10-14 years - Total",2008,12264,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 15-19 years - Female",2008,4773,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 15-19 years - Male",2008,6170,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 15-19 years - Total",2008,10943,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 20-24 years - Female",2008,4558,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 20-24 years - Male",2008,5069,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 20-24 years - Total",2008,9627,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 25-29 years - Female",2008,4041,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 25-29 years - Male",2008,4336,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 25-29 years - Total",2008,8377,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 30-34 years - Female",2008,3043,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 30-34 years - Male",2008,3583,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 30-34 years - Total",2008,6626,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 35-39 years - Female",2008,2868,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 35-39 years - Male",2008,2992,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 35-39 years - Total",2008,5860,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 40-44 years - Female",2008,2188,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 40-44 years - Male",2008,2500,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 40-44 years - Total",2008,4688,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 45-49 years - Female",2008,1627,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 45-49 years - Male",2008,1879,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 45-49 years - Total",2008,3506,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 5-9 years - Female",2008,7637,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 5-9 years - Male",2008,8386,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 5-9 years - Total",2008,16023,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 50-54 years - Female",2008,1134,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 50-54 years - Male",2008,1417,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 50-54 years - Total",2008,2551,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 55-59 years - Female",2008,779,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 55-59 years - Male",2008,911,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 55-59 years - Total",2008,1690,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 60-64 years - Female",2008,730,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 60-64 years - Male",2008,863,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 60-64 years - Total",2008,1593,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 65-69 years - Female",2008,466,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 65-69 years - Male",2008,511,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 65-69 years - Total",2008,977,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 70-74 years - Female",2008,249,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 70-74 years - Male",2008,280,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 70-74 years - Total",2008,529,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 75-79 years - Female",2008,196,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 75-79 years - Male",2008,250,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 75-79 years - Total",2008,446,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 80-84 years - Female",2008,97,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 80-84 years - Male",2008,125,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 80-84 years - Total",2008,222,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 85 years and over - Female",2008,117,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 85 years and over - Male",2008,145,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, 85 years and over - Total",2008,262,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, Female Total",2008,47624,Open Data for Africa,opendataforafrica.org
+LR,Sinoe,"Population, Male Total",2008,54767,Open Data for Africa,opendataforafrica.org

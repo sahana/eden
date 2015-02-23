@@ -1,0 +1,7 @@
+<div id='iframe'>
+{{try:}}{{=H2(title)}}{{except:}}{{pass}}
+{{try:}}{{=buttons["edit_btn"]}}{{except:}}{{pass}}
+{{try:}}{{form}}<div class='form-container'>{{=form}}</div>{{except:}}{{pass}}
+{{try:}}{{items}}<div id='table-container'>{{=items}}</div>{{except:}}{{pass}}
+{{try:}}{{=buttons["list_btn"]}}{{except:}}{{pass}}
+</div>

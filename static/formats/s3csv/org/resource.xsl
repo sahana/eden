@@ -4,7 +4,7 @@
     xmlns:org="http://eden.sahanafoundation.org/org">
 
     <!-- **********************************************************************
-         Resource - CSV Import Stylesheet
+         Org Resource - CSV Import Stylesheet
 
          CSV fields:
          Organisation............org_organisation
@@ -25,8 +25,8 @@
     <xsl:include href="../../xml/countries.xsl"/>
 
     <!-- Indexes for faster processing -->
-    <xsl:key name="resource_type" match="row" use="col[@field='Resource Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="resource_type" match="row" use="col[@field='Resource Type']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -71,14 +71,6 @@
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
 
         <resource name="org_resource">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($OrgName,$BranchName,col[@field='Country']/text(),
-                                                                  col[@field='L1']/text(),
-                                                                  col[@field='L2']/text(),
-                                                                  col[@field='L3']/text(),
-                                                                  col[@field='L4']/text(),
-                                                                  col[@field='Resource Type'])"/>
-            </xsl:attribute>
             <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">

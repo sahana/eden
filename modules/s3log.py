@@ -2,7 +2,7 @@
 
 """ S3 Logging Facility
 
-    @copyright: (c) 2014 Sahana Software Foundation
+    @copyright: (c) 2015 Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -168,6 +168,15 @@ class S3Log(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def recorder():
+        """
+            Return a recording facility for log messages
+        """
+
+        return S3LogRecorder()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def _log(severity, message, value=None):
         """
             Log a message
@@ -255,5 +264,102 @@ class S3Log(object):
         """
 
         cls._log(logging.DEBUG, message, value=value)
+
+# =============================================================================        
+class S3LogRecorder(object):
+    """
+        S3Log recorder, simple facility to record log messages for tests
         
+        Start:
+            recorder = current.log.recorder()
+            
+        Read out messages:
+            messages = recorder.read()
+            
+        Stop recording:
+            recorder.stop()
+            
+        Re-start recording:
+            recorder.listen()
+        
+        Clear messages buffer:
+            recorder.clear()
+    """
+
+    def __init__(self):
+        
+        self.handler = None
+        self.strbuf = None
+        
+        self.listen()
+        
+    # -------------------------------------------------------------------------
+    def listen(self):
+        """ Start recording S3Log messages """
+        
+        if self.handler is not None:
+            return
+        strbuf = self.strbuf
+        if strbuf is None:
+            try:
+                from cStringIO import StringIO
+            except:
+                from StringIO import StringIO
+            strbuf = StringIO()
+        handler = logging.StreamHandler(strbuf)
+        
+        logger = logging.getLogger(__name__)
+        logger.addHandler(handler)
+        
+        self.handler = handler
+        self.strbuf = strbuf
+        return
+
+    # -------------------------------------------------------------------------
+    def read(self):
+        """ Read out recorded S3Log messages """
+
+        strbuf = self.strbuf
+        if strbuf is None:
+            return ""
+        handler = self.handler
+        if handler is not None:
+            handler.flush()
+        return strbuf.getvalue()
+
+    # -------------------------------------------------------------------------
+    def stop(self):
+        """ Stop recording S3Log messages (and return the messages) """
+
+        handler = self.handler
+        if handler is not None:
+
+            logger = logging.getLogger(__name__)
+            logger.removeHandler(handler)
+
+            handler.close()
+            self.handler = None
+
+        strbuf = self.strbuf
+        if strbuf is not None:
+            return strbuf.getvalue()
+        else:
+            return ""
+
+    # -------------------------------------------------------------------------
+    def clear(self):
+        """ Clear the messages buffer """
+
+        if self.handler is not None:
+            on = True
+            self.stop()
+        else:
+            on = False
+        strbuf = self.strbuf
+        if strbuf is not None:
+            strbuf.close()
+            self.strbuf = None
+        if on:
+            self.listen()
+
 # END =========================================================================

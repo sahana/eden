@@ -1,0 +1,83 @@
+
+[class^=".fi-"] {
+  margin-right: 5px;
+}
+
+$bg-hover: darken($primary-color, 10%);
+
+
+.button {
+  text-transform: uppercase;
+  letter-spacing: $tracking;
+  transition: all 0.25s ease;
+  i {
+    font-size: 150%;
+    margin-right: 10px;
+    position: relative;
+    top: 4px;
+    display: inline-block;
+  }
+  &:hover,
+  &:focus {
+    background-color: $bg-hover; 
+    color: $white;
+  }
+}
+
+.button.large {
+  letter-spacing: $tracking-loose;
+}
+
+.button.tiny {
+  i {
+    margin-right: 6px;
+    top: 2px;
+  }
+}
+
+.button.has-icon {
+  padding: 6px 30px 6px 10px;
+  margin-bottom: 0;
+  img {
+    margin-right: 10px;
+  }
+}
+
+.button.secondary {
+  background: transparent;
+  color: $teal;
+  -webkit-box-shadow: inset 0px 0px 0px 2px $wave;
+  -moz-box-shadow: inset 0px 0px 0px 2px $wave;
+  box-shadow: inset 0px 0px 0px 2px $wave;
+  &:hover,
+  &:focus {
+    background-color: $bg-hover; 
+    color: $white;
+    -webkit-box-shadow: inset 0px 0px 0px 2px $bg-hover;
+    -moz-box-shadow: inset 0px 0px 0px 2px $bg-hover;
+    box-shadow: inset 0px 0px 0px 2px $bg-hover;
+  }
+}
+
+.button.secondary.cancel {
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+
+// multiselect
+
+.multiselect {
+  @include form-select;
+  height: ($input-font-size + ($form-spacing * 1.5) - rem-calc(1));
+  display: block;
+  text-align: left;
+}
+
+.multimenu {
+  position: absolute;
+  z-index: $layer5;
+  width: 100%;
+  padding-right: 1em;
+}

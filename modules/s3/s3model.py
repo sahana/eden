@@ -2,7 +2,7 @@
 
 """ S3 Data Model Extensions
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,10 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3Model"]
+__all__ = ("S3Model",)
 
 from gluon import *
-from gluon.dal import Table
 # Here are dependencies listed for reference:
 #from gluon import current
 #from gluon.dal import Field
@@ -38,6 +37,7 @@ from gluon.dal import Table
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3dal import Table
 from s3navigation import S3ScriptItem
 from s3resource import S3Resource
 from s3validators import IS_ONE_OF
@@ -322,6 +322,11 @@ class S3Model(object):
             Helper function to load all models
         """
 
+        s3 = current.response.s3
+        if s3.all_models_loaded:
+            # Already loaded
+            return
+
         models = current.models
 
         # Load models
@@ -337,6 +342,8 @@ class S3Model(object):
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
 
+        # Don't do this again within the current request cycle
+        s3.all_models_loaded = True
         return
 
     # -------------------------------------------------------------------------
@@ -366,7 +373,7 @@ class S3Model(object):
 
         return S3Resource(tablename, *args, **kwargs)
 
-   # -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @classmethod
     def configure(cls, tablename, **attr):
         """
@@ -485,7 +492,7 @@ class S3Model(object):
         components = current.model.components
 
         master = master._tablename if type(master) is Table else master
-        
+
         hooks = components.get(master)
         if hooks is None:
             hooks = Storage()
@@ -496,7 +503,7 @@ class S3Model(object):
                 ll = [ll]
 
             for link in ll:
-                
+
                 if isinstance(link, str):
                     alias = name
 
@@ -508,7 +515,7 @@ class S3Model(object):
                     actuate = None
                     autodelete = False
                     autocomplete = None
-                    values = None
+                    defaults = None
                     multiple = True
                     filterby = None
                     filterfor = None
@@ -539,7 +546,7 @@ class S3Model(object):
                     actuate = link.get("actuate")
                     autodelete = link.get("autodelete", False)
                     autocomplete = link.get("autocomplete")
-                    values = link.get("values")
+                    defaults = link.get("defaults")
                     multiple = link.get("multiple", True)
                     filterby = link.get("filterby")
                     filterfor = link.get("filterfor")
@@ -556,7 +563,7 @@ class S3Model(object):
                                     actuate=actuate,
                                     autodelete=autodelete,
                                     autocomplete=autocomplete,
-                                    values=values,
+                                    defaults=defaults,
                                     multiple=multiple,
                                     filterby=filterby,
                                     filterfor=filterfor)
@@ -646,7 +653,7 @@ class S3Model(object):
                 ltable = None
 
             prefix, name = tn.split("_", 1)
-            component = Storage(values=hook.values,
+            component = Storage(defaults=hook.defaults,
                                 multiple=hook.multiple,
                                 tablename=tn,
                                 table=ctable,
@@ -772,7 +779,7 @@ class S3Model(object):
         """
 
         components = current.model.components
-        
+
         table = cls.table(tablename)
         if not table:
             return None
@@ -793,7 +800,7 @@ class S3Model(object):
                 return alias
         else:
             hooks = []
-                        
+
         supertables = cls.get_config(tablename, "super_entity")
         if supertables:
             if not isinstance(supertables, (list, tuple)):
@@ -807,7 +814,7 @@ class S3Model(object):
                     alias = get_alias(hooks, link)
                     if alias:
                         return alias
-                        
+
         return None
 
     # -------------------------------------------------------------------------
@@ -1046,8 +1053,8 @@ class S3Model(object):
             return False
 
         # Get the record
-        id = record.get("id", None)
-        if not id:
+        record_id = record.get("id", None)
+        if not record_id:
             return False
 
         # Find all super-tables, super-keys and shared fields
@@ -1066,15 +1073,15 @@ class S3Model(object):
             key = cls.super_key(s)
             shared = get_config(tablename, "%s_fields" % tn)
             if not shared:
-                shared = dict([(fn, fn)
-                               for fn in s.fields
-                               if fn != key and fn in table.fields])
+                shared = dict((fn, fn)
+                              for fn in s.fields
+                              if fn != key and fn in table.fields)
             else:
-                shared = dict([(fn, shared[fn])
-                               for fn in shared
-                               if fn != key and \
-                                  fn in s.fields and \
-                                  shared[fn] in table.fields])
+                shared = dict((fn, shared[fn])
+                              for fn in shared
+                              if fn != key and \
+                                 fn in s.fields and \
+                                 shared[fn] in table.fields)
             fields.extend(shared.values())
             fields.append(key)
             updates.append((tn, s, key, shared))
@@ -1086,7 +1093,8 @@ class S3Model(object):
         if has_uuid:
             fields.append("uuid")
         fields = [ogetattr(table, fn) for fn in list(set(fields))]
-        _record = db(table.id == id).select(limitby=(0, 1), *fields).first()
+        _record = db(table.id == record_id).select(limitby=(0, 1),
+                                                   *fields).first()
         if not _record:
             return False
 
@@ -1131,7 +1139,7 @@ class S3Model(object):
 
         # Update the super_keys in the record
         if super_keys:
-            db(table.id == id).update(**super_keys)
+            db(table.id == record_id).update(**super_keys)
 
         record.update(super_keys)
         return True
@@ -1163,7 +1171,7 @@ class S3Model(object):
             return True
         if not isinstance(supertables, (list, tuple)):
             supertables = [supertables]
-            
+
         # Get the keys for all super-tables
         keys = {}
         load = {}
@@ -1189,21 +1197,24 @@ class S3Model(object):
         update_record = record.update_record
         for sname in keys:
             key, value = keys[sname]
+            if not value:
+                # Skip if we don't have a super-key
+                continue
 
             # Remove the super key
             update_record(**{key: None})
 
             # Delete the super record
             sresource = define_resource(sname, id=value)
-            success = sresource.delete(cascade=True)
+            sresource.delete(cascade=True)
 
-            if not success:
+            if sresource.error:
                 # Restore the super key
                 # @todo: is this really necessary? => caller must roll back
                 #        anyway in this case, which would automatically restore
                 update_record(**{key: value})
                 return False
-                
+
         return True
 
     # -------------------------------------------------------------------------

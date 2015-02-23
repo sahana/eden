@@ -97,12 +97,20 @@ def person():
             title_upload = T("Import Members"))
 
     s3db.configure("member_membership",
-                   delete_next=URL("member", "membership"))
+                   delete_next = URL("member", "membership"),
+                   )
 
     # Custom Method for Contacts
-    s3db.set_method("pr", resourcename,
-                    method="contacts",
-                    action=s3db.pr_contacts)
+    set_method = s3db.set_method
+    set_method("pr", resourcename,
+               method = "contacts",
+               action = s3db.pr_Contacts)
+
+    # Custom Method for CV
+    set_method("pr", "person",
+               method = "cv",
+               # @ToDo: Allow Members to have a CV without enabling HRM?
+               action = s3db.hrm_CV)
 
     # Upload for configuration (add replace option)
     s3.importerPrep = lambda: \
@@ -165,11 +173,12 @@ def person():
                 if not r.record:
                     session.error = T("Record not found")
                     redirect(URL(f="membership"))
-                member_id = request.get_vars.get("membership.id", None)
+                member_id = get_vars.get("membership.id", None)
                 if member_id and r.component_name == "membership":
                     r.component_id = member_id
                 s3db.configure("member_membership",
-                                insertable = False)
+                               insertable = False,
+                               )
         return True
     s3.prep = prep
 

@@ -11,7 +11,7 @@
 
     @requires: U{B{I{gluon}} <http://web2py.com>}
 
-    @copyright: 2009-2013 (c) Sahana Software Foundation
+    @copyright: 2009-2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -72,6 +72,7 @@ from s3hierarchy import *
 from s3model import S3Model
 
 # Resource Framework
+from s3query import *
 from s3resource import *
 
 # Authentication, Authorization, Accounting
@@ -104,6 +105,7 @@ from s3sync import *
 
 # Import
 from s3import import *
+from s3xforms import *
 
 # De-duplication
 from s3merge import S3Merge

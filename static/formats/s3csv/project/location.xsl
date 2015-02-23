@@ -136,6 +136,7 @@
 
         <!-- Locations -->
         <xsl:call-template name="Locations"/>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

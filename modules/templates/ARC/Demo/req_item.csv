@@ -1,0 +1,5 @@
+Request,Item,Pack,Quantity,Currency,Value,Comments
+REQ-FINDLAY-000001,"Lunch, Cold - Kosher",each,50,USD,2,
+REQ-FINDLAY-000001,"Dinner, Hot - Kosher",each,50,USD,2,
+REQ-OTTAWA-000001,"Lunch, Cold - Halal",each,150,USD,2,
+REQ-OTTAWA-000001,"Dinner, Hot - Halal",each,150,USD,2,

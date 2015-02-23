@@ -1,0 +1,2 @@
+Layer,Marker,Popup Format,Style,Opacity,Cluster Distance,Cluster Threshold
+Volunteers Report,volunteer,"{person_id} (T('Volunteer'))",,,,

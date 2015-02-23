@@ -10,7 +10,7 @@
          UID..................string..........gis_config.uuid (needed for SITE_DEFAULT)
          Name.................string..........gis_config.name
          OU...................string..........gis_config.pe_id
-         OU Type..............string..........gis_config.pe_type (currently only Orgs supported, but easy to extend)
+         OU Type..............string..........gis_config.pe_type (currently only Orgs/OrgGroups supported, but easy to extend)
          Region Country.......string..........gis_config.region_location_id.L0
          Region L1............string..........gis_config.region_location_id.L1
          Region L2............string..........gis_config.region_location_id.L2
@@ -25,14 +25,14 @@
          Lat..................float...........gis_config.lat
          Lon..................float...........gis_config.lon
          Projection...........integer.........gis_config.projection.epsg
-         Symbology............string..........gis_config.symbology_id
          LatMin...............float...........gis_config.lat_min
          LatMax...............float...........gis_config.lat_max
          LonMin...............float...........gis_config.lon_min
          LonMax...............float...........gis_config.lon_max
          Geocoder.............boolean.........gis_config.geocoder
+         Marker...............string..........gis_style.marker_id
          WMS Browser..........float...........gis_config.wmsbrowser_url
-         
+         Image................string..........gis_config.image URL
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -42,8 +42,8 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
+    <xsl:key name="markers" match="row" use="col[@field='Marker']/text()"/>
     <xsl:key name="projections" match="row" use="col[@field='Projection']/text()"/>
-    <xsl:key name="symbologies" match="row" use="col[@field='Symbology']/text()"/>
     <xsl:key name="ous" match="row"
              use="concat(col[@field='OU Type'], '/', col[@field='OU'])"/>
 
@@ -160,16 +160,16 @@
                 </xsl:call-template>
             </xsl:for-each>
 
+            <!-- Markers -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('markers',
+                                                                   col[@field='Marker'])[1])]">
+                <xsl:call-template name="Marker"/>
+            </xsl:for-each>
+
             <!-- Projections -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('projections',
                                                                    col[@field='Projection'])[1])]">
                 <xsl:call-template name="Projection"/>
-            </xsl:for-each>
-
-            <!-- Symbologies -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('symbologies',
-                                                                   col[@field='Symbology'])[1])]">
-                <xsl:call-template name="Symbology"/>
             </xsl:for-each>
 
             <!-- OUs -->
@@ -190,8 +190,8 @@
 
         <xsl:variable name="ou" select="col[@field='OU']/text()"/>
         <xsl:variable name="ou_type" select="col[@field='OU Type']/text()"/>
+        <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
         <xsl:variable name="Projection" select="col[@field='Projection']/text()"/>
-        <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
         <xsl:variable name="Geocoder" select="col[@field='Geocoder']/text()"/>
         <xsl:variable name="WMSBrowser" select="col[@field='WMS Browser']/text()"/>
     
@@ -215,15 +215,17 @@
             <xsl:if test="$WMSBrowser!=''">
                 <data field="wmsbrowser_url"><xsl:value-of select="$WMSBrowser"/></data>
             </xsl:if>
+            <xsl:if test="col[@field='Image']!=''">
+                <data field="image">
+                    <xsl:attribute name="url">
+                        <xsl:value-of select="col[@field='Image']"/>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
 
             <reference field="projection_id" resource="gis_projection">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="$Projection"/>
-                </xsl:attribute>
-            </reference>
-            <reference field="symbology_id" resource="gis_symbology">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Symbology"/>
                 </xsl:attribute>
             </reference>
 
@@ -244,9 +246,43 @@
                             </xsl:attribute>
                         </reference>
                     </xsl:when>
+                    <xsl:when test="$ou_type='org_group' or 
+                                    $ou_type='coalition'">
+                        <reference field="pe_id" resource="org_group">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat($ou_type, $ou)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
                 </xsl:choose>
             </xsl:if>
+            
+            <xsl:if test="$Marker!=''">
+                <resource name="gis_style">
+                    <reference field="marker_id" resource="gis_marker">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$Marker"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Marker">
+
+        <xsl:variable name="Marker" select="col[@field='Marker']/text()"/>
+    
+        <xsl:if test="$Marker!=''">
+            <resource name="gis_marker">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$Marker"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Marker"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -263,19 +299,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Symbology">
-
-        <xsl:variable name="Symbology" select="col[@field='Symbology']/text()"/>
-    
-        <resource name="gis_symbology">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$Symbology"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$Symbology"/></data>
-        </resource>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
     <xsl:template name="OU">
 
         <xsl:variable name="ou" select="col[@field='OU']/text()"/>
@@ -285,6 +308,15 @@
             <xsl:when test="$ou_type='organisation' or 
                             $ou_type='organization'">
                 <resource name="org_organisation">
+                    <xsl:attribute name="tuid">
+                         <xsl:value-of select="concat($ou_type, $ou)"/>
+                    </xsl:attribute>
+                    <data field="name"><xsl:value-of select="$ou"/></data>
+                </resource>
+            </xsl:when>
+             <xsl:when test="$ou_type='org_group' or 
+                            $ou_type='coalition'">
+                <resource name="org_group">
                     <xsl:attribute name="tuid">
                          <xsl:value-of select="concat($ou_type, $ou)"/>
                     </xsl:attribute>

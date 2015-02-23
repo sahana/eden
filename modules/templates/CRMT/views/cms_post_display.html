@@ -1,0 +1,24 @@
+{{extend "layout.html"}}
+<header class='row details-header'>
+ <div class='large-12 columns'>
+  <h6 class='breadcrumbs'>
+   <a href='{{=URL(args="datalist")}}'>{{=T("Stories")}}</a>
+   <a href='#' class='current'>{{=T("Details")}}</a>
+  </h6>
+  <h1 class='details-title'>{{try:}}{{=r.record.title}}{{except:}}{{pass}}</h1>
+ </div>
+</header>
+<div class='row details-content'>
+ <div class='large-12 columns'>
+  <dl class='horizontal'>
+  {{try:}}{{=item}}{{except:}}{{pass}}
+  </dl>
+  <h6 id='last_update' class='timestamp'>Last updated <time id='modified_on'>on {{try:}}{{=modified_on}}{{except:}}{{pass}}</time> <span id='modified_by'>by {{try:}}{{=modified_by}}{{except:}}{{pass}}</span></h6>
+  <div class='details-actions'>
+   <a class='button tiny' href='{{=r.url(method="update")}}'><i class='fi-pencil'></i>{{=T("Edit")}}</a>
+   <a class='button secondary tiny delete-btn' href='{{=r.url(method="delete")}}'><i class='fi-x'></i>{{=T("Delete")}}</a>
+   <br>
+   {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>

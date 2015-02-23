@@ -1,3 +1,0 @@
-Name,Description,URL,Symbology,Marker,Enabled,Visible,Folder,Image
-"Floods","Dartmouth Flood Observatory","http://www.gdacs.org/xml/rssfl.xml",US,flood,False,False,,"gdas:gfds_image"
-"Volcanoes","USGS: US recent","http://volcano.wr.usgs.gov/rss/vhpcaprss.xml",US,volcano,False,False,,

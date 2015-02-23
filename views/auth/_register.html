@@ -1,11 +1,11 @@
 {{include "key.html"}}
 <div class='form-container'>
 {{=register_form}}
-{{if auth.settings.facebook:}}
+{{if s3db.msg_facebook_login():}}
 <a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='{{=T("Login using Facebook account")}}'>
 <span>{{=T("Login with Facebook")}}</span>
 </a>{{pass}}
-{{if auth.settings.google:}}
+{{if settings.get_auth_google():}}
 <a class='zocial google' href='{{=URL(f="google", args="login")}}' title='{{=T("Login using Google account")}}'>
 <span>{{=T("Login with Google")}}</span>
 </a>{{pass}}
