@@ -1337,6 +1337,7 @@ def s3_datetime(name="date", **attr):
             widget = "date" (in addition to usual meanings)
             past = x hours
             future = x hours
+            set_min = set a minimum for another datetime widget
 
         @ToDo: Different default field name in case we need to start supporting
                Oracle, where 'date' is a reserved word
@@ -1347,11 +1348,19 @@ def s3_datetime(name="date", **attr):
         del attr["past"]
     else:
         past = None
+
     if "future" in attr:
         future = attr["future"]
         del attr["future"]
     else:
         future = None
+
+    # Widget Options
+    widget_option = {}
+
+    if "set_min" in attr:
+        widget_option["set_min"] = attr["set_min"]
+        del attr["set_min"]
 
     if "default" in attr and attr["default"] == "now":
         attr["default"] = current.request.utcnow
@@ -1365,17 +1374,18 @@ def s3_datetime(name="date", **attr):
                                                                  utc=True)
 
     if "widget" not in attr:
-        if past is None and future is None:
-            attr["widget"] = S3DateTimeWidget()
-        elif past is None:
-            attr["widget"] = S3DateTimeWidget(future=future)
-        elif future is None:
-            attr["widget"] = S3DateTimeWidget(past=past)
-        else:
-            attr["widget"] = S3DateTimeWidget(past=past, future=future)
+        if future:
+            widget_option["future"] = future
+
+        if past:
+            widget_option["past"] = past
+
+        attr["widget"] = S3DateTimeWidget(**widget_option)
+
     elif attr["widget"] == "date":
+        widget_option["start_field"] = widget_option.pop("set_min", None)
         if past is None and future is None:
-            attr["widget"] = S3DateWidget()
+            attr["widget"] = S3DateWidget(**widget_option)
             requires = IS_DATE(
                     format=current.deployment_settings.get_L10n_date_format()
                 )
@@ -1384,7 +1394,8 @@ def s3_datetime(name="date", **attr):
             current_month = now.month
             if past is None:
                 future = int(round(future/744.0, 0))
-                attr["widget"] = S3DateWidget(future=future)
+                widget_option["future"] = future
+                attr["widget"] = S3DateWidget(**widget_option)
                 future_month = now.month + future
                 if future_month <= 12:
                     max = now.replace(month=future_month)
@@ -1405,7 +1416,8 @@ def s3_datetime(name="date", **attr):
                     )
             elif future is None:
                 past = int(round(past/744.0, 0))
-                attr["widget"] = S3DateWidget(past=past)
+                widget_option["past"] = past
+                attr["widget"] = S3DateWidget(**widget_option)
                 if past < current_month:
                     min = now.replace(month=current_month - past)
                 else:
@@ -1426,7 +1438,9 @@ def s3_datetime(name="date", **attr):
             else:
                 future = int(round(future/744.0, 0))
                 past = int(round(past/744.0, 0))
-                attr["widget"] = S3DateWidget(past=past, future=future)
+                widget_option["future"] = future
+                widget_option["past"] = past
+                attr["widget"] = S3DateWidget(**widget_option)
                 future_month = now.month + future
                 if future_month <= 12:
                     max = now.replace(month=future_month)

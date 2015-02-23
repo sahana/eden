@@ -1369,6 +1369,17 @@ class S3DateWidget(FormWidget):
         if script not in jquery_ready: # Prevents loading twice when form has errors
             jquery_ready.append(script)
 
+        if start_field:
+            # Set the minimum end_date to the same as the start_date
+            script = '''
+S3.start_end_date('%(start_field)s','%(end_field)s')
+''' % dict(start_field = start_field,
+           end_field = selector,
+           )
+
+            if script not in jquery_ready: # Prevents loading twice when form has errors
+                jquery_ready.append(script)
+
         if start_field and default_interval:
 
             T = current.T
