@@ -2447,7 +2447,10 @@ class S3XML(S3Codec):
                                 v = values[cidx]
                             except IndexError:
                                 continue
-                            if v:
+                            if t not in (xlrd.XL_CELL_TEXT, xlrd.XL_CELL_EMPTY):
+                                items = None
+                                break
+                            elif v:
                                 items[name] = v
                         if items and all(v[0] == '#' for v in items.values()):
                             hashtags.update(items)

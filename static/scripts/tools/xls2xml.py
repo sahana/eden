@@ -8,6 +8,7 @@
 # >>> python xls2xml <XLS File> <XSLT Stylesheet>
 #       ... converts the XLS file into XML and transforms it using the stylesheet
 #
+import datetime
 import sys
 
 from lxml import etree
@@ -224,7 +225,7 @@ def xls2tree(source,
                     check_headers = False
             else:
                 if not fields and \
-                    (header_row and record_idx == 1 or record_idx == 0):
+                   (header_row and record_idx == 1 or record_idx == 0):
                     # Autodetect hashtags
                     items = {}
                     for cidx, name in headers.items():
@@ -233,7 +234,10 @@ def xls2tree(source,
                             v = values[cidx]
                         except IndexError:
                             continue
-                        if v:
+                        if t not in (xlrd.XL_CELL_TEXT, xlrd.XL_CELL_EMPTY):
+                            items = None
+                            break
+                        elif v:
                             items[name] = v
                     if items and all(v[0] == '#' for v in items.values()):
                         hashtags.update(items)
