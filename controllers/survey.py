@@ -22,6 +22,7 @@ except:
     from StringIO import StringIO
 
 from gluon.contenttype import contenttype
+import gluon.contrib.pyrtf as pyrtf
 
 from s3survey import S3AnalysisPriority, \
                      survey_question_type, \
@@ -472,49 +473,31 @@ def series_export_word(widgetList, langDict, title, logo):
         @ToDo: rewrite as S3Method handler
     """
 
-    try:
-        from PyRTF import Document, \
-                          Languages, \
-                          Section, \
-                          Image, \
-                          Paragraph, \
-                          ShadingPropertySet, \
-                          ParagraphPropertySet, \
-                          StandardColours, \
-                          Colour, \
-                          Table, \
-                          Cell, \
-                          Renderer
-    except ImportError:
-        output = s3_rest_controller(module, "survey_series",
-                                    rheader=s3db.survey_series_rheader)
-        return output
-
     output  = StringIO()
-    doc     = Document(default_language=Languages.EnglishUK)
-    section = Section()
+    doc     = pyrtf.Document(default_language=pyrtf.Languages.EnglishUK)
+    section = pyrtf.Section()
     ss      = doc.StyleSheet
     ps = ss.ParagraphStyles.Normal.Copy()
     ps.SetName("NormalGrey")
-    ps.SetShadingPropertySet(ShadingPropertySet(pattern=1,
-                                                background=Colour("grey light", 224, 224, 224)))
+    ps.SetShadingPropertySet(pyrtf.ShadingPropertySet(pattern=1,
+                                                      background=pyrtf.Colour("grey light", 224, 224, 224)))
     ss.ParagraphStyles.append(ps)
     ps = ss.ParagraphStyles.Normal.Copy()
     ps.SetName("NormalCentre")
-    ps.SetParagraphPropertySet(ParagraphPropertySet(alignment=3))
+    ps.SetParagraphPropertySet(pyrtf.ParagraphPropertySet(alignment=3))
     ss.ParagraphStyles.append(ps)
 
     doc.Sections.append(section)
-    heading = Paragraph(ss.ParagraphStyles.Heading1)
+    heading = pyrtf.Paragraph(ss.ParagraphStyles.Heading1)
 
     if logo:
-        image = Image(logo)
+        image = pyrtf.Image(logo)
         heading.append(image)
     heading.append(title)
     section.append(heading)
 
     col = [2800, 6500]
-    table = Table(*col)
+    table = pyrtf.Table(*col)
     AddRow = table.AddRow
     sortedwidgetList = sorted(widgetList.values(),
                               key=lambda widget: widget.question.posn)
@@ -528,7 +511,7 @@ def series_export_word(widgetList, langDict, title, logo):
             pass
 
     section.append(table)
-    renderer = Renderer()
+    renderer = pyrtf.Renderer()
     renderer.Write(doc, output)
     return output
 

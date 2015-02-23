@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import A, URL, TR, TD
 from gluon.storage import Storage
 
-from s3 import s3_fullname, S3SQLInlineLink, S3SQLSubFormLayout
+from s3 import s3_fullname, S3Represent, S3SQLInlineLink, S3SQLSubFormLayout
 
 def config(settings):
     """
@@ -58,6 +58,14 @@ def config(settings):
     # Uncomment to disable responsive behavior of datatables
     # - Disabled until tested
     settings.ui.datatables_responsive = False
+    # Custom icon classes
+    settings.ui.custom_icons = {
+        "alert": "icon-alert",
+        "event": "icon-event",
+        "incident": "icon-incident",
+        "news": "icon-news",
+    }
+
     # PDF to Letter
     settings.base.paper_size = T("Letter")
 
@@ -101,12 +109,18 @@ def config(settings):
     #                                           }
     settings.auth.registration_link_user_to_default = "staff"
 
+    # Record Approval
+    settings.auth.record_approval = True
+    settings.auth.record_approval_required_for = ("org_organisation",)
+
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # Enable this to have Open links in IFrames open a full page in a new tab
     settings.ui.iframe_opens_full = True
     settings.ui.label_attachments = "Media"
     settings.ui.update_label = "Edit"
+    # Uncomment to show created_by/modified_by using Names not Emails
+    settings.ui.auth_user_represent = "name"
 
     # Uncomment to disable checking that LatLons are within boundaries of their parent
     #settings.gis.check_within_parent_boundaries = False
@@ -115,12 +129,8 @@ def config(settings):
     # Uncomment to modify the Simplify Tolerance
     settings.gis.simplify_tolerance = 0.001
 
-    # Uncomment to show created_by/modified_by using Names not Emails
-    settings.ui.auth_user_represent = "name"
-
-    # Record Approval
-    settings.auth.record_approval = True
-    settings.auth.record_approval_required_for = ("org_organisation",)
+    # Uncomment to turn off enforcement of E.123 international phone number notation
+    settings.msg.require_international_phone_numbers = False
 
     # -------------------------------------------------------------------------
     # Audit
@@ -163,6 +173,47 @@ def config(settings):
     settings.cms.show_tags = True
     # Uncomment to show post Titles in Newsfeed
     settings.cms.show_titles = True
+
+    # -------------------------------------------------------------------------
+    def customise_cms_post_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            table = r.table
+
+            # Simple Location Represent
+            table.location_id.represent = S3Represent(lookup="gis_location")
+
+            # Only needed once we start having multiple types
+            # We only use a single type so hard-code it
+            #table.series_id.readable = table.series_id.writable = False
+            #if not r.record:
+            #    stable = current.s3db.cms_series
+            #    row = current.db(stable.name == "News").select(stable.id,
+            #                                                   limitby=(0, 1)
+            #                                                   ).first()
+            #    try:
+            #        table.series_id.default = row.id
+            #    except:
+            #        # Prepop not done
+            #        # Undo the readable/writable so as not to mask the error
+            #        table.series_id.readable = table.series_id.writable = True
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
     # Inventory Management
@@ -317,11 +368,11 @@ def config(settings):
             S3OptionsFilter("organisation_id",
                             ),
             S3LocationFilter("location_id",
-                             levels = ("L2", "L4"),
+                             levels = ("L2", "L3", "L4"),
                              ),
-            S3OptionsFilter("site_org_group.group_id",
-                            represent = "%(name)s",
-                            ),
+            #S3OptionsFilter("site_org_group.group_id",
+            #                represent = "%(name)s",
+            #                ),
             ]
 
         s3db = current.s3db
@@ -407,6 +458,83 @@ def config(settings):
         return attr
 
     settings.customise_org_facility_controller = customise_org_facility_controller
+
+    # -------------------------------------------------------------------------
+    def org_organisation_postprocess(form):
+        """
+            If the user selects the City (L2), or Borough (L3) for Area Served,
+            then add all Zipcodes in instead
+        """
+
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+        organisation_id = form_vars.id
+        table = s3db.org_organisation_location
+        gtable = db.gis_location
+        lquery = (table.organisation_id == organisation_id) & \
+                 (table.deleted == False) & \
+                 (gtable.id == table.location_id)
+        # City
+        query = lquery & (gtable.level == "L2")
+        city = db(query).select(gtable.id,
+                                limitby=(0, 1)
+                                ).first()
+        if city:
+            city = city.id
+            query = (gtable.deleted == False) & \
+                    (gtable.level == "L4") & \
+                    (gtable.path.like("%/" + str(city) + "/%"))
+            children = db(query).select(gtable.id)
+            zipcodes = [row.id for row in children]
+            query = (table.organisation_id == organisation_id) & \
+                    (table.deleted == False) & \
+                    (gtable.id == table.location_id) & \
+                    (gtable.level == "L4")
+            existing = db(query).select(gtable.id)
+            existing_zipcodes = [row.id for row in existing]
+            for z in zipcodes:
+                if z not in existing_zipcodes:
+                    table.insert(organisation_id=organisation_id,
+                                 location_id=z,
+                                 )
+
+            # Cleanup
+            query = (table.organisation_id == organisation_id) & \
+                    (table.location_id == city)
+            db(query).delete()
+
+        # Boroughs
+        query = lquery & (gtable.level == "L3")
+        locations = db(query).select(gtable.id)
+        if locations:
+            boroughs = [row.id for row in locations]
+            zipcodes = []
+            query = (gtable.deleted == False) & \
+                    (gtable.level == "L4")
+            for b in boroughs:
+                q = query & (gtable.path.like("%/" + str(b) + "/%"))
+                children = db(q).select(gtable.id)
+                zipcodes += [row.id for row in children]
+            query = (table.organisation_id == organisation_id) & \
+                    (table.deleted == False) & \
+                    (gtable.id == table.location_id) & \
+                    (gtable.level == "L4")
+            existing = db(query).select(gtable.id)
+            existing_zipcodes = [row.id for row in existing]
+            for z in zipcodes:
+                if z not in existing_zipcodes:
+                    table.insert(organisation_id=organisation_id,
+                                 location_id=z,
+                                 )
+
+            # Cleanup
+            query = (table.organisation_id == organisation_id) & \
+                    (table.location_id.belongs(boroughs))
+            db(query).delete()
+
+        # Handle the RSS Subscriptions
+        pr_contact_postprocess(form)
 
     # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
@@ -615,7 +743,7 @@ def config(settings):
                 explicit_add = T("Add Facility"),
             ),
             "comments",
-            postprocess = pr_contact_postprocess,
+            postprocess = org_organisation_postprocess,
         )
 
         from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter#, S3HierarchyFilter
@@ -631,12 +759,12 @@ def config(settings):
                             ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),
-                             levels = ("L2", "L4"),
+                             levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
             S3LocationFilter("organisation_location.location_id",
                              label = T("Areas Served"),
-                             levels = ("L2", "L4"),
+                             levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
             S3OptionsFilter("service_organisation.service_id",
@@ -1300,7 +1428,9 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Human Resource Management
-    # Uncomment to chage the label for 'Staff'
+    # Uncomment to disable the 'Send Message' action button
+    settings.hrm.compose_button = False
+    # Uncomment to change the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
     # Uncomment to allow Staff & Volunteers to be registered without an email address
     settings.hrm.email_required = False
@@ -1347,6 +1477,14 @@ def config(settings):
     ]
 
     # -------------------------------------------------------------------------
+    def customise_hrm_competency_resource(r, tablename):
+
+        field = current.s3db.hrm_competency.organisation_id
+        field.readable = field.writable = False
+
+    settings.customise_hrm_competency_resource = customise_hrm_competency_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         s3 = current.response.s3
@@ -1391,7 +1529,7 @@ def config(settings):
                                         ),
                         S3LocationFilter("location_id",
                                          label = T("Location"),
-                                         levels = ("L2", "L4"),
+                                         levels = ("L2", "L3", "L4"),
                                          #hidden = True,
                                          ),
                         S3OptionsFilter("group_membership.group_id",
@@ -1439,12 +1577,6 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
-        """
-            Customise hrm_human_resource resource (in facility,
-            human_resource, organisation & person controllers)
-                - runs after controller customisation
-                - but runs before prep
-        """
 
         s3db = current.s3db
         # We need a group-component for pr_person here to embed
@@ -1627,7 +1759,7 @@ def config(settings):
                     #                ),
                     S3LocationFilter("location.location_id",
                                      label = T("Location"),
-                                     levels = ("L2", "L4"),
+                                     levels = ("L2", "L3", "L4"),
                                      #hidden = True,
                                      ),
                     # @ToDo: Widget to handle Start & End in 1!

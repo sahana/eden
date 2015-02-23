@@ -346,8 +346,8 @@ class S3Profile(S3CRUD):
 
         T = current.T
 
-        context = widget.get("context", None)
-        tablename = widget.get("tablename", None)
+        context = widget.get("context")
+        tablename = widget.get("tablename")
         resource, context = self._resolve_context(r, tablename, context)
 
         # Config Options:
@@ -364,9 +364,9 @@ class S3Profile(S3CRUD):
                                     config("orderby",
                                            ~resource.table.created_on)))
 
-        filter = widget.get("filter", None)
-        if filter:
-            resource.add_filter(filter)
+        widget_filter = widget.get("filter")
+        if widget_filter:
+            resource.add_filter(widget_filter)
 
         # Use the widget-index to create a unique ID
         list_id = "profile-list-%s-%s" % (tablename, widget["index"])
@@ -446,8 +446,8 @@ class S3Profile(S3CRUD):
                 filters = context.serialize_url(resource)
                 for f in filters:
                     get_vars_new[f] = filters[f]
-            if filter:
-                filters = filter.serialize_url(resource)
+            if widget_filter:
+                filters = widget_filter.serialize_url(resource)
                 for f in filters:
                     get_vars_new[f] = filters[f]
             c, f = tablename.split("_", 1)
@@ -501,8 +501,8 @@ class S3Profile(S3CRUD):
         """
 
         # Parse context
-        context = widget.get("context", None)
-        tablename = widget.get("tablename", None)
+        context = widget.get("context")
+        tablename = widget.get("tablename")
         resource, context = self._resolve_context(r, tablename, context)
 
         # Define target resource
@@ -516,7 +516,7 @@ class S3Profile(S3CRUD):
             list_fields = [f for f in table.fields if table[f].readable]
 
         # Widget filter option
-        widget_filter = widget.get("filter", None)
+        widget_filter = widget.get("filter")
         if widget_filter:
             resource.add_filter(widget_filter)
 
@@ -726,9 +726,14 @@ class S3Profile(S3CRUD):
         if icon:
             icon = ICON(icon)
 
-        context = widget.get("context", None)
-        tablename = widget.get("tablename", None)
+        context = widget.get("context")
+        tablename = widget.get("tablename")
         resource, context = self._resolve_context(r, tablename, context)
+
+        # Widget filter option
+        widget_filter = widget.get("filter")
+        if widget_filter:
+            resource.add_filter(widget_filter)
 
         record = resource.select(["id"], limit=1, as_rows=True).first()
         if record:
@@ -741,7 +746,7 @@ class S3Profile(S3CRUD):
         else:
             readonly = not current.auth.s3_has_permission("create", tablename)
 
-        sqlform = widget.get("sqlform", None)
+        sqlform = widget.get("sqlform")
         if not sqlform:
             sqlform = resource.get_config("crud_form")
         if not sqlform:

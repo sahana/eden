@@ -83,14 +83,10 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-try:
-    from gluon.dal.objects import Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Row
 from gluon.storage import Storage
-from ..s3 import *
 
+from ..s3 import *
+from s3dal import Row
 from s3chart import S3Chart
 from s3survey import survey_question_type, \
                      survey_analysis_type, \
@@ -1600,18 +1596,20 @@ class S3SurveySeriesModel(S3Model):
                          2: T("Closed"),
                          }
 
-        # @ToDo: i18n labels
         tablename = "survey_series"
         self.define_table(tablename,
                           Field("name", length=120,
                                 default = "",
+                                label = T("Name"),
                                 requires = IS_NOT_EMPTY(),
                                 ),
                           Field("description", "text", length=500,
                                 default = "",
+                                label = T("Description"),
                                 ),
                           Field("status", "integer",
                                 default = 1,
+                                label = T("Status"),
                                 represent = lambda index: series_status[index],
                                 requires = IS_IN_SET(series_status,
                                                      zero = None),
@@ -1623,10 +1621,12 @@ class S3SurveySeriesModel(S3Model):
                           person_id(),
                           organisation_id(widget = org_widget),
                           Field("logo", length=512,
-                                default = ""
+                                default = "",
+                                label = T("Logo"),
                                 ),
                           Field("language", length=8,
                                 default = "en",
+                                label = T("Language"),
                                 ),
                           s3_date("start_date",
                                   label = T("Start Date"),
@@ -2389,18 +2389,13 @@ def survey_series_rheader(r):
                                    _class="action-btn"
                                   )
             tranForm.append(export_xls_btn)
-            try:
-                # only add the Export to Word button up if PyRTF is installed
-                from PyRTF import Document
-                export_rtf_btn = INPUT(_type="submit",
-                                       _id="export_rtf_btn",
-                                       _name="Export_Word",
-                                       _value=T("Download Assessment Form Document"),
-                                       _class="action-btn"
-                                      )
-                tranForm.append(export_rtf_btn)
-            except:
-                pass
+            export_rtf_btn = INPUT(_type="submit",
+                                   _id="export_rtf_btn",
+                                   _name="Export_Word",
+                                   _value=T("Download Assessment Form Document"),
+                                   _class="action-btn"
+                                   )
+            tranForm.append(export_rtf_btn)
             urlimport = URL(c="survey",
                             f="series",
                             args=[record.id, "export_responses"],

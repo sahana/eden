@@ -49,11 +49,11 @@ def volunteer():
     s3.filter = FS("type") == 2
 
     vol_experience = settings.get_hrm_vol_experience()
-    
+
     def prep(r):
         resource = r.resource
         get_config = resource.get_config
-        
+
         # CRUD String
         s3.crud_strings[resource.tablename] = s3.crud_strings["hrm_volunteer"]
 
@@ -64,7 +64,7 @@ def volunteer():
         # Volunteers use home address
         location_id = table.location_id
         location_id.label = T("Home Address")
-        
+
         # Configure list_fields
         if r.representation == "xls":
             # Split person_id into first/middle/last to
@@ -76,16 +76,17 @@ def volunteer():
         else:
             list_fields = ["person_id",
                            ]
-        list_fields.extend(("job_title_id",
-                            "organisation_id",
-                            (settings.get_ui_label_mobile_phone(), "phone.value"),
+        list_fields.append("job_title_id")
+        if settings.get_hrm_multiple_orgs():
+            list_fields.append("organisation_id")
+        list_fields.extend(((settings.get_ui_label_mobile_phone(), "phone.value"),
                             (T("Email"), "email.value"),
                             "location_id",
                             ))
         if settings.get_hrm_use_trainings():
-            list_fields.append("person_id$training.course_id")
+            list_fields.append((T("Trainings"),"person_id$training.course_id"))
         if settings.get_hrm_use_certificates():
-            list_fields.append("person_id$certification.certificate_id")
+            list_fields.append((T("Certificates"),"person_id$certification.certificate_id"))
 
         # Volunteer Programme and Active-status
         report_options = get_config("report_options")
@@ -98,7 +99,7 @@ def volunteer():
                 list_fields.insert(3, (T("Active?"), "details.active"))
             # Add Programme to List Fields
             list_fields.insert(6, "person_id$hours.programme_id")
-            
+
             # Add active and programme to Report Options
             report_fields = report_options.rows
             report_fields.append("person_id$hours.programme_id")
@@ -115,13 +116,13 @@ def volunteer():
         filter_widgets = \
             s3db.hrm_human_resource_filters(resource_type="volunteer",
                                             hrm_type_opts=s3db.hrm_type_opts)
-                                
+
         # Reconfigure
         resource.configure(list_fields = list_fields,
                            filter_widgets = filter_widgets,
                            report_options = report_options,
                            )
-                    
+
         if r.interactive:
             if r.id:
                 if r.method not in ("profile", "delete"):
@@ -141,7 +142,7 @@ def volunteer():
                     redirect(URL(f="person",
                                  args="import",
                                  vars={"group": "volunteer"}))
-                                
+
                 elif not r.component and r.method != "delete":
                     # Configure AddPersonWidget
                     table.person_id.widget = S3AddPersonWidget2(controller="vol")
@@ -181,7 +182,9 @@ def volunteer():
 
             # Configure action buttons
             s3_action_buttons(r, deletable=settings.get_hrm_deletable())
-            if "msg" in settings.modules:
+            if "msg" in settings.modules and \
+               settings.get_hrm_compose_button() and \
+               auth.permission.has_permission("update", c="hrm", f="compose"):
                 # @ToDo: Remove this now that we have it in Events?
                 s3.actions.append({
                         "url": URL(f="compose",
@@ -258,7 +261,7 @@ def person():
     # Custom Method for Contacts
     set_method("pr", resourcename,
                method = "contacts",
-               action = s3db.pr_contacts)
+               action = s3db.pr_Contacts)
 
     # Custom Method for CV
     set_method("pr", resourcename,
@@ -679,7 +682,7 @@ def department():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -695,7 +698,7 @@ def job_title():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -716,9 +719,11 @@ def skill():
     """ Skills Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
                               csv_template=("hrm", "skill"),
@@ -730,9 +735,11 @@ def skill_type():
     """ Skill Types Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -741,9 +748,11 @@ def competency_rating():
     """ Competency Rating for Skill Types Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
                               csv_template=("hrm", "competency_rating"),
@@ -755,9 +764,11 @@ def skill_provision():
     """ Skill Provisions Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -766,9 +777,11 @@ def course():
     """ Courses Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
@@ -784,9 +797,11 @@ def course_certificate():
     """ Courses to Certificates Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -797,7 +812,7 @@ def certificate():
     mode = session.s3.hrm.mode
     def prep(r):
         if mode is not None:
-            r.error(403, message=auth.permission.INSUFFICIENT_PRIVILEGES)
+            auth.permission.fail()
         return True
     s3.prep = prep
 
@@ -816,9 +831,11 @@ def certificate_skill():
     """ Certificates to Skills Controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename)
 
@@ -913,14 +930,13 @@ def programme():
     """ Volunteer Programmes controller """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
 
     if not auth.s3_has_role(ADMIN):
         s3.filter = auth.filter_by_root_org(s3db.hrm_programme)
 
     def prep(r):
+        if mode is not None:
+            auth.permission.fail()
         if r.component_name == "person":
             s3db.configure("hrm_programme_hours",
                            list_fields=["person_id",
@@ -946,9 +962,11 @@ def programme_hours():
     """
 
     mode = session.s3.hrm.mode
-    if mode is not None:
-        session.error = T("Access denied")
-        redirect(URL(f="index"))
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
                               csv_stylesheet=("hrm", "programme_hours.xsl"),

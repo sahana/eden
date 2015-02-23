@@ -57,16 +57,12 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-try:
-    from gluon.dal.objects import Row, Rows, Query, Table
-except ImportError:
-    # old web2py
-    from gluon.dal import Row, Rows, Query, Table
 from gluon.sqlhtml import OptionsWidget
 from gluon.storage import Storage
 from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
+from s3dal import Row, Rows, Query, Table
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
@@ -1003,6 +999,7 @@ Thank you"""
                         closestpoint = location
 
             s3tracker = S3Tracker()
+            person_id = self.s3_logged_in_person()
             if closestpoint == 0 and deployment_settings.get_auth_create_unknown_locations():
                 # There wasn't any near-by location, so create one
                 newpoint = {"lat": userlat,
@@ -1011,12 +1008,12 @@ Thank you"""
                             }
                 closestpoint = current.s3db.gis_location.insert(**newpoint)
                 s3tracker(db.pr_person,
-                          self.user.id).set_location(closestpoint,
-                                                     timestmp=request.utcnow)
-            else:
+                          person_id).set_location(closestpoint,
+                                                  timestmp=request.utcnow)
+            elif closestpoint != 0:
                 s3tracker(db.pr_person,
-                          self.user.id).set_location(closestpoint.id,
-                                                     timestmp=request.utcnow)
+                          person_id).set_location(closestpoint,
+                                                  timestmp=request.utcnow)
 
     # -------------------------------------------------------------------------
     def register(self,
@@ -1072,15 +1069,24 @@ Thank you"""
         labels, required = s3_mark_required(utable)
 
         formstyle = deployment_settings.get_ui_formstyle()
+        REGISTER = T("Register")
+        buttons = [INPUT(_type="submit", _value=REGISTER),
+                   A(T("Login"),
+                     _href=URL(f="user", args="login"),
+                     _id="login-btn",
+                     _class="action-lnk",
+                     ),
+                   ]
         current.response.form_label_separator = ""
         form = SQLFORM(utable,
                        hidden = dict(_next=request.vars._next),
                        labels = labels,
                        separator = "",
                        showid = settings.showid,
-                       submit_button = T("Register"),
+                       submit_button = REGISTER,
                        delete_label = messages.delete_label,
                        formstyle = formstyle,
+                       buttons = buttons,
                        )
 
         # Identify form for CSS & JS Validation
@@ -1089,23 +1095,6 @@ Thank you"""
         if js_validation:
             # Client-side Validation
             self.s3_register_validation()
-
-        login_link = A(T("Login"),
-                       _href=URL(f="user", args="login"),
-                       _id="login-btn",
-                       _class="action-lnk",
-                       )
-
-        # @ToDo: Probe formstyle rather than hardcode options here
-        formstyle_name = deployment_settings.ui.get("formstyle")
-        bootstrap = formstyle_name == "bootstrap"
-        foundation = formstyle_name == "foundation"
-        if bootstrap:
-            form[0][-1].append(login_link)
-        elif foundation:
-            form[0][-1][0][1].append(login_link)
-        else:
-            form[0][-1][0].append(login_link)
 
         # Insert a Password-confirmation field
         for i, row in enumerate(form[0].components):
@@ -2847,6 +2836,7 @@ $.filterOptionsS3({
             if hr_id:
                 record["id"] = hr_id
                 s3db.update_super(htable, record)
+                self.s3_set_record_owner(htable, hr_id)
                 s3db.onaccept(htablename, record, method="create")
 
         return hr_id
@@ -2905,6 +2895,10 @@ $.filterOptionsS3({
                              owned_by_user=user_id,
                              )
             member_id = mtable.insert(**record)
+            if member_id:
+                record["id"] = member_id
+                self.s3_set_record_owner(mtable, member_id)
+                s3db.onaccept(mtablename, record, method="create")
 
         return member_id
 

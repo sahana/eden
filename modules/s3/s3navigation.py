@@ -468,33 +468,25 @@ class S3NavigationItem(object):
             @param request: the request object, defaults to current.request
         """
 
+        if self.selected is not None:
+            # Already selected
+            return self.selected
         if request is None:
             request = current.request
-
-        # If this is a top-level item, then set the selected path
         if self.parent is None:
+            # If this is the root item, then set the selected path
             branch = self.branch(request)
             if branch is not None:
-                path = branch.path()
-                for item in path:
-                    item.selected = True
+                branch.select()
             if not self.selected:
                 self.selected = False
-
-        elif self.selected is not None:
-            # Selected status has already been set
-            return self.selected
-
         else:
-            # Ensure the root item has been checked
+            # Otherwise: check the root item
             root = self.get_root()
             if root.selected is None:
                 root.check_selected(request)
 
-        # Check status
-        if self.selected:
-            return True
-        return False
+        return True if self.selected else False
 
     # -------------------------------------------------------------------------
     def check_hook(self):
@@ -575,6 +567,46 @@ class S3NavigationItem(object):
                 item.disable()
         else:
             self.enabled = False
+        return
+
+    # -------------------------------------------------------------------------
+    def select(self, tag=None):
+        """
+            Select an item. If given a tag, this selects the first matching
+            descendant (depth-first search), otherwise selects this item.
+
+            Propagates the selection up the path to the root item (including
+            the root item)
+
+            @param tag: a string
+        """
+
+        selected = None
+        if tag is None:
+            parent = self.parent
+            if parent:
+                parent.select()
+            else:
+                self.deselect_all()
+            selected = True
+        else:
+            for item in self.components:
+                if not selected:
+                    selected = item.select(tag=tag)
+                else:
+                    item.deselect_all()
+            if not selected and tag in self.tags:
+                selected = True
+        self.selected = selected
+        return selected
+
+    # -------------------------------------------------------------------------
+    def deselect_all(self):
+        """ De-select this item and all its descendants """
+
+        self.selected = None
+        for item in self.components:
+            item.deselect_all()
         return
 
     # -------------------------------------------------------------------------

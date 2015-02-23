@@ -756,6 +756,10 @@ class S3Importer(S3Method):
                                 for k, v in options:
                                     if k == str(data):
                                         value = v
+                                        break
+                                if hasattr(value, "m"):
+                                    # Don't translate - XSLT expects English
+                                    value = value.m
                     elif value is None:
                         continue
                     self.csv_extra_data[label] = value
@@ -1811,7 +1815,7 @@ class S3ImportItem(object):
             table = s3db.table(tablename)
             if table is None:
                 self.error = current.ERROR.BAD_RESOURCE
-                element.set(ERROR, str(self.error))
+                element.set(ERROR, s3_unicode(self.error))
                 return False
 
         self.table = table
@@ -1830,7 +1834,7 @@ class S3ImportItem(object):
             self.error = current.ERROR.VALIDATION_ERROR
             self.accepted = False
             if not element.get(ERROR, False):
-                element.set(ERROR, str(self.error))
+                element.set(ERROR, s3_unicode(self.error))
             return False
 
         self.data = data
@@ -2174,7 +2178,7 @@ class S3ImportItem(object):
                 parent.error = VALIDATION_ERROR
                 element = parent.element
                 if not element.get(ATTRIBUTE.error, False):
-                    element.set(ATTRIBUTE.error, str(parent.error))
+                    element.set(ATTRIBUTE.error, s3_unicode(parent.error))
 
             return ignore_errors
 
@@ -3346,7 +3350,7 @@ class S3ImportJob():
                 element = item.element
                 if element is not None:
                     if not element.get(ATTRIBUTE.error, False):
-                        element.set(ATTRIBUTE.error, str(self.error))
+                        element.set(ATTRIBUTE.error, s3_unicode(self.error))
                     if not logged:
                         self.error_tree.append(deepcopy(element))
 
@@ -3859,7 +3863,9 @@ class S3BulkImporter(object):
 
     # -------------------------------------------------------------------------
     def import_role(self, filename):
-        """ Import Roles from CSV """
+        """
+            Import Roles from CSV
+        """
 
         # Check if the source file is accessible
         try:
@@ -3950,7 +3956,9 @@ class S3BulkImporter(object):
 
     # -------------------------------------------------------------------------
     def import_user(self, filename):
-        """ Import Users from CSV """
+        """
+            Import Users from CSV
+        """
 
         current.response.s3.import_prep = current.auth.s3_import_prep
         user_task = [1,
@@ -4069,6 +4077,68 @@ class S3BulkImporter(object):
                         current.log.error("error importing logo %s: %s %s" % (image, key, error))
 
     # -------------------------------------------------------------------------
+    def import_font(self, url):
+        """
+            Install a Font
+        """
+
+        if url == "unifont":
+            UNIFONT = True
+            url = "http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf"
+            # Rename to make version upgrades be transparent
+            filename = "unifont.ttf"
+            extension = "ttf"
+        else:
+            UNIFONT = False
+
+            filename = url.split("/")[-1]
+            filename, extension = filename.rsplit(".", 1)
+
+            if extension not in ("ttf", "gz", "zip"):
+                current.log.warning("Unsupported font extension: %s" % extension)
+                return
+
+            filename = "%s.ttf" % filename
+
+        fontPath = os.path.join(current.request.folder, "static", "fonts")
+        if os.path.exists(os.path.join(fontPath, filename)):
+            current.log.warning("Using cached copy of %s" % filename)
+            return
+
+        # Download as we have no cached copy
+
+        # Copy the current working directory to revert back to later
+        cwd = os.getcwd()
+
+        # Set the current working directory
+        os.chdir(fontPath)
+        try:
+            _file = fetch(url)
+        except urllib2.URLError, exception:
+            current.log.error(exception)
+            # Revert back to the working directory as before.
+            os.chdir(cwd)
+            return
+
+        if extension == "gz":
+            import tarfile
+            tf = tarfile.open(fileobj=StringIO(_file))
+            tf.extractall()
+
+        elif extension == "zip":
+            import zipfile
+            zf = zipfile.ZipFile(StringIO(_file))
+            zf.extractall()
+
+        else:
+            f = open(filename, "wb")
+            f.write(_file)
+            f.close()
+
+        # Revert back to the working directory as before.
+        os.chdir(cwd)
+
+    # -------------------------------------------------------------------------
     def import_remote_csv(self, url, prefix, resource, stylesheet):
         """ Import CSV files from remote servers """
 
@@ -4110,13 +4180,11 @@ class S3BulkImporter(object):
                 os.chdir(cwd)
                 return
 
-            fp = StringIO(_file)
-
             if extension == "zip":
                 # Need to unzip
                 import zipfile
                 try:
-                    myfile = zipfile.ZipFile(fp)
+                    myfile = zipfile.ZipFile(StringIO(_file))
                 except zipfile.BadZipfile, exception:
                     # e.g. trying to download through a captive portal
                     current.log.error(exception)

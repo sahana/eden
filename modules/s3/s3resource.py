@@ -64,15 +64,10 @@ from gluon import current
 from gluon.html import A, TAG
 from gluon.http import HTTP
 from gluon.validators import IS_EMPTY_OR
-try:
-    from gluon.dal import Field
-    from gluon.dal.objects import Row, Rows, Table, Expression
-except ImportError:
-    # old web2py
-    from gluon.dal import Row, Rows, Table, Field, Expression
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3dal import Expression, Field, Row, Rows, Table
 from s3data import S3DataTable, S3DataList, S3PivotTable
 from s3fields import S3Represent, s3_all_meta_field_names
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
@@ -3715,7 +3710,7 @@ class S3Resource(object):
 
                 try:
                     rfield = rfields[iSortCol]
-                except KeyError:
+                except IndexError:
                     # iSortCol specifies a non-existent column, i.e.
                     # iSortCol_x>=numcols => ignore
                     columns.append(Storage(field=None))
@@ -3891,12 +3886,19 @@ class S3Resource(object):
             list_fields = [f.name for f in self.readable_fields()]
 
         pkey = _pkey = self._id.name
+        if self.parent and not self.link and \
+           not current.response.s3.component_show_key:
+            fkey = self.fkey
+        else:
+            fkey = None
         fields = []
         append = fields.append
         selectors = set()
         seen = selectors.add
         for f in list_fields:
-            selector = f if type(f) is not tuple else f[1]
+            selector = f[1] if type(f) is tuple else f
+            if fkey and selector == fkey:
+                continue
             if selector == _pkey and not id_column:
                 pkey = f
             elif selector not in selectors:

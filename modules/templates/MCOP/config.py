@@ -385,6 +385,14 @@ def config(settings):
         # We do all this in Popups
         url_next = URL(c="cms", f="post", args="datalist")
 
+        # Adapt list fields for cms_post_list_layout?
+        #if r.method == "datalist":
+        #    list_fields = r.resource.get_config("list_fields")
+        #    list_fields.extend(["event_post.event_id",
+        #                        "event_post.incident_id",
+        #                        "series_id",
+        #                        ])
+
         s3db.configure("cms_post",
                        create_next = url_next,
                        crud_form = crud_form,
@@ -394,7 +402,7 @@ def config(settings):
 
         if r.representation == "geojson":
             # Add Virtual field to allow colour-coding by age
-            from gluon.dal import Field
+            from s3dal import Field
             table.age = Field.Method("age", cms_post_age)
 
     settings.customise_cms_post_resource = customise_cms_post_resource

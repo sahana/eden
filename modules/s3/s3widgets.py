@@ -41,7 +41,7 @@ __all__ = ("S3ACLWidget",
            "S3ColorPickerWidget",
            "S3DateWidget",
            "S3DateTimeWidget",
-           "S3EmbedComponentWidget",
+           "S3EmbeddedComponentWidget",
            "S3GroupedOptionsWidget",
            #"S3RadioOptionsWidget",
            "S3HiddenWidget",
@@ -100,7 +100,6 @@ except ImportError:
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon import current
-#from gluon.dal import Field
 #from gluon.html import *
 #from gluon.http import HTTP
 #from gluon.validators import *
@@ -823,12 +822,11 @@ class S3AddPersonWidget2(FormWidget):
         id = "%s_title" % fieldname
         label = field.label
         label = LABEL(label, _for=id)
-        # @ToDo: Style these icons in non-Bootstrap themes
         # @ToDo: Check Permissions for existing person records to know whether we can edit the person or simply select a different one
-        widget = DIV(A(I(" ", _class="icon icon-edit"),
+        widget = DIV(A(ICON("edit"),
                        _title=T("Edit Entry"), # "Edit Selection"
                        ),
-                     A(I(" ", _class="icon icon-remove"),
+                     A(ICON("remove"),
                        _title=T("Revert Entry"), # "Clear Selection"
                        ),
                      _class="add_person_edit_bar hide",
@@ -1679,7 +1677,7 @@ if($('#%(selector)s_clear').length==0){
         return
 
 # =============================================================================
-class S3EmbedComponentWidget(FormWidget):
+class S3EmbeddedComponentWidget(FormWidget):
     """
         Widget used by S3CRUD for link-table components with actuate="embed".
         Uses s3.embed_component.js for client-side processing, and
@@ -1689,259 +1687,252 @@ class S3EmbedComponentWidget(FormWidget):
     def __init__(self,
                  link=None,
                  component=None,
-                 widget=None,
                  autocomplete=None,
                  link_filter=None,
                  select_existing=True):
+        """
+            Constructor
+
+            @param link: the name of the link table
+            @param component: the name of the component table
+            @param autocomplete: name of the autocomplete field
+            @param link_filter: filter expression to filter out records
+                                in the component that are already linked
+                                to the main record
+            @param select_existing: allow the selection of existing
+                                    component records from the registry
+        """
 
         self.link = link
         self.component = component
-        self.widget = widget
         self.autocomplete = autocomplete
         self.select_existing = select_existing
         self.link_filter = link_filter
 
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
+        """
+            Widget renderer
+
+            @param field: the Field
+            @param value: the current value
+            @param attributes: the HTML attributes for the widget
+        """
 
         T = current.T
-        db = current.db
-        s3db = current.s3db
 
-        request = current.request
-        appname = request.application
+        # Input ID
+        if "_id" in attributes:
+            input_id = attributes["_id"]
+        else:
+            input_id = str(field).replace(".", "_")
+
+        # Form style and widget style
         s3 = current.response.s3
-        appname = current.request.application
-
         formstyle = s3.crud.formstyle
-
-        link = self.link
-        ltable = s3db[link]
-        ctable = s3db[self.component]
-
-        prefix, resourcename = self.component.split("_", 1)
-        if field.name in request.post_vars:
-            selected = request.post_vars[field.name]
+        if not callable(formstyle) or \
+           isinstance(formstyle("","","",""), tuple):
+            widgetstyle = self._formstyle
         else:
-            selected = None
-
-        # Main Input
-        default = dict(_type = "text",
-                       value = (value != None and str(value)) or "")
-        attr = StringWidget._attributes(field, default, **attributes)
-        attr["_class"] = "hide"
-
-        if "_id" in attr:
-            real_input = attr["_id"]
-        else:
-            real_input = str(field).replace(".", "_")
-        dummy = "dummy_%s" % real_input
-
-        if self.select_existing:
-            _class ="box_top"
-        else:
-            _class = "hide"
-
-        # Post-process selection/deselection
-        post_process = s3db.get_config(link, "post_process")
-        if post_process is not None:
-            try:
-                if self.autocomplete:
-                    pp = post_process % real_input
-                else:
-                    pp = post_process % dummy
-            except:
-                pp = post_process
-        else:
-            pp = None
-
-        clear = "clear_component_form();"
-        if pp is not None:
-            clear = "%s%s" % (clear, pp)
+            widgetstyle = formstyle
 
         # Subform controls
-        controls = TAG[""](A(T("Select from registry"),
-                             #_href="#",
-                             _id="select_from_registry",
+        controls = TAG[""](A(T("Select from Registry"),
+                             _id="%s-select" % input_id,
                              _class="action-btn",
                              ),
-                           A(T("Remove selection"),
-                             #_href="#",
-                             _onclick=clear,
-                             _id="clear_form_link",
+                           A(T("Remove Selection"),
+                             _id="%s-clear" % input_id,
                              _class="action-btn hide",
                              _style="padding-left:15px;",
                              ),
                            A(T("Edit Details"),
-                             #_href="#",
-                             _onclick="edit_selected_form();",
-                             _id="edit_selected_link",
+                             _id="%s-edit" % input_id,
                              _class="action-btn hide",
                              _style="padding-left:15px;",
                              ),
-                           DIV(_id="load_throbber",
-                               _class="throbber hide",
+                           DIV(_class="throbber hide",
                                _style="padding-left:85px;",
                                ),
                            )
+        controls = widgetstyle("%s-select-row" % input_id,
+                               "",
+                               controls,
+                               "",
+                               )
+        controls.add_class("box_top" if self.select_existing else "hide")
 
-        url = "/%s/%s/%s/" % (appname, prefix, resourcename)
-        callable_formstyle = callable(formstyle)
-        tuple_rows = callable_formstyle and \
-                     isinstance(formstyle("","","",""), tuple)
-        if callable_formstyle and not tuple_rows:
-            controls = formstyle("select_from_registry_row",
-                                 "",
-                                 controls,
-                                 "",
-                                 )
-            # Pass parameters as attributes
-            # @todo: move to data dict
-            controls.update(_controller=prefix,
-                            _component=self.component,
-                            _url=url,
-                            _field=real_input,
-                            _value=str(value),
-                            )
-            controls.add_class(_class)
-        else:
-            # Legacy
-            # @todo: deprecate
-            controls = TR(TD(controls, _class="w2p_fw"),
-                          TD(),
-                          _id="select_from_registry_row",
-                          _class=_class,
-                          _controller=prefix,
-                          _component=self.component,
-                          _url=url,
-                          _field=real_input,
-                          _value=str(value),
-                          )
+        s3db = current.s3db
+        ctable = s3db[self.component]
+        prefix, resourcename = self.component.split("_", 1)
 
         # Selector
         autocomplete = self.autocomplete
         if autocomplete:
-            # Autocomplete
-            select = "if($('#%(input)s').val()){select_component($('#%(input)s').val());}" % \
-                     {"input": real_input}
-            if pp is not None:
-                select = "%s%s" % (pp, select)
+            # Autocomplete widget
             ac_field = ctable[autocomplete]
 
             widget = S3AutocompleteWidget(prefix,
                                           resourcename=resourcename,
                                           fieldname=autocomplete,
                                           link_filter=self.link_filter,
-                                          post_process=select)
-            if callable_formstyle and not tuple_rows:
-                selector = formstyle("component_autocomplete_row",
-                                     LABEL("%s: " % ac_field.label,
-                                           _class="hide",
-                                           _id="component_autocomplete_label"),
-                                     widget(field, value),
-                                     "",
-                                     )
-                selector.add_class("box_top")
-            else:
-                # Legacy
-                # @todo: deprecate
-                selector = TR(TD(LABEL("%s: " % ac_field.label,
-                                       _class="hide",
-                                      _id="component_autocomplete_label",
-                                      ),
-                                 widget(field, value),
-                                 ),
-                              TD(),
-                              _id="component_autocomplete_row",
-                              _class="box_top",
-                              )
-
+                                          )
+            selector = widgetstyle("%s-autocomplete-row" % input_id,
+                                   LABEL("%s: " % ac_field.label,
+                                         _class="hide",
+                                         _id="%s-autocomplete-label" % input_id),
+                                   widget(field, value),
+                                   "",
+                                   )
+            selector.add_class("box_top")
         else:
             # Options widget
             # @todo: add link_filter here as well
-            select = "if($('#%(input)s').val()){select_component($('#%(input)s').val());}" % \
-                     {"input": dummy}
             widget = OptionsWidget.widget(field, None,
                                           _class="hide",
-                                          _id=dummy,
-                                          _onchange=select,
+                                          _id="dummy_%s" % input_id,
                                           )
             label = LABEL("%s: " % field.label,
                           _class="hide",
-                          _id="component_autocomplete_label",
+                          _id="%s-autocomplete-label" % input_id,
                           )
-            hidden_input = INPUT(_id=real_input, _class="hide")
+            hidden_input = INPUT(_id=input_id, _class="hide")
 
-            if callable_formstyle and not tuple_rows:
-                selector = formstyle("component_autocomplete_row",
-                                     label,
-                                     TAG[""](widget, hidden_input),
-                                     "",
-                                     )
-                selector.add_class("box_top")
-            else:
-                # Legacy
-                # @todo: deprecate
-                selector = TR(TD(label, widget),
-                              TD(hidden_input),
-                              _id="component_autocomplete_row",
-                              _class="box_top",
-                              )
+            selector = widgetstyle("%s-autocomplete-row" % input_id,
+                                   label,
+                                   TAG[""](widget, hidden_input),
+                                   "",
+                                   )
+            selector.add_class("box_top")
 
-        # Embedded Form
+        # Initialize field validators with the correct record ID
         fields = [f for f in ctable
                     if (f.writable or f.readable) and not f.compute]
+        request = current.request
+        if field.name in request.post_vars:
+            selected = request.post_vars[field.name]
+        else:
+            selected = None
         if selected:
-            # Initialize validators with the correct record ID
             for f in fields:
                 requires = f.requires or []
                 if not isinstance(requires, (list, tuple)):
                     requires = [requires]
                 [r.set_self_id(selected) for r in requires
                                          if hasattr(r, "set_self_id")]
+
+        # Mark required
         labels, required = s3_mark_required(fields)
         if required:
             s3.has_required = True
+
+        # Generate embedded form
         form = SQLFORM.factory(table_name=self.component,
                                labels=labels,
                                formstyle=formstyle,
                                upload="default/download",
                                separator = "",
                                *fields)
+
+        # Re-wrap the embedded form rows in an empty TAG
         formrows = []
         append = formrows.append
         for formrow in form[0]:
             if not formrow.attributes["_id"].startswith("submit_record"):
                 if hasattr(formrow, "add_class"):
-                    formrow.add_class("box_middle embedded")
+                    formrow.add_class("box_middle embedded-%s" % input_id)
                 append(formrow)
         formrows = TAG[""](formrows)
 
         # Divider
-        if callable_formstyle and not tuple_rows:
-            divider = formstyle("", "", DIV(_class="subheading"), "")
-            divider.add_class("box_bottom embedded")
-        else:
-            # Legacy
-            # @todo: deprecate
-            divider = TR(TD(_class="subheading"),
-                         TD(),
-                         _class="box_bottom embedded",
-                         )
+        divider = widgetstyle("", "", DIV(_class="subheading"), "")
+        divider.add_class("box_bottom embedded")
 
-        # JavaScript
+        # Widget script
+        appname = request.application
         if s3.debug:
-            script = "s3.embed_component.js"
+            script = "s3.ui.embeddedcomponent.js"
         else:
-            script = "s3.embed_component.min.js"
+            script = "s3.ui.embeddedcomponent.min.js"
+        script = "/%s/static/scripts/S3/%s" % (appname, script)
+        if script not in s3.scripts:
+            s3.scripts.append(script)
 
-        s3.scripts.append("/%s/static/scripts/S3/%s" % (appname, script))
+        # Script options
+        url = "/%s/%s/%s/" % (appname, prefix, resourcename)
+        options = {"ajaxURL": url,
+                   "fieldname": input_id,
+                   "component": self.component,
+                   "recordID": str(value),
+                   "autocomplete": True if autocomplete else False,
+                   }
+
+        # Post-process after Selection/Deselection
+        post_process = s3db.get_config(self.link, "post_process")
+        if post_process:
+            try:
+                pp = post_process % input_id
+            except TypeError:
+                pp = post_process
+            options["postprocess"] = pp
+
+        # Initialize UI Widget
+        script = '''$('#%(input)s').embeddedComponent(%(options)s)''' % \
+                 {"input": input_id, "options": json.dumps(options)}
+        s3.jquery_ready.append(script)
 
         # Overall layout of components
-        return TAG[""](controls,
-                       selector,
-                       formrows,
-                       divider,
-                       )
+        return TAG[""](controls, selector, formrows, divider)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _formstyle(row_id, label, widget, comments):
+        """
+            Fallback for legacy formstyles (i.e. not callable or tuple-rows)
+        """
+
+        return TR(TD(label, widget, _class="w2p_fw"),
+                  TD(comments),
+                  _id=row_id,
+                  )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def link_filter(table, expression):
+        """
+            Parse a link filter expression and convert it into an
+            S3ResourceQuery that can be added to the search_ac resource.
+
+            Link filter expressions are used to exclude records from
+            the (autocomplete-)search that are already linked to the master
+            record.
+
+            General format:
+                ?link=<linktablename>.<leftkey>.<id>.<rkey>.<fkey>
+
+            Example:
+                ?link=project_organisation.organisation_id.5.project_id.id
+
+            @param expression: the link filter expression
+        """
+
+        try:
+            link, lkey, _id, rkey, fkey = expression.split(".")
+        except ValueError:
+            # Invalid expression
+            return None
+        linktable = current.s3db.table(link)
+        if linktable:
+            fq = (linktable[rkey] == table[fkey]) & \
+                 (linktable[lkey] == _id)
+            if "deleted" in linktable:
+                fq &= (linktable.deleted != True)
+            linked = current.db(fq).select(table._id)
+            from s3query import FS
+            pkey = FS("id")
+            exclude = (~(pkey.belongs([r[table._id.name] for r in linked])))
+            return exclude
+        return None
 
 # -----------------------------------------------------------------------------
 def S3GenericAutocompleteTemplate(post_process,
@@ -4258,6 +4249,7 @@ class S3LocationSelector(S3Selector):
 
     def __init__(self,
                  levels = None,
+                 required_levels = None,
                  hide_lx = True,
                  reverse_lx = False,
                  show_address = False,
@@ -4283,6 +4275,8 @@ class S3LocationSelector(S3Selector):
 
             @param levels: list or tuple of hierarchy levels (names) to expose,
                            in order (e.g. ("L0", "L1", "L2"))
+            @param required_levels: list or tuple of required hierarchy levels (if empty,
+                                    only the highest selectable Lx will be required)
             @param hide_lx: hide Lx selectors until higher level has been selected
             @param reverse_lx: render Lx selectors in the order usually used by
                                street Addresses (lowest level first), and below the
@@ -4309,7 +4303,10 @@ class S3LocationSelector(S3Selector):
             @param represent: an S3Represent instance that can represent non-DB rows
         """
 
+        self._initlx = True
         self._levels = levels
+        self._required_levels = required_levels
+
         self._load_levels = None
 
         self.hide_lx = hide_lx
@@ -4363,10 +4360,37 @@ class S3LocationSelector(S3Selector):
         """ Lx-levels to expose as dropdowns """
 
         levels = self._levels
-        if not levels:
-            # Which levels of Hierarchy are we using?
-            self._levels = levels = current.gis.get_relevant_hierarchy_levels()
+        if self._initlx:
+            lx = []
+            if not levels:
+                # Which levels of Hierarchy are we using?
+                levels = current.gis.get_relevant_hierarchy_levels()
+            if levels is None:
+                levels = []
+            if not isinstance(levels, (tuple, list)):
+                levels = [levels]
+            for level in levels:
+                if level not in lx:
+                    lx.append(level)
+            for level in self.required_levels:
+                if level not in lx:
+                    lx.append(level)
+            levels = self._levels = lx
+            self._initlx = False
+        return levels
 
+    # -------------------------------------------------------------------------
+    @property
+    def required_levels(self):
+        """ Lx-levels to treat as required """
+
+        levels = self._required_levels
+        if self._initlx:
+            if levels is None:
+                levels = set()
+            elif not isinstance(levels, (list, tuple)):
+                levels = [levels]
+            self._required_levels = levels
         return levels
 
     # -------------------------------------------------------------------------
@@ -5079,6 +5103,7 @@ class S3LocationSelector(S3Selector):
         hidden = True
 
         T = current.T
+        required_levels = self.required_levels
         for level in levels:
 
             _id = "%s_%s" % (fieldname, level)
@@ -5093,12 +5118,14 @@ class S3LocationSelector(S3Selector):
                             )
 
             # Mark as required?
-            if required:
+            if required or level in required_levels:
                 widget.add_class("required")
                 label = s3_required_label(label)
 
-                if ("L%s" % (int(level[1:]) + 1)) not in levels:
-                    # This is the highest level which is required
+                if required and ("L%s" % (int(level[1:]) - 1)) not in levels:
+                    # This is the highest level, treat subsequent levels
+                    # as optional unless they are explicitly configured
+                    # as required
                     required = False
 
             # Throbber
@@ -5431,12 +5458,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Initialize the values dict
         if values is None:
             values = {}
-        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific"):
+        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific", "parent"):
             if key not in values:
                 values[key] = None
 
         values["id"] = record_id
-        values["parent"] = None
 
         if not record_id:
             return values
@@ -5879,8 +5905,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 level = location.level
                 if level:
                     # Which levels of Hierarchy are we using?
-                    levels = self.levels or \
-                             current.gis.get_relevant_hierarchy_levels()
+                    levels = self.levels
                     if level not in levels:
                         return (values, msg or \
                                         current.T("Location is of incorrect level!"))
@@ -6285,6 +6310,11 @@ class S3HierarchyWidget(FormWidget):
         if widget_id == None:
             widget_id = attr["_id"] = "%s-hierarchy" % selector
 
+        # Field name
+        name = attr.get("_name")
+        if not name:
+            name = field.name
+
         # Get the lookup table
         lookup = self.lookup
         if not lookup:
@@ -6315,7 +6345,7 @@ class S3HierarchyWidget(FormWidget):
         # Generate the widget
         widget = DIV(INPUT(_type = "hidden",
                            _multiple = "multiple",
-                           _name = field.name,
+                           _name = name,
                            _class = "s3-hierarchy-input",
                            requires = self.parse),
                      DIV(h.html("%s-tree" % widget_id),
@@ -6405,8 +6435,8 @@ class S3HierarchyWidget(FormWidget):
             value = json.loads(value)
         except ValueError:
             return default, None
-        if not self.multiple and value and isinstance(value, list):
-            value = value[0]
+        if not self.multiple and isinstance(value, list):
+            value = value[0] if value else None
         return value, None
 
 # =============================================================================
@@ -7476,23 +7506,10 @@ def search_ac(r, **attr):
                     "Unsupported filter! Supported filters: ~, =, <, >")
         raise HTTP(400, body=output)
 
-    # Exclude records which are already linked:
-    #      ?link=<linktablename>.<leftkey>.<id>.<rkey>.<fkey>
-    # e.g. ?link=project_organisation.organisation_id.5.project_id.id
     if "link" in _vars:
-        try:
-            link, lkey, _id, rkey, fkey = _vars.link.split(".")
-            linktable = s3db[link]
-            fq = (linktable[rkey] == table[fkey]) & \
-                 (linktable[lkey] == _id)
-            linked = current.db(fq).select(table._id)
-            pkey = FS("id")
-            exclude = (~(pkey.belongs([r[table._id.name]
-                                       for r in linked])))
-        except Exception, e:
-            pass # ignore
-        else:
-            query &= exclude
+        link_filter = S3EmbeddedComponentWidget.link_filter(table, _vars.link)
+        if link_filter:
+            query &= link_filter
 
     # Select only or exclude template records:
     # to only select templates:
@@ -7586,8 +7603,10 @@ class ICON(I):
     icons = {
         "font-awesome": {
             "_base": "icon",
+            "active": "icon-check",
             "add": "icon-plus",
             "arrow-down": "icon-arrow-down",
+            "attachment": "icon-paper-clip",
             "bar-chart": "icon-bar-chart",
             "book": "icon-book",
             "bookmark": "icon-bookmark",
@@ -7599,32 +7618,40 @@ class ICON(I):
             "delete": "icon-trash",
             "down": "icon-caret-down",
             "edit": "icon-edit",
-            "envelope-alt": "icon-envelope-alt",
             "exclamation": "icon-exclamation",
+            "facebook": "icon-facebook",
             "file": "icon-file",
             "file-alt": "icon-file-alt",
             "folder-open-alt": "icon-folder-open-alt",
             "fullscreen": "icon-fullscreen",
             "globe": "icon-globe",
             "home": "icon-home",
-            "link": "icon-link",
+            "inactive": "icon-check-empty",
+            "link": "icon-external-link",
             "list": "icon-list",
+            "mail": "icon-envelope-alt",
             "map-marker": "icon-map-marker",
             "offer": "icon-truck",
+            "other": "icon-circle",
             "paper-clip": "icon-paper-clip",
             "phone": "icon-phone",
             "plus": "icon-plus",
             "plus-sign": "icon-plus-sign",
+            "radio": "icon-microphone",
             "remove": "icon-remove",
             "request": "icon-flag",
+            "rss": "icon-rss",
             "sitemap": "icon-sitemap",
+            "skype": "icon-skype",
             "star": "icon-star",
             "table": "icon-table",
             "tag": "icon-tag",
             "tags": "icon-tags",
+            "tasks": "icon-tasks",
             "time": "icon-time",
             "trash": "icon-trash",
             "truck": "icon-truck",
+            "twitter": "icon-twitter",
             "up": "icon-caret-up",
             "user": "icon-user",
             "wrench": "icon-wrench",
@@ -7634,8 +7661,10 @@ class ICON(I):
         # @todo: integrate
         #"font-awesome4": {
             #"_base": "fa",
+            #"active": "fa-check",
             #"add": "fa-plus",
             #"arrow-down": "fa-arrow-down",
+            #"attachment": "fa-paper-clip",
             #"bar-chart": "fa-bar-chart",
             #"book": "fa-book",
             #"bookmark": "fa-bookmark",
@@ -7647,32 +7676,40 @@ class ICON(I):
             #"delete": "fa-trash",
             #"down": "fa-caret-down",
             #"edit": "fa-edit",
-            #"envelope-alt": "fa-envelope-o",
             #"exclamation": "fa-exclamation",
+            #"facebook": "fa-facebook",
             #"file": "fa-file",
             #"file-alt": "fa-file-alt",
             #"folder-open-alt": "fa-folder-open-o",
             #"fullscreen": "fa-fullscreen",
             #"globe": "fa-globe",
             #"home": "fa-home",
-            #"link": "fa-link",
+            #"inactive": "fa-check-empty",
+            #"link": "fa-external-link",
             #"list": "fa-list",
+            #"mail": "fa-envelope-o",
             #"map-marker": "fa-map-marker",
             #"offer": "fa-truck",
+            #"other": "fa-circle",
             #"paper-clip": "fa-paper-clip",
             #"phone": "fa-phone",
             #"plus": "fa-plus",
             #"plus-sign": "fa-plus-sign",
+            #"radio": "fa-microphone",
             #"remove": "fa-remove",
             #"request": "fa-flag",
+            #"rss": "fa-rss",
             #"sitemap": "fa-sitemap",
+            #"skype": "fa-skype",
             #"star": "fa-star",
             #"table": "fa-table",
             #"tag": "fa-tag",
             #"tags": "fa-tags",
+            #"tasks": "fa-tasks",
             #"time": "fa-time",
             #"trash": "fa-trash",
             #"truck": "fa-truck",
+            #"twitter": "fa-twitter",
             #"up": "fa-caret-up",
             #"user": "fa-user",
             #"wrench": "fa-wrench",
@@ -7680,8 +7717,10 @@ class ICON(I):
             #"zoomout": "fa-zoomout",
         #},
         "foundation": {
+            "active": "fi-check",
             "add": "fi-plus",
             "arrow-down": "fi-arrow-down",
+            "attachment": "fi-paperclip",
             "bar-chart": "fi-graph-bar",
             "book": "fi-book",
             "bookmark": "fi-bookmark",
@@ -7691,30 +7730,38 @@ class ICON(I):
             "comment-alt": "fi-comment",
             "delete": "fi-trash",
             "edit": "fi-page-edit",
-            "envelope-alt": "fi-mail",
             "exclamation": "fi-alert",
+            "facebook": "fi-social-facebook",
             "file": "fi-page-filled",
             "file-alt": "fi-page",
             "folder-open-alt": "fi-folder",
             "fullscreen": "fi-arrows-out",
             "globe": "fi-map",
             "home": "fi-home",
-            "link": "fi-link",
+            "inactive": "fi-x",
+            "link": "fi-web",
             "list": "fi-list",
+            "mail": "fi-mail",
             "map-marker": "fi-marker",
             "offer": "fi-burst",
+            "other": "fi-asterisk",
             "paper-clip": "fi-paperclip",
             "phone": "fi-telephone",
             "plus": "fi-plus",
             "plus-sign": "fi-plus",
+            "radio": "fi-microphone",
             "remove": "fi-x",
             "request": "fi-flag",
+            "rss": "fi-rss",
+            "skype": "fi-social-skype",
             "star": "fi-star",
             "table": "fi-list-thumbnails",
             "tag": "fi-price-tag",
             "tags": "fi-pricetag-multiple",
+            "tasks": "fi-clipboard-notes",
             "time": "fi-clock",
             "trash": "fi-trash",
+            "twitter": "fi-social-twitter",
             "user": "fi-torso",
             "wrench": "fi-wrench",
             "zoomin": "fi-zoom-in",

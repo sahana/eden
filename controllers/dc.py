@@ -21,6 +21,31 @@ def index():
 def template():
     """ Manage Data Collection Templates """
 
+    def prep(r):
+
+        if r.record and r.component_name == "question":
+
+            # Allow adding of new questions if they are not linked
+            # to this template yet
+            qtable = s3db.dc_question
+            ltable = s3db.dc_template_question
+            left = ltable.on((ltable.question_id == qtable.id) & \
+                             (ltable.deleted != True))
+            query = (qtable.deleted != True) & \
+                    ((ltable.template_id != r.id) | \
+                     (ltable.template_id == None))
+
+            # Restrict field options accordingly
+            db = current.db
+            field = ltable.question_id
+            field.requires = IS_ONE_OF(db(query),
+                                       "dc_question.id",
+                                       field.represent,
+                                       left=left)
+
+        return True
+    s3.prep = prep
+
     return s3_rest_controller(rheader = s3db.dc_rheader)
 
 # -----------------------------------------------------------------------------

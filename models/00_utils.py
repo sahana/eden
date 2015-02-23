@@ -201,6 +201,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     set_handler("filter", s3base.S3Filter)
     set_handler("hierarchy", s3base.S3HierarchyCRUD)
     set_handler("import", s3base.S3Importer)
+    set_handler("xform", s3base.S3XForms)
     set_handler("map", s3base.S3Map)
     set_handler("profile", s3base.S3Profile)
     set_handler("report", s3base.S3Report)

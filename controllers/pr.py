@@ -131,15 +131,6 @@ def person():
 
                 # S3SQLCustomForm breaks popup return, so disable
                 s3db.clear_config("pr_person", "crud_form")
-            else:
-                method = r.method
-                if method == "private_contacts":
-                    # Flag to pass into s3db.pr_contacts()
-                    s3.pr_contacts = 1
-                elif method == "public_contacts":
-                    # Flag to pass into s3db.pr_contacts()
-                    s3.pr_contacts = 2
-
             if r.component:
                 component_name = r.component_name
                 if component_name == "config":
@@ -180,17 +171,17 @@ def person():
     if "all" in contacts_tabs:
         s3db.set_method(module, resourcename,
                         method = "contacts",
-                        action = s3db.pr_contacts)
+                        action = s3db.pr_Contacts)
         tabs.append((T("Contacts"), "contacts"))
     if "public" in contacts_tabs:
         s3db.set_method(module, resourcename,
                         method = "public_contacts",
-                        action = s3db.pr_contacts)
+                        action = s3db.pr_Contacts)
         tabs.append((T("Public Contacts"), "public_contacts"))
     if "private" in contacts_tabs and auth.is_logged_in():
         s3db.set_method(module, resourcename,
                         method = "private_contacts",
-                        action = s3db.pr_contacts)
+                        action = s3db.pr_Contacts)
         tabs.append((T("Private Contacts"), "private_contacts"))
 
     tabs += [(T("Images"), "image"),
@@ -279,7 +270,7 @@ def contact():
     def prep(r):
         person_id = get_vars.get("person", None)
         if person_id:
-            # Coming from s3.contacts.js [s3db.pr_contacts()]
+            # Coming from s3.contacts.js [s3db.pr_Contacts()]
             # Lookup the controller
             controller = get_vars.get("controller", "pr")
             # Lookup the access
@@ -375,6 +366,17 @@ def contact_emergency():
                 pe_id = db(query).select(table.pe_id,
                                          limitby=(0, 1)).first().pe_id
                 s3db.pr_contact_emergency.pe_id.default = pe_id
+        else:
+            field = s3db.pr_contact_emergency.pe_id
+            if r.method == "create" and r.representation == "popup":
+                # Coming from Profile page
+                pe_id = get_vars.get("~.pe_id", None)
+                if pe_id:
+                    field.default = pe_id
+                else:
+                    field.label = T("Entity")
+                    field.readable = field.writable = True
+
         return True
     s3.prep = prep
 

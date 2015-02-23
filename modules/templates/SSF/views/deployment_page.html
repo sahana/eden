@@ -1,17 +1,17 @@
 {{extend "layout.html"}}
 <div class='item-container'>
 
- <a class='btn btn-primary' href='/eden/project/project/{{=r.id}}' id='edit-btn'>Open</a>
- <a class='delete-btn btn btn-primary' href='/eden/project/project/{{=r.id}}/delete' id='delete-btn'>Delete Deployment</a>
- <a class='btn btn-primary' href='/eden/project/project?sector.name=None,Deployment' id='list-btn'>List Deployments</a>
+ <a class='button action-btn' href='/eden/project/project/{{=r.id}}' id='edit-btn'>Open</a>
+ <a class='button delete-btn' href='/eden/project/project/{{=r.id}}/delete' id='delete-btn'>Delete Deployment</a>
+ <a class='button action-btn' href='/eden/project/project?sector.name=None,Deployment' id='list-btn'>List Deployments</a>
  <div class='row'>
-  <div class='span6'>
+  <div>
     <h2>{{=deployment_name}}</h2>
     <div class='row'>
-     <div class='span3'>
+     <div>
       <h4>{{=org_name}}</h4>
      </div>
-     <div class='span3'>
+     <div>
       {{for location in locations:}}
        <div class='row'>
         <h4>{{=location}}</h4>
@@ -20,7 +20,7 @@
      </div>
     </div>
     <div class='row'>
-     <div class='span6 well'>
+     <div>
       <h4>{{=T("Description")}}</h4>
       <div style='white-space:pre-line'>
       {{=description}}
@@ -28,32 +28,32 @@
      </div>
     </div>
   </div>
-  <div class='span6'>
+  <div>
    Carousel here
   </div>
  </div>
 
  <div class='row'>
-  <div class='span6 well'>
+  <div>
    <div class='row'>
-    <div class='span4'>
+    <div>
      <h4>{{=T("Get Involved")}}</h4>
      <div class='row'>
-      <div class='span2'>
-       <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/project/{{=r.id}}/task?~.status__belongs=2,3,4,11'><i class='icon-pencil icon-white'></i> {{=T("Work on a Task")}}</a>
+      <div>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task?~.status__belongs=2,3,4,11'><i class='icon-pencil icon-white'></i> {{=T("Work on a Task")}}</a>
        </br></br>
-       <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/project/{{=r.id}}/task/create?bug=1'><i class='icon-pencil icon-white'></i> {{=T("Report a Bug")}}</a>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task/create?bug=1'><i class='icon-pencil icon-white'></i> {{=T("Report a Bug")}}</a>
        </br></br>
       </div>
-       <div class='span2'>
-       <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/project/{{=r.id}}/task/create?featureRequest=1'><i class='icon-pencil icon-white'></i> {{=T("Request a Feature")}}</a>
+       <div>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task/create?featureRequest=1'><i class='icon-pencil icon-white'></i> {{=T("Request a Feature")}}</a>
        </br></br>
-       <a type='button' class='btn btn-lg btn-primary' href='/{{=appname}}/project/project/{{=r.id}}/task/create?support=1'><i class='icon-pencil icon-white'></i> {{=T("Request Support")}}</a>
+       <a type='button' class='button tiny' href='/{{=appname}}/project/project/{{=r.id}}/task/create?support=1'><i class='icon-pencil icon-white'></i> {{=T("Request Support")}}</a>
       </div>
      </div>
     </div>
 
-    <div class='span2'>
+    <div>
      {{if links:}}
       <h4>{{=T("Useful Links")}}</h4>
       {{for link in links:}}

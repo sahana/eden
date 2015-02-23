@@ -68,9 +68,20 @@ class DataCollectionTemplateModel(S3Model):
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
+                     # Whether to show this template in the form list
+                     # (required since form list can't use authorization)
+                     Field("public", "boolean",
+                           default = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
+        self.configure(tablename,
+                       xform = {"collection": "dc_collection",
+                                "questions": "question",
+                                "answers": "answer",
+                                },
+                       )
         # Represent
         represent = S3Represent(lookup=tablename)
 
@@ -106,7 +117,6 @@ class DataCollectionTemplateModel(S3Model):
                        dc_question = {"link": "dc_template_question",
                                       "joinby": "template_id",
                                       "key": "question_id",
-                                      # @todo: embed?
                                       "actuate": "hide",
                                       "autodelete": False,
                                       },
@@ -120,10 +130,10 @@ class DataCollectionTemplateModel(S3Model):
                      Field("question",
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("options", "json",
+                     Field("model", "json",
                            requires = IS_EMPTY_OR(IS_JSON()),
-                           # @todo: representation
-                           # @todo: widget
+                           # @todo: representation?
+                           # @todo: widget?
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -198,10 +208,10 @@ class DataCollectionTemplateModel(S3Model):
                      Field("question",
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("options", "json",
+                     Field("model", "json",
                            requires = IS_EMPTY_OR(IS_JSON()),
-                           # @todo: representation
-                           # @todo: widget
+                           # @todo: representation?
+                           # @todo: widget?
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -258,7 +268,6 @@ class DataCollectionModel(S3Model):
 
         # =====================================================================
         # Data Collection
-        # @todo: auto-create answers on-accept
         #
         tablename = "dc_collection"
         define_table(tablename,
@@ -266,16 +275,17 @@ class DataCollectionModel(S3Model):
                      self.dc_template_id(),
                      s3_date(default = "now"),
                      self.gis_location_id(),
-                     # @todo: default to user root-org
                      self.org_organisation_id(),
-                     # @todo: default to logged-in user
-                     self.pr_person_id(),
+                     self.pr_person_id(
+                        default = current.auth.s3_logged_in_person(),
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # Configuration
         self.configure(tablename,
                        super_entity = "doc_entity",
+                       orderby = "dc_collection.date desc",
                        )
 
         # Components
@@ -298,6 +308,7 @@ class DataCollectionModel(S3Model):
             msg_list_empty = T("No Data Collections currently registered"))
 
         # @todo: representation including template name, location and date
+        #        (not currently required since always hidden)
         represent = S3Represent(lookup=tablename,
                                 fields=["date"],
                                 )
@@ -309,8 +320,6 @@ class DataCollectionModel(S3Model):
                                         requires = IS_ONE_OF(db, "dc_collection.id",
                                                              represent,
                                                              ),
-                                        # @todo: newest first
-                                        sortby = "date",
                                         comment = S3AddResourceLink(f="collection",
                                                                     tooltip=T("Add a new data collection"),
                                                                     ),
@@ -323,8 +332,11 @@ class DataCollectionModel(S3Model):
         define_table(tablename,
                      collection_id(),
                      self.dc_question_id(),
-                     # @todo: elaborate:
-                     Field("answer"),
+                     Field("answer", "json",
+                           requires = IS_EMPTY_OR(IS_JSON()),
+                           # @todo: representation? (based the question model)
+                           # @todo: widget? (based the question model)
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 

@@ -80,14 +80,9 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-try:
-    from gluon.dal.objects import Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Row
-from gluon.storage import Storage
 
 from ..s3 import *
+from s3dal import Row
 from s3layouts import S3AddResourceLink
 
 # Compact JSON encoding
@@ -944,6 +939,12 @@ class S3OrganisationModel(S3Model):
         if search_l10n:
             query |= (FS("name.name_l10n").lower().like(value + "%")) | \
                      (FS("name.acronym_l10n").lower().like(value + "%"))
+
+        if "link" in _vars:
+            link_filter = S3EmbeddedComponentWidget.link_filter(table, _vars.link)
+            if link_filter:
+                query &= link_filter
+
         resource.add_filter(query)
 
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
@@ -3958,9 +3959,10 @@ class S3OfficeModel(S3Model):
                                 tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Office Type'.")),
                             )
 
-        configure(tablename,
-                  deduplicate = self.office_type_duplicate,
-                  )
+        # Not needed until we make Office Types organisation-dependent & hence remove the unique=True
+        #configure(tablename,
+        #          deduplicate = self.office_type_duplicate,
+        #          )
 
         # Components
         add_components(tablename,
@@ -5452,6 +5454,16 @@ def org_organisation_controller():
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_project_start_date','project_project_end_date')''')
 
+            elif r.component_name == "branch" and r.record and \
+                 isinstance(output, dict) and \
+                 "showadd_btn" in output:
+                treeview_link = A(current.T("Show Branch Hierarchy"),
+                                  _href=r.url(method="hierarchy", component=""),
+                                  _class="action-btn",
+                                  )
+                output["showadd_btn"] = TAG[""](output["showadd_btn"],
+                                                treeview_link,
+                                                )
         return output
     s3.postp = postp
 

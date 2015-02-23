@@ -9,11 +9,8 @@ import unittest
 
 from gluon import *
 from gluon.storage import Storage
-try:
-    from gluon.dal.objects import Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Row
+
+from s3dal import Row
 from eden.project import S3ProjectActivityModel
 
 

@@ -282,16 +282,22 @@ class S3FilterWidget(object):
 
         # Extract the URL values to populate the widget
         variable = self.variable(resource, get_vars)
+
+        defaults = {}
+        for k, v in self.values.items():
+            selector = self._prefix(k)
+            defaults[selector] = v
+
         if type(variable) is list:
             values = Storage()
             for k in variable:
-                if k in self.values:
-                    values[k] = self.values[k]
+                if k in defaults:
+                    values[k] = default[k]
                 else:
                     values[k] = self._values(get_vars, k)
         else:
-            if variable in self.values:
-                values = self.values[variable]
+            if variable in defaults:
+                values = defaults[variable]
             else:
                 values = self._values(get_vars, variable)
 
@@ -1638,7 +1644,8 @@ class S3OptionsFilter(S3FilterWidget):
                             #query = accessible_query("read", ktable)
                         #query &= (key_field == field)
 
-                        query = (key_field == field)
+                        query = accessible_query("read", ktable) & \
+                                (key_field == field)
                         joins = rfield.join
                         for tname in joins:
                             query &= joins[tname]

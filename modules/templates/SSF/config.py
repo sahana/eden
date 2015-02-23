@@ -13,6 +13,7 @@ from gluon.validators import IS_IN_SET
 from gluon.html import *
 
 from s3 import *
+from menus import S3OptionsMenu
 
 def config(settings):
     """
@@ -24,38 +25,33 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("SSF", "default/users")
-
-    # Theme
+    settings.base.prepopulate = ("SSF", "default/users")    
+    # Base settings
+    settings.base.system_name = T("Sahana Sunflower: A Community Portal")
+    settings.base.system_name_short = T("Sahana Sunflower")
     settings.base.theme = "SSF"
-    settings.ui.formstyle_row = "bootstrap"
-    settings.ui.formstyle = "bootstrap"
-    settings.ui.filter_formstyle = "table_inline"
 
-    # Uncomment to disable responsive behavior of datatables
-    # - Disabled until tested
-    settings.ui.datatables_responsive = False
-
+    # UI 
+    settings.ui.custom_icons = {
+        "watch": "icon-eye-open",
+        "unwatch": "icon-eye-close",
+        "rss": "icon-rss-sign",
+        "deploy": "icon-rocket",
+        "contribute": "icon-lightbulb",
+    }
+    
     # Message
     settings.msg.notify_email_format = "text"
 
-    # Should users be allowed to register themselves?
-    settings.security.self_registration = True
+    # Auth settings
     settings.auth.registration_requires_verification = True
     settings.auth.registration_requires_approval = False
-
     # Uncomment this to set the opt in default to True
     settings.auth.opt_in_default = True
     # Uncomment this to default the Organisation during registration
     settings.auth.registration_organisation_default = "Sahana Software Foundation"
-
     # Always notify the approver of a new (verified) user, even if the user is automatically approved
     settings.auth.always_notify_approver = True
-
-    # Base settings
-    settings.base.system_name = T("Sahana Sunflower: A Community Portal")
-    settings.base.system_name_short = T("Sahana Sunflower")
-
     # Assign the new users the permission to read.
     settings.auth.registration_roles = {"organisation_id": ["PROJECT_READ"],
                                         }
@@ -122,6 +118,8 @@ def config(settings):
 
     # Use 'soft' deletes
     settings.security.archive_not_delete = True
+    # Should users be allowed to register themselves?
+    settings.security.self_registration = True
 
     # AAA Settings
 
@@ -280,6 +278,10 @@ def config(settings):
                     is_deployment = True
 
                 if is_deployment:
+                    # Change the Side-Menu
+                    menu = current.menu
+                    menu.options = S3OptionsMenu("deployment").menu
+                    menu.main.select("deployment")
                     # Change the CRUD strings and labels
                     s3db[tablename].name.label = T("Deployment Name")
                     s3.crud_strings[tablename] = Storage(
@@ -301,6 +303,8 @@ def config(settings):
                                     r.function,
                                     method = "deployment",
                                     action = deployment_page)
+                else:
+                     current.menu.main.select("project")
 
                 if not r.component:
                     # Viewing project/deployment's Basic Details
@@ -472,6 +476,7 @@ def config(settings):
         s3db = current.s3db
         auth = current.auth
         s3 = response.s3
+        current.menu.options = S3OptionsMenu("task").menu
 
         def task_rheader(r):
 
@@ -648,9 +653,7 @@ def config(settings):
 
         query = (mtable.task_id == task_id) & \
                 (mtable.deleted == False) & \
-                (mtable.person_id == user) & \
-                (rtable.deleted == False) & \
-                (rtable.id == mtable.role_id)
+                (mtable.person_id == user)
 
         user_role = db(query).select(mtable.id,
                                      mtable.uuid).first()
@@ -660,17 +663,6 @@ def config(settings):
 
         if user_role:
             data["id"] = str(user_role.id)
-
-        # Need UUID to insert via 's3json'
-        # UUID of 'Watching' Role
-        query = (rtable.role == "Watching") & \
-                (rtable.deleted == False)
-        role = db(query).select(rtable.uuid).first()
-        try:
-            data["role_uuid"] = role.uuid
-        except:
-            data["role_uuid"] = "null"
-            current.log.error("Task Roles not prepopulated")
 
         return data
 
@@ -705,17 +697,17 @@ def config(settings):
         else:
             _id = data["id"]
             if _id == "null":
-                icon_class = "icon-eye-open"
+                icon = ICON("watch")
                 label = WATCH
             else:
-                icon_class = "icon-eye-close"
+                icon = ICON("unwatch")
                 label = UNWATCH
 
-            button = A(I(_class=icon_class),
+            button = A(icon,
                        SPAN(label),
                        data = data,
                        _id="assign-role",
-                       _class="btn btn-default")
+                       _class="button action-btn")
             if as_div:
                 interest = DIV(BR(),
                                button,
@@ -724,6 +716,20 @@ def config(settings):
                 interest = TD(button)
 
         return interest
+
+    # -----------------------------------------------------------------------------
+    def custom_project_task_create_onaccept(form):
+        """
+            - Subscribe author to updates
+            - Add author as a Member
+        """
+
+        user = current.auth.s3_logged_in_person()
+        task_id = form.vars.id
+        current.s3db.project_member.insert(task_id=task_id,
+                                           person_id=user)
+        sub = TaskSubscriptions()
+        sub.add_task_subscription(str(task_id))
 
     # -----------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
@@ -743,6 +749,17 @@ def config(settings):
             msg_record_created = None,
             msg_record_deleted = None
         )
+
+        get_config = s3db.get_config
+
+        if r.interactive or r.representation == "aadata":
+            # Remove "Assigned to" field from table
+            list_fields = get_config(tablename, "list_fields")
+            try:
+                list_fields.remove("pe_id")
+            except ValueError:
+                pass
+
         if r.interactive:
             trimmed_task = False
             get_vars = r.get_vars
@@ -846,18 +863,19 @@ def config(settings):
                                                                fields = [("", "project_id")],
                                                                multiple = False,
                                                                ))
-            
-            crud_form = S3SQLCustomForm(*crud_fields)
-            get_config = s3db.get_config
-            list_fields = get_config(tablename, "list_fields")
+
+            # Remove filter for "Assigned to"
             filter_widgets = get_config(tablename, "filter_widgets")
-            # Remove 'Assigned to' field
-            list_fields.remove("pe_id")
-            custom_filter_widgets = [widget for widget in filter_widgets \
-                                                if "pe_id" not in widget.field ]
+            custom_filter_widgets = [widget for widget in filter_widgets
+                                            if widget.field != "pe_id"]
+
+            create_onaccept = get_config(tablename, "create_onaccept")
             s3db.configure(tablename,
-                           crud_form = crud_form,
+                           crud_form = S3SQLCustomForm(*crud_fields),
                            filter_widgets = custom_filter_widgets,
+                           create_onaccept = [create_onaccept,
+                                              custom_project_task_create_onaccept,
+                                              ],
                            )
 
     settings.customise_project_task_resource = customise_project_task_resource
@@ -868,29 +886,21 @@ def config(settings):
             After DB I/O for Task Comments
             - Add User as a Member of the task
         """
-        s3db = current.s3db
-        db = current.db
         user = current.auth.s3_logged_in_person()
-        rtable = s3db.project_role
-        mtable = s3db.project_member
+        mtable = current.s3db.project_member
         task_id = current.request.args[0]
 
         if user:
             query = (mtable.person_id == user) & \
                     (mtable.task_id == task_id)
-            member = db(query).select(mtable.role_id, limitby=(0, 1))
+            member = current.db(query).select(mtable.role_id, limitby=(0, 1))
             if not member:
-                query = (rtable.role == "Watching") & \
-                        (rtable.deleted == False)
-                role = db(query).select(rtable.id, limitby=(0, 1))
-                if role:
-                    # Add User as a Member
-                    mtable.insert(task_id=task_id,
-                                  person_id=user,
-                                  role_id=role[0].id)
-                    # Subscribe user to task updates
-                    sub = TaskSubscriptions()
-                    sub.add_task_subscription(task_id)
+                # Add User as a Member
+                mtable.insert(task_id=task_id,
+                              person_id=user)
+                # Subscribe user to task updates
+                sub = TaskSubscriptions()
+                sub.add_task_subscription(task_id)
 
     # -----------------------------------------------------------------------------
     def customise_project_comment_resource(r, tablename):
@@ -938,6 +948,22 @@ def config(settings):
         s3db.project_comment.task_id.represent = custom_TaskRepresent(show_link=True)
 
     settings.customise_project_comment_resource = customise_project_comment_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_project_comment_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom Prep
+        def custom_prep(r):
+            if r.representation in ("rss", "msg"):
+                return True
+            return False
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_project_comment_controller = customise_project_comment_controller
 
     # -----------------------------------------------------------------------------
     def customise_delphi_problem_controller(**attr):
@@ -1145,9 +1171,9 @@ def config(settings):
             @param format: the contents format ("text" or "html")
         """
         rows = data["rows"]
- 
+
         if format == "text":
-            
+
             created_on_selector = resource.prefix_selector("created_on")
             created_on_colname = None
             as_utc = current.xml.as_utc
@@ -1155,8 +1181,8 @@ def config(settings):
             last_check_time = meta_data["last_check_time"]
             rfields = data["rfields"]
             output = {}
-            new, upd = [], [] 
-            
+            new, upd = [], []
+
             # Standard text format
             labels = []
             append = labels.append
@@ -1229,7 +1255,7 @@ def config(settings):
                 append(comment_container)
                 append(BR())
             output = {"body": DIV(*elements)}
-        
+
         config_url = settings.get_base_public_url() + URL(c="default",
                                                           f="index",
                                                           args=["subscriptions"])
@@ -1394,7 +1420,7 @@ class TaskSubscriptions(object):
                      ]
         self.rfilter = "comment.task_id__belongs"
         # Remove comments created by the user
-        self.exclude = ["comment.created_by__ne", str(current.auth.user.id)] 
+        self.exclude = ["comment.created_by__ne", str(current.auth.user.id)]
         # Get current subscription settings resp. from defaults
         self.subscription = self.get_subscription()
         subscription = self.subscription

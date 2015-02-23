@@ -32,13 +32,9 @@ from datetime import datetime, timedelta
 
 from gluon import current
 from gluon.storage import Storage
-try:
-    from gluon.dal.objects import Table, Rows, Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Table, Rows, Row
 from gluon.html import *
 
+from s3dal import Table, Rows, Row
 from s3rest import S3Method
 
 __all__ = ("S3Tracker",

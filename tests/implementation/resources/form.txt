@@ -4,6 +4,8 @@ Documentation       Keywords for manipulating forms
 *** Variables ***
 
 *** Keywords ***
+
+#Testsuite:hrm; Testcase:Create Staff Member
 Create A New Entry
     [Documentation]     Usage - Name Value :List of Name Value
     # ...     pairs (can take dropdowns and text fields as of now).

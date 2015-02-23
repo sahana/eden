@@ -101,6 +101,7 @@ def config(settings):
                                 pr_education = PID,
                                 pr_note = PID,
                                 hrm_human_resource = SID,
+                                hrm_training = PID,
                                 inv_recv = SID,
                                 inv_send = SID,
                                 inv_track_item = "track_org_id",
@@ -163,11 +164,32 @@ def config(settings):
             ltable = db.org_organisation_organisation_type
             query = (ltable.organisation_id == row.id) & \
                     (ltable.organisation_type_id == ottable.id)
-            row = db(query).select(ottable.name,
-                                   limitby=(0, 1)
-                                   ).first()
-            if row and row.name != "Red Cross / Red Crescent":
+            otype = db(query).select(ottable.name,
+                                     limitby=(0, 1)).first()
+            if otype and otype.name != "Red Cross / Red Crescent":
                 use_user_organisation = True
+
+        elif tablename == "hrm_training":
+            # Inherit realm entity from the related HR record
+            htable = s3db.hrm_human_resource
+            query = (table.id == row.id) & \
+                    (htable.person_id == table.person_id) & \
+                    (htable.deleted != True)
+            rows = db(query).select(htable.realm_entity, limitby=(0, 2))
+            if len(rows) == 1:
+                realm_entity = rows.first().realm_entity
+            else:
+                # Ambiguous => try course organisation
+                ctable = s3db.hrm_course
+                otable = s3db.org_organisation
+                query = (table.id == row.id) & \
+                        (ctable.id == table.course_id) & \
+                        (otable.id == ctable.organisation_id)
+                row = db(query).select(otable.pe_id,
+                                       limitby=(0, 1)).first()
+                if row:
+                    realm_entity = row.pe_id
+                # otherwise: inherit from the person record
 
         # Groups are owned by the user's organisation
         #elif tablename in ("pr_group",):
@@ -194,6 +216,12 @@ def config(settings):
     settings.ui.filter_formstyle = "table_inline"
     # Uncomment to disable responsive behavior of datatables
     settings.ui.datatables_responsive = False
+
+    settings.ui.custom_icons = {
+        "male": "icon-male",
+        "female": "icon-female",
+        "medical": "icon-plus-sign-alt",
+    }
 
     settings.gis.map_height = 600
     settings.gis.map_width = 869
@@ -280,6 +308,7 @@ def config(settings):
     ARCS = "Afghan Red Crescent Society"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
+    NRCS = "Nepal Red Cross Society"
     PMI = "Indonesian Red Cross Society (Pelang Merah Indonesia)"
     PRC = "Philippine Red Cross"
     VNRC = "Viet Nam Red Cross"
@@ -1231,6 +1260,106 @@ def config(settings):
     settings.customise_hrm_experience_controller = customise_hrm_experience_controller
 
     # -----------------------------------------------------------------------------
+    def rdrt_member_profile_header(r):
+        """ Custom profile header to allow update of RDRT roster status """
+
+        record = r.record
+        if not record:
+            return ""
+
+        person_id = record.person_id
+        from s3 import s3_fullname, s3_avatar_represent
+        name = s3_fullname(person_id)
+
+        table = r.table
+
+        # Organisation
+        comments = table.organisation_id.represent(record.organisation_id)
+
+        from s3 import s3_unicode
+        from gluon.html import A, DIV, H2, LABEL, P, SPAN
+
+        # Add job title if present
+        job_title_id = record.job_title_id
+        if job_title_id:
+            comments = (SPAN("%s, " % \
+                             s3_unicode(table.job_title_id.represent(job_title_id))),
+                             comments)
+
+        # Determine the current roster membership status (active/inactive)
+        atable = current.s3db.deploy_application
+        status = atable.active
+        query = atable.human_resource_id == r.id
+        row = current.db(query).select(atable.id,
+                                       atable.active,
+                                       limitby=(0, 1)).first()
+        if row:
+            active = 1 if row.active else 0
+            status_id = row.id
+            roster_status = status.represent(row.active)
+        else:
+            active = None
+            status_id = None
+            roster_status = current.messages.UNKNOWN_OPT
+
+        if status_id and \
+           current.auth.s3_has_permission("update",
+                                          "deploy_application",
+                                          record_id=status_id):
+            # Make inline-editable
+            roster_status = A(roster_status,
+                              data = {"status": active},
+                              _id = "rdrt-roster-status",
+                              _title = T("Click to edit"),
+                              )
+            s3 = current.response.s3
+            script = "/%s/static/themes/IFRC/js/rdrt.js" % r.application
+            if script not in s3.scripts:
+                s3.scripts.append(script)
+            script = '''$.rdrtStatus('%(url)s','%(active)s','%(inactive)s','%(submit)s')'''
+            from gluon import URL
+            options = {"url": URL(c="deploy", f="application",
+                                  args=["%s.s3json" % status_id]),
+                       "active": status.represent(True),
+                       "inactive": status.represent(False),
+                       "submit": T("Save"),
+                       }
+            s3.jquery_ready.append(script % options)
+        else:
+            # Read-only
+            roster_status = SPAN(roster_status)
+
+        # Render profile header
+        return DIV(A(s3_avatar_represent(person_id,
+                                         tablename="pr_person",
+                                         _class="media-object",
+                                         ),
+                     _class="pull-left",
+                     ),
+                   H2(name),
+                   P(comments),
+                   DIV(LABEL(status.label + ": "), roster_status),
+                   _class="profile-header",
+                   )
+
+    # -----------------------------------------------------------------------------
+    def emergency_contact_represent(row):
+        """
+            Representation of Emergency Contacts (S3Represent label renderer)
+
+            @param row: the row
+        """
+
+        items = [row["pr_contact_emergency.name"]]
+        relationship = row["pr_contact_emergency.relationship"]
+        if relationship:
+            items.append(" (%s)" % relationship)
+        phone_number = row["pr_contact_emergency.phone"]
+        if phone_number:
+            items.append(": %s" % phone_number)
+        return "".join(items)
+
+    # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         controller = current.request.controller
@@ -1243,9 +1372,12 @@ def config(settings):
 
         arcs = False
         vnrc = False
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
+
         if controller == "vol":
             # Special cases for different NS
-            root_org = current.auth.root_org_name()
             if root_org == ARCS:
                 arcs = True
                 settings.L10n.mandatory_lastname = False
@@ -1256,7 +1388,6 @@ def config(settings):
                 settings.hrm.vol_active = vol_active
             elif root_org == VNRC:
                 vnrc = True
-                settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
                 # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
                 settings.org.regions = False
         #elif vnrc:
@@ -1311,6 +1442,7 @@ def config(settings):
                 widgets = []
                 append_widget = widgets.append
                 profile_widgets = get_config("profile_widgets")
+                contacts_filter = None
                 while profile_widgets:
                     widget = profile_widgets.pop(0)
                     if widget["tablename"] == "hrm_competency":
@@ -1328,6 +1460,36 @@ def config(settings):
                         append_widget(new_widget)
                     else:
                         append_widget(widget)
+                    if widget["tablename"] == "pr_contact":
+                        contacts_filter = widget["filter"]
+
+                # Emergency contacts
+                if contacts_filter is not None:
+                    emergency_widget = {"label": "Emergency Contacts",
+                                        "label_create": "Add Emergency Contact",
+                                        "tablename": "pr_contact_emergency",
+                                        "type": "datalist",
+                                        "filter": contacts_filter,
+                                        "icon": "phone",
+                                        }
+                    append_widget(emergency_widget)
+
+                if r.record:
+                    widgets.insert(0, {"label": "Personal Details",
+                                       "tablename": "pr_person",
+                                       "type": "datalist",
+                                       "insert": False,
+                                       "list_fields": ["first_name",
+                                                       "middle_name",
+                                                       "last_name",
+                                                       "date_of_birth",
+                                                       "gender",
+                                                       "person_details.nationality",
+                                                       "physical_description.blood_type",
+                                                       ],
+                                       "filter": FS("id") == r.record.person_id,
+                                       "icon": "user",
+                                       })
 
                 # Remove unneeded filters widgets
                 filters = []
@@ -1341,8 +1503,9 @@ def config(settings):
                                             ):
                         append_widget(widget)
 
-                # Add gender-filter
                 from s3 import S3OptionsFilter
+
+                # Add gender-filter
                 gender_opts = dict(s3db.pr_gender_opts)
                 del gender_opts[1]
                 append_widget(S3OptionsFilter("person_id$gender",
@@ -1350,6 +1513,26 @@ def config(settings):
                                               cols = 2,
                                               hidden = True,
                                               ))
+                # Add Roster status filter
+                append_widget(S3OptionsFilter("application.active",
+                                              cols = 2,
+                                              default = True,
+                                              # Don't hide otherwise default
+                                              # doesn't apply:
+                                              #hidden = False,
+                                              label = T("Status"),
+                                              options = {"True": T("active"),
+                                                         "False": T("inactive"),
+                                                         },
+                                              ))
+
+                # Representation of emergency contacts
+                from s3 import S3Represent
+                field = s3db.pr_contact_emergency.id
+                field.represent = S3Represent(lookup="pr_contact_emergency",
+                                              fields=("name", "relationship", "phone"),
+                                              labels=emergency_contact_represent,
+                                              )
 
                 # Custom list fields for RDRT
                 phone_label = settings.get_ui_label_mobile_phone()
@@ -1362,6 +1545,7 @@ def config(settings):
                                "type",
                                "job_title_id",
                                # @todo: Education?
+                               (T("Status"), "application.active"),
                                (T("Email"), "email.value"),
                                (phone_label, "phone.value"),
                                (T("Address"), "person_id$address.location_id"),
@@ -1372,12 +1556,13 @@ def config(settings):
                                (T("Passport Issuer"), "person_id$passport.ia_name"),
                                (T("Passport Date"), "person_id$passport.valid_from"),
                                (T("Passport Expires"), "person_id$passport.valid_until"),
-                               # @todo: Emergency Contacts
+                               (T("Emergency Contacts"), "person_id$contact_emergency.id"),
                                "person_id$physical_description.blood_type",
                                ]
                 resource.configure(filter_widgets = filters,
                                    list_fields = list_fields,
                                    profile_widgets = widgets,
+                                   profile_header = rdrt_member_profile_header,
                                    )
             return True
         s3.prep = custom_prep
@@ -1569,6 +1754,10 @@ def config(settings):
         if root_org == "Australian Red Cross":
             # AusRC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
+        if root_org != NRCS:
+            # Only Nepal RCS use Warehouse Types
+            field = current.s3db.inv_warehouse.warehouse_type_id
+            field.readable = field.writable = False
 
     settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
@@ -1576,11 +1765,21 @@ def config(settings):
     def member_membership_paid(row):
         """
             Simplified variant of the original function in s3db/member.py,
-            with just "paid" and "unpaid" as possible values
+            with just "paid"/"unpaid"/"exempted" as possible values
         """
+
+        T = current.T
 
         if hasattr(row, "member_membership"):
             row = row.member_membership
+
+        try:
+            exempted = row.fee_exemption
+        except AttributeError:
+            exempted = False
+        if exempted:
+            return T("exempted")
+
         try:
             start_date = row.start_date
         except AttributeError:
@@ -1590,17 +1789,18 @@ def config(settings):
         except AttributeError:
             paid_date = None
         if start_date:
-            T = current.T
-            PAID = T("paid")
-            UNPAID = T("unpaid")
             now = current.request.utcnow.date()
             if not paid_date:
-                due = datetime.date(start_date.year + 1, start_date.month, start_date.day)
+                due = datetime.date(start_date.year + 1,
+                                    start_date.month,
+                                    start_date.day)
             else:
-                due = datetime.date(paid_date.year, start_date.month, start_date.day)
+                due = datetime.date(paid_date.year,
+                                    start_date.month,
+                                    start_date.day)
                 if due < paid_date:
                     due = datetime.date(paid_date.year + 1, due.month, due.day)
-            result = PAID if now < due else UNPAID
+            result = T("paid") if now < due else T("unpaid")
         else:
             result = current.messages["NONE"]
         return result
@@ -1608,12 +1808,8 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_member_membership_controller(**attr):
 
+        s3db = current.s3db
         tablename = "member_membership"
-
-        root_org = current.auth.root_org_name()
-        vnrc = False
-        if root_org == VNRC:
-            vnrc = True
 
         # Default Filter
         from s3 import s3_set_default_filter
@@ -1621,17 +1817,19 @@ def config(settings):
                               user_org_and_children_default_filter,
                               tablename = tablename)
 
-        # @ToDo: If these NS start using Membership module
-        #s3db = current.s3db
-        #
         # Special cases for different NS
-        #root_org = current.auth.root_org_name()
-        #if root_org == ARCS:
-        #    settings.L10n.mandatory_lastname = False
-        #elif root_org == VNRC:
-        #    settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-        #    # Remove link to download Template
-        #    attr["csv_template"] = "hide"
+        root_org = current.auth.root_org_name()
+        nrcs = vnrc = False
+        if root_org == ARCS:
+            settings.L10n.mandatory_lastname = False
+        elif root_org == NRCS:
+            nrcs = True
+            s3db.member_membership.membership_paid.label = T("Membership Approved")
+        elif root_org == VNRC:
+            vnrc = True
+            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
+            # Remove link to download Template
+            attr["csv_template"] = "hide"
 
         s3 = current.response.s3
 
@@ -1652,18 +1850,34 @@ def config(settings):
                     )
 
             # Set the NS filter as Visible so that the default filter works
-            filter_widgets = current.s3db.get_config(tablename, "filter_widgets")
+            filter_widgets = s3db.get_config(tablename, "filter_widgets")
             for widget in filter_widgets:
                 if widget.field == "organisation_id":
                     widget.opts.hidden = False
                     break
 
-            if vnrc:
+            if nrcs:
+                # Remove the Paid Filter (they use 'Approved' instead)
+                filter_widgets = r.resource.get_config("filter_widgets")
+                if filter_widgets:
+                    found = False
+                    index = 0
+                    for filter_widget in filter_widgets:
+                        if filter_widget.field == "paid":
+                            found = True
+                            break
+                        index += 1
+                    if found:
+                        filter_widgets.pop(index)
+
+            elif vnrc:
+                # Modify the Paid Filter
                 table = r.table
                 from gluon import Field
                 table["paid"] = Field.Method("paid", member_membership_paid)
                 filter_options = {T("paid"): T("paid"),
                                   T("unpaid"): T("unpaid"),
+                                  T("exempted"): T("exempted"),
                                   }
                 filter_widgets = r.resource.get_config("filter_widgets")
                 if filter_widgets:
@@ -2075,6 +2289,7 @@ def config(settings):
                     return False
 
             component_name = r.component_name
+            method = r.method
             if component_name == "appraisal":
                 atable = r.component.table
                 atable.organisation_id.readable = atable.organisation_id.writable = False
@@ -2100,7 +2315,7 @@ def config(settings):
                 dtable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
-            elif r.method == "cv" or component_name == "education":
+            elif method == "cv" or component_name == "education":
                 if vnrc:
                     etable = s3db.pr_education
                     # Don't enable Legacy Freetext field
@@ -2134,13 +2349,13 @@ def config(settings):
                     field.label = T("Other Level")
                     field.comment = T("Use main dropdown whenever possible")
 
-            elif r.method =="record" or component_name == "human_resource":
+            elif method =="record" or component_name == "human_resource":
                 # Organisation needs to be an NS/Branch
                 ns_only("hrm_human_resource",
                         required = True,
                         branches = True,
                         )
-                if r.method == "record":
+                if method == "record":
                     # Use default form (legacy)
                     s3db.clear_config("hrm_human_resource", "crud_form")
 
@@ -2261,7 +2476,7 @@ def config(settings):
                     s3db.configure("pr_person",
                                    crud_form = S3SQLCustomForm(*crud_fields),
                                    )
-                if r.method == "record" or component_name == "human_resource":
+                if method == "record" or component_name == "human_resource":
                     # Hide job_title_id in programme hours
                     field = s3db.hrm_programme_hours.job_title_id
                     field.readable = field.writable = False
@@ -2277,7 +2492,7 @@ def config(settings):
                         field = htable[fname]
                         field.readable = field.writable = False
 
-                    if r.method == "record" and controller == "hrm":
+                    if method == "record" and controller == "hrm":
                         # Custom config for method handler
 
                         from s3 import FS
@@ -2386,7 +2601,7 @@ def config(settings):
                     settings.gis.latlon_selector = False
                     settings.gis.map_selector = False
 
-                elif r.method == "contacts":
+                elif method == "contacts":
                     table = s3db.pr_contact_emergency
                     table.address.readable = table.address.writable = True
 
@@ -2423,14 +2638,15 @@ def config(settings):
                     field = s3db.hrm_programme_hours.job_title_id
                     field.readable = field.writable = False
 
-                elif component_name == "physical_description":
+                elif component_name == "physical_description" or \
+                     method == "import":
                     # Add the less-specific blood types (as that's all the data currently available in some cases)
                     field = s3db.pr_physical_description.blood_type
                     from gluon.validators import IS_EMPTY_OR, IS_IN_SET
                     blood_type_opts = ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "A", "B", "AB", "O")
                     field.requires = IS_EMPTY_OR(IS_IN_SET(blood_type_opts))
 
-                elif r.method == "cv" or component_name == "experience":
+                elif method == "cv" or component_name == "experience":
                     table = s3db.hrm_experience
                     # Use simple free-text variants
                     table.organisation_id.default = None # should not default in this case
@@ -2455,7 +2671,7 @@ def config(settings):
                                                   "end_date",
                                                   ],
                                    )
-                    if r.method == "cv":
+                    if method == "cv":
                         # Customize CV
                         s3db.set_method("pr", "person",
                                         method = "cv",
@@ -2472,6 +2688,36 @@ def config(settings):
                     # Hide confirming organisation (defaults to VNRC)
                     ctable.organisation_id.readable = False
 
+                elif component_name == "membership":
+                    field = s3db.member_membership.fee_exemption
+                    field.readable = field.writable = True
+                    PROGRAMMES = T("Programmes")
+                    from s3 import S3SQLCustomForm, S3SQLInlineLink
+                    crud_form = S3SQLCustomForm("organisation_id",
+                                                "code",
+                                                "membership_type_id",
+                                                "start_date",
+                                                "end_date",
+                                                "membership_fee",
+                                                "membership_paid",
+                                                "fee_exemption",
+                                                S3SQLInlineLink("programme",
+                                                                field="programme_id",
+                                                                label=PROGRAMMES,
+                                                                ),
+                                                )
+                    list_fields = ["organisation_id",
+                                   "membership_type_id",
+                                   "start_date",
+                                   (T("Paid"), "paid"),
+                                   (T("Email"), "email.value"),
+                                   (T("Phone"), "phone.value"),
+                                   (PROGRAMMES, "membership_programme.programme_id"),
+                                   ]
+                    s3db.configure("member_membership",
+                                   crud_form = crud_form,
+                                   list_fields = list_fields,
+                                   )
             return True
         s3.prep = custom_prep
 
@@ -2874,6 +3120,7 @@ def config(settings):
     #settings.inv.collapse_tabs = True
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     settings.inv.direct_stock_edits = True
+    settings.inv.org_dependent_warehouse_types = True
 
     # -----------------------------------------------------------------------------
     # Request Management
@@ -2913,6 +3160,5 @@ def config(settings):
         r.table.date.requires = r.table.date.requires.other
 
     settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
-
 
 # END =========================================================================

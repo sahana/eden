@@ -54,7 +54,7 @@ __all__ = ("S3PersonEntity",
            "pr_url_represent",
            "pr_rheader",
            # Custom Resource Methods
-           "pr_contacts",
+           "pr_Contacts",
            # Hierarchy Manipulation
            "pr_update_affiliations",
            "pr_add_affiliation",
@@ -101,15 +101,11 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
-try:
-    from gluon.dal.objects import Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Row
 from gluon.storage import Storage
 from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
+from s3dal import Row
 from s3layouts import S3AddResourceLink
 
 OU = 1 # role type which indicates hierarchy, see role_types
@@ -909,6 +905,7 @@ class S3PersonModel(S3Model):
                                       (T("Age"), "age"),
                                       (messages.ORGANISATION, "human_resource.organisation_id"),
                                       ],
+                       list_layout = pr_PersonListLayout(),
                        extra_fields = ["date_of_birth"],
                        main = "first_name",
                        extra = "last_name",
@@ -2214,6 +2211,7 @@ class S3ContactModel(S3Model):
 
         configure(tablename,
                   deduplicate = self.pr_emergency_deduplicate,
+                  list_layout = pr_EmergencyContactListLayout(),
                   )
 
         # ---------------------------------------------------------------------
@@ -4912,6 +4910,291 @@ def pr_rheader(r, tabs=[]):
 # Custom Resource Methods
 # =============================================================================
 #
+class pr_Contacts(S3Method):
+    """ Custom Method to edit person contacts """
+
+    """ Priority Order of Contact Methods """
+    PRIORITY = {"SMS": 1,
+                "EMAIL": 2,
+                "WORK_PHONE": 3,
+                "HOME_PHONE": 4,
+                "SKYPE": 5,
+                "RADIO": 6,
+                "TWITTER": 7,
+                "FACEBOOK": 8,
+                "FAX": 9,
+                "OTHER": 10,
+                "IRC": 11,
+                "GITHUB": 12,
+                "LINKEDIN": 13,
+                "BLOG": 14,
+                }
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller parameters for the request
+        """
+
+        if r.http != "GET":
+            r.error(405, current.ERROR.BAD_METHOD)
+
+        record = r.record
+        if not record:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Permission to create new contacts?
+        allow_create = current.auth.s3_has_permission("update", "pr_person",
+                                                      record_id = record.id,
+                                                      )
+
+        # Single widget - hardcode the ID
+        widget_id = "pr-contacts"
+
+        # Render the subforms
+        pe_id = record.pe_id
+        contents = DIV(_id = widget_id,
+                       _class = "pr-contacts-wrapper medium-8 small-12 columns",
+                       )
+        contacts = self.contacts(pe_id,
+                                 allow_create=allow_create,
+                                 method=r.method,
+                                 )
+        if contacts:
+            contents.append(contacts)
+        emergency = self.emergency(pe_id,
+                                   allow_create=allow_create,
+                                   )
+        if emergency:
+            contents.append(emergency)
+
+        # Add the javascript
+        response = current.response
+        s3 = response.s3
+        if s3.debug:
+            s3.scripts.append(URL(c="static", f="scripts",
+                                  args=["S3", "s3.ui.contacts.js"]))
+        else:
+            s3.scripts.append(URL(c="static", f="scripts",
+                                  args=["S3", "s3.ui.contacts.min.js"]))
+
+        # Widget options
+        T = current.T
+        if r.method == "private_contacts":
+            access = 1
+        elif r.method == "public_contacts":
+            access = 2
+        else:
+            access = None
+        widget_opts = {"controller": r.controller,
+                       "personID": record.id,
+                       "access": access,
+                       "cancelButtonText": str(T("Cancel")),
+                       }
+
+        # Apply widget
+        script = '''$("#%s").personcontacts(%s)''' % \
+                 (widget_id, json.dumps(widget_opts))
+        s3.jquery_ready.append(script)
+
+        # Custom View
+        response.view = "pr/contacts.html"
+
+        return {"contents": contents, "title": T("Contacts")}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def action_buttons(table, record_id):
+        """ Action buttons for contact rows """
+
+        T = current.T
+        has_permission = current.auth.s3_has_permission
+
+        if has_permission("update", table, record_id=record_id):
+            edit_btn = A(T("Edit"), _class="edit-btn action-btn fright")
+        else:
+            edit_btn = SPAN()
+        if has_permission("delete", table, record_id=record_id):
+            delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
+        else:
+            delete_btn = SPAN()
+        return DIV(delete_btn,
+                   edit_btn,
+                   DIV(_class="inline-throbber", _style="display:none"),
+                   _class="pr-contact-actions medium-3 columns",
+                   )
+
+    # -------------------------------------------------------------------------
+    def contacts(self, pe_id, allow_create=False, method="contacts"):
+        """
+            Contact Information Subform
+
+            @param method: the request method ("contacts", "private_contacts"
+                           or "public_contacts")
+            @param pe_id: the pe_id
+            @param allow_create: allow adding of new contacts
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        resource = s3db.resource("pr_contact",
+                                 filter = FS("pe_id") == pe_id)
+
+        # Filter by access
+        if method != "contacts":
+            if method == "private_contacts":
+                access = FS("access") == 1
+            else:
+                access = FS("access") == 2
+            resource.add_filter(access)
+
+        # Retrieve the rows
+        fields = ["id",
+                  "contact_description",
+                  "value",
+                  "contact_method",
+                  "comments",
+                  ]
+        rows = resource.select(fields).rows
+
+        # Group by contact method and sort by priority
+        from itertools import groupby
+        groups = []
+        append = groups.append
+        method = lambda row: row["pr_contact.contact_method"]
+        for key, group in groupby(rows, method):
+            groups.append((key, list(group)))
+        PRIORITY = self.PRIORITY
+        groups.sort(key = lambda item: PRIORITY.get(item[0], 99))
+
+        # Start the form
+        form = DIV(H2(T("Contacts")), _class="pr-contacts")
+
+        # Add-button
+        table = resource.table
+        if allow_create and current.auth.s3_has_permission("create", table):
+            add_btn = DIV(A(T("Add"),
+                            _class="contact-add-btn action-btn",
+                            ),
+                          DIV(_class="throbber hide"),
+                          )
+            form.append(add_btn)
+
+        # Contact information by contact method
+        opts = current.msg.CONTACT_OPTS
+        action_buttons = self.action_buttons
+        for method, contacts in groups:
+
+            # Subtitle
+            form.append(H3(opts[method]))
+
+            # Individual Rows
+            for contact in contacts:
+
+                contact_id = contact["pr_contact.id"]
+                value = contact["pr_contact.value"]
+                description = contact["pr_contact.contact_description"] or ""
+
+                inline_edit_hint = T("Click to edit")
+                title = SPAN(value,
+                             _title = inline_edit_hint,
+                             _class = "pr-contact-value",
+                             )
+                if description:
+                    title = TAG[""](SPAN(description,
+                                         _title = inline_edit_hint,
+                                         _class = "pr-contact-description"),
+                                    ", ",
+                                    title,
+                                    )
+                comments = contact["pr_contact.comments"] or ""
+
+                actions = action_buttons(table, contact_id)
+                form.append(DIV(DIV(DIV(title,
+                                        _class="pr-contact-title",
+                                        ),
+                                    DIV(SPAN(comments,
+                                             _title = inline_edit_hint,
+                                             _class = "pr-contact-comments"),
+                                        _class = "pr-contact-subtitle",
+                                        ),
+                                    _class = "pr-contact-data medium-9 columns",
+                                    ),
+                                actions,
+                                data = {
+                                    "id": contact_id,
+                                    "value": value,
+                                    "description": description,
+                                    "comments": comments,
+                                },
+                                _class="pr-contact row",
+                                ))
+        return form
+
+    # -------------------------------------------------------------------------
+    def emergency(self, pe_id, allow_create=False):
+        """
+            Emergency Contact Information SubForm
+
+            @param pe_id: the pe_id
+            @param allow_create: allow adding of new contacts
+
+            @todo: make inline-editable this one too
+        """
+
+        if not current.deployment_settings.get_pr_show_emergency_contacts():
+            return None
+
+        T = current.T
+        s3db = current.s3db
+
+        # Retrieve the rows
+        resource = s3db.resource("pr_contact_emergency",
+                                 filter = FS("pe_id") == pe_id)
+        table = resource.table
+        fields = [f for f in ("name",
+                              "relationship",
+                              "address",
+                              "phone",
+                              )
+                    if table[f].readable]
+        fields.insert(0, "id")
+        rows = resource.select(fields).rows
+
+        # Start the form
+        form = DIV(H2(T("Emergency Contacts")),
+                   _class="pr-emergency-contacts",
+                   )
+
+        # Add-button
+        if allow_create and current.auth.s3_has_permission("create", table):
+            add_btn = DIV(A(T("Add"),
+                            _class="contact-add-btn action-btn",
+                            ),
+                          DIV(_class="throbber hide"),
+                          )
+            form.append(add_btn)
+
+        # Individual rows
+        readable_fields = fields[1:]
+        for row in rows:
+            data = (row["pr_contact_emergency.%s" % f] or ""
+                    for f in readable_fields)
+            record_id = row["pr_contact_emergency.id"]
+            form.append(DIV(DIV(", ".join(data),
+                                _class="pr-emergency-data medium-9 columns",
+                                ),
+                            self.action_buttons(table, record_id),
+                            data = {"id": record_id,
+                                    },
+                            _class="pr-emergency-contact row",
+                            ))
+        return form
+
+# =============================================================================
 def pr_contacts(r, **attr):
     """
         Custom Method to provide the details for the Person's Contacts Tab:
@@ -4919,6 +5202,9 @@ def pr_contacts(r, **attr):
             Addresses (pr_address)
             Contacts (pr_contact)
             Emergency Contacts
+
+        @todo: deprecated, replaced by pr_Contacts, retained as reference
+               (until address-support re-implemented in pr_Contacts)
     """
 
     from itertools import groupby
@@ -6381,7 +6667,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
 
     addr_street = raw["gis_location.addr_street"] or ""
     if addr_street:
-        addr_street = P(I(_class="icon-home"),
+        addr_street = P(ICON("home"),
                         " ",
                         SPAN(addr_street),
                         " ",
@@ -6390,7 +6676,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
 
     addr_postcode = raw["gis_location.addr_postcode"] or ""
     if addr_postcode:
-        addr_postcode = P(I(_class="icon-envelope-alt"),
+        addr_postcode = P(ICON("mail"),
                           " ",
                           SPAN(addr_postcode),
                           " ",
@@ -6403,7 +6689,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
             locations.append(l)
     if len(locations):
         location = " | ".join(locations)
-        location = P(I(_class="icon-globe"),
+        location = P(ICON("globe"),
                      " ",
                      SPAN(location),
                      " ",
@@ -6416,7 +6702,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = current.s3db.pr_address
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="pr", f="address",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -6427,7 +6713,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -6438,7 +6724,7 @@ def pr_address_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"), # Placeholder only
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
@@ -6488,7 +6774,7 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = current.s3db.pr_contact
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="pr", f="contact",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -6499,7 +6785,7 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -6512,7 +6798,7 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     if contact_method in("SMS", "HOME_PHONE", "WORK_PHONE"):
         icon = "phone"
     elif contact_method == "EMAIL":
-        icon = "envelope-alt"
+        icon = "mail"
     elif contact_method == "SKYPE":
         icon = "skype"
     elif contact_method == "FACEBOOK":
@@ -6524,15 +6810,15 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
     elif contact_method == "RSS":
         icon = "rss"
     else:
-        icon = "circle"
+        icon = "other"
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"), # Placeholder only
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
                    _class="card-header",
                    ),
-               DIV(DIV(DIV(P(I(_class="icon-%s" % icon),
+               DIV(DIV(DIV(P(ICON(icon),
                              " ",
                              SPAN(value),
                              " ",
@@ -6553,6 +6839,276 @@ def pr_contact_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+class pr_EmergencyContactListLayout(S3DataListLayout):
+    """ Datalist layout for emergency contacts """
+
+    ICONS = {"phone": "phone",
+             "address": "home",
+             "relationship": "user",
+             }
+
+    # -------------------------------------------------------------------------
+    def render_header(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card header
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        header = DIV(ICON("icon"),
+                     SPAN(record["pr_contact_emergency.name"],
+                          _class="card-title",
+                          ),
+                     _class="card-header",
+                     )
+
+        toolbox = self.render_toolbox(list_id, resource, record)
+        if toolbox:
+            header.append(toolbox)
+
+        return header
+
+    # -------------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        body = DIV(_class="media")
+        append = body.append
+
+        fields = ("pr_contact_emergency.relationship",
+                  "pr_contact_emergency.phone",
+                  "pr_contact_emergency.address",
+                  "pr_contact_emergency.comments",
+                  )
+
+        render_column = self.render_column
+        for rfield in rfields:
+            if rfield.colname in fields:
+                column = self.render_column(item_id, rfield, record)
+                if column:
+                    append(column)
+        return DIV(DIV(body, _class="media-body"), _class="media")
+
+    # -------------------------------------------------------------------------
+    def render_column(self, item_id, rfield, record):
+        """
+            Render a column of the record
+
+            @param list_id: the HTML ID of the list
+            @param rfield: the S3ResourceField
+            @param record: the record as dict
+        """
+
+        value = record[rfield.colname]
+        if value:
+            if rfield.ftype == "text":
+                _class = "card_manylines"
+            else:
+                _class = "card_1_line"
+            return P(ICON(self.ICONS.get(rfield.fname, "icon")),
+                     SPAN(value),
+                     _class=_class,
+                     )
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        table = resource.table
+        tablename = resource.tablename
+        record_id = record[str(resource._id)]
+
+        toolbox = DIV(_class="edit-bar fright")
+
+        update_url = URL(c="pr",
+                         f="contact_emergency",
+                         args=[record_id, "update.popup"],
+                         vars={"refresh": list_id,
+                               "record": record_id,
+                               "profile": self.profile,
+                               },
+                         )
+
+        has_permission = current.auth.s3_has_permission
+        crud_string = S3Method.crud_string
+
+        if has_permission("update", table, record_id=record_id):
+            btn = A(ICON("edit"),
+                    _href=update_url,
+                    _class="s3_modal",
+                    _title=crud_string(tablename, "title_update"))
+            toolbox.append(btn)
+
+        if has_permission("delete", table, record_id=record_id):
+            btn = A(ICON("delete"),
+                    _class="dl-item-delete",
+                    _title=crud_string(tablename, "label_delete_button"))
+            toolbox.append(btn)
+
+        return toolbox
+
+# =============================================================================
+class pr_PersonListLayout(S3DataListLayout):
+    """ Datalist layout for emergency contacts """
+
+    ICONS = {"date_of_birth": "calendar",
+             "male": "male",
+             "female": "female",
+             "nationality": "globe",
+             "blood_type": "medical",
+             }
+
+    # -------------------------------------------------------------------------
+    def render_header(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card header
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        raw = record._row
+        fullname = s3_format_fullname(raw["pr_person.first_name"],
+                                      raw["pr_person.middle_name"],
+                                      raw["pr_person.last_name"],
+                                      )
+        header = DIV(ICON("icon"),
+                     SPAN(fullname,
+                          _class="card-title",
+                          ),
+                     _class="card-header",
+                     )
+
+        toolbox = self.render_toolbox(list_id, resource, record)
+        if toolbox:
+            header.append(toolbox)
+
+        return header
+
+    # -------------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        body = DIV(_class="media")
+        append = body.append
+
+        fields = ("pr_person_details.nationality",
+                  "pr_person.date_of_birth",
+                  "pr_person.gender",
+                  "pr_physical_description.blood_type",
+                  )
+
+        render_column = self.render_column
+        for rfield in rfields:
+            if rfield.colname in fields:
+                column = self.render_column(item_id, rfield, record)
+                if column:
+                    append(column)
+        return DIV(DIV(body, _class="media-body"), _class="media")
+
+    # -------------------------------------------------------------------------
+    def render_column(self, item_id, rfield, record):
+        """
+            Render a column of the record
+
+            @param list_id: the HTML ID of the list
+            @param rfield: the S3ResourceField
+            @param record: the record as dict
+        """
+
+        value = record._row[rfield.colname]
+        if value:
+            if rfield.ftype == "text":
+                _class = "card_manylines"
+            else:
+                _class = "card_1_line"
+            if rfield.colname == "pr_person.gender":
+                gender = record._row[rfield.colname]
+                if gender == 2:
+                    icon = "female"
+                elif gender == 3:
+                    icon = "male"
+                else:
+                    return None # don't render if unknown
+            else:
+                icon = rfield.fname
+            return P(ICON(self.ICONS.get(icon, "icon")),
+                     LABEL("%s: " % rfield.label),
+                     SPAN(record[rfield.colname]),
+                     _class=_class,
+                     )
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        table = resource.table
+        tablename = resource.tablename
+        record_id = record[str(resource._id)]
+
+        toolbox = DIV(_class="edit-bar fright")
+
+        update_url = URL(c="pr",
+                         f="person",
+                         args=[record_id, "update.popup"],
+                         vars={"refresh": list_id,
+                               "record": record_id,
+                               "profile": self.profile,
+                               },
+                         )
+
+        has_permission = current.auth.s3_has_permission
+        crud_string = S3Method.crud_string
+
+        if has_permission("update", table, record_id=record_id):
+            btn = A(ICON("edit"),
+                    _href=update_url,
+                    _class="s3_modal",
+                    _title=crud_string(tablename, "title_update"))
+            toolbox.append(btn)
+
+        return toolbox
 
 # =============================================================================
 def pr_filter_list_layout(list_id, item_id, resource, rfields, record):
@@ -6600,7 +7156,7 @@ def pr_filter_list_layout(list_id, item_id, resource, rfields, record):
                    SPAN(T("%(resource)s Filter") % \
                         dict(resource=resource_name),
                         _class="card-title"),
-                    DIV(A(I(" ", _class="icon icon-trash"),
+                    DIV(A(ICON("delete"),
                           _title=T("Delete this Filter"),
                           _class="dl-item-delete"),
                         _class="edit-bar fright"),
@@ -6634,8 +7190,7 @@ def filter_actions(resource, url, filters):
     actions = []
     append = actions.append
     tablename = resource.tablename
-    filter_actions = current.s3db.get_config(tablename,
-                                             "filter_actions")
+    filter_actions = current.s3db.get_config(tablename, "filter_actions")
     if filter_actions:
         controller, fn = tablename.split("_", 1)
         for action in filter_actions:
@@ -6649,8 +7204,7 @@ def filter_actions(resource, url, filters):
             e = action.get("format", None)
             link = URL(c=c, f=f, args=args, extension=e,
                        vars=filters)
-            append(A(I(" ", _class="icon icon-%s" % \
-                                action.get("icon", "circle")),
+            append(A(ICON(action.get("icon", "other")),
                      _title=T(action.get("label", "Open")),
                      _href=link))
     else:
@@ -6658,19 +7212,19 @@ def filter_actions(resource, url, filters):
         links = summary_urls(resource, url, filters)
         if links:
             if "map" in links:
-                append(A(I(" ", _class="icon icon-globe"),
+                append(A(ICON("globe"),
                          _title=T("Open Map"),
                          _href=links["map"]))
             if "table" in links:
-                append(A(I(" ", _class="icon icon-table"),
+                append(A(ICON("table"),
                          _title=T("Open Table"),
                          _href=links["table"]))
             if "chart" in links:
-                append(A(I(" ", _class="icon icon-bar-chart"),
+                append(A(ICON("bar-chart"),
                          _title=T("Open Chart"),
                          _href=links["chart"]))
             if "report" in links:
-                append(A(I(" ", _class="icon icon-bar-chart"),
+                append(A(ICON("bar-chart"),
                          _title=T("Open Report"),
                          _href=links["report"]))
 

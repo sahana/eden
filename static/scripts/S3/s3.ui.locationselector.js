@@ -194,6 +194,9 @@
                 this._lxSelect(5, L5, true);
             }
 
+            // Store original Lx path
+            this.lx = [L0, L1, L2, L3, L4, L5].join('|');
+
             // Show Address/Postcode Rows (__row1 = tuple themes)
             $(selector + '_address').val(data.address);
             $(selector + '_address__row').removeClass('hide').show();
@@ -234,6 +237,9 @@
             } else {
                 this._hideMap();
             }
+
+            // Check for relevant input
+            this.input.data('input', this._hasData());
 
             // Remove startup throbber
             this.input.prevAll('.throbber').remove();
@@ -602,6 +608,9 @@
             $(selector + '_lat').val(data.lat).trigger('setvalue');
             $(selector + '_lon').val(data.lon).trigger('setvalue');
 
+            // Check for relevant input
+            this.input.data('input', this._hasData());
+
             if (this.fieldname.slice(0, 4) == 'sub_') {
                 // This is an S3SQLInlineComponent => trigger change event
                 this.input.change();
@@ -632,6 +641,33 @@
                 }
             }
             this._serialize();
+        },
+
+        /**
+         * Check whether there is relevant user-input. This is always true
+         * for specific locations, or if we have any address, postcode,
+         * lat, lon, or wkt input - or if the Lx path has changed.
+         */
+        _hasData: function() {
+
+            var data = this.data,
+                hasData = false;
+
+            if (data.specific || data.address || data.postcode || data.lat || data.lon || data.wkt) {
+                hasData = true;
+            } else {
+                var L0 = data.L0,
+                    L1 = data.L1,
+                    L2 = data.L2,
+                    L3 = data.L3,
+                    L4 = data.L4,
+                    L5 = data.L5;
+                var lx = [L0, L1, L2, L3, L4, L5].join('|');
+                if (lx != this.lx) {
+                    hasData = true;
+                }
+            }
+            return hasData;
         },
 
         /**

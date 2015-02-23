@@ -105,6 +105,7 @@ from s3sync import *
 
 # Import
 from s3import import *
+from s3xforms import *
 
 # De-duplication
 from s3merge import S3Merge

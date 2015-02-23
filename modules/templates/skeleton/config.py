@@ -95,6 +95,12 @@ def config(settings):
     settings.L10n.decimal_separator = "."
     # Thousands separator for numbers (defaults to space)
     settings.L10n.thousands_separator = ","
+    # Uncomment this to Translate Layer Names
+    #settings.L10n.translate_gis_layer = True
+    # Uncomment this to Translate Location Names
+    #settings.L10n.translate_gis_location = True
+    # Uncomment this to Translate Organisation Names/Acronyms
+    #settings.L10n.translate_org_organisation = True
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy

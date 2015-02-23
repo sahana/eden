@@ -5,10 +5,12 @@ Documentation       Keywords for CRUD
 ${SubmitButton}     jquery=#submit_record__row input.btn[type='submit']
 
 *** Keywords ***
+#TestSuite: org; Test case:Create Organization
 Submit CRUD Form
     [Documentation]  Clicks the submit button in a CRUD form
     Click Button  ${SubmitButton}
 
+#Testsuite: org; Testcase: Create organisation without name
 Field Should Have Error
     [Arguments]  ${elementID}
     [Documentation]  Verifies that the form field with _element ID_
@@ -16,6 +18,7 @@ Field Should Have Error
     ${count}=  Execute JavaScript  return $('#${elementID}').parent().find('div.error').length;
     Should Be Equal  ${count}  ${1}  msg=No validation error shown for ${elementID}
 
+#Testsuite: org; Testcase: Create office
 Select Option
     [Arguments]  ${elementID}  ${label}
     [Documentation]  Selects the first option from _elementID_ that contains _label_

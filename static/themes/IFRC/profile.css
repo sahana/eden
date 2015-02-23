@@ -28,7 +28,7 @@ h4.profile-sub-header {
     color: #666;
     text-align: left;
     font-weight: bold;
-    font-style: normal;	
+    font-style: normal;
     padding: 6px 6px 6px 9px;
     border-radius: 5px 5px 0 0;
     background: rgba(255,255,255,1);
@@ -38,7 +38,7 @@ h4.profile-sub-header {
     background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
     background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
     background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );	
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
     -moz-box-shadow: 0 -1px 3px #d7d7d6;
     -webkit-box-shadow: 0 -1px 3px #d7d7d6;
     box-shadow: 0 -1px 3px #d7d7d6;
@@ -169,6 +169,7 @@ div.media a.pull-left img.media-object {
     float: right;
 }
 
+/* @todo: switch to font-awesome, move specialist CSS to icons.css */
 .icon {
     display: inline-block;
     width: 14px;

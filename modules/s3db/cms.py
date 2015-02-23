@@ -1314,7 +1314,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                      args=[raw["event_post.%s_id" % event_resource],
                           "profile"]
                      )
-            subtitle.append(DIV(A(I(_class="icon icon-%s" % event_resource),
+            subtitle.append(DIV(A(ICON(event_resource),
                                   label,
                                   _href=link,
                                   _target="_blank",
@@ -1516,7 +1516,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             fn = "newsfeed"
         else:
             fn = "post"
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="cms", f=fn,
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -1528,7 +1528,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -1542,7 +1542,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                                   limitby=(0, 1)
                                   ).first()
         if exists:
-            bookmark_btn = A(I(" ", _class="icon icon-bookmark"),
+            bookmark_btn = A(ICON("bookmark"),
                              _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
                                 (URL(c="cms", f="post",
                                      args=[record_id, "remove_bookmark"]),
@@ -1551,7 +1551,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                              _title=T("Remove Bookmark"),
                              )
         else:
-            bookmark_btn = A(I(" ", _class="icon icon-bookmark-empty"),
+            bookmark_btn = A(ICON("bookmark-empty"),
                              _onclick="$.getS3('%s',function(){$('#%s').datalist('ajaxReloadItem',%s)})" %
                                 (URL(c="cms", f="post",
                                      args=[record_id, "add_bookmark"]),
@@ -1583,7 +1583,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                 doc_name = NONE
             doc_url = URL(c="default", f="download",
                           args=[doc])
-            doc_item = LI(A(I(_class="icon-file"),
+            doc_item = LI(A(ICON("file"),
                             " ",
                             doc_name,
                             _href=doc_url,
@@ -1591,7 +1591,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                           _role="menuitem",
                           )
             doc_list.append(doc_item)
-        docs = DIV(A(I(_class="icon-paper-clip"),
+        docs = DIV(A(ICON("attachment"),
                      SPAN(_class="caret"),
                      _class="btn dropdown-toggle",
                      _href="#",
@@ -1609,7 +1609,7 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             links = [links]
         link_list = DIV(_class="media card-links")
         for link in links:
-            link_item = A(I(_class="icon-globe"),
+            link_item = A(ICON("link"),
                           " ",
                           link,
                           _href=link,
@@ -1637,11 +1637,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         if settings.get_cms_show_titles() and raw["cms_post.title"]:
             title = SPAN(raw["cms_post.title"],
                          _class="card-title2")
-            card_label = TAG[""](I(_class="icon icon-%s" % icon),
+            card_label = TAG[""](ICON(icon),
                                  series_title,
                                  title)
         else:
-            card_label = TAG[""](I(_class="icon icon-%s" % icon),
+            card_label = TAG[""](ICON(icon),
                                  series_title)
         # Type cards
         if series == "Alert":

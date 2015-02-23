@@ -93,6 +93,25 @@ class S3Config(Storage):
                     "zh-tw": "%Y/%m/%d",
                     }
 
+    # PDF fonts for each language
+    # fontset format -> [normal-version, bold-version]
+    # defaults to ["Helvetica", "Helvetica-Bold"] if not-specified here
+    # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
+    # Unifont can be downloaded from http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf
+    fonts = {"ar": ["unifont", "unifont"],
+             "km": ["unifont", "unifont"],
+             "ko": ["unifont", "unifont"],
+             "mn": ["unifont", "unifont"],
+             "ne": ["unifont", "unifont"],
+             "prs": ["unifont", "unifont"],
+             "ps": ["unifont", "unifont"],
+             #"th": ["unifont", "unifont"],
+             "tr": ["unifont", "unifont"],
+             "vi": ["unifont", "unifont"],
+             "zh-cn": ["unifont", "unifont"],
+             "zh-tw": ["unifont", "unifont"],
+             }
+
     def __init__(self):
         self.asset = Storage()
         self.auth = Storage()
@@ -131,6 +150,7 @@ class S3Config(Storage):
         self.ui = Storage()
         self.vulnerability = Storage()
         self.transport = Storage()
+        self.xforms = Storage()
 
         self._debug = None
 
@@ -1391,8 +1411,13 @@ class S3Config(Storage):
     # PDF settings
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
+
     def get_pdf_logo(self):
         return self.ui.get("pdf_logo", None)
+
+    def get_pdf_export_font(self):
+        language = current.session.s3.language
+        return self.fonts.get(language, None)
 
     # Optical Character Recognition (OCR)
     def get_pdf_excluded_fields(self, resourcename):
@@ -2328,6 +2353,20 @@ class S3Config(Storage):
         """
         return self.hrm.get("org_required", True)
 
+    def get_hrm_multiple_orgs(self):
+        """
+            True: Human Resources are being managed across multiple Organisations
+            False: Human Resources are only being manage internally within a single Organisation with no Branches
+        """
+        return self.hrm.get("multiple_orgs", True)
+    
+    def get_hrm_compose_button(self):
+        """
+            If set to True then HRM dataTables have a 'Send Message' button
+                if the messaging module is enabled & users have the permission to access hrm/compose
+        """
+        return self.hrm.get("compose_button", True)
+
     def get_hrm_deletable(self):
         """
             If set to True then HRM records are deletable rather than just being able to be marked as obsolete
@@ -2518,6 +2557,12 @@ class S3Config(Storage):
             - defaults to False
         """
         return self.inv.get("direct_stock_edits", False)
+
+    def get_inv_org_dependent_warehouse_types(self):
+        """
+            Whether Warehouse Types vary by Organisation
+        """
+        return self.inv.get("org_dependent_warehouse_types", False)
 
     def get_inv_send_show_mode_of_transport(self):
         """
@@ -3267,6 +3312,34 @@ class S3Config(Storage):
             Whether Seaport code is unique
         """
         return self.transport.get("seaport_code_unique", False)
+
+    # -------------------------------------------------------------------------
+    # XForms
+    #
+    def get_xforms_resources(self):
+        """
+            A list of xform resources
+
+            Item formats:
+                "tablename"
+                ("Title", "tablename")
+                ("Title", "tablename", options)
+
+            Format for options:
+                {c=controller,         ...use this controller for form handling
+                 f=function,           ...use this function for form handling
+                 vars=vars,            ...add these vars to the download URL
+                 title=title_field,    ...use this field in template for form title
+                 public=public_flag,   ...check this field whether the template is
+                                          public or not (must be boolean)
+                 }
+
+            Example:
+                settings.xforms.resources = [("Request", "req_req")]
+
+            @todo: move this documentation to the wiki?
+        """
+        return self.xforms.get("resources", None)
 
     # -------------------------------------------------------------------------
     # Frontpage Options

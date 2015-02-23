@@ -320,8 +320,6 @@ def dojs(dogis = False, warnings = True):
     # Single scripts
     for filename in ("add_person",
                      "cap",
-                     "contacts",
-                     "embed_component",
                      "gis",
                      "gis.feature_crud",
                      "gis.fullscreen",
@@ -329,12 +327,14 @@ def dojs(dogis = False, warnings = True):
                      "gis.loader",
                      "gis.pois",
                      "locationselector.widget",
-                     "ui.locationselector",
                      "msg",
                      "popup",
                      "register_validation",
                      "select_person",
                      "timeline",
+                     "ui.contacts",
+                     "ui.embeddedcomponent",
+                     "ui.locationselector",
                      ):
         print "Compressing s3.%s.js" % filename
         inputFilename = os.path.join("..", "S3", "s3.%s.js" % filename)

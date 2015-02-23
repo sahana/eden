@@ -9,6 +9,7 @@ from unit_tests.s3.s3hierarchy import *
 from unit_tests.s3.s3import import *
 from unit_tests.s3.s3model import *
 from unit_tests.s3.s3msg import *
+from unit_tests.s3.s3navigation import *
 from unit_tests.s3.s3query import *
 from unit_tests.s3.s3resource import *
 from unit_tests.s3.s3rest import *

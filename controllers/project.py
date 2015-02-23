@@ -860,8 +860,9 @@ def time():
             list_fields.insert(5, (T("Milestone"), "task_id$task_milestone.milestone_id"))
 
         s3db.configure("project_time",
-                       orderby="project_time.date desc",
-                       list_fields=list_fields)
+                       list_fields = list_fields,
+                       orderby = "project_time.date desc",
+                       )
 
     elif "week" in get_vars:
         # Filter to the specified number of weeks

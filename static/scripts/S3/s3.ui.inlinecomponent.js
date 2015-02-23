@@ -124,9 +124,9 @@
                 // Check add-row for defaults
                 var $row = $(this),
                     defaults = false;
-                $row.find('input[type!="hidden"], select').each(function() {
+                $row.find('input[type!="hidden"], select, textarea').each(function() {
                     var $this = $(this);
-                    if ($this.val() && $this.attr('type') != 'checkbox') {
+                    if ($this.is(':visible') && $this.val() && $this.attr('type') != 'checkbox') {
                         defaults = true;
                     }
                 });
@@ -1157,6 +1157,10 @@
                         input;
                     for (var j=0, numfields=inputs.length; j < numfields; j++) {
                         input = $(inputs[j]);
+                        // Ignore hidden inputs unless they have an 'input' flag
+                        if (input.is('[type="hidden"]') && !input.data('input') || !input.is(':visible')) {
+                            continue;
+                        }
                         if ((input.attr('type') != 'checkbox' && input.val()) || input.prop('checked')) {
                             empty = false;
                             break;

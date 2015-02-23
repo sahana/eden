@@ -2,6 +2,8 @@
  * Used by the pr_contacts method (modules/s3db/pr.py)
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
+ *
+ * @todo: deprecate (retained only as historic reference)
  */
 
 // Module pattern to hide internal vars

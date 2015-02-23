@@ -55,15 +55,11 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
-try:
-    from gluon import Field
-    from gluon.dal.objects import Expression, Row
-except ImportError:
-    # old web2py
-    from gluon.dal import Expression, Field, Row
 from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
+
+from s3dal import Expression, Row
 
 DEBUG = False
 if DEBUG:

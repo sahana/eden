@@ -33,6 +33,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Projects", c="project", f="project", args="summary"),
                 MM("Security", c="security", f="level"),
                 MM("Transport", c="transport", f="index"),
+                MM("Vehicles", c="vehicle", f="index"),
                 MM("Water", c="water", f="index"),
             ),
         ]

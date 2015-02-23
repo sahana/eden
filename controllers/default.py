@@ -400,7 +400,7 @@ def organisation():
                         dt_pagination="true",
                         )
     elif representation == "aadata":
-        draw = request.get_vars.get("draw")
+        draw = get_vars.get("draw")
         if draw:
             draw = int(draw)
         items = dt.json(totalrows,
@@ -624,7 +624,7 @@ def person():
     # Custom Method for Contacts
     set_method("pr", "person",
                method="contacts",
-               action=s3db.pr_contacts)
+               action=s3db.pr_Contacts)
 
     #if settings.has_module("asset"):
     #    # Assets as component of people
@@ -924,7 +924,6 @@ def about():
         versions available to this instance of Sahana Eden.
     """
 
-    response.title = T("About")
     if settings.get_template() != "default":
         # Try a Custom View
         view = os.path.join(request.folder,
@@ -941,6 +940,48 @@ def about():
                 from gluon.http import HTTP
                 raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+    # Allow editing of page content from browser using CMS module
+    if settings.has_module("cms"):
+        ADMIN = auth.get_system_roles().ADMIN in session.s3.roles
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        module = "default"
+        resource = "about"
+        query = (ltable.module == module) & \
+                ((ltable.resource == None) | \
+                 (ltable.resource == resource)) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = db(query).select(table.id,
+                                table.body,
+                                limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item = DIV(XML(item.body),
+                           BR(),
+                           A(T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[item.id, "update"]),
+                             _class="action-btn"))
+            else:
+                item = DIV(XML(item.body))
+        elif ADMIN:
+            if s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item = A(T("Edit"),
+                     _href=URL(c="cms", f="post", args="create",
+                               vars={"module": module,
+                                     "resource": resource
+                                     }),
+                     _class="%s cms-edit" % _class)
+        else:
+            item = H2(T("About"))
+    else:
+        item = H2(T("About"))
+
+    # Technical Support Details
     import sys
     import subprocess
     import string
@@ -948,20 +989,21 @@ def about():
     python_version = sys.version
     web2py_version = open(apath("../VERSION"), "r").read()[8:]
     sahana_version = open(os.path.join(request.folder, "VERSION"), "r").read()
+
     # Database
-    sqlite_version = None
-    mysql_version = None
-    mysqldb_version = None
-    pgsql_version = None
-    psycopg_version = None
+    sqlite = mysql = pgsql = ""
     if db_string.find("sqlite") != -1:
         try:
             import sqlite3
             sqlite_version = sqlite3.version
         except:
             sqlite_version = T("Unknown")
+        sqlite = TR(TD("SQLite"),
+                    TD(sqlite_version))
+
     elif db_string.find("mysql") != -1:
         try:
+            # @ToDo: Support using pymysql & Warn
             import MySQLdb
             mysqldb_version = MySQLdb.__revision__
         except:
@@ -978,9 +1020,17 @@ def about():
             cur = con.cursor()
             cur.execute("SELECT VERSION()")
             mysql_version = cur.fetchone()
+
+        mysql = TAG[""](TR(TD("MySQL"),
+                           TD(mysql_version)),
+                        TR(TD("MySQLdb python driver"),
+                           TD(mysqldb_version)),
+                        )
+
     else:
         # Postgres
         try:
+            # @ToDo: Support using pg8000 & Warn
             import psycopg2
             psycopg_version = psycopg2.__version__
         except:
@@ -999,7 +1049,14 @@ def about():
             cur.execute("SELECT version()")
             pgsql_version = cur.fetchone()
 
+        pgsql = TAG[""](TR(TD("PostgreSQL"),
+                           TD(pgsql_version)),
+                        TR(TD("psycopg2 python driver"),
+                           TD(psycopg_version)),
+                        )
+
     # Libraries
+    # @ToDo: Add more: Shapely, xlrd, etc
     try:
         import reportlab
         reportlab_version = reportlab.Version
@@ -1010,22 +1067,52 @@ def about():
         xlwt_version = xlwt.__VERSION__
     except:
         xlwt_version = T("Not installed or incorrectly configured.")
-    return dict(
-                python_version=python_version,
-                sahana_version=sahana_version,
-                web2py_version=web2py_version,
-                sqlite_version=sqlite_version,
-                mysql_version=mysql_version,
-                mysqldb_version=mysqldb_version,
-                pgsql_version=pgsql_version,
-                psycopg_version=psycopg_version,
-                reportlab_version=reportlab_version,
-                xlwt_version=xlwt_version
+
+    details = DIV(TABLE(THEAD(TR(TH(T("Core Components"),
+                                    _class="sorting_disabled"),
+                                 TH(T("Version"),
+                                    _class="sorting_disabled"),
+                                 )),
+                        TBODY(TR(TD(deployment_settings.get_system_name_short()),
+                                 TD(sahana_version),
+                                 _class="odd"),
+                              TR(TD(T("Web Server")),
+                                 TD(request.env.server_software),
+                                 ),
+                              TR(TD("Web2Py"),
+                                 TD(web2py_version),
+                                 _class="odd"),
+                              TR(TD("Python"),
+                                 TD(python_version),
+                                 ),
+                              TR(TD(STRONG(T("Database"))),
+                                 TD(),
+                                 _class="odd"),
+                              sqlite,
+                              mysql,
+                              pgsql,
+                              TR(TD(STRONG(T("Other Components"))),
+                                 TD(),
+                                 _class="odd"),
+                              TR(TD("ReportLab"),
+                                 TD(reportlab_version),
+                                 ),
+                              TR(TD("xlwt"),
+                                 TD(xlwt_version),
+                                 _class="odd"),
+                        _class="dataTable display"),
+                  _class="table-container")
+                  )
+
+    response.title = T("About")
+
+    return dict(details = details,
+                item = item,
                 )
 
 # -----------------------------------------------------------------------------
 def help():
-    """ Custom View """
+    """ CMS page or Custom View """
 
     if settings.get_template() != "default":
         # Try a Custom View
@@ -1043,8 +1130,58 @@ def help():
                 from gluon.http import HTTP
                 raise HTTP("404", "Unable to open Custom View: %s" % view)
 
+    # Allow editing of page content from browser using CMS module
+    if settings.has_module("cms"):
+        ADMIN = auth.get_system_roles().ADMIN in session.s3.roles
+        table = s3db.cms_post
+        ltable = s3db.cms_post_module
+        module = "default"
+        resource = "help"
+        query = (ltable.module == module) & \
+                ((ltable.resource == None) | \
+                 (ltable.resource == resource)) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        item = db(query).select(table.id,
+                                table.body,
+                                limitby=(0, 1)).first()
+        if item:
+            if ADMIN:
+                item = DIV(XML(item.body),
+                           BR(),
+                           A(T("Edit"),
+                             _href=URL(c="cms", f="post",
+                                       args=[item.id, "update"]),
+                             _class="action-btn"))
+            else:
+                item = DIV(XML(item.body))
+        elif ADMIN:
+            if s3.crud.formstyle == "bootstrap":
+                _class = "btn"
+            else:
+                _class = "action-btn"
+            item = A(T("Edit"),
+                     _href=URL(c="cms", f="post", args="create",
+                               vars={"module": module,
+                                     "resource": resource
+                                     }),
+                     _class="%s cms-edit" % _class)
+        else:
+            item = TAG[""](H2(T("Help")),
+                           A(T("User & Administration Guide"),
+                            _href="http://eden.sahanafoundation.org/wiki/UserGuidelines",
+                            _target="_blank"),
+                           " - online version")
+    else:
+        item = TAG[""](H2(T("Help")),
+                       A(T("User & Administration Guide"),
+                         _href="http://eden.sahanafoundation.org/wiki/UserGuidelines",
+                         _target="_blank"),
+                         " - online version")
+
     response.title = T("Help")
-    return dict()
+
+    return dict(item=item)
 
 # -----------------------------------------------------------------------------
 def privacy():

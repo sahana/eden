@@ -150,14 +150,14 @@ class S3MainMenu(default.S3MainMenu):
 
         if controller == "vol":
             dashboard = DB()(
-                DB("VOLUNTEERS",
+                DB("Volunteers",
                     c="vol",
                     image = "graphic_staff_wide.png",
                     title = "Volunteers")(
                     DB("Manage Volunteer Data", f="volunteer", m="summary"),
                     DB("Manage Teams Data", f="group"),
                 ),
-                DB("CATALOGS",
+                DB("Catalogs",
                     c="hrm",
                     image="graphic_catalogue.png",
                     title="Catalogs")(
@@ -168,14 +168,14 @@ class S3MainMenu(default.S3MainMenu):
                 ))
         elif controller in ("hrm", "org"):
             dashboard = DB()(
-                DB("STAFF",
+                DB("Staff",
                     c="hrm",
                     image = "graphic_staff_wide.png",
                     title = "Staff")(
                     DB("Manage Staff Data", f="staff", m="summary"),
                     DB("Manage Teams Data", f="group"),
                 ),
-                DB("OFFICES",
+                DB("Offices",
                     c="org",
                     image = "graphic_office.png",
                     title = "Offices")(
@@ -184,7 +184,7 @@ class S3MainMenu(default.S3MainMenu):
                        #vars=red_cross_filter
                        ),
                 ),
-                DB("CATALOGS",
+                DB("Catalogs",
                     c="hrm",
                     image="graphic_catalogue.png",
                     title="Catalogs")(

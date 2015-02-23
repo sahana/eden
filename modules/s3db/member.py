@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3MembersModel",
+           "S3MemberProgrammeModel",
            "member_rheader"
            )
 
@@ -44,6 +45,7 @@ class S3MembersModel(S3Model):
 
     names = ("member_membership_type",
              "member_membership",
+             "member_membership_id",
              )
 
     def model(self):
@@ -104,7 +106,7 @@ class S3MembersModel(S3Model):
             msg_record_deleted = T("Membership Type deleted"),
             msg_list_empty = T("No membership types currently registered"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         membership_type_id = S3ReusableField("membership_type_id", "reference %s" % tablename,
                                              label = T("Type"),
                                              ondelete = "SET NULL",
@@ -128,7 +130,6 @@ class S3MembersModel(S3Model):
         # ---------------------------------------------------------------------
         # Members
         #
-
         tablename = "member_membership"
         define_table(tablename,
                      organisation_id(
@@ -163,6 +164,13 @@ class S3MembersModel(S3Model):
                       s3_date("membership_paid",
                               label = T("Membership Paid"),
                               ),
+                      Field("fee_exemption", "boolean",
+                            label = T("Exempted from Membership Fee"),
+                            default = False,
+                            # Expose in templates as needed:
+                            readable = False,
+                            writable = False,
+                            ),
                       # Location (from pr_address component)
                       self.gis_location_id(readable = False,
                                            writable = False,
@@ -183,23 +191,6 @@ class S3MembersModel(S3Model):
             msg_record_modified = T("Member updated"),
             msg_record_deleted = T("Member deleted"),
             msg_list_empty = T("No Members currently registered"))
-
-        def member_type_opts():
-            """
-                Provide the options for the Membership Type search filter
-            """
-            ttable = self.member_membership_type
-
-            if root_org:
-                query = (ttable.deleted == False) & \
-                        ((ttable.organisation_id == root_org) | \
-                         (ttable.organisation_id == None))
-            else:
-                query = (ttable.deleted == False) & \
-                        (ttable.organisation_id == None)
-
-            rows = db(query).select(ttable.id, ttable.name)
-            return dict((row.id, row.name) for row in rows)
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -256,7 +247,6 @@ class S3MembersModel(S3Model):
             org_filter,
             S3OptionsFilter("membership_type_id",
                             cols = 3,
-                            options = member_type_opts,
                             hidden = True,
                             ),
             S3OptionsFilter("paid",
@@ -265,6 +255,7 @@ class S3MembersModel(S3Model):
                             options = {T("paid"):    T("paid"),
                                        T("overdue"): T("overdue"),
                                        T("expired"): T("expired"),
+                                       #T("exempted"): T("exempted"),
                                        },
                             hidden = True,
                             ),
@@ -292,6 +283,7 @@ class S3MembersModel(S3Model):
                   deduplicate = self.member_duplicate,
                   extra_fields = ("start_date",
                                   "membership_paid",
+                                  "fee_exemption",
                                   ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
@@ -347,12 +339,26 @@ class S3MembersModel(S3Model):
                                                          ),
                                            },
                                           ),
+                            hrm_programme = {"link": "member_membership_programme",
+                                             "joinby": "membership_id",
+                                             "key": "programme_id",
+                                             },
                             )
-                      
+
+        represent = S3Represent(lookup=tablename, fields=["code"])
+        membership_id = S3ReusableField("membership_id", "reference %s" % tablename,
+                                        label = T("Member"),
+                                        ondelete = "CASCADE",
+                                        represent = represent,
+                                        requires = IS_ONE_OF(db, "member_membership.id",
+                                                             represent,
+                                                             ),
+                                        )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return dict(member_membership_id = membership_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -363,6 +369,15 @@ class S3MembersModel(S3Model):
 
             @ToDo: Formula should come from the deployment_template
         """
+
+        T = current.T
+
+        #try:
+        #    exempted = row["member_membership.fee_exemption"]
+        #except AttributeError:
+        #    exempted = False
+        #if excempted:
+        #    return T("exempted")
 
         try:
             start_date = row["member_membership.start_date"]
@@ -377,7 +392,6 @@ class S3MembersModel(S3Model):
 
         if start_date:
 
-            T = current.T
             PAID = T("paid")
             OVERDUE = T("overdue")
             LAPSED = T("expired")
@@ -419,7 +433,7 @@ class S3MembersModel(S3Model):
                 return OVERDUE
 
         return current.messages["NONE"]
-        
+
     # ---------------------------------------------------------------------
     @staticmethod
     def member_onaccept(form):
@@ -536,6 +550,29 @@ class S3MembersModel(S3Model):
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
+class S3MemberProgrammeModel(S3Model):
+    """ Member Programmes Model """
+
+    names = ("member_membership_programme",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Link between members and programmes
+        #
+        tablename = "member_membership_programme"
+        self.define_table(tablename,
+                          self.hrm_programme_id(),
+                          self.member_membership_id(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
 def member_rheader(r, tabs=[]):
     """ Resource headers for component views """
 
@@ -597,5 +634,5 @@ def member_rheader(r, tabs=[]):
                       )
 
     return rheader
-    
+
 # END =========================================================================

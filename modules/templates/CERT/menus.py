@@ -41,14 +41,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="vol")(
                     M("Volunteers", f="volunteer",
                       check=[manager_mode])(
-                        M("New Volunteer", m="create"),
+                        M("Create Volunteer", m="create"),
                         #M("List All"),
                         M("Import", f="person", m="import",
                           vars={"group":"volunteer"}, p="create"),
                     ),
                     M(teams, f="group",
                       check=[manager_mode, use_teams])(
-                        M("New Team", m="create"),
+                        M("Create Team", m="create"),
                         #M("List All"),
                         M("Search Members", f="group_membership"),
                     ),
@@ -71,20 +71,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
-                        M("New Event", m="create"),
+                        M("Create Event", m="create"),
                         #M("List All"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),
                     M("Training Course Catalog", f="course",
                       check=manager_mode)(
-                        M("New Course", m="create"),
+                        M("Create Course", m="create"),
                         #M("List All"),
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
                       check=manager_mode)(
-                        M("New Certificate", m="create"),
+                        M("Create Certificate", m="create"),
                         #M("List All"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),

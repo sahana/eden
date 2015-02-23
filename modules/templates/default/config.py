@@ -565,6 +565,10 @@ def config(settings):
     #settings.hrm.email_required = False
     # Uncomment to allow Staff & Volunteers to be registered without an Organisation
     #settings.hrm.org_required = False
+    # Uncomment to if their are only Staff & Volunteers from a single Organisation with no Branches
+    #settings.hrm.multiple_orgs = False
+    # Uncomment to disable the 'Send Message' action button
+    #settings.hrm.compose_button = False
     # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
     #settings.hrm.deletable = True
     # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
@@ -632,6 +636,8 @@ def config(settings):
     #settings.inv.facility_label = "Facility"
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     #settings.inv.direct_stock_edits = True
+    # Uncomment to have Warehouse Types be Organisation-dependent
+    #settings.inv.org_dependent_warehouse_types = True
     # Uncomment to call Stock Adjustments, 'Stock Counts'
     #settings.inv.stock_count = True
     # Use the term 'Order' instead of 'Shipment'
@@ -835,6 +841,11 @@ def config(settings):
     #settings.base.youtube_id = [dict(id = "introduction",
     #                                 title = T("Introduction"),
     #                                 video_id = "HR-FtR2XkBU"),]
+
+    # -----------------------------------------------------------------------------
+    # XForms
+    # Configure xform resources (example)
+    #settings.xforms.resources = [("Request", "req_req")]
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
