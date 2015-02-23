@@ -5086,6 +5086,7 @@ class pr_Contacts(S3Method):
         # Contact information by contact method
         opts = current.msg.CONTACT_OPTS
         action_buttons = self.action_buttons
+        inline_edit_hint = T("Click to edit")
         for method, contacts in groups:
 
             # Subtitle
@@ -5098,7 +5099,6 @@ class pr_Contacts(S3Method):
                 value = contact["pr_contact.value"]
                 description = contact["pr_contact.contact_description"] or ""
 
-                inline_edit_hint = T("Click to edit")
                 title = SPAN(value,
                              _title = inline_edit_hint,
                              _class = "pr-contact-value",
@@ -5159,6 +5159,7 @@ class pr_Contacts(S3Method):
                               "relationship",
                               "address",
                               "phone",
+                              "comments",
                               )
                     if table[f].readable]
         fields.insert(0, "id")
@@ -5180,18 +5181,60 @@ class pr_Contacts(S3Method):
 
         # Individual rows
         readable_fields = fields[1:]
+        action_buttons = self.action_buttons
+        inline_edit_hint = T("Click to edit")
         for row in rows:
-            data = (row["pr_contact_emergency.%s" % f] or ""
-                    for f in readable_fields)
-            record_id = row["pr_contact_emergency.id"]
-            form.append(DIV(DIV(", ".join(data),
-                                _class="pr-emergency-data medium-9 columns",
+            contact_id = row["pr_contact_emergency.id"]
+
+            # Render description and data
+            data = {"id": contact_id}
+            description = TAG[""](SPAN(row["pr_contact_emergency.name"],
+                                       _title = inline_edit_hint,
+                                       _class = "pr-emergency-name",
+                                       ),
+                                  )
+            append = description.append
+            for fieldname in ("relationship", "address", "phone"):
+                if fieldname in readable_fields:
+                    value = row["pr_contact_emergency.%s" % fieldname]
+                    if value:
+                        data[fieldname] = s3_unicode(value)
+                        editable = SPAN(value,
+                                        _title = inline_edit_hint,
+                                        _class = "pr-emergency-%s" % fieldname,
+                                        )
+                        if fieldname == "relationship":
+                            append(" (")
+                            append(editable)
+                            append(")")
+                        else:
+                            append(", ")
+                            append(editable)
+
+            # Render comments
+            if "comments" in readable_fields:
+                comments = row["pr_contact_emergency.comments"] or ""
+                if comments:
+                    data["comments"] = s3_unicode(comments)
+            else:
+                comments = ""
+
+            actions = action_buttons(table, contact_id)
+            form.append(DIV(DIV(DIV(description,
+                                    _class="pr-contact-title",
+                                    ),
+                                DIV(SPAN(comments,
+                                         _title = inline_edit_hint,
+                                         _class = "pr-emergency-comments"),
+                                    _class = "pr-contact-subtitle",
+                                    ),
+                                _class = "pr-emergency-data medium-9 columns",
                                 ),
-                            self.action_buttons(table, record_id),
-                            data = {"id": record_id,
-                                    },
+                            actions,
+                            data = data,
                             _class="pr-emergency-contact row",
                             ))
+
         return form
 
 # =============================================================================

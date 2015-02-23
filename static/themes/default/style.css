@@ -724,15 +724,14 @@ input.date.hasDatepicker {
 .pr-contacts-wrapper .pr-emergency-contact {
   padding: 0.5rem;
 }
-
-.pr-contacts h3 {
+.pr-contacts-wrapper h3 {
   padding-bottom: 0 !important;
 }
-.pr-contacts .pr-contact-subtitle {
+.pr-contacts-wrapper .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
-.pr-contacts .pr-contact-actions {
+.pr-contacts-wrapper .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 

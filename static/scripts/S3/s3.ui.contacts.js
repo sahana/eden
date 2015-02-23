@@ -230,7 +230,7 @@
 
             var personID = opts.personID,
                 controller = opts.controller,
-                recordID = contact.data('id')
+                recordID = contact.data('id'),
                 access = opts.access;
 
             var url = S3.Ap.concat('/pr/contact_emergency/' + recordID + '.iframe/update?person=' + personID);
@@ -325,6 +325,35 @@
         },
 
         /**
+         * Inline update emergency contact data (jeditable)
+         *
+         * @param {jQuery} element - the container element (.pr-contact)
+         * @param {object} data - the data to update
+         */
+        _inlineUpdateEmergencyContact: function(element, data) {
+
+            var contact = $(element);
+
+            var recordID = contact.data('id');
+            var url = S3.Ap.concat('/pr/contact_emergency/' + recordID + '.s3json'),
+                success = false;
+            $.ajaxS3({
+                type: 'POST',
+                url: url,
+                data: JSON.stringify({'$_pr_contact_emergency': data}),
+                dataType: 'JSON',
+                async: false,
+                // gets moved to .done() inside .ajaxS3
+                success: function(response) {
+                    if (response.status == 'success') {
+                        success = true;
+                    }
+                }
+            });
+            return success;
+        },
+
+        /**
          * Show all read-rows and hide all throbbers
          */
         _showAll: function() {
@@ -402,6 +431,51 @@
             element.find('.pr-contact-comments').editable(function(value, settings) {
                 var contact = $(this).closest('.pr-contact');
                 if (self._inlineUpdateContact(contact, {'comments': value})) {
+                    contact.data('comments', value);
+                    return value;
+                } else {
+                    return contact.data('comments');
+                }
+            }, opts);
+            element.find('.pr-emergency-name').editable(function(value, settings) {
+                var contact = $(this).closest('.pr-emergency-contact');
+                if (self._inlineUpdateEmergencyContact(contact, {'name': value})) {
+                    contact.data('name', value);
+                    return value;
+                } else {
+                    return contact.data('name');
+                }
+            }, opts);
+            element.find('.pr-emergency-relationship').editable(function(value, settings) {
+                var contact = $(this).closest('.pr-emergency-contact');
+                if (self._inlineUpdateEmergencyContact(contact, {'relationship': value})) {
+                    contact.data('relationship', value);
+                    return value;
+                } else {
+                    return contact.data('relationship');
+                }
+            }, opts);
+            element.find('.pr-emergency-phone').editable(function(value, settings) {
+                var contact = $(this).closest('.pr-emergency-contact');
+                if (self._inlineUpdateEmergencyContact(contact, {'phone': value})) {
+                    contact.data('phone', value);
+                    return value;
+                } else {
+                    return contact.data('phone');
+                }
+            }, opts);
+            element.find('.pr-emergency-address').editable(function(value, settings) {
+                var contact = $(this).closest('.pr-emergency-contact');
+                if (self._inlineUpdateEmergencyContact(contact, {'address': value})) {
+                    contact.data('address', value);
+                    return value;
+                } else {
+                    return contact.data('address');
+                }
+            }, opts);
+            element.find('.pr-emergency-comments').editable(function(value, settings) {
+                var contact = $(this).closest('.pr-emergency-contact');
+                if (self._inlineUpdateEmergencyContact(contact, {'comments': value})) {
                     contact.data('comments', value);
                     return value;
                 } else {
