@@ -215,7 +215,7 @@ def s3_rest_controller(prefix=None, resourcename=None, **attr):
     if method == "import" and r.representation == "pdf":
         from s3.s3pdf import S3PDF
         set_handler("import", S3PDF(),
-                    http = ["GET", "POST"],
+                    http = ("GET", "POST"),
                     representation="pdf")
 
     # Plugin OrgRoleManager when appropriate

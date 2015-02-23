@@ -6,6 +6,12 @@
 # Usage with timestamped output file: python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A  smoke_tests  -o NONE -l NONE
 # Usage with given name of output file: python web2py.py --no-banner -M -S eden  -R applications/eden/tests/edentest_runner.py -A  smoke_tests  -o NONE -l NONE -v filename:smoke_tests.txt
 
+*** Settings ***
+Resource  ../../resources/main.txt
+Library  edentest_smoke.py  ${ROOT URL}  ${DO NOT FOLLOW}  ${EXT LINKS}
+Library  DateTime
+Library  OperatingSystem
+
 *** Variables ***
 # It contains the configuration settings to run the smoke tests
 
@@ -16,18 +22,12 @@ ${EXT LINKS}  ${False}
 ${PAGE LOAD TIMEOUT}  0.25
 ${ELEMENT LOAD TIMEOUT}  0.50
 # Starting URL
-${START URL}  ${BASE URL}
+${START URL}  ${SERVER}/${APPNAME}/${SMOKETEST START}
 # Every URL Must contain the root. If you want to test at a module level and
 # ignore other modules, just set the Root URL to that module
-${ROOT URL}  ${BASE URL}
+${ROOT URL}  ${SMOKETEST ROOT}
 # All the URLs containing these will be ignored eg: default/index
 @{DO NOT FOLLOW}  _language=  logout  appadmin  delete  .pdf  clean
-
-*** Settings ***
-Resource  ../../resources/main.txt
-Library  edentest_smoke.py  ${ROOT URL}  ${DO NOT FOLLOW}  ${EXT LINKS}
-Library  DateTime
-Library  OperatingSystem
 
 *** Keywords ***
 
