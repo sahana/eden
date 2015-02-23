@@ -1059,7 +1059,7 @@
 "Sector": "Sektör",
 "Sectors": "Sektörler",
 "Select %(level)s": "%(level)s Seç",
-"Select %(location)s": "&(location)s Seç",
+"Select %(location)s": "%(location)s Seç",
 "Select 2 records from this list, then click 'Merge'.": "Listeden iki kayıt seçin ve 'Birleştir'e tıkalyın.",
 "Select All": "Tümünü Seç",
 "Select Existing Location": "Varolan konumdan seç",
