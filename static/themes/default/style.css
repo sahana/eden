@@ -85,7 +85,10 @@ form {
   font-size: 0.8em;
 }
 form .form-row {
-  margin-top: 5px !important;
+  margin-top: 0.325rem !important;
+}
+form .form-row > .columns:first-child {
+  overflow: hidden;
 }
 form .form-row > .columns > label {
   font-weight: bold;

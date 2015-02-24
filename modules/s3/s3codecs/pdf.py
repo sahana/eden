@@ -1210,9 +1210,9 @@ class S3html2pdf():
             return self.parse_div(html)
         elif (isinstance(html, basestring) or isinstance(html, lazyT)):
             if title:
-                para = [Paragraph(html, self.boldstyle)]
+                para = [Paragraph(s3_unicode(html), self.boldstyle)]
             else:
-                para = [Paragraph(html, self.normalstyle)]
+                para = [Paragraph(s3_unicode(html), self.normalstyle)]
             self.normalstyle = self.plainstyle
             return para
         return None
