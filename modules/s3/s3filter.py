@@ -1872,6 +1872,11 @@ class S3HierarchyFilter(S3FilterWidget):
             represent           representation method for the key
             multiple            allow selection of multiple options
             leafonly            only lead nodes can be selected
+            cascade             automatically select child nodes when
+                                selecting a parent node (if leafonly=False,
+                                otherwise this is the standard behavior)
+            bulk_select         provide an option to select/deselect all
+                                nodes
     """
 
     _class = "hierarchy-filter"
@@ -1905,6 +1910,8 @@ class S3HierarchyFilter(S3FilterWidget):
                               represent = opts.get("represent"),
                               multiple = opts.get("multiple", True),
                               leafonly = opts.get("leafonly", True),
+                              cascade = opts.get("cascade", False),
+                              bulk_select = opts.get("bulk_select", False),
                               filter = opts.get("filter"),
                               )
 

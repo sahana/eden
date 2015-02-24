@@ -6266,6 +6266,8 @@ class S3HierarchyWidget(FormWidget):
                  represent = None,
                  multiple = True,
                  leafonly = True,
+                 cascade = False,
+                 bulk_select = False,
                  filter = None,
                  columns = None,
                  ):
@@ -6279,6 +6281,10 @@ class S3HierarchyWidget(FormWidget):
             @param multiple: allow selection of multiple options
             @param leafonly: True = only leaf nodes can be selected
                              False = any nodes to be selected independently
+            @param cascade: automatic selection of children when selecting
+                            a parent node (if leafonly=False, otherwise
+                            this is the standard behavior)
+            @param bulk_select: provide option to select/deselect all nodes
             @param filter: filter query for the lookup table
             @param columns: set the columns width class for Foundation forms
         """
@@ -6289,6 +6295,8 @@ class S3HierarchyWidget(FormWidget):
         self.multiple = multiple
         self.leafonly = leafonly
         self.columns = columns
+        self.bulk_select = bulk_select
+        self.cascade = cascade
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -6343,13 +6351,31 @@ class S3HierarchyWidget(FormWidget):
             attr["s3cols"] = self.columns
 
         # Generate the widget
+        if self.multiple and self.bulk_select:
+            header = DIV(SPAN(A("Select All",
+                                _class="s3-hierarchy-select-all",
+                                ),
+                              " | ",
+                              A("Deselect All",
+                                _class="s3-hierarchy-deselect-all",
+                                ),
+                              _class="s3-hierarchy-bulkselect",
+                              ),
+                         _class="s3-hierarchy-header",
+                         )
+        else:
+            header = ""
         widget = DIV(INPUT(_type = "hidden",
                            _multiple = "multiple",
                            _name = name,
                            _class = "s3-hierarchy-input",
                            requires = self.parse),
-                     DIV(h.html("%s-tree" % widget_id),
-                         _class = "s3-hierarchy-tree"),
+                     DIV(header,
+                         DIV(h.html("%s-tree" % widget_id),
+                             _class = "s3-hierarchy-tree",
+                             ),
+                         _class = "s3-hierarchy-wrapper",
+                         ),
                      **attr)
         widget.add_class("s3-hierarchy-widget")
 
@@ -6401,6 +6427,8 @@ class S3HierarchyWidget(FormWidget):
             widget_opts["multiple"] = False
         if not leafonly:
             widget_opts["leafonly"] = False
+        if self.cascade:
+            widget_opts["cascade"] = True
         icons = theme.get("icons", False)
         if icons:
             widget_opts["icons"] = icons

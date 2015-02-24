@@ -1537,7 +1537,8 @@ body.rtl label.ui-corner-all span {
 }
 
 /* Hierarchy Widget */
-.s3-hierarchy-tree.jstree {
+.s3-hierarchy-tree.jstree,
+.s3-hierarchy-header {
     border: 1px solid #ccc;
     padding: 2px 3px 4px 3px;
     background: white;
@@ -1547,6 +1548,16 @@ body.rtl label.ui-corner-all span {
 */
 /*  max-height: 360px;
     overflow-y: auto;*/
+}
+.jstree-contextmenu {
+    z-index: 9999;
+}
+.s3-hierarchy-wrapper {
+    z-index: 9998;
+}
+.s3-hierarchy-header {
+    font-size: 0.8rem;
+    display: none;
 }
 
 /* Saved Filters Page - Inline Editor for Filter Titles */
@@ -1617,10 +1628,10 @@ button.toggle-text {
 	margin: 0 2px 2px 0;
 }
 .ajax_more.collapsed {
-	background: url(../../img/icon_blue_plus15px.png) no-repeat left top; 
+	background: url(../../img/icon_blue_plus15px.png) no-repeat left top;
 }
 .ajax_more.expanded {
-	background: url(../../img/icon_blue_minus15px.png) no-repeat left top; 
+	background: url(../../img/icon_blue_minus15px.png) no-repeat left top;
 }
 
 /* Simile Timeline */
