@@ -1798,6 +1798,27 @@ class S3Config(Storage):
                                                    stripes = True,
                                                    ))
 
+    def get_ui_hierarchy_cascade_option_in_tree(self):
+        """
+            Whether hierarchy widgets show a "Select All" option in
+            the tree (True) or as context menu of the parent node.
+        """
+        return self.ui.get("hierarchy_cascade_option_in_tree", True)
+
+    def get_ui_hierarchy_filter_bulk_select_option(self):
+        """
+            Whether or not to show a bulk-select option in hierarchical
+            filter widgets (overrides per-widget setting)
+        """
+        return self.ui.get("hierarchy_filter_bulk_select_option", None)
+
+    def get_ui_location_filter_bulk_select_option(self):
+        """
+            Whether or not to show a bulk-select option in location
+            filter widgets (overrides per-widget setting)
+        """
+        return self.ui.get("location_filter_bulk_select_option", None)
+
     def get_ui_inline_component_layout(self):
         """
             Layout for S3SQLInlineComponent
@@ -2359,7 +2380,7 @@ class S3Config(Storage):
             False: Human Resources are only being manage internally within a single Organisation with no Branches
         """
         return self.hrm.get("multiple_orgs", True)
-    
+
     def get_hrm_compose_button(self):
         """
             If set to True then HRM dataTables have a 'Send Message' button

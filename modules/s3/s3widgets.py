@@ -6279,11 +6279,15 @@ class S3HierarchyWidget(FormWidget):
             @param represent: alternative representation method (falls back
                               to the field's represent-method)
             @param multiple: allow selection of multiple options
-            @param leafonly: True = only leaf nodes can be selected
-                             False = any nodes to be selected independently
+            @param leafonly: True = only leaf nodes can be selected (with
+                             multiple=True: selection of a parent node will
+                             automatically select all leaf nodes of that
+                             branch)
+                             False = any nodes can be selected independently
             @param cascade: automatic selection of children when selecting
                             a parent node (if leafonly=False, otherwise
-                            this is the standard behavior)
+                            this is the standard behavior!), requires
+                            multiple=True
             @param bulk_select: provide option to select/deselect all nodes
             @param filter: filter query for the lookup table
             @param columns: set the columns width class for Foundation forms
@@ -6292,11 +6296,13 @@ class S3HierarchyWidget(FormWidget):
         self.lookup = lookup
         self.represent = represent
         self.filter = filter
+
         self.multiple = multiple
         self.leafonly = leafonly
+        self.cascade = cascade
+
         self.columns = columns
         self.bulk_select = bulk_select
-        self.cascade = cascade
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -6351,7 +6357,12 @@ class S3HierarchyWidget(FormWidget):
             attr["s3cols"] = self.columns
 
         # Generate the widget
-        if self.multiple and self.bulk_select:
+        settings = current.deployment_settings
+        cascade_option_in_tree = settings.get_ui_hierarchy_cascade_option_in_tree()
+
+        if self.multiple and self.bulk_select and \
+           not cascade_option_in_tree:
+            # Render bulk-select options as separate header
             header = DIV(SPAN(A("Select All",
                                 _class="s3-hierarchy-select-all",
                                 ),
@@ -6395,7 +6406,7 @@ class S3HierarchyWidget(FormWidget):
                 append(v)
 
         # Custom theme
-        theme = current.deployment_settings.get_ui_hierarchy_theme()
+        theme = settings.get_ui_hierarchy_theme()
 
         if s3.debug:
             script = "%s/jstree.js" % script_dir
@@ -6421,7 +6432,10 @@ class S3HierarchyWidget(FormWidget):
                        "selectedText": str(T("# selected")),
                        "noneSelectedText": str(T("Select")),
                        "noOptionsText": str(T("No options available")),
+                       "selectAllText": str(T("Select All")),
+                       "deselectAllText": str(T("Deselect All")),
                        }
+
         # Only include non-default options
         if not self.multiple:
             widget_opts["multiple"] = False
@@ -6429,12 +6443,17 @@ class S3HierarchyWidget(FormWidget):
             widget_opts["leafonly"] = False
         if self.cascade:
             widget_opts["cascade"] = True
+        if self.bulk_select:
+            widget_opts["bulkSelect"] = True
+        if not cascade_option_in_tree:
+            widget_opts["cascadeOptionInTree"] = False
         icons = theme.get("icons", False)
         if icons:
             widget_opts["icons"] = icons
         stripes = theme.get("stripes", True)
         if not stripes:
             widget_opts["stripes"] = stripes
+
 
         script = '''$('#%(widget_id)s').hierarchicalopts(%(widget_opts)s)''' % \
                  {"widget_id": widget_id,

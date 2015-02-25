@@ -1559,6 +1559,9 @@ body.rtl label.ui-corner-all span {
     font-size: 0.8rem;
     display: none;
 }
+.s3-hierarchy-action-node {
+    font-style: italic;
+}
 
 /* Saved Filters Page - Inline Editor for Filter Titles */
 form.jeditable-input input {
