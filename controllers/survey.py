@@ -49,7 +49,7 @@ def create():
         - provides a simpler URL to access from mobile devices...
     """
 
-    redirect(URL(f="newAssessment.iframe",
+    redirect(URL(f="new_assessment.iframe",
                  vars={"viewing": "survey_series.%s" % request.args[0]}))
 
 # -----------------------------------------------------------------------------
@@ -109,23 +109,23 @@ def template():
             template_id = r.id
             if r.component_name == "translate":
                 s3_action_buttons(r)
-                s3.actions.append(dict(label=str(T("Download")),
+                s3.actions.extend([dict(label=str(T("Download")),
                                        _class="action-btn",
                                        url=r.url(method = "translate_download",
                                                  component = "translate",
                                                  component_id = "[id]",
                                                  representation = "xls",
-                                                 )
+                                                 ),
                                        ),
-                                  )
-                s3.actions.append(
-                           dict(label=str(T("Upload")),
-                                _class="action-btn",
-                                url=URL(c=module,
-                                        f="template",
-                                        args=[template_id, "translate", "[id]"])
-                               ),
-                          )
+                                   dict(label=str(T("Upload")),
+                                        _class="action-btn",
+                                        url=URL(c=module,
+                                                f="template",
+                                                args=[template_id,
+                                                      "translate",
+                                                      "[id]"]),
+                                        ),
+                                   ])
             #elif r.component_name == "section":
             #    # Add the section select widget to the form
             #    # undefined
@@ -199,7 +199,7 @@ def template_read():
                    )
 
     r = s3_request("survey", "template", args=[template_id])
-    output  = r(method = "read", rheader=s3db.survey_template_rheader)
+    output = r(method="read", rheader=s3db.survey_template_rheader)
     return output
 
 # -----------------------------------------------------------------------------
@@ -924,7 +924,7 @@ def question_metadata():
     return output
 
 # -----------------------------------------------------------------------------
-def newAssessment():
+def new_assessment():
     """
         RESTful CRUD controller to create a new 'complete' survey
         - although the created form is a fully custom one
@@ -1059,7 +1059,7 @@ def complete():
             sheetM = workbook.sheet_by_name("Metadata")
         except:
             session.error = T("You need to use the spreadsheet which you can download from this page")
-            redirect(URL(c="survey", f="newAssessment", args=[],
+            redirect(URL(c="survey", f="new_assessment", args=[],
                          vars={"viewing": "survey_series.%s" % series_id}))
         header = ""
         body = ""
