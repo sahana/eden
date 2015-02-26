@@ -4739,15 +4739,21 @@ def hrm_vars():
             hrm_vars.orgs = None
 
     # Set mode
-    hrm_vars.mode = current.request.vars.get("mode", None)
-    if hrm_vars.mode != "personal":
+    mode = current.request.get_vars.get("access", None)
+    if mode != "personal":
+        # Default access mode: with policy >= 3, only ADMINS,
+        # ORG_ADMINS and Staff Members are allowed to access
+        # in manager mode
         sr = session.s3.system_roles
         if sr.ADMIN in session.s3.roles or \
+           sr.ORG_ADMIN in session.s3.roles or \
            hrm_vars.orgs or \
            current.deployment_settings.get_security_policy() in (1, 2):
-            hrm_vars.mode = None
-    else:
-        hrm_vars.mode = "personal"
+            mode = None
+        else:
+            mode = "personal"
+
+    hrm_vars.mode = mode
     return
 
 # =============================================================================
@@ -8521,7 +8527,7 @@ def hrm_human_resource_filters(resource_type=None,
                                    hidden = True,
                                    ))
 
-    # Training filter 
+    # Training filter
     if settings.get_hrm_use_trainings():
         append_filter(S3OptionsFilter("training.course_id",
                                       label = T("Training"),

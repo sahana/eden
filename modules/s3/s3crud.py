@@ -589,7 +589,7 @@ class S3CRUD(S3Method):
 
         # Get the target record ID
         record_id = self.record_id
-        
+
         if r.interactive:
 
             # If this is a single-component and no record exists,
@@ -602,7 +602,7 @@ class S3CRUD(S3Method):
                     return self.create(r, **attr)
                 else:
                     return self.select(r, **attr)
-                    
+
             # Redirect to update if user has permission unless
             # a method has been specified in the URL
             # MH: Is this really desirable? Many users would prefer to open as read
@@ -813,7 +813,7 @@ class S3CRUD(S3Method):
                        _config("onvalidation")
         onaccept = _config("update_onaccept") or \
                    _config("onaccept")
-                   
+
         # Get the target record ID
         record_id = self.record_id
         if r.interactive and not record_id:
@@ -1096,7 +1096,7 @@ class S3CRUD(S3Method):
             @param r: the S3Request
             @param attr: dictionary of parameters for the method handler
         """
-        
+
         resource = self.resource
 
         tablename = resource.tablename
