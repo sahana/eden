@@ -2867,6 +2867,9 @@ class S3Config(Storage):
                 else:
                     root_org = auth.root_org_name()
                     enabled = root_org in org_name_list
+            else:
+                # Enable if empty list
+                enabled = True
 
         if enable_field:
             field = current.s3db[tablename][fieldname]

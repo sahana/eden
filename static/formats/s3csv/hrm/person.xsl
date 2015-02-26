@@ -38,6 +38,8 @@
          Occupation.....................optional.....person_details occupation
          Company........................optional.....person_details company
          Affiliations............ ......optional.....person_details affiliation
+         Marital Status.................optional.....person_details marital status
+         Place of Birth.................optional.....person_details place of birth
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
          Religion.......................optional.....person_details religion
@@ -101,6 +103,17 @@
          Active.........................optional.....volunteer_details.active
          Deployable.....................optional.....link to deployments module (true|false)
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
+         Military Service
+         Criminal Record
+         Number of Children
+
+         Turkey-specific:
+         Identity Card City
+         Identity Card Town
+         Identity Card District
+         Identity Card Volume No
+         Identity Card Family Order No
+         Identity Card Order No
 
          Column headers looked up in labels.xml:
 
@@ -556,6 +569,7 @@
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
+        <xsl:variable name="BloodType" select="col[@field='Blood Type']"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
         <xsl:variable name="Trainings" select="col[@field='Trainings']"/>
         <xsl:variable name="Certificates" select="col[@field='Certificates']"/>
@@ -625,11 +639,26 @@
             </xsl:if>
 
             <resource name="pr_person_details">
+                <xsl:if test="col[@field='Marital Status']!=''">
+                    <data field="marital_status"><xsl:value-of select="col[@field='Marital Status']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Place of Birth']!=''">
+                    <data field="place_of_birth"><xsl:value-of select="col[@field='Place of Birth']"/></data>
+                </xsl:if>
                 <xsl:if test="col[@field='Father Name']!=''">
                     <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Mother Name']!=''">
                     <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Number of Children']!=''">
+                    <data field="number_children"><xsl:value-of select="col[@field='Number of Children']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Military Service']!=''">
+                    <data field="military_service"><xsl:value-of select="col[@field='Military Service']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Criminal Record']!=''">
+                    <data field="criminal_record"><xsl:value-of select="col[@field='Criminal Record']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Religion']!=''">
 	                <data field="religion">
@@ -684,9 +713,44 @@
                 </xsl:if>
             </resource>
 
-            <xsl:if test="col[@field='Blood Type']!=''">
+            <!-- Turkish Identity
+            <resource name="tr_identity">
+                <xsl:variable name="id_l3">
+                    <xsl:value-of select="col[@field='Identity Card District']"/>
+                </xsl:variable>
+                <xsl:if test="$id_l3!=''">
+                    <reference field="location_id" resource="gis_location">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Location L3: ', $id_l3)"/>
+                        </xsl:attribute>
+                    </reference>
+                   </xsl:if>
+                <xsl:if test="col[@field='Identity Card Volume No']!=''">
+                    <data field="volume_no"><xsl:value-of select="col[@field='Identity Card Volume No']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Identity Card Family Order No']!=''">
+                    <data field="family_order_no"><xsl:value-of select="col[@field='Identity Card Family Order No']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Identity Card Order No']!=''">
+                    <data field="order_no"><xsl:value-of select="col[@field='Identity Card Order No']"/></data>
+                </xsl:if>
+            </resource> -->
+
+            <xsl:if test="$BloodType!=''">
                 <resource name="pr_physical_description">
-                    <data field="blood_type"><xsl:value-of select="col[@field='Blood Type']"/></data>
+                    <data field="blood_type">
+                        <xsl:choose>
+                            <xsl:when test="$BloodType='0+'">
+                                <xsl:text>O+</xsl:text>
+                            </xsl:when>
+                            <xsl:when test="$BloodType='0-'">
+                                <xsl:text>O-</xsl:text>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$BloodType"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </data>
                 </resource>
             </xsl:if>
 
@@ -864,6 +928,13 @@
                 <xsl:with-param name="l5" select="col[@field='Permanent L5']/text()"/>
                 <xsl:with-param name="lat" select="col[@field='Permanent Lat']/text()"/>
                 <xsl:with-param name="lon" select="col[@field='Permanent Lon']/text()"/>
+            </xsl:call-template>
+        </xsl:if>
+        <xsl:if test="col[@field='Identity Card District']!=''">
+            <xsl:call-template name="TR_ID_Locations">
+                <xsl:with-param name="l1" select="col[@field='Identity Card City']/text()"/>
+                <xsl:with-param name="l2" select="col[@field='Identity Card Town']/text()"/>
+                <xsl:with-param name="l3" select="col[@field='Identity Card District']/text()"/>
             </xsl:call-template>
         </xsl:if>
     </xsl:template>
@@ -1454,6 +1525,100 @@
             <data field="lat"><xsl:value-of select="$lat"/></data>
             <data field="lon"><xsl:value-of select="$lon"/></data>
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="TR_ID_Locations">
+        <xsl:param name="l1"/>
+        <xsl:param name="l2"/>
+        <xsl:param name="l3"/>
+
+        <xsl:variable name="l1id" select="concat('Location L1: ', $l1)"/>
+        <xsl:variable name="l2id" select="concat('Location L2: ', $l2)"/>
+        <xsl:variable name="l3id" select="concat('Location L3: ', $l3)"/>
+
+        <!-- Country Code = UUID of the L0 Location -->
+        <xsl:variable name="countrycode" select="TR"/>
+
+        <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
+
+        <!-- L1 Location -->
+        <xsl:if test="$l1!=''">
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$l1id"/>
+                </xsl:attribute>
+                <reference field="parent" resource="gis_location">
+                    <xsl:attribute name="uuid">
+                        <xsl:value-of select="$country"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="name"><xsl:value-of select="$l1"/></data>
+                <data field="level"><xsl:text>L1</xsl:text></data>
+            </resource>
+        </xsl:if>
+
+        <!-- L2 Location -->
+        <xsl:if test="$l2!=''">
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$l2id"/>
+                </xsl:attribute>
+                <xsl:choose>
+                    <xsl:when test="$l1!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l1id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <data field="name"><xsl:value-of select="$l2"/></data>
+                <data field="level"><xsl:text>L2</xsl:text></data>
+            </resource>
+        </xsl:if>
+
+        <!-- L3 Location -->
+        <xsl:if test="$l3!=''">
+            <resource name="gis_location">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$l3id"/>
+                </xsl:attribute>
+                <xsl:choose>
+                    <xsl:when test="$l2!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l2id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:when test="$l1!=''">
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="$l1id"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <reference field="parent" resource="gis_location">
+                            <xsl:attribute name="uuid">
+                                <xsl:value-of select="$country"/>
+                            </xsl:attribute>
+                        </reference>
+                    </xsl:otherwise>
+                </xsl:choose>
+                <data field="name"><xsl:value-of select="$l3"/></data>
+                <data field="level"><xsl:text>L3</xsl:text></data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 

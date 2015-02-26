@@ -3114,22 +3114,23 @@ class S3PersonDetailsModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         pr_marital_status_opts = {
-            1:T("unknown"),
-            2:T("single"),
-            3:T("married"),
-            4:T("separated"),
-            5:T("divorced"),
-            6:T("widowed"),
-            9:T("other")
+            1: T("unknown"),
+            2: T("single"),
+            3: T("married"),
+            4: T("separated"),
+            5: T("divorced"),
+            6: T("widowed"),
+            9: T("other")
         }
 
         pr_marital_status = S3ReusableField("marital_status", "integer",
-                                            requires = IS_IN_SET(pr_marital_status_opts,
-                                                                 zero=None),
                                             default = 1,
                                             label = T("Marital Status"),
                                             represent = lambda opt: \
-                                                pr_marital_status_opts.get(opt, UNKNOWN_OPT))
+                                                pr_marital_status_opts.get(opt, UNKNOWN_OPT),
+                                            requires = IS_IN_SET(pr_marital_status_opts,
+                                                                 zero=None),
+                                            )
 
         pr_religion_opts = current.deployment_settings.get_L10n_religions()
 
@@ -3183,6 +3184,9 @@ class S3PersonDetailsModel(S3Model):
                           Field("mother_name",
                                 label = T("Name of Mother"),
                                 ),
+                          Field("number_children", "integer",
+                                label = T("Number of Children"),
+                                ),
                           Field("occupation", length=128, # Mayon Compatibility
                                 label = T("Profession"),
                                 ),
@@ -3193,6 +3197,14 @@ class S3PersonDetailsModel(S3Model):
                           Field("affiliations",
                                 label = T("Affiliations"),
                                 # @ToDo: Autofill from hrm_human_resource Volunteer Organisation
+                                ),
+                          Field("criminal_record", "boolean",
+                                label = T("Criminal Record"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          Field("military_service", "boolean",
+                                label = T("Military Service"),
+                                represent = s3_yes_no_represent,
                                 ),
                           *s3_meta_fields())
 

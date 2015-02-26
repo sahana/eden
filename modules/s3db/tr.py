@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-""" S3 Framework Tables
+""" Turkey-specific Tables
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2015 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -27,31 +27,40 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3HierarchyModel",)
+__all__ = ("S3TurkeyIdentityModel",)
 
 from gluon import *
 from ..s3 import *
 
 # =============================================================================
-class S3HierarchyModel(S3Model):
-    """ Model for stored object hierarchies """
+class S3TurkeyIdentityModel(S3Model):
+    """ Model for Turkish Identity Cards """
 
-    names = ("s3_hierarchy",)
+    names = ("tr_identity",)
 
     def model(self):
 
         # -------------------------------------------------------------------------
-        # Stored Object Hierarchy
+        # Turkish Identity
         #
-        tablename = "s3_hierarchy"
+        tablename = "tr_identity"
         self.define_table(tablename,
-                          Field("tablename",
-                                length=64),
-                          Field("dirty", "boolean",
-                                default=False),
-                          Field("hierarchy", "json"),
-                          *s3_timestamp())
-
+                          self.pr_person_id(),
+                          self.gis_location_id(
+                            widget = S3LocationSelector(levels("L1", "L2", "L3"),
+                                                        show_map=False,
+                                                        )),
+                          Field("volume_no",
+                                label = T("Volume No"),
+                                ),
+                          Field("family_order_no", "integer",
+                                label = T("Family Order No"),
+                                ),
+                          Field("order_no", "integer",
+                                label = T("Order No"),
+                                ),
+                          *s3_meta_fields()
+                          )
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #

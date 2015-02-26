@@ -907,10 +907,12 @@ def s3_auth_user_represent_name(id, row=None):
 def s3_yes_no_represent(value):
     " Represent a Boolean field as Yes/No instead of True/False "
 
-    if value:
+    if value is True:
         return current.T("Yes")
-    else:
+    elif value is False:
         return current.T("No")
+    else:
+        return current.messages["NONE"]
 
 # =============================================================================
 def s3_include_debug_css():

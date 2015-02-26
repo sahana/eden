@@ -38,7 +38,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,TJ,Province,District,Jamoat,Village,,
 ,TL,District,SubDistrict,Suco,Aldeia,,
 ,TM,Province,District,,,,
-,TR,Province,District,,,,
+,TR,City,Town,District,,,
 ,PR,Municipality,Barrio,,,,
 ,US,State,County,City,Neighborhood,,False
 ,UZ,Province,District,,,,

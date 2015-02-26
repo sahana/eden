@@ -123,6 +123,84 @@ def config(settings):
     #
     settings.security.policy = 8 # Entity Realm + Hierarchy and Delegations
 
+    # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
+    settings.hrm.skill_types = True
+
+    def customise_pr_person_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.pr_person_details
+        table.place_of_birth.writable = True
+        table.mother_name.readable = True
+        table.father_name.readable = True
+        #import s3db.tr
+        s3db.add_components("pr_person",
+                            tr_identity = "person_id",
+                            )
+        settings.org.dependent_fields = \
+            {"pr_person_details.mother_name" : None, # Show for all
+             "pr_person_details.father_name" : None, # Show for all
+             }
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm("first_name",
+                                    "last_name",
+                                    "date_of_birth",
+                                    #"initials",
+                                    #"preferred_name",
+                                    #"local_name",
+                                    "gender",
+                                    "person_details.occupation",
+                                    "person_details.marital_status",
+                                    "person_details.number_children",
+                                    #"person_details.nationality",
+                                    #"person_details.religion",
+                                    "person_details.mother_name",
+                                    "person_details.father_name",
+                                    #"person_details.company",
+                                    #"person_details.affiliations",
+                                    "person_details.criminal_record",
+                                    "person_details.military_service",
+                                    "comments",
+                                    )
+        s3db.configure("pr_person",
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
+    def vol_rheader(r):
+        if r.representation != "html":
+            # RHeaders only used in interactive views
+            return None
+        record = r.record
+        if record is None:
+            # List or Create form: rheader makes no sense here
+            return None
+
+        #from gluon.html import DIV
+        person_id = r.id
+        s3db = current.s3db
+        table = s3db.hrm_human_resource
+        hr = current.db(table.person_id == person_id).select(table.organisation_id,
+                                                             limitby=(0, 1)).first()
+        if hr:
+            if current.auth.user.organisation_id != hr.organisation_id:
+                # Only show Org if not the same as user's
+                rheader = table.organisation_id.represent(hr.organisation_id)
+            else:
+                rheader = None
+        else:
+            # Something went wrong!
+            rheader = None
+        return rheader
+
+    def customise_pr_person_controller(**attr):
+        # Custom RHeader
+        attr["rheader"] = vol_rheader
+        return attr
+
+    #settings.customise_pr_person_controller = customise_pr_person_controller
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py

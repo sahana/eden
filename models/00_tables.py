@@ -55,6 +55,7 @@ import s3db.support
 import s3db.survey
 import s3db.sync
 import s3db.tour
+#import s3db.tr
 import s3db.translate
 import s3db.transport
 import s3db.vehicle
