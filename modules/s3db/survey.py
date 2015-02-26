@@ -120,15 +120,16 @@ def json2list(jsonstr):
     """
 
     if jsonstr == "":
-        valueList = []
+        value_list = []
     else:
         if jsonstr[0] == "[":
-            valueList = json2py(jsonstr)
+            value_list = json2py(jsonstr)
         else:
-            valueList = jsonstr.split(",")
-        if not isinstance(valueList, list):
-            valueList = [valueList]
-    return valueList
+            value_list = jsonstr.split(",")
+        if not isinstance(value_list, list):
+            value_ist = [value_list]
+    return value_list
+
 survey_json2list = json2list
 
 # =============================================================================
@@ -333,32 +334,33 @@ class S3SurveyTemplateModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def addQuestion(template_id, name, code, notes, type, posn, metadata={}):
+    def add_question(template_id, name, code, notes, type, posn, metadata={}):
         """
+            Adds a question to the template corresponding to template_id
         """
 
         db = current.db
         s3db = current.s3db
 
         # Add the question to the database if it's not already there
-        qstntable = s3db.survey_question
-        query = (qstntable.name == name) & \
-                (qstntable.code == code)
-        record = db(query).select(qstntable.id, limitby=(0, 1)).first()
+        qtable = s3db.survey_question
+        query = (qtable.name == name) & \
+                (qtable.code == code)
+        record = db(query).select(qtable.id, limitby=(0, 1)).first()
         if record:
             qstn_id = record.id
         else:
-            qstn_id = qstntable.insert(name = name,
-                                       code = code,
-                                       notes = notes,
-                                       type = type
-                                      )
+            qstn_id = qtable.insert(name = name,
+                                    code = code,
+                                    notes = notes,
+                                    type = type,
+                                    )
             qstn_metadata_table = s3db.survey_question_metadata
             for (descriptor, value) in metadata.items():
                 qstn_metadata_table.insert(question_id = qstn_id,
                                            descriptor = descriptor,
-                                           value = value
-                                          )
+                                           value = value,
+                                           )
         # Add these questions to the section: "Background Information"
         sectable = s3db.survey_section
         section_name = "Background Information"
@@ -373,16 +375,16 @@ class S3SurveyTemplateModel(S3Model):
                                          posn = 0 # special section with no position
                                          )
         # Add the question to the list of questions in the template
-        qstn_list_table = s3db.survey_question_list
-        query = (qstn_list_table.question_id == qstn_id) & \
-                (qstn_list_table.template_id == template_id)
-        record = db(query).select(qstntable.id, limitby=(0, 1)).first()
+        qltable = s3db.survey_question_list
+        query = (qltable.question_id == qstn_id) & \
+                (qltable.template_id == template_id)
+        record = db(query).select(qtable.id, limitby=(0, 1)).first()
         if not record:
-            qstn_list_table.insert(question_id = qstn_id,
-                                   template_id = template_id,
-                                   section_id = section_id,
-                                   posn = posn
-                                   )
+            qltable.insert(question_id = qstn_id,
+                           template_id = template_id,
+                           section_id = section_id,
+                           posn = posn,
+                           )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -406,28 +408,28 @@ class S3SurveyTemplateModel(S3Model):
         else:
             return
 
-        addQuestion = S3SurveyTemplateModel.addQuestion
+        add_question = S3SurveyTemplateModel.add_question
         if form_vars.competion_qstn != None:
             name = form_vars.competion_qstn
             code = "STD-WHO"
             notes = "Who completed the assessment"
             type = "String"
             posn = -10 # negative used to force these question to appear first
-            addQuestion(template_id, name, code, notes, type, posn)
+            add_question(template_id, name, code, notes, type, posn)
         if form_vars.date_qstn != None:
             name = form_vars.date_qstn
             code = "STD-DATE"
             notes = "Date the assessment was completed"
             type = "Date"
             posn += 1
-            addQuestion(template_id, name, code, notes, type, posn)
+            add_question(template_id, name, code, notes, type, posn)
         if form_vars.time_qstn != None:
             name = form_vars.time_qstn
             code = "STD-TIME"
             notes = "Time the assessment was completed"
             type = "Time"
             posn += 1
-            addQuestion(template_id, name, code, notes, type, posn)
+            add_question(template_id, name, code, notes, type, posn)
         if form_vars.location_detail != None:
             locationList = json2py(form_vars.location_detail)
             if len(locationList) > 0:
@@ -435,7 +437,7 @@ class S3SurveyTemplateModel(S3Model):
                 code = "STD-P-Code"
                 type = "String"
                 posn += 1
-                addQuestion(template_id, name, code, None, type, posn)
+                add_question(template_id, name, code, None, type, posn)
             for loc in locationList:
                 if loc == "Lat":
                     name = "Latitude"
@@ -451,7 +453,7 @@ class S3SurveyTemplateModel(S3Model):
                     type = "Location"
                     metadata = {}
                 posn += 1
-                addQuestion(template_id, name, code, "", type, posn, metadata)
+                add_question(template_id, name, code, "", type, posn, metadata)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -530,39 +532,39 @@ def survey_template_rheader(r, tabs=[]):
 
             # Tabs
             tabs = [(T("Basic Details"), "read"),
-                    (T("Question Details"),"templateRead/"),
-                    (T("Question Summary"),"templateSummary/"),
+                    (T("Question Details"), "template_read/"),
+                    (T("Question Summary"), "template_summary/"),
                     #(T("Sections"), "section"),
                     ]
             if current.auth.s3_has_permission("create", "survey_translate"):
-                tabs.append((T("Translate"),"translate"))
+                tabs.append((T("Translate"), "translate"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            sectionTable = s3db.survey_section
-            qlistTable = s3db.survey_question_list
+            stable = s3db.survey_section
+            qltable = s3db.survey_question_list
             viewing = current.request.get_vars.get("viewing", None)
             if viewing:
                 dummy, template_id = viewing.split(".")
             else:
                 template_id = r.id
 
-            query = (qlistTable.template_id == template_id) & \
-                    (qlistTable.section_id == sectionTable.id)
-            rows = current.db(query).select(sectionTable.id,
-                                            sectionTable.name,
-                                            orderby = qlistTable.posn)
+            query = (qltable.template_id == template_id) & \
+                    (qltable.section_id == stable.id)
+            rows = current.db(query).select(stable.id,
+                                            stable.name,
+                                            orderby = qltable.posn)
             tsection = TABLE(_class="survey-section-list")
-            lblSection = SPAN(T("Sections that are part of this template"),
-                              _style="font-weight:bold;")
+            label_section = SPAN(T("Sections that are part of this template"),
+                                 _style="font-weight:bold;")
             if (rows.__len__() == 0):
                 rsection = SPAN(T("As of yet, no sections have been added to this template."))
             else:
                 rsection = TR()
                 count = 0
-                lastSection = ""
+                last_section = ""
                 for section in rows:
-                    if section.name == lastSection:
+                    if section.name == last_section:
                         continue
                     rsection.append(TD(section.name))
                     # Comment out the following until templates can be built online
@@ -570,11 +572,11 @@ def survey_template_rheader(r, tabs=[]):
                     #                     _href=URL(c="survey",
                     #                               f="section",
                     #                               args="%s" % section.id))))
-                    lastSection = section.name
+                    last_section = section.name
                     count += 1
                     if count % 4 == 0:
                         tsection.append(rsection)
-                        rsection=TR()
+                        rsection = TR()
             tsection.append(rsection)
 
             rheader = DIV(TABLE(TR(TH("%s: " % T("Name")),
@@ -583,7 +585,7 @@ def survey_template_rheader(r, tabs=[]):
                                    s3db.survey_template_status[record.status],
                                    ),
                                 ),
-                          lblSection,
+                          label_section,
                           tsection,
                           rheader_tabs,
                           )
@@ -614,25 +616,25 @@ def survey_getAllWidgetsForTemplate(template_id):
     """
 
     s3db = current.s3db
-    q_ltable = s3db.survey_question_list
-    qsntable = s3db.survey_question
-    query = (q_ltable.template_id == template_id) & \
-            (q_ltable.question_id == qsntable.id)
-    rows = current.db(query).select(qsntable.id,
-                                    qsntable.code,
-                                    qsntable.type,
-                                    q_ltable.posn,
+    qltable = s3db.survey_question_list
+    qtable = s3db.survey_question
+    query = (qltable.template_id == template_id) & \
+            (qltable.question_id == qtable.id)
+    rows = current.db(query).select(qtable.id,
+                                    qtable.code,
+                                    qtable.type,
+                                    qltable.posn,
                                     )
     widgets = {}
     for row in rows:
         sqrow = row.survey_question
-        qstnType = sqrow.type
+        qstn_type = sqrow.type
         qstn_id = sqrow.id
         qstn_code = sqrow.code
         qstn_posn = row.survey_question_list.posn
-        widgetObj = survey_question_type[qstnType](qstn_id)
-        widgets[qstn_code] = widgetObj
-        widgetObj.question["posn"] = qstn_posn
+        widget_obj = survey_question_type[qstn_type](qstn_id)
+        widgets[qstn_code] = widget_obj
+        widget_obj.question["posn"] = qstn_posn
         question = {}
     return widgets
 
@@ -723,7 +725,7 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                 form.append(P())
                 form.append(HR(_width="90%"))
                 form.append(P())
-            div = DIV(_class="survey_scrollable")
+            div = DIV()
             table = TABLE()
             div.append(table)
             form.append(div)
@@ -1007,7 +1009,7 @@ class S3SurveyQuestionModel(S3Model):
             @todo: add the full name if it is a grid question BUT not displayed
                   as part of a grid,
                   e.g. "Currently known Displaced", rather than just "Displaced"
-                  see controller... templateRead() for an example not in the grid
+                  see controller... template_read() for an example not in the grid
         """
 
         if value == "L0" or value == "L1" or \
@@ -1084,7 +1086,7 @@ class S3SurveyQuestionModel(S3Model):
 
         data = item.data
         question = data.get("question_id")
-        descriptor  = data.get("descriptor")
+        descriptor = data.get("descriptor")
         table = item.table
         query = (table.descriptor == descriptor) & \
                 (table.question_id == question)
@@ -1315,7 +1317,7 @@ def survey_getQuestionFromName(name, series_id):
         locList = current.gis.get_all_current_levels()
         for row in locList.items():
             if row[1] == name:
-                return survey_getQuestionFromName(row[0],series_id)
+                return survey_getQuestionFromName(row[0], series_id)
 
     question = {}
     sq = record.survey_question
@@ -1327,7 +1329,7 @@ def survey_getQuestionFromName(name, series_id):
     return question
 
 # =============================================================================
-def survey_updateMetaData (record, type, metadata):
+def survey_updateMetaData(record, type, metadata):
     """
     """
 
@@ -1660,7 +1662,7 @@ class S3SurveySeriesModel(S3Model):
             msg_list_empty = T("No Disaster Assessments"))
 
         self.configure(tablename,
-                       create_next = URL(f="newAssessment",
+                       create_next = URL(f="new_assessment",
                                          vars={"viewing":"survey_series.[id]"}),
                        deduplicate = self.survey_series_duplicate,
                        onaccept = self.series_onaccept,
@@ -2343,7 +2345,7 @@ def survey_series_rheader(r):
                     (T("Map"), "map"),
                     ]
             if current.auth.s3_has_permission("create", "survey_complete"):
-                tabs.insert(1, (T("Enter Completed Assessment"), "newAssessment/"))
+                tabs.insert(1, (T("Enter Completed Assessment"), "new_assessment/"))
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -2958,7 +2960,7 @@ def survey_answer_list_represent(value):
     xml_decode = S3Codec.xml_decode
     for line in list:
         line = xml_decode(line)
-        (question, answer) = line.split(",",1)
+        (question, answer) = line.split(",", 1)
         question = question.strip("\" ")
         if question in questions:
             question = questions[question]
@@ -3134,7 +3136,7 @@ def buildCompletedList(series_id, question_id_list):
                 row = complete_lookup[complete_id]
             else:
                 row = len(complete_lookup)
-                complete_lookup[complete_id]=row
+                complete_lookup[complete_id] = row
                 items.append([''] * rowLen)
             items[row][qstn_posn] = widgetObj.repr(answer["value"])
         qstn_posn += 1
