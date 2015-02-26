@@ -6459,7 +6459,7 @@ def org_organisation_list_layout(list_id, item_id, resource, rfields, record):
     permit = current.auth.s3_has_permission
     table = db.org_organisation
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="org", f="organisation",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -6470,9 +6470,9 @@ def org_organisation_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
-                      )
+                       )
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -6489,12 +6489,12 @@ def org_organisation_list_layout(list_id, item_id, resource, rfields, record):
                        edit_bar,
                        _class="card-header-select",
                        ),
-                   DIV(P(I(_class="icon icon-phone"),
+                   DIV(P(ICON("phone"),
                          " ",
                          phone,
                          _class="card_1_line",
                          ),
-                       P(I(_class="icon icon-map"),
+                       P(ICON("link"),
                          " ",
                          website,
                          _class="card_1_line",
@@ -6565,7 +6565,7 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
             vars["(organisation)"] = organisation_id
         elif f == "location" and location_id:
             vars["(location)"] = location_id
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="org", f="resource",
                                args=[record_id, "update.popup"],
                                vars=vars),
@@ -6575,7 +6575,7 @@ def org_resource_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:

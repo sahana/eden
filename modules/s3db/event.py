@@ -2439,7 +2439,7 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     permit = current.auth.s3_has_permission
     table = current.db.event_incident
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="event", f="incident",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -2451,7 +2451,7 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        _title=current.response.s3.crud_strings.event_incident.label_delete_button,
                        )
@@ -2463,7 +2463,7 @@ def event_incident_list_layout(list_id, item_id, resource, rfields, record,
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon icon-%s" % icon),
+    item = DIV(DIV(ICON(icon),
                    SPAN(location, _class="location-title"),
                    SPAN(zero_hour, _class="date-title"),
                    edit_bar,
@@ -2551,7 +2551,7 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
             vars["(organisation)"] = organisation_id
         elif f == "location" and location_id:
             vars["(location)"] = location_id
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="event", f="resource",
                                args=[record_id, "update.popup"],
                                vars=vars),
@@ -2561,7 +2561,7 @@ def event_resource_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
