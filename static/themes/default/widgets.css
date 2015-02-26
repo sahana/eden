@@ -1292,7 +1292,8 @@ ul.x-tree-root-ct {
 .s3-checkboxes-widget input,
 .s3-groupedopts-widget input
 {
-    float: left;
+    display: inline-block;
+    vertical-align: middle;
 }
 .s3-checkboxes-widget-filter input {
     vertical-align: middle;

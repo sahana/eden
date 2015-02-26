@@ -55,6 +55,10 @@ h4.profile-sub-header {
     font: 13px "Helvetica Neue", Arial, sans-serif;
     opacity: 0.67;
 }
+.empty_card-holder .icon-folder-open-alt {
+    margin: 1rem 0 0.5rem;
+    font-size: 1.1rem;
+}
 
 .card-holder {
     display: inline-block;
@@ -101,11 +105,7 @@ h4.profile-sub-header {
     font-size: 13px;
 }
 
-.card-holder .card-actions .card-action {
-    vertical-align: middle;
-}
-
-.card-holder .card-actions .card-action:last-child {
+.card-holder .card-actions {
     margin-right: 30px;
 }
 
@@ -148,7 +148,7 @@ div.media a.pull-left img.media-object {
 .profile-data {
     margin-top: 6px;
 }
-.profile-data-label{
+.profile-data-label {
     font: 11px "Helvetica Neue", Arial, sans-serif;
     color: #999;
     padding-right: 4px;
@@ -169,83 +169,34 @@ div.media a.pull-left img.media-object {
     float: right;
 }
 
-/* @todo: switch to font-awesome, move specialist CSS to icons.css */
 .icon {
     display: inline-block;
-    width: 14px;
-    height: 16px;
-    margin-top: 1px;
-    *margin-right: .3em;
-    line-height: 14px;
-    vertical-align: text-top;
 }
 
-.edit-bar .icon-edit,
-.edit-bar .icon-envelope-alt,
-.edit-bar .icon-file-alt,
-.edit-bar .icon-paperclip,
-.edit-bar .icon-search,
-.edit-bar .icon-trash {
-/*     color: #999; */
+.edit-bar a > .icon {
+    color: #999;
     padding-left: 2px;
     margin-right: 4px;
 }
+.edit-bar a:hover > .icon {
+    color: #0095fe;
+}
+.edit-bar .action-lnk,
+.edit-bar .icon-edit,
+.edit-bar .icon-file-alt,
+.edit-bar .icon-paperclip,
+.edit-bar .icon-trash {
+    color: #999;
+}
+.edit-bar .action-lnk:hover,
 .edit-bar .icon-edit:hover,
-.edit-bar .icon-envelope-alt:hover,
 .edit-bar .icon-file-alt:hover,
-.edit-bar .icon-paperclip:hover,
-.edit-bar .icon-search:hover {
-    /* Color doesn't work with Images, only with Fonts */
+.edit-bar .icon-paperclip:hover {
     color: #0095fe;
     text-decoration: none;
 }
-.edit-bar .icon-trash:hover {
-    /* Color doesn't work with Images, only with Fonts */
-    color: #E74C3C;
-}
-.icon-edit:before,
-.icon-file-alt:before,
-.icon-trash:before {
-    /* Override font-awesome icons */
-    content: none;
-}
-
-.icon-file-alt {
-    background: url(img/file.png) no-repeat;
-}
-.icon-edit {
-    background: url(img/pencil.png) no-repeat;
-}
-.icon-search {
-    background: url(img/magnifier.png) no-repeat;
-}
-.icon-trash {
-    background: url(img/trashbin.png) no-repeat;
-}
-
-.icon-deploy,
-.icon-deployed {
-    margin-left: 2px;
-    margin-right: 4px;
-    background: url(img/deploy.png) no-repeat;
-}
-.icon-deploy {
-    background-position: -14px 0;
-}
-.icon-deployed {
-    background-position: 0 0;
-}
-
-.icon-sent,
-.icon-unsent {
-    margin-right: 4px;
-    background: url(img/deploy.png) no-repeat;
-}
-.icon-unsent {
-    background-position: -28px 0;
-}
-.icon-sent {
-    background-position: 0 0;
+.edit-bar a:hover > .icon-trash {
+    color: #e74C3c;
 }
 
 .profile-add-btn {
@@ -256,6 +207,12 @@ div.media a.pull-left img.media-object {
 
 .alert-status {
     padding-left: 20px;
+}
+.alert-status .icon {
+    padding-right: 4px;
+}
+.alert-status .icon-ok {
+    color: green;
 }
 
 .mission-comments {
