@@ -40,6 +40,8 @@ class S3TurkeyIdentityModel(S3Model):
 
     def model(self):
 
+        T = current.T
+
         # -------------------------------------------------------------------------
         # Turkish Identity
         #
@@ -47,9 +49,10 @@ class S3TurkeyIdentityModel(S3Model):
         self.define_table(tablename,
                           self.pr_person_id(),
                           self.gis_location_id(
-                            widget = S3LocationSelector(levels("L1", "L2", "L3"),
+                            widget = S3LocationSelector(levels=("L1", "L2", "L3"),
                                                         show_map=False,
-                                                        )),
+                                                        ),
+                            ),
                           Field("volume_no",
                                 label = T("Volume No"),
                                 ),
@@ -61,16 +64,10 @@ class S3TurkeyIdentityModel(S3Model):
                                 ),
                           *s3_meta_fields()
                           )
+
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
         return dict()
-
-    # -------------------------------------------------------------------------
-    def defaults(self):
-        """ Safe defaults if module is disabled """
-
-        return dict()
-
 
 # END =========================================================================

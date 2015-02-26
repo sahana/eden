@@ -39,10 +39,13 @@
          Company........................optional.....person_details company
          Affiliations............ ......optional.....person_details affiliation
          Marital Status.................optional.....person_details marital status
+         Number of Children.............optional.....person_details number of children
          Place of Birth.................optional.....person_details place of birth
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
          Religion.......................optional.....person_details religion
+         Criminal Record................optional.....person_details criminal record
+         Military Service...............optional.....person_details military service
          Blood Type.....................optional.....pr_physical_description blood_type
          National ID....................optional.....person identity type = 2, value
          Passport No....................optional.....person identity type = 1, value
@@ -103,9 +106,6 @@
          Active.........................optional.....volunteer_details.active
          Deployable.....................optional.....link to deployments module (true|false)
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
-         Military Service
-         Criminal Record
-         Number of Children
 
          Turkey-specific:
          Identity Card City
@@ -713,7 +713,7 @@
                 </xsl:if>
             </resource>
 
-            <!-- Turkish Identity
+            <!-- Turkish Identity -->
             <resource name="tr_identity">
                 <xsl:variable name="id_l3">
                     <xsl:value-of select="col[@field='Identity Card District']"/>
@@ -734,7 +734,7 @@
                 <xsl:if test="col[@field='Identity Card Order No']!=''">
                     <data field="order_no"><xsl:value-of select="col[@field='Identity Card Order No']"/></data>
                 </xsl:if>
-            </resource> -->
+            </resource>
 
             <xsl:if test="$BloodType!=''">
                 <resource name="pr_physical_description">

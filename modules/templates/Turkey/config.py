@@ -358,6 +358,11 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
+        ("tr", Storage(
+           name_nice = "Turkish Extensions",
+           restricted = True,
+           module_type = None,
+        )),
         ("transport", Storage(
            name_nice = T("Transport"),
            restricted = True,

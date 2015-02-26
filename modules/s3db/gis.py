@@ -703,7 +703,7 @@ class S3LocationModel(S3Model):
           If the record is a duplicate then it will set the item method to update
 
           Rules for finding a duplicate:
-           - Don't do deduplication if there is no level
+           - If there is no level, then deduplicate based on the address
            - Look for a record with the same name, ignoring case
            - If no match, also check name_l10n
            - If parent exists in the import, the same parent
@@ -715,22 +715,34 @@ class S3LocationModel(S3Model):
                    - make a deployment_setting for relevant function?
         """
 
-        table = item.table
         data = item.data
-        name = data.get("name", None)
+        name = data.get("name")
 
         if not name:
             return
 
-        level = data.get("level", None)
+        level = data.get("level")
         if not level:
-            # Don't deduplicate precise locations as hard to ensure these have unique names
+            address = data.get("addr_street")
+            if not address:
+                # Don't deduplicate precise locations as hard to ensure these have unique names
+                return
+            table = item.table
+            query = (table.addr_street == address) & \
+                    (table.deleted != True)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
             return
 
         # Don't try to update Countries
         if level == "L0":
             item.method = None
             return
+
+        table = item.table
 
         code = current.deployment_settings.get_gis_lookup_code()
         if code:
@@ -752,9 +764,9 @@ class S3LocationModel(S3Model):
                 item.method = item.METHOD.UPDATE
                 return
 
-        parent = data.get("parent", None)
-        start_date = data.get("start_date", None)
-        end_date = data.get("end_date", None)
+        parent = data.get("parent")
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
 
         # @ToDo: check the the lat and lon if they exist?
         #lat = "lat" in data and data.lat

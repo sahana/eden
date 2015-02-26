@@ -934,14 +934,14 @@ class S3Importer(S3Method):
 
         # ---------------------------------------------------------------------
         # CSV
-        if fileFormat == "csv" or fileFormat == "comma-separated-values":
+        if fileFormat in ("csv", "comma-separated-values"):
 
             fmt = "csv"
             src = openFile
 
         # ---------------------------------------------------------------------
         # XLS
-        elif fileFormat == "xls" or fileFormat == "xlsx":
+        elif fileFormat in ("xls", "xlsx"):
 
             fmt = "xls"
             src = openFile
