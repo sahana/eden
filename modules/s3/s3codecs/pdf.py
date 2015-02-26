@@ -216,6 +216,9 @@ class S3RL_PDF(S3Codec):
         docTitle = "%s %s" % (title, now)
         self.filename = attr.get("pdf_filename")
         if self.filename == None:
+            if not isinstance(title, str):
+                # Must be str not unicode
+                title = title.encode("utf-8")
             self.filename = "%s_%s.pdf" % (title, now)
 
         # Get the Doc Template
