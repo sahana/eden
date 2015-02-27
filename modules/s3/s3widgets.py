@@ -1618,10 +1618,17 @@ class S3DateTimeWidget(FormWidget):
 
         separator = settings.get_L10n_datetime_separator()
 
+        # Year range
+        pyears, fyears = 10, 10
+        if "min" in opts or "past" in opts:
+            pyears = abs(earliest.year - now.year)
+        if "max" in opts or "future" in opts:
+            fyears = abs(latest.year - now.year)
+        year_range = "%s:%s" % (opts.get("min_year", "-%s" % pyears),
+                                opts.get("max_year", "+%s" % fyears))
+
         # Other options
         firstDOW = settings.get_L10n_firstDOW()
-        year_range = "%s:%s" % (opts.get("min_year", "-10"),
-                                opts.get("max_year", "+10"))
 
         # Boolean options
         getopt = lambda opt, default: opts.get(opt, default) and "true" or "false"
