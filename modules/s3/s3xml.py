@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+## -*- coding: utf-8 -*-
 
 """ S3XML Toolkit
 
@@ -1515,17 +1515,17 @@ class S3XML(S3Codec):
                         # continue
                 elif download_url:
                     # Download file from Internet
+                    if not isinstance(download_url, str):
+                        try:
+                            download_url = download_url.encode("utf-8")
+                        except UnicodeEncodeError:
+                            continue
                     if not filename:
                         try:
                             filename = download_url.split("?")[0]
                         except:
                             # Fake filename as fallback
                             filename = "upload.bin"
-                    if not isinstance(download_url, str):
-                        try:
-                            download_url = download_url.encode("utf-8")
-                        except UnicodeEncodeError:
-                            continue
                     try:
                         upload = urllib2.urlopen(download_url)
                     except IOError:
