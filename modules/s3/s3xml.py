@@ -1521,10 +1521,14 @@ class S3XML(S3Codec):
                         except:
                             # Fake filename as fallback
                             filename = "upload.bin"
+                    if not isinstance(download_url, str):
+                        try:
+                            download_url = download_url.encode("utf-8")
+                        except UnicodeEncodeError:
+                            continue
                     try:
                         upload = urllib2.urlopen(download_url)
-                    #except IOError, UnicodeEncodeError:
-                    except:
+                    except IOError:
                         continue
                 if upload:
                     field = table[f]
