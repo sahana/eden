@@ -1494,8 +1494,8 @@ class S3XML(S3Codec):
             if field_type in ("id", "blob"):
                 continue
             elif field_type == "upload":
-                download_url = child.get(ATTRIBUTE["url"], None)
-                filename = child.get(ATTRIBUTE["filename"], None)
+                download_url = child.get(ATTRIBUTE["url"])
+                filename = child.get(ATTRIBUTE["filename"])
                 upload = None
                 if filename and filename in files:
                     # We already have the file cached
@@ -1523,7 +1523,8 @@ class S3XML(S3Codec):
                             filename = "upload.bin"
                     try:
                         upload = urllib2.urlopen(download_url)
-                    except IOError:
+                    #except IOError, UnicodeEncodeError:
+                    except:
                         continue
                 if upload:
                     field = table[f]

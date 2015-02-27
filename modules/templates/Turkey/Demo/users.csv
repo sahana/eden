@@ -1,0 +1,4 @@
+First Name,Last Name,Email,Password,Role,Organisation
+Org,Admin,org_admin@example.com,testing,ORG_ADMIN,Mahalle Afet Gönüllüleri Vakfı
+HR,Manager,hr_manager@example.com,testing,HR_MANAGER,Mahalle Afet Gönüllüleri Vakfı
+Logs,Manager,log_manager@example.com,testing,LOGS_MANAGER,Mahalle Afet Gönüllüleri Vakfı
