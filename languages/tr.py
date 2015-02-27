@@ -89,6 +89,8 @@
 "All Records": "Tüm Kayıtlar",
 "All selected": "Hepsi Seçildi",
 "All": "Hepsi",
+'Ambulance Station': 'Ambulans İstasyonu',
+'Ambulance Stations': 'Ambulans İstasyonları',
 "An error occured, please %(reload)s the page.": "Bir hata oluştu, lütfen sayfayı %(reload)s ",
 "Any": "Herhangi",
 "Application Permissions": "Uygulama İzinleri",
