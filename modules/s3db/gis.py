@@ -730,6 +730,12 @@ class S3LocationModel(S3Model):
             table = item.table
             query = (table.addr_street == address) & \
                     (table.deleted != True)
+            postcode = data.get("addr_postcode")
+            if postcode:
+                query &= (table.addr_postcode == postcode)
+            parent = data.get("parent")
+            if parent:
+                query &= (table.parent == parent)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:

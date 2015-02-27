@@ -380,7 +380,7 @@
 "Disciplinary Action Type": "Disiplin Eylem Türü",
 "Disciplinary Record": "Disiplin Kaydı",
 "District": "İlçe",
-"District / Town": "İlçe",
+"District / Town": "İlçe / Kasaba",
 "Do you really want to approve this record?": "Bu kayıdı onaylamak istiyor musunuz?",
 "Do you really want to delete these records?": "Bu kayıtları silmek istiyor musunuz?",
 "Do you really want to delete this record? (This action can not be reversed)": "Bu kayıdı silmek istiyor musunuz? (Bu işlem geri alınamaz)",
