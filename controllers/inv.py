@@ -347,12 +347,13 @@ def warehouse():
     # CRUD post-process
     def postp(r, output):
         if r.interactive and not r.component and r.method != "import":
-            # Change Action buttons to open Stock Tab by default
-            read_url = URL(f="warehouse", args=["[id]", "inv_item"])
-            update_url = URL(f="warehouse", args=["[id]", "inv_item"])
-            s3_action_buttons(r,
-                              read_url=read_url,
-                              update_url=update_url)
+            if auth.s3_has_permission("read", "inv_inv_item"):
+                # Change Action buttons to open Stock Tab by default
+                read_url = URL(f="warehouse", args=["[id]", "inv_item"])
+                update_url = URL(f="warehouse", args=["[id]", "inv_item"])
+                s3_action_buttons(r,
+                                  read_url=read_url,
+                                  update_url=update_url)
         else:
             cname = r.component_name
             if cname == "human_resource":

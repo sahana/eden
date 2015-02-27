@@ -3273,16 +3273,16 @@ def inv_rheader(r):
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 ]
+        permit = current.auth.s3_has_permission
         settings = current.deployment_settings
         if settings.has_module("hrm"):
             STAFF = settings.get_hrm_staff_label()
             tabs.append((STAFF, "human_resource"))
-            permit = current.auth.s3_has_permission
             if permit("create", "hrm_human_resource_site") and \
                permit("update", tablename, r.id):
                 tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
-        if settings.has_module("asset"):
-            tabs.insert(6,(T("Assets"), "asset"))
+        if settings.has_module("asset") and permit("read", "asset_asset"):
+            tabs.insert(6, (T("Assets"), "asset"))
         tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):
             tabs = tabs + s3db.req_tabs(r)

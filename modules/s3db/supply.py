@@ -2612,6 +2612,6 @@ def supply_get_shipping_code(type, site_id, field):
             ref = ref_row(field)
             number = int(ref[-6:])
 
-    return "%s%06d" % (code, number+1)
+    return "%s%06d" % (code, number + 1)
 
 # END =========================================================================

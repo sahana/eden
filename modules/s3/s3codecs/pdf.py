@@ -190,6 +190,9 @@ class S3RL_PDF(S3Codec):
                                           B - Both
             @keyword pdf_paper_alignment: Portrait (default) or Landscape
             @keyword use_colour:      True to add colour to the cells. default False
+
+            @ToDo: Add Page Numbers in Footer:
+                   http://www.blog.pythonlibrary.org/2013/08/12/reportlab-how-to-add-page-numbers/
         """
 
         if not PILImported:
@@ -1119,7 +1122,7 @@ class S3PDFTable(object):
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
                  ("LINEBELOW", (0, 0), (endCol, 0), 1, Color(0, 0, 0)),
                  ("FONTNAME", (0, 0), (endCol, 0), font_name_bold),
-                ]
+                 ]
         sappend = style.append
         if colour_required:
             sappend(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
