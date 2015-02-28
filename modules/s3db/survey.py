@@ -706,9 +706,9 @@ def survey_getWidgetFromQuestion(question_id):
     question = current.db(qtable.id == question_id).select(qtable.type,
                                                            limitby=(0, 1)
                                                            ).first()
-    qstnType = question.type
-    widgetObj = survey_question_type[qstnType](question_id)
-    return widgetObj
+    question_type = question.type
+    widget_obj = survey_question_type[question_type](question_id)
+    return widget_obj
 
 # =============================================================================
 def buildQuestionsForm(questions, complete_id=None, readOnly=False):
@@ -718,10 +718,10 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
 
     form = FORM()
     table = None
-    sectionTitle = ""
+    section_title = ""
     for question in questions:
-        if sectionTitle != question["section"]:
-            if sectionTitle != "":
+        if section_title != question["section"]:
+            if section_title != "":
                 form.append(P())
                 form.append(HR(_width="90%"))
                 form.append(P())
@@ -732,18 +732,18 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
             table.append(TR(TH(question["section"],
                                _colspan="2"),
                             _class="survey_section"))
-            sectionTitle = question["section"]
-        widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
+            section_title = question["section"]
+        widget_obj = survey_getWidgetFromQuestion(question["qstn_id"])
         if readOnly:
             table.append(TR(TD(question["code"]),
-                            TD(widgetObj.type_represent()),
+                            TD(widget_obj.type_represent()),
                             TD(question["name"])
                             )
                          )
         else:
             if complete_id != None:
-                widgetObj.loadAnswer(complete_id, question["qstn_id"])
-            widget = widgetObj.display(question_id = question["qstn_id"])
+                widget_obj.loadAnswer(complete_id, question["qstn_id"])
+            widget = widget_obj.display(question_id = question["qstn_id"])
             if widget != None:
                 if isinstance(widget, TABLE):
                     table.append(TR(TD(widget, _colspan=2)))
@@ -764,56 +764,56 @@ def survey_build_template_summary(template_id):
 
     table = TABLE(_id="template_summary",
                   _class="dataTable display")
-    hr = TR(TH(T("Position")), TH(T("Section")))
-    qstnTypeList = {}
+    table_header = TR(TH(T("Position")), TH(T("Section")))
+    question_type_list = {}
     posn = 1
     for (key, type) in survey_question_type.items():
         if key == "Grid" or key == "GridChild":
             continue
-        hr.append(TH(type().type_represent()))
-        qstnTypeList[key] = posn
+        table_header.append(TH(type().type_represent()))
+        question_type_list[key] = posn
         posn += 1
-    hr.append(TH(T("Total")))
-    header = THEAD(hr)
+    table_header.append(TH(T("Total")))
+    header = THEAD(table_header)
 
-    numOfQstnTypes = len(survey_question_type) - 1 # exclude the grid questions
+    num_of_question_types = len(survey_question_type) - 1 # exclude the grid questions
     questions = survey_getAllQuestionsForTemplate(template_id)
-    sectionTitle = ""
+    section_title = ""
     line = []
     body = TBODY()
     section = 0
-    total = ["", T("Total")] + [0]*numOfQstnTypes
+    total = ["", T("Total")] + [0] * num_of_question_types
     for question in questions:
-        if sectionTitle != question["section"]:
+        if section_title != question["section"]:
             if line != []:
-                br = TR()
+                temp_row = TR()
                 for cell in line:
-                    br.append(cell)
-                body.append(br)
+                    temp_row.append(cell)
+                body.append(temp_row)
             section += 1
-            sectionTitle = question["section"]
-            line = [section, sectionTitle] + [0]*numOfQstnTypes
+            section_title = question["section"]
+            line = [section, section_title] + [0] * num_of_question_types
         if question["type"] == "Grid":
             continue
         if question["type"] == "GridChild":
             # get the real grid question type
-            widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
-            question["type"] = widgetObj.typeDescription
-        line[qstnTypeList[question["type"]]+1] += 1
-        line[numOfQstnTypes+1] += 1
-        total[qstnTypeList[question["type"]]+1] += 1
-        total[numOfQstnTypes+1] += 1
+            widget_obj = survey_getWidgetFromQuestion(question["qstn_id"])
+            question["type"] = widget_obj.typeDescription
+        line[question_type_list[question["type"]]+1] += 1
+        line[num_of_question_types+1] += 1
+        total[question_type_list[question["type"]]+1] += 1
+        total[num_of_question_types+1] += 1
     # Add the trailing row
-    br = TR()
+    empty_row = TR()
     for cell in line:
-        br.append(cell)
-    body.append(br)
+        empty_row.append(cell)
+    body.append(empty_row)
     # Add the footer to the table
     foot = TFOOT()
-    tr = TR()
+    footer_row = TR()
     for cell in total:
-        tr.append(TD(B(cell))) # don't use TH() otherwise dataTables will fail
-    foot.append(tr)
+        footer_row.append(TD(B(cell))) # don't use TH() otherwise dataTables will fail
+    foot.append(footer_row)
 
     table.append(header)
     table.append(body)
@@ -1120,15 +1120,15 @@ class S3SurveyQuestionModel(S3Model):
             _debug("survey question missing type: %s" % record)
             return
         if type == "Grid":
-            widgetObj = survey_question_type["Grid"]()
-            widgetObj.insertChildrenToList(question_id,
-                                           template_id,
-                                           section_id,
-                                           posn,
-                                           )
+            widget_obj = survey_question_type["Grid"]()
+            widget_obj.insertChildrenToList(question_id,
+                                            template_id,
+                                            section_id,
+                                            posn,
+                                            )
         if type == "Location":
-            widgetObj = survey_question_type["Location"]()
-            widgetObj.insertChildrenToList(question_id,
+            widget_obj = survey_question_type["Location"]()
+            widget_obj.insertChildrenToList(question_id,
                                            template_id,
                                            section_id,
                                            posn,
@@ -1184,11 +1184,11 @@ def survey_getQuestionFromCode(code, series_id=None):
                                       limitby=(0, 1)).first()
     question = {}
     if record != None:
-        sq = record.survey_question
-        question["qstn_id"] = sq.id
-        question["code"] = sq.code
-        question["name"] = sq.name
-        question["type"] = sq.type
+        question_row = record.survey_question
+        question["qstn_id"] = question_row.id
+        question["code"] = question_row.code
+        question["name"] = question_row.name
+        question["type"] = question_row.type
         question["posn"] = record.survey_question_list.posn
     return question
 
@@ -1216,15 +1216,15 @@ def survey_getAllQuestionsForTemplate(template_id):
                                     qsntable.type,
                                     sectable.name,
                                     q_ltable.posn,
-                                    orderby=(q_ltable.posn))
+                                    orderby=q_ltable.posn)
     questions = []
     for row in rows:
         question = {}
-        sq = row.survey_question
-        question["qstn_id"] = sq.id
-        question["code"] = sq.code
-        question["name"] = s3db.survey_qstn_name_represent(sq.name)
-        question["type"] = sq.type
+        question_row = row.survey_question
+        question["qstn_id"] = question_row.id
+        question["code"] = question_row.code
+        question["name"] = s3db.survey_qstn_name_represent(question_row.name)
+        question["type"] = question_row.type
         question["posn"] = row.survey_question_list.posn
         question["section"] = row.survey_section.name
         questions.append(question)
@@ -1269,7 +1269,7 @@ def survey_getAllQuestionsForComplete(complete_id):
     return (questions, series_id)
 
 # =============================================================================
-def survey_get_series_questions_of_type(questionList, type):
+def survey_get_series_questions_of_type(question_list, type):
     """
     """
 
@@ -1278,14 +1278,14 @@ def survey_get_series_questions_of_type(questionList, type):
     else:
         types = (type)
     questions = []
-    for question in questionList:
+    for question in question_list:
         if question["type"] in types:
             questions.append(question)
         elif question["type"] == "Link" or \
              question["type"] == "GridChild":
-            widgetObj = survey_getWidgetFromQuestion(question["qstn_id"])
-            if widgetObj.getParentType() in types:
-                question["name"] = widgetObj.fullName()
+            widget_obj = survey_getWidgetFromQuestion(question["qstn_id"])
+            if widget_obj.getParentType() in types:
+                question["name"] = widget_obj.fullName()
                 questions.append(question)
     return questions
 
@@ -1314,17 +1314,17 @@ def survey_getQuestionFromName(name, series_id):
         # Unable to get the record from the question name
         # It could be because the question is a location
         # So get the location names and then check
-        locList = current.gis.get_all_current_levels()
-        for row in locList.items():
+        loc_list = current.gis.get_all_current_levels()
+        for row in loc_list.items():
             if row[1] == name:
                 return survey_getQuestionFromName(row[0], series_id)
 
     question = {}
-    sq = record.survey_question
-    question["qstn_id"] = sq.id
-    question["code"] = sq.code
-    question["name"] = sq.name
-    question["type"] = sq.type
+    question_row = record.survey_question
+    question["qstn_id"] = question_row.id
+    question["code"] = question_row.code
+    question["name"] = question_row.name
+    question["type"] = question_row.type
     question["posn"] = record.survey_question_list.posn
     return question
 
@@ -1338,23 +1338,23 @@ def survey_updateMetaData(record, type, metadata):
     # the metadata can either be passed in as a JSON string
     # or as a parsed map. If it is a string load the map.
     if isinstance(metadata, str):
-        metadataList = json2py(metadata)
+        metadata_list = json2py(metadata)
     else:
-        metadataList = metadata
-    for (desc, value) in metadataList.items():
-            desc = desc.strip()
-            if not isinstance(value, str):
-                # web2py stomps all over a list so convert back to a string
-                # before inserting it on the database
-                value = json.dumps(value)
-            value = value.strip()
-            metatable.insert(question_id = id,
-                             descriptor = desc,
-                             value = value
-                            )
+        metadata_list = metadata
+    for (desc, value) in metadata_list.items():
+        desc = desc.strip()
+        if not isinstance(value, str):
+            # web2py stomps all over a list so convert back to a string
+            # before inserting it on the database
+            value = json.dumps(value)
+        value = value.strip()
+        metatable.insert(question_id = id,
+                         descriptor = desc,
+                         value = value,
+                         )
     if type == "Grid":
-        widgetObj = survey_question_type["Grid"]()
-        widgetObj.insertChildren(record, metadataList)
+        widget_obj = survey_question_type["Grid"]()
+        widget_obj.insertChildren(record, metadata_list)
 
 # =============================================================================
 class S3SurveyFormatterModel(S3Model):
@@ -1445,13 +1445,13 @@ class S3SurveyFormatterModel(S3Model):
 
         s3db = current.s3db
         section_id = form.vars.section_id
-        sectionTbl = s3db.survey_section
-        section_name = sectionTbl[section_id].name
+        stable = s3db.survey_section
+        section_name = stable[section_id].name
         if section_name == "Background Information":
             col1 = []
             # Add the default layout
-            templateTbl = s3db.survey_template
-            template = templateTbl[form.vars.template_id]
+            ttable = s3db.survey_template
+            template = ttable[form.vars.template_id]
             if template.competion_qstn != "":
                 col1.append("STD-WHO")
             if template.date_qstn != "":
@@ -1460,14 +1460,14 @@ class S3SurveyFormatterModel(S3Model):
                 col1.append("STD-TIME")
             if "location_detail" in template:
                 col2 = ["STD-P-Code"]
-                locationList = json2py(template.location_detail)
-                for loc in locationList:
+                location_list = json2py(template.location_detail)
+                for loc in location_list:
                     col2.append("STD-%s" % loc)
                 col = [col1, col2]
                 rule = [{"columns":col}]
-                ruleList = json2py(form.vars.rules)
-                ruleList[:0] = rule
-                rules = json.dumps(ruleList)
+                rule_list = json2py(form.vars.rules)
+                rule_list[:0] = rule
+                rules = json.dumps(rule_list)
                 db = current.db
                 ftable = db.survey_formatter
                 db(ftable.id == form.vars.id).update(rules = rules)
@@ -1531,24 +1531,24 @@ def survey_getQstnLayoutRules(template_id,
             drules = row.rules
     if rules == None and drules != None:
         rules = drules
-    rowList = []
+    row_list = []
     if rules is None or rules == "":
         # get the rules from survey_question_list
-        q_ltable = s3db.survey_question_list
-        qsntable = s3db.survey_question
-        query = (q_ltable.template_id == template_id) & \
-                (q_ltable.section_id == section_id) & \
-                (q_ltable.question_id == qsntable.id)
-        rows = db(query).select(qsntable.code,
-                                q_ltable.posn,
-                                orderby=(q_ltable.posn))
-        append = rowList.append
-        for qstn in rows:
-            append([qstn.survey_question.code])
+        qltable = s3db.survey_question_list
+        qtable = s3db.survey_question
+        query = (qltable.template_id == template_id) & \
+                (qltable.section_id == section_id) & \
+                (qltable.question_id == qtable.id)
+        rows = db(query).select(qtable.code,
+                                qltable.posn,
+                                orderby=qltable.posn)
+        append = row_list.append
+        for question in rows:
+            append([question.survey_question.code])
     else:
         # convert the JSON rules to python
-        rowList = json2py(rules)
-    return rowList
+        row_list = json2py(rules)
+    return row_list
 
 # =============================================================================
 class S3SurveySeriesModel(S3Model):
