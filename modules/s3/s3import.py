@@ -1361,9 +1361,12 @@ class S3Importer(S3Method):
             output.append(header)
         # Add components, if present
         components = element.findall("resource")
+        s3db = current.s3db
         for component in components:
             ctablename = component.get("name")
-            ctable = db[ctablename]
+            ctable = s3db.table(ctablename)
+            if not ctable:
+                continue
             self._add_item_details(component.findall("data"), ctable,
                                    details=rows, prefix=True)
         if rows:
