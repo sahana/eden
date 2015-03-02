@@ -1360,6 +1360,27 @@ def config(settings):
         return "".join(items)
 
     # -----------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+        """ Configure hrm_human_resource """
+
+        if r.controller == "vol":
+            T = current.T
+            root_org = current.auth.root_org_name()
+            if root_org == NRCS:
+                # Expose volunteer_type field with these options:
+                types = {"PROGRAMME": T("Programme Volunteer"),
+                         "GOVERNANCE": T("Governance Volunteer"),
+                         }
+                field = current.s3db.vol_details.volunteer_type
+                field.readable = field.writable = True
+                from gluon.validators import IS_EMPTY_OR, IS_IN_SET
+                field.requires = IS_EMPTY_OR(IS_IN_SET(types))
+                from s3 import S3Represent
+                field.represent = S3Represent(options=types)
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         controller = current.request.controller
@@ -1429,10 +1450,29 @@ def config(settings):
                                                           hidden = True,
                                                           ))
 
-            if controller == "deploy":
+            resource = r.resource
+            get_config = resource.get_config
 
-                resource = r.resource
-                get_config = resource.get_config
+            if controller == "vol" and root_org == NRCS:
+                pos = 6
+                # Add volunteer type to list_fields
+                list_fields = get_config("list_fields")
+                list_fields.insert(pos, "details.volunteer_type")
+
+                # Add volunteer type to report options
+                report_options = get_config("report_options")
+                if "details.volunteer_type" not in report_options["rows"]:
+                    report_options["rows"].insert(pos, "details.volunteer_type")
+                if "details.volunteer_type" not in report_options["cols"]:
+                    report_options["cols"].insert(pos, "details.volunteer_type")
+
+                # Add filter widget for volunteer type
+                filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+                filter_widgets.insert(-1, S3OptionsFilter("details.volunteer_type",
+                                                          hidden = True,
+                                                          ))
+
+            if controller == "deploy":
 
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
@@ -2356,8 +2396,20 @@ def config(settings):
                         branches = True,
                         )
                 if method == "record":
-                    # Use default form (legacy)
-                    s3db.clear_config("hrm_human_resource", "crud_form")
+                    if r.controller == "vol" and root_org == NRCS:
+                        from s3 import S3SQLCustomForm
+                        crud_form = S3SQLCustomForm("organisation_id",
+                                                    "details.volunteer_type",
+                                                    "job_title_id",
+                                                    "start_date",
+                                                    "end_date",
+                                                    "status",
+                                                    "comments",
+                                                    )
+                        s3db.configure("hrm_human_resource", crud_form=crud_form)
+                    else:
+                        # Use default form (legacy)
+                        s3db.clear_config("hrm_human_resource", "crud_form")
 
             if arcs:
                 if not r.component:

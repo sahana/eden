@@ -69,6 +69,10 @@ class S3VolunteerModel(S3Model):
         tablename = "vol_details"
         self.define_table(tablename,
                           self.hrm_human_resource_id(ondelete = "CASCADE"),
+                          Field("volunteer_type",
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("active", "boolean",
                                 default = False,
                                 label = T("Active"),

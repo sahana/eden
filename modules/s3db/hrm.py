@@ -729,7 +729,8 @@ class S3HRModel(S3Model):
         if group == "volunteer":
             # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
             #location_context = "person_id$address.location_id" # When not using S3Track()
-            crud_fields.extend(("details.availability",
+            crud_fields.extend(("details.volunteer_type",
+                                "details.availability",
                                 "details.card",
                                 "volunteer_cluster.vol_cluster_type_id",
                                 "volunteer_cluster.vol_cluster_id",
@@ -7510,6 +7511,8 @@ class hrm_Record(S3Method):
             @param r: the S3Request
             @param attr: controller arguments
         """
+
+        r.customise_resource("hrm_human_resource")
 
         if r.name == "person" and r.id and not r.component and \
            r.representation in ("html", "aadata"):
