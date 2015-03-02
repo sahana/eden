@@ -1722,7 +1722,7 @@ class S3SurveySeriesModel(S3Model):
 
         name = item.data.get("name")
         table = item.table
-        query =  table.name.lower().like('%%%s%%' % name.lower())
+        query = table.name.lower().like('%%%s%%' % name.lower())
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -1842,8 +1842,8 @@ class S3SurveySeriesModel(S3Model):
         h = hashlib.sha256()
         h.update(end_part)
         encoded_part = h.hexdigest()
-        chartName = "survey_series_%s_%s" % (vars.series, encoded_part)
-        return chartName
+        chart_name = "survey_series_%s_%s" % (vars.series, encoded_part)
+        return chart_name
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1859,23 +1859,23 @@ class S3SurveySeriesModel(S3Model):
         response.headers["Content-Type"] = contenttype(".png")
         response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
 
-        chartFile = S3SurveySeriesModel.getChartName()
-        cached = S3Chart.getCachedFile(chartFile)
+        chart_file = S3SurveySeriesModel.getChartName()
+        cached = S3Chart.getCachedFile(chart_file)
         if cached:
             return cached
 
         # The cached version doesn't exist so regenerate it
         output = dict()
-        vars = current.request.get_vars
-        if "labelQuestion" in vars:
-            labelQuestion = vars.labelQuestion
-        if "numericQuestion" in vars:
-            numQstnList = vars.numericQuestion
-            if not isinstance(numQstnList, (list, tuple)):
-                numQstnList = [numQstnList]
-        if (numQstnList != None) and (labelQuestion != None):
-            S3SurveySeriesModel.drawChart(output, r.id, numQstnList,
-                                          labelQuestion, outputFormat="png")
+        get_vars = current.request.get_vars
+        if "labelQuestion" in get_vars:
+            label_question = get_vars.labelQuestion
+        if "numericQuestion" in get_vars:
+            numeric_question_list = get_vars.numericQuestion
+            if not isinstance(numeric_question_list, (list, tuple)):
+                numeric_question_list = [numeric_question_list]
+        if (numeric_question_list != None) and (label_question != None):
+            S3SurveySeriesModel.drawChart(output, r.id, numeric_question_list,
+                                          label_question, outputFormat="png")
         return output["chart"]
 
     # -------------------------------------------------------------------------
@@ -1906,24 +1906,24 @@ class S3SurveySeriesModel(S3Model):
             series_id = vars.series
         else:
             series_id = r.id
-        chartFile = S3SurveySeriesModel.getChartName()
-        cachePath = S3Chart.getCachedPath(chartFile)
-        if cachePath and r.ajax:
-            return IMG(_src=cachePath)
+        chart_file = S3SurveySeriesModel.getChartName()
+        cache_path = S3Chart.getCachedPath(chart_file)
+        if cache_path and r.ajax:
+            return IMG(_src=cache_path)
         else:
-            numQstnList = None
-            labelQuestion = None
+            numeric_question_list = None
+            label_question = None
             post_vars = r.post_vars
             if post_vars is not None:
                 if "labelQuestion" in post_vars:
-                    labelQuestion = post_vars.labelQuestion
+                    label_question = post_vars.labelQuestion
                 if "numericQuestion" in post_vars:
-                    numQstnList = post_vars.numericQuestion
-                    if not isinstance(numQstnList, (list, tuple)):
-                        numQstnList = [numQstnList]
-                if (numQstnList != None) and (labelQuestion != None):
-                    S3SurveySeriesModel.drawChart(output, series_id, numQstnList,
-                                                  labelQuestion)
+                    numeric_question_list = post_vars.numericQuestion
+                    if not isinstance(numeric_question_list, (list, tuple)):
+                        numeric_question_list = [numeric_question_list]
+                if (numeric_question_list != None) and (label_question != None):
+                    S3SurveySeriesModel.drawChart(output, series_id, numeric_question_list,
+                                                  label_question)
         if r.ajax == True and "chart" in output:
             return output["chart"]
 
@@ -1934,71 +1934,73 @@ class S3SurveySeriesModel(S3Model):
             output["rheader"] = rheader
 
         # ---------------------------------------------------------------------
-        def addQstnChkboxToTR(numQstnList, qstn):
+        def addQstnChkboxToTR(numeric_question_list, question):
             """
                 Build the form
             """
 
             tr = TR()
-            if numQstnList != None and qstn["code"] in numQstnList:
+            if numeric_question_list != None and \
+               question["code"] in numeric_question_list:
                 tr.append(INPUT(_type="checkbox",
                                 _name="numericQuestion",
-                                _value=qstn["code"],
+                                _value=question["code"],
                                 value=True,
                                 )
                           )
             else:
                 tr.append(INPUT(_type="checkbox",
                                 _name="numericQuestion",
-                                _value=qstn["code"],
+                                _value=question["code"],
                                 )
                           )
-            tr.append(LABEL(qstn["name"]))
+            tr.append(LABEL(question["name"]))
             return tr
 
         if series_id == None:
             return output
-        allQuestions = survey_getAllQuestionsForSeries(series_id)
-        labelTypeList = ("String",
-                         "Option",
-                         "YesNo",
-                         "YesNoDontKnow",
-                         "Location",
-                         )
-        labelQuestions = survey_get_series_questions_of_type(allQuestions,
-                                                             labelTypeList)
-        lblQstns = []
-        for question in labelQuestions:
-            lblQstns.append(question["name"])
-        numericTypeList = ("Numeric")
+
+        all_questions = survey_getAllQuestionsForSeries(series_id)
+        label_type_list = ("String",
+                           "Option",
+                           "YesNo",
+                           "YesNoDontKnow",
+                           "Location",
+                           )
+        label_questions = survey_get_series_questions_of_type(all_questions,
+                                                              label_type_list)
+        question_labels = []
+        for question in label_questions:
+            question_labels.append(question["name"])
+        numeric_type_list = ("Numeric")
 
         form = FORM(_id="mapGraphForm")
         table = TABLE()
 
-        labelQstn = SELECT(lblQstns, _name="labelQuestion", value=labelQuestion)
+        label_question = SELECT(question_labels, _name="labelQuestion", value=label_question)
         table.append(TR(TH("%s:" % T("Select Label Question")),
                         _class="survey_question"))
-        table.append(labelQstn)
+        table.append(label_question)
 
         table.append(TR(TH(T("Select Numeric Questions (one or more):")),
                         _class="survey_question"))
         # First add the special questions
-        specialQuestions = [{"code": "Count",
-                             "name": T("Number of Completed Assessment Forms"),
-                             }]
-        innerTable = TABLE()
-        for qstn in specialQuestions:
-            tr = addQstnChkboxToTR(numQstnList, qstn)
-            innerTable.append(tr)
-        table.append(innerTable)
+        special_questions = [{"code": "Count",
+                              "name": T("Number of Completed Assessment Forms"),
+                              }]
+        inner_table = TABLE()
+        for question in special_questions:
+            tr = addQstnChkboxToTR(numeric_question_list, question)
+            inner_table.append(tr)
+        table.append(inner_table)
         # Now add the numeric questions
-        numericQuestions = survey_get_series_questions_of_type(allQuestions,
-                                                               numericTypeList)
-        innerTable = TABLE()
-        for qstn in numericQuestions:
-            tr = addQstnChkboxToTR(numQstnList, qstn)
-            innerTable.append(tr)
-        table.append(innerTable)
+        numeric_questions = survey_get_series_questions_of_type(all_questions,
+                                                                numeric_type_list)
+        inner_table = TABLE()
+        for question in numeric_questions:
+            tr = addQstnChkboxToTR(numeric_question_list, question)
+            inner_table.append(tr)
+        table.append(inner_table)
         form.append(table)
 
         series = INPUT(_type="hidden",
@@ -2035,68 +2037,72 @@ $('#chart_btn').click(function(){
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def drawChart(output, series_id, numQstnList, labelQuestion, outputFormat=None):
+    def drawChart(output,
+                  series_id,
+                  numeric_question_list,
+                  label_question,
+                  outputFormat=None):
         """
         """
 
         T = current.T
 
-        getAnswers = survey_getAllAnswersForQuestionInSeries
-        gqstn = survey_getQuestionFromName(labelQuestion, series_id)
+        get_answers = survey_getAllAnswersForQuestionInSeries
+        gqstn = survey_getQuestionFromName(label_question, series_id)
         gqstn_id = gqstn["qstn_id"]
-        ganswers = getAnswers(gqstn_id, series_id)
-        dataList = []
-        legendLabels = []
-        for numericQuestion in numQstnList:
-            if numericQuestion == "Count":
+        ganswers = get_answers(gqstn_id, series_id)
+        data_list = []
+        legend_labels = []
+        for numeric_question in numeric_question_list:
+            if numeric_question == "Count":
                 # get the count of replies for the label question
                 gqstn_type = gqstn["type"]
-                analysisTool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
-                map = analysisTool.uniqueCount()
+                analysis_tool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
+                map = analysis_tool.uniqueCount()
                 label = map.keys()
                 data = map.values()
-                legendLabels.append(T("Count of Question"))
+                legend_labels.append(T("Count of Question"))
             else:
-                qstn = survey_getQuestionFromCode(numericQuestion, series_id)
+                qstn = survey_getQuestionFromCode(numeric_question, series_id)
                 qstn_id = qstn["qstn_id"]
                 qstn_type = qstn["type"]
-                answers = getAnswers(qstn_id, series_id)
-                analysisTool = survey_analysis_type[qstn_type](qstn_id, answers)
-                label = analysisTool.qstnWidget.fullName()
+                answers = get_answers(qstn_id, series_id)
+                analysis_tool = survey_analysis_type[qstn_type](qstn_id, answers)
+                label = analysis_tool.qstnWidget.fullName()
                 if len(label) > 20:
                     label = "%s..." % label[0:20]
-                legendLabels.append(label)
-                grouped = analysisTool.groupData(ganswers)
+                legend_labels.append(label)
+                grouped = analysis_tool.groupData(ganswers)
                 aggregate = "Sum"
-                filtered = analysisTool.filter(aggregate, grouped)
-                (label, data) = analysisTool.splitGroupedData(filtered)
+                filtered = analysis_tool.filter(aggregate, grouped)
+                (label, data) = analysis_tool.splitGroupedData(filtered)
             if data != []:
-                dataList.append(data)
+                data_list.append(data)
 
-        if dataList == []:
+        if data_list == []:
             output["chart"] = H4(T("There is insufficient data to draw a chart from the questions selected"))
         else:
-            chartFile = S3SurveySeriesModel.getChartName()
-            chart = S3Chart(path=chartFile, width=7.2)
+            chart_file = S3SurveySeriesModel.getChartName()
+            chart = S3Chart(path=chart_file, width=7.2)
             chart.asInt = True
-            chart.survey_bar(labelQuestion,
-                             dataList,
+            chart.survey_bar(label_question,
+                             data_list,
                              label,
-                             legendLabels)
+                             legend_labels)
             if outputFormat == None:
                 image = chart.draw()
             else:
                 image = chart.draw(output=outputFormat)
             output["chart"] = image
             request = current.request
-            chartLink = A(T("Download"),
+            chart_link = A(T("Download"),
                           _href=URL(c="survey",
                                     f="series",
                                     args=request.args,
                                     vars=request.vars
                                     )
                           )
-            output["chartDownload"] = chartLink
+            output["chartDownload"] = chart_link
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2146,75 +2152,74 @@ $('#chart_btn').click(function(){
         bounds = {}
 
         # Build the drop down list of priority questions
-        allQuestions = survey_getAllQuestionsForSeries(series_id)
-        numericTypeList = ("Numeric")
-        numericQuestions = survey_get_series_questions_of_type(allQuestions,
-                                                               numericTypeList)
-        numQstns = []
-        for question in numericQuestions:
-            numQstns.append(question["name"])
+        all_questions = survey_getAllQuestionsForSeries(series_id)
+        numeric_type_list = ("Numeric")
+        numeric_questions = survey_get_series_questions_of_type(all_questions,
+                                                                numeric_type_list)
+        num_questions = []
+        for question in numeric_questions:
+            num_questions.append(question["name"])
 
         form = FORM(_id="mapQstnForm")
         table = TABLE()
 
         if pqstn:
-            priorityQstn = SELECT(numQstns, _name="pqstn_name",
+            priority_question = SELECT(num_questions, _name="pqstn_name",
                                   value=pqstn_name)
         else:
-            priorityQstn = None
+            priority_question = None
 
         # Set up the legend
-        priorityObj = S3AnalysisPriority(range=[-.66, .66],
-                                         colour={-1:"#888888", # grey
-                                                  0:"#008000", # green
-                                                  1:"#FFFF00", # yellow
-                                                  2:"#FF0000", # red
-                                                  },
-                                         # Make Higher-priority show up more clearly
-                                         opacity={-1:0.5,
-                                                   0:0.6,
-                                                   1:0.7,
-                                                   2:0.8,
-                                                   },
-                                         image={-1:"grey",
-                                                 0:"green",
-                                                 1:"yellow",
-                                                 2:"red",
-                                                 },
-                                         desc={-1:"No Data",
-                                                0:"Low",
-                                                1:"Average",
-                                                2:"High",
-                                                },
-                                          zero = True)
+        priority_object = S3AnalysisPriority(range=[-.66, .66],
+                                             colour={-1:"#888888", # grey
+                                                      0:"#008000", # green
+                                                      1:"#FFFF00", # yellow
+                                                      2:"#FF0000", # red
+                                                      },
+                                             # Make Higher-priority show up more clearly
+                                             opacity={-1:0.5,
+                                                       0:0.6,
+                                                       1:0.7,
+                                                       2:0.8,
+                                                       },
+                                             image={-1:"grey",
+                                                     0:"green",
+                                                     1:"yellow",
+                                                     2:"red",
+                                                     },
+                                             desc={-1:"No Data",
+                                                    0:"Low",
+                                                    1:"Average",
+                                                    2:"High",
+                                                    },
+                                             zero = True)
         for series_id in series:
             series_name = series[series_id]
             response_locations = getLocationList(series_id)
             if pqstn == {} and pqstn_name:
-                for question in numericQuestions:
+                for question in numeric_questions:
                     if pqstn_name == question["name"]:
                         pqstn = question
             if pqstn != {}:
                 pqstn_id = pqstn["qstn_id"]
                 answers = survey_getAllAnswersForQuestionInSeries(pqstn_id,
                                                                   series_id)
-                analysisTool = survey_analysis_type["Numeric"](pqstn_id,
-                                                               answers)
-                analysisTool.advancedResults()
+                analysis_tool = survey_analysis_type["Numeric"](pqstn_id,
+                                                                answers)
+                analysis_tool.advancedResults()
             else:
-                analysisTool = None
-            if analysisTool != None and not math.isnan(analysisTool.mean):
-                pBand = analysisTool.priorityBand(priorityObj)
-                legend = TABLE(
-                           TR (TH(T("Marker Levels"), _colspan=3),
+                analysis_tool = None
+            if analysis_tool != None and not math.isnan(analysis_tool.mean):
+                priority_band = analysis_tool.priorityBand(priority_object)
+                legend = TABLE(TR(TH(T("Marker Levels"), _colspan=3),
                                _class= "survey_question"),
-                           )
-                for key in priorityObj.image.keys():
-                    tr = TR(TD(priorityObj.imageURL(r.application,
+                               )
+                for key in priority_object.image.keys():
+                    tr = TR(TD(priority_object.imageURL(r.application,
                                                     key)),
-                            TD(priorityObj.desc(key)),
-                            TD(priorityObj.rangeText(key, pBand)),
-                           )
+                            TD(priority_object.desc(key)),
+                            TD(priority_object.rangeText(key, priority_band)),
+                            )
                     legend.append(tr)
                 output["legend"] = legend
 
@@ -2233,13 +2238,13 @@ $('#chart_btn').click(function(){
                               )
                     location.shape = "circle"
                     location.size = 5
-                    if analysisTool is None:
+                    if analysis_tool is None:
                         priority = -1
                     else:
-                        priority = analysisTool.priority(complete_id,
-                                                         priorityObj)
-                    location.colour = priorityObj.colour[priority]
-                    location.opacity = priorityObj.opacity[priority]
+                        priority = analysis_tool.priority(complete_id,
+                                                          priority_object)
+                    location.colour = priority_object.colour[priority]
+                    location.opacity = priority_object.opacity[priority]
                     location.popup_url = url
                     location.popup_label = response_locations[i].name
                 feature_queries.append({ "name": "%s: Assessments" % series_name,
@@ -2267,7 +2272,7 @@ $('#chart_btn').click(function(){
                        )
         table.append(TR(TH("%s:" % T("Display Question on Map")),
                         _class="survey_question"))
-        table.append(priorityQstn)
+        table.append(priority_question)
         table.append(series)
         form.append(table)
 
@@ -2349,55 +2354,55 @@ def survey_series_rheader(r):
 
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
-            completeTable = s3db.survey_complete
-            qty = db(completeTable.series_id == record.id).count()
+            ctable = s3db.survey_complete
+            qty = db(ctable.series_id == record.id).count()
             tsection = TABLE(_class="survey-complete-list")
-            lblSection = T("Number of Completed Assessment Forms")
-            rsection = TR(TH(lblSection), TD(qty))
+            label_section = T("Number of Completed Assessment Forms")
+            rsection = TR(TH(label_section), TD(qty))
             tsection.append(rsection)
 
             urlexport = URL(c="survey", f="series_export_formatted",
                             args=[record.id])
-            tranForm = FORM(_action=urlexport)
-            translationList = survey_getAllTranslationsForSeries(record.id)
-            if len(translationList) > 0:
-                tranTable = TABLE()
+            translate_form = FORM(_action=urlexport)
+            translation_list = survey_getAllTranslationsForSeries(record.id)
+            if len(translation_list) > 0:
+                translation_table = TABLE()
                 tr = TR(INPUT(_type='radio',
                               _name='translation_language',
                               _value="Default",
                               _checked=True,
                               ),
                         LABEL("Default"))
-                colCnt = 1
-                for translation in translationList:
+                column_count = 1
+                for translation in translation_list:
                     # include a maximum of 4 translation languages per row
-                    if colCnt == 4:
-                        tranTable.append(tr)
+                    if column_count == 4:
+                        translation_table.append(tr)
                         tr = TR()
-                        colCnt = 0
+                        column_count = 0
                     tr.append(INPUT(_type="radio",
                                     _name="translation_language",
                                     _value=translation["code"],
                                    ))
                     tr.append(LABEL(translation["language"]))
-                    colCnt += 1
-                if colCnt != 0:
-                    tranTable.append(tr)
-                tranForm.append(tranTable)
+                    column_count += 1
+                if column_count != 0:
+                    translation_table.append(tr)
+                translate_form.append(translation_table)
             export_xls_btn = INPUT(_type="submit",
                                    _id="export_xls_btn",
                                    _name="Export_Spreadsheet",
                                    _value=T("Download Assessment Form Spreadsheet"),
                                    _class="action-btn"
                                   )
-            tranForm.append(export_xls_btn)
+            translate_form.append(export_xls_btn)
             export_rtf_btn = INPUT(_type="submit",
                                    _id="export_rtf_btn",
                                    _name="Export_Word",
                                    _value=T("Download Assessment Form Document"),
                                    _class="action-btn"
                                    )
-            tranForm.append(export_rtf_btn)
+            translate_form.append(export_rtf_btn)
             urlimport = URL(c="survey",
                             f="series",
                             args=[record.id, "export_responses"],
@@ -2409,17 +2414,16 @@ def survey_series_rheader(r):
                             ),
                           )
 
-            rheader = DIV(TABLE(
-                          TR(TH("%s: " % T("Template")),
-                             survey_template_represent(record.template_id),
-                             TH("%s: " % T("Name")),
-                             record.name,
-                             TH("%s: " % T("Status")),
-                             s3db.survey_series_status[record.status],
-                             ),
-                              ),
+            rheader = DIV(TABLE(TR(TH("%s: " % T("Template")),
+                                   survey_template_represent(record.template_id),
+                                   TH("%s: " % T("Name")),
+                                   record.name,
+                                   TH("%s: " % T("Status")),
+                                   s3db.survey_series_status[record.status],
+                                   ),
+                                ),
                           tsection,
-                          tranForm,
+                          translate_form,
                           buttons,
                           rheader_tabs)
             return rheader
@@ -2477,10 +2481,11 @@ def survey_getPriorityQuestionForSeries(series_id):
     """
     """
 
-    templateRec = survey_getTemplateFromSeries(series_id)
-    if templateRec != None:
-        priorityQstnCode = templateRec["priority_qstn"]
-        question = survey_getQuestionFromCode(priorityQstnCode, series_id)
+    template_rec = survey_getTemplateFromSeries(series_id)
+    if template_rec != None:
+        priority_question_code = template_rec["priority_qstn"]
+        question = survey_getQuestionFromCode(priority_question_code,
+                                              series_id)
         return question
     else:
         return None
@@ -2510,7 +2515,7 @@ def buildSeriesSummary(series_id, posn_offset):
         if question["type"] == "Grid":
             continue
         question_id = question["qstn_id"]
-        widgetObj = survey_getWidgetFromQuestion(question_id)
+        widget_object = survey_getWidgetFromQuestion(question_id)
         br = TR()
         posn = int(question["posn"])+posn_offset
         br.append(TD(INPUT(_id="select%s" % posn,
@@ -2518,21 +2523,21 @@ def buildSeriesSummary(series_id, posn_offset):
                            _class="bulkcheckbox",
                            )))
         br.append(posn) # add an offset to make all id's +ve
-        br.append(widgetObj.fullName())
+        br.append(widget_object.fullName())
         #br.append(question["name"])
-        type = widgetObj.type_represent()
+        type = widget_object.type_represent()
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
                                                           series_id)
-        analysisTool = survey_analysis_type[question["type"]](question_id,
-                                                              answers)
-        chart = analysisTool.chartButton(series_id)
+        analysis_tool = survey_analysis_type[question["type"]](question_id,
+                                                               answers)
+        chart = analysis_tool.chartButton(series_id)
         cell = TD()
         cell.append(type)
         if chart:
             cell.append(chart)
         br.append(cell)
-        analysisTool.count()
-        br.append(analysisTool.summary())
+        analysis_tool.count()
+        br.append(analysis_tool.summary())
 
         body.append(br)
 
@@ -2554,7 +2559,7 @@ def buildSeriesSummary(series_id, posn_offset):
                                   **attr
                                   )
     series = INPUT(_type="hidden", _id="selectSeriesID", _name="series",
-                _value="%s" % series_id)
+                   _value="%s" % series_id)
     form.append(series)
     return form
 
