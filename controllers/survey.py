@@ -342,43 +342,43 @@ def series_export_formatted():
             logo = None
 
     # Get the translation dictionary
-    langDict = dict()
-    lang = request.post_vars.get("translationLanguage", None)
+    lang_dict = dict()
+    lang = request.post_vars.get("translation_language", None)
     if lang:
         if lang == "Default":
-            langDict = dict()
+            lang_dict = dict()
         else:
             try:
                 from gluon.languages import read_dict
-                lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % \
+                lang_filename = "applications/%s/uploads/survey/translations/%s.py" % \
                                     (appname, lang)
-                langDict = read_dict(lang_fileName)
+                lang_dict = read_dict(lang_filename)
             except:
-                langDict = dict()
+                lang_dict = dict()
 
     if "Export_Spreadsheet" in vars:
-        (matrix, matrixAnswers) = series_prepare_matrix(series_id,
-                                                        series,
-                                                        logo,
-                                                        langDict,
-                                                        justified = True
-                                                        )
+        (matrix, matrix_answers) = series_prepare_matrix(series_id,
+                                                         series,
+                                                         logo,
+                                                         lang_dict,
+                                                         justified = True
+                                                         )
         output = series_export_spreadsheet(matrix,
-                                           matrixAnswers,
+                                           matrix_answers,
                                            logo,
                                            )
         filename = "%s.xls" % series.name
-        contentType = ".xls"
+        content_type = ".xls"
 
     elif "Export_Word" in vars:
         template = s3db.survey_getTemplateFromSeries(series_id)
         template_id = template.id
         title = "%s (%s)" % (series.name, template.name)
-        title = survey_T(title, langDict)
-        widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
-        output = series_export_word(widgetList, langDict, title, logo)
+        title = survey_T(title, lang_dict)
+        widget_list = s3db.survey_getAllWidgetsForTemplate(template_id)
+        output = series_export_word(widget_list, lang_dict, title, logo)
         filename = "%s.rtf" % series.name
-        contentType = ".rtf"
+        content_type = ".rtf"
 
     else:
         output = s3_rest_controller(module, "series",
@@ -386,23 +386,20 @@ def series_export_formatted():
         return output
 
     output.seek(0)
-    response.headers["Content-Type"] = contenttype(contentType)
+    response.headers["Content-Type"] = contenttype(content_type)
     response.headers["Content-disposition"] = "attachment; filename=\"%s\"" % filename
     return output.read()
 
 # -----------------------------------------------------------------------------
-def series_prepare_matrix(series_id, series, logo, langDict, justified=False):
+def series_prepare_matrix(series_id, series, logo, lang_dict, justified=False):
     """
         Helper function for series_export_formatted()
     """
 
-    ######################################################################
-    #
     # Get the data
     # ============
     # * The sections within the template
     # * The layout rules for each question
-    ######################################################################
     # Check that the series_id has been passed in
     try:
         series_id = request.args[0]
@@ -413,63 +410,56 @@ def series_prepare_matrix(series_id, series, logo, langDict, justified=False):
 
     template = s3db.survey_getTemplateFromSeries(series_id)
     template_id = template.id
-    sectionList = s3db.survey_getAllSectionsForSeries(series_id)
+    section_list = s3db.survey_getAllSectionsForSeries(series_id)
     title = "%s (%s)" % (series.name, template.name)
-    title = survey_T(title, langDict)
+    title = survey_T(title, lang_dict)
     layout = []
     survey_getQstnLayoutRules = s3db.survey_getQstnLayoutRules
-    for section in sectionList:
-        sectionName = survey_T(section["name"], langDict)
+    for section in section_list:
+        section_name = survey_T(section["name"], lang_dict)
         rules = survey_getQstnLayoutRules(template_id,
                                           section["section_id"])
-        layoutRules = [sectionName, rules]
-        layout.append(layoutRules)
-    widgetList = s3db.survey_getAllWidgetsForTemplate(template_id)
-    layoutBlocks = LayoutBlocks()
+        layout_rules = [section_name, rules]
+        layout.append(layout_rules)
+    widget_list = s3db.survey_getAllWidgetsForTemplate(template_id)
+    layout_blocks = LayoutBlocks()
 
-    ######################################################################
-    #
     # Store the questions into a matrix based on the layout and the space
     # required for each question - for example an option question might
     # need one row for each possible option, and if this is in a layout
     # then the position needs to be recorded carefully...
-    #
-    ######################################################################
-    preliminaryMatrix = getMatrix(title,
-                                  logo,
-                                  layout,
-                                  widgetList,
-                                  False,
-                                  langDict,
-                                  showSectionLabels = False,
-                                  layoutBlocks = layoutBlocks
-                                  )
+    preliminary_matrix = getMatrix(title,
+                                   logo,
+                                   layout,
+                                   widget_list,
+                                   False,
+                                   lang_dict,
+                                   showSectionLabels = False,
+                                   layoutBlocks = layout_blocks,
+                                   )
     if not justified:
-        return preliminaryMatrix
+        return preliminary_matrix
 
-    ######################################################################
     # Align the questions so that each row takes up the same space.
     # This is done by storing resize and margin instructions with
     # each widget that is being printed
-    ######################################################################
-    layoutBlocks.align()
-    ######################################################################
+    layout_blocks.align()
+
     # Now rebuild the matrix with the spacing for each widget set up so
     # that the document will be fully justified
-    ######################################################################
-    layoutBlocks = LayoutBlocks()
+    layout_blocks = LayoutBlocks()
     (matrix1, matrix2) = getMatrix(title,
                                    logo,
                                    layout,
-                                   widgetList,
+                                   widget_list,
                                    True,
-                                   langDict,
+                                   lang_dict,
                                    showSectionLabels = False,
                                    )
     return (matrix1, matrix2)
 
 # -----------------------------------------------------------------------------
-def series_export_word(widgetList, langDict, title, logo):
+def series_export_word(widget_list, lang_dict, title, logo):
     """
         Export a Series in RTF Format
         @ToDo: rewrite as S3Method handler
@@ -501,10 +491,10 @@ def series_export_word(widgetList, langDict, title, logo):
     col = [2800, 6500]
     table = pyrtf.Table(*col)
     AddRow = table.AddRow
-    sortedwidgetList = sorted(widgetList.values(),
+    sorted_widget_list = sorted(widget_list.values(),
                               key=lambda widget: widget.question.posn)
-    for widget in sortedwidgetList:
-        line = widget.writeQuestionToRTF(ss, langDict)
+    for widget in sorted_widget_list:
+        line = widget.writeQuestionToRTF(ss, lang_dict)
         try:
             AddRow(*line)
         except:
@@ -518,7 +508,7 @@ def series_export_word(widgetList, langDict, title, logo):
     return output
 
 # -----------------------------------------------------------------------------
-def series_export_spreadsheet(matrix, matrixAnswers, logo):
+def series_export_spreadsheet(matrix, matrix_answers, logo):
     """
         Now take the matrix data type and generate a spreadsheet from it
     """
@@ -534,11 +524,11 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     import math
 
     # -------------------------------------------------------------------------
-    def wrapText(sheet, cell, style):
+    def wrap_text(sheet, cell, style):
         row = cell.row
         col = cell.col
         try:
-            text = unicode(cell.text)
+            text = s3_unicode(cell.text)
         except:
             text = cell.text
         width = 16
@@ -552,7 +542,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
                                   cell.col,
                                   cell.col + cell.mergeH,
                                   text,
-                                  style
+                                  style,
                                   )
             except Exception as msg:
                 log = current.log
@@ -567,7 +557,7 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
             sheet.write(cell.row,
                         cell.col,
                         text,
-                        style
+                        style,
                         )
             rows = math.ceil(len(text) / characters_in_cell)
         new_row_height = int(rows * twips_per_row)
@@ -578,42 +568,42 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
             sheet.col(col).width = new_col_width
 
     # -------------------------------------------------------------------------
-    def mergeStyles(listTemplate, styleList):
+    def merge_styles(list_template, style_list):
         """
             Take a list of styles and return a single style object with
             all the differences from a newly created object added to the
             resultant style.
         """
-        if len(styleList) == 0:
-            finalStyle = xlwt.XFStyle()
-        elif len(styleList) == 1:
-            finalStyle = listTemplate[styleList[0]]
+        if len(style_list) == 0:
+            final_style = xlwt.XFStyle()
+        elif len(style_list) == 1:
+            final_style = list_template[style_list[0]]
         else:
-            zeroStyle = xlwt.XFStyle()
-            finalStyle = xlwt.XFStyle()
-            for i in range(0, len(styleList)):
-                finalStyle = mergeObjectDiff(finalStyle,
-                                             listTemplate[styleList[i]],
-                                             zeroStyle)
-        return finalStyle
+            zero_style = xlwt.XFStyle()
+            final_style = xlwt.XFStyle()
+            for i in range(0, len(style_list)):
+                final_style = merge_object_diff(final_style,
+                                                list_template[style_list[i]],
+                                                zero_style)
+        return final_style
 
     # -------------------------------------------------------------------------
-    def mergeObjectDiff(baseObj, newObj, zeroObj):
+    def merge_object_diff(base_obj, new_obj, zero_obj):
         """
-            function to copy all the elements in newObj that are different from
-            the zeroObj and place them in the baseObj
+            Function to copy all the elements in new_obj that are different from
+            the zero_obj and place them in the base_obj
         """
 
-        elementList = newObj.__dict__
-        for (element, value) in elementList.items():
+        element_list = new_obj.__dict__
+        for (element, value) in element_list.items():
             try:
-                baseObj.__dict__[element] = mergeObjectDiff(baseObj.__dict__[element],
-                                                            value,
-                                                            zeroObj.__dict__[element])
+                base_obj.__dict__[element] = merge_object_diff(base_obj.__dict__[element],
+                                                               value,
+                                                               zero_obj.__dict__[element])
             except:
-                if zeroObj.__dict__[element] != value:
-                    baseObj.__dict__[element] = value
-        return baseObj
+                if zero_obj.__dict__[element] != value:
+                    base_obj.__dict__[element] = value
+        return base_obj
 
     COL_WIDTH_MULTIPLIER = 240
     book = xlwt.Workbook(encoding="utf-8")
@@ -621,8 +611,8 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
 
     protection = xlwt.Protection()
     protection.cell_locked = 1
-    noProtection = xlwt.Protection()
-    noProtection.cell_locked = 0
+    no_protection = xlwt.Protection()
+    no_protection.cell_locked = 0
 
     borders = xlwt.Borders()
     borders.left = xlwt.Borders.DOTTED
@@ -630,149 +620,149 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
     borders.top = xlwt.Borders.DOTTED
     borders.bottom = xlwt.Borders.DOTTED
 
-    borderT1 = xlwt.Borders()
-    borderT1.top = xlwt.Borders.THIN
-    borderT2 = xlwt.Borders()
-    borderT2.top = xlwt.Borders.MEDIUM
+    border_t1 = xlwt.Borders()
+    border_t1.top = xlwt.Borders.THIN
+    border_t2 = xlwt.Borders()
+    border_t2.top = xlwt.Borders.MEDIUM
 
-    borderL1 = xlwt.Borders()
-    borderL1.left = xlwt.Borders.THIN
-    borderL2 = xlwt.Borders()
-    borderL2.left = xlwt.Borders.MEDIUM
+    border_l1 = xlwt.Borders()
+    border_l1.left = xlwt.Borders.THIN
+    border_l2 = xlwt.Borders()
+    border_l2.left = xlwt.Borders.MEDIUM
 
-    borderR1 = xlwt.Borders()
-    borderR1.right = xlwt.Borders.THIN
-    borderR2 = xlwt.Borders()
-    borderR2.right = xlwt.Borders.MEDIUM
+    border_r1 = xlwt.Borders()
+    border_r1.right = xlwt.Borders.THIN
+    border_r2 = xlwt.Borders()
+    border_r2.right = xlwt.Borders.MEDIUM
 
-    borderB1 = xlwt.Borders()
-    borderB1.bottom = xlwt.Borders.THIN
-    borderB2 = xlwt.Borders()
-    borderB2.bottom = xlwt.Borders.MEDIUM
+    border_b1 = xlwt.Borders()
+    border_b1.bottom = xlwt.Borders.THIN
+    border_b2 = xlwt.Borders()
+    border_b2.bottom = xlwt.Borders.MEDIUM
 
-    alignBase = xlwt.Alignment()
-    alignBase.horz = xlwt.Alignment.HORZ_LEFT
-    alignBase.vert = xlwt.Alignment.VERT_TOP
+    align_base = xlwt.Alignment()
+    align_base.horz = xlwt.Alignment.HORZ_LEFT
+    align_base.vert = xlwt.Alignment.VERT_TOP
 
-    alignWrap = xlwt.Alignment()
-    alignWrap.horz = xlwt.Alignment.HORZ_LEFT
-    alignWrap.vert = xlwt.Alignment.VERT_TOP
-    alignWrap.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+    align_wrap = xlwt.Alignment()
+    align_wrap.horz = xlwt.Alignment.HORZ_LEFT
+    align_wrap.vert = xlwt.Alignment.VERT_TOP
+    align_wrap.wrap = xlwt.Alignment.WRAP_AT_RIGHT
 
-    shadedFill = xlwt.Pattern()
-    shadedFill.pattern = xlwt.Pattern.SOLID_PATTERN
-    shadedFill.pattern_fore_colour = 0x16 # 25% Grey
-    shadedFill.pattern_back_colour = 0x08 # Black
+    shaded_fill = xlwt.Pattern()
+    shaded_fill.pattern = xlwt.Pattern.SOLID_PATTERN
+    shaded_fill.pattern_fore_colour = 0x16 # 25% Grey
+    shaded_fill.pattern_back_colour = 0x08 # Black
 
-    headingFill = xlwt.Pattern()
-    headingFill.pattern = xlwt.Pattern.SOLID_PATTERN
-    headingFill.pattern_fore_colour = 0x1F # ice_blue
-    headingFill.pattern_back_colour = 0x08 # Black
+    heading_fill = xlwt.Pattern()
+    heading_fill.pattern = xlwt.Pattern.SOLID_PATTERN
+    heading_fill.pattern_fore_colour = 0x1F # ice_blue
+    heading_fill.pattern_back_colour = 0x08 # Black
 
-    styleTitle =  xlwt.XFStyle()
-    styleTitle.font.height = 0x0140 # 320 twips, 16 points
-    styleTitle.font.bold = True
-    styleTitle.alignment = alignBase
-    styleHeader = xlwt.XFStyle()
-    styleHeader.font.height = 0x00F0 # 240 twips, 12 points
-    styleHeader.font.bold = True
-    styleHeader.alignment = alignBase
-    styleSubHeader = xlwt.XFStyle()
-    styleSubHeader.font.bold = True
-    styleSubHeader.alignment = alignWrap
-    styleSectionHeading = xlwt.XFStyle()
-    styleSectionHeading.font.bold = True
-    styleSectionHeading.alignment = alignWrap
-    styleSectionHeading.pattern = headingFill
-    styleHint = xlwt.XFStyle()
-    styleHint.protection = protection
-    styleHint.font.height = 160 # 160 twips, 8 points
-    styleHint.font.italic = True
-    styleHint.alignment = alignWrap
-    styleText = xlwt.XFStyle()
-    styleText.protection = protection
-    styleText.alignment = alignWrap
-    styleInstructions = xlwt.XFStyle()
-    styleInstructions.font.height = 0x00B4 # 180 twips, 9 points
-    styleInstructions.font.italic = True
-    styleInstructions.protection = protection
-    styleInstructions.alignment = alignWrap
-    styleBox = xlwt.XFStyle()
-    styleBox.borders = borders
-    styleBox.protection = noProtection
-    styleInput = xlwt.XFStyle()
-    styleInput.borders = borders
-    styleInput.protection = noProtection
-    styleInput.pattern = shadedFill
-    boxL1 = xlwt.XFStyle()
-    boxL1.borders = borderL1
-    boxL2 = xlwt.XFStyle()
-    boxL2.borders = borderL2
-    boxT1 = xlwt.XFStyle()
-    boxT1.borders = borderT1
-    boxT2 = xlwt.XFStyle()
-    boxT2.borders = borderT2
-    boxR1 = xlwt.XFStyle()
-    boxR1.borders = borderR1
-    boxR2 = xlwt.XFStyle()
-    boxR2.borders = borderR2
-    boxB1 = xlwt.XFStyle()
-    boxB1.borders = borderB1
-    boxB2 = xlwt.XFStyle()
-    boxB2.borders = borderB2
-    styleList = {}
-    styleList["styleTitle"] = styleTitle
-    styleList["styleHeader"] = styleHeader
-    styleList["styleSubHeader"] = styleSubHeader
-    styleList["styleSectionHeading"] = styleSectionHeading
-    styleList["styleHint"] = styleHint
-    styleList["styleText"] = styleText
-    styleList["styleInstructions"] = styleInstructions
-    styleList["styleInput"] = styleInput
-    styleList["boxL1"] = boxL1
-    styleList["boxL2"] = boxL2
-    styleList["boxT1"] = boxT1
-    styleList["boxT2"] = boxT2
-    styleList["boxR1"] = boxR1
-    styleList["boxR2"] = boxR2
-    styleList["boxB1"] = boxB1
-    styleList["boxB2"] = boxB2
+    style_title =  xlwt.XFStyle()
+    style_title.font.height = 0x0140 # 320 twips, 16 points
+    style_title.font.bold = True
+    style_title.alignment = align_base
+    style_header = xlwt.XFStyle()
+    style_header.font.height = 0x00F0 # 240 twips, 12 points
+    style_header.font.bold = True
+    style_header.alignment = align_base
+    style_sub_header = xlwt.XFStyle()
+    style_sub_header.font.bold = True
+    style_sub_header.alignment = align_wrap
+    style_section_heading = xlwt.XFStyle()
+    style_section_heading.font.bold = True
+    style_section_heading.alignment = align_wrap
+    style_section_heading.pattern = heading_fill
+    style_hint = xlwt.XFStyle()
+    style_hint.protection = protection
+    style_hint.font.height = 160 # 160 twips, 8 points
+    style_hint.font.italic = True
+    style_hint.alignment = align_wrap
+    style_text = xlwt.XFStyle()
+    style_text.protection = protection
+    style_text.alignment = align_wrap
+    style_instructions = xlwt.XFStyle()
+    style_instructions.font.height = 0x00B4 # 180 twips, 9 points
+    style_instructions.font.italic = True
+    style_instructions.protection = protection
+    style_instructions.alignment = align_wrap
+    style_box = xlwt.XFStyle()
+    style_box.borders = borders
+    style_box.protection = no_protection
+    style_input = xlwt.XFStyle()
+    style_input.borders = borders
+    style_input.protection = no_protection
+    style_input.pattern = shaded_fill
+    box_l1 = xlwt.XFStyle()
+    box_l1.borders = border_l1
+    box_l2 = xlwt.XFStyle()
+    box_l2.borders = border_l2
+    box_t1 = xlwt.XFStyle()
+    box_t1.borders = border_t1
+    box_t2 = xlwt.XFStyle()
+    box_t2.borders = border_t2
+    box_r1 = xlwt.XFStyle()
+    box_r1.borders = border_r1
+    box_r2 = xlwt.XFStyle()
+    box_r2.borders = border_r2
+    box_b1 = xlwt.XFStyle()
+    box_b1.borders = border_b1
+    box_b2 = xlwt.XFStyle()
+    box_b2.borders = border_b2
+    style_list = {}
+    style_list["styleTitle"] = style_title
+    style_list["styleHeader"] = style_header
+    style_list["styleSubHeader"] = style_sub_header
+    style_list["styleSectionHeading"] = style_section_heading
+    style_list["styleHint"] = style_hint
+    style_list["styleText"] = style_text
+    style_list["styleInstructions"] = style_instructions
+    style_list["styleInput"] = style_input
+    style_list["boxL1"] = box_l1
+    style_list["boxL2"] = box_l2
+    style_list["boxT1"] = box_t1
+    style_list["boxT2"] = box_t2
+    style_list["boxR1"] = box_r1
+    style_list["boxR2"] = box_r2
+    style_list["boxB1"] = box_b1
+    style_list["boxB2"] = box_b2
 
     sheet1 = book.add_sheet(T("Assessment"))
-    sheetA = book.add_sheet(T("Metadata"))
-    maxCol = 0
+    sheet2 = book.add_sheet(T("Metadata"))
+    max_col = 0
     for cell in matrix.matrix.values():
         if cell.col + cell.mergeH > 255:
             current.log.warning("Cell (%s,%s) - (%s,%s) ignored" % \
                 (cell.col, cell.row, cell.col + cell.mergeH, cell.row + cell.mergeV))
             continue
-        if cell.col + cell.mergeH > maxCol:
-            maxCol = cell.col + cell.mergeH
+        if cell.col + cell.mergeH > max_col:
+            max_col = cell.col + cell.mergeH
         if cell.joined():
             continue
-        style = mergeStyles(styleList, cell.styleList)
+        style = merge_styles(style_list, cell.styleList)
         if (style.alignment.wrap == style.alignment.WRAP_AT_RIGHT):
             # get all the styles from the joined cells
             # and merge these styles in.
-            joinedStyles = matrix.joinedElementStyles(cell)
-            joinedStyle =  mergeStyles(styleList, joinedStyles)
+            joined_styles = matrix.joinedElementStyles(cell)
+            joined_style =  merge_styles(style_list, joined_styles)
             try:
-                wrapText(sheet1, cell, joinedStyle)
+                wrap_text(sheet1, cell, joined_style)
             except:
                 pass
         else:
             if cell.merged():
                 # get all the styles from the joined cells
                 # and merge these styles in.
-                joinedStyles = matrix.joinedElementStyles(cell)
-                joinedStyle =  mergeStyles(styleList, joinedStyles)
+                joined_styles = matrix.joinedElementStyles(cell)
+                joined_style =  merge_styles(style_list, joined_styles)
                 try:
                     sheet1.write_merge(cell.row,
                                        cell.row + cell.mergeV,
                                        cell.col,
                                        cell.col + cell.mergeH,
-                                       unicode(cell.text),
-                                       joinedStyle
+                                       s3_unicode(cell.text),
+                                       joined_style,
                                        )
                 except Exception as msg:
                     log = current.log
@@ -785,40 +775,40 @@ def series_export_spreadsheet(matrix, matrixAnswers, logo):
             else:
                 sheet1.write(cell.row,
                              cell.col,
-                             unicode(cell.text),
-                             style
+                             s3_unicode(cell.text),
+                             style,
                              )
-    cellWidth = 480 # approximately 2 characters
-    if maxCol > 255:
-        maxCol = 255
-    for col in range(maxCol + 1):
-        sheet1.col(col).width = cellWidth
+    CELL_WIDTH = 480 # approximately 2 characters
+    if max_col > 255:
+        max_col = 255
+    for col in xrange(max_col + 1):
+        sheet1.col(col).width = CELL_WIDTH
 
-    sheetA.write(0, 0, "Question Code")
-    sheetA.write(0, 1, "Response Count")
-    sheetA.write(0, 2, "Values")
-    sheetA.write(0, 3, "Cell Address")
-    for cell in matrixAnswers.matrix.values():
-        style = mergeStyles(styleList, cell.styleList)
-        sheetA.write(cell.row,
+    sheet2.write(0, 0, "Question Code")
+    sheet2.write(0, 1, "Response Count")
+    sheet2.write(0, 2, "Values")
+    sheet2.write(0, 3, "Cell Address")
+    for cell in matrix_answers.matrix.values():
+        style = merge_styles(style_list, cell.styleList)
+        sheet2.write(cell.row,
                      cell.col,
-                     unicode(cell.text),
-                     style
+                     s3_unicode(cell.text),
+                     style,
                      )
 
     if logo != None:
         sheet1.insert_bitmap(logo, 0, 0)
 
     sheet1.protect = True
-    sheetA.protect = True
+    sheet2.protect = True
     for i in range(26):
-        sheetA.col(i).width = 0
-    sheetA.write(0,
+        sheet2.col(i).width = 0
+    sheet2.write(0,
                  26,
-                 unicode(T("Please do not remove this sheet")),
-                 styleHeader
+                 s3_unicode(T("Please do not remove this sheet")),
+                 style_header,
                  )
-    sheetA.col(26).width = 12000
+    sheet2.col(26).width = 12000
     book.save(output)
     return output
 

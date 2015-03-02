@@ -105,12 +105,12 @@ def json2py(jsonstr):
     try:
         jsonstr = unescape(jsonstr, {"u'": '"'})
         jsonstr = unescape(jsonstr, {"'": '"'})
-        pythonStructure = json.loads(jsonstr)
+        python_structure = json.loads(jsonstr)
     except:
         _debug("ERROR: attempting to convert %s using modules/s3db/survey/json2py.py" % (jsonstr))
         return jsonstr
     else:
-        return pythonStructure
+        return python_structure
 survey_json2py = json2py
 
 # =============================================================================
@@ -127,7 +127,7 @@ def json2list(jsonstr):
         else:
             value_list = jsonstr.split(",")
         if not isinstance(value_list, list):
-            value_ist = [value_list]
+            value_list = [value_list]
     return value_list
 
 survey_json2list = json2list
@@ -431,14 +431,14 @@ class S3SurveyTemplateModel(S3Model):
             posn += 1
             add_question(template_id, name, code, notes, type, posn)
         if form_vars.location_detail != None:
-            locationList = json2py(form_vars.location_detail)
-            if len(locationList) > 0:
+            location_list = json2py(form_vars.location_detail)
+            if len(location_list) > 0:
                 name = "The location P-code"
                 code = "STD-P-Code"
                 type = "String"
                 posn += 1
                 add_question(template_id, name, code, None, type, posn)
-            for loc in locationList:
+            for loc in location_list:
                 if loc == "Lat":
                     name = "Latitude"
                 elif loc == "Lon":
@@ -2363,7 +2363,7 @@ def survey_series_rheader(r):
             if len(translationList) > 0:
                 tranTable = TABLE()
                 tr = TR(INPUT(_type='radio',
-                              _name='translationLanguage',
+                              _name='translation_language',
                               _value="Default",
                               _checked=True,
                               ),
@@ -2376,7 +2376,7 @@ def survey_series_rheader(r):
                         tr = TR()
                         colCnt = 0
                     tr.append(INPUT(_type="radio",
-                                    _name="translationLanguage",
+                                    _name="translation_language",
                                     _value=translation["code"],
                                    ))
                     tr.append(LABEL(translation["language"]))
