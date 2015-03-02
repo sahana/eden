@@ -85,7 +85,7 @@
          Skills.........................optional.....comma-separated list of Skills
          Teams..........................optional.....comma-separated list of Groups
          Trainings......................optional.....comma-separated list of Training Courses
-         Training:XXXX..................optional.....Date of Training Course XXXX OR "True" to add Training Courses by column 
+         Training:XXXX..................optional.....Date of Training Course XXXX OR "True" to add Training Courses by column
          Certificates...................optional.....comma-separated list of Certificates
          Certificate:XXXX...............optional.....Expiry Date of Certificate XXXX OR "True" to add Certificate by column
          Education Level................optional.....person education level of award (highest)
@@ -104,6 +104,7 @@
          Volunteer Cluster..............optional.....volunteer_cluster cluster name
          Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
          Active.........................optional.....volunteer_details.active
+         Volunteer Type.................optional.....volunteer_details.volunteer_type
          Deployable.....................optional.....link to deployments module (true|false)
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
 
@@ -201,7 +202,7 @@
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'], '/', col[@field='Office'])"/>
 
     <xsl:key name="orggroups" match="row"
-             use="col[contains(document('../labels.xml')/labels/column[@name='OrgGroup']/match/text(), 
+             use="col[contains(document('../labels.xml')/labels/column[@name='OrgGroup']/match/text(),
                                concat('|', @field, '|'))]"/>
 
     <xsl:key name="departments" match="row"
@@ -801,7 +802,7 @@
                     </xsl:call-template>
                 </xsl:otherwise>
             </xsl:choose>
-            
+
             <!-- Link to OrgGroup -->
             <xsl:call-template name="OrgGroupPerson">
                 <xsl:with-param name="Field" select="$OrgGroupHeaders"/>
@@ -1082,9 +1083,21 @@
             <xsl:call-template name="Contract"/>
 
             <!-- Volunteer Details -->
-            <xsl:if test="col[@field='Active'] = 'true'">
+            <xsl:variable name="VolDetailsActive" select="col[@field='Active']/text()"/>
+            <xsl:variable name="VolDetailsType" select="col[@field='Volunteer Type']/text()"/>
+            <xsl:if test="$VolDetailsActive='true' or $VolDetailsType!=''">
                 <resource name="vol_details">
-                    <data field="active" value="true"/>
+                    <xsl:if test="$VolDetailsActive='true'">
+                        <data field="active" value="true"/>
+                    </xsl:if>
+                    <xsl:if test="$VolDetailsType!=''">
+                        <data field="volunteer_type">
+                            <xsl:choose>
+                                <xsl:when test="$VolDetailsType='Governance Volunteer'">GOVERNANCE</xsl:when>
+                                <xsl:when test="$VolDetailsType='Programme Volunteer'">PROGRAMME</xsl:when>
+                            </xsl:choose>
+                        </data>
+                    </xsl:if>
                 </resource>
             </xsl:if>
 
@@ -1832,7 +1845,7 @@
         </xsl:if>
     </xsl:template>
 
-    <!-- ****************************************************************** 
+    <!-- ******************************************************************
     <xsl:template name="Training">
 
         <xsl:param name="course"/>
@@ -1849,7 +1862,7 @@
 
     </xsl:template>
 -->
-    <!-- ****************************************************************** 
+    <!-- ******************************************************************
     <xsl:template name="Trainings">
 
         <xsl:param name="course_list"/>
