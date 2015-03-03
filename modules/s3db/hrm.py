@@ -7926,7 +7926,7 @@ def hrm_competency_list_layout(list_id, item_id, resource, rfields, record):
     if organisation:
         #org_url = URL(c="org", f="organisation", args=[organisation, "profile"])
         org_url = URL(c="org", f="organisation", args=[organisation])
-        organisation = P(I(_class="icon-sitemap"),
+        organisation = P(ICON("organisation"),
                          " ",
                          SPAN(A(record["hrm_competency.organisation_id"],
                                 _href=org_url)
@@ -7936,7 +7936,7 @@ def hrm_competency_list_layout(list_id, item_id, resource, rfields, record):
                          )
     competency = raw["hrm_competency.competency_id"] or ""
     if competency:
-        competency = P(I(_class="icon-certificate"),
+        competency = P(ICON("certificate"),
                        " ",
                        SPAN(record["hrm_competency.competency_id"]),
                        " ",
@@ -7951,7 +7951,7 @@ def hrm_competency_list_layout(list_id, item_id, resource, rfields, record):
         controller = current.request.controller
         if controller not in ("vol", "deploy"):
             controller = "hrm"
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c=controller, f="competency",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -7962,7 +7962,7 @@ def hrm_competency_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -7973,7 +7973,7 @@ def hrm_competency_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"),
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
@@ -8025,7 +8025,7 @@ def hrm_credential_list_layout(list_id, item_id, resource, rfields, record):
             dates = "%s - " % record["hrm_credential.start_date"]
         else:
             dates = " - %s" % record["hrm_credential.end_date"]
-        date = P(I(_class="icon-calendar"),
+        date = P(ICON("calendar"),
                  " ",
                  SPAN(dates),
                  " ",
@@ -8041,7 +8041,7 @@ def hrm_credential_list_layout(list_id, item_id, resource, rfields, record):
         controller = current.request.controller
         if controller not in ("vol", "deploy"):
             controller = "hrm"
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c=controller, f="credential",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -8052,7 +8052,7 @@ def hrm_credential_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -8063,7 +8063,7 @@ def hrm_credential_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"),
                    SPAN(" %s" % record["hrm_credential.job_title_id"],
                         _class="card-title"),
                    edit_bar,
@@ -8099,7 +8099,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
 
     raw = record._row
 
-    card_line = lambda icon, item: P(I(" ", _class=icon),
+    card_line = lambda icon, item: P(ICON(icon),
                                      SPAN(item),
                                      _class="card_1_line",
                                      )
@@ -8114,7 +8114,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
         # Try free-text field
         organisation = raw["hrm_experience.organisation"]
     if organisation:
-        organisation = card_line("icon-sitemap", organisation)
+        organisation = card_line("organisation", organisation)
     else:
         organisation = ""
 
@@ -8122,7 +8122,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     colname = "hrm_experience.activity_type"
     activity_type = raw[colname]
     if activity_type:
-        activity_type = card_line("icon-tag", record[colname])
+        activity_type = card_line("activity", record[colname])
     else:
         activity_type = ""
 
@@ -8130,7 +8130,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     colname = "hrm_experience.responsibilities"
     responsibilities = raw[colname]
     if responsibilities:
-        responsibilities = card_line("icon-briefcase", record[colname])
+        responsibilities = card_line("responsibility", record[colname])
     else:
         responsibilities = ""
 
@@ -8140,18 +8140,15 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     if location_id:
         #location_url = URL(c="gis", f="location", args=[location_id, "profile"])
         location_url = URL(c="gis", f="location", args=[location_id])
-        location = card_line("icon-globe",
-                             A(record[colname],
-                               _href=location_url,
-                               ),
-                             )
+        location = card_line("location",
+                             A(record[colname], _href=location_url))
     else:
         location = ""
 
     # Hours
     hours = raw["hrm_experience.hours"]
     if hours:
-        hours = card_line("icon-time", hours)
+        hours = card_line("time", hours)
     else:
         hours = ""
 
@@ -8169,7 +8166,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
             dates = "%s - " % record[colname_start]
         else:
             dates = " - %s" % record[colname_end]
-        date = card_line("icon-calendar", dates)
+        date = card_line("calendar", dates)
     else:
         date = ""
 
@@ -8179,11 +8176,8 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     if supervisor_id:
         #person_url = URL(c="hrm", f="person", args=[supervisor_id, "profile"])
         person_url = URL(c="hrm", f="person", args=[supervisor_id])
-        supervisor = card_line("icon-user",
-                               A(record[colname],
-                                 _href=person_url,
-                                 ),
-                              )
+        supervisor = card_line("user",
+                               A(record[colname], _href=person_url))
     else:
         supervisor = ""
 
@@ -8194,7 +8188,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     colname = "hrm_experience.job_title_id"
     if raw[colname]:
         title = record[colname]
-        job_title = card_line("icon-star", title)
+        job_title = card_line("star", title)
     else:
         title = ""
         job_title = ""
@@ -8218,7 +8212,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
         controller = current.request.controller
         if controller not in ("vol", "deploy"):
             controller = "hrm"
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c=controller, f="experience",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -8229,7 +8223,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -8240,7 +8234,7 @@ def hrm_experience_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"),
                    SPAN(title, _class="card-title"),
                    edit_bar,
                    _class="card-header",
@@ -8289,7 +8283,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
 
     date = raw["hrm_training.date"] or ""
     if date:
-        date = P(I(_class="icon-calendar"),
+        date = P(ICON("calendar"),
                  " ",
                  SPAN(record["hrm_training.date"]),
                  " ",
@@ -8298,7 +8292,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
 
     grade = raw["hrm_training.grade"] or ""
     if grade:
-        grade = P(I(_class="icon-certificate"),
+        grade = P(ICON("certificate"),
                   " ",
                   SPAN(record["hrm_training.grade"]),
                   " ",
@@ -8307,7 +8301,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
 
     hours = raw["hrm_training.hours"] or ""
     if hours:
-        hours = P(I(_class="icon-time"),
+        hours = P(ICON("time"),
                   " ",
                   SPAN(hours),
                   " ",
@@ -8319,7 +8313,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
         #site_id = raw["hrm_training_event.site_id"]
         #site_url = URL(c="org", f="site", args=[site_id, "profile"])
         site_url = "#"
-        site = P(I(_class="icon-home"),
+        site = P(ICON("site"),
                  " ",
                  SPAN(A(record["hrm_training_event.site_id"],
                         _href=site_url)
@@ -8330,7 +8324,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
 
     job_title = raw["hrm_course_job_title.job_title_id"] or ""
     if job_title:
-        job_title = P(I(_class="icon-tags"),
+        job_title = P(ICON("star"),
                       " ",
                       SPAN(record["hrm_course_job_title.job_title_id"],
                            ),
@@ -8349,7 +8343,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
         controller = current.request.controller
         if controller not in ("vol", "deploy"):
             controller = "hrm"
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c=controller, f="training",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -8360,7 +8354,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
+        delete_btn = A(ICON("delete"),
                        _class="dl-item-delete",
                        )
     else:
@@ -8371,7 +8365,7 @@ def hrm_training_list_layout(list_id, item_id, resource, rfields, record):
                    )
 
     # Render the item
-    item = DIV(DIV(I(_class="icon"),
+    item = DIV(DIV(ICON("icon"),
                    SPAN(" %s" % title,
                         _class="card-title"),
                    edit_bar,
