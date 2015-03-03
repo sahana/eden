@@ -409,7 +409,9 @@
                 return false;
             });
 
-            var opts = {style: 'display: inline'};
+            var opts = {style: 'display: inline',
+                        indicator : '<div class="throbber">'
+                        };
             element.find('.pr-contact-value').editable(function(value, settings) {
                 var contact = $(this).closest('.pr-contact');
                 if (self._inlineUpdateContact(contact, {'value': value})) {
@@ -482,6 +484,28 @@
                     return contact.data('comments');
                 }
             }, opts);
+            var priority_opts = {
+                style: 'display: inline-block;',
+                data: function(value, settings) {
+                    var opts = '{';
+                    for (var i = 1; i < 10; i++) {
+                        opts += '"' + i + '":"' + i + '",';
+                    }
+                    opts += '"selected":"' + value + '"}';
+                    return opts;
+                },
+                type: 'select',
+                submit: 'ok'
+            }
+            element.find('.pr-contact-priority').editable(function(value, settings) {
+                var contact = $(this).closest('.pr-contact');
+                if (self._inlineUpdateContact(contact, {'priority': value})) {
+                    contact.data('priority', value);
+                    return value;
+                } else {
+                    return contact.data('priority');
+                }
+            }, priority_opts);
 
             return true;
         },

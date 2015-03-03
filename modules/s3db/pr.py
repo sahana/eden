@@ -5066,12 +5066,13 @@ class pr_Contacts(S3Method):
 
         # Retrieve the rows
         fields = ["id",
+                  "priority",
                   "contact_description",
                   "value",
                   "contact_method",
                   "comments",
                   ]
-        rows = resource.select(fields).rows
+        rows = resource.select(fields, orderby="pr_contact.priority").rows
 
         # Group by contact method and sort by priority
         from itertools import groupby
@@ -5108,6 +5109,16 @@ class pr_Contacts(S3Method):
             # Individual Rows
             for contact in contacts:
 
+                priority = contact["pr_contact.priority"]
+                if priority:
+                    priority_title = "%s - %s" % (T("Priority"), inline_edit_hint)
+                    priority_field = SPAN(priority,
+                                          _class = "pr-contact-priority",
+                                          _title = priority_title,
+                                          )
+                else:
+                    priority_field = ""
+
                 contact_id = contact["pr_contact.id"]
                 value = contact["pr_contact.value"]
                 description = contact["pr_contact.contact_description"] or ""
@@ -5119,26 +5130,34 @@ class pr_Contacts(S3Method):
                 if description:
                     title = TAG[""](SPAN(description,
                                          _title = inline_edit_hint,
-                                         _class = "pr-contact-description"),
+                                         _class = "pr-contact-description",
+                                         ),
                                     ", ",
                                     title,
                                     )
+
                 comments = contact["pr_contact.comments"] or ""
 
                 actions = action_buttons(table, contact_id)
-                form.append(DIV(DIV(DIV(title,
-                                        _class="pr-contact-title",
-                                        ),
-                                    DIV(SPAN(comments,
-                                             _title = inline_edit_hint,
-                                             _class = "pr-contact-comments"),
-                                        _class = "pr-contact-subtitle",
+                form.append(DIV(DIV(priority_field,
+                                    DIV(DIV(title,
+                                            _class="pr-contact-title",
+                                            ),
+                                        DIV(SPAN(comments,
+                                                 _title = inline_edit_hint,
+                                                 _class = "pr-contact-comments",
+                                                 ),
+                                            _class = "pr-contact-subtitle",
+                                            ),
+                                        _class = "pr-contact-details",
                                         ),
                                     _class = "pr-contact-data medium-9 columns",
                                     ),
+
                                 actions,
                                 data = {
                                     "id": contact_id,
+                                    "priority": priority,
                                     "value": value,
                                     "description": description,
                                     "comments": comments,

@@ -459,8 +459,15 @@ button.alert-send-btn:enabled {
 }
 .pr-contact-data,
 .pr-emergency-data,
-.pr-contact-actions {
+.pr-contact-actions,
+.pr-contact-priority,
+.pr-contact-details {
     display: inline-block;
+}
+.pr-contact-data,
+.pr-emergency-data {
+    width: 400px;
+    vertical-align: top;
 }
 .pr-contacts h3,
 .pr-emergency-contacts .pr-emergency-contact,
@@ -473,10 +480,13 @@ button.alert-send-btn:enabled {
     font-style: italic;
     color: #7f7f7f;
 }
-.pr-contact-data,
-.pr-emergency-data {
-    width: 400px;
-    vertical-align: top;
+.pr-contact-priority {
+  border: thin solid #a0a0a0;
+  color: #a0a0a0;
+  display: inline-block;
+  margin: 3px 8px 0 0;
+  padding: 0 3px;
+  vertical-align: top;
 }
 
 .profile-sub-header .icon {
