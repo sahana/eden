@@ -729,6 +729,17 @@ def config(settings):
             return {}
 
     # -----------------------------------------------------------------------------
+    def hide_third_gender():
+        """ Whether to hide the third person gender """
+
+        root_org = current.auth.root_org_name()
+        if root_org == NRCS:
+            return False
+        return True
+
+    settings.pr.hide_third_gender = hide_third_gender
+
+    # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
 
         tablename = "asset_asset"
@@ -1548,9 +1559,11 @@ def config(settings):
                 # Add gender-filter
                 gender_opts = dict(s3db.pr_gender_opts)
                 del gender_opts[1]
+                if settings.hide_third_gender():
+                    del gender_opts[4]
                 append_widget(S3OptionsFilter("person_id$gender",
                                               options = gender_opts,
-                                              cols = 2,
+                                              cols = 3,
                                               hidden = True,
                                               ))
                 # Add Roster status filter

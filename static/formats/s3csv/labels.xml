@@ -80,6 +80,14 @@
             <label>Mr</label>
             <label>Mr.</label>
         </option>
+        <option value="4" name="other">
+            <label>X</label>
+            <label>O</label>
+            <label>Other</label>
+            <label>other</label>
+            <label>Mx</label>
+            <label>Mx.</label>
+        </option>
     </column>
 
     <column name="HRMType">

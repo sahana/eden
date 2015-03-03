@@ -738,12 +738,20 @@ class S3PersonModel(S3Model):
                           2: T("female"),
                           3: T("male"),
                           }
+        if not settings.get_pr_hide_third_gender():
+            # Add the third gender option ("other" or "indeterminate",
+            # meaning neither female nor male, officially recognized
+            # in various countries)
+            pr_gender_opts[4] = T("other")
         pr_gender = S3ReusableField("gender", "integer",
                                     default = 1,
                                     label = T("Sex"),
-                                    represent = lambda opt: \
-                                                pr_gender_opts.get(opt, UNKNOWN_OPT),
-                                    requires = IS_IN_SET(pr_gender_opts, zero=None),
+                                    represent = S3Represent(options=pr_gender_opts,
+                                                            default=current.messages["NONE"],
+                                                            ),
+                                    requires = IS_PERSON_GENDER(pr_gender_opts,
+                                                                sort=True,
+                                                                ),
                                     )
 
         pr_impact_tags = {1: T("injured"),
@@ -1750,7 +1758,7 @@ class S3PersonModel(S3Model):
             if date_of_birth:
                 item["dob"] = date_of_birth.isoformat()
             gender = row.get("pr_person.gender", None)
-            if gender in (2, 3):
+            if gender in (2, 3, 4):
                 # 1 = unknown
                 item["sex"] = gender
             occupation = row.get("pr_person_details.occupation", None)
@@ -7136,6 +7144,9 @@ class pr_PersonListLayout(S3DataListLayout):
                     icon = "female"
                 elif gender == 3:
                     icon = "male"
+                # @todo: support "other" gender
+                #elif gender == 4:
+                    #icon = ?
                 else:
                     return None # don't render if unknown
             else:

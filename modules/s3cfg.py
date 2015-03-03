@@ -2914,6 +2914,15 @@ class S3Config(Storage):
                 group = "60+"
         return group
 
+    def get_pr_hide_third_gender(self):
+        """
+            Whether to hide the third gender ("Other")
+        """
+        option = self.pr.get("hide_third_gender", True)
+        if callable(option):
+            return option()
+        return option
+
     def get_pr_import_update_requires_email(self):
         """
             During imports, records are only updated if the import

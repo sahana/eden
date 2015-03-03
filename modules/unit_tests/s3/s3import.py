@@ -62,7 +62,7 @@ class ListStringImportTests(unittest.TestCase):
 
         current.auth.override = False
         current.db.rollback()
-    
+
 # =============================================================================
 class DefaultApproverOverrideTests(unittest.TestCase):
     """ Test ability to override default approver in imports """
@@ -221,7 +221,7 @@ class PostParseTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def setUp(self):
-    
+
         current.auth.override = True
         self.pp = current.s3db.get_config("pr_person", "xml_post_parse")
 
@@ -377,7 +377,7 @@ class FailedReferenceTests(unittest.TestCase):
         org = s3db.resource("org_organisation", uid="TROY")
         self.assertEqual(before, org.count())
         org.delete()
-        
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 

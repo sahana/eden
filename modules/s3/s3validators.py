@@ -53,6 +53,7 @@ __all__ = ("single_phone_number_pattern",
            "IS_ONE_OF_EMPTY",
            "IS_ONE_OF_EMPTY_SELECT",
            "IS_NOT_ONE_OF",
+           "IS_PERSON_GENDER",
            "IS_PHONE_NUMBER",
            "IS_PROCESSED_IMAGE",
            "IS_SITE_SELECTOR",
@@ -2920,6 +2921,21 @@ class IS_TIME_INTERVAL_WIDGET(Validator):
             return (0, None)
         seconds = val * mul
         return (seconds, None)
+
+# =============================================================================
+class IS_PERSON_GENDER(IS_IN_SET):
+    """
+        Special validator for pr_person.gender and derivates,
+        accepts the "O" option even if it's not in the set.
+    """
+
+    def __call__(self, value):
+
+        if value == 4:
+            # 4 = other, always accepted even if hidden
+            return value, None
+        else:
+            return super(IS_PERSON_GENDER, self).__call__(value)
 
 # =============================================================================
 class IS_PHONE_NUMBER(Validator):
