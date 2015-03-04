@@ -5599,15 +5599,19 @@ class gis_LocationRepresent(S3Represent):
                     represent = name or "ID: %s" % row.id
 
                 if has_lat_lon and self.show_marker_icon:
-                    popup = current.deployment_settings.get_gis_popup_location_link()
-                    script = '''s3_viewMap(%i,%i,'%s');return false''' % (row.id,
-                                                                          self.iheight,
-                                                                          popup)
+                    if not self.show_link:
+                        popup = current.deployment_settings.get_gis_popup_location_link()
+                        script = '''s3_viewMap(%i,%i,'%s');return false''' % (row.id,
+                                                                              self.iheight,
+                                                                              popup)
+                    else:
+                        # Already inside a link with onclick-script
+                        script = None
                     represent = SPAN(s3_unicode(represent),
-                                     I(_class="icon icon-map-marker",
-                                       _title=self.lat_lon_represent(row),
-                                       _onclick=script,
-                                       ),
+                                     ICON("map-marker",
+                                          _title=self.lat_lon_represent(row),
+                                          _onclick=script,
+                                          ),
                                      _class="gis-display-feature",
                                      )
                     return represent
