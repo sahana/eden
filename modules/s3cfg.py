@@ -2556,6 +2556,14 @@ class S3Config(Storage):
         """
         return self.hrm.get("use_trainings", True)
 
+    def get_hrm_training_instructors(self):
+        """
+            Whether to track "internal" training instructors (=persons
+            from the registry), or "external" (=just names), or "both",
+            ...or None (=don't track instructors at all)
+        """
+        return self.hrm.get("training_instructors", "external")
+
     def get_hrm_activity_types(self):
         """
             HRM Activity Types (for experience record),

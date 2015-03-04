@@ -1020,6 +1020,8 @@ class S3PersonModel(S3Model):
                        hrm_competency = "person_id",
                        hrm_credential = "person_id",
                        hrm_training = "person_id",
+                       # Facilitated Trainings (Instructor)
+                       hrm_training_event = "person_id",
                        # Experience
                        hrm_experience = "person_id",
                        hrm_programme_hours = {"name": "hours",

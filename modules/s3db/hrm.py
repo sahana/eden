@@ -2522,6 +2522,31 @@ class S3HRSkillModel(S3Model):
         #site_label = settings.get_org_site_label()
         site_label = T("Venue")
 
+        # Instructor settings
+        INSTRUCTOR = T("Instructor")
+        instructors = settings.get_hrm_training_instructors()
+
+        int_instructor = ext_instructor = False
+        int_instructor_tooltip = None
+        ext_instructor_label = INSTRUCTOR
+        ext_instructor_tooltip = None
+
+        if instructors in ("internal", "both"):
+            int_instructor = True
+            int_instructor_tooltip = DIV(_class="tooltip",
+                                         _title="%s|%s" % (INSTRUCTOR,
+                                                           AUTOCOMPLETE_HELP),
+                                         )
+            if instructors == "both":
+                ext_instructor = True
+                ext_instructor_label = T("External Instructor")
+                ext_instructor_tooltip = DIV(_class="tooltip",
+                                             _title="%s|%s" % (T("External Instructor"),
+                                                               T("Enter the name of the external instructor")),
+                                             )
+        elif instructors == "external":
+            ext_instructor = True
+
         tablename = "hrm_training_event"
         define_table(tablename,
                      course_id(empty = False),
@@ -2550,10 +2575,17 @@ class S3HRSkillModel(S3Model):
                            label = T("Hours"),
                            requires = IS_INT_IN_RANGE(1, 1000),
                            ),
-                     # human_resource_id?
+                     person_id(label = INSTRUCTOR,
+                               comment = int_instructor_tooltip,
+                               readable = int_instructor,
+                               writable = int_instructor,
+                               ),
                      Field("instructor",
-                           label = T("Instructor"),
+                           label = ext_instructor_label,
+                           comment = ext_instructor_tooltip,
                            represent = s3_string_represent,
+                           readable = ext_instructor,
+                           writable = ext_instructor,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -5821,10 +5853,12 @@ def hrm_rheader(r, tabs=[], profile=False):
         else:
             teams_tab = None
 
-        if settings.get_hrm_use_trainings() and not use_cv:
-            trainings_tab = (T("Trainings"), "training")
-        else:
-            trainings_tab = None
+        trainings_tab = instructor_tab = None
+        if settings.get_hrm_use_trainings():
+            if not use_cv:
+                trainings_tab = (T("Trainings"), "training")
+            if settings.get_hrm_training_instructors() in ("internal", "both"):
+                instructor_tab = (T("Trainer Activity"), "training_event")
 
         if use_cv:
             trainings_tab = (T("CV"), "cv")
@@ -5857,6 +5891,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                      credentials_tab,
                      experience_tab,
                      experience_tab2,
+                     instructor_tab,
                      teams_tab,
                      #(T("Assets"), "asset"),
                      ]
@@ -5916,6 +5951,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                      credentials_tab,
                      experience_tab,
                      experience_tab2,
+                     instructor_tab,
                      awards_tab,
                      teams_tab,
                      (T("Assets"), "asset"),
