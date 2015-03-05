@@ -2562,7 +2562,12 @@ class S3Config(Storage):
             from the registry), or "external" (=just names), or "both",
             ...or None (=don't track instructors at all)
         """
-        return self.hrm.get("training_instructors", "external")
+        default = "external"
+        option = self.hrm.get("training_instructors", default)
+        if callable(option):
+            # Call only once
+            option = self.hrm.training_instructors = option(default)
+        return option
 
     def get_hrm_activity_types(self):
         """
@@ -2926,9 +2931,11 @@ class S3Config(Storage):
         """
             Whether to hide the third gender ("Other")
         """
-        option = self.pr.get("hide_third_gender", True)
+        default = True
+        option = self.pr.get("hide_third_gender", default)
         if callable(option):
-            return option()
+            # Call only once
+            option = self.pr.hide_third_gender = option(default)
         return option
 
     def get_pr_import_update_requires_email(self):

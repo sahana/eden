@@ -4990,10 +4990,19 @@ class hrm_TrainingEventRepresent(S3Represent):
         rows = current.db(query).select(etable.id,
                                         etable.start_date,
                                         etable.instructor,
+                                        etable.person_id,
                                         ctable.name,
                                         ctable.code,
                                         stable.name,
                                         left = left)
+
+        instructors = current.deployment_settings.get_hrm_training_instructors()
+        if instructors in ("internal", "both"):
+            # Bulk-represent internal instructors to suppress
+            # per-row DB lookups in represent_row:
+            key = str(etable.person_id)
+            etable.person_id.represent.bulk([row[key] for row in rows])
+
         self.queries += 1
         return rows
 
@@ -5007,19 +5016,18 @@ class hrm_TrainingEventRepresent(S3Represent):
             @param row: the Row
         """
 
-        # Course details
+        # Course Details
         course = row.get("hrm_course")
         if not course:
             return current.messages.UNKNOWN_OPT
         name = course.get("name")
         if not name:
             name = current.messages.UNKNOWN_OPT
+        representation = ["%s --" % name]
+        append = representation.append
         code = course.get("code")
         if code:
-            representation = ["%s (%s)" % (name, code)]
-        else:
-            representation = [name]
-        append = representation.append
+            append("(%s)" % code)
 
         # Venue and instructor
         event = row.hrm_training_event
@@ -5027,20 +5035,30 @@ class hrm_TrainingEventRepresent(S3Represent):
             site = row.org_site.name
         except:
             site = None
-        instructor = event.get("instructor")
+
+        instructors = current.deployment_settings.get_hrm_training_instructors()
+
+        instructor = None
+        if instructors in ("internal", "both"):
+            person_id = event.get("person_id")
+            if person_id:
+                instructor = self.table.person_id.represent(person_id)
+        if instructor is None and instructors in ("external", "both"):
+            instructor = event.get("instructor")
+
         if instructor and site:
-            append(" %s - {%s}" % (instructor, site))
+            append("%s - {%s}" % (instructor, site))
         elif instructor:
-            append(" %s" % instructor)
+            append("%s" % instructor)
         elif site:
-            append(" {%s}" % site)
+            append("{%s}" % site)
 
         # Start date
         start_date = event.start_date
         if start_date:
             # Easier for users & machines
             start_date = S3DateTime.date_represent(start_date, format="%Y-%m-%d")
-            append(" [%s]" % start_date)
+            append("[%s]" % start_date)
 
         return " ".join(representation)
 
@@ -5858,7 +5876,7 @@ def hrm_rheader(r, tabs=[], profile=False):
             if not use_cv:
                 trainings_tab = (T("Trainings"), "training")
             if settings.get_hrm_training_instructors() in ("internal", "both"):
-                instructor_tab = (T("Trainer Activity"), "training_event")
+                instructor_tab = (T("Instructor"), "training_event")
 
         if use_cv:
             trainings_tab = (T("CV"), "cv")
