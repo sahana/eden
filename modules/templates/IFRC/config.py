@@ -1807,6 +1807,14 @@ def config(settings):
             settings.hrm.vol_active = True
         elif root_org in (CVTL, PMI, PRC):
             settings.hrm.vol_active = vol_active
+        elif root_org == NRCS:
+            # Don't allow creating of Persons here
+            from gluon import DIV
+            T = current.T
+            current.s3db.hrm_training.person_id.comment = \
+                DIV(_class="tooltip",
+                    _title="%s|%s" % (T("Participant"),
+                                      T("Type the first few characters of one of the Participant's names.")))
         elif root_org == VNRC:
             settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
             # Remove link to download Template
