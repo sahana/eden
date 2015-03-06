@@ -981,8 +981,8 @@ def new_assessment():
                             _class="action-btn"
                             ),
                           )
-            output["subtitle"] = buttons
-            output["form"] = form
+
+            output["form"] = TAG[""](buttons, form)
         return output
     s3.postp = postp
 

@@ -71,7 +71,7 @@ __all__ = ("S3SurveyTemplateModel",
 
 try:
     from cStringIO import StringIO    # Faster, where available
-except:
+except ImportError:
     from StringIO import StringIO
 
 try:
@@ -79,14 +79,13 @@ try:
 except ImportError:
     try:
         import simplejson as json # try external module
-    except:
+    except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3dal import Row
 from s3chart import S3Chart
 from s3survey import survey_question_type, \
                      survey_analysis_type, \
@@ -106,7 +105,7 @@ def json2py(jsonstr):
         jsonstr = unescape(jsonstr, {"u'": '"'})
         jsonstr = unescape(jsonstr, {"'": '"'})
         python_structure = json.loads(jsonstr)
-    except:
+    except ValueError:
         _debug("ERROR: attempting to convert %s using modules/s3db/survey/json2py.py" % (jsonstr))
         return jsonstr
     else:
@@ -256,8 +255,16 @@ class S3SurveyTemplateModel(S3Model):
                    action = survey_TranslateDownload,
                    )
 
+        filter_widgets = [
+            S3TextFilter("name",
+                         label = T("Search")),
+            S3OptionsFilter("status",
+                         label = T("Status")),
+            ]
+
         configure(tablename,
                   deduplicate = self.survey_template_duplicate,
+                  filter_widgets = filter_widgets,
                   onaccept = self.template_onaccept,
                   onvalidation = self.template_onvalidate,
                   )
@@ -334,7 +341,7 @@ class S3SurveyTemplateModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def add_question(template_id, name, code, notes, type, posn, metadata={}):
+    def add_question(template_id, name, code, notes, qtype, posn, metadata={}):
         """
             Adds a question to the template corresponding to template_id
         """
@@ -353,7 +360,7 @@ class S3SurveyTemplateModel(S3Model):
             qstn_id = qtable.insert(name = name,
                                     code = code,
                                     notes = notes,
-                                    type = type,
+                                    type = qtype,
                                     )
             qstn_metadata_table = s3db.survey_question_metadata
             for (descriptor, value) in metadata.items():
@@ -413,31 +420,31 @@ class S3SurveyTemplateModel(S3Model):
             name = form_vars.competion_qstn
             code = "STD-WHO"
             notes = "Who completed the assessment"
-            type = "String"
+            qtype = "String"
             posn = -10 # negative used to force these question to appear first
-            add_question(template_id, name, code, notes, type, posn)
+            add_question(template_id, name, code, notes, qtype, posn)
         if form_vars.date_qstn != None:
             name = form_vars.date_qstn
             code = "STD-DATE"
             notes = "Date the assessment was completed"
-            type = "Date"
+            qtype = "Date"
             posn += 1
-            add_question(template_id, name, code, notes, type, posn)
+            add_question(template_id, name, code, notes, qtype, posn)
         if form_vars.time_qstn != None:
             name = form_vars.time_qstn
             code = "STD-TIME"
             notes = "Time the assessment was completed"
-            type = "Time"
+            qtype = "Time"
             posn += 1
-            add_question(template_id, name, code, notes, type, posn)
+            add_question(template_id, name, code, notes, qtype, posn)
         if form_vars.location_detail != None:
             location_list = json2py(form_vars.location_detail)
             if len(location_list) > 0:
                 name = "The location P-code"
                 code = "STD-P-Code"
-                type = "String"
+                qtype = "String"
                 posn += 1
-                add_question(template_id, name, code, None, type, posn)
+                add_question(template_id, name, code, None, qtype, posn)
             for loc in location_list:
                 if loc == "Lat":
                     name = "Latitude"
@@ -447,13 +454,13 @@ class S3SurveyTemplateModel(S3Model):
                     name = loc
                 code = "STD-%s" % loc
                 if loc == "Lat" or loc == "Lon":
-                    type = "Numeric"
+                    qtype = "Numeric"
                     metadata = {"Format": "nnn.nnnnnn"}
                 else:
-                    type = "Location"
+                    qtype = "Location"
                     metadata = {}
                 posn += 1
-                add_question(template_id, name, code, "", type, posn, metadata)
+                add_question(template_id, name, code, "", qtype, posn, metadata)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -497,23 +504,23 @@ class S3SurveyTemplateModel(S3Model):
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
-def survey_template_represent(id, row=None):
+def survey_template_represent(template_id, row=None):
     """
         Display the template name rather than the id
     """
 
     if row:
         return row.name
-    elif not id:
+    elif not template_id:
         return current.messages["NONE"]
 
     table = current.s3db.survey_template
-    query = (table.id == id)
+    query = (table.id == template_id)
     record = current.db(query).select(table.name,
                                       limitby=(0, 1)).first()
     try:
         return record.name
-    except:
+    except AttributeError:
         return current.messages.UNKNOWN_OPT
 
 # =============================================================================
@@ -750,7 +757,8 @@ def buildQuestionsForm(questions, complete_id=None, readOnly=False):
                 else:
                     table.append(widget)
     if not readOnly:
-        button = INPUT(_type="submit", _name="Save", _value=current.T("Save"))
+        button = INPUT(_type="submit", _name="Save", _value=current.T("Save"),
+                       _class="small primary button")
         form.append(button)
     return form
 
@@ -767,10 +775,10 @@ def survey_build_template_summary(template_id):
     table_header = TR(TH(T("Position")), TH(T("Section")))
     question_type_list = {}
     posn = 1
-    for (key, type) in survey_question_type.items():
+    for (key, qtype) in survey_question_type.items():
         if key == "Grid" or key == "GridChild":
             continue
-        table_header.append(TH(type().type_represent()))
+        table_header.append(TH(qtype().type_represent()))
         question_type_list[key] = posn
         posn += 1
     table_header.append(TH(T("Total")))
@@ -1045,18 +1053,18 @@ class S3SurveyQuestionModel(S3Model):
 
         """
 
-        vars = form.vars
-        if vars.metadata is None:
+        form_vars = form.vars
+        if form_vars.metadata is None:
             return
-        if vars.id:
-            record = current.s3db.survey_question[vars.id]
+        if form_vars.id:
+            record = current.s3db.survey_question[form_vars.id]
         else:
             return
-        if vars.metadata and \
-           vars.metadata != "":
+        if form_vars.metadata and \
+           form_vars.metadata != "":
             survey_updateMetaData(record,
-                                  vars.type,
-                                  vars.metadata
+                                  form_vars.type,
+                                  form_vars.metadata
                                   )
 
     # -------------------------------------------------------------------------
@@ -1106,33 +1114,30 @@ class S3SurveyQuestionModel(S3Model):
 
         qstntable = current.s3db.survey_question
         try:
-            vars = form.vars
-            question_id = vars.question_id
-            template_id = vars.template_id
-            section_id = vars.section_id
-            posn = vars.posn
-        except:
+            form_vars = form.vars
+            question_id = form_vars.question_id
+            template_id = form_vars.template_id
+            section_id = form_vars.section_id
+            posn = form_vars.posn
+        except AttributeError:
             return
         record = qstntable[question_id]
-        try:
-            type = record.type
-        except:
-            _debug("survey question missing type: %s" % record)
-            return
-        if type == "Grid":
+        qtype = record.type
+
+        if qtype == "Grid":
             widget_obj = survey_question_type["Grid"]()
             widget_obj.insertChildrenToList(question_id,
                                             template_id,
                                             section_id,
                                             posn,
                                             )
-        if type == "Location":
+        if qtype == "Location":
             widget_obj = survey_question_type["Location"]()
             widget_obj.insertChildrenToList(question_id,
-                                           template_id,
-                                           section_id,
-                                           posn,
-                                           )
+                                            template_id,
+                                            section_id,
+                                            posn,
+                                            )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1216,7 +1221,7 @@ def survey_getAllQuestionsForTemplate(template_id):
                                     qsntable.type,
                                     sectable.name,
                                     q_ltable.posn,
-                                    orderby=q_ltable.posn)
+                                    orderby=(q_ltable.posn))
     questions = []
     for row in rows:
         question = {}
@@ -1269,14 +1274,14 @@ def survey_getAllQuestionsForComplete(complete_id):
     return (questions, series_id)
 
 # =============================================================================
-def survey_get_series_questions_of_type(question_list, type):
+def survey_get_series_questions_of_type(question_list, qtype):
     """
     """
 
-    if isinstance(type, (list, tuple)):
-        types = type
+    if isinstance(qtype, (list, tuple)):
+        types = qtype
     else:
-        types = (type)
+        types = (qtype)
     questions = []
     for question in question_list:
         if question["type"] in types:
@@ -1329,12 +1334,12 @@ def survey_getQuestionFromName(name, series_id):
     return question
 
 # =============================================================================
-def survey_updateMetaData(record, type, metadata):
+def survey_updateMetaData(record, qtype, metadata):
     """
     """
 
     metatable = current.s3db.survey_question_metadata
-    id = record.id
+    question_id = record.id
     # the metadata can either be passed in as a JSON string
     # or as a parsed map. If it is a string load the map.
     if isinstance(metadata, str):
@@ -1348,11 +1353,11 @@ def survey_updateMetaData(record, type, metadata):
             # before inserting it on the database
             value = json.dumps(value)
         value = value.strip()
-        metatable.insert(question_id = id,
+        metatable.insert(question_id = question_id,
                          descriptor = desc,
                          value = value,
                          )
-    if type == "Grid":
+    if qtype == "Grid":
         widget_obj = survey_question_type["Grid"]()
         widget_obj.insertChildren(record, metadata_list)
 
@@ -1661,10 +1666,20 @@ class S3SurveySeriesModel(S3Model):
             msg_record_deleted = T("Disaster Assessment deleted"),
             msg_list_empty = T("No Disaster Assessments"))
 
+        filter_widgets = [
+            S3TextFilter("name",
+                         label = T("Search")),
+            S3OptionsFilter("organisation_id",
+                         label = T("Organization")),
+            S3DateFilter("start_date",
+                         label = T("Start Date")),
+            ]
+
         self.configure(tablename,
                        create_next = URL(f="new_assessment",
                                          vars={"viewing":"survey_series.[id]"}),
                        deduplicate = self.survey_series_duplicate,
+                       filter_widgets = filter_widgets,
                        onaccept = self.series_onaccept,
                        )
 
@@ -1753,13 +1768,13 @@ class S3SurveySeriesModel(S3Model):
             # Wants to display the details of the selected questions
             crud_strings = s3.crud_strings["survey_complete"]
             question_ids = []
-            vars = r.vars
+            rvars = r.vars
 
-            if "mode" in vars:
-                mode = vars["mode"]
+            if "mode" in rvars:
+                mode = rvars["mode"]
                 series_id = r.id
-                if "selected" in vars:
-                    selected = vars["selected"].split(",")
+                if "selected" in rvars:
+                    selected = rvars["selected"].split(",")
                 else:
                     selected = []
                 q_ltable = s3db.survey_question_list
@@ -1794,13 +1809,13 @@ class S3SurveySeriesModel(S3Model):
                 url_pdf = URL(c="survey", f="series",
                               args=[series_id, "summary.pdf"],
                               vars = {"mode": mode,
-                                      "selected": vars["selected"]}
-                             )
+                                      "selected": rvars["selected"]},
+                              )
                 url_xls = URL(c="survey", f="series",
                               args=[series_id, "summary.xls"],
                               vars = {"mode": mode,
-                                      "selected": vars["selected"]}
-                             )
+                                      "selected": rvars["selected"]},
+                              )
                 s3.formats["pdf"] = url_pdf
                 s3.formats["xls"] = url_xls
             else:
@@ -1836,13 +1851,13 @@ class S3SurveySeriesModel(S3Model):
         """
 
         import hashlib
-        vars = current.request.vars
-        end_part = "%s_%s" % (vars.numericQuestion,
-                              vars.labelQuestion)
+        rvars = current.request.vars
+        end_part = "%s_%s" % (rvars.numericQuestion,
+                              rvars.labelQuestion)
         h = hashlib.sha256()
         h.update(end_part)
         encoded_part = h.hexdigest()
-        chart_name = "survey_series_%s_%s" % (vars.series, encoded_part)
+        chart_name = "survey_series_%s_%s" % (rvars.series, encoded_part)
         return chart_name
 
     # -------------------------------------------------------------------------
@@ -1899,11 +1914,11 @@ class S3SurveySeriesModel(S3Model):
 
         # Draw the chart
         output = dict()
-        vars = r.vars
-        if "viewing" in vars:
-            dummy, series_id = vars.viewing.split(".")
-        elif "series" in vars:
-            series_id = vars.series
+        rvars = r.vars
+        if "viewing" in rvars:
+            dummy, series_id = rvars.viewing.split(".")
+        elif "series" in rvars:
+            series_id = rvars.series
         else:
             series_id = r.id
         chart_file = S3SurveySeriesModel.getChartName()
@@ -2012,6 +2027,7 @@ class S3SurveySeriesModel(S3Model):
                        _id="chart_btn",
                        _name="Chart",
                        _value=T("Display Chart"),
+                       _class="small primary button",
                        )
         form.append(series)
         form.append(button)
@@ -2058,9 +2074,9 @@ $('#chart_btn').click(function(){
                 # get the count of replies for the label question
                 gqstn_type = gqstn["type"]
                 analysis_tool = survey_analysis_type[gqstn_type](gqstn_id, ganswers)
-                map = analysis_tool.uniqueCount()
-                label = map.keys()
-                data = map.values()
+                mapdict = analysis_tool.uniqueCount()
+                label = mapdict.keys()
+                data = mapdict.values()
                 legend_labels.append(T("Count of Question"))
             else:
                 qstn = survey_getQuestionFromCode(numeric_question, series_id)
@@ -2096,12 +2112,12 @@ $('#chart_btn').click(function(){
             output["chart"] = image
             request = current.request
             chart_link = A(T("Download"),
-                          _href=URL(c="survey",
-                                    f="series",
-                                    args=request.args,
-                                    vars=request.vars
-                                    )
-                          )
+                           _href=URL(c="survey",
+                                     f="series",
+                                     args=request.args,
+                                     vars=request.vars
+                                     )
+                           )
             output["chartDownload"] = chart_link
 
     # -------------------------------------------------------------------------
@@ -2258,13 +2274,13 @@ $('#chart_btn').click(function(){
                     bounds = merge_bounds([bounds, new_bounds])
         if bounds == {}:
             bounds = gis.get_bounds()
-        map = gis.show_map(feature_queries = feature_queries,
-                           #height = 600,
-                           #width = 720,
-                           bbox = bounds,
-                           #collapsed = True,
-                           catalogue_layers = True,
-                           )
+        gismap = gis.show_map(feature_queries = feature_queries,
+                              #height = 600,
+                              #width = 720,
+                              bbox = bounds,
+                              #collapsed = True,
+                              catalogue_layers = True,
+                              )
         series = INPUT(_type="hidden",
                        _id="selectSeriesID",
                        _name="series",
@@ -2277,7 +2293,9 @@ $('#chart_btn').click(function(){
         form.append(table)
 
         button = INPUT(_type="submit", _name="Chart",
-                       _value=T("Update Map"))
+                       _value=T("Update Map"),
+                       _class="small primary button",
+                       )
         # REMOVED until we have dynamic loading of maps.
         #button = INPUT(_type="button", _id="map_btn", _name="Map_Btn", _value=T("Select the Question"))
         #jurl = URL(c=r.prefix, f=r.function, args=r.args)
@@ -2316,7 +2334,7 @@ def survey_serieslist_dataTable_post(r):
                         url=URL(c="survey", f="series",
                                 args=["[id]", "summary"]
                                 )
-                       ),
+                        ),
                   ]
 
 # =============================================================================
@@ -2443,7 +2461,7 @@ def survey_buildQuestionnaireFromSeries(series_id, complete_id=None):
     return buildQuestionsForm(questions, complete_id)
 
 # =============================================================================
-def survey_save_answers_for_series(series_id, complete_id, vars):
+def survey_save_answers_for_series(series_id, complete_id, rvars):
     """
         function to save the list of answers for a completed series
 
@@ -2451,10 +2469,10 @@ def survey_save_answers_for_series(series_id, complete_id, vars):
     """
 
     questions = survey_getAllQuestionsForSeries(series_id)
-    return saveAnswers(questions, series_id, complete_id, vars)
+    return saveAnswers(questions, series_id, complete_id, rvars)
 
 # =============================================================================
-def saveAnswers(questions, series_id, complete_id, vars):
+def saveAnswers(questions, series_id, complete_id, rvars):
     """
     """
 
@@ -2462,14 +2480,14 @@ def saveAnswers(questions, series_id, complete_id, vars):
     table = current.s3db.survey_complete
     for question in questions:
         code = question["code"]
-        if (code in vars) and vars[code] != "":
-            line = '"%s","%s"\n' % (code, vars[code])
+        if (code in rvars) and rvars[code] != "":
+            line = '"%s","%s"\n' % (code, rvars[code])
             text += line
     if complete_id == None:
         # Insert into database
-        id = table.insert(series_id = series_id, answer_list = text)
-        S3SurveyCompleteModel.completeOnAccept(id)
-        return id
+        record_id = table.insert(series_id = series_id, answer_list = text)
+        S3SurveyCompleteModel.completeOnAccept(record_id)
+        return record_id
     else:
         # Update the complete_id record
         current.db(table.id == complete_id).update(answer_list = text)
@@ -2525,14 +2543,14 @@ def buildSeriesSummary(series_id, posn_offset):
         br.append(posn) # add an offset to make all id's +ve
         br.append(widget_object.fullName())
         #br.append(question["name"])
-        type = widget_object.type_represent()
+        qtype = widget_object.type_represent()
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
                                                           series_id)
         analysis_tool = survey_analysis_type[question["type"]](question_id,
                                                                answers)
         chart = analysis_tool.chartButton(series_id)
         cell = TD()
-        cell.append(type)
+        cell.append(qtype)
         if chart:
             cell.append(chart)
         br.append(cell)
@@ -2669,7 +2687,7 @@ class S3SurveyCompleteModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def extractAnswerFromAnswerList(answerList, qstnCode):
+    def extractAnswerFromAnswerList(answer_list, question_code):
         """
             function to extract the answer for the question code
             passed in from the list of answers. This is in a CSV
@@ -2677,12 +2695,12 @@ class S3SurveyCompleteModel(S3Model):
             saveAnswers()
         """
 
-        start = answerList.find(qstnCode)
+        start = answer_list.find(question_code)
         if start == -1:
             return None
-        start = start + len(qstnCode) + 3
-        end = answerList.find('"', start)
-        answer = answerList[start:end]
+        start = start + len(question_code) + 3
+        end = answer_list.find('"', start)
+        answer = answer_list[start:end]
         return answer
 
     # -------------------------------------------------------------------------
@@ -2692,21 +2710,21 @@ class S3SurveyCompleteModel(S3Model):
         """
 
         T = current.T
-        vars = form.vars
-        if "series_id" not in vars or vars.series_id == None:
+        form_vars = form.vars
+        if "series_id" not in form_vars or form_vars.series_id == None:
             form.errors.series_id = T("Series details missing")
             return False
-        if "answer_list" not in vars or vars.answer_list == None:
+        if "answer_list" not in form_vars or form_vars.answer_list == None:
             form.errors.answer_list = T("The answers are missing")
             return False
-        series_id = vars.series_id
-        answer_list = vars.answer_list
+        series_id = form_vars.series_id
+        answer_list = form_vars.answer_list
         qstn_list = survey_getAllQuestionsForSeries(series_id)
         qstns = []
         for qstn in qstn_list:
             qstns.append(qstn["code"])
-        answerList = answer_list.splitlines(True)
-        for answer in answerList:
+        temp_answer_list = answer_list.splitlines(True)
+        for answer in temp_answer_list:
             qstn_code = answer[1:answer.find('","')]
             if qstn_code not in qstns:
                 msg = "%s: %s" % (T("Unknown question code"), qstn_code)
@@ -2729,8 +2747,9 @@ class S3SurveyCompleteModel(S3Model):
             defined by the template and store this in the location field
         """
 
-        if form.vars.id:
-            S3SurveyCompleteModel.completeOnAccept(form.vars.id)
+        complete_id = form.vars.id
+        if complete_id:
+            S3SurveyCompleteModel.completeOnAccept(complete_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2744,30 +2763,30 @@ class S3SurveyCompleteModel(S3Model):
         atable = s3db.survey_answer
         record = rtable[complete_id]
         series_id = record.series_id
-        purgePrefix = "survey_series_%s" % series_id
-        S3Chart.purgeCache(purgePrefix)
+        purge_prefix = "survey_series_%s" % series_id
+        S3Chart.purgeCache(purge_prefix)
         if series_id == None:
             return
-        # Save all the answers from answerList in the survey_answer table
-        answerList = record.answer_list
-        S3SurveyCompleteModel.importAnswers(complete_id, answerList)
+        # Save all the answers from answer_list in the survey_answer table
+        answer_list = record.answer_list
+        S3SurveyCompleteModel.importAnswers(complete_id, answer_list)
         # Extract the default template location question and save the
         # answer in the location field
-        templateRec = survey_getTemplateFromSeries(series_id)
-        locDetails = templateRec["location_detail"]
-        if not locDetails:
+        template_record = survey_getTemplateFromSeries(series_id)
+        location_details = template_record["location_detail"]
+        if not location_details:
             return
-        widgetObj = get_default_location(complete_id)
-        if widgetObj:
-            current.db(rtable.id == complete_id).update(location = widgetObj.repr())
+        widget_obj = get_default_location(complete_id)
+        if widget_obj:
+            current.db(rtable.id == complete_id).update(location = widget_obj.repr())
         locations = get_location_details(complete_id)
         S3SurveyCompleteModel.importLocations(locations)
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def importAnswers(id, list):
+    def importAnswers(complete_id, question_list):
         """
-            private function used to save the answer_list stored in
+            Private function used to save the answer_list stored in
             survey_complete into answer records held in survey_answer
         """
 
@@ -2775,14 +2794,14 @@ class S3SurveyCompleteModel(S3Model):
         import os
 
         strio = StringIO()
-        strio.write(list)
+        strio.write(question_list)
         strio.seek(0)
         answer = []
         append = answer.append
         reader = csv.reader(strio)
         for row in reader:
             if row != None:
-                row.insert(0, id)
+                row.insert(0, complete_id)
                 append(row)
 
         from tempfile import TemporaryFile
@@ -2813,30 +2832,30 @@ class S3SurveyCompleteModel(S3Model):
         import csv
         import os
 
-        lastLocWidget = None
-        codeList = ["STD-L0","STD-L1","STD-L2","STD-L3","STD-L4"]
-        headingList = ["Country",
-                       "ADM1_NAME",
-                       "ADM2_NAME",
-                       "ADM3_NAME",
-                       "ADM4_NAME"
-                      ]
-        cnt = 0
+        last_loc_widget = None
+        code_list = ["STD-L0", "STD-L1", "STD-L2", "STD-L3", "STD-L4"]
+        heading_list = ["Country",
+                        "ADM1_NAME",
+                        "ADM2_NAME",
+                        "ADM3_NAME",
+                        "ADM4_NAME",
+                        ]
+
         answer = []
         headings = []
         aappend = answer.append
         happend = headings.append
-        for loc in codeList:
-            if loc in location_dict:
-                aappend(location_dict[loc].repr())
-                lastLocWidget = location_dict[loc]
-                happend(headingList[cnt])
-            cnt += 1
+        for position, location in enumerate(code_list):
+            if location in location_dict:
+                aappend(location_dict[location].repr())
+                last_loc_widget = location_dict[location]
+                happend(heading_list[position])
+
         # Check that we have at least one location question answered
-        if lastLocWidget == None:
+        if last_loc_widget == None:
             return
-        codeList = ["STD-P-Code","STD-Lat","STD-Lon"]
-        for loc in codeList:
+        code_list = ["STD-P-Code", "STD-Lat", "STD-Lon"]
+        for loc in code_list:
             if loc in location_dict:
                 aappend(location_dict[loc].repr())
             else:
@@ -2857,7 +2876,7 @@ class S3SurveyCompleteModel(S3Model):
                            "gis",
                            "location.xsl")
         resource = current.s3db.resource("gis_location")
-        resource.import_xml(csvfile, stylesheet = xsl, format="csv",)
+        resource.import_xml(csvfile, stylesheet = xsl, format="csv")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2872,7 +2891,7 @@ class S3SurveyCompleteModel(S3Model):
         query = (table.answer_list == answers)
         try:
             duplicate = current.db(query).select(table.id,
-                                                limitby=(0, 1)).first()
+                                                 limitby=(0, 1)).first()
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
@@ -2895,12 +2914,12 @@ class S3SurveyCompleteModel(S3Model):
             complete_id = form_vars.complete_id
             question_id = form_vars.question_id
             value = form_vars.value
-            widgetObj = survey_getWidgetFromQuestion(question_id)
-            newValue = widgetObj.onaccept(value)
-            if newValue != value:
+            widget_obj = survey_getWidgetFromQuestion(question_id)
+            new_value = widget_obj.onaccept(value)
+            if new_value != value:
                 query = (atable.question_id == question_id) & \
                         (atable.complete_id == complete_id)
-                current.db(query).update(value = newValue)
+                current.db(query).update(value = new_value)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2941,12 +2960,12 @@ def survey_answerlist_dataTable_post(r):
 
     #S3CRUD.action_buttons(r)
     current.response.s3.actions = [
-                   dict(label=current.messages["UPDATE"],
-                        _class="action-btn edit",
-                        url=URL(c="survey", f="series",
-                                args=[r.id, "complete", "[id]", "update"])
-                       ),
-                  ]
+                    dict(label=current.messages["UPDATE"],
+                         _class="action-btn edit",
+                         url=URL(c="survey", f="series",
+                                 args=[r.id, "complete", "[id]", "update"])
+                         ),
+                    ]
 
 # =============================================================================
 def survey_answer_list_represent(value):
@@ -2959,11 +2978,11 @@ def survey_answer_list_represent(value):
     db = current.db
     qtable = current.s3db.survey_question
     answer_text = value
-    list = answer_text.splitlines()
+    answer_list = answer_text.splitlines()
     result = TABLE()
     questions = {}
     xml_decode = S3Codec.xml_decode
-    for line in list:
+    for line in answer_list:
         line = xml_decode(line)
         (question, answer) = line.split(",", 1)
         question = question.strip("\" ")
@@ -2992,21 +3011,21 @@ def get_location_details(complete_id):
     s3db = current.s3db
 
     locations = {}
-    comtable = s3db.survey_complete
-    qsntable = s3db.survey_question
-    answtable = s3db.survey_answer
-    query = (answtable.question_id == qsntable.id) & \
-            (answtable.complete_id == comtable.id)
-    codeList = ["STD-P-Code",
-                "STD-L0", "STD-L1", "STD-L2", "STD-L3", "STD-L4",
-                "STD-Lat", "STD-Lon"]
-    for locCode in codeList:
-        record = db(query & (qsntable.code == locCode)).select(qsntable.id,
-                                                               limitby=(0, 1)).first()
+    ctable = s3db.survey_complete
+    qtable = s3db.survey_question
+    atable = s3db.survey_answer
+    query = (atable.question_id == qtable.id) & \
+            (atable.complete_id == ctable.id)
+    code_list = ["STD-P-Code",
+                 "STD-L0", "STD-L1", "STD-L2", "STD-L3", "STD-L4",
+                 "STD-Lat", "STD-Lon"]
+    for location_code in code_list:
+        record = db(query & (qtable.code == location_code)).select(qtable.id,
+                                                                   limitby=(0, 1)).first()
         if record:
-            widgetObj = survey_getWidgetFromQuestion(record.id)
-            widgetObj.loadAnswer(complete_id, record.id)
-            locations[locCode] = widgetObj
+            widget_obj = survey_getWidgetFromQuestion(record.id)
+            widget_obj.loadAnswer(complete_id, record.id)
+            locations[location_code] = widget_obj
     return locations
 
 # =============================================================================
@@ -3019,21 +3038,21 @@ def get_default_location(complete_id):
     db = current.db
     s3db = current.s3db
 
-    comtable = s3db.survey_complete
-    qsntable = s3db.survey_question
-    answtable = s3db.survey_answer
-    query = (answtable.question_id == qsntable.id) & \
-            (answtable.complete_id == comtable.id)
-    codeList = ["STD-L4", "STD-L3", "STD-L2", "STD-L1", "STD-L0"]
-    for locCode in codeList:
-        record = db(query & (qsntable.code == locCode)).select(qsntable.id,
-                                                               limitby=(0, 1)).first()
+    ctable = s3db.survey_complete
+    qtable = s3db.survey_question
+    atable = s3db.survey_answer
+    query = (atable.question_id == qtable.id) & \
+            (atable.complete_id == ctable.id)
+    code_list = ["STD-L4", "STD-L3", "STD-L2", "STD-L1", "STD-L0"]
+    for location_code in code_list:
+        record = db(query & (qtable.code == location_code)).select(qtable.id,
+                                                                   limitby=(0, 1)).first()
         if record:
-            widgetObj = survey_getWidgetFromQuestion(record.id)
+            widget_obj = survey_getWidgetFromQuestion(record.id)
             break
     if record:
-        widgetObj.loadAnswer(complete_id, record.id)
-        return widgetObj
+        widget_obj.loadAnswer(complete_id, record.id)
+        return widget_obj
     else:
         return None
 
@@ -3063,12 +3082,12 @@ def survey_getAllAnswersForQuestionInSeries(question_id, series_id):
     return answers
 
 # =============================================================================
-def buildTableFromCompletedList(dataSource):
+def buildTableFromCompletedList(data_source):
     """
     """
 
-    headers = dataSource[0]
-    items = dataSource[2:]
+    headers = data_source[0]
+    items = data_source[2:]
 
     table = TABLE(_id="completed_list",
                   _class="dataTable display")
@@ -3123,17 +3142,17 @@ def buildCompletedList(series_id, question_id_list):
     types = []
     items = []
     qstn_posn = 0
-    rowLen = len(question_id_list)
+    row_len = len(question_id_list)
     complete_lookup = {}
     for question_id in question_id_list:
         answers = survey_getAllAnswersForQuestionInSeries(question_id,
                                                           series_id)
-        widgetObj = survey_getWidgetFromQuestion(question_id)
+        widget_obj = survey_getWidgetFromQuestion(question_id)
 
         question = db(qtable.id == question_id).select(qtable.name,
                                                        limitby=(0, 1)).first()
         happend(question.name)
-        types.append(widgetObj.db_type())
+        types.append(widget_obj.db_type())
 
         for answer in answers:
             complete_id = answer["complete_id"]
@@ -3142,8 +3161,8 @@ def buildCompletedList(series_id, question_id_list):
             else:
                 row = len(complete_lookup)
                 complete_lookup[complete_id] = row
-                items.append([''] * rowLen)
-            items[row][qstn_posn] = widgetObj.repr(answer["value"])
+                items.append([''] * row_len)
+            items[row][qstn_posn] = widget_obj.repr(answer["value"])
         qstn_posn += 1
 
     return [headers] + [types] + items
@@ -3156,7 +3175,7 @@ def getLocationList(series_id):
 
     response_locations = []
     rappend = response_locations.append
-    codeList = ["STD-L4", "STD-L3", "STD-L2", "STD-L1", "STD-L0"]
+    code_list = ["STD-L4", "STD-L3", "STD-L2", "STD-L1", "STD-L0"]
 
     table = current.s3db.survey_complete
     rows = current.db(table.series_id == series_id).select(table.id,
@@ -3170,13 +3189,13 @@ def getLocationList(series_id):
         for line in answer_list:
             (question, answer) = line.split(",", 1)
             question = question.strip('"')
-            if question in codeList:
+            if question in code_list:
                 # Store to get the name
                 answer_dict[question] = answer.strip('"')
             elif question == "STD-Lat":
                 try:
                     lat = float(answer.strip('"'))
-                except:
+                except ValueError:
                     pass
                 else:
                     if lat < -90.0 or lat > 90.0:
@@ -3184,7 +3203,7 @@ def getLocationList(series_id):
             elif question == "STD-Lon":
                 try:
                     lon = float(answer.strip('"'))
-                except:
+                except ValueError:
                     pass
                 else:
                     if lon < -180.0 or lon > 180.0:
@@ -3193,12 +3212,14 @@ def getLocationList(series_id):
                 # Not relevant here
                 continue
 
-        for locCode in codeList:
+        for loc_code in code_list:
             # Retrieve the name of the lowest Lx
-            if locCode in answer_dict:
-                name = answer_dict[locCode]
+            if loc_code in answer_dict:
+                name = answer_dict[loc_code]
                 break
+
         if lat and lon:
+            from s3dal import Row
             # We have sufficient data to display on the map
             location = Row()
             location.lat = lat
@@ -3208,14 +3229,14 @@ def getLocationList(series_id):
             rappend(location)
         else:
             # The lat & lon were not added to the assessment so try and get one
-            locWidget = get_default_location(row.id)
-            if locWidget:
-                complete_id = locWidget.question["complete_id"]
-                if "answer" not in locWidget.question:
+            loc_widget = get_default_location(row.id)
+            if loc_widget:
+                complete_id = loc_widget.question["complete_id"]
+                if "answer" not in loc_widget.question:
                     continue
-                answer = locWidget.question["answer"]
-                if locWidget != None:
-                    record = locWidget.getLocationRecord(complete_id, answer)
+                answer = loc_widget.question["answer"]
+                if loc_widget != None:
+                    record = loc_widget.getLocationRecord(complete_id, answer)
                     if len(record.records) == 1:
                         location = record.records[0].gis_location
                         location.complete_id = complete_id
@@ -3248,7 +3269,7 @@ class S3SurveyTranslateModel(S3Model):
                           self.survey_template_id(),
                           Field("language",
                                 comment = DIV(_class="tooltip",
-                                                _title="%s|%s" % (T("Language"),
+                                              _title="%s|%s" % (T("Language"),
                                                                 LANG_HELP))
                                 ),
                           Field("code",
@@ -3298,47 +3319,47 @@ class S3SurveyTranslateModel(S3Model):
             request =  current.request
             response = current.response
 
-            msgNone = T("No translations exist in spreadsheet")
+            msg_none = T("No translations exist in spreadsheet")
             upload_file = request.post_vars.file
             upload_file.file.seek(0)
-            openFile = upload_file.file.read()
+            open_file = upload_file.file.read()
             lang = form.record.language
             code = form.record.code
             try:
-                workbook = xlrd.open_workbook(file_contents=openFile)
-            except:
+                workbook = xlrd.open_workbook(file_contents=open_file)
+            except IOError:
                 msg = T("Unable to open spreadsheet")
                 response.error = msg
                 response.flash = None
                 return
             try:
-                sheetL = workbook.sheet_by_name(lang)
-            except:
+                language_sheet = workbook.sheet_by_name(lang)
+            except IOError:
                 msg = T("Unable to find sheet %(sheet_name)s in uploaded spreadsheet") % \
                     dict(sheet_name=lang)
                 response.error = msg
                 response.flash = None
                 return
-            if sheetL.ncols == 1:
-                response.warning = msgNone
+            if language_sheet.ncols == 1:
+                response.warning = msg_none
                 response.flash = None
                 return
             count = 0
-            lang_fileName = "applications/%s/uploads/survey/translations/%s.py" % \
+            lang_filename = "applications/%s/uploads/survey/translations/%s.py" % \
                 (request.application, code)
             try:
-                strings = read_dict(lang_fileName)
-            except:
+                strings = read_dict(lang_filename)
+            except IOError:
                 strings = dict()
-            for row in xrange(1, sheetL.nrows):
-                original = sheetL.cell_value(row, 0)
-                translation = sheetL.cell_value(row, 1)
+            for row in xrange(1, language_sheet.nrows):
+                original = language_sheet.cell_value(row, 0)
+                translation = language_sheet.cell_value(row, 1)
                 if (original not in strings) or translation != "":
                     strings[original] = translation
                     count += 1
-            write_dict(lang_fileName, strings)
+            write_dict(lang_filename, strings)
             if count == 0:
-                response.warning = msgNone
+                response.warning = msg_none
                 response.flash = None
             else:
                 response.flash = T("%(count_of)d translations have been imported to the %(language)s language file") % \
@@ -3407,11 +3428,11 @@ class survey_TranslateDownload(S3Method):
 
         code = record.code
         from s3survey import S3QuestionTypeOptionWidget
-        lang_fileName = "applications/%s/languages/%s.py" % (r.application,
+        lang_filename = "applications/%s/languages/%s.py" % (r.application,
                                                              code)
         try:
             from gluon.languages import read_dict
-            strings = read_dict(lang_fileName)
+            strings = read_dict(lang_filename)
         except IOError:
             strings = dict()
 
@@ -3419,43 +3440,43 @@ class survey_TranslateDownload(S3Method):
 
         book = xlwt.Workbook(encoding="utf-8")
         sheet = book.add_sheet(record.language)
-        qstnList = s3db.survey_getAllQuestionsForTemplate(template_id)
+        question_list = s3db.survey_getAllQuestionsForTemplate(template_id)
         original = {}
         original[template.name] = True
         if template.description != "":
             original[template.description] = True
 
-        for qstn in qstnList:
+        for qstn in question_list:
             original[qstn["name"]] = True
-            widgetObj = survey_question_type[qstn["type"]](question_id = qstn["qstn_id"])
-            if isinstance(widgetObj, S3QuestionTypeOptionWidget):
-                optionList = widgetObj.getList()
-                for option in optionList:
+            widget_obj = survey_question_type[qstn["type"]](question_id = qstn["qstn_id"])
+            if isinstance(widget_obj, S3QuestionTypeOptionWidget):
+                option_list = widget_obj.getList()
+                for option in option_list:
                     original[option] = True
         sections = s3db.survey_getAllSectionsForTemplate(template_id)
 
         for section in sections:
             original[section["name"]] = True
             section_id = section["section_id"]
-            layoutRules = s3db.survey_getQstnLayoutRules(template_id, section_id)
-            layoutStr = str(layoutRules)
-            posn = layoutStr.find("heading")
+            layout_rules = s3db.survey_getQstnLayoutRules(template_id, section_id)
+            layout_str = str(layout_rules)
+            posn = layout_str.find("heading")
             while posn != -1:
                 start = posn + 11
-                end = layoutStr.find("}", start)
-                original[layoutStr[start:end]] = True
-                posn = layoutStr.find("heading", end)
+                end = layout_str.find("}", start)
+                original[layout_str[start:end]] = True
+                posn = layout_str.find("heading", end)
 
         row = 0
         sheet.write(row, 0, u"Original")
         sheet.write(row, 1, u"Translation")
-        originalList = original.keys()
-        originalList.sort()
+        original_list = original.keys()
+        original_list.sort()
 
-        for text in originalList:
+        for text in original_list:
             row += 1
-            original = unicode(text)
-            sheet.write(row, 0, s3_unicode(original))
+            original = s3_unicode(text)
+            sheet.write(row, 0, original)
             if (original in strings):
                 sheet.write(row, 1, s3_unicode(strings[original]))
 
@@ -3500,7 +3521,7 @@ class survey_ExportResponses(S3Method):
         except ImportError:
             r.error(501, T("xlwt not installed, so cannot export as a Spreadsheet"))
 
-        sectionBreak = False
+        section_break = False
         try:
             filename = "%s_All_responses.xls" % r.record.name
         except AttributeError:
@@ -3511,48 +3532,48 @@ class survey_ExportResponses(S3Method):
         book = xlwt.Workbook(encoding="utf-8")
         # Get all questions and write out as a heading
         col = 0
-        completeRow = {}
-        nextRow = 2
-        qstnList = s3db.survey_getAllQuestionsForSeries(series_id)
-        if len(qstnList) > 256:
-            sectionList = s3db.survey_getAllSectionsForSeries(series_id)
-            sectionBreak = True
-        if sectionBreak:
+        complete_row = {}
+        next_row = 2
+        question_list = s3db.survey_getAllQuestionsForSeries(series_id)
+        if len(question_list) > 256:
+            section_list = s3db.survey_getAllSectionsForSeries(series_id)
+            section_break = True
+        if section_break:
             sheets = {}
             cols = {}
-            for section in sectionList:
-                sheetName = section["name"].split(" ")[0]
-                if sheetName not in sheets:
-                    sheets[sheetName] = book.add_sheet(sheetName)
-                    cols[sheetName] = 0
+            for section in section_list:
+                sheet_name = section["name"].split(" ")[0]
+                if sheet_name not in sheets:
+                    sheets[sheet_name] = book.add_sheet(sheet_name)
+                    cols[sheet_name] = 0
         else:
             sheet = book.add_sheet(T("Responses", lazy = False))
-        for qstn in qstnList:
-            if sectionBreak:
-                sheetName = qstn["section"].split(" ")[0]
-                sheet = sheets[sheetName]
-                col = cols[sheetName]
+        for qstn in question_list:
+            if section_break:
+                sheet_name = qstn["section"].split(" ")[0]
+                sheet = sheets[sheet_name]
+                col = cols[sheet_name]
             row = 0
             sheet.write(row, col, s3_unicode(qstn["code"]))
             row += 1
-            widgetObj = s3db.survey_getWidgetFromQuestion(qstn["qstn_id"])
-            sheet.write(row, col, s3_unicode(widgetObj.fullName()))
+            widget_obj = s3db.survey_getWidgetFromQuestion(qstn["qstn_id"])
+            sheet.write(row, col, s3_unicode(widget_obj.fullName()))
             # For each question get the response
-            allResponses = s3db.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
-                                                                        series_id)
-            for answer in allResponses:
+            all_responses = s3db.survey_getAllAnswersForQuestionInSeries(qstn["qstn_id"],
+                                                                         series_id)
+            for answer in all_responses:
                 value = answer["value"]
                 complete_id = answer["complete_id"]
-                if complete_id in completeRow:
-                    row = completeRow[complete_id]
+                if complete_id in complete_row:
+                    row = complete_row[complete_id]
                 else:
-                    completeRow[complete_id] = nextRow
-                    row = nextRow
-                    nextRow += 1
+                    complete_row[complete_id] = next_row
+                    row = next_row
+                    next_row += 1
                 sheet.write(row, col, s3_unicode(value))
             col += 1
-            if sectionBreak:
-                cols[sheetName] += 1
+            if section_break:
+                cols[sheet_name] += 1
         sheet.panes_frozen = True
         sheet.horz_split_pos = 2
 
