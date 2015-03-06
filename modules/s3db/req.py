@@ -3707,7 +3707,7 @@ def req_match(rheader=None):
         return output
 
     table = s3db[tablename]
-    row = current.db(table.id == record_id).select(table.site_id, 
+    row = current.db(table.id == record_id).select(table.site_id,
                                                    limitby=(0, 1)).first()
     if row:
         site_id = row.site_id
@@ -4162,7 +4162,7 @@ def req_req_list_layout(list_id, item_id, resource, rfields, record):
     permit = auth.s3_has_permission
     table = db.req_req
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="req", f="req",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -4173,9 +4173,7 @@ def req_req_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                       )
+        delete_btn = A(ICON("delete"), _class="dl-item-delete")
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -4201,13 +4199,13 @@ def req_req_list_layout(list_id, item_id, resource, rfields, record):
             opts["_data-toggle"] = "popover"
             opts["_data-content"] = site_comments
         site_link = A(site, **opts)
-        card_title = TAG[""](I(_class="icon icon-request"),
-                             SPAN(site_link,
-                                  _class="card-title"))
+        card_title = TAG[""](ICON("request"),
+                             SPAN(site_link, _class="card-title"),
+                             )
     else:
-        card_title = TAG[""](I(_class="icon icon-request"),
-                             SPAN(" ",
-                                  _class="card-title"))
+        card_title = TAG[""](ICON("reqiest"),
+                             SPAN(" ", _class="card-title"),
+                             )
 
     #if priority == 3:
     #    # Apply additional highlighting for High Priority
@@ -4239,7 +4237,7 @@ def req_req_list_layout(list_id, item_id, resource, rfields, record):
                          vars={"_next": next,
                                },
                          )
-    commit_btn = A(I(" ", _class="icon icon-truck"),
+    commit_btn = A(ICON("commit"),
                    " ",
                    T("DONATE"),
                    _href=commit_url,
@@ -4516,27 +4514,20 @@ def req_commit_list_layout(list_id, item_id, resource, rfields, record):
                      _width=50,
                      _style="padding-right:5px;",
                      _class="media-object")
-        avatar = A(avatar,
-                   _href=org_url,
-                   _class="pull-left",
-                   )
+        avatar = A(avatar, _href=org_url, _class="pull-left")
     else:
         organisation = ""
         # Personal Avatar
         avatar = s3_avatar_represent(person_id,
                                      tablename="pr_person",
                                      _class="media-object")
-
-        avatar = A(avatar,
-                   _href=person_url,
-                   _class="pull-left",
-                   )
+        avatar = A(avatar, _href=person_url, _class="pull-left")
 
     # Edit Bar
     permit = current.auth.s3_has_permission
     table = current.s3db.req_commit
     if permit("update", table, record_id=record_id):
-        edit_btn = A(I(" ", _class="icon icon-edit"),
+        edit_btn = A(ICON("edit"),
                      _href=URL(c="req", f="commit",
                                args=[record_id, "update.popup"],
                                vars={"refresh": list_id,
@@ -4547,9 +4538,7 @@ def req_commit_list_layout(list_id, item_id, resource, rfields, record):
     else:
         edit_btn = ""
     if permit("delete", table, record_id=record_id):
-        delete_btn = A(I(" ", _class="icon icon-trash"),
-                       _class="dl-item-delete",
-                       )
+        delete_btn = A(ICON("delete"), _class="dl-item-delete")
     else:
         delete_btn = ""
     edit_bar = DIV(edit_btn,
@@ -4557,9 +4546,9 @@ def req_commit_list_layout(list_id, item_id, resource, rfields, record):
                    _class="edit-bar fright",
                    )
 
-    card_label = TAG[""](I(_class="icon icon-offer"),
-                         SPAN(" %s" % title,
-                              _class="card-title"))
+    card_label = TAG[""](ICON("offer"),
+                         SPAN(" %s" % title, _class="card-title"),
+                         )
 
     # Render the item
     item = DIV(DIV(card_label,
