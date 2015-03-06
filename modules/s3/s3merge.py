@@ -707,6 +707,10 @@ class S3Merge(S3Method):
         widgets = SQLFORM.widgets
         ftype = str(field.type)
 
+        if value is not None and ftype not in ("id", "upload", "blob"):
+            # Call field.formatter to prepare the value for the widget
+            value = field.formatter(value)
+
         if ftype == "id":
             inp = None
         elif ftype == "upload":
