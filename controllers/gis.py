@@ -3780,4 +3780,51 @@ def screenshot():
     else:
         raise HTTP(500, "Screenshot not taken")
 
+# =============================================================================
+def search_gis_locations():
+    
+    user_str = request.vars['name_startsWith']
+    callback_func = request.vars['callback']
+    db = current.db
+    s3db = current.s3db
+    atable = db.gis_location
+    query = atable.name.lower().like(user_str+'%')
+    rows = db(query).select(atable.id,
+                            atable.level,
+                            atable.name,
+                            atable.lat,
+                            atable.lon
+                            )
+    results = []
+    count=0
+    for row in rows:
+        count+=1
+        result = {}
+        
+        #Convert the level colum into the ADM codes geonames returns
+        #fcode = row["gis_location.level"]
+        level = row["gis_location.level"]
+        if(level=='L0'): #Country
+            fcode = 'PCL' #Zoom 5
+        elif(level=='L1'): #State/Province
+            fcode = 'ADM1'
+        elif(level=='L2'): #County/District
+            fcode = 'ADM2'
+        elif(level=='L3'): #Village/Suburb
+            fcode = 'ADM3'
+        else: #City/Town/Village
+            fcode = 'ADM4'
+            
+        result = {"id" : row["gis_location.id"], "fcode" : fcode,
+                  "name" : row["gis_location.name"],"lat" : row["gis_location.lat"],
+                  "lng" : row["gis_location.lon"]}
+        results.append(result)
+    
+    returnVal = {}
+    returnVal["gislocations"] = results
+    returnVal["totalResultsCount"] = count
+    
+    #Autocomplete caller expects JSONP response. Callback wrapper.
+    return callback_func+'('+json.dumps(returnVal)+')'
+    
 # END =========================================================================
