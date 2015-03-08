@@ -4773,20 +4773,26 @@ def hrm_vars():
         else:
             hrm_vars.orgs = None
 
-    # Set mode
-    mode = current.request.get_vars.get("access", None)
+    # Set access mode
+    mode = current.request.get_vars.get("access")
     if mode != "personal":
-        # Default access mode: with policy >= 3, only ADMINS,
-        # ORG_ADMINS and Staff Members are allowed to access
-        # in manager mode
+        # Default access mode
         sr = session.s3.system_roles
         if sr.ADMIN in session.s3.roles or \
            sr.ORG_ADMIN in session.s3.roles or \
            hrm_vars.orgs or \
            current.deployment_settings.get_security_policy() in (1, 2):
+            # Admins, OrgAdmins, Staff Members or policy<3 => always
+            # manager mode
             mode = None
-        else:
+        elif auth.s3_logged_in_human_resource():
+            # Volunteers => default to personal mode
             mode = "personal"
+        else:
+            # All other cases => manager mode (personal mode makes
+            # no sense here since no personal Staff/Volunteer records
+            # exist)
+            mode = None
 
     hrm_vars.mode = mode
     return

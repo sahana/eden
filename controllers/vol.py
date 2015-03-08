@@ -195,7 +195,7 @@ def volunteer():
 
             # Insert field to set the Programme
             if vol_experience in ("programme", "both") and \
-               r.method not in ("search", "report", "import") and \
+               r.method not in ("report", "import") and \
                "form" in output:
                 # @ToDo: Re-implement using
                 # http://eden.sahanafoundation.org/wiki/S3SQLForm
@@ -493,12 +493,10 @@ def person():
                         r.id = r.record.id
                 if not r.record:
                     session.error = T("Record not found")
-                    redirect(URL(f="volunteer",
-                                 args=["search"]))
+                    redirect(URL(f="volunteer"))
                 if hr_id and r.component_name == "human_resource":
                     r.component_id = hr_id
-                configure("hrm_human_resource",
-                          insertable = False)
+                configure("hrm_human_resource", insertable = False)
 
         elif r.component_name == "group_membership" and r.representation == "aadata":
             s3db.hrm_configure_pr_group_membership()
@@ -515,7 +513,7 @@ def person():
 '''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 vol_experience = settings.get_hrm_vol_experience()
                 if vol_experience in ("programme", "both") and \
-                   r.method not in ["search", "report", "import"] and \
+                   r.method not in ("report", "import") and \
                    "form" in output:
                     # Insert field to set the Programme
                     # @ToDo: Re-implement using http://eden.sahanafoundation.org/wiki/S3SQLForm
