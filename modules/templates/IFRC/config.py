@@ -316,6 +316,7 @@ def config(settings):
         {"pr_person.middle_name"                     : (CVTL, VNRC),
          "pr_person_details.mother_name"             : (BRCS, ),
          "pr_person_details.father_name"             : (ARCS, BRCS),
+         "pr_person_details.grandfather_name"        : (ARCS, ),
          "pr_person_details.affiliations"            : (PRC, ),
          "pr_person_details.company"                 : (PRC, ),
          "vol_details.availability"                  : (VNRC, ),
@@ -2449,11 +2450,7 @@ def config(settings):
                         # Use default form (legacy)
                         s3db.clear_config("hrm_human_resource", "crud_form")
 
-            if arcs:
-                if not r.component:
-                    s3db.pr_person_details.father_name.label = T("Name of Grandfather")
-
-            elif vnrc:
+            if vnrc:
                 controller = r.controller
                 if not r.component:
                     crud_fields = ["first_name",

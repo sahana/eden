@@ -18,6 +18,7 @@
          Affiliations............ ......optional.....person_details affiliation
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
+         Grandfather Name...............optional.....person_details grandfather name
          Religion.......................optional.....person_details religion
          Religion other.................optional.....person_details religion_other
          Blood Type.....................optional.....pr_physical_description blood_type
@@ -148,6 +149,9 @@
                 </xsl:if>
                 <xsl:if test="col[@field='Mother Name']!=''">
                     <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Grandfather Name']!=''">
+                    <data field="grandfather_name"><xsl:value-of select="col[@field='Grandfather Name']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Religion']!=''">
 	                <data field="religion">

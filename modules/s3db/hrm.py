@@ -7053,6 +7053,7 @@ def hrm_person_controller(**attr):
                 set_org_dependent_field("pr_person", "middle_name")
                 set_org_dependent_field("pr_person_details", "father_name")
                 set_org_dependent_field("pr_person_details", "mother_name")
+                set_org_dependent_field("pr_person_details", "grandfather_name")
                 set_org_dependent_field("pr_person_details", "affiliations")
                 set_org_dependent_field("pr_person_details", "company")
             else:

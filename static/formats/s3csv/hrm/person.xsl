@@ -43,6 +43,7 @@
          Place of Birth.................optional.....person_details place of birth
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
+         Grandfather Name...............optional.....person_details grandfather name
          Religion.......................optional.....person_details religion
          Criminal Record................optional.....person_details criminal record
          Military Service...............optional.....person_details military service
@@ -651,6 +652,9 @@
                 </xsl:if>
                 <xsl:if test="col[@field='Mother Name']!=''">
                     <data field="mother_name"><xsl:value-of select="col[@field='Mother Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Grandfather Name']!=''">
+                    <data field="grandfather_name"><xsl:value-of select="col[@field='Grandfather Name']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Number of Children']!=''">
                     <data field="number_children"><xsl:value-of select="col[@field='Number of Children']"/></data>
