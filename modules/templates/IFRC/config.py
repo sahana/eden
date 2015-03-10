@@ -730,12 +730,8 @@ def config(settings):
             return {}
 
     # -----------------------------------------------------------------------------
-    # Org-dependent model-options:
-    # NB these are callables because they must be set before the tables get
-    #    defined (i.e. before any customise_* callback), but only after the
-    #    user is logged in (i.e. after config.py). Will be called only once.
-    #    Pattern is per-setting (=rather than having a bulk org_settings()
-    #    wrapper), so that they remain individually overridable in 000_config.py
+    # Org-dependent settings
+    # => lazy settings because they require user authentication
     #
     def hide_third_gender(default):
         """ Whether to hide the third person gender """
@@ -756,6 +752,16 @@ def config(settings):
         return default
 
     settings.hrm.training_instructors = training_instructors
+
+    def location_filter_bulk_select_option(default):
+        """ Whether to show a bulk select option in location filters """
+
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            return True
+        return default
+
+    settings.ui.location_filter_bulk_select_option = location_filter_bulk_select_option
 
     # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
