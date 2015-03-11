@@ -12,8 +12,8 @@
          Activity Type........;-sep list......List of Activity Types
          Sectors..............;-sep list......List of Activity Sectors (Allow Sector Names to include a Comma, such as "Water, Sanitation & Hygiene"
          Themes...............;-sep list......List of Activity Themes
-         Organisation.........comma-sep list..project_activity_organisation.organisation_id  
-         Organisation Group...string..........project_activity_group.group_id  
+         Organisation.........comma-sep list..project_activity_organisation.organisation_id
+         Organisation Group...string..........project_activity_group.group_id
          Country..............string..........Country code/name (L0)
          L1...................string..........L1 location name (e.g. State/Province)
          L2...................string..........L2 location name (e.g. District/County)
@@ -30,13 +30,18 @@
          Start Date...........date............Start Date
          End Date.............date............End Date
          Comments.............string..........Activity Comments
-         Beneficiaries:XXX....integer.........Number of Beneficiaries of type XXX (multiple allowed)
          Item:XXX.............integer.........Number of Items of type XXX Distributed (multiple allowed)
+         Beneficiaries:XXX...........integer..Number of Beneficiaries of type XXX (multiple allowed)
+         TargetedBeneficiaries:XXX...integer..Targeted Number of Beneficiaries of type XXX
+
+         Alternatively, Beneficiaries:XXX can be like "<actual_number>/<targeted_number>"
 
          @ToDo: Support lowest-level Lx as ;-separated list
                 Do this by making the normal Activity Row part of a splitList
 
     *********************************************************************** -->
+
+    <xsl:import href="beneficiary.xsl"/>
 
     <xsl:output method="xml"/>
 
@@ -196,7 +201,7 @@
 
             </resource>
         </xsl:if>
-        
+
         <!-- Activity Types -->
         <xsl:call-template name="splitList">
             <xsl:with-param name="list">
@@ -354,61 +359,14 @@
             <resource name="project_beneficiary_activity">
                 <reference field="beneficiary_id" resource="project_beneficiary">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('Ben:',
-                                                     $ProjectName,'/',
-                                                     $ActivityName,'/',
+                        <xsl:value-of select="concat('BNFNumber:',
+                                                     $ProjectName, '/',
+                                                     $ActivityName, '/',
                                                      $BeneficiaryType)"/>
                     </xsl:attribute>
                 </reference>
             </resource>
         </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Beneficiaries">
-        <xsl:param name="ProjectName"/>
-        <xsl:param name="ActivityName"/>
-
-        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="BeneficiaryNumber" select="text()"/>
-
-        <xsl:if test="$BeneficiaryNumber!=''">
-            <resource name="project_beneficiary">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Ben:',
-                                                 $ProjectName,'/',
-                                                 $ActivityName,'/',
-                                                 $BeneficiaryType)"/>
-                </xsl:attribute>
-                <xsl:if test="$ProjectName!=''">
-                    <reference field="project_id" resource="project_project">
-                        <xsl:attribute name="tuid">
-                            <xsl:value-of select="concat($ProjectPrefix, $ProjectName)"/>
-                        </xsl:attribute>
-                    </reference>
-                </xsl:if>
-                <reference field="parameter_id" resource="project_beneficiary_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('BenType:', $BeneficiaryType)"/>
-                    </xsl:attribute>
-                </reference>
-                <data field="value"><xsl:value-of select="$BeneficiaryNumber"/></data>
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="BeneficiaryType">
-        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
-
-        <resource name="project_beneficiary_type">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('BenType:', $BeneficiaryType)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$BeneficiaryType"/></data>
-        </resource>
 
     </xsl:template>
 

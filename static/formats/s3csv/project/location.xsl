@@ -32,9 +32,14 @@
                                               as "FirstName,LastName,Email,MobilePhone",
                                               where first name and email as well as the
                                               three commas are mandatory
-         Beneficiaries:XXX....integer.........Number of Beneficiaries of type XXX (multiple allowed)
+         Beneficiaries:XXX...........integer..Number of Beneficiaries of type XXX (multiple allowed)
+         TargetedBeneficiaries:XXX...integer..Targeted Number of Beneficiaries of type XXX
+
+         Alternatively, Beneficiaries:XXX can be like "<actual_number>/<targeted_number>"
 
     *********************************************************************** -->
+
+    <xsl:import href="beneficiary.xsl"/>
 
     <xsl:output method="xml"/>
 
@@ -329,38 +334,6 @@
 
         <resource name="project_status">
             <data field="name"><xsl:value-of select="$Status"/></data>
-        </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Beneficiaries">
-
-        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="BeneficiaryNumber" select="text()"/>
-
-        <xsl:if test="$BeneficiaryNumber!=''">
-            <resource name="project_beneficiary">
-                <reference field="parameter_id" resource="project_beneficiary_type">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
-                    </xsl:attribute>
-                </reference>
-                <data field="value"><xsl:value-of select="$BeneficiaryNumber"/></data>
-            </resource>
-        </xsl:if>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="BeneficiaryType">
-        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
-
-        <resource name="project_beneficiary_type">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="concat('BNF:', $BeneficiaryType)"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$BeneficiaryType"/></data>
         </resource>
 
     </xsl:template>
