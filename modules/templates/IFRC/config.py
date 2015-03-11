@@ -3144,6 +3144,7 @@ def config(settings):
                                                         ),
                                         "parameter_id",
                                         "value",
+                                        "target_value",
                                         "date",
                                         "end_date",
                                         "comments",

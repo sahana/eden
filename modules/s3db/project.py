@@ -1694,11 +1694,22 @@ class S3ProjectBeneficiaryModel(S3Model):
                                 ),
                      # Populated automatically from project_location
                      self.gis_location_id(readable = False,
-                                          writable = False),
+                                          writable = False,
+                                          ),
                      Field("value", "integer",
                            label = T("Number"),
-                           represent = lambda v: \
-                            IS_INT_AMOUNT.represent(v),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Actual Number of Beneficiaries"),
+                                                           T("The number of beneficiaries actually reached by this activity"))),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_INT_IN_RANGE(0, 99999999),
+                           ),
+                     Field("target_value", "integer",
+                           label = T("Targeted Number"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Targeted Number of Beneficiaries"),
+                                                           T("The number of beneficiaries targeted by this activity"))),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_INT_IN_RANGE(0, 99999999),
                            ),
                      s3_date("date",
@@ -1771,6 +1782,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         list_fields = ["project_id",
                        (T("Beneficiary Type"), "parameter_id"),
                        "value",
+                       "target_value",
                        "year",
                        ]
 
@@ -1811,16 +1823,20 @@ class S3ProjectBeneficiaryModel(S3Model):
         elif "L1" in levels:
             default_row = "location_id$L1"
         else:
-            default_row = "beneficiary.project_id"
+            default_row = "project_id"
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = [(T("Number of Beneficiaries"),
-                                          "sum(value)"),
+                                          "sum(value)",
+                                          ),
+                                         (T("Number of Targeted Beneficiaries"),
+                                          "sum(target_value)",
+                                          ),
                                          ],
                                  defaults = Storage(rows=default_row,
-                                                    cols="beneficiary.parameter_id",
-                                                    fact="sum(beneficiary.value)",
+                                                    cols="parameter_id",
+                                                    fact="sum(value)",
                                                     totals=True
                                                     ),
                                  )
