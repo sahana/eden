@@ -883,6 +883,20 @@ def time():
     return s3_rest_controller(hide_filter=hide_filter)
 
 # =============================================================================
+# Programmes
+# =============================================================================
+def programme():
+    """ RESTful controller for Programmes """
+
+    return s3_rest_controller()
+
+def programme_project():
+    """ RESTful controller for Programmes """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+    return s3_rest_controller()
+
+# =============================================================================
 # Comments
 # =============================================================================
 def comment_parse(comment, comments, task_id=None):

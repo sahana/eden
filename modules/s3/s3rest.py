@@ -1809,26 +1809,31 @@ class S3Method(object):
             @param r: the S3Request
         """
 
+        master_id = r.id
+
         if r.component:
-            # Component
+
             component = r.component
-            if not component.multiple and not r.component_id:
+            component_id = r.component_id
+            link = r.link
+
+            if not component.multiple and not component_id:
+                # Enforce first component record
                 table = component.table
                 pkey = table._id.name
                 component.load(start=0, limit=1)
                 if len(component):
-                    r.component_id = component.records().first()[pkey]
-            component_id = r.component_id
-            if not r.link:
+                    component_id = component.records().first()[pkey]
+                    if link and master_id:
+                        r.link_id = link.link_id(master_id, component_id)
+                    r.component_id = component_id
+
+            if not link or r.actuate_link():
                 return component_id
-            elif r.id and component_id:
-                if r.actuate_link():
-                    return component_id
-                elif r.link_id:
-                    return r.link_id
+            else:
+                return r.link_id
         else:
-            # Master record
-            return r.id
+            return master_id
 
         return None
 
@@ -1981,7 +1986,7 @@ class S3Method(object):
 def s3_request(*args, **kwargs):
     """
         Helper function to generate S3Request instances
-        
+
         @param args: arguments for the S3Request
         @param kwargs: keyword arguments for the S3Request
 

@@ -48,6 +48,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectDRRPPModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
+           "S3ProjectProgrammeModel",
            "S3ProjectTaskIReportModel",
            "project_ActivityRepresent",
            "project_activity_year_options",
@@ -429,6 +430,13 @@ class S3ProjectModel(S3Model):
                                         "key": "theme_id",
                                         "actuate": "hide",
                                         },
+                       # Programmes
+                       project_programme = {"link": "project_programme_project",
+                                            "joinby": "project_id",
+                                            "key": "programme_id",
+                                            "actuate": "hide",
+                                            "multiple": False,
+                                            },
                        # Format needed by S3Filter
                        project_theme_project = "project_id",
                        )
@@ -5386,6 +5394,123 @@ class S3ProjectTaskHRMModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict()
+
+# =============================================================================
+class S3ProjectProgrammeModel(S3Model):
+    """
+        Project Programme Model
+    """
+
+    names = ("project_programme",
+             "project_programme_id",
+             "project_programme_project",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Project Programmes
+        #
+        tablename = "project_programme"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Title"),
+                           requires = IS_NOT_EMPTY()
+                           ),
+                     #Field("acronym"
+                     #      ),
+                     #Field("description", "text",
+                     #      label = T("Description"),
+                     #      ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename)
+        tooltip = T("If you don't see the programme in the list, you can add a new one by clicking link 'Create Programme'.")
+        programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
+                            label = T("Programme"),
+                            ondelete = "CASCADE",
+                            represent = represent,
+                            requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "project_programme.id",
+                                                      represent,
+                                                      updateable = True,
+                                                      )),
+                            sortby = "name",
+                            comment = S3AddResourceLink(c="project",
+                                                        f="programme",
+                                                        tooltip=tooltip,
+                                                        ),
+                       )
+
+        self.add_components(tablename,
+                            project_project = {"link": "project_programme_project",
+                                               "joinby": "programme_id",
+                                               "key": "project_id",
+                                               "actuate": "link",
+                                               "autocomplete": "name",
+                                               "autodelete": False,
+                                               })
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Programme"),
+            #title_display = T("Programme"),
+            #title_list = T("Programmes"),
+            #title_update = T("Edit Programme"),
+            #title_upload = T("Import Programmes"),
+            #label_list_button = T("List Programmes"),
+            #msg_record_created = T("Programme created"),
+            #msg_record_modified = T("Programme updated"),
+            #msg_record_deleted = T("Programme deleted"),
+            #msg_list_empty = T("No Programmes found")
+        )
+
+        # ---------------------------------------------------------------------
+        # Project Programmes <=> Projects
+        #
+        tablename = "project_programme_project"
+        define_table(tablename,
+                     programme_id(),
+                     self.project_project_id(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            #label_create = T("New Organization"),
+            #title_display = ORGANISATION,
+            #title_list = T("Organizations"),
+            #title_update = T("Edit Organization"),
+            #label_list_button = T("List Organizations"),
+            #msg_record_created = T("Organization added to Policy/Strategy"),
+            #msg_record_modified = T("Organization updated"),
+            #msg_record_deleted = T("Organization removed from Policy/Strategy"),
+            #msg_list_empty = T("No Organizations found for this Policy/Strategy")
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"project_programme_id": programme_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names if module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return {"project_programme_id": lambda **attr: dummy("programme_id"),
+                }
 
 # =============================================================================
 class S3ProjectTaskIReportModel(S3Model):
