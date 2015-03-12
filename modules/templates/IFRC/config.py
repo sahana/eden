@@ -1583,7 +1583,7 @@ def config(settings):
                 # Add gender-filter
                 gender_opts = dict(s3db.pr_gender_opts)
                 del gender_opts[1]
-                if settings.hide_third_gender():
+                if settings.get_pr_hide_third_gender():
                     del gender_opts[4]
                 append_widget(S3OptionsFilter("person_id$gender",
                                               options = gender_opts,
