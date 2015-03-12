@@ -2886,6 +2886,8 @@ def config(settings):
         #5: T("Supplier"),
         9: T("Partner National Society"),
     }
+    # Uncomment this to enable Programmes in projects
+    settings.project.programmes = True
 
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
@@ -2926,6 +2928,23 @@ def config(settings):
         # Custom Crud Form
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         s3db = current.s3db
+        if settings.get_project_programmes():
+            # Inject inline link for programmes including AddResourceLink
+            from s3layouts import S3AddResourceLink
+            comment = s3db.project_programme_id.attr.comment
+            comment.vars = {"caller": "link_defaultprogramme",
+                            "prefix": "project",
+                            "parent": "programme_project",
+                            }
+            programme = S3SQLInlineLink("programme",
+                                        label = T("Programme"),
+                                        field = "programme_id",
+                                        multiple = False,
+                                        comment = comment,
+                                        )
+        else:
+            programme = None
+
         crud_form = S3SQLCustomForm(
             "organisation_id",
             "name",
@@ -2934,6 +2953,7 @@ def config(settings):
             "status_id",
             "start_date",
             "end_date",
+            programme,
             #S3SQLInlineComponent(
             #    "location",
             #    label = T("Countries"),

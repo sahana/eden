@@ -477,6 +477,8 @@ def config(settings):
     # Persons
     # Uncomment to allow person imports to match even without email addresses
     #settings.pr.import_update_requires_email = False
+    # Uncomment this to enable support for third gender
+    #settings.pr.hide_third_gender = False
     # Uncomment to a fuzzy search for duplicates in the new AddPersonWidget2
     #settings.pr.lookup_duplicates = True
     # Uncomment to hide fields in S3AddPersonWidget[2]
@@ -626,6 +628,8 @@ def config(settings):
     #settings.hrm.teams = False
     # Uncomment to disable the use of HR Trainings
     #settings.hrm.use_trainings = False
+    # Uncomment this to configure tracking of internal/external training instructors
+    #settings.hrm.training_instructors = "external"
     # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
     #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
@@ -792,6 +796,8 @@ def config(settings):
     #settings.project.projects = True
     # Uncomment this to disable Sectors in projects
     #settings.project.sectors = False
+    # Uncomment this to enable Programmes in projects
+    #settings.project.programmes = True
     # Uncomment this to use Tags in Tasks
     #settings.project.task_tag = True
     # Uncomment this to enable Themes in 3W projects

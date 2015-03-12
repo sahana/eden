@@ -130,10 +130,11 @@ class S3ProjectModel(S3Model):
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
         mode_drr = settings.get_project_mode_drr()
-        use_codes = settings.get_project_codes()
-        use_sectors = settings.get_project_sectors()
         multi_budgets = settings.get_project_multiple_budgets()
         multi_orgs = settings.get_project_multiple_organisations()
+        programmes = settings.get_project_programmes()
+        use_codes = settings.get_project_codes()
+        use_sectors = settings.get_project_sectors()
 
         add_components = self.add_components
         configure = self.configure
@@ -274,6 +275,8 @@ class S3ProjectModel(S3Model):
         append("organisation_id")
         if mode_3w:
             append((T("Locations"), "location.location_id"))
+        if programmes:
+            append((T("Programme"), "programme.name"))
         if use_sectors:
             append((T("Sectors"), "sector.name"))
         if mode_drr:
@@ -1754,10 +1757,21 @@ class S3ProjectBeneficiaryModel(S3Model):
             msg_list_empty = T("No Beneficiaries Found")
         )
 
-        # Which levels of Hierarchy are we using?
+        # Model options
+        programmes = settings.get_project_programmes()
+        sectors = settings.get_project_sectors()
+        hazards = settings.get_project_hazards()
+        themes = settings.get_project_themes()
+
+        programme_id = "project_id$programme_project.programme_id"
+        sector_id = "project_id$sector_project.sector_id"
+        hazard_id = "project_id$hazard_project.hazard_id"
+        theme_id = "project_id$theme_project.theme_id"
+
+        # Which levels of location hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
-        # Normally only used in Report
+        # Filter Widgets
         filter_widgets = [
             #S3TextFilter(["project_id$name",
             #              "project_id$code",
@@ -1786,7 +1800,14 @@ class S3ProjectBeneficiaryModel(S3Model):
                              #hidden = True,
                              ),
             ]
+        if programmes:
+            filter_widgets.insert(0, S3OptionsFilter(programme_id))
+        if sectors:
+            filter_widgets.insert(0, S3OptionsFilter(sector_id))
+        if themes:
+            filter_widgets.append(S3OptionsFilter(theme_id))
 
+        # List fields
         list_fields = ["project_id",
                        (T("Beneficiary Type"), "parameter_id"),
                        "value",
@@ -1794,37 +1815,30 @@ class S3ProjectBeneficiaryModel(S3Model):
                        "year",
                        ]
 
+        if settings.get_project_programmes():
+            list_fields.append(programme_id)
+
+        # Report axes
         report_fields = [(T("Beneficiary Type"), "parameter_id"),
                          "project_id",
                          #"project_location_id",
                          "year",
                          ]
+        add_report_field = report_fields.append
+        if programmes:
+            add_report_field(programme_id)
+        if sectors:
+            add_report_field(sector_id)
+        if hazards:
+            add_report_field(hazard_id)
+        if themes:
+            add_report_field(theme_id)
 
-        if settings.get_project_sectors():
-            report_fields.append("project_id$sector_project.sector_id")
-            filter_widgets.insert(0,
-                S3OptionsFilter("project_id$sector_project.sector_id",
-                                # Doesn't allow translation
-                                #represent = "%(name)s",
-                                #hidden = True,
-                                ))
-
-        if settings.get_project_hazards():
-            report_fields.append("project_id$hazard_project.hazard_id")
-
-        if settings.get_project_themes():
-            report_fields.append("project_id$theme_project.theme_id")
-            filter_widgets.append(
-                S3OptionsFilter("project_id$theme_project.theme_id",
-                                # Doesn't allow translation
-                                #represent = "%(name)s",
-                                #hidden = True,
-                                ))
-
+        # Location levels (append to list fields and report axes)
         for level in levels:
             lfield = "location_id$%s" % level
             list_fields.append(lfield)
-            report_fields.append(lfield)
+            add_report_field(lfield)
 
         if "L0" in levels:
             default_row = "location_id$L0"
@@ -1833,6 +1847,7 @@ class S3ProjectBeneficiaryModel(S3Model):
         else:
             default_row = "project_id"
 
+        # Report options and defaults
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = [(T("Number of Beneficiaries"),
@@ -1849,6 +1864,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                                     ),
                                  )
 
+        # Resource configuration
         configure(tablename,
                   deduplicate = self.project_beneficiary_deduplicate,
                   filter_widgets = filter_widgets,
@@ -1874,6 +1890,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                 T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiaries'.")),
             )
 
+        # Components
         self.add_components(tablename,
                             # Activity Types
                             project_activity_type = {"link": "project_beneficiary_activity_type",
@@ -2837,6 +2854,13 @@ class S3ProjectLocationModel(S3Model):
                                                   hidden = True,
                                                   ))
 
+        if settings.get_project_programmes():
+            programme_id = "project_id$programme_project.programme_id"
+            filter_widgets.append(S3OptionsFilter(programme_id,
+                                                  hidden=True,
+                                                  ))
+            rappend((T("Programme"), programme_id))
+
         filter_widgets.extend((
             # This is only suitable for deployments with a few projects
             #S3OptionsFilter("project_id",
@@ -2861,15 +2885,16 @@ class S3ProjectLocationModel(S3Model):
                               (T("Activity Types"), "activity_type.activity_type_id"),
                               ))
 
+        # Report options and default
         report_options = Storage(rows=report_fields,
                                  cols=report_fields,
                                  fact=report_fields,
-                                 defaults=Storage(rows="location.location_id$%s" % levels[0], # Highest-level of Hierarchy
-                                                  cols="location.project_id",
-                                                  fact="activity_type.activity_type_id",
+                                 defaults=Storage(rows="location_id$%s" % levels[0], # Highest-level of Hierarchy
+                                                  cols="project_id",
+                                                  fact="list(activity_type.activity_type_id)",
                                                   aggregate="list",
-                                                  totals=True
-                                                  )
+                                                  totals=True,
+                                                  ),
                                  )
 
         # Resource Configuration
@@ -3077,6 +3102,7 @@ class S3ProjectOrganisationModel(S3Model):
     def model(self):
 
         T = current.T
+        settings = current.deployment_settings
 
         messages = current.messages
         NONE = messages["NONE"]
@@ -3085,7 +3111,7 @@ class S3ProjectOrganisationModel(S3Model):
         # Project Organisations
         # for multi_orgs=True
         #
-        project_organisation_roles = current.deployment_settings.get_project_organisation_roles()
+        project_organisation_roles = settings.get_project_organisation_roles()
 
         organisation_help = T("Add all organizations which are involved in different roles in this project")
 
@@ -3152,6 +3178,8 @@ class S3ProjectOrganisationModel(S3Model):
                          "amount",
                          "currency",
                          ]
+        if settings.get_project_programmes():
+            report_fields.insert(0, "project_id$programme_project.programme_id")
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = report_fields,
@@ -5431,33 +5459,6 @@ class S3ProjectProgrammeModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        represent = S3Represent(lookup=tablename)
-        tooltip = T("If you don't see the programme in the list, you can add a new one by clicking link 'Create Programme'.")
-        programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
-                            label = T("Programme"),
-                            ondelete = "CASCADE",
-                            represent = represent,
-                            requires = IS_EMPTY_OR(
-                                            IS_ONE_OF(db, "project_programme.id",
-                                                      represent,
-                                                      updateable = True,
-                                                      )),
-                            sortby = "name",
-                            comment = S3AddResourceLink(c="project",
-                                                        f="programme",
-                                                        tooltip=tooltip,
-                                                        ),
-                       )
-
-        self.add_components(tablename,
-                            project_project = {"link": "project_programme_project",
-                                               "joinby": "programme_id",
-                                               "key": "project_id",
-                                               "actuate": "link",
-                                               "autocomplete": "name",
-                                               "autodelete": False,
-                                               })
-
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Programme"),
@@ -5472,6 +5473,31 @@ class S3ProjectProgrammeModel(S3Model):
             #msg_list_empty = T("No Programmes found")
         )
 
+        represent = S3Represent(lookup=tablename)
+        programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
+                            label = T("Programme"),
+                            ondelete = "CASCADE",
+                            represent = represent,
+                            requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "project_programme.id",
+                                                      represent,
+                                                      updateable = True,
+                                                      )),
+                            sortby = "name",
+                            comment = S3AddResourceLink(c="project",
+                                                        f="programme",
+                                                        ),
+                       )
+
+        self.add_components(tablename,
+                            project_project = {"link": "project_programme_project",
+                                               "joinby": "programme_id",
+                                               "key": "project_id",
+                                               "actuate": "link",
+                                               "autocomplete": "name",
+                                               "autodelete": False,
+                                               })
+
         # ---------------------------------------------------------------------
         # Project Programmes <=> Projects
         #
@@ -5480,19 +5506,6 @@ class S3ProjectProgrammeModel(S3Model):
                      programme_id(),
                      self.project_project_id(),
                      *s3_meta_fields())
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            #label_create = T("New Organization"),
-            #title_display = ORGANISATION,
-            #title_list = T("Organizations"),
-            #title_update = T("Edit Organization"),
-            #label_list_button = T("List Organizations"),
-            #msg_record_created = T("Organization added to Policy/Strategy"),
-            #msg_record_modified = T("Organization updated"),
-            #msg_record_deleted = T("Organization removed from Policy/Strategy"),
-            #msg_list_empty = T("No Organizations found for this Policy/Strategy")
-        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -6675,6 +6688,14 @@ def project_project_filters(org_label):
         ]
 
     append_filter = filter_widgets.append
+
+    if settings.get_project_programmes():
+        append_filter(
+            S3OptionsFilter("programme_project.programme_id",
+                            label = T("Programme"),
+                            hidden = True,
+                            )
+        )
 
     if settings.get_project_sectors():
         if settings.get_ui_label_cluster():

@@ -3084,6 +3084,12 @@ class S3Config(Storage):
         """
         return self.project.get("sectors", True)
 
+    def get_project_programmes(self):
+        """
+            Use Programmes in Projects
+        """
+        return self.project.get("programmes", False)
+
     def get_project_themes(self):
         """
             Use Themes in 3W Projects
