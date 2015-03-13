@@ -1999,14 +1999,14 @@ class S3ImportItem(object):
         ERROR = xml.ATTRIBUTE["error"]
 
         METHOD = self.METHOD
-        DELETE = METHOD["DELETE"]
-        MERGE = METHOD["MERGE"]
+        DELETE = METHOD.DELETE
+        MERGE = METHOD.MERGE
 
         # Detect update
         self.deduplicate()
 
-        # Don't need to validate deleted records
-        if self.method in (DELETE, MERGE):
+        # Don't need to validate skipped or deleted records
+        if self.skip or self.method in (DELETE, MERGE):
             self.accepted = True if self.id else False
             return True
 

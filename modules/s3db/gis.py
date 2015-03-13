@@ -746,7 +746,14 @@ class S3LocationModel(S3Model):
         # Don't try to update Countries
         if level == "L0":
             item.method = None
+            item.skip = True
             return
+
+        MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
+        def skip(level, location_id):
+            if not MAP_ADMIN:
+                return not gis_hierarchy_editable(level, location_id)
+            return False
 
         table = item.table
 
@@ -759,6 +766,7 @@ class S3LocationModel(S3Model):
                     (kv_table.location_id == table.id)
             duplicate = current.db(query).select(table.id,
                                                  table.name,
+                                                 table.level,
                                                  orderby=~table.end_date,
                                                  limitby=(0, 1)).first()
 
@@ -768,6 +776,7 @@ class S3LocationModel(S3Model):
                 data.name = duplicate.name # Don't update the name with the code
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+                item.skip = skip(duplicate.level, duplicate.id)
                 return
 
         parent = data.get("parent")
@@ -792,6 +801,7 @@ class S3LocationModel(S3Model):
                       (table.end_date == None))
 
         duplicate = current.db(query).select(table.id,
+                                             table.level,
                                              orderby=~table.end_date,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -799,6 +809,7 @@ class S3LocationModel(S3Model):
             #current.log.debug("Location Match")
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+            item.skip = skip(duplicate.level, duplicate.id)
             return
 
         elif current.deployment_settings.get_L10n_translate_gis_location():
@@ -816,6 +827,7 @@ class S3LocationModel(S3Model):
 
             duplicate = current.db(query).select(table.id,
                                                  table.name,
+                                                 table.level,
                                                  orderby=~table.end_date,
                                                  limitby=(0, 1)).first()
             if duplicate:
@@ -824,6 +836,7 @@ class S3LocationModel(S3Model):
                 data.name = duplicate.name # Don't update the name
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+                item.skip = skip(duplicate.level, duplicate.id)
             else:
                 # @ToDo: Import Log
                 #current.log.debug("No Match", name)
