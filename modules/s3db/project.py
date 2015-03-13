@@ -1853,7 +1853,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                  fact = [(T("Number of Beneficiaries"),
                                           "sum(value)",
                                           ),
-                                         (T("Targeted Number of Beneficiaries"),
+                                         (T("Number of Beneficiaries Targeted"),
                                           "sum(target_value)",
                                           ),
                                          ],
