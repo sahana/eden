@@ -5489,6 +5489,10 @@ class S3ProjectProgrammeModel(S3Model):
                                                         ),
                        )
 
+        self.configure(tablename,
+                       deduplicate = self.programme_duplicate,
+                       )
+
         self.add_components(tablename,
                             project_project = {"link": "project_programme_project",
                                                "joinby": "programme_id",
@@ -5524,6 +5528,23 @@ class S3ProjectProgrammeModel(S3Model):
 
         return {"project_programme_id": lambda **attr: dummy("programme_id"),
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def programme_duplicate(item):
+        """ Import item update-detection """
+
+        name = item.data.get("name")
+        if name:
+            table = item.table
+            query = (table.name.lower() == name.lower())
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3ProjectTaskIReportModel(S3Model):
