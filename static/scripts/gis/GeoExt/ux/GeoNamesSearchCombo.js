@@ -218,7 +218,7 @@ GeoExt.ux.GeoNamesSearchCombo = Ext.extend(Ext.form.ComboBox, {
      *  Url of the GeoNames service: http://www.GeoNames.org/export/GeoNames-search.html
      */
     /*url: 'http://ws.geonames.org/searchJSON?',*/
-    url: 'http://127.0.0.1:8000/eden/gis/search_gis_locations.html/',
+    url: 'http://'+window.location.hostname+':8000/eden/gis/search_gis_locations.html/',
 
     /** private: constructor
      */

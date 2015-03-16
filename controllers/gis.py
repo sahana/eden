@@ -3782,6 +3782,7 @@ def screenshot():
 
 # =============================================================================
 def search_gis_locations():
+    import urllib2
     
     user_str = request.vars['name_startsWith']
     callback_func = request.vars['callback']
@@ -3800,7 +3801,7 @@ def search_gis_locations():
     for row in rows:
         count+=1
         result = {}
-        
+         
         #Convert the level colum into the ADM codes geonames returns
         #fcode = row["gis_location.level"]
         level = row["gis_location.level"]
@@ -3814,17 +3815,41 @@ def search_gis_locations():
             fcode = 'ADM3'
         else: #City/Town/Village
             fcode = 'ADM4'
-            
+             
         result = {"id" : row["gis_location.id"], "fcode" : fcode,
                   "name" : row["gis_location.name"],"lat" : row["gis_location.lat"],
                   "lng" : row["gis_location.lon"]}
         results.append(result)
-    
+        
+    #if count = 0, then search on geonames
+    if count == 0:
+        username = "eden_test"
+        maxrows = "20"
+        lang = "en"
+        charset = "UTF8"
+        nameStartsWith = user_str
+        geonames_base_url = "http://ws.geonames.org/searchJSON?"
+        url = geonames_base_url + "username=" + username + "&maxRows=" + maxrows + "&lang=" + lang + "&charset=" + charset + "&name_startsWith=" + nameStartsWith;
+        response = urllib2.urlopen(url)
+        dictResponse = json.loads(response.read().decode(response.info().getparam('charset') or 'utf-8'))
+        response.close()
+     
+        results = []
+        if dictResponse["totalResultsCount"] != 0:
+            geonamesResults = dictResponse["geonames"]
+            for geonamesResult in geonamesResults:
+                result = {}
+              
+                result = {"id" : int(geonamesResult["geonameId"]), "fcode" : str(geonamesResult["fcode"]),
+                          "name" : str(geonamesResult["name"]),"lat" : float(geonamesResult["lat"]),
+                          "lng" : float(geonamesResult["lng"])}
+                results.append(result)
+
     returnVal = {}
     returnVal["gislocations"] = results
     returnVal["totalResultsCount"] = count
     
     #Autocomplete caller expects JSONP response. Callback wrapper.
     return callback_func+'('+json.dumps(returnVal)+')'
-    
+
 # END =========================================================================
