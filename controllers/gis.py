@@ -3823,7 +3823,7 @@ def search_gis_locations():
         
     #if count = 0, then search on geonames
     if count == 0:
-        username = "eden_test"
+        username = current.deployment_settings.get_gis_geonames_username()
         maxrows = "20"
         lang = "en"
         charset = "UTF8"
