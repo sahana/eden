@@ -4050,7 +4050,7 @@ class S3BulkImporter(object):
                 try:
                     record_id = record.id
                 except:
-                    current.log.error("Unable to get record %s of the resource %s to attach the image file to" % (id, tablename))
+                    current.log.error("Unable to get record %s of the resource %s to attach the image file to" % (row["id"], tablename))
                     continue
                 # Create and accept the form
                 form = SQLFORM(table, record, fields=["id", imagefield])

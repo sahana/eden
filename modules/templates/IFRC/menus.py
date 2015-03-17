@@ -438,7 +438,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         not_vnrc = lambda i: auth.root_org_name() != "Viet Nam Red Cross"
         skills_menu = lambda i: auth.root_org_name() in ("Afghan Red Crescent Society",
-                                                         "Indonesian Red Cross Society (Pelang Merah Indonesia)",
+                                                         "Indonesian Red Cross Society (Palang Merah Indonesia)",
                                                          "Viet Nam Red Cross",
                                                          )
 

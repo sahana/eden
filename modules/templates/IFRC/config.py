@@ -309,7 +309,7 @@ def config(settings):
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
     NRCS = "Nepal Red Cross Society"
-    PMI = "Indonesian Red Cross Society (Pelang Merah Indonesia)"
+    PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
     PRC = "Philippine Red Cross"
     VNRC = "Viet Nam Red Cross"
     settings.org.dependent_fields = \
