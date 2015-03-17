@@ -3784,12 +3784,11 @@ def screenshot():
 def search_gis_locations():
     import urllib2
     
-    user_str = request.vars['name_startsWith']
-    callback_func = request.vars['callback']
-    db = current.db
-    s3db = current.s3db
+    #Get vars from url
+    user_str = get_vars["name_startsWith"]
+    callback_func = request.vars["callback"]
     atable = db.gis_location
-    query = atable.name.lower().like(user_str+'%')
+    query = atable.name.lower().like(user_str + '%')
     rows = db(query).select(atable.id,
                             atable.level,
                             atable.name,
@@ -3797,39 +3796,41 @@ def search_gis_locations():
                             atable.lon
                             )
     results = []
-    count=0
+    count = 0
     for row in rows:
-        count+=1
+        count += 1
         result = {}
          
         #Convert the level colum into the ADM codes geonames returns
         #fcode = row["gis_location.level"]
         level = row["gis_location.level"]
-        if(level=='L0'): #Country
-            fcode = 'PCL' #Zoom 5
-        elif(level=='L1'): #State/Province
-            fcode = 'ADM1'
-        elif(level=='L2'): #County/District
-            fcode = 'ADM2'
-        elif(level=='L3'): #Village/Suburb
-            fcode = 'ADM3'
+        if level=="L0": #Country
+            fcode = "PCL" #Zoom 5
+        elif level=="L1": #State/Province
+            fcode = "ADM1"
+        elif level=="L2": #County/District
+            fcode = "ADM2"
+        elif level=="L3": #Village/Suburb
+            fcode = "ADM3"
         else: #City/Town/Village
-            fcode = 'ADM4'
+            fcode = "ADM4"
              
-        result = {"id" : row["gis_location.id"], "fcode" : fcode,
-                  "name" : row["gis_location.name"],"lat" : row["gis_location.lat"],
+        result = {"id" : row["gis_location.id"],
+                  "fcode" : fcode,
+                  "name" : row["gis_location.name"],
+                  "lat" : row["gis_location.lat"],
                   "lng" : row["gis_location.lon"]}
         results.append(result)
         
     #if count = 0, then search on geonames
     if count == 0:
-        username = current.deployment_settings.get_gis_geonames_username()
+        username = settings.get_gis_geonames_username()
         maxrows = "20"
         lang = "en"
         charset = "UTF8"
         nameStartsWith = user_str
         geonames_base_url = "http://ws.geonames.org/searchJSON?"
-        url = geonames_base_url + "username=" + username + "&maxRows=" + maxrows + "&lang=" + lang + "&charset=" + charset + "&name_startsWith=" + nameStartsWith;
+        url = "%susername=%s&maxRows=%s&lang=%s&charset=%s&name_startsWith=%s" % (geonames_base_url,username,maxrows,lang,charset,nameStartsWith)
         response = urllib2.urlopen(url)
         dictResponse = json.loads(response.read().decode(response.info().getparam('charset') or 'utf-8'))
         response.close()
