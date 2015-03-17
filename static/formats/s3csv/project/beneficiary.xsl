@@ -104,7 +104,7 @@
                     <data field="target_value"><xsl:value-of select="$TargetValue"/></data>
                 </xsl:if>
 
-                <xsl:if test="$ActivityType">
+                <xsl:if test="$ActivityType!=''">
                     <resource name="project_beneficiary_activity_type">
                         <reference field="activity_type_id">
                             <resource name="project_activity_type">
