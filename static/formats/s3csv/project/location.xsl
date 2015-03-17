@@ -48,7 +48,7 @@
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
-    <xsl:variable name="ActivityTypePrefix" select="'ActivityType: '"/>
+    <xsl:variable name="ActivityTypePrefix" select="'ActivityType:'"/>
     <xsl:variable name="SectorPrefix" select="'Sector:'"/>
 
     <xsl:key name="orgs"

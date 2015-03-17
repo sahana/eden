@@ -10,7 +10,17 @@
     <!-- Beneficiary Type, called in context of "Beneficiaries:TypeName" columns -->
     <xsl:template name="BeneficiaryType">
 
-        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="TypeStr" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="BeneficiaryType">
+            <xsl:choose>
+                <xsl:when test="contains($TypeStr, ':')">
+                    <xsl:value-of select="normalize-space(substring-after($TypeStr, ':'))"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$TypeStr"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
 
         <resource name="project_beneficiary_type">
             <xsl:attribute name="tuid">
@@ -28,7 +38,22 @@
         <xsl:param name="ProjectName"/>
         <xsl:param name="ActivityName"/>
 
-        <xsl:variable name="BeneficiaryType" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="TypeStr" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="BeneficiaryType">
+            <xsl:choose>
+                <xsl:when test="contains($TypeStr, ':')">
+                    <xsl:value-of select="normalize-space(substring-after($TypeStr, ':'))"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$TypeStr"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+        <xsl:variable name="ActivityType">
+            <xsl:if test="contains($TypeStr, ':')">
+                <xsl:value-of select="normalize-space(substring-before($TypeStr, ':'))"/>
+            </xsl:if>
+        </xsl:variable>
 
         <xsl:variable name="Number" select="text()"/>
         <xsl:variable name="Value">
@@ -78,6 +103,19 @@
                 <xsl:if test="$TargetValue!=''">
                     <data field="target_value"><xsl:value-of select="$TargetValue"/></data>
                 </xsl:if>
+
+                <xsl:if test="$ActivityType">
+                    <resource name="project_beneficiary_activity_type">
+                        <reference field="activity_type_id">
+                            <resource name="project_activity_type">
+                                <data field="name">
+                                    <xsl:value-of select="$ActivityType"/>
+                                </data>
+                            </resource>
+                        </reference>
+                    </resource>
+                </xsl:if>
+
             </resource>
         </xsl:if>
 

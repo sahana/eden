@@ -2016,12 +2016,12 @@ class S3ProjectBeneficiaryModel(S3Model):
         """ Import item de-duplication """
 
         data = item.data
-        parameter_id = data.get("parameter_id")
         activity_id = data.get("activity_id")
-        # Match beneficiary by type and activity
-        if parameter_id and activity_id:
+        beneficiary_id = data.get("beneficiary_id")
+
+        if beneficiary_id and activity_id:
             table = item.table
-            query = (table.parameter_id == parameter_id) & \
+            query = (table.beneficiary_id == beneficiary_id) & \
                     (table.activity_id == activity_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -2035,12 +2035,12 @@ class S3ProjectBeneficiaryModel(S3Model):
         """ Import item de-duplication """
 
         data = item.data
-        parameter_id = data.get("parameter_id")
         activity_type_id = data.get("activity_type_id")
-        # Match beneficiary by type and activity_type
-        if parameter_id and activity_type_id:
+        beneficiary_id = data.get("beneficiary_id")
+
+        if beneficiary_id and activity_type_id:
             table = item.table
-            query = (table.parameter_id == parameter_id) & \
+            query = (table.beneficiary_id == beneficiary_id) & \
                     (table.activity_type_id == activity_type_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -2825,7 +2825,7 @@ class S3ProjectLocationModel(S3Model):
         if settings.get_project_theme_percentages():
             lappend((T("Themes"), "project_id$theme_project.theme_id"))
         else:
-            lappend((T("Activity Types"), "activity_type.activity_type_id"))
+            lappend((T("Activity Types"), "activity_type.name"))
         lappend("comments")
 
         # Filter widgets
