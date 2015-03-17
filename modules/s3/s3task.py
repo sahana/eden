@@ -57,7 +57,7 @@ except ImportError:
 from gluon import current, HTTP, IS_EMPTY_OR
 from gluon.storage import Storage
 
-from s3utils import S3DateTime
+from s3utils import S3DateTime, RepeatedTimer
 from s3validators import IS_TIME_INTERVAL_WIDGET, IS_UTC_DATETIME
 from s3widgets import S3DateTimeWidget, S3TimeIntervalWidget
 
@@ -312,7 +312,8 @@ class S3Task(object):
                       enabled=None, # None = Enabled
                       group_name=None,
                       ignore_duplicate=False,
-                      sync_output=0):
+                      sync_output=0,
+                      report_progress=False):
         """
             Schedule a task in web2py Scheduler
 
@@ -390,14 +391,71 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Add to DB for pickup by Scheduler task
-        db = current.db
-        record = db.scheduler_task.insert(application_name="%s/default" % current.request.application,
-                                          task_name=task,
-                                          function_name=function_name,
-                                          args=json.dumps(args),
-                                          vars=json.dumps(vars),
-                                          **kwargs)
+        record = self.scheduler.queue_task(task,
+                                           args,
+                                           vars,
+                                           sync_output=sync_output)
+        if report_progress:
+            log_name = datetime.datetime.now() \
+                .strftime("%y-%m-%d-%H-%M") + "_" + task + ".txt"
+            from time import sleep
+            rt = RepeatedTimer(1, self.check_status,
+                               log_name, record.id,
+                               self.scheduler, task,
+                               current.request.folder)
+            try:
+                '''
+                While the task is running..? What if it
+                never gets out of a QUEUED state?
+                Every second for 10 seconds, check
+                the task's status
+                '''
+                sleep(15)
+            finally:
+                rt.stop()
         return record
+
+    #--------------------------------------------------------------------------
+    def check_status(user_id, log_name, task_id, scheduler, task_name, folder):
+        import os
+        log_path = os.path.join(folder, "logs", "tasks")
+        from gluon import DAL, Field
+        '''
+        If we use current.db here instead of getting a
+        new handle to the db, the task that we
+        previously queued won't get inserted into the db
+        so every call we make in this method to check
+        on the task's status will always result in the task being in
+        the 'QUEUED' state.
+        '''
+        db = DAL('sqlite://storage.db',
+                 folder='applications/eden/databases',
+                 auto_import=True)
+        table = db.scheduler_task
+        query = (table.id == task_id)
+        task_status = None
+        try:
+            task_status = db(query).select(table.status).first().status
+        except AttributeError:
+            task_status = 'Unknown (task not yet in db)'
+            
+        '''
+        This is the preferred way to check a task's status since
+        it's using the web2py API, but we can't use this
+        because the scheduler is pointing to
+        current.db (see above comment):
+        task_status = scheduler.task_status(task_id, output=True)
+        print task_status.scheduler_task.status
+        print task_status.result
+        print task_status.scheduler_run.run_output
+        '''
+
+        if not os.path.exists(log_path):
+            os.makedirs(log_path)
+
+        with open(os.path.join(log_path, log_name), "a+") as log:
+            log.write('<%s>: %s is currently in the %s state\n'
+                      % (datetime.datetime.now(), task_name, task_status))
 
     # -------------------------------------------------------------------------
     def _duplicate_task_exists(self, task, args, vars):
