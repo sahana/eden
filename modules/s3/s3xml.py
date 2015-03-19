@@ -56,6 +56,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from s3codec import S3Codec
+from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
 from s3fields import S3RepresentLazy
 from s3utils import s3_get_foreign_key, s3_unicode, s3_strip_markup, s3_validate, s3_represent_value
 
@@ -1179,8 +1180,6 @@ class S3XML(S3Codec):
         # Fields
         FIELDS_TO_ATTRIBUTES = self.FIELDS_TO_ATTRIBUTES
 
-        encode_iso_datetime = self.encode_iso_datetime
-
         _repr = self.represent
         to_json = json.dumps
 
@@ -1207,7 +1206,7 @@ class S3XML(S3Codec):
             value = None
 
             if fieldtype == "datetime":
-                value = encode_iso_datetime(v).decode("utf-8")
+                value = s3_encode_iso_datetime(v).decode("utf-8")
             elif fieldtype in ("date", "time") or \
                  fieldtype[:7] == "decimal":
                 value = str(formatter(v)).decode("utf-8")
@@ -1355,8 +1354,8 @@ class S3XML(S3Codec):
         value = None
 
         try:
-            dt = S3Codec.decode_iso_datetime(str(dtstr))
-            value = S3Codec.as_utc(dt)
+            dt = s3_decode_iso_datetime(str(dtstr))
+            value = s3_utc(dt)
         except:
             error = sys.exc_info()[1]
         if error is None:
@@ -2381,7 +2380,6 @@ class S3XML(S3Codec):
             decode_date = lambda v: datetime.datetime(
                                     *xlrd.xldate_as_tuple(v, wb.datemode))
 
-            encode_iso_datetime = cls.encode_iso_datetime
             def decode(t, v):
                 """
                     Helper method to decode the cell value by type
@@ -2399,7 +2397,7 @@ class S3XML(S3Codec):
                     elif t == xlrd.XL_CELL_NUMBER:
                         text = str(long(v)) if long(v) == v else str(v)
                     elif t == xlrd.XL_CELL_DATE:
-                        text = encode_iso_datetime(decode_date(v))
+                        text = s3_encode_iso_datetime(decode_date(v))
                     elif t == xlrd.XL_CELL_BOOLEAN:
                         text = str(value).lower()
                 return text

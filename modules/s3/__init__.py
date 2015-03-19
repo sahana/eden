@@ -47,6 +47,7 @@ from s3validators import *
 from s3utils import *
 from s3widgets import *
 from s3data import *
+from s3datetime import *
 
 # Basic Toolkits ==============================================================
 #

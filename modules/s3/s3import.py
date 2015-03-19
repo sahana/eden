@@ -64,6 +64,7 @@ from gluon import *
 from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
+from s3datetime import s3_utc
 from s3rest import S3Method
 from s3resource import S3Resource
 from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
@@ -2156,7 +2157,7 @@ class S3ImportItem(object):
         VALIDATION_ERROR = current.ERROR.VALIDATION_ERROR
 
         # Make item mtime TZ-aware
-        self.mtime = xml.as_utc(self.mtime)
+        self.mtime = s3_utc(self.mtime)
 
         _debug("Committing item %s" % self)
 
@@ -2233,7 +2234,7 @@ class S3ImportItem(object):
         this_mci = 0
         if this:
             if hasattr(table, MTIME):
-                this_mtime = xml.as_utc(this[MTIME])
+                this_mtime = s3_utc(this[MTIME])
             if hasattr(table, MCI):
                 this_mci = this[MCI]
 
@@ -2242,7 +2243,7 @@ class S3ImportItem(object):
         this_modified = True
         self.modified = True
         self.conflict = False
-        last_sync = xml.as_utc(job.last_sync)
+        last_sync = s3_utc(job.last_sync)
         if last_sync:
             if this_mtime and this_mtime < last_sync:
                 this_modified = False
@@ -2299,7 +2300,7 @@ class S3ImportItem(object):
                     if f in this:
                         # Check if unchanged
                         if type(this[f]) is datetime:
-                            if xml.as_utc(data[f]) == xml.as_utc(this[f]):
+                            if s3_utc(data[f]) == s3_utc(this[f]):
                                 del data[f]
                                 continue
                         else:

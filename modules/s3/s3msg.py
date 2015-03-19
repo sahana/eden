@@ -70,6 +70,7 @@ from gluon.html import *
 
 from s3codec import S3Codec
 from s3crud import S3CRUD
+from s3datetime import s3_decode_iso_datetime
 from s3forms import S3SQLDefaultForm
 from s3utils import s3_unicode
 from s3validators import IS_IN_SET, IS_ONE_OF
@@ -1683,7 +1684,7 @@ class S3Msg(object):
             mtable = s3db.msg_sms
             minsert = mtable.insert
             update_super = s3db.update_super
-            decode = S3Codec.decode_iso_datetime
+            decode = s3_decode_iso_datetime
 
             # Is this channel connected to a parser?
             parser = s3db.msg_parser_enabled(channel_id)

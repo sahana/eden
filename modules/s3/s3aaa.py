@@ -63,11 +63,12 @@ from gluon.tools import Auth, callback, DEFAULT, replace_id
 from gluon.utils import web2py_uuid
 
 from s3dal import Row, Rows, Query, Table
+from s3datetime import S3DateTime
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
 from s3rest import S3Method
 from s3track import S3Tracker
-from s3utils import s3_addrow, S3DateTime, s3_get_extension, s3_mark_required
+from s3utils import s3_addrow, s3_get_extension, s3_mark_required
 
 DEBUG = False
 if DEBUG:

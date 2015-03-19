@@ -83,7 +83,8 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.validators import Validator
 
-from s3utils import S3DateTime, s3_orderby_fields, s3_unicode, s3_validate
+from s3datetime import S3DateTime
+from s3utils import s3_orderby_fields, s3_unicode, s3_validate
 
 def translate(text):
     if text is None:

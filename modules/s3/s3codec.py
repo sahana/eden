@@ -29,16 +29,6 @@
 
 __all__ = ("S3Codec",)
 
-import datetime
-try:
-    import dateutil
-    import dateutil.parser
-    import dateutil.tz
-except ImportError:
-    import sys
-    print >> sys.stderr, "ERROR: python-dateutil module needed for date handling"
-    raise
-
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -143,79 +133,6 @@ class S3Codec(object):
         if s:
             s = unescape(s, cls.XML2PY)
         return s
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def decode_iso_datetime(dtstr):
-        """
-            Convert date/time string in ISO-8601 format into a
-            datetime object
-
-            @note: this routine is named "iso" for consistency reasons,
-                   but can actually read a broad variety of datetime
-                   formats, but may raise a ValueError where not
-
-            @param dtstr: the date/time string
-        """
-
-        # Default seconds/microseconds=zero
-        DEFAULT = datetime.datetime.utcnow().replace(second=0,
-                                                     microsecond=0)
-
-        dt = dateutil.parser.parse(dtstr, default=DEFAULT)
-        if dt.tzinfo is None:
-            try:
-                dt = dateutil.parser.parse(dtstr + " +0000",
-                                           default=DEFAULT)
-            except:
-                # time part missing?
-                dt = dateutil.parser.parse(dtstr + " 00:00:00 +0000",
-                                           default=DEFAULT)
-        return dt
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def as_utc(dt):
-        """
-            Get a datetime object for the same date/time as the
-            datetime object, but in UTC
-
-            @param dt: the datetime object
-        """
-        if dt:
-            if dt.tzinfo is None:
-                return dt.replace(tzinfo=dateutil.tz.tzutc())
-            return dt.astimezone(dateutil.tz.tzutc())
-        else:
-            return None
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def encode_iso_datetime(dt):
-        """
-            Convert a datetime object into a ISO-8601 formatted
-            string, omitting microseconds
-
-            @param dt: the datetime object
-        """
-        dx = dt - datetime.timedelta(microseconds=dt.microsecond)
-        return dx.isoformat()
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def encode_local_datetime(dt, fmt=None):
-        """
-            Convert a datetime object into a local date/time formatted
-            string, omitting microseconds
-
-            @param dt: the datetime object
-        """
-        if fmt is None:
-            format = current.deployment_settings.get_L10n_datetime_format()
-        else:
-            format = fmt
-        dx = dt - datetime.timedelta(microseconds=dt.microsecond)
-        return dx.strftime(str(format))
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -108,6 +108,7 @@ from gluon.languages import lazyT
 from gluon.sqlhtml import *
 from gluon.storage import Storage
 
+from s3datetime import S3DateTime
 from s3utils import *
 from s3validators import *
 

@@ -25,13 +25,13 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("SSF", "default/users")    
+    settings.base.prepopulate = ("SSF", "default/users")
     # Base settings
     settings.base.system_name = T("Sahana Sunflower: A Community Portal")
     settings.base.system_name_short = T("Sahana Sunflower")
     settings.base.theme = "SSF"
 
-    # UI 
+    # UI
     settings.ui.custom_icons = {
         "watch": "icon-eye-open",
         "unwatch": "icon-eye-close",
@@ -39,7 +39,7 @@ def config(settings):
         "deploy": "icon-rocket",
         "contribute": "icon-lightbulb",
     }
-    
+
     # Message
     settings.msg.notify_email_format = "text"
 
@@ -1176,7 +1176,6 @@ def config(settings):
 
             created_on_selector = resource.prefix_selector("created_on")
             created_on_colname = None
-            as_utc = current.xml.as_utc
             notify_on = meta_data["notify_on"]
             last_check_time = meta_data["last_check_time"]
             rfields = data["rfields"]
@@ -1201,7 +1200,7 @@ def config(settings):
                     except KeyError, AttributeError:
                         pass
                     else:
-                        if as_utc(created_on) >= last_check_time:
+                        if s3_utc(created_on) >= last_check_time:
                             append_record = new.append
 
                 record = []

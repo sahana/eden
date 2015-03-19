@@ -56,6 +56,7 @@ from gluon.html import *
 from gluon.validators import IS_IN_SET
 from gluon.sqlhtml import OptionsWidget
 
+from s3datetime import s3_decode_iso_datetime, s3_utc
 from s3rest import S3Method
 from s3query import FS
 from s3report import S3ReportForm
@@ -1417,9 +1418,8 @@ class S3TimeSeries(object):
                        datetime.timedelta(days = day-1)
 
         # ISO datetime
-        xml = current.xml
-        dt = xml.decode_iso_datetime(str(timestr))
-        return xml.as_utc(dt)
+        dt = s3_decode_iso_datetime(str(timestr))
+        return s3_utc(dt)
 
 # =============================================================================
 class S3TimeSeriesEvent(object):

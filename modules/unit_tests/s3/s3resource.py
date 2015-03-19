@@ -23,7 +23,7 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         """ Master resource has no join """
 
         resource = current.s3db.resource("pr_person")
-        
+
         self.assertEqual(resource.get_join(), None)
 
     # -------------------------------------------------------------------------
@@ -37,7 +37,7 @@ class ComponentJoinConstructionTests(unittest.TestCase):
         ctable = component.table
         expected = (ctable.person_id == rtable.id) & \
                    (ctable.deleted != True)
-                   
+
         join = component.get_join()
         self.assertEqual(str(join), str(expected))
 
@@ -47,12 +47,12 @@ class ComponentJoinConstructionTests(unittest.TestCase):
 
         resource = current.s3db.resource("pr_person")
         component = resource.components["contact"]
-        
+
         rtable = resource.table
         ctable = component.table
         expected = (rtable.pe_id == ctable.pe_id) & \
                    (ctable.deleted != True)
-                   
+
         join = component.get_join()
         self.assertEqual(str(join), str(expected))
 
@@ -63,14 +63,14 @@ class ComponentJoinConstructionTests(unittest.TestCase):
 
         resource = current.s3db.resource("project_project")
         component = resource.components["task"]
-        
+
         project_project = resource.table
         project_task_project = component.link.table
         project_task = component.table
         expected = (((project_task_project.project_id == project_project.id) &
                    (project_task_project.deleted != True)) &
                    (project_task_project.task_id == project_task.id))
-                   
+
         join = component.get_join()
         self.assertEqual(str(join), str(expected))
 
@@ -108,7 +108,7 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
 
         resource = current.s3db.resource("pr_person")
         component = resource.components["contact"]
-        
+
         rtable = resource.table
         ctable = component.table
         expected = ctable.on((rtable.pe_id == ctable.pe_id) &
@@ -126,11 +126,11 @@ class ComponentLeftJoinConstructionTests(unittest.TestCase):
 
         resource = current.s3db.resource("project_project")
         component = resource.components["task"]
-        
+
         rtable = resource.table
         ltable = component.link.table
         ctable = component.table
-        
+
         expected_l = ltable.on((ltable.project_id == rtable.id) &
                                (ltable.deleted != True))
         expected_r = ctable.on(ltable.task_id == ctable.id)
@@ -209,7 +209,7 @@ class ResourceAxisFilterTests(unittest.TestCase):
             self.assertTrue("1" in values)
             self.assertTrue("2" in values)
             self.assertTrue("3" in values)
-            
+
         finally:
             try:
                 table.drop()
@@ -223,7 +223,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testDataTableFilterStandard(self):
         """ Test Standard Data Table """
-        
+
         resource = current.s3db.resource("hrm_certificate_skill")
         vars = Storage({"bSortable_0": "false",
                         "bSortable_1": "true",
@@ -241,7 +241,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testDataTableFilterWithBulkColumn(self):
         """ Test De-Duplicator Data Table """
-        
+
         resource = current.s3db.resource("hrm_certificate_skill")
         vars = Storage({"bSortable_0": "false",
                         "bSortable_1": "false",
@@ -260,7 +260,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testDataTableFilterOther(self):
         """ Test Other Data Table """
-        
+
         resource = current.s3db.resource("hrm_certificate_skill")
         vars = Storage({"bSortable_0": "false",
                         "bSortable_1": "true",
@@ -275,7 +275,7 @@ class ResourceDataTableFilterTests(unittest.TestCase):
                                                             "competency_id"],
                                                             vars)
         self.assertEqual(orderby, "hrm_competency_rating.priority desc")
-        
+
 # =============================================================================
 class ResourceExportTests(unittest.TestCase):
     """ Test XML export of resources """
@@ -288,7 +288,7 @@ class ResourceExportTests(unittest.TestCase):
         auth = current.auth
 
         auth.override = True
-        
+
         xmlstr = """
 <s3xml>
     <resource name="org_organisation">
@@ -373,7 +373,7 @@ class ResourceExportTests(unittest.TestCase):
     @unittest.skipIf(current.deployment_settings.get_database_type() == "postgres", "not working for postgres")
     def testExportTreeWithMSince(self):
         """ Test automatic ordering of export items by mtime if msince is given """
-        
+
         # FIXME: functionality works in postgres, but test fails
 
         auth = current.auth
@@ -439,7 +439,7 @@ class ResourceExportTests(unittest.TestCase):
 
         auth = current.auth
         s3db = current.s3db
-        
+
         auth.override = True
 
         xmlstr = """
@@ -489,7 +489,7 @@ class ResourceExportTests(unittest.TestCase):
             xmlexport = resource.export_xml(filters=filters,
                                             mcomponents=["org_office"],
                                             dereference=False)
-                                            
+
             xmltree = etree.ElementTree(etree.fromstring(xmlexport))
             orgs = xmltree.xpath("resource[@name='org_organisation']")
             self.assertEqual(len(orgs), 1)
@@ -535,7 +535,7 @@ class ResourceExportTests(unittest.TestCase):
             self.assertTrue("SFO1" in uids)
             self.assertTrue("SFO2" in uids)
             self.assertTrue("SFO3" in uids)
-            
+
             offices = xmltree.xpath("//resource[@name='org_office']")
             self.assertEqual(len(offices), 3)
             uids = [office.get("uuid") for office in offices]
@@ -613,10 +613,10 @@ class ResourceImportTests(unittest.TestCase):
 </s3xml>"""
 
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
-        
+
         resource = current.s3db.resource("pr_person")
         msg = resource.import_xml(xmltree)
-        
+
         from gluon.contrib import simplejson as json
         msg = json.loads(msg)
 
@@ -646,8 +646,8 @@ class ResourceImportTests(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
         resource.import_xml(xmltree)
-        self.assertEqual(current.xml.as_utc(resource.mtime),
-                         current.xml.as_utc(datetime.datetime(2012, 4, 21, 0, 0, 0)))
+        self.assertEqual(s3_utc(resource.mtime),
+                         s3_utc(datetime.datetime(2012, 4, 21, 0, 0, 0)))
 
     # -------------------------------------------------------------------------
     def testImportXMLWithoutMTime(self):
@@ -666,8 +666,8 @@ class ResourceImportTests(unittest.TestCase):
         resource.import_xml(xmltree)
         # Can't compare with exactly utcnow as these would be milliseconds apart,
         # assume equal dates are sufficient for this test
-        self.assertEqual(current.xml.as_utc(resource.mtime).date(),
-                         current.xml.as_utc(datetime.datetime.utcnow()).date())
+        self.assertEqual(s3_utc(resource.mtime).date(),
+                         s3_utc(datetime.datetime.utcnow()).date())
 
     # -------------------------------------------------------------------------
     def testImportXMLWithPartialMTime(self):
@@ -687,8 +687,8 @@ class ResourceImportTests(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("hms_hospital")
         resource.import_xml(xmltree)
-        self.assertEqual(current.xml.as_utc(resource.mtime).date(),
-                         current.xml.as_utc(datetime.datetime.utcnow()).date())
+        self.assertEqual(s3_utc(resource.mtime).date(),
+                         s3_utc(datetime.datetime.utcnow()).date())
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -813,7 +813,7 @@ class ResourceDataObjectAPITests (unittest.TestCase):
         finally:
             auth.override = False
             current.db.rollback()
-        
+
 # =============================================================================
 class MergeOrganisationsTests(unittest.TestCase):
     """ Test merging org_organisation records """
@@ -1198,7 +1198,7 @@ class MergePersonsTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testPermissionError(self):
         """ Check for exception if not authorized """
-        
+
         db = current.db
         auth = current.auth
         s3db = current.s3db
@@ -1210,7 +1210,7 @@ class MergePersonsTests(unittest.TestCase):
 
         self.assertRaises(current.auth.permission.error,
                           self.resource.merge, self.id1, self.id2)
-                          
+
         # Check for proper rollback
         ptable = s3db.pr_person
         query = ptable._id.belongs((self.id1, self.id2))
@@ -1220,7 +1220,7 @@ class MergePersonsTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testOriginalNotFoundError(self):
         """ Check for exception if record not found """
-        
+
         db = current.db
         s3db = current.s3db
         deployment_settings = current.deployment_settings
@@ -1235,7 +1235,7 @@ class MergePersonsTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testNotDuplicateFoundError(self):
         """ Check for exception if record not found """
-        
+
         db = current.db
         s3db = current.s3db
         deployment_settings = current.deployment_settings
@@ -1506,14 +1506,14 @@ class MergeReferenceListsTest(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def setUp(self):
-        
+
         tablename = self.tablename = "merge_list_reference"
         db = current.db
         db.define_table(tablename,
                         Field("facility_type_id",
                               "list:reference org_facility_type"),
                         *s3_meta_fields())
-                                
+
         xmlstr = """
 <s3xml>
     <resource name="org_facility_type" uuid="TESTMERGEFACTYPE1">
@@ -1537,13 +1537,13 @@ class MergeReferenceListsTest(unittest.TestCase):
     def testMergeListReference(self):
 
         s3db = current.s3db
-    
+
         resource = s3db.resource("org_facility_type",
                                  uid=["TESTMERGEFACTYPE1", "TESTMERGEFACTYPE2"])
 
         rows = resource.select(["id"], limit=2, as_rows=True)
         self.assertEqual(len(rows), 2)
-        
+
         original = rows[0].id
         duplicate = rows[1].id
         resource.merge(original, duplicate)
@@ -1874,7 +1874,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         auth = current.auth
         s3db = current.s3db
-        
+
         org_organisation = s3db.org_organisation
         org_test_office = s3db.org_office.with_alias("org_test_office")
 
@@ -1907,7 +1907,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                          (org_test_office.deleted != True)) &
                         (org_test_office.office_type_id == 5))
         self.assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
-        
+
         # ...and the effective query of the master contains the filter
         # and is using the correct alias
         expected = (((org_organisation.deleted != True) &
@@ -1923,13 +1923,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                     (org_organisation.id > 0)) &
                     (org_test_office.name.lower().like("xyz%"))))
         self.assertEqual(str(component.get_query()), str(expected))
-        
+
         rfilter = component.rfilter
         expected = org_organisation.on(
                         (org_test_office.organisation_id == org_organisation.id) &
                         (org_test_office.office_type_id == 5))
         self.assertEqual(str(rfilter.get_joins(left=True)[0]), str(expected))
-        
+
         # Remove the component hook
         del current.model.components["org_organisation"]["test"]
 
@@ -1942,7 +1942,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
             Test translation of datatable filter/sorting for fields in
             filtered components
         """
-        
+
         s3db = current.s3db
 
         org_organisation = s3db.org_organisation
@@ -1978,7 +1978,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         self.assertEqual(orderby,
                          "org_test_office.name asc, "
                          "org_office_type.name desc")
-        
+
         # Remove the component hook
         del current.model.components["org_organisation"]["test"]
 
@@ -1986,10 +1986,10 @@ class ResourceFilteredComponentTests(unittest.TestCase):
     @unittest.skipIf(not current.deployment_settings.has_module("org"), "org module disabled")
     def testSelectWithFilteredComponent(self):
         """ Test S3Resource.select with fields in a filtered component """
-    
+
         s3db = current.s3db
         auth = current.auth
-        
+
         xmlstr = """
 <s3xml>
     <resource name="org_organisation" uuid="FCTESTORG">
@@ -2008,7 +2008,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
 
         auth.override = True
-        
+
         resource = s3db.resource("org_organisation")
         resource.import_xml(xmltree)
 
@@ -2023,7 +2023,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                                           "filterfor": type_id,
                                          },
                            )
-        
+
         resource = current.s3db.resource("org_organisation", uid="FCTESTORG")
         fields = ["id", "name", "test.name", "test.office_type_id$name"]
         data = resource.select(fields, limit=None)
@@ -2081,7 +2081,7 @@ class ResourceFilteredComponentTests(unittest.TestCase):
 
         s3db = current.s3db
         resource = s3db.resource("hrm_human_resource")
-        
+
         pr_person = s3db.pr_person
         hrm_human_resource = s3db.hrm_human_resource
         pr_contact = s3db.pr_contact
@@ -2089,13 +2089,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         component = resource.components["email"]
         pr_email_contact = pr_contact.with_alias("pr_email_contact")
         ljoin = component.get_left_join()
-        
+
         self.assertTrue(isinstance(ljoin, list))
         self.assertEqual(len(ljoin), 2)
         self.assertEqual(str(ljoin[0]), str(pr_person.on(
                             (hrm_human_resource.person_id == pr_person.id) &
                             (pr_person.deleted != True))))
-                            
+
         self.assertEqual(str(ljoin[1]), str(pr_email_contact.on(
                                 (pr_person.pe_id == pr_email_contact.pe_id) &
                                 (pr_email_contact.contact_method == "EMAIL"))))
@@ -2103,13 +2103,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         component = resource.components["phone"]
         pr_phone_contact = pr_contact.with_alias("pr_phone_contact")
         ljoin = component.get_left_join()
-        
+
         self.assertTrue(isinstance(ljoin, list))
         self.assertEqual(len(ljoin), 2)
         self.assertEqual(str(ljoin[0]), str(pr_person.on(
                             (hrm_human_resource.person_id == pr_person.id) &
                             (pr_person.deleted != True))))
-                                        
+
         self.assertEqual(str(ljoin[1]), str(pr_phone_contact.on(
                                 (pr_person.pe_id == pr_phone_contact.pe_id) &
                                 (pr_phone_contact.contact_method == "SMS"))))
@@ -2137,18 +2137,18 @@ class ResourceFilteredComponentTests(unittest.TestCase):
                                           },
                                          ),
                            )
-                           
+
         resource = s3db.resource("org_organisation")
         self.assertEqual(str(resource.components.fieldoffice.filter), \
                          "(org_fieldoffice_office.office_type_id = 5)")
         self.assertEqual(str(resource.components.hq.filter), \
                          "(org_hq_office.office_type_id = 4)")
-        
+
         tree = resource.export_tree(mcomponents=["fieldoffice","hq"])
         self.assertTrue(resource.components.fieldoffice._length > 0)
         self.assertTrue(resource.components.hq._length > 0)
         self.assertTrue(resource.components.office._length is None)
-        
+
         tree = resource.export_tree(mcomponents=["org_office","fieldoffice","hq"])
         self.assertTrue(resource.components.office._length > 0)
         self.assertTrue(resource.components.fieldoffice._length is None)
@@ -2226,7 +2226,7 @@ class ResourceDeleteTests(unittest.TestCase):
         db(db.del_master._id>0).delete()
         db(db.del_super._id>0).delete()
         db.commit()
-        
+
         current.auth.override = False
 
     # -------------------------------------------------------------------------
@@ -2235,7 +2235,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         self.master_deleted = row.id
         return
-        
+
     # -------------------------------------------------------------------------
     def super_ondelete(self, row):
         """ Dummy ondelete-callback """
@@ -2256,7 +2256,7 @@ class ResourceDeleteTests(unittest.TestCase):
 
         s3db = current.s3db
         s3db.clear_config("del_master", "super_entity")
-        
+
         master_id = self.master_id
 
         # Delete the master record
@@ -2373,7 +2373,7 @@ class ResourceDeleteTests(unittest.TestCase):
             component_record = component[component_id]
             self.assertFalse(component_record.deleted)
             self.assertEqual(component_record.del_master_id, None)
-            
+
             # Check callbacks
             self.assertEqual(self.master_deleted, master_id)
             self.assertEqual(self.super_deleted, 0)
@@ -2437,7 +2437,7 @@ class ResourceDeleteTests(unittest.TestCase):
         finally:
             component.drop()
             del current.model.components["del_master"]["component"]
-            
+
     # -------------------------------------------------------------------------
     def testArchiveSuper(self):
         """
@@ -2528,7 +2528,7 @@ class ResourceDeleteTests(unittest.TestCase):
             crecord = component[component_id]
             self.assertTrue(crecord.deleted)
             self.assertEqual(crecord.del_super_id, None)
-            
+
             # Check callbacks
             self.assertEqual(self.master_deleted, master_id)
             self.assertEqual(self.super_deleted, super_id)
@@ -2592,7 +2592,7 @@ class ResourceDeleteTests(unittest.TestCase):
             crecord = component[component_id]
             self.assertFalse(crecord.deleted)
             self.assertEqual(crecord.del_super_id, None)
-            
+
             # Check callbacks
             self.assertEqual(self.master_deleted, master_id)
             self.assertEqual(self.super_deleted, super_id)
@@ -2656,7 +2656,7 @@ class ResourceDeleteTests(unittest.TestCase):
             crecord = component[component_id]
             self.assertFalse(crecord.deleted)
             self.assertEqual(crecord.del_super_id, super_id)
-            
+
             # Check callbacks
             self.assertEqual(self.master_deleted, 0)
             self.assertEqual(self.super_deleted, 0)
@@ -2665,7 +2665,7 @@ class ResourceDeleteTests(unittest.TestCase):
         finally:
             component.drop()
             del current.model.components["del_super"]["component"]
-            
+
     ## -------------------------------------------------------------------------
     #def testDeleteSimple(self):
         #""" Test hard deletion of a record """
@@ -2678,7 +2678,7 @@ class ResourceDeleteTests(unittest.TestCase):
             #Test hard deletion of a record which is referenced by
             #other records
         #"""
-        
+
         #raise NotImplementedError
 
     ## -------------------------------------------------------------------------
@@ -2708,11 +2708,11 @@ class LinkDeletionTests(unittest.TestCase):
         # Define master table
         s3db.define_table("link_master",
                           *s3_meta_fields())
-                          
+
         # Define component table
         s3db.define_table("link_component",
                           *s3_meta_fields())
-                          
+
         # Define link table
         s3db.define_table("link_link",
                           Field("master_id", "reference link_master"),
@@ -2785,7 +2785,7 @@ class LinkDeletionTests(unittest.TestCase):
         # Filter for a particular component record
         query = FS("component.id") == self.component1
         resource.add_filter(query)
-        
+
         link = resource.links["link"]
 
         # Test resolution of field selector
@@ -2821,7 +2821,7 @@ class LinkDeletionTests(unittest.TestCase):
                                                  limitby=(0, 1)).first()
         self.assertNotEqual(row, None,
                             msg = "Component record deleted instead of just unlinking it")
-        
+
         row = db((table.id == self.component2) & \
                  (table.deleted != True)).select(table.id,
                                                  limitby=(0, 1)).first()
@@ -2842,7 +2842,7 @@ def run_suite(*test_classes):
     return
 
 if __name__ == "__main__":
-    
+
     run_suite(
         ComponentJoinConstructionTests,
         ComponentLeftJoinConstructionTests,

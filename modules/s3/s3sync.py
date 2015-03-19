@@ -55,6 +55,7 @@ except ImportError:
 from gluon import *
 from gluon.storage import Storage
 
+from s3datetime import s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
@@ -583,7 +584,7 @@ class S3Sync(S3Method):
                     # Accept if newer
                     xml = current.xml
                     if xml.MTIME in original and \
-                       xml.as_utc(original[xml.MTIME]) <= item.mtime:
+                       s3_utc(original[xml.MTIME]) <= item.mtime:
                         _debug("Accept because newer")
                         item.conflict = False
                     else:
