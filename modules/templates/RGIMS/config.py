@@ -32,7 +32,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0800"
+    settings.L10n.utc_offset = "+0800"
 
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)

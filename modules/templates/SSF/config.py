@@ -87,9 +87,7 @@ def config(settings):
     # Display the language toolbar
     settings.L10n.display_toolbar = True
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0000"
-    # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0000"
+    settings.L10n.utc_offset = "+0000"
 
     # Add thousands separator to numbers, eg. 1,000,000
     #settings.L10n.thousands_separator = True

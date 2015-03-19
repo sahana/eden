@@ -93,7 +93,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0530"
+    settings.L10n.utc_offset = "+0530"
 
     settings.fin.currencies = {
         "EUR" : T("Euros"),

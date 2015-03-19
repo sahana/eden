@@ -93,7 +93,7 @@ def config(settings):
     #settings.L10n.display_toolbar = False
     # @ToDO:These should be modified per-country
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0100"
+    settings.L10n.utc_offset = "+0100"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     #settings.L10n.decimal_separator = "."

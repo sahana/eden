@@ -87,7 +87,7 @@ def config(settings):
     # Default Language
     settings.L10n.default_language = "en"
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0600"
+    settings.L10n.utc_offset = "+0600"
     # Unsortable 'pretty' date format
     settings.L10n.date_format = "%d %b %Y"
     # Number formats (defaults to ISO 31-0)

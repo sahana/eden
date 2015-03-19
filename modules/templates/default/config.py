@@ -155,7 +155,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
-    #settings.L10n.utc_offset = "UTC +0000"
+    #settings.L10n.utc_offset = "+0000"
     # Uncomment these to use US-style dates in English
     #settings.L10n.date_format = "%m-%d-%Y"
     #settings.L10n.time_format = "%H:%M:%S"

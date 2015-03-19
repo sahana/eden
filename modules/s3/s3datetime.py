@@ -45,8 +45,11 @@ except ImportError:
     import sys
     print >> sys.stderr, "ERROR: python-dateutil module needed for date handling"
     raise
+import re
 
 from gluon import *
+
+OFFSET = re.compile("([+|-]{0,1})(\d{1,2}):(\d\d)")
 
 # =============================================================================
 class S3DateTime(object):
@@ -124,27 +127,58 @@ class S3DateTime(object):
                 dt = dt + datetime.timedelta(seconds=offset)
 
         if dt:
-            return cls.encode_local_datetime(dt)
+            return s3_encode_local_datetime(dt)
         else:
             return current.messages["NONE"]
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def get_offset_value(offset_str):
+    def get_offset_value(string):
         """
             Convert an UTC offset string into a UTC offset value in seconds
 
-            @param offset_str: the UTC offset as string
+            @param string: the UTC offset in hours as string, valid formats
+                           are: "+HH:MM", "+HHMM", "+HH" (positive sign can
+                           be omitted), can also recognize decimal notation
+                           with "." as mark
         """
-        if offset_str and len(offset_str) >= 5 and \
-            (offset_str[-5] == "+" or offset_str[-5] == "-") and \
-            offset_str[-4:].isdigit():
-            offset_hrs = int(offset_str[-5] + offset_str[-4:-2])
-            offset_min = int(offset_str[-5] + offset_str[-2:])
-            offset = 3600 * offset_hrs + 60 * offset_min
-            return offset
+
+        if not string:
+            return 0
+
+        sign = 1
+        offset_hrs = offset_min = 0
+
+        if isinstance(string, (int, long, float)):
+            offset_hrs = string
+        elif isinstance(string, basestring):
+            if string[:3] == "UTC":
+                string = string[3:]
+            string = string.strip()
+            match = OFFSET.match(string)
+            if match:
+                groups = match.groups()
+                if groups[0] == "-":
+                    sign = -1
+                offset_hrs = int(groups[1])
+                offset_min = int(groups[2])
+            elif "." not in string:
+                try:
+                    offset_hrs = int(string)
+                except ValueError:
+                    return 0
+                if offset_hrs < -99 or offset_hrs > 99:
+                    if offset_hrs < 0:
+                        sign = -1
+                    offset_hrs, offset_min = divmod(abs(offset_hrs), 100)
+            else:
+                try:
+                    offset_hrs = float(string)
+                except ValueError:
+                    return 0
         else:
-            return None
+            return 0
+        return sign * (3600 * offset_hrs + 60 * offset_min)
 
 #--------------------------------------------------------------------------
 def s3_decode_iso_datetime(dtstr):

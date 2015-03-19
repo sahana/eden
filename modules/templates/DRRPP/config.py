@@ -62,7 +62,7 @@ def config(settings):
     ])
     settings.L10n.default_language = "en-gb"
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0700"
+    settings.L10n.utc_offset = "+0700"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
@@ -183,7 +183,7 @@ def config(settings):
             Use new Web2Py formstyle to generate form using DIVs & CSS
             CSS can then be used to create MUCH more flexible form designs:
             - Labels above vs. labels to left
-            - Multiple Columns 
+            - Multiple Columns
             @ToDo: Requires further changes to code to use
         """
         form = DIV()
@@ -233,12 +233,12 @@ def config(settings):
         s3db.project_project.budget.label = T("Total Funding (USD)")
         location_id = s3db.project_location.location_id
         location_id.label = ""
-        
+
         # Limit to just Countries
         location_id.requires = s3db.gis_country_requires
         # Use dropdown, not AC
         location_id.widget = None
-        
+
         # In DRRPP this is a free field
         table = s3db.project_organisation
         table.comments.label = T("Role")
@@ -260,22 +260,22 @@ def config(settings):
         # Custom dataTable
         s3["dataTable_dom"] = 'ripl<"dataTable_table"t>p'
 
-        # Don't show export buttons for XLS/XML    
+        # Don't show export buttons for XLS/XML
         s3.formats = Storage(xls=None, xml=None)
-        
+
         # Remove rheader
         attr["rheader"] = None
-        
+
         # Only show 10 Project by default to improve load time
         attr["dt_lengthMenu"] = [[ 10, 50, -1], [ 10, 50, T("All")]]
         s3.dataTable_pageLength = 10
-        
+
         # Custom PreP
         standard_prep = s3.prep
         def custom_prep(r):
 
             resource = r.resource
-            
+
             # Call standard prep
             if callable(standard_prep):
                 result = standard_prep(r)
@@ -357,7 +357,7 @@ def config(settings):
                                  (T("Partner Organizations"), "partner.organisation_id"),
                                  (T("Donors"), "donor.organisation_id"),
                                 ]
-                                
+
                 # Report Settings for charts
                 if "chart" in r.get_vars and r.representation != "json":
                     s3.crud_strings[tablename].title_report  = T("Project Graph")
@@ -392,7 +392,7 @@ def config(settings):
                 current.deployment_settings.ui.hide_report_options = True
 
             if r.interactive:
-                
+
                 # Don't show Update/Delete button on Search table
                 if r.method is None and not r.id:
                     resource.configure(editable = False,
@@ -401,13 +401,13 @@ def config(settings):
 
                 # JS to show/hide Cook Island fields
                 s3.scripts.append("/%s/static/themes/DRRPP/js/drrpp.js" % current.request.application)
-                
+
                 if r.method == "read":
                     table_pl = s3db.project_location
                     table_l = s3db.gis_location
-                    countries = [row.name for row in 
+                    countries = [row.name for row in
                                  db((table_pl.project_id == r.record.id) &
-                                    (table_pl.location_id == table_l.id) 
+                                    (table_pl.location_id == table_l.id)
                                     ).select(table_l.name)
                                  ]
                     if not ("Cook Islands" in countries and len(countries) == 1):
@@ -643,7 +643,7 @@ def config(settings):
                                       8: "organisation_id",
                                      },
                        )
-        
+
         return attr
 
     settings.customise_project_project_controller = customise_project_project_controller
@@ -791,7 +791,7 @@ def config(settings):
                        #map_submit = (T("Search"), "search-button"),
                        map_advanced = (T("Advanced Search"), T("Simple Search")),
                        )
-        
+
         return attr
 
     settings.customise_project_location_controller = customise_project_location_controller

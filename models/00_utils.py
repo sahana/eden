@@ -109,7 +109,7 @@ def s3_get_utc_offset():
         offset = request.post_vars.get("_utc_offset", None)
         if offset:
             offset = int(offset)
-            utcstr = offset < 0 and "UTC +" or "UTC -"
+            utcstr = offset < 0 and "+" or "-"
             hours = abs(int(offset/60))
             minutes = abs(int(offset % 60))
             offset = "%s%02d%02d" % (utcstr, hours, minutes)

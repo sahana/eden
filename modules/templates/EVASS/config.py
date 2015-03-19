@@ -24,7 +24,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Pre-Populate
     settings.base.prepopulate = ("EVASS", "default/users")
-    # Pre-Populate options, for use in 000_config.py e.g. 
+    # Pre-Populate options, for use in 000_config.py e.g.
     #   settings.base.prepopulate = "template:demo" => Demo install
     #   settings.base.prepopulate = "template:prod" => Production install
     settings.base.prepopulate_options = {"mandatory": "EVASS",
@@ -64,7 +64,7 @@ def config(settings):
         ("it", "Italiano"),
     ])
     settings.L10n.default_language = "en"
-    settings.L10n.utc_offset = "UTC +0100"
+    settings.L10n.utc_offset = "+0100"
     settings.L10n.date_format = T("%d/%m/%Y")
     settings.L10n.decimal_separator = ","
     settings.L10n.thousands_separator = "."

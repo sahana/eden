@@ -89,7 +89,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
     # Default timezone for users
-    #settings.L10n.utc_offset = "UTC +0100"
+    #settings.L10n.utc_offset = "+0100"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
@@ -122,7 +122,7 @@ def config(settings):
         table.type.default = 3 # Telephones
         table.purchase_price.readable = table.purchase_price.writable = False
         table.purchase_currency.readable = table.purchase_currency.writable = False
-        
+
     settings.customise_asset_asset_resource = customise_asset_asset_resource
     # -----------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

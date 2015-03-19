@@ -36,7 +36,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC -0500"
+    settings.L10n.utc_offset = "-0500"
     # Uncomment these to use US-style dates in English
     settings.L10n.date_format = "%m-%d-%Y"
     # Start week on Sunday

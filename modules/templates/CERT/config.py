@@ -33,7 +33,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     settings.L10n.display_toolbar = False
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC -0600"
+    settings.L10n.utc_offset = "-0600"
     # Uncomment these to use US-style dates in English
     settings.L10n.date_format = "%m-%d-%Y"
     # Start week on Sunday
@@ -51,17 +51,17 @@ def config(settings):
     settings.ui.label_postcode = "ZIP Code"
     # PDF to Letter
     settings.base.paper_size = T("Letter")
-    
+
     settings.hrm.multiple_orgs = False
-    
+
     settings.hrm.vol_experience = False
     settings.hrm.use_description = False
     settings.hrm.use_skills = False
     settings.hrm.use_awards = False
     settings.hrm.use_credentials = False
-    
+
     settings.msg.require_international_phone_numbers = False
-    
+
     settings.gis.geocode_imported_addresses = "google"
 
     # Comment/uncomment modules here to disable/enable them

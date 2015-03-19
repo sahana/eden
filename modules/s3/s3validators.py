@@ -2479,23 +2479,21 @@ class IS_UTC_OFFSET(Validator):
             passes through.
     """
 
-    def __init__(self,
-                 error_message="invalid UTC offset!"
-                ):
+    def __init__(self, error_message="invalid UTC offset!"):
+
         self.error_message = error_message
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
         if value and isinstance(value, str):
-            _offset_str = value.strip()
 
-            offset = S3DateTime.get_offset_value(_offset_str)
-
-            if offset is not None and offset > -86340 and offset < 86340:
-                # Add a leading 'UTC ',
-                # otherwise leading '+' and '0' will be stripped away by web2py
-                return ("UTC " + _offset_str[-5:], None)
+            offset = S3DateTime.get_offset_value(value)
+            if offset is not None:
+                hours, seconds = divmod(abs(offset), 3600)
+                minutes = int(seconds / 60)
+                sign = "-" if offset < 0 else "+"
+                return ("%s%02d%02d" % (sign, hours, minutes), None)
 
         return (value, self.error_message)
 
@@ -2570,10 +2568,9 @@ class IS_UTC_DATETIME(Validator):
             self.utc_offset = utc_offset
         if self.utc_offset is None:
             self.utc_offset = current.session.s3.utc_offset
-        validate = IS_UTC_OFFSET()
-        offset, error = validate(self.utc_offset)
+        offset, error = IS_UTC_OFFSET()(self.utc_offset)
         if error:
-            self.utc_offset = "UTC +0000" # fallback to UTC
+            self.utc_offset = "+0000" # fallback to UTC
         else:
             self.utc_offset = offset
         delta = S3DateTime.get_offset_value(self.utc_offset)
@@ -2588,7 +2585,7 @@ class IS_UTC_DATETIME(Validator):
         if len(val) > 5 and val[-5] in ("+", "-") and val[-4:].isdigit():
             # UTC offset specified in dtstr
             dtstr = val[0:-5].strip()
-            utc_offset = "UTC %s" % val[-5:]
+            utc_offset = val[-5:]
         else:
             # use default UTC offset
             dtstr = val

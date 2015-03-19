@@ -1328,7 +1328,7 @@ class S3Config(Storage):
                            )
 
     def get_L10n_utc_offset(self):
-        return self.L10n.get("utc_offset", "UTC +0000")
+        return self.L10n.get("utc_offset", "+0000")
 
     def get_L10n_firstDOW(self):
         return self.L10n.get("firstDOW", 1)

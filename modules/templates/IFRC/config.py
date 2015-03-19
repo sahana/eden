@@ -249,7 +249,7 @@ def config(settings):
     # Default Language
     settings.L10n.default_language = "en-gb"
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC +0700"
+    settings.L10n.utc_offset = "+0700"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."

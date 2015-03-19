@@ -33,7 +33,7 @@ def config(settings):
     # US Settings
     # -----------------------------------------------------------------------------
     # Default timezone for users
-    settings.L10n.utc_offset = "UTC -0800"
+    settings.L10n.utc_offset = "-0800"
     # Uncomment these to use US-style dates
     settings.L10n.date_format = "%m-%d-%Y"
     # Start week on Sunday
@@ -1473,11 +1473,11 @@ def config(settings):
                              }
         for k in feature_type_keys.values():
             output[k] = 0
-                
+
         ptable = s3db.gis_poi
         ltable = s3db.gis_poi_group
 
-        join = [ltable.on((ltable.poi_id == ptable.id) & 
+        join = [ltable.on((ltable.poi_id == ptable.id) &
                           (ltable.deleted == False)),
                 gtable.on(ptable.location_id == gtable.id),
                 ]
@@ -1486,9 +1486,9 @@ def config(settings):
 
         cnt = ptable.id.count()
         feature_type = gtable.gis_feature_type
-        rows = db(query).select(cnt, 
-                                feature_type, 
-                                join = join, 
+        rows = db(query).select(cnt,
+                                feature_type,
+                                join = join,
                                 groupby = feature_type,
                                 )
         for row in rows:
@@ -2416,11 +2416,11 @@ def config(settings):
 
                 # Patch the style
                 script = \
-    '''var s=$('#gis_poi_poi_type_id__row .small-10') 
+    '''var s=$('#gis_poi_poi_type_id__row .small-10')
     var c=s.html()
     s.html('<div class="row"><div class="small-4 end columns"></div></div>')
     $('#gis_poi_poi_type_id__row .small-10 .small-4').html(c)
-    s=$('#gis_poi_organisation_id__row .small-10') 
+    s=$('#gis_poi_organisation_id__row .small-10')
     c=s.html()
     s.html('<div class="row"><div class="small-4 end columns"></div></div>')
     $('#gis_poi_organisation_id__row .small-10 .small-4').html(c)'''
