@@ -516,6 +516,12 @@ def config(settings):
                restricted = True,
                #module_type = 10,
            )),
+        ("po", Storage(
+               name_nice = T("Population Outreach"),
+               #description = "Population Outreach",
+               restricted = True,
+               #module_type = 10,
+           )),
         ("stats", Storage(
                 name_nice = T("Statistics"),
                 #description = "Manages statistics",

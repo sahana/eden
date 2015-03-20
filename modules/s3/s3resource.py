@@ -1364,6 +1364,11 @@ class S3Resource(object):
                     append(f)
                     continue
 
+                # Must include the fkey if component
+                if self.parent and not self.link and f == self.fkey:
+                    append(f)
+                    continue
+
                 # Must include all super-keys
                 ktablename = s3_get_foreign_key(table[f], m2m=False)[0]
                 if ktablename:

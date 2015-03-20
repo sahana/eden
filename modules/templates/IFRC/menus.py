@@ -89,6 +89,8 @@ class S3MainMenu(default.S3MainMenu):
             homepage("project")(
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
+                # @todo: hide for all orgs except NZRC
+                MM("Outreach", c="po", f="index"),
             ),
             homepage("vulnerability")(
                 MM("Map", c="vulnerability", f="index"),

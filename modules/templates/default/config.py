@@ -940,10 +940,10 @@ def config(settings):
             module_type = 2,
         )),
         ("cms", Storage(
-        name_nice = T("Content Management"),
-        #description = "Content Management System",
-        restricted = True,
-        module_type = 10,
+            name_nice = T("Content Management"),
+            #description = "Content Management System",
+            restricted = True,
+            module_type = 10,
         )),
         ("doc", Storage(
             name_nice = T("Documents"),
@@ -1119,6 +1119,12 @@ def config(settings):
         #("patient", Storage(
         #    name_nice = T("Patient Tracking"),
         #    #description = "Tracking of Patients",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
+        #("po", Storage(
+        #    name_nice = T("Population Outreach"),
+        #    #description = "Population Outreach",
         #    restricted = True,
         #    module_type = 10
         #)),

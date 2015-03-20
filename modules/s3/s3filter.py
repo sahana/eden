@@ -1833,11 +1833,11 @@ class S3OptionsFilter(S3FilterWidget):
                 none = current.messages["NONE"]
             options.append((None, none))
 
-        if not opts.get("multiple") and not self.values:
+        if not opts.get("multiple", True) and not self.values:
             # Browsers automatically select the first option in single-selects,
             # but that doesn't filter the data, so the first option must be
             # empty if we don't have a default:
-            options.insert(0, ("", ""))
+            options.insert(0, ("", "")) # XML("&nbsp;") better?
 
         # Sort the options
         return (ftype, options, None)

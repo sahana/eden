@@ -1492,6 +1492,20 @@ class S3OptionsMenu(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def po():
+        """ PO / Population Outreach """
+
+        return M(c="po")(
+                    M("Households", f="household", m="summary")(
+                        M("Create", m="create"),
+                    ),
+                    M("Areas", f="area")(
+                        M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def pr():
         """ PR / Person Registry """
 

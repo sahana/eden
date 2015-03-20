@@ -1316,10 +1316,10 @@ def s3_date(name="date", **attr):
             widget_option["default_explicit"] = attr["default_explicit"]
             del attr["default_explicit"]
 
-        if future:
+        if future is not None:
             widget_option["future"] = future
 
-        if past:
+        if past is not None:
             widget_option["past"] = past
 
         attr["widget"] = S3DateWidget(**widget_option)

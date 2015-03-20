@@ -367,7 +367,8 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                             // Reload the layer
                             for (j=0; j < jlen; j++) {
                                 strategy = strategies[j];
-                                if (strategy.CLASS_NAME == 'OpenLayers.Strategy.BBOX') {
+                                if (strategy.CLASS_NAME == 'OpenLayers.Strategy.BBOX' ||
+                                    strategy.CLASS_NAME == 'OpenLayers.Strategy.ZoomBBOX') {
                                     // Set bounds to maxExtent so that filter doesn't apply
                                     strategy.bounds = null;
                                     strategy.triggerRead();
