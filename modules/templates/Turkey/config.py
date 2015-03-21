@@ -26,7 +26,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("Turkey", "default/users", "Turkey/Demo")
+    settings.base.prepopulate = ("Turkey", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "Turkey"
@@ -59,7 +59,7 @@ def config(settings):
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
-        ("ar", "العربية"),
+    #   ("ar", "العربية"),
     #    ("bs", "Bosanski"),
         ("en", "English"),
     #    ("fr", "Français"),
