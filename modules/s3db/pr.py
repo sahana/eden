@@ -4646,7 +4646,7 @@ class pr_PersonEntityRepresent(S3Represent):
         if self.show_type:
             etable = current.s3db.pr_pentity
             instance_type_nice = etable.instance_type.represent(instance_type)
-            instance_type_nice = " (%s)" % instance_type_nice
+            instance_type_nice = " (%s)" % s3_unicode(instance_type_nice)
         else:
             instance_type_nice = ""
 
