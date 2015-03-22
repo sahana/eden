@@ -390,7 +390,7 @@ class S3Msg(object):
         # Place the Message in the appropriate Log
         if contact_method == "EMAIL":
             if not from_address:
-                from_address = s3_unicode(current.deployment_settings.get_mail_sender())
+                from_address = current.deployment_settings.get_mail_sender()
 
             table = s3db.msg_email
             _id = table.insert(body=message,
