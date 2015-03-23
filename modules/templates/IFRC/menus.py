@@ -39,6 +39,14 @@ class S3MainMenu(default.S3MainMenu):
 
         T = current.T
 
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        def outreach(item):
+
+            root_org = current.auth.root_org_name()
+            return root_org == "New Zealand Red Cross" or \
+                   root_org is None and current.auth.s3_has_role(ADMIN)
+
         return [
             homepage("gis")(
             ),
@@ -89,8 +97,7 @@ class S3MainMenu(default.S3MainMenu):
             homepage("project")(
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
-                # @todo: hide for all orgs except NZRC
-                MM("Outreach", c="po", f="index"),
+                MM("Outreach", c="po", f="index", check = outreach),
             ),
             homepage("vulnerability")(
                 MM("Map", c="vulnerability", f="index"),

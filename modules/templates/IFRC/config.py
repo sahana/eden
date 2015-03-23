@@ -106,7 +106,8 @@ def config(settings):
                                 inv_send = SID,
                                 inv_track_item = "track_org_id",
                                 inv_adj_item = "adj_id",
-                                req_req_item = "req_id"
+                                req_req_item = "req_id",
+                                po_household = "area_id",
                                 )
 
         # Default Foreign Keys (ordered by priority)

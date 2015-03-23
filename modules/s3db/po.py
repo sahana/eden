@@ -47,11 +47,16 @@ class OutreachAreaModel(S3Model):
 
         T = current.T
         db = current.db
+        auth = current.auth
 
         define_table = self.define_table
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
+
+        root_org = auth.root_org()
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
 
         # ---------------------------------------------------------------------
         # Area
@@ -67,6 +72,11 @@ class OutreachAreaModel(S3Model):
                                                     polygons = True,
                                                     ),
                      ),
+                     # Only included to set realm entity:
+                     self.org_organisation_id(default = root_org,
+                                              readable = is_admin,
+                                              writable = is_admin,
+                                              ),
                      s3_comments(),
                      *s3_meta_fields())
 
