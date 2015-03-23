@@ -2510,9 +2510,11 @@ class S3Config(Storage):
 
     def get_hrm_use_code(self):
         """
-            Whether Human Resources should use Staff/Volunteer IDs
+            Whether Human Resources should use Staff/Volunteer IDs,
+            either True or False, or "staff" to use code for staff
+            only
         """
-        return self.hrm.get("use_code", False)
+        return self.__lazy(self.hrm, "use_code", default=False)
 
     def get_hrm_use_credentials(self):
         """

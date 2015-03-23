@@ -1593,6 +1593,8 @@ class S3PersonModel(S3Model):
             else:
                 dob = None
         gender = post_vars.get("sex", None)
+        father_name = post_vars.get("father_name", None)
+        grandfather_name = post_vars.get("grandfather_name", None)
         occupation = post_vars.get("occupation", None)
         mobile_phone = post_vars.get("mphone", None)
         home_phone = post_vars.get("hphone", None)
@@ -1643,6 +1645,8 @@ class S3PersonModel(S3Model):
                   "last_name",
                   "date_of_birth",
                   "gender",
+                  "person_details.father_name",
+                  "person_details.grandfather_name",
                   "person_details.occupation",
                   "image.image",
                   ]
@@ -1757,31 +1761,37 @@ class S3PersonModel(S3Model):
             item = {"id"     : row["pr_person.id"],
                     "name"   : name,
                     }
-            date_of_birth = row.get("pr_person.date_of_birth", None)
+            date_of_birth = row.get("pr_person.date_of_birth")
             if date_of_birth:
                 item["dob"] = date_of_birth.isoformat()
-            gender = row.get("pr_person.gender", None)
+            gender = row.get("pr_person.gender")
             if gender in (2, 3, 4):
                 # 1 = unknown
                 item["sex"] = gender
-            occupation = row.get("pr_person_details.occupation", None)
+            father_name = row.get("pr_person_details.father_name")
+            if father_name:
+                item["father_name"] = father_name
+            grandfather_name = row.get("pr_person_details.grandfather_name")
+            if grandfather_name:
+                item["grandfather_name"] = grandfather_name
+            occupation = row.get("pr_person_details.occupation")
             if occupation:
                 item["job"] = occupation
-            email = row.get("pr_contact.email", None)
+            email = row.get("pr_contact.email")
             if email:
                 item["email"] = email
-            phone = row.get("pr_contact.phone", None)
+            phone = row.get("pr_contact.phone")
             if phone:
                 item["mphone"] = phone
-            image = row.get("pr_image.image", None)
+            image = row.get("pr_image.image")
             if image:
                 item["image"] = image
             if show_hr:
-                job_title = row.get("hrm_job_title.name", None)
+                job_title = row.get("hrm_job_title.name")
                 if job_title:
                     item["job"] = job_title
                 if show_orgs:
-                     org = row.get("org_organisation.name", None)
+                     org = row.get("org_organisation.name")
                      if org:
                         item["org"] = org
             iappend(item)

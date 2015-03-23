@@ -7605,15 +7605,20 @@ class hrm_Record(S3Method):
                      },
                 ]
 
+            table = s3db.hrm_human_resource
+            code = table.code
             if controller == "vol":
                 widget_filter = FS("type") == 2
                 label = "Volunteer Record"
+                if settings.get_hrm_use_code() is True:
+                    code.readable = code.writable = True
             #elif controller = "hrm":
             else:
                 widget_filter = FS("type") == 1
                 label = "Staff Record"
+                if settings.get_hrm_use_code():
+                    code.readable = code.writable = True
 
-            table = s3db.hrm_human_resource
             profile_widgets = [
                 dict(label = label,
                      type = "form",
@@ -8475,11 +8480,17 @@ def hrm_human_resource_filters(resource_type=None,
     if not module:
         module = current.request.controller
 
-    filter_widgets = [S3TextFilter(["person_id$first_name",
-                                    "person_id$middle_name",
-                                    "person_id$last_name",
-                                    "person_id$email.value",
-                                    ],
+    text_search_fields = ["person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name",
+                          "person_id$email.value",
+                          ]
+
+    use_code = settings.get_hrm_use_code()
+    if resource_type != "volunteer" and use_code or use_code is True:
+        text_search_fields.append("code")
+
+    filter_widgets = [S3TextFilter(text_search_fields,
                                    label = T("Search"),
                                    ),
                       ]

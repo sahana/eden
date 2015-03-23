@@ -630,11 +630,16 @@ class S3AddPersonWidget2(FormWidget):
     """
 
     def __init__(self,
-                 controller = None
+                 controller = None,
+                 father_name = False,
+                 grandfather_name = False,
                  ):
 
         # Controller to retrieve the person or hrm record
         self.controller = controller
+
+        self.father_name = father_name
+        self.grandfather_name = grandfather_name
 
     def __call__(self, field, value, **attributes):
 
@@ -738,6 +743,9 @@ class S3AddPersonWidget2(FormWidget):
             emailRequired = False
             occupation = None
 
+        father_name = dtable.father_name if self.father_name else None
+        grandfather_name = dtable.grandfather_name if self.grandfather_name else None
+
         if value:
             db = current.db
             fields = [ptable.first_name,
@@ -745,6 +753,8 @@ class S3AddPersonWidget2(FormWidget):
                       ptable.last_name,
                       ptable.pe_id,
                       ]
+            details = False
+
             if hrm:
                 query = (htable.id == value) & \
                         (htable.person_id == ptable.id)
@@ -756,27 +766,45 @@ class S3AddPersonWidget2(FormWidget):
                 fields.append(date_of_birth)
             if gender:
                 fields.append(gender)
+            if father_name:
+                fields.append(father_name)
+                details = True
+            if grandfather_name:
+                fields.append(grandfather_name)
+                details = True
             if occupation:
                 fields.append(occupation)
+                details = True
+
+            if details:
                 left = dtable.on(dtable.person_id == ptable.id)
             else:
                 left = None
+
             row = db(query).select(*fields,
                                    left=left,
                                    limitby=(0, 1)).first()
-            if hrm:
-                values["organisation_id"] = row["hrm_human_resource.organisation_id"]
-            if occupation:
-                values["occupation"] = row["pr_person_details.occupation"]
-            if hrm or occupation:
+
+            if details or hrm:
                 person = row["pr_person"]
-            else:
-                person = row
+                if details:
+                    person_details = row["pr_person_details"]
+                if hrm:
+                    human_resource = row["hrm_human_resource"]
+            if hrm:
+                values["organisation_id"] = human_resource.organisation_id
+            if occupation:
+                values["occupation"] = person_details.occupation
+            if father_name:
+                values["father_name"] = person_details.father_name
+            if grandfather_name:
+                values["grandfather_name"] = person_details.grandfather_name
             values["full_name"] = s3_fullname(person)
             if date_of_birth:
                 values["date_of_birth"] = person.date_of_birth
             if gender:
                 values["gender"] = person.gender
+
             # Contacts as separate query as we can't easily limitby
             ctable = s3db.pr_contact
             if req_home_phone:
@@ -893,7 +921,10 @@ class S3AddPersonWidget2(FormWidget):
                      OptionsWidget.widget(gender, values.get("gender", None),
                                           _id = "%s_gender" % fieldname),
                      False))
-
+        if father_name:
+            fappend(("father_name", father_name.label, INPUT(), False))
+        if grandfather_name:
+            fappend(("grandfather_name", grandfather_name.label, INPUT(), False))
         if occupation:
             fappend(("occupation", occupation.label, INPUT(), False))
 
@@ -982,6 +1013,14 @@ i18n.dupes_found="%s"''' % (i18n,
                             T("No"),
                             T("_NUM_ duplicates found"),
                             )
+            if father_name or grandfather_name:
+                i18n = \
+'''%s
+i18n.father_name_label="%s:"
+i18n.grandfather_name_label="%s:"''' % (i18n,
+                                        father_name.label,
+                                        grandfather_name.label,
+                                        )
             s3.js_global.append(i18n)
         if lookup_duplicates:
             script = '''S3.addPersonWidget('%s',1)''' % fieldname

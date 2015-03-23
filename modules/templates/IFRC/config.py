@@ -770,6 +770,16 @@ def config(settings):
 
     settings.ui.location_filter_bulk_select_option = location_filter_bulk_select_option
 
+    def hrm_use_code(default):
+        """ Whether to use Staff-ID/Volunteer-ID """
+
+        root_org = current.auth.root_org_name()
+        if root_org == ARCS:
+            return True # use for both staff and volunteers
+        return default
+
+    settings.hrm.use_code = hrm_use_code
+
     # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
 
@@ -1444,7 +1454,6 @@ def config(settings):
             if root_org == ARCS:
                 arcs = True
                 settings.L10n.mandatory_lastname = False
-                settings.hrm.use_code = True
                 settings.hrm.use_skills = True
                 settings.hrm.vol_active = True
             elif root_org in (CVTL, PMI, PRC):
@@ -1495,24 +1504,32 @@ def config(settings):
             resource = r.resource
             get_config = resource.get_config
 
-            if controller == "vol" and root_org == NRCS:
-                pos = 6
-                # Add volunteer type to list_fields
-                list_fields = get_config("list_fields")
-                list_fields.insert(pos, "details.volunteer_type")
+            if controller == "vol":
+                if root_org == ARCS:
+                    field = s3db.hrm_human_resource.person_id
+                    from s3 import S3AddPersonWidget2
+                    field.widget = S3AddPersonWidget2(controller = "vol",
+                                                      father_name = True,
+                                                      grandfather_name = True,
+                                                      )
+                elif root_org == NRCS:
+                    pos = 6
+                    # Add volunteer type to list_fields
+                    list_fields = get_config("list_fields")
+                    list_fields.insert(pos, "details.volunteer_type")
 
-                # Add volunteer type to report options
-                report_options = get_config("report_options")
-                if "details.volunteer_type" not in report_options["rows"]:
-                    report_options["rows"].insert(pos, "details.volunteer_type")
-                if "details.volunteer_type" not in report_options["cols"]:
-                    report_options["cols"].insert(pos, "details.volunteer_type")
+                    # Add volunteer type to report options
+                    report_options = get_config("report_options")
+                    if "details.volunteer_type" not in report_options["rows"]:
+                        report_options["rows"].insert(pos, "details.volunteer_type")
+                    if "details.volunteer_type" not in report_options["cols"]:
+                        report_options["cols"].insert(pos, "details.volunteer_type")
 
-                # Add filter widget for volunteer type
-                filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
-                filter_widgets.insert(-1, S3OptionsFilter("details.volunteer_type",
-                                                          hidden = True,
-                                                          ))
+                    # Add filter widget for volunteer type
+                    filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+                    filter_widgets.insert(-1, S3OptionsFilter("details.volunteer_type",
+                                                              hidden = True,
+                                                              ))
 
             if controller == "deploy":
 
@@ -2291,7 +2308,6 @@ def config(settings):
             settings.L10n.mandatory_lastname = False
             # Override what has been set in the model already
             s3db.pr_person.last_name.requires = None
-            settings.hrm.use_code = True
             settings.hrm.use_skills = True
             settings.hrm.vol_active = True
         elif root_org == PMI:
@@ -2461,7 +2477,18 @@ def config(settings):
                         # Use default form (legacy)
                         s3db.clear_config("hrm_human_resource", "crud_form")
 
-            if vnrc:
+            if arcs:
+                controller = r.controller
+                if controller == "vol" and not r.component:
+                    # Hide unwanted fields
+                    table = r.resource.table
+                    for field in ("initials", "preferred_name", "local_name"):
+                        table[field].writable = table[field].readable = False
+                    table = s3db.pr_person_details
+                    for field in ("religion",):
+                        table[field].writable = table[field].readable = False
+
+            elif vnrc:
                 controller = r.controller
                 if not r.component:
                     crud_fields = ["first_name",
