@@ -3833,15 +3833,14 @@ class S3Resource(object):
                     vappend = values.append
                     for row in rows:
                         v = row[colname]
-                        if v:
-                            vappend(v)
+                        vappend(v if v else [None])
                     values = set(chain.from_iterable(values))
 
                     include, exclude = af.values(rfield)
                     fdict = {}
                     if include:
                         for v in values:
-                            vstr = s3_unicode(v)
+                            vstr = s3_unicode(v) if v is not None else v
                             if vstr in include and vstr not in exclude:
                                 fdict[v] = None
                     else:
