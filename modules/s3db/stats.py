@@ -88,6 +88,7 @@ class S3StatsModel(S3Model):
                            org_resource_type = T("Organization Resource Type"),
                            project_beneficiary_type = T("Project Beneficiary Type"),
                            project_campaign_keyword = T("Project Campaign Keyword"),
+                           project_indicator = T("Project Indicator"),
                            stats_demographic = T("Demographic"),
                            stats_impact_type = T("Impact Type"),
                            # @ToDo; Deprecate
@@ -120,6 +121,7 @@ class S3StatsModel(S3Model):
                            org_resource = T("Organization Resource"),
                            project_beneficiary = T("Project Beneficiary"),
                            project_campaign_response_summary = T("Project Campaign Response Summary"),
+                           project_indicator_data = T("Project Indicator Data"),
                            stats_demographic_data = T("Demographic Data"),
                            stats_impact = T("Impact"),
                            # @ToDo: Deprecate

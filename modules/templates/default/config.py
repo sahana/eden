@@ -790,6 +790,8 @@ def config(settings):
     #settings.project.community = True
     # Uncomment this to enable Hazards in 3W projects
     #settings.project.hazards = True
+    # Uncomment this to enable Indicators in projects
+    #settings.project.indicators = True
     # Uncomment this to enable Milestones in projects
     #settings.project.milestones = True
     # Uncomment this to use Projects for Activities & Tasks

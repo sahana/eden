@@ -38,6 +38,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectFrameworkModel",
            "S3ProjectHazardModel",
            "S3ProjectHRModel",
+           "S3ProjectIndicatorModel",
            "S3ProjectLocationModel",
            "S3ProjectOrganisationModel",
            "S3ProjectOutputModel",
@@ -384,6 +385,8 @@ class S3ProjectModel(S3Model):
                                                 "key": "activity_type_id",
                                                 "actuate": "link",
                                                 },
+                       # Indicators
+                       project_indicator_data = "project_id",
                        # Milestones
                        project_milestone = "project_id",
                        # Outputs
@@ -1699,9 +1702,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                                 writable = True,
                                 comment = S3AddResourceLink(c="project",
                                                             f="beneficiary_type",
-                                                            vars = dict(child = "parameter_id"),
+                                                            vars = dict(child="parameter_id"),
                                                             title=ADD_BNF_TYPE,
-                                                            tooltip=T("Please record Beneficiary according to the reporting needs of your project")),
+                                                            tooltip=T("Please record Beneficiary according to the reporting needs of your project")
+                                                            ),
                                 ),
                      # Populated automatically from project_location
                      self.gis_location_id(readable = False,
@@ -1711,7 +1715,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                            label = T("Number"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Actual Number of Beneficiaries"),
-                                                           T("The number of beneficiaries actually reached by this activity"))),
+                                                           T("The number of beneficiaries actually reached by this activity"))
+                                                           ),
                            represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_INT_IN_RANGE(0, 99999999),
                            ),
@@ -1719,7 +1724,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                            label = T("Targeted Number"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Targeted Number of Beneficiaries"),
-                                                           T("The number of beneficiaries targeted by this activity"))),
+                                                           T("The number of beneficiaries targeted by this activity"))
+                                                           ),
                            represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
@@ -2690,6 +2696,282 @@ class S3ProjectHRModel(S3Model):
             form.errors.human_resource_id = current.T("Record already exists")
 
         return
+
+# =============================================================================
+class S3ProjectIndicatorModel(S3Model):
+    """
+        Project Indicator Model
+        - depends on Stats module
+    """
+
+    names = ("project_indicator",
+             "project_indicator_data",
+             )
+
+    def model(self):
+
+        if not current.deployment_settings.has_module("stats"):
+            current.log.warning("Project Indicator Model needs Stats module enabling")
+            return dict()
+
+        T = current.T
+        db = current.db
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        configure = self.configure
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+        super_link = self.super_link
+
+        # ---------------------------------------------------------------------
+        # Project Indicator
+        #
+        tablename = "project_indicator"
+        define_table(tablename,
+                     super_link("parameter_id", "stats_parameter"),
+                     Field("name", length=128, unique=True,
+                           label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
+                           requires = IS_NOT_IN_DB(db,
+                                                   "project_indicator.name"),
+                           ),
+                     s3_comments("description",
+                                 label = T("Description"),
+                                 ),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_INDICATOR = T("Create Indicator")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_INDICATOR,
+            title_display = T("Indicator"),
+            title_list = T("Indicators"),
+            title_update = T("Edit Indicator"),
+            label_list_button = T("List Indicators"),
+            msg_record_created = T("Indicator Added"),
+            msg_record_modified = T("Indicator Updated"),
+            msg_record_deleted = T("Indicator Deleted"),
+            msg_list_empty = T("No Indicators Found")
+        )
+
+        # Resource Configuration
+        configure(tablename,
+                  super_entity = "stats_parameter",
+                  )
+
+        # ---------------------------------------------------------------------
+        # Project Indicator Data
+        #
+
+        tablename = "project_indicator_data"
+        define_table(tablename,
+                     # Instance
+                     super_link("data_id", "stats_data"),
+                     self.project_project_id(),
+                     # This is a component, so needs to be a super_link
+                     # - can't override field name, ondelete or requires
+                     super_link("parameter_id", "stats_parameter",
+                                empty = False,
+                                instance_types = ("project_indicator",),
+                                label = T("Indicator"),
+                                represent = S3Represent(lookup="stats_parameter",
+                                                        translate=True,
+                                                        ),
+                                readable = True,
+                                writable = True,
+                                comment = S3AddResourceLink(c="project",
+                                                            f="indicator",
+                                                            vars = dict(child="parameter_id"),
+                                                            title=ADD_INDICATOR),
+                                ),
+                     #self.gis_location_id(),
+                     s3_date("date",
+                             empty = False,
+                             #label = T("Start Date"),
+                             ),
+                     #s3_date("end_date",
+                     #        #empty = False,
+                     #        label = T("End Date"),
+                     #        start_field = "project_indicator_data_date",
+                     #        default_interval = 12,
+                     #        ),
+                     #Field("year", "list:integer",
+                     #      compute = lambda row: \
+                     #        self.stats_year(row, "project_indicator_data"),
+                     #      label = T("Year"),
+                     #      ),
+                     Field("target_value", "integer",
+                           label = T("Target Value"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                           ),
+                     Field("value", "integer",
+                           label = T("Actual Value"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                           ),
+                     # Link to Source
+                     #self.stats_source_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Indicator Data"),
+            title_display = T("Indicator Data Details"),
+            title_list = T("Indicator Data"),
+            title_update = T("Edit Indicator Data"),
+            title_report = T("Indicators Report"),
+            label_list_button = T("List Indicator Data"),
+            msg_record_created = T("Indicator Data Added"),
+            msg_record_modified = T("Indicator Data Updated"),
+            msg_record_deleted = T("Indicator Data Deleted"),
+            msg_list_empty = T("No Indicator Data Found")
+        )
+
+        # Model options
+        programmes = settings.get_project_programmes()
+        sectors = settings.get_project_sectors()
+        hazards = settings.get_project_hazards()
+        themes = settings.get_project_themes()
+
+        programme_id = "project_id$programme_project.programme_id"
+        sector_id = "project_id$sector_project.sector_id"
+        hazard_id = "project_id$hazard_project.hazard_id"
+        theme_id = "project_id$theme_project.theme_id"
+
+        # Which levels of location hierarchy are we using?
+        #levels = current.gis.get_relevant_hierarchy_levels()
+
+        # Filter Widgets
+        filter_widgets = [
+            S3TextFilter(["project_id$name",
+                          "project_id$code",
+                          "project_id$description",
+                          "project_id$organisation.name",
+                          "project_id$organisation.acronym",
+                          ],
+                         label = T("Search"),
+                         _class = "filter-search",
+                         ),
+            S3OptionsFilter("project_id",
+                            #hidden = True,
+                            ),
+            S3OptionsFilter("parameter_id",
+                            label = T("Indicator"),
+                            #hidden = True,
+                            ),
+            #S3OptionsFilter("year",
+            #                operator = "anyof",
+            #                options = lambda: \
+            #                          self.stats_year_options("project_indicator_data"),
+            #                hidden = True,
+            #                ),
+            #S3LocationFilter("location_id",
+            #                 levels = levels,
+            #                 #hidden = True,
+            #                 ),
+            ]
+        if programmes:
+            filter_widgets.insert(0, S3OptionsFilter(programme_id))
+        if sectors:
+            filter_widgets.insert(0, S3OptionsFilter(sector_id))
+        if themes:
+            filter_widgets.append(S3OptionsFilter(theme_id))
+
+        # List fields
+        list_fields = ["project_id",
+                       (T("Indicator"), "parameter_id"),
+                       "value",
+                       "target_value",
+                       "date",
+                       #"year",
+                       ]
+
+        if settings.get_project_programmes():
+            list_fields.insert(0, programme_id)
+
+        # Report axes
+        report_fields = [(T("Indicator"), "parameter_id"),
+                         "project_id",
+                         #"project_location_id",
+                         "date",
+                         #"year",
+                         ]
+        add_report_field = report_fields.append
+        if programmes:
+            add_report_field(programme_id)
+        if sectors:
+            add_report_field(sector_id)
+        if hazards:
+            add_report_field(hazard_id)
+        if themes:
+            add_report_field(theme_id)
+
+        # Location levels (append to list fields and report axes)
+        #for level in levels:
+        #    lfield = "location_id$%s" % level
+        #    list_fields.append(lfield)
+        #    add_report_field(lfield)
+
+        #if "L0" in levels:
+        #    default_row = "location_id$L0"
+        #elif "L1" in levels:
+        #    default_row = "location_id$L1"
+        #else:
+        default_row = "project_id"
+
+        # Report options and defaults
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = [(T("Value of Indicator"),
+                                          "sum(value)",
+                                          ),
+                                         (T("Target Value of Indicator"),
+                                          "sum(target_value)",
+                                          ),
+                                         ],
+                                 defaults = Storage(rows=default_row,
+                                                    cols="parameter_id",
+                                                    fact="sum(value)",
+                                                    totals=True
+                                                    ),
+                                 )
+
+        # Resource configuration
+        configure(tablename,
+                  deduplicate = self.project_indicator_data_deduplicate,
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  report_options = report_options,
+                  super_entity = "stats_data",
+                  )
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_indicator_data_deduplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        parameter_id = data.get("parameter_id")
+        project_id = data.get("project_id")
+        start_date = data.get("date")
+        # Match indicator_data by indicator, project and date
+        if parameter_id and project_id and start_date:
+            table = item.table
+            query = (table.parameter_id == parameter_id) & \
+                    (table.project_id == project_id) & \
+                    (table.date == start_date)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectLocationModel(S3Model):
@@ -6244,6 +6526,8 @@ def project_rheader(r):
             append((T("Themes"), "theme"))
         if mode_3w:
             append((T("Beneficiaries"), "beneficiary"))
+        if settings.get_project_indicators():
+            append((T("Indicators"), "indicator_data"))
         if settings.get_project_milestones():
             append((T("Milestones"), "milestone"))
         if settings.get_project_activities():

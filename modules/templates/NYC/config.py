@@ -113,6 +113,7 @@ def config(settings):
     settings.auth.record_approval = True
     settings.auth.record_approval_required_for = ("org_organisation",)
 
+    #settings.security.policy = 8 # Delegations when ready
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # Enable this to have Open links in IFrames open a full page in a new tab

@@ -309,6 +309,7 @@ def config(settings):
     ARCS = "Afghan Red Crescent Society"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
+    HRC = "Honduras Red Cross"
     NRCS = "Nepal Red Cross Society"
     PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
     PRC = "Philippine Red Cross"
@@ -2902,6 +2903,8 @@ def config(settings):
     settings.project.community = True
     # Uncomment this to enable Hazards in 3W projects
     settings.project.hazards = True
+    # Uncomment this to enable Indicators in projects
+    settings.project.indicators = True
     # Uncomment this to use multiple Budgets per project
     settings.project.multiple_budgets = True
     # Uncomment this to use multiple Organisations per project

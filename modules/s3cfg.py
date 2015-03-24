@@ -3055,6 +3055,12 @@ class S3Config(Storage):
         """
         return self.project.get("hazards", False)
 
+    def get_project_indicators(self):
+        """
+            Use Indicators in Projects
+        """
+        return self.project.get("indicators", False)
+
     #def get_project_locations_from_countries(self):
     #    """
     #        Create a project_location for each country that a Project is

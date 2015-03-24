@@ -1041,6 +1041,19 @@ def comment():
     return s3_rest_controller()
 
 # =============================================================================
+# Indicators
+# =============================================================================
+def indicator():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+def indicator_data():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
 # Campaigns
 # =============================================================================
 def campaign():
