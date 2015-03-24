@@ -4079,6 +4079,8 @@ class S3AxisFilter(object):
             value = self.r
             if isinstance(value, (list, tuple)):
                 value = [s3_unicode(v) for v in value]
+                if not value:
+                    value = [None]
             else:
                 value = [s3_unicode(value)]
             if op == "CONTAINS":
