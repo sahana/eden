@@ -2545,6 +2545,8 @@ class S3PivotTable(object):
                 continue
             value = row[colname]
             if type(value) is list:
+                if not value:
+                    value = [None]
                 if axisfilter and colname in axisfilter:
                     p = [(colname, v) for v in value
                                        if v in axisfilter[colname]]
