@@ -744,12 +744,13 @@ class S3LocationModel(S3Model):
             return
 
         # Don't try to update Countries
+        MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
         if level == "L0":
             item.method = None
-            item.skip = True
+            if not MAP_ADMIN:
+                item.skip = True
             return
 
-        MAP_ADMIN = current.auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
         def skip(level, location_id):
             if not MAP_ADMIN:
                 return not gis_hierarchy_editable(level, location_id)
