@@ -910,6 +910,7 @@ class S3ParsingModel(S3Model):
              "msg_parser_disable",
              "msg_parser_enable_interactive",
              "msg_parser_disable_interactive",
+             "msg_keyword_incident_type",
              )
 
     def model(self):
@@ -1001,11 +1002,45 @@ class S3ParsingModel(S3Model):
         tablename = "msg_keyword"
         define_table(tablename,
                      Field("keyword",
-                           label = T("Keyword"),
+                           label=T("Keyword"),
                            ),
-                     # @ToDo: Move this to a link table
-                     self.event_incident_type_id(),
                      *s3_meta_fields())
+
+        self.add_components(tablename,
+                            msg_keyword_incident_type={"link": "msg_keyword_incident_type",
+                                                       "joinby": "msg_keyword_id",
+                                                       "key": "incident_type_id",
+                                                       }
+                            )
+
+        crud_form = S3SQLCustomForm("keyword",
+                                    S3SQLInlineLink("keyword_incident_type",
+                                                    label=T("Incident"),
+                                                    field="incident_type_id"))
+        self.configure(tablename,
+                       list_fields=["keyword",
+                                    "keyword_incident_type.incident_type_id",
+                                    ],
+                       crud_form=crud_form)
+
+        # ---------------------------------------------------------------------
+        # Link Table: Message Keyword <> Event Incident Type
+        #
+        tablename = "msg_keyword_incident_type"
+
+        msg_keyword_represent = S3Represent(lookup="msg_keyword")
+
+        define_table(tablename,
+                     Field("msg_keyword_id", self.msg_keyword,
+                           represent=msg_keyword_represent,
+                           requires=IS_ONE_OF(current.db, "msg_keyword.id",
+                                              msg_keyword_represent,
+                                              sort=True
+                                              )
+                           ),
+                     self.event_incident_type_id(),
+                     *s3_meta_fields()
+                     )
 
         # ---------------------------------------------------------------------
         # Senders for Message Parsing

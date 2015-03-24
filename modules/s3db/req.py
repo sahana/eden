@@ -72,6 +72,7 @@ class S3RequestModel(S3Model):
              "req_prep",
              "req_tabs",
              "req_priority_opts",
+             "req_req_event",
              )
 
     def model(self):
@@ -178,13 +179,6 @@ class S3RequestModel(S3Model):
         tablename = "req_req"
         self.define_table(tablename,
                           super_link("doc_id", "doc_entity"),
-                          # @ToDo: Replace with Link Table
-                          self.event_event_id(
-                               default = session.s3.event,
-                               ondelete = "SET NULL",
-                               readable = False,
-                               writable = False,
-                               ),
                           Field("type", "integer",
                                 label = T("Request Type"),
                                 represent = lambda opt: \
@@ -474,7 +468,7 @@ class S3RequestModel(S3Model):
                        "date_required",
                        "site_id",
                        "requester_id",
-                       #"event_id",
+                       #"req_event.event_id",
                        # @ToDo: Vary by deployment_setting (easy)
                        # @ToDo: Allow a single column to support different components based on type
                        # @ToDo: Include Qty too (Computed VF in component?)
@@ -498,6 +492,34 @@ class S3RequestModel(S3Model):
                             ))
         if use_commit:
             list_fields.append((T("Committed By"), "commit.site_id"))
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink(
+                                      "req_event",
+                                      label=False,
+                                      field = "event_id",
+                                    ),
+                                    "type",
+                                    "date",
+                                    "priority",
+                                    "site_id",
+                                    "purpose",
+                                    "is_template",
+                                    "date_required",
+                                    "date_required_until",
+                                    "requester_id",
+                                    "assigned_to_id",
+                                    "approved_by_id",
+                                    "request_for_id",
+                                    "transport_req",
+                                    "security_req",
+                                    "date_recv",
+                                    "recv_by_id",
+                                    "commit_status",
+                                    "transit_status",
+                                    "fulfil_status",
+                                    "closed",
+                                    "comments",
+                                    )
 
         self.configure(tablename,
                        context = {"event": "event_id",
@@ -525,6 +547,7 @@ class S3RequestModel(S3Model):
                                 totals = True,
                                 )
                             ),
+                       crud_form = crud_form,
                        )
 
         # Custom Methods
@@ -546,34 +569,51 @@ class S3RequestModel(S3Model):
                    action=self.req_form)
 
         # Components
-        add_components(tablename,
-                       # Documents
-                       req_document = "req_id",
-                       # Requested Items
-                       req_req_item = {"joinby": "req_id",
-                                       "multiple": multiple_req_items,
-                                       },
-                       # Requested Skills
-                       req_req_skill = {"joinby": "req_id",
-                                        "multiple": multiple_req_items,
-                                        },
-                       # Commitment
-                       req_commit = "req_id",
-                       # Item Categories
-                       supply_item_category = {"link": "req_req_item_category",
-                                               "joinby": "req_id",
-                                               "key": "item_category_id",
-                                               },
+        self.add_components(tablename,
+                            # Documents
+                            req_document = "req_id",
+                            # Requested Items
+                            req_req_item = {"joinby": "req_id",
+                                            "multiple": multiple_req_items,
+                                            },
+                            # Requested Skills
+                            req_req_skill = {"joinby": "req_id",
+                                             "multiple": multiple_req_items,
+                                             },
+                            # Request Event
+                            req_req_event = {"joinby": "req_id",
+                                             "link": "req_req_event",
+                                             "key": "event_id",
+                                             },
+                            # Commitment
+                            req_commit = "req_id",
+                            # Item Categories
+                            supply_item_category = {"link": "req_req_item_category",
+                                                    "joinby": "req_id",
+                                                    "key": "item_category_id",
+                                                    },
+                            **{# Scheduler Jobs (for recurring requests)
+                               S3Task.TASK_TABLENAME: {"name": "job",
+                                                       "joinby": "req_id",
+                                                       "link": "req_job",
+                                                       "key": "scheduler_task_id",
+                                                       "actuate": "replace",
+                                                       },
+                               }
+                            )
 
-                       **{# Scheduler Jobs (for recurring requests)
-                          S3Task.TASK_TABLENAME: {"name": "job",
-                                                  "joinby": "req_id",
-                                                  "link": "req_job",
-                                                  "key": "scheduler_task_id",
-                                                  "actuate": "replace",
-                                                  },
-                         }
-                      )
+        # ---------------------------------------------------------------------
+        # Link Table: Request <> Event
+        tablename = "req_req_event"
+        self.define_table(tablename,
+                          req_id(empty=False),
+                          self.event_event_id(default = session.s3.event,
+                                              ondelete = "SET NULL",
+                                              readable = False,
+                                              writable = False,
+                                              ),
+                          *s3_meta_fields()
+                          )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
