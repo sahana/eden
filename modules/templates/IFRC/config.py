@@ -167,7 +167,7 @@ def config(settings):
                     (ltable.organisation_type_id == ottable.id)
             otype = db(query).select(ottable.name,
                                      limitby=(0, 1)).first()
-            if otype and otype.name != "Red Cross / Red Crescent":
+            if not otype or otype.name != "Red Cross / Red Crescent":
                 use_user_organisation = True
 
         elif tablename == "hrm_training":

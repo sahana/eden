@@ -1502,6 +1502,9 @@ class S3OptionsMenu(object):
                     M("Areas", f="area")(
                         M("Create", m="create"),
                     ),
+                    M("Referral Agencies", f="organisation")(
+                        M("Create", m="create"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------
