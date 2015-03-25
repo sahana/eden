@@ -4849,7 +4849,8 @@ class hrm_HumanResourceRepresent(S3Represent):
         ptable = s3db.pr_person
 
         left = ptable.on(ptable.id == htable.person_id)
-        if len(values) == 1:
+        count = len(values)
+        if count == 1:
             query = (key == values[0])
         else:
             query = key.belongs(values)
@@ -4860,6 +4861,7 @@ class hrm_HumanResourceRepresent(S3Represent):
                                         ptable.first_name,
                                         ptable.middle_name,
                                         ptable.last_name,
+                                        limitby = (0, count),
                                         left = left)
         self.queries += 1
 

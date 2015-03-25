@@ -29,7 +29,9 @@
 
 __all__ = ("OutreachAreaModel",
            "OutreachHouseholdModel",
+           "OutreachReferralModel",
            "po_rheader",
+           "po_organisation_onaccept",
            )
 
 from ..s3 import *
@@ -95,7 +97,6 @@ class OutreachAreaModel(S3Model):
         )
 
         # Reusable field
-        # @todo: represent area as link either to details or household list
         represent = S3Represent(lookup=tablename, show_link=True)
         area_id = S3ReusableField("area_id", "reference %s" % tablename,
                                   label = T("Area"),
@@ -112,6 +113,11 @@ class OutreachAreaModel(S3Model):
         # Components
         self.add_components(tablename,
                             po_household = "area_id",
+                            org_organisation = {"link": "po_organisation_area",
+                                                "joinby": "area_id",
+                                                "key": "organisation_id",
+                                                "actuate": "hide",
+                                                },
                             )
 
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -151,6 +157,7 @@ class OutreachAreaModel(S3Model):
 class OutreachHouseholdModel(S3Model):
 
     names = ("po_household",
+             "po_household_id",
              "po_household_dwelling",
              "po_household_member",
              "po_household_followup",
@@ -202,8 +209,7 @@ class OutreachHouseholdModel(S3Model):
         )
 
         # Reusable Field
-        # @todo: represent household by it's address
-        represent = S3Represent(lookup=tablename, fields=["id"])
+        represent = po_HouseholdRepresent()
         household_id = S3ReusableField("household_id", "reference %s" % tablename,
                                        label = T("Household"),
                                        represent = represent,
@@ -233,17 +239,27 @@ class OutreachHouseholdModel(S3Model):
                                           hidden = True,
                                           ),
                           S3DateFilter("household_followup.followup_date",
+                                       label = T("Follow-up Date"),
                                        hidden = True,
                                        ),
-                          S3OptionsFilter("household_dwelling.dwelling_type",
+                          S3OptionsFilter("organisation_household.organisation_id",
                                           hidden = True,
                                           ),
                           ]
 
+        # List fields
+        list_fields = ("area_id",
+                       "location_id",
+                       "followup",
+                       "household_followup.followup_date",
+                       "organisation_household.organisation_id",
+                       "comments",
+                       )
+
         # Reports
         report_axes = ["area_id",
                        "followup",
-                       "household_dwelling.dwelling_type",
+                       "organisation_household.organisation_id",
                        ]
         reports = ((T("Number of Households Visited"), "count(id)"),
                    )
@@ -251,6 +267,7 @@ class OutreachHouseholdModel(S3Model):
         configure(tablename,
                   create_next = self.household_create_next,
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   onaccept = self.household_onaccept,
                   report_options = {"rows": report_axes,
                                     "cols": report_axes,
@@ -280,6 +297,7 @@ class OutreachHouseholdModel(S3Model):
                             po_household_followup = {"joinby": "household_id",
                                                      "multiple": False,
                                                      },
+                            po_organisation_household = "household_id",
                             )
 
         # ---------------------------------------------------------------------
@@ -408,18 +426,20 @@ class OutreachHouseholdModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"po_household_id": household_id,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        #dummy = S3ReusableField("dummy_id", "integer",
-        #                        readable = False,
-        #                        writable = False)
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
 
-        return {}
+        return {"po_household_id": lambda **attr: dummy("household_id"),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -447,6 +467,7 @@ class OutreachHouseholdModel(S3Model):
             if follow_up:
                 return r.url(target="[id]",
                              component="contact",
+                             method="",
                              vars=next_vars,
                              )
             else:
@@ -482,6 +503,168 @@ class OutreachHouseholdModel(S3Model):
             ftable.insert(household_id=row[htable.id])
 
 # =============================================================================
+class OutreachReferralModel(S3Model):
+    """ Model to track referrals of households to organisations """
+
+    names = ("po_referral_organisation",
+             "po_organisation_area",
+             "po_organisation_household",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        define_table = self.define_table
+        configure = self.configure
+
+        s3 = current.response.s3
+        crud_strings = s3.crud_strings
+
+        organisation_id = self.org_organisation_id
+
+        # Organisation Represent should link to po/organisation
+        org_link = URL(c="po", f="organisation", args="[id]")
+        org_represent = self.org_OrganisationRepresent(show_link=True,
+                                                       linkto=org_link,
+                                                       )
+        # Organisation AddResourceLink should go to po/organisation
+        ADD_ORGANISATION = T("Create Agency")
+        tooltip = T("If you don't see the Agency in the list, you can add a new one by clicking link 'Create Agency'.")
+        org_comment = S3AddResourceLink(c="po", f="organisation",
+                                        label=ADD_ORGANISATION,
+                                        title=ADD_ORGANISATION,
+                                        tooltip=tooltip,
+                                        )
+
+        # ---------------------------------------------------------------------
+        # Referral Agency (context link table), currently not visible
+        #
+        tablename = "po_referral_organisation"
+        define_table(tablename,
+                     organisation_id(represent=org_represent,
+                                     comment=org_comment,
+                                     ),
+                     #s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Areas Served by a Referral Agency
+        #
+        tablename = "po_organisation_area"
+        define_table(tablename,
+                     # @todo: AddResourceLink should go to po/organisation
+                     organisation_id(label=T("Agency"),
+                                     represent=org_represent,
+                                     comment=org_comment,
+                                     ),
+                     self.po_area_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Agency"),
+            title_update = T("Edit Referral Agency"),
+            label_delete_button = T("Remove Agency"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Referral Household=>Agency
+        #
+        tablename = "po_organisation_household"
+        define_table(tablename,
+                     # @todo: AddResourceLink should go to po/organisation
+                     organisation_id(label=T("Referral Agency"),
+                                     represent=org_represent,
+                                     comment=org_comment,
+                                     ),
+                     self.po_household_id(),
+                     s3_date(default="now"),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Referral"),
+            title_update = T("Edit Referral Details"),
+            label_delete_button = T("Delete Referral"),
+        )
+
+        # Table Configuration
+        configure(tablename,
+                  orderby = "%s.date desc" % tablename,
+                  list_fields = ("date",
+                                 "organisation_id",
+                                 "household_id",
+                                 "comments",
+                                 ),
+                  )
+
+# =============================================================================
+class po_HouseholdRepresent(S3Represent):
+
+    def __init__(self, show_link=True):
+        """
+            Constructor
+
+            @param show_link: whether to add a URL to representations
+        """
+
+        super(po_HouseholdRepresent, self).__init__(
+                                        lookup = "po_household",
+                                        show_link = show_link)
+
+        self.location_represent = \
+                current.s3db.gis_LocationRepresent(address_only=True,
+                                                   show_link=False,
+                                                   )
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+        table = self.table
+
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(table.id,
+                                        table.location_id,
+                                        limitby = (0, count),
+                                        )
+        self.queries += 1
+
+        # Bulk-represent locations
+        location_id = str(table.location_id)
+        location_ids = [row[location_id] for row in rows]
+        if location_ids:
+            self.location_represent.bulk(location_ids, show_link=False)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        # Represent household as its address
+        return self.location_represent(row.location_id)
+
+# =============================================================================
 def po_rheader(r, tabs=[]):
 
     if r.representation != "html":
@@ -499,14 +682,17 @@ def po_rheader(r, tabs=[]):
 
         if tablename == "po_area":
 
+            # @todo: hide "Referral Agencies" per deployment setting
             if not tabs:
                 tabs = [(T("Basic Details"), ""),
                         (T("Households"), "household"),
+                        (T("Referral Agencies"), "organisation"),
                         ]
 
-            rheader_fields = []
+            rheader_fields = [["name"],
+                              ]
 
-        if tablename == "po_household":
+        elif tablename == "po_household":
 
             if not tabs:
                 tabs = [(T("Basic Details"), "")]
@@ -516,14 +702,49 @@ def po_rheader(r, tabs=[]):
                                  (T("Members"), "person"),
                                  (T("Dwelling"), "household_dwelling"),
                                  (T("Follow-up Details"), "household_followup"),
+                                 (T("Referrals"), "organisation_household"),
                                  ])
 
             rheader_fields = [["area_id"],
                               ["location_id"],
                               ]
 
+        elif tablename == "org_organisation":
+
+            # @todo: hide "Areas Served" per deployment setting
+            if not tabs:
+                tabs = [(T("Basic Details"), ""),
+                        (T("Areas Served"), "area"),
+                        (T("Referrals"), "organisation_household"),
+                        ]
+
+            rheader_fields = [["name"],
+                              ]
+
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     return rheader
+
+# =============================================================================
+def po_organisation_onaccept(form):
+    """
+        Create a po_referral_organisation record onaccept of
+        an org_organisation to link it to this module.
+
+        @param form: the form
+    """
+
+    formvars = form.vars
+    try:
+        organisation_id = formvars.id
+    except AttributeError:
+        return
+
+    rtable = current.s3db.po_referral_organisation
+    query = (rtable.organisation_id == organisation_id) & \
+            (rtable.deleted != True)
+    row = current.db(query).select(rtable.id, limitby=(0, 1)).first()
+    if not row:
+        rtable.insert(organisation_id=organisation_id)
 
 # END =========================================================================

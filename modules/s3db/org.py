@@ -644,6 +644,13 @@ class S3OrganisationModel(S3Model):
                                             "autodelete": False,
                                             },
                                            ),
+
+                       # Population Outreach (referral agencies)
+                       po_area = {"link": "po_organisation_area",
+                                  "joinby": "organisation_id",
+                                  "key": "area_id",
+                                  },
+                       po_organisation_household = "organisation_id",
                        )
 
         # Projects
@@ -4579,6 +4586,7 @@ class org_OrganisationRepresent(S3Represent):
 
     def __init__(self,
                  show_link=False,
+                 linkto=None,
                  parent=True,
                  acronym=True,
                  multiple=False,
@@ -4636,6 +4644,7 @@ class org_OrganisationRepresent(S3Represent):
               self).__init__(lookup="org_organisation",
                              fields=fields,
                              show_link=show_link,
+                             linkto=linkto,
                              translate=translate,
                              multiple=multiple)
 
