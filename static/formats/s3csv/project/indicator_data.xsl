@@ -7,11 +7,13 @@
 
          Column headers defined in this stylesheet:
 
+         Project........................required.....project.name
          Indicator......................required.....indicator.name
          Description....................optional.....indicator.comments
-         Value..........................required.....indicator_data.value
+         Target.........................optional.....indicator_data.target_value
+         Value..........................optional.....indicator_data.value
          OR
-         Ind:XXXX.......................required.....indicator.name (Indicator = XX in column name, value = cell in row. Multiple allowed)
+         Ind:XXXX.......................optional.....indicator.name (Indicator = XX in column name, value = cell in row. Multiple allowed)
 
          Date...........................optional.....indicator_data.date
          Year...........................optional.....indicator_data.date
@@ -90,12 +92,20 @@
 
     <xsl:key name="indicator" match="row" use="col[@field='Indicator']"/>
     <xsl:key name="org" match="row" use="col[@field='Source Organisation']"/>
+    <xsl:key name="projects" match="row" use="col[@field='Project']"/>
     <xsl:key name="source" match="row" use="col[@field='Source']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
         <s3xml>
+            <!-- Projects -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('projects',
+                                                        col[@field='Project'])[1])]">
+                <xsl:call-template name="Project"/>
+            </xsl:for-each>
+
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('org',
@@ -225,38 +235,42 @@
         <xsl:choose>
             <xsl:when test="$value!=''">
                 <!-- Single Indicator per row -->
-                <xsl:if test="$value!='0'">
-                    <xsl:call-template name="IndicatorData">
-                        <xsl:with-param name="indicator">
-                            <xsl:value-of select="col[@field='Indicator']"/>
-                        </xsl:with-param>
-                        <xsl:with-param name="value">
-                            <xsl:value-of select="$value"/>
-                        </xsl:with-param>
-                        <xsl:with-param name="location">
-                            <xsl:value-of select="$location"/>
-                        </xsl:with-param>
-                        <xsl:with-param name="tuid">
-                            <xsl:value-of select="$tuid"/>
-                        </xsl:with-param>
-                        <xsl:with-param name="date">
-                            <xsl:choose>
-	                            <xsl:when test="$date!=''">
-	                                <xsl:value-of select="$date"/>
-	                            </xsl:when>
-	                            <xsl:otherwise>
-	                                <xsl:value-of select="$year"/>
-	                            </xsl:otherwise>
-                            </xsl:choose>
-                        </xsl:with-param>
-                        <xsl:with-param name="source">
-                            <xsl:value-of select="$source"/>
-                        </xsl:with-param>
-                        <xsl:with-param name="approved">
-                            <xsl:value-of select="$approved"/>
-                        </xsl:with-param>
-                    </xsl:call-template>
-                </xsl:if>
+                <xsl:call-template name="IndicatorData">
+                    <xsl:with-param name="project">
+                        <xsl:value-of select="col[@field='Project']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="indicator">
+                        <xsl:value-of select="col[@field='Indicator']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="target">
+                        <xsl:value-of select="col[@field='Target']"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="value">
+                        <xsl:value-of select="$value"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="location">
+                        <xsl:value-of select="$location"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="tuid">
+                        <xsl:value-of select="$tuid"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="date">
+                        <xsl:choose>
+                            <xsl:when test="$date!=''">
+                                <xsl:value-of select="$date"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$year"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:with-param>
+                    <xsl:with-param name="source">
+                        <xsl:value-of select="$source"/>
+                    </xsl:with-param>
+                    <xsl:with-param name="approved">
+                        <xsl:value-of select="$approved"/>
+                    </xsl:with-param>
+                </xsl:call-template>
             </xsl:when>
             <xsl:otherwise>
                 <!-- Multiple Indicators per row -->
@@ -265,6 +279,9 @@
                     <xsl:variable name="Value" select="text()"/>
                     <xsl:if test="$Value!='' and $Value!='0'">
                         <xsl:call-template name="IndicatorData">
+                            <xsl:with-param name="project">
+                                <xsl:value-of select="col[@field='Project']"/>
+                            </xsl:with-param>
                             <xsl:with-param name="indicator">
                                 <xsl:value-of select="$Indicator"/>
                             </xsl:with-param>
@@ -296,7 +313,9 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="IndicatorData">
+        <xsl:param name="project"/>
         <xsl:param name="indicator"/>
+        <xsl:param name="target"/>
         <xsl:param name="value"/>
         <xsl:param name="location"/>
         <xsl:param name="tuid"/>
@@ -309,8 +328,16 @@
                 <xsl:value-of select="$approved"/>
             </xsl:attribute>
             <data field="date"><xsl:value-of select="$date"/></data>
+            <data field="target_value"><xsl:value-of select="$target"/></data>
             <data field="value"><xsl:value-of select="$value"/></data>
 
+            <!-- Link to Project -->
+            <reference field="project_id" resource="project_project">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('project/',$ProjectName)"/>
+                </xsl:attribute>
+            </reference>
+                    
             <!-- Link to Indicator -->
             <reference field="parameter_id" resource="project_indicator">
                 <xsl:attribute name="tuid">
@@ -381,6 +408,21 @@
                     <xsl:value-of select="concat('organisation/',$OrgName)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$OrgName"/></data>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Project">
+        <xsl:variable name="ProjectName" select="col[@field='Project']"/>
+
+         <xsl:if test="$ProjectName!=''">
+             <resource name="project_project">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('project/',$ProjectName)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$ProjectName"/></data>
             </resource>
         </xsl:if>
 

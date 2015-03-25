@@ -1584,6 +1584,9 @@ class S3OptionsMenu(object):
                     M("Indicators", f="indicator_data", m="report",
                       check=indicators,
                       ),
+                    M("Indicators over Time", f="indicator_data", m="timeplot",
+                      check=indicators,
+                      ),
                     M("Funding", f="organisation", m="report"),
                  ),
                  M("Import", f="project", m="import", p="create")(

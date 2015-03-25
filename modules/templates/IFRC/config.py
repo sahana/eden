@@ -266,6 +266,8 @@ def config(settings):
     settings.L10n.translate_gis_location = True
     # Uncomment this for Alternate Location Names
     settings.L10n.name_alt_gis_location = True
+    # Uncomment this to Translate Organisation Names/Acronyms
+    settings.L10n.translate_org_organisation = True
 
     # -----------------------------------------------------------------------------
     # Finance settings
@@ -309,7 +311,7 @@ def config(settings):
     ARCS = "Afghan Red Crescent Society"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
-    HRC = "Honduras Red Cross"
+    HRC = "Honduran Red Cross"
     NRCS = "Nepal Red Cross Society"
     PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
     PRC = "Philippine Red Cross"
