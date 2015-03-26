@@ -80,6 +80,7 @@ from gluon.languages import lazyT, regex_translate
 from gluon.storage import Storage
 
 from s3dal import Rows
+from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
@@ -9160,9 +9161,6 @@ class S3ExportPOI(S3Method):
             @param attr: controller options for this request
         """
 
-        import time
-        tfmt = current.xml.ISOFORMAT
-
         # Determine request Lx
         current_lx = r.record
         if not current_lx: # or not current_lx.level:
@@ -9196,12 +9194,7 @@ class S3ExportPOI(S3Method):
             if msince.lower() == "auto":
                 msince = "auto"
             else:
-                try:
-                    (y, m, d, hh, mm, ss, t0, t1, t2) = \
-                        time.strptime(msince, tfmt)
-                    msince = datetime.datetime(y, m, d, hh, mm, ss)
-                except ValueError:
-                    msince = None
+                msince = s3_parse_datetime(msince)
 
         # Export a combined tree
         tree = self.export_combined_tree(tables,
@@ -9229,7 +9222,7 @@ class S3ExportPOI(S3Method):
         if tree and stylesheet is not None:
             args = Storage(domain=xml.domain,
                            base_url=s3.base_url,
-                           utcnow=datetime.datetime.utcnow().strftime(tfmt))
+                           utcnow=s3_format_datetime())
             tree = xml.transform(tree, stylesheet, **args)
         if tree:
             if as_json:

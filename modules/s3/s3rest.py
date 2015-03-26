@@ -59,6 +59,7 @@ from gluon import *
 #from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
 from gluon.storage import Storage
 
+from s3datetime import s3_parse_datetime
 from s3resource import S3Resource
 from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_record_id
 
@@ -788,13 +789,7 @@ class S3Request(object):
         # msince
         msince = get_vars.get("msince")
         if msince is not None:
-            tfmt = current.xml.ISOFORMAT
-            try:
-                (y, m, d, hh, mm, ss, t0, t1, t2) = \
-                    time.strptime(msince, tfmt)
-                msince = datetime.datetime(y, m, d, hh, mm, ss)
-            except ValueError:
-                msince = None
+            msince = s3_parse_datetime(msince)
 
         # Show IDs (default: False)
         if "show_ids" in get_vars:

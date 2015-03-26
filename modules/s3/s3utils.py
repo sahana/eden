@@ -60,7 +60,7 @@ from gluon.languages import lazyT
 from gluon.tools import addrow
 
 from s3dal import Expression, Row
-from s3datetime import s3_decode_iso_datetime
+from s3datetime import ISOFORMAT, s3_decode_iso_datetime
 
 DEBUG = False
 if DEBUG:
@@ -1927,8 +1927,7 @@ class S3TypeConverter(object):
         elif isinstance(b, basestring):
             try:
                 # ISO Format is standard (e.g. in URLs)
-                tfmt = current.xml.ISOFORMAT
-                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
+                (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, ISOFORMAT)
             except ValueError:
                 try:
                     # Try localized datetime format

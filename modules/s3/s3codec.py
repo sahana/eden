@@ -51,8 +51,6 @@ class S3Codec(object):
         data formats, for use with S3Importer/S3Exporter
     """
 
-    ISOFORMAT = "%Y-%m-%dT%H:%M:%S" #: universal timestamp
-
     # A list of fields which should be skipped from PDF/XLS exports
     indices = ["id", "pe_id", "site_id", "sit_id", "item_entity_id"]
 

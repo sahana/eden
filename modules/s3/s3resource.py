@@ -69,6 +69,7 @@ from gluon.tools import callback
 
 from s3dal import Expression, Field, Row, Rows, Table
 from s3data import S3DataTable, S3DataList, S3PivotTable
+from s3datetime import s3_format_datetime
 from s3fields import S3Represent, s3_all_meta_field_names
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
 from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, s3_get_last_record_id, s3_remove_last_record_id
@@ -1772,12 +1773,11 @@ class S3Resource(object):
             #if DEBUG:
             #    _start = datetime.datetime.now()
             import uuid
-            tfmt = xml.ISOFORMAT
             args.update(domain=xml.domain,
                         base_url=current.response.s3.base_url,
                         prefix=self.prefix,
                         name=self.name,
-                        utcnow=datetime.datetime.utcnow().strftime(tfmt),
+                        utcnow=s3_format_datetime(),
                         msguid=uuid.uuid4().urn)
             tree = xmlformat.transform(tree, **args)
             #if DEBUG:
@@ -2470,20 +2470,12 @@ class S3Resource(object):
 
         if not job_id:
 
-            # Resource data
-            prefix = self.prefix
-            name = self.name
-
             # Additional stylesheet parameters
-            tfmt = xml.ISOFORMAT
-            utcnow = datetime.datetime.utcnow().strftime(tfmt)
-            domain = xml.domain
-            base_url = current.response.s3.base_url
-            args.update(domain=domain,
-                        base_url=base_url,
-                        prefix=prefix,
-                        name=name,
-                        utcnow=utcnow)
+            args.update(domain=xml.domain,
+                        base_url=current.response.s3.base_url,
+                        prefix=self.prefix,
+                        name=self.name,
+                        utcnow=s3_format_datetime())
 
             # Build import tree
             if not isinstance(source, (list, tuple)):
@@ -2977,12 +2969,11 @@ class S3Resource(object):
         # Transformation
         tree = etree.ElementTree(root)
         if stylesheet is not None:
-            tfmt = xml.ISOFORMAT
             args = dict(domain=xml.domain,
                         base_url=current.response.s3.base_url,
                         prefix=self.prefix,
                         name=self.name,
-                        utcnow=datetime.datetime.utcnow().strftime(tfmt))
+                        utcnow=s3_format_datetime())
 
             tree = xml.transform(tree, stylesheet, **args)
             if tree is None:

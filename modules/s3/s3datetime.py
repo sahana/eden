@@ -29,8 +29,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DateTime",
+__all__ = ("ISOFORMAT",
+           "S3DateTime",
            "s3_utc",
+           "s3_parse_datetime",
+           "s3_format_datetime",
            "s3_decode_iso_datetime",
            "s3_encode_iso_datetime",
            "s3_encode_local_datetime",
@@ -46,9 +49,11 @@ except ImportError:
     print >> sys.stderr, "ERROR: python-dateutil module needed for date handling"
     raise
 import re
+import time
 
 from gluon import *
 
+ISOFORMAT = "%Y-%m-%dT%H:%M:%S" #: ISO 8601 Combined Date+Time format
 OFFSET = re.compile("([+|-]{0,1})(\d{1,2}):(\d\d)")
 
 # =============================================================================
@@ -179,6 +184,45 @@ class S3DateTime(object):
         else:
             return 0
         return sign * (3600 * offset_hrs + 60 * offset_min)
+
+#--------------------------------------------------------------------------
+def s3_parse_datetime(string, dtfmt=None):
+    """
+        Parse a date/time string according to the given format.
+
+        @param string: the string
+        @param dtfmt: the string format (defaults to ISOFORMAT)
+
+        @return: a datetime object, or None if the string is invalid
+    """
+
+    if not string:
+        return None
+    if dtfmt is None:
+        dtfmt = ISOFORMAT
+    try:
+        (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(string, dtfmt)
+        dt = datetime.datetime(y, m, d, hh, mm, ss)
+    except ValueError:
+        dt = None
+    return dt
+
+#--------------------------------------------------------------------------
+def s3_format_datetime(dt=None, dtfmt=None):
+    """
+        Format a datetime object according to the given format.
+
+        @param dt: the datetime object, defaults to datetime.datetime.utcnow()
+        @param dtfmt: the string format (defaults to ISOFORMAT)
+
+        @return: a string
+    """
+
+    if not dt:
+        dt = datetime.datetime.utcnow()
+    if dtfmt is None:
+        dtfmt = ISOFORMAT
+    return dt.strftime(dtfmt)
 
 #--------------------------------------------------------------------------
 def s3_decode_iso_datetime(dtstr):
