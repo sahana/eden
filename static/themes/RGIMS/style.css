@@ -398,6 +398,18 @@ div.tabs span.tab_other a:hover {
   white-space: nowrap;
 }
 
+/* Caret */
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-top: 4px solid #000000;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+}
+
 /* Footer */
 #footer {
   margin-top: 20px;
@@ -755,6 +767,14 @@ input.date.hasDatepicker {
 }
 .dl .dl-row {
   border: 0;
+}
+
+.dl-item .dropdown .caret {
+  margin-left: 0.2rem;
+  margin-top: 0.4rem;
+}
+.dl-item .attachments {
+  margin-right: 0.2rem;
 }
 
 /* Comment feeds */

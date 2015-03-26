@@ -1572,8 +1572,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
     if documents:
         if not isinstance(documents, list):
             documents = [documents]
-        doc_list = UL(_class="dropdown-menu",
+        doc_list_id = "attachments-%s" % item_id
+        doc_list = UL(_class="f-dropdown dropdown-menu",
                       _role="menu",
+                      _id=doc_list_id,
+                      data={"dropdown-content": ""},
                       )
         retrieve = db.doc_document.file.retrieve
         for doc in documents:
@@ -1595,10 +1598,11 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                      SPAN(_class="caret"),
                      _class="btn dropdown-toggle",
                      _href="#",
-                     **{"_data-toggle": "dropdown"}
+                     data={"toggle": "dropdown"},
                      ),
                    doc_list,
                    _class="btn-group attachments dropdown pull-right",
+                   data={"dropdown": doc_list_id},
                    )
     else:
         docs = ""

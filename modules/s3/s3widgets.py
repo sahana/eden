@@ -791,6 +791,8 @@ class S3AddPersonWidget2(FormWidget):
                     person_details = row["pr_person_details"]
                 if hrm:
                     human_resource = row["hrm_human_resource"]
+            else:
+                person = row
             if hrm:
                 values["organisation_id"] = human_resource.organisation_id
             if occupation:
