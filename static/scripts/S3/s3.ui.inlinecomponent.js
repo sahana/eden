@@ -1326,8 +1326,8 @@
                 item = {};
                 item[fieldname] = {'text': label, 'value': value};
                 item._changed = true;
-                if (row.hasOwnProperty('_delete')) {
-                    delete row._delete;
+                if (item.hasOwnProperty('_delete')) {
+                    delete item._delete;
                 }
                 data.push(item);
             }

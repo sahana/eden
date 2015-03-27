@@ -113,8 +113,7 @@ def config(settings):
     settings.auth.record_approval = True
     settings.auth.record_approval_required_for = ("org_organisation",)
 
-    #settings.security.policy = 8 # Delegations when ready
-    settings.security.policy = 5 # Controller, Function & Table ACLs
+    settings.security.policy = 8 # Hierarchical Realms + Delegations
 
     # Enable this to have Open links in IFrames open a full page in a new tab
     settings.ui.iframe_opens_full = True
@@ -418,7 +417,7 @@ def config(settings):
                 tablename = "org_facility"
                 table = s3db[tablename]
 
-                if not r.component and r.method in (None, "create", "update"):
+                if not r.component and r.method in (None, "create", "update", "summary"):
                     from s3 import S3LocationSelector, S3MultiSelectWidget
                     field = table.location_id
                     if r.method in ("create", "update"):

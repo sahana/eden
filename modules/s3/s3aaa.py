@@ -1849,6 +1849,7 @@ $.filterOptionsS3({
                     # Add a new record
                     id = table.insert(**{pe_field: pe_value})
                     update_super(table, Storage(id=id))
+                    self.s3_set_record_owner(table, id)
                     record = db(table.id == id).select(table.id,
                                                        table.pe_id,
                                                        limitby=(0, 1)).first()
@@ -6389,7 +6390,7 @@ class S3Permission(object):
             if "t" in acl:
                 table_acl = acl["t"]
             elif table_restricted:
-                table_acl = page_acl
+                table_acl = NONE
             else:
                 table_acl = ALL
             table_acl = most_permissive(default_table_acl, table_acl)

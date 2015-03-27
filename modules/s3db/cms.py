@@ -1596,13 +1596,14 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
             doc_list.append(doc_item)
         docs = DIV(A(ICON("attachment"),
                      SPAN(_class="caret"),
-                     _class="btn dropdown-toggle",
+                     _class="btn dropdown-toggle dropdown",
                      _href="#",
-                     data={"toggle": "dropdown"},
+                     data={"toggle": "dropdown",
+                           "dropdown": doc_list_id,
+                           },
                      ),
                    doc_list,
                    _class="btn-group attachments dropdown pull-right",
-                   data={"dropdown": doc_list_id},
                    )
     else:
         docs = ""
