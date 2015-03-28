@@ -155,13 +155,21 @@ def post():
                     # We always want the Rich Text widget here
                     table.body.widget = s3base.s3_richtext_widget
                     resource = get_vars.get("resource", None)
-                    if resource in ("contact", "index"):
-                        if resource == "contact":
+                    if resource in ("about", "contact", "help", "index"):
+
+                        if resource == "about":
+                            # We're creating/updating text for the About page
+                            table.name.default = "About Page"
+                        elif resource == "contact":
                             # We're creating/updating text for a Contact page
                             table.name.default = "Contact Page"
+                        elif resource == "help":
+                            # We're creating/updating text for the Help page
+                            table.name.default = "Help Page"
                         else:
                             # We're creating/updating text for the Home page
                             table.name.default = "Home Page"
+
                         #table.title.readable = table.title.writable = False
                         table.replies.readable = table.replies.writable = False
                         url = URL(c=_module, f=resource)
