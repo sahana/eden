@@ -2348,6 +2348,8 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             if person_id:
                 # Update the super-entities
                 s3db.update_super(ptable, dict(id=person_id))
+                # Update realm
+                current.auth.s3_set_record_owner(ptable, person_id)
                 # Read the created pe_id
                 query = (ptable.id == person_id)
                 person = db(query).select(ptable.pe_id,

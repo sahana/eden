@@ -81,7 +81,7 @@ ERROR["PARSE_ERROR"] = "XML parse error"
 ERROR["TRANSFORMATION_ERROR"] = "XSLT transformation error"
 ERROR["UNAUTHORISED"] = "Not Authorized"
 ERROR["VALIDATION_ERROR"] = "Validation error"
-        
+
 # To get included in <HEAD>
 s3.stylesheets = []
 s3.external_stylesheets = []
@@ -248,6 +248,7 @@ ANONYMOUS = system_roles.ANONYMOUS
 EDITOR = system_roles.EDITOR
 MAP_ADMIN = system_roles.MAP_ADMIN
 ORG_ADMIN = system_roles.ORG_ADMIN
+ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
 if s3.debug:
     # Add the developer toolbar from modules/s3/s3utils.py

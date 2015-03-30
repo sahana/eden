@@ -44,8 +44,8 @@ class S3MainMenu(default.S3MainMenu):
         AUTHENTICATED = current.session.s3.system_roles.AUTHENTICATED
 
         return [
-            MM("Contacts", c="hrm", f="staff")(
-            ),                
+            MM("Contacts", c="hrm", f="staff", t="hrm_human_resource")(
+            ),
             MM("Facilities", c="org", f="facility", m="summary",
                restrict=[AUTHENTICATED])(
             ),
@@ -90,7 +90,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         AUTHENTICATED = s3.system_roles.AUTHENTICATED
 
         return M()(
-                    M("Contacts", c="hrm", f="staff")(
+                    M("Contacts", c="hrm", f="staff", t="hrm_human_resource")(
                         M("View"),
                         M("Create", m="create"),
                     ),

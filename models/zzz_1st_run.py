@@ -32,16 +32,20 @@ if len(pop_list) > 0:
     create_role = auth.s3_create_role
     #update_acls = auth.s3_update_acls
 
-    # Do not remove or change order of these 5 definitions (System Roles):
+    # Do not remove or change order of these role definitions (System Roles):
     create_role("Administrator",
                 "System Administrator - can access & make changes to any data",
                 uid=sysroles.ADMIN,
-                system=True, protected=True)
+                system=True,
+                protected=True,
+                )
 
     create_role("Authenticated",
                 "Authenticated - all logged-in users",
                 uid=sysroles.AUTHENTICATED,
-                protected=True)
+                system=True,
+                protected=True,
+                )
 
     create_role("Anonymous",
                 "Unauthenticated users",
@@ -52,13 +56,17 @@ if len(pop_list) > 0:
                 # org when registering
                 dict(c="org", f="sites_for_org", uacl=acl.READ, entity="any"),
                 uid=sysroles.ANONYMOUS,
-                protected=True)
+                system=True,
+                protected=True,
+                )
 
     # Primarily for Security Policy 2
     create_role("Editor",
                 "Editor - can access & make changes to any unprotected data",
                 uid=sysroles.EDITOR,
-                system=True, protected=True)
+                system=True,
+                protected=True,
+                )
 
     # MapAdmin
     map_admin = create_role("MapAdmin",
@@ -66,13 +74,25 @@ if len(pop_list) > 0:
                             dict(c="gis", uacl=acl.ALL, oacl=acl.ALL),
                             dict(c="gis", f="location", uacl=acl.ALL, oacl=acl.ALL),
                             uid=sysroles.MAP_ADMIN,
-                            system=True, protected=True)
+                            system=True,
+                            protected=True,
+                            )
 
     # OrgAdmin (policies 6, 7 and 8)
     create_role("OrgAdmin",
-                "OrgAdmin - allowed to manage user roles for entity realms",
+                "OrgAdmin - allowed to manage user roles for organisation realms",
                 uid=sysroles.ORG_ADMIN,
-                system=True, protected=True)
+                system=True,
+                protected=True,
+                )
+
+    # OrgGroupAdmin (policies 6, 7 and 8)
+    create_role("OrgGroupAdmin",
+                "OrgGroupAdmin - allowed to manage organisation group realms",
+                uid=sysroles.ORG_GROUP_ADMIN,
+                system=True,
+                protected=True,
+                )
 
     # Enable shortcuts (needed by default.py)
     system_roles = auth.get_system_roles()
@@ -82,6 +102,7 @@ if len(pop_list) > 0:
     EDITOR = system_roles.EDITOR
     MAP_ADMIN = system_roles.MAP_ADMIN
     ORG_ADMIN = system_roles.ORG_ADMIN
+    ORG_GROUP_ADMIN = system_roles.ORG_GROUP_ADMIN
 
     # =========================================================================
     # Configure Scheduled Tasks

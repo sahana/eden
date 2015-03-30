@@ -69,11 +69,6 @@
                 <data field="language"><xsl:value-of select="col[@field='Language']"/></data>
             </xsl:if>
 
-            <!-- Every user must have the authenticated role -->
-            <resource name="auth_membership">
-                <reference field="group_id" resource="auth_group" uuid="AUTHENTICATED"/>
-            </resource>
-
             <!-- Add other roles as per list -->
             <xsl:variable name="roles" select="col[@field='Role']/text()"/>
             <xsl:call-template name="splitList">

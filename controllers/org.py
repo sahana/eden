@@ -35,6 +35,12 @@ def index_alt():
 def group():
     """ RESTful CRUD controller """
 
+    # Use hrm/group controller for teams rather than pr/group
+    s3db.configure("pr_group",
+                   linkto = lambda record_id: \
+                            URL(c="hrm", f="group", args=[record_id]),
+                   )
+
     return s3_rest_controller(rheader = s3db.org_rheader)
 
 # -----------------------------------------------------------------------------

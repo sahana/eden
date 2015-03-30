@@ -67,6 +67,7 @@ __all__ = ("S3PersonEntity",
            "pr_add_to_role",
            "pr_remove_from_role",
            # Hierarchy Lookup
+           "pr_instance_type",
            "pr_realm",
            "pr_realm_users",
            "pr_get_role_paths",
@@ -6221,6 +6222,22 @@ def pr_get_ancestors(pe_id):
     ancestors = S3MultiPath.all_nodes(paths)
 
     return ancestors
+
+# =============================================================================
+def pr_instance_type(pe_id):
+    """
+        Get the instance type for a PE
+
+        @param pe_id: the PE ID
+    """
+
+    if pe_id:
+        etable = current.s3db.pr_pentity
+        row = current.db(etable.pe_id == pe_id).select(etable.instance_type,
+                                                       limitby=(0, 1)).first()
+        if row:
+            return row.instance_type
+    return None
 
 # =============================================================================
 def pr_realm(entity):

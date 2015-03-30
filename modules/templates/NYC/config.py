@@ -134,6 +134,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Audit
+    #
     def audit_write(method, tablename, form, record, representation):
         if not current.auth.user:
             # Don't include prepop
@@ -150,6 +151,27 @@ def config(settings):
             return False
 
     settings.security.audit_write = audit_write
+
+    # -------------------------------------------------------------------------
+    # Realm Rules
+    #
+    def realm_entity(table, row):
+
+        tablename = table._tablename
+        if tablename == "pr_person":
+            # Person records define their own realm
+            ptable = current.s3db.pr_person
+            query = (ptable.id == row.id)
+            row = current.db(query).select(ptable.id,
+                                   ptable.pe_id,
+                                   limitby=(0, 1)).first()
+            if row.pe_id:
+                return row.pe_id
+
+        # All other cases follow default rules
+        return 0
+
+    settings.auth.realm_entity = realm_entity
 
     # -------------------------------------------------------------------------
     # CMS
