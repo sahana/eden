@@ -581,7 +581,9 @@ class OutreachReferralModel(S3Model):
                                      comment=org_comment,
                                      ),
                      self.po_household_id(),
-                     s3_date(default="now"),
+                     s3_date(default="now",
+                             label=T("Date Referral Made"),
+                             ),
                      s3_comments(),
                      *s3_meta_fields())
 
