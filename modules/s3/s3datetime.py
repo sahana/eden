@@ -37,6 +37,7 @@ __all__ = ("ISOFORMAT",
            "s3_decode_iso_datetime",
            "s3_encode_iso_datetime",
            "s3_encode_local_datetime",
+           "s3_get_utc_offset",
            )
 
 import datetime
@@ -292,5 +293,47 @@ def s3_utc(dt):
         return dt.astimezone(dateutil.tz.tzutc())
     else:
         return None
+
+# =============================================================================
+def s3_get_utc_offset():
+    """ Get the current UTC offset for the client """
+
+    offset = None
+    session = current.session
+    request = current.request
+
+    logged_in = current.auth.is_logged_in()
+    if logged_in:
+        # 1st choice is the personal preference (useful for GETs if user
+        # wishes to see times in their local timezone)
+        offset = session.auth.user.utc_offset
+        if offset:
+            offset = offset.strip()
+
+    if not offset:
+        # 2nd choice is what the client provides in the hidden form
+        # field (for form POSTs)
+        offset = request.post_vars.get("_utc_offset", None)
+        if offset:
+            offset = int(offset)
+            utcstr = offset < 0 and "+" or "-"
+            hours = abs(int(offset/60))
+            minutes = abs(int(offset % 60))
+            offset = "%s%02d%02d" % (utcstr, hours, minutes)
+            # Make this the preferred value during this session
+            if logged_in:
+                session.auth.user.utc_offset = offset
+
+    if not offset:
+        # 3rd choice is the server default (what most clients should see
+        # the timezone as)
+        offset = current.deployment_settings.L10n.utc_offset
+
+    session.s3.utc_offset = offset
+
+    seconds = datetime.timedelta(seconds=S3DateTime.get_offset_value(offset))
+    current.response.s3.local_date = (request.utcnow + seconds).date()
+
+    return offset
 
 # END =========================================================================

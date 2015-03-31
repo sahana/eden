@@ -1206,20 +1206,20 @@ def s3_date(name="date", **attr):
     else:
         future = None
 
+    T = current.T
+    now = current.response.s3.local_date or current.request.utcnow.date()
+
     if "default" in attr and attr["default"] == "now":
-        attr["default"] = current.request.utcnow
+        attr["default"] = now
     if "label" not in attr:
-        attr["label"] = current.T("Date")
+        attr["label"] = T("Date")
     if "represent" not in attr:
-        attr["represent"] = lambda d: S3DateTime.date_represent(d,
-                                                                utc=True)
+        attr["represent"] = lambda d: S3DateTime.date_represent(d, utc=True)
     if "requires" not in attr:
+        date_format = current.deployment_settings.get_L10n_date_format()
         if past is None and future is None:
-            requires = IS_DATE(
-                    format=current.deployment_settings.get_L10n_date_format()
-                )
+            requires = IS_DATE(format=date_format)
         else:
-            now = current.request.utcnow.date()
             current_month = now.month
             if past is None:
                 future_month = now.month + future
@@ -1236,9 +1236,9 @@ def s3_date(name="date", **attr):
                     else:
                         max = now.replace(year=future_year)
                 requires = IS_DATE_IN_RANGE(
-                        format=current.deployment_settings.get_L10n_date_format(),
+                        format=date_format,
                         maximum=max,
-                        error_message=current.T("Date must be %(max)s or earlier!")
+                        error_message=T("Date must be %(max)s or earlier!")
                     )
             elif future is None:
                 if past < current_month:
@@ -1254,9 +1254,9 @@ def s3_date(name="date", **attr):
                     else:
                         min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
-                        format=current.deployment_settings.get_L10n_date_format(),
+                        format=date_format,
                         minimum=min,
-                        error_message=current.T("Date must be %(min)s or later!")
+                        error_message=T("Date must be %(min)s or later!")
                     )
             else:
                 future_month = now.month + future
@@ -1285,10 +1285,10 @@ def s3_date(name="date", **attr):
                     else:
                         min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
-                        format=current.deployment_settings.get_L10n_date_format(),
+                        format=date_format,
                         maximum=max,
                         minimum=min,
-                        error_message=current.T("Date must be between %(min)s and %(max)s!")
+                        error_message=T("Date must be between %(min)s and %(max)s!")
                     )
         if "empty" in attr:
             if attr["empty"] is False:

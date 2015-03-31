@@ -391,6 +391,8 @@ class OutreachHouseholdModel(S3Model):
                       "W": T("worse"),
                       }
 
+        twoweeks = s3.local_date + datetime.timedelta(days=14)
+
         tablename = "po_household_followup"
         define_table(tablename,
                      household_id(),
@@ -399,8 +401,7 @@ class OutreachHouseholdModel(S3Model):
                            ),
                      s3_date("followup_date",
                              label = T("Date for Follow-up"),
-                             default = current.request.utcnow + \
-                                       datetime.timedelta(days=14),
+                             default = twoweeks,
                              past = 0,
                              ),
                      Field("followup", "text",
