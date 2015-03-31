@@ -955,13 +955,18 @@ def about():
         item = db(query).select(table.id,
                                 table.body,
                                 limitby=(0, 1)).first()
+
+        get_vars = {"module": module,
+                    "resource": resource}
+
         if item:
             if ADMIN:
                 item = DIV(XML(item.body),
                            BR(),
                            A(T("Edit"),
                              _href=URL(c="cms", f="post",
-                                       args=[item.id, "update"]),
+                                       args=[item.id, "update"],
+                                       vars=get_vars),
                              _class="action-btn"))
             else:
                 item = DIV(XML(item.body))
@@ -972,9 +977,7 @@ def about():
                 _class = "action-btn"
             item = A(T("Edit"),
                      _href=URL(c="cms", f="post", args="create",
-                               vars={"module": module,
-                                     "resource": resource
-                                     }),
+                               vars=get_vars),
                      _class="%s cms-edit" % _class)
         else:
             item = H2(T("About"))
@@ -1145,13 +1148,18 @@ def help():
         item = db(query).select(table.id,
                                 table.body,
                                 limitby=(0, 1)).first()
+
+        get_vars = {"module": module,
+                    "resource": resource}
+
         if item:
             if ADMIN:
                 item = DIV(XML(item.body),
                            BR(),
                            A(T("Edit"),
                              _href=URL(c="cms", f="post",
-                                       args=[item.id, "update"]),
+                                       args=[item.id, "update"],
+                                       vars=get_vars),
                              _class="action-btn"))
             else:
                 item = DIV(XML(item.body))
@@ -1162,9 +1170,7 @@ def help():
                 _class = "action-btn"
             item = A(T("Edit"),
                      _href=URL(c="cms", f="post", args="create",
-                               vars={"module": module,
-                                     "resource": resource
-                                     }),
+                               vars=get_vars),
                      _class="%s cms-edit" % _class)
         else:
             item = TAG[""](H2(T("Help")),
