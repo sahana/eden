@@ -3209,8 +3209,8 @@ class S3ProjectLocationModel(S3Model):
                                     "actuate": "hide",
                                     "autodelete": False,
                                     },
-                       # Distributions
-                       supply_distribution = "project_location_id",
+                       # Distributions (not implemented yet)
+                       #supply_distribution = "project_location_id",
                        # Themes
                        project_theme = {"link": "project_theme_location",
                                         "joinby": "project_location_id",
