@@ -27,7 +27,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Posts
-    redirect(URL(f="post"))
+    s3_redirect_default(URL(f="post"))
 
 # -----------------------------------------------------------------------------
 def series():
@@ -437,7 +437,7 @@ def newsfeed():
                                    #represent = "%(name)s",
                                    hidden = hidden,
                                    ))
-                      
+
     elif len_series > 1:
         notify_fields.insert(0, (T("Type"), "series_id"))
         # Checkboxes
@@ -514,9 +514,9 @@ def newsfeed():
                 # @ToDo: deployment_setting
                 #ADMIN = session.s3.system_roles.ADMIN
                 #if (not auth.s3_has_role(ADMIN)):
-                #    represent = S3Represent(lookup="cms_series", 
+                #    represent = S3Represent(lookup="cms_series",
                 #                            translate=settings.get_L10n_translate_cms_series())
-                #    field.requires = IS_ONE_OF(db, 
+                #    field.requires = IS_ONE_OF(db,
                 #                               "cms_series.id",
                 #                               represent,
                 #                               not_filterby="name",
@@ -560,7 +560,7 @@ def newsfeed():
                                  post_id=form.vars.id)
 
                 s3db.configure("cms_post",
-                               create_onaccept = create_onaccept, 
+                               create_onaccept = create_onaccept,
                                )
 
             crud_fields = ["date",

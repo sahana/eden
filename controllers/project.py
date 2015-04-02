@@ -18,10 +18,10 @@ def index():
 
     if mode_task:
         # Bypass home page & go direct to browsing Tasks for a Project
-        redirect(URL(f="project", vars={"tasks":1}))
+        s3_redirect_default(URL(f="project", vars={"tasks":1}))
     else:
         # Bypass home page & go direct to filterable list of Projects
-        redirect(URL(f="project"))
+        s3_redirect_default(URL(f="project"))
 
 # =============================================================================
 def create():

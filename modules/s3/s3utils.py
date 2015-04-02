@@ -916,6 +916,34 @@ def s3_yes_no_represent(value):
         return current.messages["NONE"]
 
 # =============================================================================
+def s3_redirect_default(location="", how=303, client_side=False, headers=None):
+    """
+        Redirect preserving response messages, useful when redirecting from
+        index() controllers.
+
+        @param location: the url where to redirect
+        @param how: what HTTP status code to use when redirecting
+        @param client_side: if set to True, it triggers a reload of
+                            the entire page when the fragment has been
+                            loaded as a component
+        @param headers: response headers
+    """
+
+    response = current.response
+    session = current.session
+
+    session.error = response.error
+    session.warning = response.warning
+    session.confirmation = response.confirmation
+    session.flash = response.flash
+
+    redirect(location,
+             how=how,
+             client_side=client_side,
+             headers=headers,
+             )
+
+# =============================================================================
 def s3_include_debug_css():
     """
         Generates html to include the css listed in

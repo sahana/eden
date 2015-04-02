@@ -23,7 +23,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Requests
-    redirect(URL(f="req"))
+    s3_redirect_default(URL(f="req"))
 
 # -----------------------------------------------------------------------------
 def is_affiliated():
@@ -397,9 +397,9 @@ def req_controller(template = False):
 
             table.site_id.requires = IS_IN_SET(site_opts)
             if (commit_status == 2) and settings.get_req_restrict_on_complete():
-                # Restrict from committing to completed requests                
+                # Restrict from committing to completed requests
                 listadd = False
-            else:    
+            else:
                 # Allow commitments to be added when doing so as a component
                 listadd = True
 
@@ -731,7 +731,7 @@ def req_item():
         s3.filter = (FS("req_id$is_template") == False)
 
     def prep(r):
-        
+
         if r.interactive or r.representation == "aadata":
 
             list_fields = s3db.get_config("req_req_item", "list_fields")
@@ -971,7 +971,7 @@ def commit():
                                               _href=URL(c="default",
                                                         f="user",
                                                         args=["profile"]))
-                    
+
                     jappend = s3.jquery_ready.append
                     jappend('''
 $('#req_commit_site_id_link').click(function(){
@@ -987,7 +987,7 @@ $('#req_commit_site_id_link').click(function(){
 })''')
                     # Dropdown not Autocomplete
                     s3db.req_commit_item.req_item_id.widget = None
-                    
+
                     # Options updater for inline items
                     if not r.component:
                         jappend('''

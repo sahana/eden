@@ -14,7 +14,7 @@ if not settings.has_module(module):
 def index():
     """ RESTful CRUD controller """
 
-    redirect(URL(f="building"))
+    s3_redirect_default(URL(f="building"))
 
 
 # -----------------------------------------------------------------------------
@@ -102,7 +102,7 @@ def building():
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
             s3db.configure("assess_building", marker_fn=building_marker_fn)
-        
+
         return True
     s3.prep = prep
 

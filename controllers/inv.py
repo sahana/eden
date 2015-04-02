@@ -26,7 +26,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Warehouses
-    redirect(URL(f="warehouse"))
+    s3_redirect_default(URL(f="warehouse"))
 
 # -----------------------------------------------------------------------------
 def index2():
@@ -289,7 +289,7 @@ def warehouse():
 
     # CRUD pre-process
     def prep(r):
-        
+
         if r.component:
             component_name = r.component_name
             if component_name == "inv_item":
@@ -1620,7 +1620,7 @@ def recv_item_json():
             (rtable.id == ittable.recv_id) & \
             (rtable.site_id == stable.id) & \
             (rtable.status == s3db.inv_ship_status["RECEIVED"]) & \
-            (ittable.deleted == False) 
+            (ittable.deleted == False)
     records = db(query).select(rtable.id,
                                rtable.date,
                                stable.name,

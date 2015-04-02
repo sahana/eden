@@ -13,9 +13,7 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    return {}
-    # @todo: swallows error messages
-    #return s3db.cms_index(module, alt_function="index_alt")
+    return s3db.cms_index(module, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -23,7 +21,7 @@ def index_alt():
         Module homepage for non-Admin users when no CMS content found
     """
 
-    redirect(URL(f="household", args="summary"))
+    s3_redirect_default(URL(f="household", args="summary"))
 
 # -----------------------------------------------------------------------------
 def area():

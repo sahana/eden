@@ -25,7 +25,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Members
-    redirect(URL(f="membership", args=["summary"]))
+    s3_redirect_default(URL(f="membership", args=["summary"]))
 
 # =============================================================================
 def membership_type():

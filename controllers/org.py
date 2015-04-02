@@ -26,10 +26,10 @@ def index_alt():
     template = settings.get_template()
     if template == "SandyRelief":
         # Just redirect to the Facilities
-        redirect(URL(f="facility"))
+        s3_redirect_default(URL(f="facility"))
     else:
         # Just redirect to the list of Organisations
-        redirect(URL(f="organisation"))
+        s3_redirect_default(URL(f="organisation"))
 
 # -----------------------------------------------------------------------------
 def group():

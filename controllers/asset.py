@@ -25,7 +25,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Assets
-    redirect(URL(f="asset"))
+    s3_redirect_default(URL(f="asset"))
 
 # -----------------------------------------------------------------------------
 def create():
@@ -81,7 +81,7 @@ def item():
                                    filter_opts = (True,),
                                    sort = True,
                                    )
-                    
+
         field.comment = S3AddResourceLink(f="item_category",
                                           label=T("Create Item Category"),
                                           title=T("Item Category"),
@@ -115,7 +115,7 @@ def item_category():
     field = table.can_be_asset
     field.readable = field.writable = False
     field.default = True
-    
+
     return s3_rest_controller("supply", "item_category")
 
 # -----------------------------------------------------------------------------

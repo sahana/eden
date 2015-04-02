@@ -19,10 +19,10 @@ def index():
     mode = session.s3.hrm.mode
     if mode is not None:
         # Go to Personal Profile
-        redirect(URL(f="person"))
+        s3_redirect_default(URL(f="person"))
     else:
         # Bypass home page & go direct to searchable list of Staff
-        redirect(URL(f="staff", args="summary"))
+        s3_redirect_default(URL(f="staff", args="summary"))
 
 # =============================================================================
 # People

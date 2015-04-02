@@ -27,7 +27,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Cases
-    redirect(URL(f="person"))
+    s3_redirect_default(URL(f="person"))
 
 # -----------------------------------------------------------------------------
 def person():

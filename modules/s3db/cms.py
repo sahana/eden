@@ -1020,6 +1020,10 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
             environment = build_environment(request, response, current.session)
             environment["settings"] = settings
             environment["s3db"] = current.s3db
+            # Retain certain globals (extend as needed):
+            g = globals()
+            environment["s3base"] = g.get("s3base")
+            environment["s3_redirect_default"] = g.get("s3_redirect_default")
             page = run_controller_in(request.controller, alt_function, environment)
             if isinstance(page, dict):
                 response._vars = page

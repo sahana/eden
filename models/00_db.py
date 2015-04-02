@@ -149,6 +149,7 @@ s3.crud = Storage()
 # namespace in order to access them without the s3base namespace prefix
 s3_action_buttons = s3base.S3CRUD.action_buttons
 s3_fullname = s3base.s3_fullname
+s3_redirect_default = s3base.s3_redirect_default
 S3ResourceHeader = s3base.S3ResourceHeader
 from s3.s3navigation import s3_rheader_tabs
 from s3.s3validators import *
