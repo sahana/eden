@@ -8,6 +8,7 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
 
 def config(settings):
@@ -21,6 +22,7 @@ def config(settings):
     """
 
     T = current.T
+    s3 = current.response.s3
 
     #settings.base.system_name = T("Sahana Skeleton")
     #settings.base.system_name_short = T("Sahana")
@@ -29,7 +31,7 @@ def config(settings):
     settings.base.prepopulate = ("Turkey", "default/users","Turkey/Demo")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "Turkey"
+    settings.base.theme = "Turkey"
 
     # Authentication settings
     # Should users be allowed to register themselves?
@@ -278,12 +280,12 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        #("cms", Storage(
-        #    name_nice = T("Content Management"),
-        #    #description = "Content Management System",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("cms", Storage(
+            name_nice = T("Content Management"),
+            #description = "Content Management System",
+            restricted = True,
+            module_type = 10,
+        )),
         ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
@@ -376,4 +378,84 @@ def config(settings):
         )),
     ])
 
+    # -----------------------------------------------------------------------------
+    def render_posts(list_id, item_id, resource, rfields, record, type=None):
+        """
+            Custom dataList item renderer for CMS Posts on the Home & News Feed pages
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+            @param type: ? (@todo)
+        """
+
+        record_id = record["cms_post.id"]
+        item_class = "thumbnail"
+
+        raw = record._row
+        series = record["cms_post.series_id"]
+        date = record["cms_post.date"]
+        body = record["cms_post.body"]
+        title = record["cms_post.title"]
+        
+        db = current.db
+        s3db = current.s3db
+        
+        # Edit Bar
+        permit = current.auth.s3_has_permission
+        table = db.cms_post
+        if permit("update", table, record_id=record_id):
+            edit_btn = A(I(" ", _class="icon icon-edit"),
+                         _href=URL(c="cms", f="post",
+                                   args=[record_id, "update.popup"],
+                                   vars={"refresh": list_id,
+                                         "record": record_id}),
+                         _class="s3_modal",
+                         _title=T("Edit %(type)s") % dict(type=T(series)),
+                         )
+        else:
+            edit_btn = ""
+        if permit("delete", table, record_id=record_id):
+            delete_btn = A(I(" ", _class="icon icon-remove-sign"),
+                           _class="dl-item-delete",
+                           )
+        else:
+            delete_btn = ""
+        edit_bar = DIV(edit_btn,
+                       delete_btn,
+                       _class="edit-bar fright",
+                       )
+        if current.request.controller == "default":
+            # Mixed resource lists (Home, News Feed)
+            icon = series.lower().replace(" ", "_")
+            card_label = TAG[""](I(_class="icon icon-%s" % icon),
+                                 SPAN(" %s" % T(series),
+                                      _class="card-title"))            
+        else:
+            card_label = SPAN(" ", _class="card-title")
+
+        # Render the item
+        if "newsfeed" not in current.request.args and series == "Haberler":
+            item = DIV(DIV(SPAN(title,
+                                _class="news-title",
+                                ),                           
+                           edit_bar,
+                           _class="card-header",
+                           ),
+                       DIV(DIV(DIV(body,                                   
+                                   _class="media",
+                                   ),
+                               _class="media-body",
+                               ),
+                           _class="media",
+                           ),                       
+                       _class=item_class,
+                       _id=item_id,
+                       )        
+        return item
+
+    # For access from custom controllers
+    s3.render_posts = render_posts
 # END =========================================================================
