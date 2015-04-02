@@ -269,9 +269,20 @@ form table td:first-child {
 	border-style: none;
 	background-color: transparent;
 }
-form table.embeddedComponent td,
-form table.embeddedComponent td:first-child {
-	border-style: solid;
+form table.embeddedComponent {
+    overflow: auto;
+}
+form table.embeddedComponent .map_wrapper {
+    min-width: 500px;
+}
+form table.embeddedComponent td {
+    border-style: none;
+}
+form table.embeddedComponent tr.label-row > td,
+form table.embeddedComponent tr.read-row > td,
+form table.embeddedComponent tr.edit-row > td,
+form table.embeddedComponent tr.edit-row > td {
+    border-style: solid;
 }
 
 /* Form Layout styles */

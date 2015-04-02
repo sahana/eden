@@ -4743,11 +4743,17 @@ class S3LocationSelector(S3Selector):
         # Real input
         classes = ["location-selector"]
         if fieldname.startswith("sub_"):
+            is_inline = True
             classes.append("inline-locationselector-widget")
+        else:
+            is_inline = False
         real_input = self.inputfield(field, values, classes, **attributes)
 
         # The overall layout of the components
-        visible_components = self._layout(components, map_icon=map_icon)
+        visible_components = self._layout(components,
+                                          map_icon=map_icon,
+                                          inline=is_inline,
+                                          )
 
         return TAG[""](DIV(_class="throbber"),
                        real_input,
@@ -5055,7 +5061,8 @@ class S3LocationSelector(S3Selector):
     def _layout(self,
                 components,
                 map_icon=None,
-                formstyle=None):
+                formstyle=None,
+                inline=False):
         """
             Overall layout for visible components
 
@@ -5074,12 +5081,14 @@ class S3LocationSelector(S3Selector):
             # Formstyle with separate row for label
             # (e.g. old default Eden formstyle)
             tuple_rows = True
+            table_style = inline and row[0].tag == "tr"
         else:
             # Formstyle with just a single row
             # (e.g. Bootstrap, Foundation or DRRPP)
             tuple_rows = False
+            table_style = False
 
-        selectors = DIV()
+        selectors = DIV() if not table_style else TABLE()
         for name in ("L0", "L1", "L2", "L3", "L4", "L5"):
             if name in components:
                 label, widget, input_id, hidden = components[name]
@@ -5095,7 +5104,7 @@ class S3LocationSelector(S3Selector):
                 else:
                     selectors.append(formrow)
 
-        inputs = TAG[""]()
+        inputs = TAG[""]() if not table_style else TABLE()
         for name in ("address", "postcode", "lat", "lon", "latlon_toggle"):
             if name in components:
                 label, widget, input_id, hidden = components[name]

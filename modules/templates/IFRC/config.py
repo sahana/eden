@@ -2083,6 +2083,8 @@ def config(settings):
                         # Custom CRUD form
                         if r.interactive:
                             from s3 import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
+                            # Filter inline address for type "office address", also sets default
+                            OFFICE = {"field": "type", "options": 3}
                             crud_form = S3SQLCustomForm(
                                             "name",
                                             "acronym",
@@ -2091,12 +2093,27 @@ def config(settings):
                                                             label = type_label,
                                                             multiple = False,
                                                             ),
+                                            S3SQLInlineComponent("address",
+                                                                 fields = [("", "location_id")],
+                                                                 multiple = False,
+                                                                 filterby = (OFFICE,),
+                                                                 ),
                                             "phone",
                                             "website",
                                             "logo",
                                             "comments",
                                             )
-                            resource.configure(crud_form=crud_form)
+                            # Remove unwanted filters
+                            # @todo: add a location filter for office address
+                            unwanted_filters = ("sector_organisation.sector_id",
+                                                "country",
+                                                )
+                            filter_widgets = [widget
+                                              for widget in resource.get_config("filter_widgets")
+                                              if widget.field not in unwanted_filters]
+                            resource.configure(crud_form=crud_form,
+                                               filter_widgets=filter_widgets,
+                                               )
                     else:
                         # Organisations in org module
                         list_fields = ["name",
