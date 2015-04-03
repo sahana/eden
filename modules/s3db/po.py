@@ -132,6 +132,20 @@ class OutreachAreaModel(S3Model):
         # Table Configuration
         self.configure(tablename,
                        filter_widgets = filter_widgets,
+                       summary = ({"common": True,
+                                   "name": "add",
+                                   "widgets": [{"method": "create"}],
+                                   },
+                                  {"name": "table",
+                                   "label": "Table",
+                                   "widgets": [{"method": "datatable"}]
+                                   },
+                                  {"name": "map",
+                                   "label": "Map",
+                                   "widgets": [{"method": "map",
+                                                "ajax_init": True}],
+                                   },
+                                  ),
                        )
 
         # ---------------------------------------------------------------------
@@ -270,6 +284,7 @@ class OutreachHouseholdModel(S3Model):
         report_axes = ["area_id",
                        "followup",
                        "organisation_household.organisation_id",
+                       "household_followup.evaluation",
                        ]
         reports = ((T("Number of Households Visited"), "count(id)"),
                    )

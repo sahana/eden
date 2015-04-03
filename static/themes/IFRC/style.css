@@ -503,3 +503,22 @@ button.alert-send-btn:enabled {
 .profile-sub-header .icon {
     margin-right: 8px;
 }
+
+.po-summary {
+    display: table;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #a0a0a0;
+}
+.po-summary-info {
+    display: table-row;
+}
+.po-summary-info label,
+.po-summary-info > span {
+    display: table-cell;
+    font-size: 0.9rem;
+    padding-right: 0.8rem;
+}
+.po-summary-info label {
+    font-weight: bold;
+}

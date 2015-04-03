@@ -522,7 +522,7 @@ def config(settings):
                #module_type = 10,
            )),
         ("po", Storage(
-               name_nice = T("Population Outreach"),
+               name_nice = T("Recovery Outreach"),
                #description = "Population Outreach",
                restricted = True,
                #module_type = 10,

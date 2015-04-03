@@ -13,15 +13,101 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    # Page title
+    module_name = settings.modules[module].name_nice
 
-# -----------------------------------------------------------------------------
-def index_alt():
-    """
-        Module homepage for non-Admin users when no CMS content found
-    """
+    response.title = module_name
+    output = {"module_name": module_name}
 
-    s3_redirect_default(URL(f="household", args="summary"))
+    # Extract summary information
+    htable = s3db.po_household
+    rtable = s3db.po_organisation_household
+    ftable = s3db.po_household_followup
+    atable = s3db.po_referral_organisation
+
+    # => Number of households
+    query = (htable.deleted != True)
+    count = htable.id.count()
+    row = db(query).select(count).first()
+    total_households = row[count]
+
+    # => Number of referrals
+    query = (rtable.deleted != True) & \
+            (rtable.household_id == htable.id) & \
+            (htable.deleted != True)
+    count = rtable.id.count()
+    row = db(query).select(count).first()
+    total_referrals = row[count]
+
+    # => Number of agencies involved
+    query = (atable.deleted != True) & \
+            (rtable.deleted != True) & \
+            (rtable.organisation_id == atable.organisation_id)
+    count = atable.id.count()
+    rows = db(query).select(atable.id, groupby=atable.id)
+    total_agencies = len(rows)
+
+    # => Number of follow ups (broken down into pending/completed)
+    query = (ftable.deleted != True) & \
+            (ftable.household_id == htable.id) & \
+            (htable.deleted != True) & \
+            (htable.followup == True)
+    count = ftable.id.count()
+    evaluation = ftable.evaluation
+    rows = db(query).select(evaluation, count, groupby=evaluation)
+    follow_ups_pending, follow_ups_completed = 0, 0
+    for row in rows:
+        if row[evaluation] is None:
+            follow_ups_pending += row[count]
+        else:
+            follow_ups_completed += row[count]
+    total_follow_ups = follow_ups_pending + follow_ups_completed
+
+    # Summary
+    output["summary"] = DIV(DIV(LABEL("%s: " % T("Total Households Visited")),
+                                SPAN(total_households),
+                                _class="po-summary-info",
+                                ),
+                            DIV(LABEL("%s: " % T("Follow-ups")),
+                                SPAN(total_follow_ups),
+                                SPAN("(%s %s, %s %s)" % (follow_ups_completed,
+                                                         T("completed"),
+                                                         follow_ups_pending,
+                                                         T("pending"),
+                                                         )
+                                     ),
+                                _class="po-summary-info",
+                                ),
+                            DIV(LABEL("%s: " % T("Total Referrals Made")),
+                                SPAN(total_referrals),
+                                _class="po-summary-info",
+                                ),
+                            DIV(LABEL("%s: " % T("Agencies Involved")),
+                                SPAN(total_agencies),
+                                _class="po-summary-info",
+                                ),
+                            _class="po-summary",
+                            )
+
+    # Map of areas covered
+    # @todo: auto-focus/zoom to show all (accessible) areas, alternatively
+    #        fix to Canterbury in NZRC config
+    areas = {"name": T("Areas Covered"),
+             "id": "areas",
+             "active": True,
+             "tablename": "po_area",
+             "url": "area.geojson",
+             "style": '{"fill":"2288CC"}',
+             "opacity": 0.5,
+             }
+    map_wrapper = gis.show_map(feature_resources=(areas,),
+                               catalogue_layers = False,
+                               collapsed = True,
+                               )
+    map_wrapper["_style"] = "width:100%;"
+    output["map"] = map_wrapper
+
+    return output
 
 # -----------------------------------------------------------------------------
 def area():

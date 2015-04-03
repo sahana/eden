@@ -1496,6 +1496,7 @@ class S3OptionsMenu(object):
         """ PO / Population Outreach """
 
         return M(c="po")(
+                    M("Overview", f="index"),
                     M("Households", f="household", m="summary")(
                         M("Create", m="create"),
                     ),
