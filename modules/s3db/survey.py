@@ -30,6 +30,11 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
+
+    @todo: PEP8
+    @todo: naming conventions!
+    @todo: remove unnecessary wrappers
+    @todo: docstrings
 """
 
 __all__ = ("S3SurveyTemplateModel",
@@ -65,8 +70,6 @@ __all__ = ("S3SurveyTemplateModel",
            "survey_serieslist_dataTable_post",
            "survey_answerlist_dataTable_pre",
            "survey_answerlist_dataTable_post",
-           "survey_json2py",
-           "survey_json2list",
            "survey_LayoutBlocks",
            "survey_MatrixElement",
            "survey_DataMatrix",
@@ -106,46 +109,6 @@ if DEBUG:
         print >> sys.stderr, m
 else:
     _debug = lambda m: None
-
-# =============================================================================
-def json2py(jsonstr):
-    """
-        Utility function to convert a string in json to a python structure
-    """
-
-    from xml.sax.saxutils import unescape
-
-    if not isinstance(jsonstr, str):
-        return jsonstr
-    try:
-        jsonstr = unescape(jsonstr, {"u'": '"'})
-        jsonstr = unescape(jsonstr, {"'": '"'})
-        python_structure = json.loads(jsonstr)
-    except ValueError:
-        _debug("ERROR: attempting to convert %s using modules/s3db/survey/json2py.py" % (jsonstr))
-        return jsonstr
-    else:
-        return python_structure
-survey_json2py = json2py
-
-# =============================================================================
-def json2list(jsonstr):
-    """
-        Used to modify a json string to a python list.
-    """
-
-    if jsonstr == "":
-        value_list = []
-    else:
-        if jsonstr[0] == "[":
-            value_list = json2py(jsonstr)
-        else:
-            value_list = jsonstr.split(",")
-        if not isinstance(value_list, list):
-            value_list = [value_list]
-    return value_list
-
-survey_json2list = json2list
 
 # =============================================================================
 class S3SurveyTemplateModel(S3Model):
@@ -1528,10 +1491,7 @@ class S3SurveyFormatterModel(S3Model):
             item.method = item.METHOD.UPDATE
 
 # =============================================================================
-def survey_getQstnLayoutRules(template_id,
-                              section_id,
-                              method = 1
-                              ):
+def survey_getQstnLayoutRules(template_id, section_id, method = 1):
     """
         This will return the rules for laying out the questions for
         the given section within the template.
@@ -3634,6 +3594,21 @@ class survey_LayoutBlocks():
 
         This is used when resizing the layout to make the final layout uniform.
     """
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        self.startPosn = [0, 0]
+        self.endPosn = [0, 0]
+        self.contains = []
+        self.temp = []
+        self.widgetList = []
+        self.growToWidth = 0
+        self.growToHeight = 0
+
+    # -------------------------------------------------------------------------
     class RowBlocks():
         """
             Class the holds blocks that belong on the same row
@@ -3654,28 +3629,28 @@ class survey_LayoutBlocks():
             self.cnt += 1
         # end of class RowBlocks
 
-    def __init__(self):
-        self.startPosn = [0, 0]
-        self.endPosn = [0, 0]
-        self.contains = []
-        self.temp = []
-        self.widgetList = []
-        self.growToWidth = 0
-        self.growToHeight = 0
-
+    # -------------------------------------------------------------------------
     def growTo (self, width=None, height=None):
+        """ @todo: docstring """
+
         if width != None:
             self.growToWidth = width
         if height != None:
             self.growToHeight = height
 
+    # -------------------------------------------------------------------------
     def growBy(self, width=None, height=None):
+        """ @todo: docstring """
+
         if width != None:
             self.growToWidth = self.endPosn[1] + width
         if height != None:
             self.growToHeight = self.endPosn[0] + height
 
+    # -------------------------------------------------------------------------
     def setPosn(self, start, end):
+        """ @todo: docstring """
+
         if self.startPosn[0] == 0 or \
            start[0] < self.startPosn[0]:
             self.startPosn[0] = start[0]
@@ -3693,13 +3668,19 @@ class survey_LayoutBlocks():
         self.growToWidth = self.endPosn[1]
         self.growToHeight = self.endPosn[0]
 
+    # -------------------------------------------------------------------------
     def slideHorizontally(self, colAdjust):
+        """ @todo: docstring """
+
         self.startPosn[1] += colAdjust
         self.endPosn[1] += colAdjust
         for block in self.contains:
             block.slideHorizontally(colAdjust)
 
+    # -------------------------------------------------------------------------
     def setWidgets(self, widgets):
+        """ @todo: docstring """
+
         rowList = {}
         colList = {}
         for widget in widgets:
@@ -3719,13 +3700,22 @@ class survey_LayoutBlocks():
             self.action = "rows"
         self.widgetList = widgets
 
+    # -------------------------------------------------------------------------
     def widthShortfall(self):
+        """ @todo: docstring """
+
         return self.growToWidth - self.endPosn[1]
 
+    # -------------------------------------------------------------------------
     def heightShortfall(self):
+        """ @todo: docstring """
+
         return self.growToHeight - self.endPosn[0]
 
+    # -------------------------------------------------------------------------
     def addBlock(self, start, end, widgets=[]):
+        """ @todo: docstring """
+
         lb = survey_LayoutBlocks()
         lb.setPosn(start, end)
         lb.setWidgets(widgets)
@@ -3746,18 +3736,27 @@ class survey_LayoutBlocks():
         else:
             self.contains.append(lb)
 
+    # -------------------------------------------------------------------------
     def addTempBlock(self, start, end, widgets):
+        """ @todo: docstring """
+
         lb = survey_LayoutBlocks()
         lb.setPosn(start, end)
         lb.setWidgets(widgets)
         self.temp.append(lb)
 
+    # -------------------------------------------------------------------------
     def __repr__(self):
+        """ @todo: docstring """
+
         indent = ""
         data = self.display(indent)
         return data
 
+    # -------------------------------------------------------------------------
     def display(self, indent):
+        """ @todo: docstring """
+
         widgets = ""
         for widget in self.widgetList:
             widgets += "%s " % widget.question.code
@@ -3773,6 +3772,7 @@ class survey_LayoutBlocks():
             data += lb.display(indent)
         return data
 
+    # -------------------------------------------------------------------------
     def align(self):
         """
             Method to align the widgets up with each other.
@@ -3784,10 +3784,14 @@ class survey_LayoutBlocks():
         formWidth = self.endPosn[1]
         self.realign(formWidth)
 
+    # -------------------------------------------------------------------------
     def realign(self, formWidth):
         """
-            recursive method to ensure all widgets line up
+            Recursive method to ensure all widgets line up
+
+            @todo: parameter description
         """
+
         rowList = {}
         # Put all of the blocks into rows
         for block in self.contains:
@@ -3860,7 +3864,10 @@ class survey_LayoutBlocks():
             else:
                 self.alignBlock(block, blkCnt)
 
+    # -------------------------------------------------------------------------
     def alignBlock(self, block, blkCnt):
+        """ @todo: docstring """
+
         if block.action == "rows":
             widthShortfall = block.widthShortfall()
             self.alignRow(block, widthShortfall)
@@ -3869,6 +3876,7 @@ class survey_LayoutBlocks():
             widthShortfall = block.widthShortfall()
             self.alignCol(block, heightShortfall, widthShortfall)
 
+    # -------------------------------------------------------------------------
     def alignRow(self, block, widthShortfall):
         """
             Method to align the widgets laid out in a single row.
@@ -3880,7 +3888,10 @@ class survey_LayoutBlocks():
 
             Any space that is left over will be added to a margin between
             the widgets
+
+            @todo: parameter description
         """
+
         canGrowCount = 0
         for widget in block.widgetList:
             if widget.canGrowHorizontal():
@@ -3915,10 +3926,14 @@ class survey_LayoutBlocks():
                 else:
                     widget.addToVerticalMargin(heightShortfall)
 
+    # -------------------------------------------------------------------------
     def alignCol(self, block, heightShortfall, widthShortfall):
         """
-            method to align the widgets laid out different rows
+            Method to align the widgets laid out different rows
+
+            @todo: parameter description
         """
+
         # Stretch the columns to fill the maximum width
         for widget in block.widgetList:
             widgetWidth = block.startPosn[1] + widget.getMatrixSize()[1]
@@ -3970,14 +3985,22 @@ class survey_DataMatrix():
          * The actual text to be displayed
          * Any style to be applied to the data
     """
+
     def __init__(self):
+        """
+            Constructor
+        """
+
         self.matrix = {}
         self.lastRow = 0
         self.lastCol = 0
         self.fixedWidthRepr = False
         self.fixedWidthReprLen = 1
 
+    # -------------------------------------------------------------------------
     def __repr__(self):
+        """ @todo: docstring """
+
         repr = ""
         for row in xrange(self.lastRow+1):
             for col in xrange(self.lastCol+1):
@@ -4006,7 +4029,10 @@ class survey_DataMatrix():
             repr += "\n"
         return repr
 
+    # -------------------------------------------------------------------------
     def addCell(self, row, col, data, style, horizontal=0, vertical=0):
+        """ @todo: docstring """
+
         cell = survey_MatrixElement(row, col, data, style)
         if horizontal != 0 or vertical != 0:
             cell.merge(horizontal, vertical)
@@ -4017,10 +4043,14 @@ class survey_DataMatrix():
         return (row + 1 + vertical,
                 col + 1 + horizontal)
 
+    # -------------------------------------------------------------------------
     def addElement(self, element):
         """
             Add an element to the matrix, checking that the position is unique.
+
+            @todo: parameter description
         """
+
         posn = element.posn()
         if posn in self.matrix:
             msg = "Attempting to add data %s at posn %s. This is already taken with data %s" % \
@@ -4035,11 +4065,15 @@ class survey_DataMatrix():
         if element.col + element.mergeH > self.lastCol:
             self.lastCol = element.col + element.mergeH
 
+    # -------------------------------------------------------------------------
     def joinedElementStyles(self, rootElement):
         """
-            return a list of all the styles used by all the elements joined
+            Return a list of all the styles used by all the elements joined
             to the root element
+
+            @todo: parameter description
         """
+
         styleList = []
         row = rootElement.row
         col = rootElement.col
@@ -4049,12 +4083,16 @@ class survey_DataMatrix():
                 styleList += self.matrix[newPosn].styleList
         return styleList
 
+    # -------------------------------------------------------------------------
     def joinElements(self, rootElement):
         """
             This will set the joinedWith property to the posn of rootElement
             for all the elements that rootElement joins with to make a single
             large merged element.
+
+            @todo: parameter description
         """
+
         row = rootElement.row
         col = rootElement.col
         posn = rootElement.posn()
@@ -4074,6 +4112,7 @@ class survey_DataMatrix():
                     childElement.joinedWith = posn
                     self.matrix[newPosn] = childElement
 
+    # -------------------------------------------------------------------------
     def boxRange(self, startrow, startcol, endrow, endcol, width=1):
         """
             Function to add a bounding box around the elements contained by
@@ -4082,7 +4121,10 @@ class survey_DataMatrix():
             This uses standard style names:
             boxL, boxB, boxR, boxT
             for Left, Bottom, Right and Top borders respectively
+
+            @todo: parameter description
         """
+
         for r in xrange(startrow, endrow):
             posn = "%s,%s" % (r, startcol)
             if posn in self.matrix:
@@ -4094,6 +4136,7 @@ class survey_DataMatrix():
                 self.matrix[posn].styleList.append("boxR%s"%width)
             else:
                 self.addElement(survey_MatrixElement(r, endcol, "", "boxR%s"%width))
+
         for c in xrange(startcol, endcol + 1):
             posn = "%s,%s" % (startrow, c)
             if posn in self.matrix:
@@ -4115,7 +4158,14 @@ class survey_MatrixElement():
         * text - the actual data that will be displayed at the given position
         * style - a list of styles that will be applied to this location
     """
+
     def __init__(self, row, col, data, style):
+        """
+            Constructor
+
+            @todo: parameter description
+        """
+
         self.row = row
         self.col = col
         self.text = data
@@ -4128,36 +4178,64 @@ class survey_MatrixElement():
         else:
             self.styleList = [style]
 
+    # -------------------------------------------------------------------------
     def __repr__(self):
+        """ @todo: docstring """
+
         return self.text
 
+    # -------------------------------------------------------------------------
     def merge(self, horizontal=0, vertical=0):
+        """ @todo: docstring """
+
         self.mergeH = horizontal
         self.mergeV = vertical
         for parent in self.parents:
             parent.joinElements(self)
 
+    # -------------------------------------------------------------------------
     @staticmethod
     def getPosn(row, col):
-        """ Standard representation of the position """
+        """
+            Standard representation of the position
+
+            @todo: parameter description
+        """
+
         return "%s,%s" % (row, col)
 
+    # -------------------------------------------------------------------------
     def posn(self):
-        """ Standard representation of the position """
+        """
+            Standard representation of the position
+        """
+
         return self.getPosn(self.row, self.col)
 
+    # -------------------------------------------------------------------------
     def nextX(self):
+        """ @todo: docstring """
+
         return self.row + self.mergeH + 1
 
+    # -------------------------------------------------------------------------
     def nextY(self):
+        """ @todo: docstring """
+
         return self.col + self.mergeV + 1
 
+    # -------------------------------------------------------------------------
     def merged(self):
+        """ @todo: docstring """
+
         if self.mergeH > 0 or self.mergeV > 0:
             return True
         return False
 
+    # -------------------------------------------------------------------------
     def joined(self):
+        """ @todo: docstring """
+
         if self.joinedWith == None:
             return False
         else:
@@ -4165,14 +4243,21 @@ class survey_MatrixElement():
 
 # =============================================================================
 class survey_DataMatrixBuilder():
+    """ @todo: docstring """
+
     def __init__(self,
                  primaryMatrix,
                  layout=None,
                  widgetList = [],
                  secondaryMatrix=None,
                  langDict = None,
-                 addMethod=None
-                 ):
+                 addMethod=None):
+        """
+            Constructor
+
+            @todo: parameter description
+        """
+
         self.matrix = primaryMatrix
         self.layout = layout
         self.widgetList = widgetList
@@ -4187,7 +4272,10 @@ class survey_DataMatrixBuilder():
         self.boxOpen = False
         self.postponeLayoutUpdate = False
 
+    # -------------------------------------------------------------------------
     def processRule(self, rules, row, col, matrix):
+        """ @todo: docstring """
+
         startcol = col
         startrow = row
         endcol = col
@@ -4211,7 +4299,10 @@ class survey_DataMatrixBuilder():
                     self.widgetsInList = []
         return (endrow, endcol)
 
+    # -------------------------------------------------------------------------
     def processList(self, rules, row, col, matrix, action="rows"):
+        """ @todo: docstring """
+
         startcol = col
         startrow = row
         endcol = col
@@ -4237,7 +4328,10 @@ class survey_DataMatrixBuilder():
         self.addToLayout(startrow, startcol)
         return (self.nextrow, self.nextcol)
 
+    # -------------------------------------------------------------------------
     def processDict(self, rules, parent, row, col, matrix, action="rows"):
+        """ @todo: docstring """
+
         startcol = col
         startrow = row
         endcol = col
@@ -4297,7 +4391,10 @@ class survey_DataMatrixBuilder():
             endcol = self.nextcol
         return (endrow, endcol)
 
+    # -------------------------------------------------------------------------
     def processBox(self, rules, row, col, matrix, action="rows"):
+        """ @todo: docstring """
+
         startcol = col
         startrow = row
         endcol = col
@@ -4318,7 +4415,10 @@ class survey_DataMatrixBuilder():
         self.addToLayout(startrow, startcol, endPostpone = True)
         return (endrow, endcol)
 
+    # -------------------------------------------------------------------------
     def addToLayout(self, startrow, startcol, andThenPostpone = None, endPostpone = None):
+        """ @todo: docstring """
+
         if endPostpone != None:
             self.postponeLayoutUpdate = not endPostpone
         if not self.postponeLayoutUpdate \
@@ -4330,7 +4430,10 @@ class survey_DataMatrixBuilder():
         if andThenPostpone != None:
             self.postponeLayoutUpdate = andThenPostpone
 
+    # -------------------------------------------------------------------------
     def addArea(self, element, row, col):
+        """ @todo: docstring """
+
         try:
             widgetObj = self.widgetList[element]
         except:
@@ -4350,9 +4453,12 @@ class survey_DataMatrixBuilder():
                                    vertical=vert - 1,
                                   )
 
+    # -------------------------------------------------------------------------
     def addLabel(self, label, row, col, width=11,
                  height=None,
                  style="styleSubHeader"):
+        """ @todo: docstring """
+
         cell = survey_MatrixElement(row, col, label, style=style)
         if height == None:
             height = len(label) / (2 * width) + 1
@@ -4366,7 +4472,10 @@ class survey_DataMatrixBuilder():
         endcol = col + width
         return (endrow, endcol)
 
+    # -------------------------------------------------------------------------
     def addData(self, element, row, col):
+        """ @todo: docstring """
+
         try:
             widgetObj = self.widgetList[element]
         except:
@@ -4393,15 +4502,16 @@ class survey_DataMatrixBuilder():
         return (endrow, endcol)
 
 # =============================================================================
-def getMatrix(title,
-              logo,
-              layout,
-              widgetList,
-              secondaryMatrix,
-              langDict,
-              showSectionLabels=True,
-              layoutBlocks=None):
+def survey_getMatrix(title,
+                     logo,
+                     layout,
+                     widgetList,
+                     secondaryMatrix,
+                     langDict,
+                     showSectionLabels=True,
+                     layoutBlocks=None):
     """
+        @todo: docstring
     """
 
     matrix = survey_DataMatrix()
@@ -4453,10 +4563,10 @@ def getMatrix(title,
     else:
         return matrix
 
-survey_getMatrix = getMatrix
-
 # =============================================================================
 # Question Types
+# @todo: get rid of the wrapper functions!
+#
 def survey_stringType(question_id = None):
     return S3QuestionTypeStringWidget(question_id)
 
@@ -4502,15 +4612,6 @@ def survey_gridType(question_id = None):
 def survey_gridChildType(question_id = None):
     return S3QuestionTypeGridChildWidget(question_id)
 
-def survey_T(phrase, langDict):
-    """
-        Function to translate a phrase using the dictionary passed in
-    """
-    if phrase in langDict and langDict[phrase] != "":
-        return langDict[phrase]
-    else:
-        return phrase
-
 survey_question_type = {"String": survey_stringType,
                         "Text": survey_textType,
                         "Numeric": survey_numericType,
@@ -4527,7 +4628,6 @@ survey_question_type = {"String": survey_stringType,
                         "Grid" : survey_gridType,
                         "GridChild" : survey_gridChildType,
                         }
-
 
 # =============================================================================
 class S3QuestionTypeAbstractWidget(FormWidget):
@@ -5762,11 +5862,13 @@ class S3QuestionTypeMultiOptionWidget(S3QuestionTypeOptionWidget):
 
     # -------------------------------------------------------------------------
     def display(self, **attr):
+        """ @todo: docstring """
+
         S3QuestionTypeAbstractWidget.initDisplay(self, **attr)
         self.field.requires = IS_IN_SET(self.getList())
         value = self.getAnswer()
-        s3 = current.response.s3
-        valueList = current.s3db.survey_json2list(value)
+        valueList = json2list(value)
+
         self.field.name = self.question.code
         input = CheckboxesWidget.widget(self.field, valueList, **self.attr)
         self.field.name = "value"
@@ -5836,6 +5938,7 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
         """
             Method to format the value that has just been put on the database
         """
+
         return value
 
     # -------------------------------------------------------------------------
@@ -5846,8 +5949,8 @@ class S3QuestionTypeLocationWidget(S3QuestionTypeAbstractWidget):
             If it is not valid JSON then an exception will be raised,
             and must be handled by the calling function
         """
-        s3 = current.response.s3
-        answerList = s3.survey_json2py(answer)
+
+        answerList = json2py(answer)
         return answerList
 
     ######################################################################
@@ -6360,59 +6463,77 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
 ###    will work with a list of answers for the same question
 ###############################################################################
 
+# *****************************************************************************
 # Analysis Types
+# @todo: get rid of the wrapper functions!
+#
 def analysis_stringType(question_id, answerList):
     return S3StringAnalysis("String", question_id, answerList)
+
 def analysis_textType(question_id, answerList):
     return S3TextAnalysis("Text", question_id, answerList)
+
 def analysis_numericType(question_id, answerList):
     return S3NumericAnalysis("Numeric", question_id, answerList)
+
 def analysis_dateType(question_id, answerList):
     return S3DateAnalysis("Date", question_id, answerList)
+
 def analysis_timeType(question_id, answerList):
     return S3TimeAnalysis("Date", question_id, answerList)
+
 def analysis_optionType(question_id, answerList):
     return S3OptionAnalysis("Option", question_id, answerList)
+
 def analysis_ynType(question_id, answerList):
     return S3OptionYNAnalysis("YesNo", question_id, answerList)
+
 def analysis_yndType(question_id, answerList):
     return S3OptionYNDAnalysis("YesNoDontKnow", question_id, answerList)
+
 def analysis_optionOtherType(question_id, answerList):
     return S3OptionOtherAnalysis("OptionOther", question_id, answerList)
+
 def analysis_multiOptionType(question_id, answerList):
     return S3MultiOptionAnalysis("MultiOption", question_id, answerList)
+
 def analysis_locationType(question_id, answerList):
     return S3LocationAnalysis("Location", question_id, answerList)
+
 def analysis_linkType(question_id, answerList):
     return S3LinkAnalysis("Link", question_id, answerList)
+
 def analysis_gridType(question_id, answerList):
     return S3GridAnalysis("Grid", question_id, answerList)
+
 def analysis_gridChildType(question_id, answerList):
     return S3GridChildAnalysis("GridChild", question_id, answerList)
+
 #def analysis_ratingType(answerList):
 #    return S3RatingAnalysis(answerList)
 #    pass
 
-survey_analysis_type = {
-    "String": analysis_stringType,
-    "Text": analysis_textType,
-    "Numeric": analysis_numericType,
-    "Date": analysis_dateType,
-    "Time": analysis_timeType,
-    "Option": analysis_optionType,
-    "YesNo": analysis_ynType,
-    "YesNoDontKnow": analysis_yndType,
-    "OptionOther": analysis_optionOtherType,
-    "MultiOption" : analysis_multiOptionType,
-    "Location": analysis_locationType,
-    "Link": analysis_linkType,
-    "Grid": analysis_gridType,
-    "GridChild" : analysis_gridChildType,
-    #"Rating": analysis_ratingType,
-}
+survey_analysis_type = {"String": analysis_stringType,
+                        "Text": analysis_textType,
+                        "Numeric": analysis_numericType,
+                        "Date": analysis_dateType,
+                        "Time": analysis_timeType,
+                        "Option": analysis_optionType,
+                        "YesNo": analysis_ynType,
+                        "YesNoDontKnow": analysis_yndType,
+                        "OptionOther": analysis_optionOtherType,
+                        "MultiOption" : analysis_multiOptionType,
+                        "Location": analysis_locationType,
+                        "Link": analysis_linkType,
+                        "Grid": analysis_gridType,
+                        "GridChild" : analysis_gridChildType,
+                        #"Rating": analysis_ratingType,
+                        }
 
 # =============================================================================
 class survey_S3AnalysisPriority():
+    """ @todo: docstring """
+
     def __init__(self,
                  range=[-1, -0.5, 0, 0.5, 1],
                  colour={-1:"#888888", # grey
@@ -6450,6 +6571,12 @@ class survey_S3AnalysisPriority():
                        },
                  zero = True,
                  ):
+        """
+            Constructor
+
+            @todo: do not use lists or dicts as parameter defaults!
+            @todo: parameter description
+        """
         self.range = range
         self.colour = colour
         self.opacity = opacity
@@ -6458,6 +6585,8 @@ class survey_S3AnalysisPriority():
 
     # -------------------------------------------------------------------------
     def imageURL(self, app, key):
+        """ @todo: docstring """
+
         T = current.T
         base_url = "/%s/static/img/survey/" % app
         dot_url = base_url + "%s-dot.png" % self.image[key]
@@ -6470,11 +6599,15 @@ class survey_S3AnalysisPriority():
 
     # -------------------------------------------------------------------------
     def desc(self, key):
+        """ @todo: docstring """
+
         T = current.T
         return T(self.description[key])
 
     # -------------------------------------------------------------------------
     def rangeText(self, key, pBand):
+        """ @todo: docstring """
+
         T = current.T
         if key == -1:
             return ""
@@ -6513,8 +6646,13 @@ class S3AbstractAnalysis():
     def __init__(self,
                  type,
                  question_id,
-                 answerList,
-                 ):
+                 answerList):
+        """
+            Constructor
+
+            @todo: parameter description
+        """
+
         self.question_id = question_id
         self.answerList = answerList
         self.valueList = []
@@ -6542,8 +6680,12 @@ class S3AbstractAnalysis():
     # -------------------------------------------------------------------------
     def valid(self, answer):
         """
-            used to validate a single answer
+            Used to validate a single answer
+
+            @todo: parameter description
+            @todo: raise exception if abstract and override is mandatory
         """
+
         # @todo add validation here
         # widget = S3QuestionTypeNumericWidget()
         # widget.validate(answer)
@@ -6555,7 +6697,11 @@ class S3AbstractAnalysis():
         """
             Used to modify the answer from its raw text format.
             Where necessary, this will function be overridden.
+
+            @todo: parameter description
+            @todo: raise exception if abstract and override is mandatory
         """
+
         return answer
 
     # -------------------------------------------------------------------------
@@ -6563,7 +6709,11 @@ class S3AbstractAnalysis():
         """
             Perform basic analysis of the answer set.
             Where necessary, this will function be overridden.
+
+            @todo: parameter description
+            @todo: raise exception if abstract and override is mandatory
         """
+
         pass
 
     # -------------------------------------------------------------------------
@@ -6572,6 +6722,9 @@ class S3AbstractAnalysis():
             This will display a button which when pressed will display a chart
             When a chart is not appropriate then the subclass will override this
             function with a nul function.
+
+            @todo: parameter description
+            @todo: make a class property rather than overriding in subclasses
         """
 
         if len(self.valueList) == 0:
@@ -6592,25 +6745,35 @@ class S3AbstractAnalysis():
     def getChartName(self, series_id):
         """
             Get chart name for series_id
+
+            @todo: parameter description
         """
 
         import hashlib
         h = hashlib.sha256()
         h.update(self.qstnWidget.question.code)
         encoded_part = h.hexdigest()
-        chartName = "survey_series_%s_%s" % (series_id,
-                                             encoded_part
-                                             )
+        chartName = "survey_series_%s_%s" % (series_id, encoded_part)
+
         return chartName
 
     # -------------------------------------------------------------------------
-    def drawChart(self, series_id, output=None, data=None, label=None,
-                  xLabel=None, yLabel=None):
+    def drawChart(self,
+                  series_id,
+                  output=None,
+                  data=None,
+                  label=None,
+                  xLabel=None,
+                  yLabel=None):
         """
             This function will draw the chart using the answer set.
 
             This function must be overridden by the subclass.
+
+            @todo: parameter description
+            @todo: raise NotImplementedException if override is mandatory
         """
+
         msg = "Programming Error: No chart for %sWidget" % self.type
         output = StringIO()
         output.write(msg)
@@ -6623,6 +6786,7 @@ class S3AbstractAnalysis():
 
             Where necessary, this will function be overridden.
         """
+
         self.result = []
         return self.count()
 
@@ -6633,14 +6797,19 @@ class S3AbstractAnalysis():
 
             Where necessary, this will function be overridden.
         """
+
         self.result.append(([current.T("Replies")], len(self.answerList)))
         return self.format()
 
     # -------------------------------------------------------------------------
     def format(self):
         """
-            This function will take the results and present them in a HTML table
+            This function will take the results and present them in a
+            HTML table
+
+            @todo: rename into "formatted"
         """
+
         table = TABLE()
         for (key, value) in self.result:
             table.append(TR(TD(B(key)), TD(value)))
@@ -6650,7 +6819,10 @@ class S3AbstractAnalysis():
     def uniqueCount(self):
         """
             Calculate the number of occurances of each value
+
+            @todo: do not override Python built-in functions (e.g. "map")
         """
+
         map = {}
         for answer in self.valueList:
             if answer in map:
@@ -6674,7 +6846,10 @@ class S3AbstractAnalysis():
             sum, or maybe the mean. Finally the result will be split.
 
             See controllers/survey.py - series_graph()
+
+            @todo: parameter description
         """
+
         grouped = {}
         answers = {}
         for answer in self.answerList:
@@ -6701,14 +6876,22 @@ class S3AbstractAnalysis():
     def filter(self, filterType, groupedData):
         """
             Filter the data within the groups by the filter type
+
+            @todo: indicate whether this is meant to be overwritten by
+                   subclass (if not: remove it!)
+            @todo: parameter description
         """
+
         return groupedData
 
     # -------------------------------------------------------------------------
     def splitGroupedData(self, groupedData):
         """
             Split the data set by the groups
+
+            @todo: parameter description
         """
+
         keys = []
         values = []
         for (key, value) in groupedData.items():
@@ -6718,48 +6901,76 @@ class S3AbstractAnalysis():
 
 # =============================================================================
 class S3StringAnalysis(S3AbstractAnalysis):
+    """
+        @todo: docstring
+        @todo: use class property rather than overriding chartButton method
+               (=only enable chartButton when needed rather than overriding
+                 with return None => lots of unnecessary calls!)
+    """
 
     def chartButton(self, series_id):
         return None
 
 # =============================================================================
 class S3TextAnalysis(S3AbstractAnalysis):
+    """
+        @todo: docstring
+        @todo: use class property rather than overriding chartButton method
+               (=only enable chartButton when needed rather than overriding
+                 with return None => lots of unnecessary calls!)
+    """
 
     def chartButton(self, series_id):
         return None
 
 # =============================================================================
 class S3DateAnalysis(S3AbstractAnalysis):
+    """
+        @todo: docstring
+        @todo: use class property rather than overriding chartButton method
+               (=only enable chartButton when needed rather than overriding
+                 with return None => lots of unnecessary calls!)
+    """
 
     def chartButton(self, series_id):
         return None
 
 # -----------------------------------------------------------------------------
 class S3TimeAnalysis(S3AbstractAnalysis):
+    """
+        @todo: docstring
+        @todo: use class property rather than overriding chartButton method
+               (=only enable chartButton when needed rather than overriding
+                 with return None => lots of unnecessary calls!)
+    """
 
     def chartButton(self, series_id):
         return None
 
 # =============================================================================
 class S3NumericAnalysis(S3AbstractAnalysis):
+    """
+        @todo: docstring
+    """
 
-    def __init__(self,
-                 type,
-                 question_id,
-                 answerList
-                 ):
+    def __init__(self, type, question_id, answerList):
+
         S3AbstractAnalysis.__init__(self, type, question_id, answerList)
         self.histCutoff = 10
 
     # -------------------------------------------------------------------------
     def castRawAnswer(self, complete_id, answer):
+        """ @todo: docstring """
+
         try:
             return float(answer)
-        except:
+        except ValueError:
             return None
 
     # -------------------------------------------------------------------------
     def summary(self):
+        """ @todo: docstring """
+
         T = current.T
         widget = S3QuestionTypeNumericWidget()
         fmt = widget.formattedAnswer
@@ -6775,6 +6986,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def count(self):
+        """ @todo: docstring """
+
         T = current.T
         self.result.append((T("Replies"), len(self.answerList)))
         self.result.append((T("Valid"), self.cnt))
@@ -6782,6 +6995,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def basicResults(self):
+        """ @todo: docstring """
+
         self.cnt = 0
         if len(self.valueList) == 0:
             self.sum = None
@@ -6803,6 +7018,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def advancedResults(self):
+        """ @todo: docstring """
+
         try:
             from numpy import array
         except:
@@ -6823,6 +7040,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def priority(self, complete_id, priorityObj):
+        """ @todo: docstring """
+
         priorityList = priorityObj.range
         priority = 0
         try:
@@ -6837,6 +7056,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def priorityBand(self, priorityObj):
+        """ @todo: docstring """
+
         priorityList = priorityObj.range
         priority = 0
         band = [""]
@@ -6852,6 +7073,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def chartButton(self, series_id):
+        """ @todo: docstring """
+
         # At the moment only draw charts for integers
         if self.qstnWidget.get("Format", "n") != "n":
             return None
@@ -6860,8 +7083,15 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         return S3AbstractAnalysis.chartButton(self, series_id)
 
     # -------------------------------------------------------------------------
-    def drawChart(self, series_id, output="xml",
-                  data=None, label=None, xLabel=None, yLabel=None):
+    def drawChart(self,
+                  series_id,
+                  output="xml",
+                  data=None,
+                  label=None,
+                  xLabel=None,
+                  yLabel=None):
+        """ @todo: docstring """
+
         chartFile = self.getChartName(series_id)
         cached = S3Chart.getCachedFile(chartFile)
         if cached:
@@ -6889,6 +7119,8 @@ class S3NumericAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
+        """ @todo: docstring """
+
         filteredData = {}
         if filterType == "Sum":
             for (key, valueList) in groupedData.items():
@@ -6902,12 +7134,14 @@ class S3NumericAnalysis(S3AbstractAnalysis):
             return filteredData
         return groupedData
 
-
 # =============================================================================
 class S3OptionAnalysis(S3AbstractAnalysis):
+    """ @todo: docstring """
 
     # -------------------------------------------------------------------------
     def summary(self):
+        """ @todo: docstring """
+
         T = current.T
         for (key, value) in self.listp.items():
             self.result.append((T(key), value))
@@ -6915,6 +7149,8 @@ class S3OptionAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def basicResults(self):
+        """ @todo: docstring """
+
         self.cnt = 0
         self.list = {}
         for answer in self.valueList:
@@ -6929,8 +7165,15 @@ class S3OptionAnalysis(S3AbstractAnalysis):
                 self.listp[key] = "%3.1f%%" % round((100.0 * value) / self.cnt, 1)
 
     # -------------------------------------------------------------------------
-    def drawChart(self, series_id, output="xml",
-                  data=None, label=None, xLabel=None, yLabel=None):
+    def drawChart(self,
+                  series_id,
+                  output="xml",
+                  data=None,
+                  label=None,
+                  xLabel=None,
+                  yLabel=None):
+        """ @todo: docstring """
+
         chartFile = self.getChartName(series_id)
         cached = S3Chart.getCachedFile(chartFile)
         if cached:
@@ -6950,9 +7193,12 @@ class S3OptionAnalysis(S3AbstractAnalysis):
 
 # =============================================================================
 class S3OptionYNAnalysis(S3OptionAnalysis):
+    """ @todo: docstring """
 
     # -------------------------------------------------------------------------
     def summary(self):
+        """ @todo: docstring """
+
         T = current.T
         self.result.append((T("Yes"), self.yesp))
         self.result.append((T("No"), self.nop))
@@ -6961,6 +7207,8 @@ class S3OptionYNAnalysis(S3OptionAnalysis):
 
     # -------------------------------------------------------------------------
     def basicResults(self):
+        """ @todo: docstring """
+
         S3OptionAnalysis.basicResults(self)
         T = current.T
         if "Yes" in self.listp:
@@ -6982,9 +7230,12 @@ class S3OptionYNAnalysis(S3OptionAnalysis):
 
 # =============================================================================
 class S3OptionYNDAnalysis(S3OptionAnalysis):
+    """ @todo: docstring """
 
     # -------------------------------------------------------------------------
     def summary(self):
+        """ @todo: docstring """
+
         T = current.T
         self.result.append((T("Yes"), self.yesp))
         self.result.append((T("No"), self.nop))
@@ -6993,6 +7244,8 @@ class S3OptionYNDAnalysis(S3OptionAnalysis):
 
     # -------------------------------------------------------------------------
     def basicResults(self):
+        """ @todo: docstring """
+
         S3OptionAnalysis.basicResults(self)
         T = current.T
         if "Yes" in self.listp:
@@ -7022,10 +7275,16 @@ class S3OptionYNDAnalysis(S3OptionAnalysis):
 
 # =============================================================================
 class S3OptionOtherAnalysis(S3OptionAnalysis):
+    """
+        @todo: docstring
+        @todo: remove if not needed
+    """
+
     pass
 
 # =============================================================================
 class S3MultiOptionAnalysis(S3OptionAnalysis):
+    """ @todo: docstring """
 
     # -------------------------------------------------------------------------
     def castRawAnswer(self, complete_id, answer):
@@ -7033,11 +7292,14 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
             Used to modify the answer from its raw text format.
             Where necessary, this function will be overridden.
         """
-        valueList = current.s3db.survey_json2list(answer)
+
+        valueList = json2list(answer)
         return valueList
 
     # -------------------------------------------------------------------------
     def basicResults(self):
+        """ @todo: docstring """
+
         self.cnt = 0
         self.list = {}
         for answer in self.valueList:
@@ -7057,8 +7319,15 @@ class S3MultiOptionAnalysis(S3OptionAnalysis):
                 self.listp[key] = "%s%%" %((100 * value) / self.cnt)
 
     # -------------------------------------------------------------------------
-    def drawChart(self, series_id, output="xml",
-                  data=None, label=None, xLabel=None, yLabel=None):
+    def drawChart(self,
+                  series_id,
+                  output="xml",
+                  data=None,
+                  label=None,
+                  xLabel=None,
+                  yLabel=None):
+        """ @todo: docstring """
+
         chartFile = self.getChartName(series_id)
         cached = S3Chart.getCachedFile(chartFile)
         if cached:
@@ -7106,6 +7375,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
             Multiple records: The set of location, on of which is the location
             None: No match is found on the database.
         """
+
         records = self.qstnWidget.getLocationRecord(complete_id, answer)
         return records
 
@@ -7114,6 +7384,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         """
             Returns a summary table
         """
+
         T = current.T
         self.result.append((T("Known Locations"), self.kcnt))
         self.result.append((T("Duplicate Locations"), self.dcnt))
@@ -7125,6 +7396,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         """
             Returns a table of basic results
         """
+
         T = current.T
         self.result.append((T("Total Locations"), len(self.valueList)))
         self.result.append((T("Unique Locations"), self.cnt))
@@ -7155,6 +7427,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
             NOTE: Percentages are calculated from the unique locations
                   and not from the total responses.
         """
+
         self.locationList = {}
         self.duplicates = {}
         self.known = {}
@@ -7190,7 +7463,10 @@ class S3LocationAnalysis(S3AbstractAnalysis):
     def chartButton(self, series_id):
         """
             Ensures that no button is set up
+
+            @todo: use a class property rather than calling just to get a None
         """
+
         return None
 
     # -------------------------------------------------------------------------
@@ -7198,6 +7474,7 @@ class S3LocationAnalysis(S3AbstractAnalysis):
         """
             Calculate the number of occurances of each value
         """
+
         map = {}
         for answer in self.valueList:
             if answer.key in map:
@@ -7208,12 +7485,11 @@ class S3LocationAnalysis(S3AbstractAnalysis):
 
 # =============================================================================
 class S3LinkAnalysis(S3AbstractAnalysis):
+    """ @todo: docstring """
 
-    def __init__(self,
-                 type,
-                 question_id,
-                 answerList,
-                 ):
+    def __init__(self, type, question_id, answerList):
+        """ @todo: docstring """
+
         S3AbstractAnalysis.__init__(self, type, question_id, answerList)
         linkWidget = S3QuestionTypeLinkWidget(question_id)
         parent = linkWidget.get("Parent")
@@ -7237,37 +7513,56 @@ class S3LinkAnalysis(S3AbstractAnalysis):
 
     # -------------------------------------------------------------------------
     def summary(self):
+        """ @todo: docstring """
+
         return self.widget.summary()
 
     # -------------------------------------------------------------------------
     def count(self):
+        """ @todo: docstring """
+
         return self.widget.count()
 
     # -------------------------------------------------------------------------
     def chartButton(self, series_id):
+        """ @todo: docstring """
+
         return self.widget.chartButton(series_id)
 
     # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
+        """ @todo: docstring """
+
         return self.widget.filter(filterType, groupedData)
 
     # -------------------------------------------------------------------------
-    def drawChart(self, series_id, output="xml",
-                  data=None, label=None, xLabel=None, yLabel=None):
+    def drawChart(self,
+                  series_id,
+                  output="xml",
+                  data=None,
+                  label=None,
+                  xLabel=None,
+                  yLabel=None):
+        """ @todo: docstring """
+
         return self.widget.drawChart(data, series_id, label, xLabel, yLabel)
 
 # =============================================================================
 class S3GridAnalysis(S3AbstractAnalysis):
+    """
+        @todo: docstring
+        @todo: remove if not needed
+    """
+
     pass
 
 # =============================================================================
 class S3GridChildAnalysis(S3AbstractAnalysis):
+    """ @todo: docstring """
 
-    def __init__(self,
-                 type,
-                 question_id,
-                 answerList,
-                 ):
+    def __init__(self, type, question_id, answerList):
+        """ @todo: docstring """
+
         S3AbstractAnalysis.__init__(self, type, question_id, answerList)
         childWidget = S3QuestionTypeLinkWidget(question_id)
         trueType = childWidget.get("Type")
@@ -7288,11 +7583,66 @@ class S3GridChildAnalysis(S3AbstractAnalysis):
                   label=None,
                   xLabel=None,
                   yLabel=None):
+        """ @todo: docstring """
+
         return self.widget.drawChart(series_id, output, data, label, xLabel, yLabel)
 
     # -------------------------------------------------------------------------
     def filter(self, filterType, groupedData):
+        """ @todo: docstring """
+
         return self.widget.filter(filterType, groupedData)
 
+# =============================================================================
+# Utilities
+#
+def json2py(jsonstr):
+    """
+        Utility function to convert a string in json to a python structure
+    """
+
+    from xml.sax.saxutils import unescape
+
+    if not isinstance(jsonstr, str):
+        return jsonstr
+    try:
+        jsonstr = unescape(jsonstr, {"u'": '"'})
+        jsonstr = unescape(jsonstr, {"'": '"'})
+        python_structure = json.loads(jsonstr)
+    except ValueError:
+        _debug("ERROR: attempting to convert %s using modules/s3db/survey/json2py.py" % (jsonstr))
+        return jsonstr
+    else:
+        return python_structure
+
+# -----------------------------------------------------------------------------
+def json2list(jsonstr):
+    """
+        Used to modify a json string to a python list.
+    """
+
+    if jsonstr == "":
+        value_list = []
+    else:
+        if jsonstr[0] == "[":
+            value_list = json2py(jsonstr)
+        else:
+            value_list = jsonstr.split(",")
+        if not isinstance(value_list, list):
+            value_list = [value_list]
+    return value_list
+
+# -----------------------------------------------------------------------------
+def survey_T(phrase, langDict):
+    """
+        Function to translate a phrase using the dictionary passed in
+
+        @todo: parameter description
+    """
+
+    if phrase in langDict and langDict[phrase] != "":
+        return langDict[phrase]
+    else:
+        return phrase
 
 # END =========================================================================
