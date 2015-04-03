@@ -97,7 +97,7 @@ def alert():
                              args = request.args,
                              vars = request.vars))
         else:
-            s3.filter = (r.table.is_template == False)
+            r.resource.add_filter(r.table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
@@ -126,7 +126,7 @@ def alert():
                                                                   filterby="alert_id",
                                                                   filter_opts=(r.id,),
                                                                   ))
-                
+
         #elif r.representation == "cap":
         #    # This is either importing from or exporting to cap format. Set both
         #    # postprocessing hooks so we don't have to enumerate methods.
@@ -158,8 +158,8 @@ def alert():
         """
             REST post-processor:
              - check to see if "Save and add information" was pressed
-        """ 
-        
+        """
+
         lastid = r.resource.lastid
         if lastid and request.post_vars.get("edit_info", False):
             table = db.cap_alert
@@ -238,7 +238,7 @@ def info():
                                           T("Save and add another language..."),
                                           "",
                                           ),)
-            
+
         return result
     s3.prep = prep
 

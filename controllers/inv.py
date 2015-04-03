@@ -585,9 +585,9 @@ def track_movement():
             if "viewing" in get_vars:
                 dummy, item_id = get_vars.viewing.split(".")
                 if item_id != "None":
-                    filter = (table.send_inv_item_id == item_id ) | \
-                             (table.recv_inv_item_id == item_id)
-                    s3.filter = filter
+                    query = (table.send_inv_item_id == item_id ) | \
+                            (table.recv_inv_item_id == item_id)
+                    r.resource.add_filter(query)
         return True
     s3.prep = prep
 

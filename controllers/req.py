@@ -254,11 +254,7 @@ def req_controller(template = False):
                     s3.crud_strings["req_req"].label_create = T("Make People Request")
 
                 # Filter the query based on type
-                if s3.filter:
-                    s3.filter = s3.filter & \
-                                (table.type == type)
-                else:
-                    s3.filter = (table.type == type)
+                r.resource.add_filter(table.type == type)
 
             # These changes are applied via JS in create forms where type is editable
             if type == 1: # Item

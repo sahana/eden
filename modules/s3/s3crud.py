@@ -1394,10 +1394,6 @@ class S3CRUD(S3Method):
         # Initialize output
         output = {}
 
-        # Filter
-        if s3.filter is not None:
-            resource.add_filter(s3.filter)
-
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
@@ -1612,10 +1608,6 @@ class S3CRUD(S3Method):
 
         # Initialize output
         output = {}
-
-        # Filter
-        if s3.filter is not None:
-            resource.add_filter(s3.filter)
 
         # Prepare data list
         representation = r.representation

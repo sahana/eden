@@ -101,12 +101,6 @@ class S3Report(S3Method):
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
 
-        # Filter
-        response = current.response
-        s3_filter = response.s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
         widget_id = "pivottable"
 
         # @todo: make configurable:
@@ -221,7 +215,7 @@ class S3Report(S3Method):
             self._view(r, "pivottable.html")
 
             # View
-            response.view = self._view(r, "report.html")
+            current.response.view = self._view(r, "report.html")
 
         elif r.representation == "json":
 
@@ -249,12 +243,6 @@ class S3Report(S3Method):
         # Set response headers
         response.headers["Content-Type"] = s3.content_type.get("geojson",
                                                                "application/json")
-
-        # Filter
-        s3_filter = s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
         if not resource.count():
             # No Data
             return json.dumps({})
@@ -294,7 +282,7 @@ class S3Report(S3Method):
                 # Show Points
                 resource.clear_query()
                 # Apply URL filters (especially BBOX)
-                resource.build_query(filter=s3_filter, vars=get_vars)
+                resource.build_query(filter=s3.filter, vars=get_vars)
 
                 # Extract the Location Data
                 xmlformat = S3XMLFormat(stylesheet)
@@ -356,7 +344,7 @@ class S3Report(S3Method):
                     return json.dumps({})
                 resource.clear_query()
                 # Apply URL filters (especially BBOX)
-                resource.build_query(filter=s3_filter, vars=get_vars)
+                resource.build_query(filter=s3.filter, vars=get_vars)
                 level = "L%s" % (level - 1)
                 if context and "location" in context:
                     # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
@@ -445,11 +433,6 @@ class S3Report(S3Method):
 
         resource = self.resource
         get_config = resource.get_config
-
-        # Filter
-        s3_filter = current.response.s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
 
         # @todo: make configurable:
         maxrows = 20

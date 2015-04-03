@@ -332,7 +332,9 @@ def newsfeed():
     title_list = T("Latest Information")
 
     # Hide Posts linked to Modules and Maps & Expired Posts
-    s3.filter = (FS("post_module.module") == None) & (FS("post_layer.layer_id") == None) & (FS("expired") != True)
+    s3.filter = (FS("post_module.module") == None) & \
+                (FS("post_layer.layer_id") == None) & \
+                (FS("expired") != True)
 
     # Ensure that filtered views translate into options which update the Widget
     if "~.series_id$name" in get_vars:

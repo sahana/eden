@@ -1335,7 +1335,8 @@ def config(settings):
                     if not level:
                         # Just show PH L1s
                         level = "L1"
-                        s3.filter = (table.L0 == "Philippines") & (table.level == "L1")
+                        query = (table.L0 == "Philippines") & (table.level == "L1")
+                        r.resource.add_filter(query)
 
                     parent = current.request.get_vars.get("~.parent", None)
                     if level == "L1":
@@ -2752,7 +2753,7 @@ def config(settings):
                 result = standard_prep(r)
 
             # Filter Out Docs from Newsfeed
-            current.response.s3.filter = (table.name != None)
+            r.resource.add_filter(table.name != None)
 
             if r.interactive:
                 s3.crud_strings[tablename] = Storage(
@@ -2821,7 +2822,7 @@ def config(settings):
             else:
                 s3db.req_customise_req_fields()
             if r.method in ("datalist", "datalist.dl"):
-                s3.filter = (r.table.req_status.belongs([0, 1]))
+                r.resource.add_filter(r.table.req_status.belongs([0, 1]))
             elif r.method == "profile":
                 # Customise tables used by widgets
                 s3db.req_customise_commit_fields()
@@ -2943,7 +2944,7 @@ def config(settings):
             current.s3db.req_customise_commit_fields()
 
             if r.method in ("datalist", "datalist.dl"):
-                s3.filter = (r.table.cancel != True)
+                r.resource.add_filter(r.table.cancel != True)
 
             return True
         s3.prep = custom_prep

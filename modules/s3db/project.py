@@ -6754,8 +6754,9 @@ def project_task_controller():
             # Show the Open Tasks for this User
             if auth.user:
                 pe_id = auth.user.pe_id
-                s3.filter = (table.pe_id == pe_id) & \
-                            (table.status.belongs(statuses))
+                query = (table.pe_id == pe_id) & \
+                        (table.status.belongs(statuses))
+                r.resource.add_filter(query)
             crud_strings.title_list = T("My Open Tasks")
             crud_strings.msg_list_empty = T("No Tasks Assigned")
             s3db.configure(tablename,
@@ -6781,8 +6782,9 @@ def project_task_controller():
             except:
                 current.session.error = T("Project not Found")
                 redirect(URL(args=None, vars=None))
-            s3.filter = (FS("task_id:project_task_project.project_id") == project) & \
-                        (FS("status").belongs(statuses))
+            query = (FS("task_id:project_task_project.project_id") == project) & \
+                    (FS("status").belongs(statuses))
+            r.resource.add_filter(query)
             crud_strings.title_list = T("Open Tasks for %(project)s") % dict(project=name)
             crud_strings.msg_list_empty = T("No Open Tasks for %(project)s") % dict(project=name)
             # Add Activity
@@ -6804,7 +6806,7 @@ def project_task_controller():
         elif "open" in get_vars:
             # Show Only Open Tasks
             crud_strings.title_list = T("All Open Tasks")
-            s3.filter = (table.status.belongs(statuses))
+            r.resource.add_filter(table.status.belongs(statuses))
 
         if r.component:
             if r.component_name == "req":

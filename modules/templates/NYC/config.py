@@ -433,7 +433,9 @@ def config(settings):
                 if not types:
                     # Hide Private Residences
                     from s3 import FS
-                    s3.filter = FS("site_facility_type.facility_type_id$name") != "Private Residence"
+                    query = (FS("site_facility_type.facility_type_id") == None) | \
+                            (FS("site_facility_type.facility_type_id$name") != "Private Residence")
+                    r.resource.add_filter(query)
 
             if r.interactive:
                 tablename = "org_facility"

@@ -1332,7 +1332,9 @@ class deploy_Inbox(S3Method):
                             filters = None
                         query = ~(FS("id").belongs(selected))
                         mresource = s3db.resource("msg_email",
-                                                filter=query, vars=filters)
+                                                  filter=query,
+                                                  vars=filters,
+                                                  )
                         if response.s3.filter:
                             mresource.add_filter(response.s3.filter)
                         rows = mresource.select(["id"], as_rows=True)
