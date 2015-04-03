@@ -751,17 +751,17 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testDateTimeComparison(self):
-        """ 
+        """
             Test virtual field string value comparison against
             date/time value
         """
 
         assertTrue = self.assertTrue
         assertFalse = self.assertFalse
-        
+
         resource = current.s3db.resource("org_organisation")
         row = Storage()
-        
+
         # Test matching date
         query = FS("test") == datetime.datetime(2014,10,5).date()
 
@@ -771,7 +771,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         assertFalse(query(resource, row))
         row.test = ""
         assertFalse(query(resource, row))
-        
+
         # Test matching datetime
         query = FS("test") == datetime.datetime(2014,10,5,10,0,0)
 
@@ -786,7 +786,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         # Test matching time
         query = FS("test") == datetime.time(10,0,0)
-        
+
         row.test = "10:00:00"
         assertTrue(query(resource, row))
         row.test = "11:00:00"
@@ -795,7 +795,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         assertFalse(query(resource, row))
         row.test = ""
         assertFalse(query(resource, row))
-        
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 

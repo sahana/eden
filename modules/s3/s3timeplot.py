@@ -1653,31 +1653,31 @@ class S3TimeSeriesPeriod(object):
             @param cumulative: include previous events
         """
 
+        event_sets = [self.cevents]
         if cumulative:
-            events = dict(self.pevents)
-            events.update(self.cevents)
-        else:
-            events = self.cevents
+            event_sets.append(self.pevents)
+
         rows = {}
         cols = {}
         matrix = {}
         from itertools import product
-        for event_id, event in events.items():
-            for key in event.rows:
-                row = rows.get(key)
-                if row is None:
-                    row = rows[key] = set()
-                row.add(event_id)
-            for key in event.cols:
-                col = cols.get(key)
-                if col is None:
-                    col = cols[key] = set()
-                col.add(event_id)
-            for key in product(event.rows, event.cols):
-                cell = matrix.get(key)
-                if cell is None:
-                    cell = matrix[key] = set()
-                cell.add(event_id)
+        for index, events in enumerate(event_sets):
+            for event_id, event in events.items():
+                for key in event.rows:
+                    row = rows.get(key)
+                    if row is None:
+                        row = rows[key] = (set(), set())
+                    row[index].add(event_id)
+                for key in event.cols:
+                    col = cols.get(key)
+                    if col is None:
+                        col = cols[key] = (set(), set())
+                    col[index].add(event_id)
+                for key in product(event.rows, event.cols):
+                    cell = matrix.get(key)
+                    if cell is None:
+                        cell = matrix[key] = (set(), set())
+                    cell[index].add(event_id)
         self._rows = rows
         self._cols = cols
         self._matrix = matrix
@@ -1720,19 +1720,28 @@ class S3TimeSeriesPeriod(object):
 
         # Aggregate rows
         rows = self.rows = {}
-        for key, event_ids in self._rows.items():
+        for key, event_sets in self._rows.items():
+            event_ids = event_sets[0]
+            if cumulative:
+                event_ids |= event_sets[1]
             items = [events[event_id] for event_id in event_ids]
             rows[key] = aggregate(items)
 
         # Aggregate columns
         cols = self.cols = {}
-        for key, event_ids in self._cols.items():
+        for key, event_sets in self._cols.items():
+            event_ids = event_sets[0]
+            if cumulative:
+                event_ids |= event_sets[1]
             items = [events[event_id] for event_id in event_ids]
             cols[key] = aggregate(items)
 
         # Aggregate matrix
         matrix = self.matrix = {}
-        for key, event_ids in self._matrix.items():
+        for key, event_sets in self._matrix.items():
+            event_ids = event_sets[0]
+            if cumulative:
+                event_ids |= event_sets[1]
             items = [events[event_id] for event_id in event_ids]
             matrix[key] = aggregate(items)
 

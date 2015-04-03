@@ -17,9 +17,9 @@ class ISLatTest(unittest.TestCase):
         Latitude has to be in decimal degrees between -90 & 90
         - we can convert D/M/S or D°M'S" format into decimal degrees:
         Zero padded, separated by spaces or : or (d, m, s) or (°, ', ") or run together and followed by cardinal direction initial (N,S) Note: Only seconds can have decimals places. A decimal point with no trailing digits is invalid.
-        Matches	
+        Matches
         40:26:46N | 40°26'47?N | 40d 26m 47s N | 90 00 00.0 | 89 59 50.4141 S | 00 00 00.0
-        Non-Matches	
+        Non-Matches
         90 00 00.001 N | 9 00 00.00 N | 9 00 00.00 | 90 61 50.4121 S | -90 48 50. N | 90 00 00. N | 00 00 00.
     """
 
@@ -31,9 +31,9 @@ class ISLonTest(unittest.TestCase):
         Longitude has to be in decimal degrees between -180 & 180
         - we can convert D/M/S format into decimal degrees
         Zero padded, separated by spaces or : or (d, m, s) or (°, ', ") or run together and followed by cardinal direction initial (E,W) Note: Only seconds can have decimals places. A decimal point with no trailing digits is invalid.
-        Matches	
+        Matches
         079:56:55W | 079°58'36?W | 079d 58' 36? W | 180 00 00.0 | 090 29 20.4 E | 000 00 00.0
-        Non-Matches	
+        Non-Matches
         180 00 00.001 E | 79 00 00.00 E | -79 00 00.00 | 090 29 20.4 E | -090 29 20.4 E | 180 00 00. E | 000 00 00.
     """
 
@@ -203,14 +203,14 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
         # Store current setting
         settings = current.deployment_settings
         current_setting = settings.get_msg_require_international_phone_numbers()
-        
+
         assertEqual = self.assertEqual
         assertNotEqual = self.assertNotEqual
         validate = IS_PHONE_NUMBER(international=True)
 
         # Turn on notation requirement globally
         settings.msg.require_international_phone_numbers = True
-        
+
         number = "+46-73-3847589"
         value, error = validate(number)
         assertEqual(error, None)
@@ -256,7 +256,7 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
 
         # Restore current setting
         settings.msg.require_international_phone_numbers = current_setting
-        
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """

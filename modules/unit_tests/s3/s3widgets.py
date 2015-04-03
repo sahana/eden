@@ -17,7 +17,7 @@ class TestS3OptionsMatrixWidget(unittest.TestCase):
     # @todo: deprecate?
 
     def setUp(self):
-        
+
         self.field = Storage(name='roles')
 
         self.rows = (
