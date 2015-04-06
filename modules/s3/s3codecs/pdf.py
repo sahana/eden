@@ -1122,7 +1122,8 @@ class S3PDFTable(object):
                  ("VALIGN", (0, 0), (-1, -1), "TOP"),
                  ("LINEBELOW", (0, 0), (endCol, 0), 1, Color(0, 0, 0)),
                  ("FONTNAME", (0, 0), (endCol, 0), font_name_bold),
-                 ]
+                ]
+
         sappend = style.append
         if colour_required:
             sappend(("BACKGROUND", (0, 0), (endCol, 0), self.headerColour))
