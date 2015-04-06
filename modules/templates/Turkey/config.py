@@ -132,8 +132,8 @@ def config(settings):
 
         s3db = current.s3db
         table = s3db.pr_person_details
-        table.place_of_birth.writable = True
-        table.mother_name.readable = True
+        table.place_of_birth.readable = True
+        table.place_of_birth.writable = True        
         table.father_name.readable = True
         #import s3db.tr
         s3db.add_components("pr_person",
@@ -146,6 +146,7 @@ def config(settings):
         from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm("first_name",
                                     "last_name",
+                                    "person_details.place_of_birth",
                                     "date_of_birth",
                                     #"initials",
                                     #"preferred_name",

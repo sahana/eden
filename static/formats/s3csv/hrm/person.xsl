@@ -116,6 +116,7 @@
          Identity Card Volume No
          Identity Card Family Order No
          Identity Card Order No
+         Shoe Size
 
          Column headers looked up in labels.xml:
 
@@ -738,6 +739,9 @@
                 </xsl:if>
                 <xsl:if test="col[@field='Identity Card Order No']!=''">
                     <data field="order_no"><xsl:value-of select="col[@field='Identity Card Order No']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Shoe Size']!=''">
+                    <data field="shoe_size"><xsl:value-of select="col[@field='Shoe Size']"/></data>
                 </xsl:if>
             </resource>
 
