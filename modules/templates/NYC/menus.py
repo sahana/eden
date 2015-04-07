@@ -56,7 +56,36 @@ class S3MainMenu(default.S3MainMenu):
                icon="icon-map",
                restrict=[AUTHENTICATED]
                ),
+            MM("Get Involved")(
+                MM("Events",
+                   url="http://nycprepared.org/events",
+                   _target="_blank",
+                   ),
+                MM("Register",
+                   url="http://nycprepared.org/sites",
+                   _target="_blank",
+                   ),
+                MM("Support",
+                   url="https://sarapis.org/donate-to-nycprepared",
+                   _target="_blank",
+                   ),
+            ),
         ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_help(cls, **attr):
+        """ Help Menu """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        menu_help = MM("Help", c="default", f="help", link=False, **attr)(
+            MM("User Guide", f="help"),
+            MM("Contact us", f="contact"),
+            #MM("About", f="about", restrict=[ADMIN]),
+        )
+
+        return menu_help
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):

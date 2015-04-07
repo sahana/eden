@@ -476,11 +476,11 @@ div.tabs span.tab_other a:hover {
 .top-bar-section ul li.has-dropdown:hover > a {
   background-color: #2ba6cb;
 }
-.top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
+.top-bar-section ul.dropdown li:not(.has-form):not(.active) a:not(.button) {
   color: #ffffff;
   background-color: #777879;
 }
-.top-bar-section ul.dropdown li:not(.has-form) a:not(.button):hover {
+.top-bar-section ul.dropdown li:not(.has-form):not(.active) a:not(.button):hover {
   color: #ffffff;
   background-color: #2ba6cb;
 }
