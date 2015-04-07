@@ -49,6 +49,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Facilities", c="org", f="facility", m="summary",
                restrict=[AUTHENTICATED])(
             ),
+            MM("Services", c="cms", f="page", vars={"name": "Services"}),
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news",
                restrict=[AUTHENTICATED]),
@@ -56,6 +57,7 @@ class S3MainMenu(default.S3MainMenu):
                icon="icon-map",
                restrict=[AUTHENTICATED]
                ),
+            MM("Data", c="cms", f="page", vars={"name": "Data"}),
             MM("Get Involved")(
                 MM("Events",
                    url="http://nycprepared.org/events",

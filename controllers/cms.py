@@ -230,15 +230,29 @@ def page():
         - with optional Comments
     """
 
+    found = True
+    get_vars = request.get_vars
+    if "name" in get_vars:
+        table = s3db.cms_post
+        query = (table.name == get_vars.name) & \
+                (table.deleted != True)
+        row = db(query).select(table.id, limitby=(0, 1)).first()
+        if row:
+            request.args.append(str(row.id))
+        else:
+            found = False
+
     # Pre-process
     def prep(r):
+        if not found:
+            r.error(404, T("Page not found"), next=auth.permission.homepage)
         s3db.configure(r.tablename, listadd=False)
         return True
     s3.prep = prep
 
     # Post-process
     def postp(r, output):
-        if r.record:
+        if r.record and not r.transformable():
             output = {"item": r.record.body}
             current.menu.options = None
             response.view = s3base.S3CRUD._view(r, "cms/page.html")
