@@ -58,13 +58,13 @@ class S3MainMenu(default.S3MainMenu):
                restrict=[AUTHENTICATED]
                ),
             MM("Data", c="cms", f="page", vars={"name": "Data"}),
-            MM("Get Involved")(
+            MM("Get Involved", link=False)(
                 MM("Events",
                    url="http://nycprepared.org/events",
                    _target="_blank",
                    ),
-                MM("Register",
-                   url="http://nycprepared.org/sites",
+                MM("Learn more",
+                   url="http://nycprepared.org",
                    _target="_blank",
                    ),
                 MM("Support",
