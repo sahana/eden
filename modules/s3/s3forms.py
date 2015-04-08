@@ -2666,6 +2666,9 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         # Do not create a second record in this component
                         query = (resource._id == master_id) & \
                                 component.get_join()
+                        f = self._filterby_query()
+                        if f is not None:
+                            query &= f
                         DELETED = current.xml.DELETED
                         if DELETED in table.fields:
                             query &= table[DELETED] != True

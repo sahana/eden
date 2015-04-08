@@ -4627,13 +4627,19 @@ class S3ResourceFilter(object):
 
         resource = self.resource
 
+        inner_joins = self.get_joins(left=False)
+        if inner_joins:
+            inner = S3Joins(resource.tablename, inner_joins)
+            ijoins = ", ".join([str(j) for j in inner.as_list()])
+        else:
+            ijoins = None
+
         left_joins = self.get_joins(left=True)
         if left_joins:
             left = S3Joins(resource.tablename, left_joins)
-            joins = ", ".join([str(j) for j in left.as_list()])
+            ljoins = ", ".join([str(j) for j in left.as_list()])
         else:
-            left = None
-            joins = None
+            ljoins = None
 
         vfltr = self.get_filter()
         if vfltr:
@@ -4643,15 +4649,16 @@ class S3ResourceFilter(object):
 
         represent = "<S3ResourceFilter %s, " \
                     "query=%s, " \
+                    "join=[%s], " \
                     "left=[%s], " \
                     "distinct=%s, " \
-                    "filter=%s>" % (
-                        resource.tablename,
-                        self.get_query(),
-                        joins,
-                        self.distinct,
-                        vfltr
-                    )
+                    "filter=%s>" % (resource.tablename,
+                                    self.get_query(),
+                                    ijoins,
+                                    ljoins,
+                                    self.distinct,
+                                    vfltr,
+                                    )
 
         return represent
 
