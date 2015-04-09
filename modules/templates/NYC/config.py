@@ -802,13 +802,25 @@ def config(settings):
             #                  ),
             ]
 
-        list_fields = ["name",
-                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
-                       (T("Services"), "service.name"),
-                       "phone",
-                       (T("Email"), "email.value"),
-                       "website"
-                       ]
+        if r.method == "review":
+            from s3 import S3DateTime
+            s3db.org_organisation.created_on.represent = \
+                lambda dt: S3DateTime.date_represent(dt, utc=True)
+            list_fields = ["name",
+                           (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Date Registered"), "created_on"),
+                           "phone",
+                           (T("Email"), "email.value"),
+                           "website",
+                           ]
+        else:
+            list_fields = ["name",
+                           (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                           (T("Services"), "service.name"),
+                           "phone",
+                           (T("Email"), "email.value"),
+                           "website",
+                           ]
 
         s3db.configure("org_organisation",
                        crud_form = crud_form,
