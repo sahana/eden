@@ -607,8 +607,9 @@ def person():
 
         next = URL(c = "default",
                    f = "person",
-                   args = [user_person_id, "user"])
+                   args = [user_person_id, "user_profile"])
         onaccept = lambda form: auth.s3_approve_user(form.vars),
+        auth.configure_user_fields()
         form = auth.profile(next = next,
                             onaccept = onaccept)
 
@@ -618,7 +619,7 @@ def person():
                     )
 
     set_method("pr", "person",
-               method="user",
+               method="user_profile",
                action=auth_profile_method)
 
     # Custom Method for Contacts
@@ -808,7 +809,7 @@ def person():
         trainings_tab = None
 
     tabs = [(T("Person Details"), None),
-            (T("User Account"), "user"),
+            (T("User Account"), "user_profile"),
             (T("Staff/Volunteer Record"), "human_resource"),
             id_tab,
             description_tab,

@@ -1332,6 +1332,9 @@ S3.openPopup = function(url, center) {
         $(triggerSelector).each(function() {
             var trigger = $(this),
                 $scope;
+            if (!trigger.is(':visible')) {
+                return;
+            }
             if (settings.scope == 'row') {
                 $scope = trigger.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {
