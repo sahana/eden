@@ -1292,7 +1292,6 @@ S3.openPopup = function(url, center) {
 
         var trigger = settings.trigger, triggerName;
 
-
         if (settings.event) {
             triggerName = settings.event;
         } else if (typeof trigger == 'string') {
@@ -1330,7 +1329,7 @@ S3.openPopup = function(url, center) {
         }
 
         // Initial event-less update of the target(s)
-        $(triggerSelector).last().each(function() {
+        $(triggerSelector).each(function() {
             var trigger = $(this),
                 $scope;
             if (settings.scope == 'row') {

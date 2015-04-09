@@ -108,7 +108,14 @@ form .action-lnk {
   font-size: 0.75rem;
 }
 form table.embeddedComponent {
+  border: 1px solid #dddddd;
   border-collapse: separate;
+}
+form table.embeddedComponent td {
+  border: none;
+}
+form table.embeddedComponent .label-row td:empty {
+  padding: 0;
 }
 form .inline-open-add {
   display: inline-block;
@@ -200,12 +207,6 @@ textarea {
 }
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
-}
-.form-container form table.embeddedComponent {
-  border: 1px solid #dddddd;
-}
-.form-container form table.embeddedComponent td {
-  border: none;
 }
 
 .item-container .controls {

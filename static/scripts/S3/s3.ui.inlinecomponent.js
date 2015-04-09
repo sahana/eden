@@ -688,6 +688,15 @@
 
             this._removeErrors();
 
+            var data = this._deserialize();
+            var fields = data['fields'];
+            var row = data['data'][rowindex];
+
+            if (row._readonly) {
+                // Can't edit the row if it is read-only
+                return;
+            }
+
             // Show all read rows for this field
             $('#sub-' + formname + ' .read-row').removeClass('hide');
             // Hide the current read row, unless it's an Image
@@ -696,9 +705,6 @@
             }
 
             // Populate the edit row with the data for this rowindex
-            var data = this._deserialize();
-            var fields = data['fields'];
-            var row = data['data'][rowindex];
             var fieldname,
                 element,
                 input,

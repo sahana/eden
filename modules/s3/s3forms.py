@@ -1826,7 +1826,6 @@ class S3SQLSubFormLayout(object):
 
             @param data: the input field data as Python object
             @param readonly: whether the form is read-only
-            @param attributes: HTML attributes for the header row
         """
 
         fields = data["fields"]

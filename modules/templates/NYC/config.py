@@ -1119,32 +1119,55 @@ def config(settings):
             if r.interactive or r.representation == "aadata":
 
                 if not r.component:
+
+                    htable = s3db.hrm_human_resource
+                    organisation_id = htable.organisation_id
+
+                    # Site ID uses drop-down not autocomplete
+                    site_id = htable.site_id
+                    site_id.widget = None
+
+                    # Fields for embedded HR record
                     hr_fields = ["organisation_id",
                                  "org_contact",
                                  "job_title_id",
                                  "site_id",
                                  ]
-                    htable = s3db.hrm_human_resource
+
+                    # Show org_contact checkbox
                     field = htable.org_contact
                     field.readable = field.writable = True
                     field.label = POC
+
+                    # Profile popups: defaults for organisation and site
                     if r.method in ("create", "update"):
                         get_vars = r.get_vars
                         # Context from a Profile page?"
-                        organisation_id = get_vars.get("(organisation)", None)
-                        if organisation_id:
-                            field = htable.organisation_id
-                            field.default = organisation_id
-                            field.readable = field.writable = False
+                        organisation = get_vars.get("(organisation)", None)
+                        if organisation:
+                            organisation_id.default = organisation
+                            organisation_id.readable = \
+                            organisation_id.writable = False
                             hr_fields.remove("organisation_id")
-                        site_id = get_vars.get("(site)", None)
-                        if site_id:
-                            field = htable.site_id
-                            field.default = site_id
-                            field.readable = field.writable = False
+                        site = get_vars.get("(site)", None)
+                        if site:
+                            site_id.default = site
+                            site_id.readable = site_id.writable = False
                             hr_fields.remove("site_id")
                         else:
-                            s3db.hrm_human_resource.site_id.default = None
+                            site_id.default = None
+
+                    # Filter site options by organisation
+                    if organisation_id.writable and site_id.writable:
+                        s3.jquery_ready.append('''
+$.filterOptionsS3({
+ 'trigger':{'prefix':'human_resource','alias':'human_resource','name':'organisation_id'},
+ 'target':{'prefix':'human_resource','alias':'human_resource','name':'site_id'},
+ 'scope':'row',
+ 'lookupPrefix':'org',
+ 'lookupResource':'site',
+ 'msgNoRecords':'%s',
+})''' % T("No facilities for this organisation"))
 
                     # ImageCrop widget doesn't currently work within an Inline Form
                     #image_field = s3db.pr_image.image
@@ -1164,83 +1187,92 @@ def config(settings):
                                                     "joinby": "person_id",
                                                     "key": "group_id",
                                                     })
+
+                    # Filter contact information by access level
                     if current.auth.s3_logged_in():
+                        # Authenticated users see both public and private contacts
+                        contact_filter = []
+                        # Show access-level selector in form
                         contact_fields = [("", "value"),
                                           ("", "access"),
                                           ]
-                        contact_filter = []
                         field = s3db.pr_contact.access
                         field.readable = field.writable = True
                         field.default = 2 # public
                     else:
-                        contact_fields = [("", "value"),
-                                          ]
+                        # Anonymous users see only public contacts
                         contact_filter = [{"field": "access",
                                            "options": 2,
                                            }]
-                    s3_sql_custom_fields = ["first_name",
-                                            #"middle_name",
-                                            "last_name",
-                                            S3SQLInlineComponent(
-                                                "human_resource",
-                                                name = "human_resource",
-                                                label = "",
-                                                multiple = False,
-                                                fields = hr_fields,
-                                                ),
-                                            S3SQLInlineComponent(
-                                                "contact",
-                                                name = "email",
-                                                label = EMAIL,
-                                                #multiple = True,
-                                                fields = contact_fields,
-                                                filterby = [{"field": "contact_method",
-                                                             "options": "EMAIL",
-                                                             },
-                                                            ] + contact_filter,
-                                                ),
-                                            S3SQLInlineComponent(
-                                                "contact",
-                                                name = "work_phone",
-                                                label = T("Work Phone"),
-                                                #multiple = True,
-                                                fields = contact_fields,
-                                                filterby = [{"field": "contact_method",
-                                                             "options": "WORK_PHONE",
-                                                             },
-                                                            ] + contact_filter,
-                                                ),
-                                            S3SQLInlineComponent(
-                                                "contact",
-                                                name = "phone",
-                                                label = MOBILE,
-                                                #multiple = True,
-                                                fields = contact_fields,
-                                                filterby = [{"field": "contact_method",
-                                                             "options": "SMS",
-                                                             },
-                                                            ] + contact_filter,
-                                                ),
-                                            S3SQLInlineLink(
-                                                "group",
-                                                label = T("Groups"),
-                                                field = "group_id",
-                                                multiple = True,
-                                            ),
-                                            #S3SQLInlineComponent(
-                                            #    "image",
-                                            #    name = "image",
-                                            #    label = T("Photo"),
-                                            #    multiple = False,
-                                            #    fields = [("", "image")],
-                                            #    filterby = dict(field = "profile",
-                                            #                    options=[True]
-                                            #                    )
-                                            #    ),
-                                            ]
+                        # Hide access-level
+                        contact_fields = [("", "value"),
+                                          ]
 
-                    crud_form = S3SQLCustomForm(*s3_sql_custom_fields)
+                    # Custom CRUD form
+                    crud_fields = ["first_name",
+                                   #"middle_name",
+                                   "last_name",
+                                   S3SQLInlineComponent(
+                                        "human_resource",
+                                        name = "human_resource",
+                                        label = "",
+                                        multiple = False,
+                                        fields = hr_fields,
+                                        ),
+                                   S3SQLInlineComponent(
+                                        "contact",
+                                        name = "email",
+                                        label = EMAIL,
+                                        #multiple = True,
+                                        fields = contact_fields,
+                                        filterby = [{"field": "contact_method",
+                                                        "options": "EMAIL",
+                                                        },
+                                                    ] + contact_filter,
+                                        ),
+                                   S3SQLInlineComponent(
+                                        "contact",
+                                        name = "work_phone",
+                                        label = T("Work Phone"),
+                                        #multiple = True,
+                                        fields = contact_fields,
+                                        filterby = [{"field": "contact_method",
+                                                     "options": "WORK_PHONE",
+                                                     },
+                                                    ] + contact_filter,
+                                        ),
+                                   S3SQLInlineComponent(
+                                        "contact",
+                                        name = "phone",
+                                        label = MOBILE,
+                                        #multiple = True,
+                                        fields = contact_fields,
+                                        filterby = [{"field": "contact_method",
+                                                     "options": "SMS",
+                                                     },
+                                                    ] + contact_filter,
+                                        ),
+                                   S3SQLInlineLink(
+                                        "group",
+                                        label = T("Groups"),
+                                        field = "group_id",
+                                        multiple = True,
+                                        ),
+                                   #S3SQLInlineComponent(
+                                   #     "image",
+                                   #     name = "image",
+                                   #     label = T("Photo"),
+                                   #     multiple = False,
+                                   #     fields = [("", "image")],
+                                   #     filterby = dict(field = "profile",
+                                   #                     options=[True]
+                                   #                     ),
+                                   #     ),
+                                   ]
 
+                    crud_form = S3SQLCustomForm(*crud_fields)
+
+                    # Custom list fields
                     list_fields = [(current.messages.ORGANISATION, "human_resource.organisation_id"),
                                    "first_name",
                                    #"middle_name",
@@ -1255,6 +1287,7 @@ def config(settings):
                                         (EMAIL, "email.value"),
                                         ]
 
+                    # Update table configuration
                     s3db.configure(r.tablename,
                                    crud_form = crud_form,
                                    list_fields = list_fields,
