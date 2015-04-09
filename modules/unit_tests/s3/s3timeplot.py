@@ -1717,6 +1717,120 @@ class TimeSeriesTests(unittest.TestCase):
             return False
 
 # =============================================================================
+class FactParserTests(unittest.TestCase):
+    """ Tests for S3TimeSeriesFact parser """
+
+    def testFactExpressionParsing(self):
+        """ Test parsing of fact expressions """
+
+        parse = S3TimeSeriesFact.parse
+
+        expressions = (
+                       # Isolated selector
+                       ("id",
+                        ((None, "count", "id", None, None),
+                         )
+                        ),
+                       # Normal fact expression
+                       ("count(id)",
+                        ((None, "count", "id", None, None),
+                         )
+                        ),
+                       # Cumulate with base and slope
+                       ("cumulate(value,delta,3weeks)",
+                        ((None, "cumulate", "value", "delta", "3weeks"),
+                         )
+                        ),
+                       # Cumulate without base
+                       ("cumulate(delta,3weeks)",
+                        ((None, "cumulate", None, "delta", "3weeks"),
+                         )
+                        ),
+                       # Cumulate without slope
+                       ("cumulate(value)",
+                        ((None, "cumulate", "value", None, None),
+                         )
+                        ),
+                       # Normal fact expression, with complex selector
+                       ("sum(~.value)",
+                        ((None, "sum", "~.value", None, None),
+                         )
+                        ),
+                       # Normal fact expression, with label
+                       (("Number of Records", "count(id)"),
+                        (("Number of Records", "count", "id", None, None),
+                         )
+                        ),
+                       # List of fact expressions
+                       (["count(id)", "sum(value)"],
+                        ((None, "count", "id", None, None),
+                         (None, "sum", "value", None, None),
+                         )
+                        ),
+                       # List of fact expressions, with label
+                       (["count(id)", ("Example", "min(example)")],
+                        ((None, "count", "id", None, None),
+                         ("Example", "min", "example", None, None),
+                         )
+                        ),
+                       # Multiple fact expressions
+                       ("min(other),avg(other)",
+                        ((None, "min", "other", None, None),
+                         (None, "avg", "other", None, None),
+                         )
+                        ),
+                       # Multiple fact expressions, with label
+                       (("Test", "min(other),avg(other)"),
+                        (("Test", "min", "other", None, None),
+                         ("Test", "avg", "other", None, None),
+                         )
+                        ),
+                       # Mixed list and multi-expression
+                       (["count(id)", "sum(value),avg(other)"],
+                        ((None, "count", "id", None, None),
+                         (None, "sum", "value", None, None),
+                         (None, "avg", "other", None, None),
+                         )
+                        ),
+                       # Empty list
+                       ([], None),
+                       # Invalid method
+                       (["count(id)", "invalid(value)"], None),
+                       # Missing selector
+                       ("count(id),count()", None),
+                       )
+
+        assertRaises = self.assertRaises
+        assertEqual = self.assertEqual
+
+        i = 0
+        for i, (expression, expected) in enumerate(expressions):
+
+            if expected is None:
+                with assertRaises(SyntaxError):
+                    facts = parse(expression)
+            else:
+                facts = parse(expression)
+                assertEqual(len(facts), len(expected))
+                for j, fact in enumerate(facts):
+                    label, method, base, slope, interval = expected[j]
+                    assertEqual(fact.label, label,
+                                msg = "Expression %s/%s - incorrect label: %s != %s" %
+                                (i, j, fact.label, label))
+                    assertEqual(fact.method, method,
+                                msg = "Expression %s/%s - incorrect method: %s != %s" %
+                                (i, j, fact.method, method))
+                    assertEqual(fact.base, base,
+                                msg = "Expression %s/%s - incorrect base: %s != %s" %
+                                (i, j, fact.base, base))
+                    assertEqual(fact.slope, slope,
+                                msg = "Expression %s/%s - incorrect slope: %s != %s" %
+                                (i, j, fact.slope, slope))
+                    assertEqual(fact.interval, interval,
+                                msg = "Expression %s/%s - incorrect interval: %s != %s" %
+                                (i, j, fact.interval, interval))
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -1739,6 +1853,7 @@ if __name__ == "__main__":
         EventFrameTests,
         DtParseTests,
         TimeSeriesTests,
+        FactParserTests,
     )
 
 # END ========================================================================

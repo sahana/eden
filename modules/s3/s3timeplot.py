@@ -72,7 +72,7 @@ tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
 SEPARATORS = (",", ":")
 
 DEFAULT = lambda: None
-NUMERIC_TYPES = ("integer", "double")
+NUMERIC_TYPES = ("integer", "double", "id")
 
 dt_regex = Storage(
     YEAR = re.compile(r"\A\s*(\d{4})\s*\Z"),
@@ -81,6 +81,9 @@ dt_regex = Storage(
     DATE = re.compile(r"\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
     DELTA = re.compile(r"\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
 )
+
+FACT = re.compile(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z")
+SELECTOR = re.compile(r"^[a-zA-Z0-9_.$:\~]+\Z")
 
 # =============================================================================
 class S3TimePlot(S3Method):
@@ -153,6 +156,8 @@ class S3TimePlot(S3Method):
                               cols=cols,
                               facts=facts,
                               baseline=baseline,
+                              # @todo: add title
+                              #title=title,
                               )
 
             # Extract aggregated results as JSON-serializable dict
@@ -253,7 +258,10 @@ class S3TimePlot(S3Method):
                           rows=rows,
                           cols=cols,
                           facts=facts,
-                          baseline=baseline)
+                          baseline=baseline,
+                          # @todo: add title
+                          #title=title,
+                          )
 
         # Extract aggregated results as JSON-serializable dict
         data = ts.as_dict()
@@ -664,7 +672,8 @@ class S3TimeSeries(object):
                  rows=None,
                  cols=None,
                  facts=None,
-                 baseline=None):
+                 baseline=None,
+                 title=None):
         """
             Constructor
 
@@ -681,10 +690,14 @@ class S3TimeSeries(object):
             @param facts: an array of facts (S3TimeSeriesFact)
 
             @param baseline: the baseline field (field selector)
+
+            @param title: the time series title
         """
 
         self.resource = resource
         self.rfields = {}
+
+        self.title = title
 
         # Resolve timestamp
         self.resolve_timestamp(event_start, event_end)
@@ -715,7 +728,8 @@ class S3TimeSeries(object):
         # Fact Data
         fact_data = []
         for fact in self.facts:
-            fact_data.append((fact.method,
+            fact_data.append((fact.label,
+                              fact.method,
                               fact.base,
                               fact.slope,
                               fact.interval,
@@ -763,10 +777,10 @@ class S3TimeSeries(object):
         event_frame = self.event_frame
         periods_data = []
         append = periods_data.append
-        fact = self.facts[0]
+        #fact = self.facts[0]
         for period in event_frame:
             # Aggregate
-            period.aggregate([fact])
+            period.aggregate(self.facts)
             # Extract
             item = period.as_dict(rows = rows_keys,
                                   cols = cols_keys,
@@ -788,10 +802,7 @@ class S3TimeSeries(object):
                 "t": (event_start, event_end),
                 "s": event_frame.slots,
                 "e": event_frame.empty,
-                # @todo: implement labels:
-                #"l": {"t": report_title,
-                      #"f": fact_title,
-                      #},
+                "l": self.title,
                 "r": rows_data,
                 "c": cols_data,
                 "p": periods_data,
@@ -804,7 +815,10 @@ class S3TimeSeries(object):
     @staticmethod
     def _represent_axis(rfield, values):
         """
-            @todo: docstring
+            Represent and sort the values of a pivot axis (rows or cols)
+
+            @param rfield: the axis rfield
+            @param values: iterable of values
         """
 
         if rfield.virtual:
@@ -1431,7 +1445,7 @@ class S3TimeSeriesFact(object):
 
     METHODS = ("count", "cumulate", "sum", "avg", "min", "max")
 
-    def __init__(self, method, base, slope=None, interval=None):
+    def __init__(self, method, base, slope=None, interval=None, label=None):
         """
             Constructor
 
@@ -1448,6 +1462,8 @@ class S3TimeSeriesFact(object):
         self.base = base
         self.slope = slope
         self.interval = interval
+
+        self.label = label
 
         self.resource = None
 
@@ -1600,18 +1616,33 @@ class S3TimeSeriesFact(object):
             @param fact: the fact expression
         """
 
+        if isinstance(fact, list):
+            facts = []
+            for f in fact:
+                facts.extend(cls.parse(f))
+            if not facts:
+                raise SyntaxError("Invalid fact expression: %s" % fact)
+            return facts
+
+        if isinstance(fact, tuple):
+            label, fact = fact
+        else:
+            label = None
+
         # Parse the fact
         other = None
         if not fact:
             method, parameters = "count", "id"
         else:
-            match = re.match(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z", fact)
+            match = FACT.match(fact)
             if match:
                 method, parameters, other = match.groups()
                 if other:
-                    other = cls.parse(other)
-            else:
+                    other = cls.parse((label, other) if label else other)
+            elif SELECTOR.match(fact):
                 method, parameters, other = "count", fact, None
+            else:
+                raise SyntaxError("Invalid fact expression: %s" % fact)
 
         # Validate method
         if method not in cls.METHODS:
@@ -1635,7 +1666,7 @@ class S3TimeSeriesFact(object):
                 slope = parameters[1]
                 interval = parameters[2]
 
-        facts = [cls(method, base, slope=slope, interval=interval)]
+        facts = [cls(method, base, slope=slope, interval=interval, label=label)]
         if other:
             facts.extend(other)
         return facts
@@ -1695,6 +1726,9 @@ class S3TimeSeriesFact(object):
         if base_rfield:
             self.base_rfield = base_rfield
             self.base_column = base_rfield.colname
+            if not self.label:
+                # @todo: use method for automatic fact label
+                self.label = base_rfield.label
 
         if slope_rfield:
             self.slope_rfield = slope_rfield
@@ -1706,7 +1740,10 @@ class S3TimeSeriesFact(object):
 
 # =============================================================================
 class S3TimeSeriesPeriod(object):
-    """ @todo: docstring """
+    """
+        Class representing a single time period (slot) in an event frame,
+        within which events will be grouped and facts aggregated
+    """
 
     def __init__(self, start, end=None):
         """
@@ -1735,8 +1772,6 @@ class S3TimeSeriesPeriod(object):
 
         self._reset_aggregates()
 
-        return
-
     # -------------------------------------------------------------------------
     def _reset_aggregates(self):
         """ Reset the aggregated values matrix """
@@ -1745,8 +1780,6 @@ class S3TimeSeriesPeriod(object):
         self.rows = None
         self.cols = None
         self.totals = None
-
-        return
 
     # -------------------------------------------------------------------------
     def add_current(self, event):
