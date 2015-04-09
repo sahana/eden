@@ -300,7 +300,7 @@
                 var period = data[i];
                 items.push({
                     start: new Date(period.t[0]).getTime(),
-                    value: period.v
+                    value: period.v[0] // @todo: render multiple series
                 });
             }
 
@@ -392,7 +392,7 @@
                 var period = data[i];
                 items.push({
                     start: new Date(period.t[0]).getTime(),
-                    value: period.v
+                    value: period.v[0] // @todo: render multiple series
                 });
             }
 
