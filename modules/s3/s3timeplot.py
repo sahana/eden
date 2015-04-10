@@ -899,11 +899,8 @@ class S3TimeSeries(object):
         """
             Create an event frame for this report
 
-            @param resource: the target resource
-            @param event_start: the event start field (S3ResourceField)
-            @param event_end: the event end field (S3ResourceField)
-            @param start: the start date/time (string)
-            @param end: the end date/time (string)
+            @param start: the start date/time (string, date or datetime)
+            @param end: the end date/time (string, date or datetime)
             @param slots: the slot length (string)
 
             @return: the event frame

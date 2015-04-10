@@ -153,7 +153,7 @@ class S3Parser(object):
                     hr_id = rows[0][htable.id]
             if hr_id:
                 data["human_resource_id"] = hr_id
-                
+
         table = s3db.deploy_response
         table.insert(**data)
 

@@ -2291,8 +2291,8 @@ class S3URLQueryParser(object):
                 pp.Keyword("NONE") | \
                 pp.quotedString | \
                 pp.Word(pp.alphanums + pp.printables)
-        qe = pp.Group(pp.Group(expression | selector) + 
-                      comparison + 
+        qe = pp.Group(pp.Group(expression | selector) +
+                      comparison +
                       pp.originalTextFor(pp.delimitedList(value, combine=True)))
 
         parser = pp.operatorPrecedence(qe, [("not", 1, pp.opAssoc.RIGHT, ),

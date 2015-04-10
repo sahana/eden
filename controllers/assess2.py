@@ -1464,7 +1464,7 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-    
+
     configure(tablename, deletable=False)
 
 
@@ -1720,7 +1720,7 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-    
+
     configure(tablename, deletable=False)
 
     # Sections as components of RAT
@@ -1750,7 +1750,7 @@ def rat_tables():
                                     "multiple": False,
                                    },
                   )
-                 
+
     # -----------------------------------------------------------------------------
     def assess_rat_summary(r, **attr):
 

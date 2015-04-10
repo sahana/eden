@@ -84,8 +84,8 @@ class S3Parser(object):
             exists = db(post_table.body == body).select(post_table.id,
                                                         limitby=(0, 1)
                                                         ).first()
-                
-        
+
+
         channel_id = record.channel_id
         tags = record.tags
 
@@ -226,7 +226,7 @@ class S3Parser(object):
                 s3db.cms_post_organisation_group.insert(post_id=post_id,
                                                         group_id=org_id,
                                                         )
-            
+
 
             if tags:
                 ttable = db.cms_tag

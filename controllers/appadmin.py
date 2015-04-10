@@ -534,30 +534,30 @@ def table_template(table):
 
 def bg_graph_model():
     graph = pgv.AGraph(layout='dot',  directed=True,  strict=False,  rankdir='LR')
-    
-    subgraphs = dict()    
+
+    subgraphs = dict()
     for tablename in db.tables:
         if hasattr(db[tablename],'_meta_graphmodel'):
             meta_graphmodel = db[tablename]._meta_graphmodel
         else:
             meta_graphmodel = dict(group='Undefined', color='#ECECEC')
-        
-        group = meta_graphmodel['group'].replace(' ', '') 
+
+        group = meta_graphmodel['group'].replace(' ', '')
         if not subgraphs.has_key(group):
             subgraphs[group] = dict(meta=meta_graphmodel, tables=[])
             subgraphs[group]['tables'].append(tablename)
         else:
-            subgraphs[group]['tables'].append(tablename)        
-      
+            subgraphs[group]['tables'].append(tablename)
+
         graph.add_node(tablename, name=tablename, shape='plaintext',
                        label=table_template(tablename))
-    
-    for n, key in enumerate(subgraphs.iterkeys()):        
+
+    for n, key in enumerate(subgraphs.iterkeys()):
         graph.subgraph(nbunch=subgraphs[key]['tables'],
                     name='cluster%d' % n,
                     style='filled',
                     color=subgraphs[key]['meta']['color'],
-                    label=subgraphs[key]['meta']['group'])   
+                    label=subgraphs[key]['meta']['group'])
 
     for tablename in db.tables:
         for field in db[tablename]:
@@ -574,12 +574,12 @@ def bg_graph_model():
     #return graph.draw(format='png', prog='dot')
     if not request.args:
         return graph.draw(format='png', prog='dot')
-    else:       
+    else:
         response.headers['Content-Disposition']='attachment;filename=graph.%s'%request.args(0)
-        if request.args(0) == 'dot':        
+        if request.args(0) == 'dot':
             return graph.string()
         else:
             return graph.draw(format=request.args(0), prog='dot')
 
-def graph_model():    
+def graph_model():
     return dict(databases=databases, pgv=pgv)

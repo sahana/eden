@@ -224,7 +224,7 @@ class TranslateGetFiles:
             currentDir = path.abspath(currentDir)
             base_dir = path.basename(currentDir)
 
-            if base_dir in (".git", 
+            if base_dir in (".git",
                             "docs",
                             "languages",
                             "private",

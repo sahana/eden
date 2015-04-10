@@ -108,7 +108,7 @@ class index():
                               "label":T("Compose"),
                              }]
                   },
-                 ] 
+                 ]
 
         return dict(title = title,
                     menus=menus,

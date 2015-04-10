@@ -112,15 +112,15 @@ class S3MainMenu(default.S3MainMenu):
             greeting = "Welcome, %s!" % user.first_name
             if user.org_group_id:
                 menu_auth = MM(greeting, c="org", f="group",
-                               args=[user.org_group_id, "dashboard"], 
-                               translate=False, 
+                               args=[user.org_group_id, "dashboard"],
+                               translate=False,
                                _id="auth_menu_email",
                                **attr)
             else:
                 # User is not associated with a coalition
                 menu_auth = MM(greeting,
                                link=False,
-                               translate=False, 
+                               translate=False,
                                _id="auth_menu_email",
                                **attr)
 

@@ -15,7 +15,7 @@ class index(S3CustomController):
     def __call__(self):
 
         response = current.response
-        
+
         output = {}
         #output["title"] = response.title = current.deployment_settings.get_system_name()
 
@@ -146,7 +146,7 @@ class subscriptions(S3CustomController):
         auth = current.auth
         if not auth.s3_logged_in():
             auth.permission.fail()
-            
+
         # Available resources
         resources = [dict(resource="req_req",
                           url="req/req/datalist",
@@ -189,9 +189,9 @@ class subscriptions(S3CustomController):
 
         # Form
         form = self._manage_subscriptions(resources, filters)
-        
+
         return dict(title=title, form=form)
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def _options(fieldname):
@@ -238,7 +238,7 @@ class subscriptions(S3CustomController):
             ERROR = T("Error: could not update notification settings"),
             SUCCESS = T("Notification settings updated"),
         )
-        
+
         # Get current subscription settings resp. form defaults
         subscription = self._get_subscription()
 
@@ -375,7 +375,7 @@ class subscriptions(S3CustomController):
 
         db = current.db
         s3db = current.s3db
-        
+
         pe_id = current.auth.user.pe_id
 
         stable = s3db.pr_subscription
@@ -393,7 +393,7 @@ class subscriptions(S3CustomController):
                                limitby=(0, 1)).first()
 
         output = {"pe_id": pe_id}
-                            
+
         get_vars = {}
         if row:
             # Existing settings
@@ -438,7 +438,7 @@ class subscriptions(S3CustomController):
                            "frequency": s.frequency,
                            "method": ["EMAIL"] #s.method,
                            })
-            
+
         else:
             # Form defaults
             output.update({"id": None,
@@ -466,7 +466,7 @@ class subscriptions(S3CustomController):
         filters = subscription.get("filters")
         if filters:
             ftable = s3db.pr_filter
-            
+
             if not filter_id:
                 success = ftable.insert(pe_id=pe_id, query=filters)
                 filter_id = success
@@ -511,10 +511,10 @@ class subscriptions(S3CustomController):
                     subscribed[(r.resource, r.url)] = r.id
                     timestamps[r.id] = (r.last_check_time,
                                         r.next_check_time)
-                                    
+
             intervals = s3db.pr_subscription_check_intervals
             interval = timedelta(minutes=intervals.get(frequency, 0))
-                
+
             keep = set()
             fk = '''{"subscription_id": %s}''' % subscription_id
             for new in subscribe:
@@ -551,7 +551,7 @@ class subscriptions(S3CustomController):
                     if data:
                         db(rtable.id == record_id).update(**data)
                     keep.add(record_id)
-                    
+
             # Unsubscribe all others
             unsubscribe = set(subscribed.values()) - keep
             db(rtable.id.belongs(unsubscribe)).update(deleted=True,
@@ -562,5 +562,5 @@ class subscriptions(S3CustomController):
         subscription["id"] = subscription_id
         subscription["filter_id"] = filter_id
         return subscription
-        
+
 # END =========================================================================

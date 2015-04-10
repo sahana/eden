@@ -228,7 +228,7 @@ class S3Parser(object):
             #    s3db.cap_alert_organisation_group.insert(alert_id=alert_id,
             #                                             group_id=org_id,
             #                                             )
-            
+
             #if tags:
             #    ttable = db.cap_tag
             #    ltable = db.cap_alert_tag

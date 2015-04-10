@@ -66,6 +66,41 @@ class S3DateTimeTests(unittest.TestCase):
                         )
 
 # =============================================================================
+class S3DateRepresentationTests(unittest.TestCase):
+    """ Test S3DateTime.date_represent """
+    
+    #NONE = current.messages["NONE"]
+    
+    # -------------------------------------------------------------------------
+    def setUp(self):
+        
+        self.default_format = current.deployment_settings.get_L10n_date_format()
+        current.deployment_settings.L10n.date_format = "%Y-%m-%d"
+        
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+        
+        current.deployment_settings.L10n.date_format = self.default_format
+
+    # -------------------------------------------------------------------------
+    def testDateRepresent(self):
+        """ Test date representation of datetime.date """
+        
+        date = datetime.date(2015, 5, 3)
+        rstr = S3DateTime.date_represent(date)
+        
+        self.assertEqual(rstr, "2015-05-03")
+    
+    # -------------------------------------------------------------------------
+    def testDatetimeRepresent(self):
+        """ Test date representation of datetime.datetime """
+        
+        date = datetime.datetime(1993, 6, 17, 22, 0, 0)
+        rstr = S3DateTime.date_represent(date)
+        
+        self.assertEqual(rstr, "1993-06-17")
+    
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -80,7 +115,9 @@ def run_suite(*test_classes):
 
 if __name__ == "__main__":
 
-    run_suite(S3DateTimeTests,
-              )
+    run_suite(
+        S3DateTimeTests,
+        S3DateRepresentationTests,
+    )
 
 # END ========================================================================

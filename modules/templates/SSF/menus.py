@@ -69,7 +69,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Home", c="default", f="index"),
             MM("Contributors", c="pr", f="person"),
             MM("Deployments", c="project", f="project",
-               vars=deployment_filter, 
+               vars=deployment_filter,
                tags="deployment"),
             MM("Projects", c="project", f="project",
                vars=project_filter,
@@ -94,9 +94,9 @@ class S3MainMenu(default.S3MainMenu):
             user = auth.user
             options =[MM("Edit Profile", c="pr", f="person", args=[user_id]),
                       MM("Details", c="default", f="user", m="profile"),
-                      MM("Notification Settings", c="default", f="index", 
+                      MM("Notification Settings", c="default", f="index",
                          m="subscriptions"),
-                      MM("Change Password", c="default", f="user", 
+                      MM("Change Password", c="default", f="user",
                          m="change_password"),
                       MM("Logout", c="default", f="user", m="logout"),
                       ]
@@ -127,7 +127,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         any current or future controller prefix (e.g. by using an
         underscore prefix).
     """
-    
+
     def project(self):
         """ Project Options Menu """
 
@@ -161,5 +161,5 @@ class S3OptionsMenu(default.S3OptionsMenu):
                        M("Import", m="import"),
                    ),
                 )
-  
+
 # END =========================================================================

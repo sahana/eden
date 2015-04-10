@@ -154,21 +154,21 @@ google.setOnLoadCallback(LoadFeeds)'''))
 
 # =============================================================================
 class subscriptions(S3CustomController):
-    """ 
+    """
         Custom page to configure Subscription settings
     """
     def __call__(self):
-        """ 
-            Main entry point, configuration 
+        """
+            Main entry point, configuration
         """
 
         T = current.T
         auth = current.auth
-        
+
         # Must be logged in
         if not auth.s3_logged_in():
             auth.permission.fail()
-        
+
         form = self.create_form()
         if form:
             output = {"title": T("Subscription Settings"),
@@ -177,11 +177,11 @@ class subscriptions(S3CustomController):
             output = {"title": T("No Subscriptions")}
         # View
         self._view(THEME, "subscriptions.html")
-        
+
         return output
 
     def create_form(self):
-        """ 
+        """
             Build form for subscription settings
         """
 
@@ -194,7 +194,7 @@ class subscriptions(S3CustomController):
         formstyle = current.deployment_settings.get_ui_formstyle()
         query = (stable.pe_id == user) & \
                 (stable.deleted != True)
-        row = db(query).select(stable.id,   
+        row = db(query).select(stable.id,
                                stable.frequency,
                                stable.email_format,
                                limitby=(0, 1))
@@ -223,7 +223,7 @@ class subscriptions(S3CustomController):
                 if sub.update_subscription():
                     response.confirmation = messages.SUCCESS
                 else:
-                    response.error = messages.ERROR 
+                    response.error = messages.ERROR
             return form
         else:
             return None

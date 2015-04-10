@@ -85,7 +85,7 @@ class S3Exporter(object):
             @param fields: list of field selectors for fields to include in
                            the export (None for all fields)
             @param orderby: ORDERBY expression
-            @param tooltip: additional tooltip field, either a field selector 
+            @param tooltip: additional tooltip field, either a field selector
                             or an expression "f(k,v)" where f is a function
                             name that can be looked up from s3db, and k,v are
                             field selectors for the row, f will be called with

@@ -74,7 +74,7 @@ class index(S3CustomController):
 
         # Check logged in and permissions
         if system_roles.AUTHENTICATED not in roles:
-            
+
             login_buttons = DIV(A(T("Login"),
                                   _id="show-login",
                                   _class="tiny secondary button"),
@@ -96,7 +96,7 @@ $('#show-login').click(function(e){
  $('#intro').slideUp()
 })'''
             s3.jquery_ready.append(script)
-            
+
             # This user isn't yet logged-in
             if current.request.cookies.has_key("registered"):
                 # This browser has logged-in before
@@ -136,7 +136,7 @@ $('#login-btn').click(function(e){
  $('#login_form').show()
 })'''
                 s3.jquery_ready.append(register_script)
-                
+
             # Provide a login box on front page
             auth.messages.submit_button = T("Login")
             login_form = auth.login(inline=True)
@@ -159,7 +159,7 @@ $('#login-btn').click(function(e){
 
         self._view(THEME, "index.html")
         return output
-        
+
 # -----------------------------------------------------------------------------
 class network():
     """
