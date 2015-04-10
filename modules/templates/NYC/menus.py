@@ -67,7 +67,7 @@ class S3MainMenu(default.S3MainMenu):
                    url="http://nycprepared.org",
                    _target="_blank",
                    ),
-                MM("Support",
+                MM("Donate",
                    url="https://sarapis.org/donate-to-nycprepared",
                    _target="_blank",
                    ),

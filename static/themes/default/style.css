@@ -127,6 +127,7 @@ form table.embeddedComponent {
 }
 form table.embeddedComponent td {
   border: none;
+  vertical-align: top;
 }
 form table.embeddedComponent .label-row td:empty {
   padding: 0;
