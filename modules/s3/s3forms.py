@@ -2945,6 +2945,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
         """
 
         filterby = self.options["filterby"]
+        if not filterby:
+            return
         if not isinstance(filterby, (list, tuple)):
             filterby = [filterby]
 

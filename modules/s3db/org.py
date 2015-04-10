@@ -4865,10 +4865,10 @@ class org_SiteRepresent(S3Represent):
 
         qty = len(values)
         if qty == 1:
-            query = (stable.id == values[0])
+            query = (stable.site_id == values[0])
             limitby = (0, 1)
         else:
-            query = (stable.id.belongs(values))
+            query = (stable.site_id.belongs(values))
             limitby = (0, qty)
 
         if self.show_link:
@@ -4899,9 +4899,7 @@ class org_SiteRepresent(S3Represent):
                     fields.append(ttable.name)
                     left.append(ltable.on(ltable.site_id == stable.site_id))
                     left.append(ttable.on(ttable.id == ltable.facility_type_id))
-            rows = db(query).select(*fields,
-                                    left=left,
-                                    limitby=limitby)
+            rows = db(query).select(*fields, left=left)
 
         else:
             # We don't need instance_type IDs

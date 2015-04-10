@@ -461,7 +461,8 @@ def config(settings):
                     # We default this onvalidation
                     table.name.notnull = False
                     table.name.requires = None
-                    crud_form = S3SQLCustomForm(S3SQLInlineComponent(
+                    crud_form = S3SQLCustomForm("organisation_id",
+                                                S3SQLInlineComponent(
                                                     "site_facility_type",
                                                     label = T("Facility Type"),
                                                     fields = [("", "facility_type_id")],
@@ -688,7 +689,7 @@ def config(settings):
                 layout = FacilitySubFormLayout,
                 filterby = {"field": "main_facility",
                             "options": True,
-                           },
+                            },
                 multiple = False,
             ),
             "website",
@@ -1138,6 +1139,16 @@ def config(settings):
                     # Site ID uses drop-down not autocomplete
                     site_id = htable.site_id
                     site_id.widget = None
+                    from s3layouts import S3AddResourceLink
+                    site_id.comment = S3AddResourceLink(T("Create Facility"),
+                                                        c="org",
+                                                        f="facility",
+                                                        t="org_facility",
+                                                        vars={"prefix": "hrm",
+                                                              "parent": "human_resource",
+                                                              "child": "site_id",
+                                                              },
+                                                        )
 
                     # Fields for embedded HR record
                     hr_fields = ["organisation_id",
@@ -1775,8 +1786,8 @@ $.filterOptionsS3({
                                   "comments", # NB This is labelled 'Role' in DRRPP
                                   ],
                         filterby = dict(field = "role",
-                        options = "2"
-                        )
+                                        options = "2"
+                                        ),
                     ),
                     S3SQLInlineComponent(
                         "document",
