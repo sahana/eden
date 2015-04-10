@@ -65,6 +65,7 @@ class OutreachAreaModel(S3Model):
         #
         tablename = "po_area"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
@@ -146,6 +147,7 @@ class OutreachAreaModel(S3Model):
                                                 "ajax_init": True}],
                                    },
                                   ),
+                       super_entity = "doc_entity",
                        )
 
         # ---------------------------------------------------------------------
@@ -593,6 +595,7 @@ class OutreachReferralModel(S3Model):
         crud_strings[tablename] = Storage(
             label_create = T("Add Agency"),
             title_update = T("Edit Referral Agency"),
+            label_list_button = T("List Agencies"),
             label_delete_button = T("Remove Agency"),
         )
 
@@ -715,6 +718,7 @@ def po_rheader(r, tabs=[]):
                 tabs = [(T("Basic Details"), ""),
                         (T("Households"), "household"),
                         (T("Referral Agencies"), "organisation"),
+                        (T("Documents"), "document"),
                         ]
 
             rheader_fields = [["name"],

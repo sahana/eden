@@ -119,7 +119,8 @@ def area():
             otable = s3db.org_organisation
             rtable = s3db.po_referral_organisation
             atable = s3db.po_organisation_area
-            query = (rtable.id != None) & (atable.area_id != r.id)
+            query = (rtable.id != None) & \
+                    ((atable.area_id == None) | (atable.area_id != r.id))
             left = [rtable.on((rtable.organisation_id == otable.id) & \
                               (rtable.deleted != True)),
                     atable.on((atable.organisation_id == otable.id) & \
