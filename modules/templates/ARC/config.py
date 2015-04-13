@@ -1683,7 +1683,7 @@ def config(settings):
                                          4: T("Accepted"),
                                          5: T("Blocked"),
                                          6: T("On Hold"),
-                                         7: T("Cancelled"),
+                                         7: T("Canceled"),
                                          8: T("Duplicate"),
                                          9: T("Ready"),
                                         10: T("Verified"),

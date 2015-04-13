@@ -164,7 +164,7 @@ def config(settings):
     # MCOP sets these to match Wrike
     settings.project.task_status_opts = {2: T("Active"),
                                          6: T("Deferred"),
-                                         7: T("Cancelled"),
+                                         7: T("Canceled"),
                                         12: T("Completed"),
                                         }
     # -----------------------------------------------------------------------------

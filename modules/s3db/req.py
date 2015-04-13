@@ -3927,7 +3927,7 @@ def req_customise_req_fields():
         field.requires = IS_IN_SET({REQ_STATUS_NONE:     T("Open"),
                                     REQ_STATUS_PARTIAL:  T("Responded"),
                                     REQ_STATUS_COMPLETE: T("Resolved"),
-                                    REQ_STATUS_CANCEL:   T("Cancelled"),
+                                    REQ_STATUS_CANCEL:   T("Canceled"),
                                     })
         crud_fields.append("req_status")
 

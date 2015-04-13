@@ -726,7 +726,6 @@
 'Cancel Log Entry': 'Elimina voce di registrazione',
 'Cancel Shipment': 'Annullare spedizione',
 'Canceled': 'Annullato',
-'cancelled': 'annullato',
 'Candidate Matches for Body %s': 'Riscontro candidato per il corpo %s',
 'Canned Fish': 'Pesce in scatola',
 'cannot be deleted.': 'Impossibile cancellare',

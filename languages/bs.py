@@ -1187,8 +1187,6 @@
 'Cancel Log Entry': 'Otkaži stavku zapisnika',
 'Cancel Shipment': 'Otkazati pošiljku',
 'Canceled': 'Otkazano',
-'Cancelled': 'Otkazano',
-'cancelled': 'otkazano',
 'Candidate Matches for Body %(label)s': 'Kandidat odgovara tijelu %(label)s',
 'Candidate Matches for Body %s': 'Kandidat odgovara tijelu %s',
 'Canned Fish': 'Konzervirana riba',

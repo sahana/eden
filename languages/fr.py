@@ -878,8 +878,6 @@
 'Cancel Shipment': 'Annuler expédition',
 "Cancel' will indicate an asset log entry did not occur": "Annuler' indique qu'une entrée dans le journal des actifs n'a pas été effectuée ",
 'Canceled': 'Annulé(e)',
-'Cancelled': 'Annule(e)',
-'cancelled': 'Annule(e)',
 'Candidate Matches for Body %s': 'Les candidats qui correspondent pour s% corps',
 'Canned Fish': 'Conserves de poisson',
 'Cannot be empty': 'Ne peut pas être vide',

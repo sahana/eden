@@ -271,11 +271,13 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Finance settings
+    # @ToDo: Allow this list to vary by NS
     settings.fin.currencies = {
         "AUD" : T("Australian Dollars"),
         "CAD" : T("Canadian Dollars"),
         "EUR" : T("Euros"),
         "GBP" : T("Great British Pounds"),
+        "HNL" : T("Honduran Lempira"),
         "PHP" : T("Philippine Pesos"),
         "CHF" : T("Swiss Francs"),
         "USD" : T("United States Dollars"),
@@ -311,7 +313,7 @@ def config(settings):
     ARCS = "Afghan Red Crescent Society"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
-    HRC = "Honduran Red Cross"
+    HNRC = "Honduran Red Cross"
     NRCS = "Nepal Red Cross Society"
     NZRC = "New Zealand Red Cross"
     PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
@@ -1862,11 +1864,11 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == "Australian Red Cross":
-            # AusRC use proper Logistics workflow
+        if root_org in ("Australian Red Cross", HNRC):
+            # Australian & Honduran RC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
         if root_org != NRCS:
-            # Only Nepal RCS use Warehouse Types
+            # Only Nepal RC use Warehouse Types
             field = current.s3db.inv_warehouse.warehouse_type_id
             field.readable = field.writable = False
 

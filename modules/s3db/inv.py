@@ -401,7 +401,8 @@ class S3InventoryModel(S3Model):
     """
         Inventory Management
 
-        A module to record inventories of items at a location (site)
+        Record inventories of items at sites :
+            Warehouses, Offices, Shelters, Hospitals, etc
     """
 
     names = ("inv_inv_item",
@@ -500,7 +501,7 @@ class S3InventoryModel(S3Model):
                                 readable = track_pack_values,
                                 writable = track_pack_values,
                                 ),
-                            # @ToDo: Move this into a Currency Widget for the pack_value field
+                          # @ToDo: Move this into a Currency Widget for the pack_value field
                           s3_currency(readable = track_pack_values,
                                       writable = track_pack_values,
                                       ),
@@ -537,9 +538,8 @@ class S3InventoryModel(S3Model):
 
         # CRUD strings
         INV_ITEM = T("Warehouse Stock")
-        ADD_INV_ITEM = T("Add Stock to Warehouse")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_INV_ITEM,
+            label_create = T("Add Stock to Warehouse"),
             title_display = T("Warehouse Stock Details"),
             title_list = T("Stock in Warehouse"),
             title_update = T("Edit Warehouse Stock"),
@@ -1538,7 +1538,9 @@ class S3InventoryTrackingModel(S3Model):
         tablename = "inv_kit"
         define_table(tablename,
                      Field("site_id", "reference org_site",
+                           default = user.site_id if is_logged_in() else None,
                            label = T("By %(site)s") % dict(site=SITE_LABEL),
+                           represent = org_site_represent,
                            requires = IS_ONE_OF(db, "org_site.site_id",
                                                 lambda id, row: \
                                                 org_site_represent(id, row,
@@ -1547,18 +1549,16 @@ class S3InventoryTrackingModel(S3Model):
                                                 updateable = True,
                                                 sort=True,
                                                 ),
-                           default = user.site_id if is_logged_in() else None,
                            readable = True,
                            writable = True,
                            widget = S3SiteAutocompleteWidget(),
-                           represent = org_site_represent,
                            comment = S3AddResourceLink(
                                 c="inv",
                                 f="warehouse",
                                 label=T("Create Warehouse"),
                                 title=T("Warehouse"),
                                 tooltip=T("Type the name of an existing site OR Click 'Create Warehouse' to add a new warehouse.")),
-                            ),
+                           ),
                      item_id(label = T("Kit"),
                              requires = IS_ONE_OF(db, "supply_item.id",
                                                   self.supply_item_represent,
@@ -1577,31 +1577,30 @@ class S3InventoryTrackingModel(S3Model):
                              comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (T("Kit"),
                                                              T("Type the name of an existing catalog kit"))),
-                                ),
+                             ),
                      Field("quantity", "double",
                            label = T("Quantity"),
                            represent = lambda v, row=None: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2)
+                            IS_FLOAT_AMOUNT.represent(v, precision=2)
                            ),
                      s3_date(comment = DIV(_class="tooltip",
                                            _title="%s|%s" % \
                                            (T("Date Repacked"),
                                             T("Will be filled automatically when the Item has been Repacked")))
-                             ),
+                            ),
                      req_ref(writable = True),
                      person_id(name = "repacked_id",
+                               default = auth.s3_logged_in_person(),
                                label = T("Repacked By"),
                                ondelete = "SET NULL",
-                               default = auth.s3_logged_in_person(),
                                #comment = self.pr_person_comment(child="repacked_id")),
                                ),
                      s3_comments(),
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_KIT = T("Create Kit")
         crud_strings[tablename] = Storage(
-            label_create = ADD_KIT,
+            label_create = T("Create Kit"),
             title_display = T("Kit Details"),
             title_list = T("Kits"),
             title_update = T("Kit"),
@@ -1618,9 +1617,10 @@ class S3InventoryTrackingModel(S3Model):
                                  "req_ref",
                                  "quantity",
                                  "date",
-                                 "repacked_id"],
-                  onvalidation = self.inv_kit_onvalidate,
+                                 "repacked_id",
+                                 ],
                   onaccept = self.inv_kit_onaccept,
+                  onvalidation = self.inv_kit_onvalidate,
                   )
 
         # ---------------------------------------------------------------------
@@ -1687,16 +1687,17 @@ $.filterOptionsS3({
                            represent = s3_string_represent),
                      inv_item_id(name="recv_inv_item_id",
                                  label = T("Receiving Inventory"),
+                                 ondelete = "RESTRICT",
                                  required = False,
                                  readable = False,
                                  writable = False,
-                                 ondelete = "RESTRICT"),
+                                 ),
                      # The bin at destination
                      Field("recv_bin", length=16,
                            label = T("Add to Bin"),
+                           represent = s3_string_represent,
                            readable = False,
                            writable = False,
-                           represent = s3_string_represent,
                            widget = S3InvBinWidget("inv_track_item"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % \
@@ -1705,37 +1706,43 @@ $.filterOptionsS3({
                            ),
                      Field("item_source_no", "string", length=16,
                            label = self.inv_itn_label,
-                           represent = s3_string_represent),
+                           represent = s3_string_represent,
+                           ),
                      # original donating org
                      organisation_id(name = "supply_org_id",
                                      label = T("Supplier/Donor"),
-                                     ondelete = "SET NULL"),
+                                     ondelete = "SET NULL",
+                                     ),
                      # which org owns this item
                      organisation_id(name = "owner_org_id",
                                      label = T("Owned By (Organization/Branch)"),
-                                     ondelete = "SET NULL"),
+                                     ondelete = "SET NULL",
+                                     ),
                      Field("inv_item_status", "integer",
+                           default = 0,
                            label = T("Item Status"),
+                           represent = lambda opt: \
+                                       inv_item_status_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(inv_item_status_opts)
                                         ),
-                           represent = lambda opt: \
-                                       inv_item_status_opts.get(opt, UNKNOWN_OPT),
-                           default = 0,),
+                           ),
                      Field("status", "integer",
+                           default = 1,
                            label = T("Item Tracking Status"),
+                           represent = lambda opt: tracking_status[opt],
                            required = True,
                            requires = IS_IN_SET(tracking_status),
-                           default = 1,
-                           represent = lambda opt: tracking_status[opt],
-                           writable = False),
+                           writable = False,
+                           ),
                      self.inv_adj_item_id(ondelete = "RESTRICT"), # any adjustment record
                      # send record
                      send_id(),
                      # receive record
                      recv_id(),
-                     req_item_id(readable=False,
-                                 writable=False),
+                     req_item_id(readable = False,
+                                 writable = False,
+                                 ),
                      Field.Method("total_value",
                                   self.inv_track_item_total_value),
                      Field.Method("pack_quantity",
@@ -1745,9 +1752,8 @@ $.filterOptionsS3({
                      )
 
         # CRUD strings
-        ADD_TRACK_ITEM = T("Add Item to Shipment")
         crud_strings[tablename] = Storage(
-            label_create = ADD_TRACK_ITEM,
+            label_create = T("Add Item to Shipment"),
             title_display = T("Shipment Item Details"),
             title_list = T("Shipment Items"),
             title_update = T("Edit Shipment Item"),
@@ -1763,22 +1769,24 @@ $.filterOptionsS3({
             S3TextFilter(["item_id$name",
                           "send_id$site_id$name",
                           "recv_id$site_id$name",
-                         ],
+                          ],
                          label = T("Search"),
                          #comment = recv_search_comment,
-                        ),
+                         ),
             S3DateFilter("send_id$date",
                          label = T("Sent date"),
                          hidden = True,
-                        ),
+                         ),
             S3DateFilter("recv_id$date",
                          label = T("Received date"),
                          hidden = True,
-                        ),
-        ]
+                         ),
+            ]
 
         # Resource configuration
         configure(tablename,
+                  extra_fields = ["quantity", "pack_value", "item_pack_id"],
+                  filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "status",
                                  "item_id",
@@ -1797,13 +1805,11 @@ $.filterOptionsS3({
                                  "owner_org_id",
                                  "supply_org_id",
                                  ],
-                  filter_widgets = filter_widgets,
                   onaccept = self.inv_track_item_onaccept,
                   onvalidation = self.inv_track_item_onvalidate,
-                  extra_fields = ["quantity", "pack_value", "item_pack_id"],
-                 )
+                  )
 
-        #---------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
         return dict(inv_send_controller = self.inv_send_controller,
@@ -1813,7 +1819,7 @@ $.filterOptionsS3({
                     inv_track_item_onaccept = self.inv_track_item_onaccept,
                     )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_total_value(row):
         """ Total value of a track item """
@@ -1827,7 +1833,7 @@ $.filterOptionsS3({
             # not available
             return current.messages["NONE"]
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_track_item_quantity_needed(row):
         """
@@ -1872,7 +1878,7 @@ $.filterOptionsS3({
 
         return quantity_needed
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_send_represent(id, row=None, show_link=True):
         """
@@ -2281,7 +2287,7 @@ $.filterOptionsS3({
                                          rheader = inv_send_rheader)
         return output
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_send_process():
         """
@@ -2394,7 +2400,7 @@ $.filterOptionsS3({
         redirect(URL(f = "send",
                      args = [send_id, "track_item"]))
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_send_form(r, **attr):
         """
@@ -2449,7 +2455,7 @@ $.filterOptionsS3({
                         **attr
                         )
 
-    # ---------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     @staticmethod
     def inv_recv_represent(id, row=None, show_link=True):
         """
@@ -2606,7 +2612,8 @@ $.filterOptionsS3({
         table.type.readable = False
         field = table.site_id
         field.readable = True
-        field.label = current.T("By %(site)s") % dict(site=current.deployment_settings.get_inv_facility_label())
+        field.label = current.T("By %(site)s") % \
+            dict(site=current.deployment_settings.get_inv_facility_label())
         field.represent = current.s3db.org_site_represent
 
         record = table[r.id]

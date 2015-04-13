@@ -95,12 +95,12 @@ def config(settings):
     settings.inv.recv_form_name = "Acknowledgement Receipt for Donations Received Form"
     settings.inv.recv_shortname = "ARDR"
     settings.inv.recv_type = {
-             #0: T("-"),
-             #1: T("Other Warehouse"),
-             32: T("Donation"),
-             33: T("Foreign Donation"),
-             34: T("Local Purchases"),
-             35: T("Confiscated Goods from Bureau Of Customs")
+        #0: T("-"),
+        #1: T("Other Warehouse"),
+        32: T("Donation"),
+        33: T("Foreign Donation"),
+        34: T("Local Purchases"),
+        35: T("Confiscated Goods from Bureau Of Customs")
         }
 
     # Comment/uncomment modules here to disable/enable them
@@ -215,11 +215,11 @@ def config(settings):
         #        module_type = 10,
         #    )),
         ("req", Storage(
-                name_nice = T("Requests"),
-                #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-                restricted = True,
-                module_type = 2,
-            )),
+            name_nice = T("Requests"),
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = 2,
+        )),
         #("project", Storage(
         #        name_nice = T("Projects"),
         #        #description = "Tracking of Projects, Activities and Tasks",

@@ -567,18 +567,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         settings = current.deployment_settings
         #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
+        root_org = current.auth.root_org_name()
         def use_adjust(i):
-            db = current.db
-            otable = s3db.org_organisation
-            try:
-                ausrc = db(otable.name == "Australian Red Cross").select(otable.id,
-                                                                         limitby=(0, 1)
-                                                                         ).first().id
-            except:
-                # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            if root_org in ("Australian Red Cross", "Honduran Red Cross"):
+                # Australian & Honduran RC use proper Logistics workflow
+                return True
+            else:
+                # Others use simplified version
                 return False
-            if current.auth.root_org() == ausrc:
-                # AusRC use proper Logistics workflow
+        def use_kits(i):
+            if root_org == "Honduran Red Cross":
+                # Honduran RC use Kits
                 return True
             else:
                 # Others use simplified version
@@ -594,7 +593,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Warehouse Stock", c="inv", f="inv_item")(
                         M("Search Shipped Items", f="track_item"),
                         M("Adjust Stock Levels", f="adj", check=use_adjust),
-                        #M("Kitting", f="kit"),
+                        M("Kitting", f="kit", check=use_kits),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(

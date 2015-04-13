@@ -3891,7 +3891,6 @@
 'by': '게시자',
 'c/o Name': 'c/o 이름',
 'can be used to extract data from spreadsheets and put them into database tables.': '스프레드시트 데이터를 추출하는 데 사용할 수 있고 데이터베이스 테이블로 이를 넣으십시오.',
-'cancelled': '취소',
 'check all': '모두 선택',
 'click for more details': '자세한 내용은 누르십시오',
 'completed': '완료됨',

@@ -3170,7 +3170,6 @@
 'brown': 'castanho',
 'by': 'por',
 'can be used to extract data from spreadsheets and put them into database tables.': 'pode ser utilizado para extrair dados das tabelas e colocá-los em folhas de base de dados / folhas de calculo',
-'cancelled': 'Cancelado',
 'caucasoid': 'caucasóide',
 'check all': 'verificar tudo',
 'click for more details': 'Carregue para mais detalhes',

@@ -3987,7 +3987,6 @@
 'by': 'пользователем',
 'c/o Name': 'C/o имя',
 'can be used to extract data from spreadsheets and put them into database tables.': 'Может быть использован для извлечения данных из электронной таблицы и помещения их в таблицы базы данных.',
-'cancelled': 'аннулировано',
 'caucasoid': 'европеоид',
 'check all': 'проверить все',
 'click for more details': 'Щелкните для дополнительные сведения',
