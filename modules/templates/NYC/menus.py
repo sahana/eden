@@ -126,9 +126,14 @@ class S3MainMenu(default.S3MainMenu):
         else:
             # Logged-in
             menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False, link=False, _id="auth_menu_email",
+                           translate=False,
+                           link=False,
+                           _id="auth_menu_email",
                            **attr)(
                             MM("Logout", m="logout", _id="auth_menu_logout"),
+                            MM("Dashboard", c="default", f="index",
+                               args=["dashboard"],
+                               ),
                             #MM("User Profile", m="profile"),
                             MM("Personal Profile", c="default", f="person", m="update"),
                             #MM("Contact Details", c="pr", f="person",
@@ -140,9 +145,11 @@ class S3MainMenu(default.S3MainMenu):
                             MM("Change Password", m="change_password"),
                             SEP(),
                             MM({"name": current.T("Rapid Data Entry"),
-                               "id": "rapid_toggle",
-                               "value": current.session.s3.rapid_data_entry is True},
-                               f="rapid"),
+                                "id": "rapid_toggle",
+                                "value": current.session.s3.rapid_data_entry is True,
+                                },
+                               f="rapid",
+                               ),
                         )
 
         return menu_auth

@@ -68,7 +68,16 @@ def index():
     auth.settings.register_onvalidation = register_validation
     auth.configure_user_fields()
 
-    page = request.args(0)
+    page = None
+    if len(request.args):
+        # Use the first non-numeric argument as page name
+        # (RESTful custom controllers may have record IDs in Ajax URLs)
+        for arg in request.args:
+            pname = arg.split(".", 1)[0] if "." in arg else arg
+            if not pname.isdigit():
+                page = pname
+                break
+
     custom = None
     if page:
         # Go to a custom page,
@@ -87,9 +96,6 @@ def index():
             current.log.warning("File not loadable",
                                 "%s, %s" % (page, sys.exc_info()[1]))
         else:
-            if "." in page:
-                # Remove format extension
-                page = page.split(".", 1)[0]
             if hasattr(custom, page):
                 controller = getattr(custom, page)()
             elif page != "login":
@@ -828,8 +834,8 @@ def person():
             ]
 
     output = s3_rest_controller("pr", "person",
-                                rheader = lambda r: \
-                                    s3db.pr_rheader(r, tabs=tabs))
+                                rheader = lambda r, tabs=tabs: \
+                                          s3db.pr_rheader(r, tabs=tabs))
     return output
 
 # -----------------------------------------------------------------------------

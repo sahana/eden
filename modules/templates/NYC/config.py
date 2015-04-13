@@ -1330,7 +1330,7 @@ $.filterOptionsS3({
                 output = standard_postp(r, output)
 
             if r.interactive and isinstance(output, dict):
-                if "form" in output:
+                if "form" in output and hasattr(output["form"], "add_class"):
                     output["form"].add_class("pr_person")
                 elif "item" in output and hasattr(output["item"], "add_class"):
                     output["item"].add_class("pr_person")

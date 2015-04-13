@@ -628,8 +628,8 @@ class S3DataTable(object):
         _aget = attr.get
         config.dom = _aget("dt_dom", settings.get_ui_datatables_dom())
         config.lengthMenu = _aget("dt_lengthMenu",
-                                  [[ 25, 50, -1],
-                                   [ 25, 50, str(current.T("All"))]
+                                  [[25, 50, -1],
+                                   [25, 50, str(current.T("All"))]
                                    ]
                                   )
         config.pageLength = _aget("dt_pageLength", s3.ROWSPERPAGE)

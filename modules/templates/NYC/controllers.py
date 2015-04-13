@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from gluon import *
-from s3 import S3CustomController, S3DataTable
+from s3 import S3CustomController, S3DataTable, S3Method, s3_request
 
 THEME = "NYC"
 
@@ -469,4 +469,180 @@ class register(S3CustomController):
                     item=item,
                     )
 
-# END =========================================================================# END =========================================================================
+# =============================================================================
+class dashboard(S3CustomController):
+    """ Custom controller for personal dashboard """
+
+    def __call__(self):
+
+        auth = current.auth
+        if not auth.s3_logged_in():
+            auth.permission.fail()
+
+        # Use custom method
+        current.s3db.set_method("pr", "person",
+                                method = "dashboard",
+                                action = PersonalDashboard,
+                                )
+
+        # Call for currently logged-in person
+        r = s3_request("pr", "person",
+                       args=[str(auth.s3_logged_in_person()),
+                             "dashboard.%s" % auth.permission.format,
+                             ],
+                       r = current.request,
+                       )
+
+        return r()
+
+# =============================================================================
+class PersonalDashboard(S3Method):
+    """ Custom method for personal dashboard """
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the request (S3Request)
+            @param attr: REST controller parameters
+        """
+
+        if r.record and r.representation in ("html", "aadata"):
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+            settings = current.deployment_settings
+
+            tablename = r.tablename
+
+            auth = current.auth
+            is_admin = auth.s3_has_role("ADMIN")
+            accessible = auth.s3_accessible_query
+
+            # Profile widgets
+            profile_widgets = []
+            from s3 import FS
+
+            dt_row_actions = self.dt_row_actions
+
+            # Organisations
+            widget = {"label": T("My Organizations"),
+                      "type": "datatable",
+                      "tablename": "org_organisation",
+                      "actions": dt_row_actions("org", "organisation"),
+                      "insert": False,
+                      "icon": "organisation",
+                      "list_fields": ["name",
+                                      (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                                      "phone",
+                                      (T("Email"), "email.value"),
+                                      "website",
+                                      ],
+                      }
+            if not is_admin:
+                otable = s3db.org_organisation
+                rows = db(accessible("update", "org_organisation")).select(otable.id)
+                organisation_ids = [row.id for row in rows]
+                widget["filter"] = FS("id").belongs(organisation_ids)
+            profile_widgets.append(widget)
+
+            # Facilities
+            widget = {"label": T("My Facilities"),
+                      "type": "datatable",
+                      "tablename": "org_facility",
+                      "actions": dt_row_actions("org", "facility"),
+                      "insert": False,
+                      "icon": "facility",
+                      "list_fields": ["name",
+                                      "code",
+                                      "site_facility_type.facility_type_id",
+                                      "organisation_id",
+                                      "location_id",
+                                      ],
+                      }
+            if not is_admin:
+                ftable = s3db.org_facility
+                rows = db(accessible("update", "org_facility")).select(ftable.id)
+                facility_ids = [row.id for row in rows]
+                widget["filter"] = FS("id").belongs(facility_ids)
+            profile_widgets.append(widget)
+
+            # Networks
+            # @todo: render only for ORG_GROUP_ADMINs?
+            widget = {"label": T("My Networks"),
+                      "type": "datatable",
+                      "tablename": "org_group",
+                      "actions": dt_row_actions("org", "group"),
+                      "insert": False,
+                      "icon": "org-network",
+                      }
+            if not is_admin:
+                gtable = s3db.org_group
+                rows = db(accessible("update", "org_group")).select(gtable.id)
+                org_group_ids = [row.id for row in rows]
+                widget["filter"] = FS("id").belongs(org_group_ids)
+            profile_widgets.append(widget)
+
+            # Groups
+            # @todo: render only for ORG_GROUP_ADMINs?
+            widget = {"label": T("My Groups"),
+                      "type": "datatable",
+                      "tablename": "pr_group",
+                      "actions": dt_row_actions("hrm", "group"),
+                      "insert": False,
+                      "icon": "group",
+                      "list_fields": [(T("Network"), "group_team.org_group_id"),
+                                      "name",
+                                      "description",
+                                      (T("Chairperson"), "chairperson"),
+                                      ],
+                      }
+            if not is_admin:
+                gtable = s3db.pr_group
+                rows = db(accessible("update", "pr_group")).select(gtable.id)
+                group_ids = [row.id for row in rows]
+                widget["filter"] = FS("id").belongs(group_ids)
+            profile_widgets.append(widget)
+
+            # Rheader
+            if r.representation == "html":
+                from gluon.html import H2
+                profile_header = H2(T("Dashboard"))
+            else:
+                profile_header = None
+
+            # Configure profile
+            s3db.configure(tablename,
+                           profile_cols = 2,
+                           profile_header = profile_header,
+                           profile_widgets = profile_widgets,
+                           )
+
+            # Render profile
+            from s3 import S3Profile
+            profile = S3Profile()
+            profile.tablename = tablename
+            profile.request = r
+            output = profile.profile(r, **attr)
+
+            if r.representation == "html":
+                output["title"] = \
+                current.response.title = T("Personal Dashboard")
+            return output
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dt_row_actions(c, f):
+        """ Data table row actions """
+
+        return lambda r, list_id: [
+            {"label": current.deployment_settings.get_ui_label_update(),
+             "url": URL(c=c, f=f, args=["[id]", "update"]),
+             "_class": "action-btn edit",
+             },
+        ]
+
+# END =========================================================================

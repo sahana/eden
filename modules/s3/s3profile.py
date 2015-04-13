@@ -301,6 +301,7 @@ class S3Profile(S3CRUD):
 
         # Define target resource
         resource = current.s3db.resource(tablename, filter=query)
+        r.customise_resource(tablename)
         return resource, query
 
     # -------------------------------------------------------------------------
@@ -455,7 +456,7 @@ class S3Profile(S3CRUD):
             url = URL(c=c, f=f, args=["datalist.popup"],
                       vars=get_vars_new)
             more = DIV(A(BUTTON("%s (%s)" % (T("see more"), more),
-                                _class="btn btn-mini",
+                                _class="btn btn-mini tiny button",
                                 _type="button",
                                 ),
                          _class="s3_modal",
@@ -527,9 +528,10 @@ class S3Profile(S3CRUD):
         # - first field actually in this table
         def default_orderby():
             for f in list_fields:
-                if f == "id":
+                selector = f[1] if isinstance(f, tuple) else f
+                if selector == "id":
                     continue
-                rfield = resource.resolve_selector(f)
+                rfield = resource.resolve_selector(selector)
                 if rfield.field:
                     return rfield.field
             return None
@@ -550,7 +552,7 @@ class S3Profile(S3CRUD):
                 try:
                     start = int(start)
                     limit = int(limit)
-                except ValueError:
+                except (ValueError, TypeError):
                     start = None
                     limit = 0 # use default
         else:
@@ -567,6 +569,9 @@ class S3Profile(S3CRUD):
                 display_length = s3.dataTable_pageLength
             else:
                 display_length = widget.get("pagesize", 10)
+            dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
+                                       [10, 25, 50, str(current.T("All"))]
+                                      ]
 
             # ORDERBY fallbacks: widget->resource->default
             orderby = widget.get("orderby")
@@ -612,6 +617,7 @@ class S3Profile(S3CRUD):
                 actions = actions(r, list_id)
             if actions:
                 dtargs["dt_row_actions"] = actions
+
             datatable = dt.html(totalrows,
                                 displayrows,
                                 id=list_id,
@@ -1004,7 +1010,10 @@ class S3Profile(S3CRUD):
     @staticmethod
     def _lookup_class(r, widget):
         """
-            Provide the Bootstrap span class for the Widgets
+            Provide the column-width class for the widgets
+
+            @param r: the S3Request
+            @param widget: the widget config (dict)
         """
 
         page_cols = current.s3db.get_config(r.tablename, "profile_cols")
@@ -1013,7 +1022,13 @@ class S3Profile(S3CRUD):
         widget_cols = widget.get("colspan", 1)
         span = int(12 / page_cols) * widget_cols
 
-        return "span%s" % span
+        formstyle = current.deployment_settings.ui.get("formstyle", "default")
+        if current.deployment_settings.ui.get("formstyle") == "bootstrap":
+            # Bootstrap
+            return "profile-widget span%s" % span
+
+        # Default (=foundation)
+        return "profile-widget medium-%s columns" % span
 
     # -------------------------------------------------------------------------
     @staticmethod

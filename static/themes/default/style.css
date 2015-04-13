@@ -777,12 +777,22 @@ input.date.hasDatepicker {
   font-size: 0.8rem;
 }
 
-/* Data Lists */
+/* Data Lists (including profile) */
+.dl .dl-header {
+  float: none;
+  text-align: right;
+}
 .dl .card_1_line {
   height: auto;
 }
+.dl .empty_card-holder {
+  text-align: center;
+}
 .dl .dl-row {
   border: 0;
+}
+.dl .dl-1-cols {
+  width: 100%;
 }
 
 .dl-item .dropdown .caret {
@@ -791,6 +801,12 @@ input.date.hasDatepicker {
 }
 .dl-item .attachments {
   margin-right: 0.2rem;
+}
+
+h4.profile-sub-header {
+  background-color: #EFEFEF;
+  padding: 0.1rem 0.3rem;
+  font-size: 1.2rem;
 }
 
 /* Comment feeds */
