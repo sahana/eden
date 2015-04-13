@@ -77,21 +77,24 @@ class S3DateTime(object):
         if not format:
             format = current.deployment_settings.get_L10n_date_format()
 
-        if date and isinstance(date, datetime.datetime) and utc:
-            offset = cls.get_offset_value(current.session.s3.utc_offset)
-            if offset:
-                date = date + datetime.timedelta(seconds=offset)
-
         if date:
+            if utc and isinstance(date, datetime.datetime):
+                offset = cls.get_offset_value(current.session.s3.utc_offset)
+                if offset:
+                    date = date + datetime.timedelta(seconds=offset)
             try:
-                return date.strftime(str(format))
-            except:
-                # e.g. dates < 1900
-                date = date.isoformat()
-                current.log.warning("Date cannot be formatted - using isoformat", date)
-                return date
+                dtstr = date.strftime(str(format))
+            except ValueError:
+                # Dates < 1900 not supported by strftime
+                dtstr = date.isoformat().split("T")[0]
+                current.log.warning("Date cannot be formatted - using isoformat", dtstr)
+            except AttributeError:
+                # Invalid argument type
+                raise TypeError("date_represent: invalid argument type: %s" % type(date))
         else:
-            return current.messages["NONE"]
+            dtstr = current.messages["NONE"]
+
+        return dtstr
 
     # -----------------------------------------------------------------------------
     @classmethod
