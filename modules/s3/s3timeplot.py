@@ -728,7 +728,7 @@ class S3TimeSeries(object):
         # Fact Data
         fact_data = []
         for fact in self.facts:
-            fact_data.append((fact.label,
+            fact_data.append((str(fact.label),
                               fact.method,
                               fact.base,
                               fact.slope,
@@ -1730,37 +1730,98 @@ class S3TimeSeriesFact(object):
         if base_rfield:
             self.base_rfield = base_rfield
             self.base_column = base_rfield.colname
-            if not self.label:
-                self.label = self._label(base_rfield, method)
 
         if slope_rfield:
             self.slope_rfield = slope_rfield
             self.slope_column = slope_rfield.colname
 
-        self.resource = resource
+        if not self.label:
+            # Lookup the label from the timeplot options
+            label = self.lookup_label(resource,
+                                      method,
+                                      base,
+                                      slope,
+                                      self.interval)
+            if not label:
+                # Generate a default label
+                label = self.default_label(base_rfield, self.method)
+            self.label = label
 
+        self.resource = resource
         return self
 
     # -------------------------------------------------------------------------
     @classmethod
-    def _label(cls, rfield, method):
+    def lookup_label(cls, resource, method, base, slope=None, interval=None):
         """
-            Generate a fact label
+            Lookup the fact label from the timeplot options of resource
+
+            @param resource: the resource (S3Resource)
+            @param method: the aggregation method (string)
+            @param base: the base field selector (string)
+            @param slope: the slope field selector (string)
+            @param interval: the interval expression (string)
+        """
+
+        fact_opts = None
+        if resource:
+            config = resource.get_config("timeplot_options")
+            if config:
+                fact_opts = config.get("fact")
+
+        label = None
+        if fact_opts:
+            parse = cls.parse
+            for opt in fact_opts:
+                if isinstance(opt, tuple):
+                    title, facts = opt
+                else:
+                    title, facts = None, opt
+                facts = parse(facts)
+                match = None
+                for fact in facts:
+                    if fact.method == method and \
+                       fact.base == base and \
+                       fact.slope == slope and \
+                       fact.interval == interval:
+                        match = fact
+                        break
+                if match:
+                    if fact.label:
+                        label = fact.label
+                    elif len(facts) == 1:
+                        label = title
+                if label:
+                    break
+
+        return label
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def default_label(cls, rfield, method):
+        """
+            Generate a default fact label
 
             @param rfield: the S3ResourceField (alternatively the field label)
             @param method: the aggregation method
         """
 
+        T = current.T
+
         if hasattr(rfield, "ftype") and \
            rfield.ftype == "id" and \
            method == "count":
-            field_label = current.T("Records")
+            field_label = T("Records")
         elif hasattr(rfield, "label"):
             field_label = rfield.label
         else:
             field_label = rfield
 
-        method_label = cls.METHODS.get(method, method)
+        method_label = cls.METHODS.get(method)
+        if not method_label:
+            method_label = method
+        else:
+            method_label = T(method_label)
 
         return "%s (%s)" % (field_label, method_label)
 
