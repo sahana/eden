@@ -1440,7 +1440,14 @@ class S3TimeSeriesEvent(object):
 class S3TimeSeriesFact(object):
     """ Class representing a fact layer """
 
-    METHODS = ("count", "cumulate", "sum", "avg", "min", "max")
+    #: Supported aggregation methods
+    METHODS = {"count": "Count",
+               "sum": "Total",
+               "cumulate": "Cumulative Total",
+               "min": "Minimum",
+               "max": "Maximum",
+               "avg": "Average",
+               }
 
     def __init__(self, method, base, slope=None, interval=None, label=None):
         """
@@ -1724,8 +1731,7 @@ class S3TimeSeriesFact(object):
             self.base_rfield = base_rfield
             self.base_column = base_rfield.colname
             if not self.label:
-                # @todo: use method for automatic fact label
-                self.label = base_rfield.label
+                self.label = self._label(base_rfield, method)
 
         if slope_rfield:
             self.slope_rfield = slope_rfield
@@ -1734,6 +1740,29 @@ class S3TimeSeriesFact(object):
         self.resource = resource
 
         return self
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _label(cls, rfield, method):
+        """
+            Generate a fact label
+
+            @param rfield: the S3ResourceField (alternatively the field label)
+            @param method: the aggregation method
+        """
+
+        if hasattr(rfield, "ftype") and \
+           rfield.ftype == "id" and \
+           method == "count":
+            field_label = current.T("Records")
+        elif hasattr(rfield, "label"):
+            field_label = rfield.label
+        else:
+            field_label = rfield
+
+        method_label = cls.METHODS.get(method, method)
+
+        return "%s (%s)" % (field_label, method_label)
 
 # =============================================================================
 class S3TimeSeriesPeriod(object):

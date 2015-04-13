@@ -388,14 +388,26 @@
 
             // Prepare the data items
             var items = [],
+                keys = {},
+                key,
+                index = 0,
                 area = facts.length == 1,
                 i,
                 j;
             for (i=0; i < facts.length; i++) {
-                var series = {key: "series-" + i, label: facts[i][0], area: area},
+                key = facts[i][0];
+                if (keys.hasOwnProperty(key)) {
+                    index = keys[key] + 1;
+                }
+                keys[key] = index;
+                if (index) {
+                    key += ' [' + (index + 1) +']';
+                }
+                var series = {key: key, label: facts[i][0], area: area},
+                    period,
                     values = [];
                 for (j=0; j < data.length; j++) {
-                    var period = data[j];
+                    period = data[j];
                     values.push({
                         start: new Date(period.t[0]).getTime(),
                         value: period.v[i]
