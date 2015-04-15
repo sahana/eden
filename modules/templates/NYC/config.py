@@ -115,6 +115,9 @@ def config(settings):
 
     settings.security.policy = 8 # Hierarchical Realms + Delegations
 
+    # Hide UTC offset
+    settings.auth.show_utc_offset = False
+
     # Enable this to have Open links in IFrames open a full page in a new tab
     settings.ui.iframe_opens_full = True
     settings.ui.label_attachments = "Media"
@@ -635,141 +638,148 @@ def config(settings):
                                                                   parent="group_membership",
                                                                   child="status_id"
                                                                   ))
-        crud_form = S3SQLCustomForm(
-            "name",
-            "acronym",
-            S3SQLInlineLink(
-                "organisation_type",
-                field = "organisation_type_id",
-                label = T("Type"),
-                multiple = False,
-                #widget = "hierarchy",
-            ),
-            S3SQLInlineComponentMultiSelectWidget(
-            # activate hierarchical org_service:
-            #S3SQLInlineLink(
-                "service",
-                label = T("Services"),
-                field = "service_id",
-                # activate hierarchical org_service:
-                #leafonly = False,
-                #widget = "hierarchy",
-            ),
-            S3SQLInlineComponent(
-                "tag",
-                label = T("Service Description"),
-                multiple = False,
-                fields = [("", "value")],
-                filterby = dict(field = "tag",
-                                options = "service_description"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "group_membership",
-                label = T("Network"),
-                fields = [("", "group_id"),
-                          ("", "status_id"),
-                          ],
-                ),
-            S3SQLInlineComponent(
-                "organisation_location",
-                label = T("Areas Served"),
-                fields = [("", "location_id"),
-                          ],
-                ),
-            S3SQLInlineComponent(
-                "facility",
-                label = T("Main Facility"),
-                fields = ["name",
-                          "phone1",
-                          "phone2",
-                          "email",
-                          "location_id",
-                          ],
-                layout = FacilitySubFormLayout,
-                filterby = {"field": "main_facility",
-                            "options": True,
-                            },
-                multiple = False,
-            ),
-            "website",
-            S3SQLInlineComponent(
-                "contact",
-                comment = DIV(INPUT(_type="checkbox",
-                                    _name="rss_no_import",
-                                    value = rss_import,
-                                    ),
-                              T("Don't Import Feed")),
-                name = "rss",
-                label = T("RSS"),
-                multiple = False,
-                fields = [("", "value"),
-                          #(T("Don't Import Feed"), "poll"),
-                          ],
-                filterby = dict(field = "contact_method",
-                                options = "RSS"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "document",
-                name = "iCal",
-                label = "iCAL",
-                multiple = False,
-                fields = [("", "url")],
-                filterby = dict(field = "name",
-                                options="iCal"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "document",
-                name = "data",
-                label = T("Data"),
-                multiple = False,
-                fields = [("", "url")],
-                filterby = dict(field = "name",
-                                options="Data"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "contact",
-                name = "twitter",
-                label = T("Twitter"),
-                multiple = False,
-                fields = [("", "value")],
-                filterby = dict(field = "contact_method",
-                                options = "TWITTER"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "contact",
-                name = "facebook",
-                label = T("Facebook"),
-                multiple = False,
-                fields = [("", "value")],
-                filterby = dict(field = "contact_method",
-                                options = "FACEBOOK"
-                                )
-            ),
-            S3SQLInlineComponent(
-                "facility",
-                name = "other_facilities",
-                label = T("Other Facilities"),
-                fields = ["name",
-                          "phone1",
-                          "phone2",
-                          "email",
-                          "location_id",
-                          ],
-                layout = FacilitySubFormLayout,
-                filterby = {"field": "main_facility",
-                            "options": False,
-                           },
-                multiple = True,
-                explicit_add = T("Add Facility"),
-            ),
-            "comments",
-            postprocess = org_organisation_postprocess,
-        )
+        crud_fields = ["name",
+                       "acronym",
+                       S3SQLInlineLink("organisation_type",
+                                       field = "organisation_type_id",
+                                       label = T("Type"),
+                                       multiple = False,
+                                       #widget = "hierarchy",
+                                       ),
+                       # activate hierarchical org_service:
+                       #S3SQLInlineLink(
+                       S3SQLInlineComponentMultiSelectWidget(
+                            "service",
+                            label = T("Services"),
+                            field = "service_id",
+                            # activate hierarchical org_service:
+                            #leafonly = False,
+                            #widget = "hierarchy",
+                            ),
+                       S3SQLInlineComponent(
+                            "tag",
+                            label = T("Service Description"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "tag",
+                                            options = "service_description",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "group_membership",
+                            label = T("Network"),
+                            fields = [("", "group_id"),
+                                      ("", "status_id"),
+                                      ],
+                            ),
+                       S3SQLInlineComponent(
+                            "organisation_location",
+                            label = T("Areas Served"),
+                            fields = [("", "location_id"),
+                                      ],
+                            ),
+                       S3SQLInlineComponent(
+                            "facility",
+                            label = T("Main Facility"),
+                            fields = ["name",
+                                      "phone1",
+                                      "phone2",
+                                      "email",
+                                      "location_id",
+                                      ],
+                            layout = FacilitySubFormLayout,
+                            filterby = {"field": "main_facility",
+                                        "options": True,
+                                        },
+                            multiple = False,
+                            ),
+                       "website",
+                       S3SQLInlineComponent(
+                            "contact",
+                            comment = DIV(INPUT(_type="checkbox",
+                                                _name="rss_no_import",
+                                                value = rss_import,
+                                                ),
+                                          T("Don't Import Feed"),
+                                          ),
+                            name = "rss",
+                            label = T("RSS"),
+                            multiple = False,
+                            fields = [("", "value"),
+                                      #(T("Don't Import Feed"), "poll"),
+                                      ],
+                            filterby = dict(field = "contact_method",
+                                            options = "RSS",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "document",
+                            name = "iCal",
+                            label = "iCAL",
+                            multiple = False,
+                            fields = [("", "url")],
+                            filterby = dict(field = "name",
+                                            options="iCal",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "document",
+                            name = "data",
+                            label = T("Data"),
+                            multiple = False,
+                            fields = [("", "url")],
+                            filterby = dict(field = "name",
+                                            options="Data",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "twitter",
+                            label = T("Twitter"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "contact_method",
+                                            options = "TWITTER",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "contact",
+                            name = "facebook",
+                            label = T("Facebook"),
+                            multiple = False,
+                            fields = [("", "value")],
+                            filterby = dict(field = "contact_method",
+                                            options = "FACEBOOK",
+                                            ),
+                            ),
+                       S3SQLInlineComponent(
+                            "facility",
+                            name = "other_facilities",
+                            label = T("Other Facilities"),
+                            fields = ["name",
+                                      "phone1",
+                                      "phone2",
+                                      "email",
+                                      "location_id",
+                                      ],
+                            layout = FacilitySubFormLayout,
+                            filterby = {"field": "main_facility",
+                                        "options": False,
+                                        },
+                            multiple = True,
+                            explicit_add = T("Add Facility"),
+                            ),
+                       "comments",
+                       ]
+
+        if r.representation == "popup" and \
+           r.get_vars.get("caller") == "auth_user_organisation_id":
+            # Create Organisation during User Registration
+            crud_fields = crud_fields[:5] + ["website", "comments"]
+            postprocess = None
+        else:
+            postprocess = org_organisation_postprocess
+        crud_form = S3SQLCustomForm(postprocess=postprocess, *crud_fields)
 
         from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter#, S3HierarchyFilter
         filter_widgets = [
