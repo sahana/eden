@@ -716,6 +716,19 @@ $.filterOptionsS3({
                      s3_comments(),
                      *s3_meta_fields())
 
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Item to Kit"),
+            title_display = T("Kit Item Details"),
+            title_list = T("Kit Items"),
+            title_update = T("Edit Kit Item"),
+            label_list_button = T("List Kit Items"),
+            label_delete_button = T("Remove Item from Kit"),
+            msg_record_created = T("Item added to Kit"),
+            msg_record_modified = T("Kit Item updated"),
+            msg_record_deleted = T("Item removed from Kit"),
+            msg_list_empty = T("No Items currently in this Kit"))
+
         # =====================================================================
         # Alternative Items
         #

@@ -151,6 +151,7 @@ class S3RequestModel(S3Model):
         req_ask_security = settings.get_req_ask_security()
         req_ask_transport = settings.get_req_ask_transport()
         date_writable = settings.get_req_date_writable()
+        recurring = settings.get_req_recurring()
         requester_label = settings.get_req_requester_label()
         requester_is_author = settings.get_req_requester_is_author()
         if requester_is_author:
@@ -241,6 +242,8 @@ class S3RequestModel(S3Model):
                                 default = False,
                                 label = T("Recurring Request?"),
                                 represent = s3_yes_no_represent,
+                                readable = recurring,
+                                writable = recurring,
                                 comment = DIV(_class="tooltip",
                                                 _title="%s|%s" % (T("Recurring Request?"),
                                                                   T("If this is a request template to be added repeatedly then the schedule can be set on the next page."))),

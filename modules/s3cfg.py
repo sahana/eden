@@ -3199,6 +3199,12 @@ class S3Config(Storage):
     def get_req_type_hrm_label(self):
         return current.T(self.req.get("type_hrm_label", "People"))
 
+    def get_req_recurring(self):
+        """
+            Do we allow creation of recurring requests?
+        """
+        return current.T(self.req.get("recurring", True))
+
     def get_req_requester_label(self):
         return current.T(self.req.get("requester_label", "Requester"))
 

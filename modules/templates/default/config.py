@@ -693,6 +693,8 @@ def config(settings):
     #settings.req.type_hrm_label = "Volunteers"
     # Label for Requester
     #settings.req.requester_label = "Site Contact"
+    # Uncomment to disable Recurring Request
+    #settings.req.recurring = False
     #settings.req.requester_optional = True
     # Uncomment if the User Account logging the Request is NOT normally the Requester
     #settings.req.requester_is_author = False

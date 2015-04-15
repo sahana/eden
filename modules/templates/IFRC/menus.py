@@ -575,12 +575,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
             else:
                 # Others use simplified version
                 return False
+        def use_facilities(i):
+            if root_org == "Honduran Red Cross":
+                # Honduran RC don't use Facilities
+                return False
+            else:
+                return True
         def use_kits(i):
             if root_org == "Honduran Red Cross":
                 # Honduran RC use Kits
                 return True
             else:
-                # Others use simplified version
+                return False
+        def use_types(i):
+            if root_org == "Nepal Red Cross Society":
+                # Nepal RC use Warehouse Types
+                return True
+            else:
                 return False
         use_commit = lambda i: settings.get_req_use_commit()
 
@@ -590,7 +601,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Warehouse Stock", c="inv", f="inv_item")(
+                    M("Warehouse Stock", c="inv", f="inv_item", args="summary")(
                         M("Search Shipped Items", f="track_item"),
                         M("Adjust Stock Levels", f="adj", check=use_adjust),
                         M("Kitting", f="kit", check=use_kits),
@@ -598,8 +609,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Reports", c="inv", f="inv_item")(
                         M("Warehouse Stock", f="inv_item",m="report"),
-                        #M("Expiration Report", c="inv", f="track_item",
-                        #  vars=dict(report="exp")),
+                        M("Expiration Report", c="inv", f="track_item",
+                          vars=dict(report="exp")),
                         #M("Monetization Report", c="inv", f="inv_item",
                         #  vars=dict(report="mon")),
                         #M("Utilization Report", c="inv", f="track_item",
@@ -639,14 +650,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Facilities", c="inv", f="facility")(
+                    M("Facilities", c="inv", f="facility", check=use_facilities)(
                         M("Create", m="create", t="org_facility"),
                     ),
-                    M("Facility Types", c="inv", f="facility_type",
+                    M("Facility Types", c="inv", f="facility_type", check=use_facilities,
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Warehouse Types", c="inv", f="warehouse_type",
+                    M("Warehouse Types", c="inv", f="warehouse_type", check=use_types,
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),

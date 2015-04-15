@@ -1860,6 +1860,23 @@ def config(settings):
     settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
 
     # -----------------------------------------------------------------------------
+    def customise_inv_inv_item_resource(r, tablename):
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org in ("Australian Red Cross", HNRC):
+            # Australian & Honduran RC use proper Logistics workflow
+            settings.inv.direct_stock_edits = False
+            current.s3db.configure("inv_inv_item",
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
+                                   )
+
+    settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
+
+    # -----------------------------------------------------------------------------
     def customise_inv_warehouse_resource(r, tablename):
 
         # Special cases for different NS
@@ -1867,6 +1884,8 @@ def config(settings):
         if root_org in ("Australian Red Cross", HNRC):
             # Australian & Honduran RC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
+            if root_org == HNRC:
+                settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
         if root_org != NRCS:
             # Only Nepal RC use Warehouse Types
             field = current.s3db.inv_warehouse.warehouse_type_id
@@ -2361,6 +2380,8 @@ def config(settings):
             s3db.pr_person.last_name.requires = None
             settings.hrm.use_skills = True
             settings.hrm.vol_active = True
+        elif root_org == HNRC:
+            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
         elif root_org == PMI:
             settings.hrm.use_skills = True
             settings.hrm.staff_experience = "experience"
@@ -3320,6 +3341,19 @@ def config(settings):
     # Uncomment if you need a simpler (but less accountable) process for managing stock levels
     settings.inv.direct_stock_edits = True
     settings.inv.org_dependent_warehouse_types = True
+    # Settings for HNRC:
+    settings.inv.item_status = {#0: current.messages["NONE"], # Not defined yet
+                                0: "-",
+                                1: T("Dump"),
+                                #2: T("Sale"),
+                                #3: T("Reject"),
+                                4: T("Surplus")
+                                }
+    settings.inv.recv_type = {32: T("Donation"),
+                              34: T("Purchase"),
+                              36: T("Consignment") # Borrowed
+                              }
+
 
     # -----------------------------------------------------------------------------
     # Request Management
@@ -3329,6 +3363,8 @@ def config(settings):
     settings.req.use_commit = False
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
+    # Uncomment to disable Recurring Request
+    settings.req.recurring = False # HNRC
 
     # -----------------------------------------------------------------------------
     def customise_req_commit_controller(**attr):

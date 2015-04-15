@@ -687,6 +687,8 @@ $.filterOptionsS3({
                        deletable = direct_stock_edits,
                        editable = direct_stock_edits,
                        listadd = direct_stock_edits,
+                       context = {"location": "site_id$location_id",
+                                  },
                        deduplicate = self.inv_item_duplicate,
                        extra_fields = ["quantity",
                                        "pack_value",
