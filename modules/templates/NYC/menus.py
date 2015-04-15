@@ -44,6 +44,10 @@ class S3MainMenu(default.S3MainMenu):
         AUTHENTICATED = current.session.s3.system_roles.AUTHENTICATED
 
         return [
+            MM("Dashboard", c="default", f="index",
+               args=["dashboard"],
+               restrict=[AUTHENTICATED],
+               ),
             MM("Contacts", c="hrm", f="staff", t="hrm_human_resource")(
             ),
             MM("Facilities", c="org", f="facility", m="summary",
@@ -52,10 +56,11 @@ class S3MainMenu(default.S3MainMenu):
             MM("Services", c="cms", f="page", vars={"name": "Services"}),
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news",
-               restrict=[AUTHENTICATED]),
+               restrict=[AUTHENTICATED],
+               ),
             MM("Map", c="gis", f="index",
                icon="icon-map",
-               restrict=[AUTHENTICATED]
+               restrict=[AUTHENTICATED],
                ),
             MM("Data", c="cms", f="page", vars={"name": "Data"}),
             MM("Get Involved", link=False)(
@@ -131,9 +136,6 @@ class S3MainMenu(default.S3MainMenu):
                            _id="auth_menu_email",
                            **attr)(
                             MM("Logout", m="logout", _id="auth_menu_logout"),
-                            MM("Dashboard", c="default", f="index",
-                               args=["dashboard"],
-                               ),
                             #MM("User Profile", m="profile"),
                             MM("Personal Profile", c="default", f="person", m="update"),
                             #MM("Contact Details", c="pr", f="person",

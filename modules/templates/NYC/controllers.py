@@ -512,9 +512,6 @@ class PersonalDashboard(S3Method):
             T = current.T
             db = current.db
             s3db = current.s3db
-            settings = current.deployment_settings
-
-            tablename = r.tablename
 
             auth = current.auth
             is_admin = auth.s3_has_role("ADMIN")
@@ -522,17 +519,18 @@ class PersonalDashboard(S3Method):
 
             # Profile widgets
             profile_widgets = []
-            from s3 import FS
+            add_widget = profile_widgets.append
 
             dt_row_actions = self.dt_row_actions
+            from s3 import FS
 
             # Organisations
             widget = {"label": T("My Organizations"),
-                      "type": "datatable",
-                      "tablename": "org_organisation",
-                      "actions": dt_row_actions("org", "organisation"),
-                      "insert": False,
                       "icon": "organisation",
+                      "insert": False,
+                      "tablename": "org_organisation",
+                      "type": "datatable",
+                      "actions": dt_row_actions("org", "organisation"),
                       "list_fields": ["name",
                                       (T("Type"), "organisation_organisation_type.organisation_type_id"),
                                       "phone",
@@ -545,15 +543,15 @@ class PersonalDashboard(S3Method):
                 rows = db(accessible("update", "org_organisation")).select(otable.id)
                 organisation_ids = [row.id for row in rows]
                 widget["filter"] = FS("id").belongs(organisation_ids)
-            profile_widgets.append(widget)
+            add_widget(widget)
 
             # Facilities
             widget = {"label": T("My Facilities"),
-                      "type": "datatable",
-                      "tablename": "org_facility",
-                      "actions": dt_row_actions("org", "facility"),
-                      "insert": False,
                       "icon": "facility",
+                      "insert": False,
+                      "tablename": "org_facility",
+                      "type": "datatable",
+                      "actions": dt_row_actions("org", "facility"),
                       "list_fields": ["name",
                                       "code",
                                       "site_facility_type.facility_type_id",
@@ -566,53 +564,71 @@ class PersonalDashboard(S3Method):
                 rows = db(accessible("update", "org_facility")).select(ftable.id)
                 facility_ids = [row.id for row in rows]
                 widget["filter"] = FS("id").belongs(facility_ids)
-            profile_widgets.append(widget)
+            add_widget(widget)
 
-            # Networks
-            # @todo: render only for ORG_GROUP_ADMINs?
-            widget = {"label": T("My Networks"),
-                      "type": "datatable",
-                      "tablename": "org_group",
-                      "actions": dt_row_actions("org", "group"),
-                      "insert": False,
-                      "icon": "org-network",
-                      }
+            # Networks (only if user can update any records)
+            widget_filter = None
             if not is_admin:
                 gtable = s3db.org_group
                 rows = db(accessible("update", "org_group")).select(gtable.id)
-                org_group_ids = [row.id for row in rows]
-                widget["filter"] = FS("id").belongs(org_group_ids)
-            profile_widgets.append(widget)
+                group_ids = [row.id for row in rows]
+                if group_ids:
+                    widget_filter = FS("id").belongs(group_ids)
+            if is_admin or widget_filter:
+                widget = {"label": T("My Networks"),
+                          "icon": "org-network",
+                          "insert": False,
+                          "tablename": "org_group",
+                          "filter": widget_filter,
+                          "type": "datatable",
+                          "actions": dt_row_actions("org", "group"),
+                          }
+                add_widget(widget)
 
-            # Groups
-            # @todo: render only for ORG_GROUP_ADMINs?
-            widget = {"label": T("My Groups"),
-                      "type": "datatable",
-                      "tablename": "pr_group",
-                      "actions": dt_row_actions("hrm", "group"),
-                      "insert": False,
-                      "icon": "group",
-                      "list_fields": [(T("Network"), "group_team.org_group_id"),
-                                      "name",
-                                      "description",
-                                      (T("Chairperson"), "chairperson"),
-                                      ],
-                      }
+            # Groups (only if user can update any records)
+            widget_filter = None
             if not is_admin:
                 gtable = s3db.pr_group
                 rows = db(accessible("update", "pr_group")).select(gtable.id)
                 group_ids = [row.id for row in rows]
-                widget["filter"] = FS("id").belongs(group_ids)
-            profile_widgets.append(widget)
+                if group_ids:
+                    widget_filter = FS("id").belongs(group_ids)
+            if is_admin or widget_filter:
+                widget = {"label": T("My Groups"),
+                          "icon": "group",
+                          "insert": False,
+                          "tablename": "pr_group",
+                          "filter": widget_filter,
+                          "type": "datatable",
+                          "actions": dt_row_actions("hrm", "group"),
+                          "list_fields": [(T("Network"), "group_team.org_group_id"),
+                                          "name",
+                                          "description",
+                                          (T("Chairperson"), "chairperson"),
+                                          ],
+                          }
+                add_widget(widget)
 
             # Rheader
             if r.representation == "html":
-                from gluon.html import H2
-                profile_header = H2(T("Dashboard"))
+                from gluon.html import A, DIV, H2, TAG
+                profile_header = DIV(DIV(DIV(A(T("Personal Profile"),
+                                               _href = URL(c="default", f="person"),
+                                               _class = "action-btn",
+                                               ),
+                                             _class="dashboard-links right",
+                                             _style="padding:0.5rem 0;"
+                                             ),
+                                         H2(T("Dashboard")),
+                                         _class="medium-6 columns end",
+                                         ),
+                                     _class="row",
+                                     )
             else:
                 profile_header = None
 
             # Configure profile
+            tablename = r.tablename
             s3db.configure(tablename,
                            profile_cols = 2,
                            profile_header = profile_header,
