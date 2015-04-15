@@ -1330,11 +1330,11 @@ def track_item():
     table = s3db.inv_track_item
 
     s3db.configure("inv_track_item",
-                   create=False,
-                   listadd=False,
-                   insertable=False,
-                   editable=False,
-                   deletable=False,
+                   create = False,
+                   deletable = False,
+                   editable = False,
+                   insertable = False,
+                   listadd = False,
                    )
 
     report = get_vars.get("report")
@@ -1370,20 +1370,20 @@ def track_item():
                                                     )
 
         s3db.configure("inv_track_item",
-                        list_fields = ["id",
-                                        (T("Date Received"), "recv_id$date"),
-                                        (T("Received By"), "recv_id$recipient_id"),
-                                        (settings.get_inv_send_shortname(), "recv_id$send_ref"),
-                                        (settings.get_inv_recv_shortname(), "recv_id$recv_ref"),
-                                        (settings.get_proc_shortname(), "recv_id$purchase_ref"),
-                                        (T("Item/Description"), "item_id"),
-                                        (T("Unit"), "item_pack_id"),
-                                        (T("Quantity"), "quantity"),
-                                        (T("Unit Cost"), "pack_value"),
-                                        (T("Total Cost"), "total_value"),
-                                        (T("Source"), "supply_org_id"),
-                                        (T("Remarks"), "comments"),
-                                        ],
+                       list_fields = ["id",
+                                      (T("Date Received"), "recv_id$date"),
+                                      (T("Received By"), "recv_id$recipient_id"),
+                                      (settings.get_inv_send_shortname(), "recv_id$send_ref"),
+                                      (settings.get_inv_recv_shortname(), "recv_id$recv_ref"),
+                                      (settings.get_proc_shortname(), "recv_id$purchase_ref"),
+                                      (T("Item/Description"), "item_id"),
+                                      (T("Unit"), "item_pack_id"),
+                                      (T("Quantity"), "quantity"),
+                                      (T("Unit Cost"), "pack_value"),
+                                      (T("Total Cost"), "total_value"),
+                                      (T("Source"), "supply_org_id"),
+                                      (T("Remarks"), "comments"),
+                                      ],
                         orderby = "inv_recv.recipient_id",
                         )
         s3.filter = (FS("recv_id") != None)
@@ -1395,19 +1395,19 @@ def track_item():
                                                     )
 
         s3db.configure("inv_track_item",
-                        list_fields = ["id",
-                                        (T("Item/Description"), "item_id$name"),
-                                        (T("Beneficiary"), "send_id$site_id"),
-                                        (settings.get_inv_send_shortname(), "send_id$send_ref"),
-                                        (settings.get_req_shortname(), "send_id$req_ref"),
-                                        (T("Items/Description"), "item_id"),
-                                        (T("Source"), "supply_org_id"),
-                                        (T("Unit"), "item_pack_id"),
-                                        (T("Quantity"), "quantity"),
-                                        (T("Unit Cost"), "pack_value"),
-                                        (T("Total Cost"), "total_value"),
-                                        ]
-                        )
+                       list_fields = ["id",
+                                      (T("Item/Description"), "item_id$name"),
+                                      (T("Beneficiary"), "send_id$site_id"),
+                                      (settings.get_inv_send_shortname(), "send_id$send_ref"),
+                                      (settings.get_req_shortname(), "send_id$req_ref"),
+                                      (T("Items/Description"), "item_id"),
+                                      (T("Source"), "supply_org_id"),
+                                      (T("Unit"), "item_pack_id"),
+                                      (T("Quantity"), "quantity"),
+                                      (T("Unit Cost"), "pack_value"),
+                                      (T("Total Cost"), "total_value"),
+                                      ]
+                       )
 
         s3.filter = (FS("item_id") != None)
 
@@ -1418,16 +1418,17 @@ def track_item():
                                                     )
 
         s3db.configure("inv_track_item",
-                        list_fields = ["id",
-                                        (T("Item/Description"), "item_id"),
-                                        (T("Expiration Date"), "expiry_date"),
-                                        (T("Source"), "supply_org_id"),
-                                        (T("Unit"), "item_pack_id"),
-                                        (T("Quantity"), "quantity"),
-                                        (T("Unit Cost"), "pack_value"),
-                                        (T("Total Cost"), "total_value"),
-                                        ]
-                        )
+                       list_fields = ["id",
+                                      "recv_inv_item_id$site_id",
+                                      (T("Item/Description"), "item_id"),
+                                      (T("Expiration Date"), "expiry_date"),
+                                      (T("Source"), "supply_org_id"),
+                                      (T("Unit"), "item_pack_id"),
+                                      (T("Quantity"), "quantity"),
+                                      (T("Unit Cost"), "pack_value"),
+                                      (T("Total Cost"), "total_value"),
+                                      ]
+                       )
         s3.filter = (FS("expiry_date") != None)
 
     output = s3_rest_controller(rheader = s3db.inv_rheader)

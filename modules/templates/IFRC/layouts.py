@@ -231,19 +231,32 @@ class S3OrgMenuLayout(S3NavigationItem):
         # Lookup Root Organisation name & Logo
         root_org = current.auth.root_org()
         if root_org:
+            db = current.db
             s3db = current.s3db
+            language = current.session.s3.language
+            if language == current.deployment_settings.get_L10n_default_language():
+                l10n = None
+            else:
+                ltable = s3db.org_organisation_name
+                query = (ltable.organisation_id == root_org) & \
+                        (ltable.language == language)
+                l10n = db(query).select(ltable.name_l10n,
+                                        ltable.acronym_l10n,
+                                        limitby = (0, 1),
+                                        cache = s3db.cache,
+                                        ).first()
             table = s3db.org_organisation
-            record = current.db(table.id == root_org).select(table.name,
-                                                             table.acronym,
-                                                             table.logo,
-                                                             limitby = (0, 1),
-                                                             cache = s3db.cache,
-                                                             ).first()
-            if record:
-                if record.acronym:
-                    name = _name = record.acronym
+            record = db(table.id == root_org).select(table.name,
+                                                     table.acronym,
+                                                     table.logo,
+                                                     limitby = (0, 1),
+                                                     cache = s3db.cache,
+                                                     ).first()
+            if l10n:
+                if l10n.acronym_l10n:
+                    name = _name = l10n.acronym_l10n
                 else:
-                    _name = record.name
+                    _name = l10n.name_l10n
                     names = _name.split(" ")
                     names_with_breaks = []
                     nappend = names_with_breaks.append
@@ -253,6 +266,22 @@ class S3OrgMenuLayout(S3NavigationItem):
                     # Remove last BR()
                     names_with_breaks.pop()
                     name = TAG[""](*names_with_breaks)
+
+            if record:
+                if not l10n:
+                    if record.acronym:
+                        name = _name = record.acronym
+                    else:
+                        _name = record.name
+                        names = _name.split(" ")
+                        names_with_breaks = []
+                        nappend = names_with_breaks.append
+                        for name in names:
+                            nappend(name)
+                            nappend(BR())
+                        # Remove last BR()
+                        names_with_breaks.pop()
+                        name = TAG[""](*names_with_breaks)
 
                 if record.logo:
                     size = (60, None)

@@ -193,8 +193,8 @@ class S3RequestModel(S3Model):
                                 requires = IS_IN_SET(req_type_opts, zero=None),
                                 ),
                           req_ref(),
-                          s3_datetime(label = T("Date Requested"),
-                                      default = "now",
+                          s3_datetime(default = "now",
+                                      label = T("Date Requested"),
                                       past = 8760, # Hours, so 1 year
                                       future = 0,
                                       readable = date_writable,
@@ -1615,7 +1615,7 @@ class S3RequestItemModel(S3Model):
         quantities_writable = settings.get_req_item_quantities_writable()
         use_commit = settings.get_req_use_commit()
         show_qty_transit = settings.get_req_show_quantity_transit()
-        track_pack_values = settings.get_inv_track_pack_values()
+        track_pack_values = settings.get_req_pack_values()
 
         define_table = self.define_table
         req_id = self.req_req_id
@@ -1630,24 +1630,28 @@ class S3RequestItemModel(S3Model):
                      self.supply_item_id(),
                      self.supply_item_pack_id(),
                      Field("quantity", "double", notnull=True,
-                           requires = IS_FLOAT_IN_RANGE(minimum=1),
+                           label = T("Quantity"),
                            represent=lambda v: \
-                           IS_FLOAT_AMOUNT.represent(v, precision=2)),
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_FLOAT_IN_RANGE(minimum=1),
+                           ),
                      Field("pack_value", "double",
+                           label = T("Estimated Value per Pack"),
                            readable=track_pack_values,
                            writable=track_pack_values,
-                           label = T("Estimated Value per Pack")),
+                           ),
                      # @ToDo: Move this into a Currency Widget for the pack_value field
                      s3_currency(readable=track_pack_values,
                                  writable=track_pack_values),
                      self.org_site_id,
                      Field("quantity_commit", "double",
+                           default = 0,
                            label = T("Quantity Committed"),
                            represent = self.req_qnty_commit_represent,
-                           default = 0,
                            requires = IS_FLOAT_IN_RANGE(minimum=0, maximum=999999),
                            readable = use_commit,
-                           writable = use_commit and quantities_writable),
+                           writable = use_commit and quantities_writable,
+                           ),
                      Field("quantity_transit", "double",
                            label = T("Quantity in Transit"),
                            represent = self.req_qnty_transit_represent,

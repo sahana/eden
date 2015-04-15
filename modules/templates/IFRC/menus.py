@@ -575,12 +575,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
             else:
                 # Others use simplified version
                 return False
-        def use_facilities(i):
-            if root_org == "Honduran Red Cross":
-                # Honduran RC don't use Facilities
-                return False
-            else:
-                return True
+        #def use_facilities(i):
+        #    if root_org == "Honduran Red Cross":
+        #        # Honduran RC don't use Facilities
+        #        return False
+        #    else:
+        #        return True
         def use_kits(i):
             if root_org == "Honduran Red Cross":
                 # Honduran RC use Kits
@@ -650,10 +650,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Facilities", c="inv", f="facility", check=use_facilities)(
+                    M("Facilities", c="inv", f="facility")(
                         M("Create", m="create", t="org_facility"),
                     ),
-                    M("Facility Types", c="inv", f="facility_type", check=use_facilities,
+                    M("Facility Types", c="inv", f="facility_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),

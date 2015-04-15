@@ -1898,6 +1898,8 @@ $.filterOptionsS3({
     settings.req.skill_quantities_writable = True
     settings.req.items_ask_purpose = False
     #settings.req.use_req_number = False
+    settings.req.pack_values = False
+    settings.inv.send_show_org = False
     # Label for Requester
     settings.req.requester_label = "Site Contact"
     # Filter Requester as being from the Site

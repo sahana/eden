@@ -1059,16 +1059,16 @@ class S3InventoryTrackingModel(S3Model):
                      Field("to_site_id", self.org_site,
                            label = T("To %(site)s") % dict(site=SITE_LABEL),
                            ondelete = "SET NULL",
-                           represent =  org_site_represent,
+                           represent = org_site_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   lambda id, row: \
-                                                  org_site_represent(id, row,
-                                                                     show_link=False),
+                                                    org_site_represent(id, row,
+                                                                       show_link=False),
                                                   sort=True,
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = (True,),
-                                                 )),
+                                                  )),
                            ),
                      organisation_id(
                         label = T("To Organization"),
@@ -1200,9 +1200,8 @@ class S3InventoryTrackingModel(S3Model):
         ]
 
         # CRUD strings
-        ADD_SEND = T("Send New Shipment")
         crud_strings[tablename] = Storage(
-            label_create = ADD_SEND,
+            label_create = T("Send New Shipment"),
             title_display = T("Sent Shipment Details"),
             title_list = T("Sent Shipments"),
             title_update = T("Shipment to Send"),
@@ -1263,7 +1262,7 @@ class S3InventoryTrackingModel(S3Model):
                        "driver_phone",
                        "vehicle_plate_no",
                        "time_out",
-                       "comments"
+                       "comments",
                        ]
         if time_in:
             list_fields.insert(12, "time_in")
@@ -1632,13 +1631,13 @@ class S3InventoryTrackingModel(S3Model):
 
         tablename = "inv_track_item"
         define_table(tablename,
-                     organisation_id(name = "track_org_id",
+                     organisation_id("track_org_id",
                                      label = T("Shipping Organization"),
                                      ondelete = "SET NULL",
                                      readable = False,
                                      writable = False
                                      ),
-                     inv_item_id(name="send_inv_item_id",
+                     inv_item_id("send_inv_item_id",
                                  ondelete = "RESTRICT",
                                  # Local Purchases don't have this available
                                  requires = IS_EMPTY_OR(
@@ -1667,26 +1666,32 @@ $.filterOptionsS3({
                      #      writable = False),
                      Field("quantity", "double", notnull=True,
                            label = T("Quantity Sent"),
-                           requires = IS_NOT_EMPTY()),
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("recv_quantity", "double",
                            label = T("Quantity Received"),
                            represent = self.qnty_recv_repr,
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      Field("return_quantity", "double",
                            label = T("Quantity Returned"),
                            represent = self.qnty_recv_repr,
                            readable = False,
-                           writable = False),
+                           writable = False,
+                           ),
                      Field("pack_value", "double",
-                           label = T("Value per Pack")),
+                           label = T("Value per Pack"),
+                           ),
                      s3_currency(),
                      s3_date("expiry_date",
-                             label = T("Expiry Date")),
+                             label = T("Expiry Date"),
+                             ),
                      # The bin at origin
                      Field("bin", length=16,
                            label = T("Bin"),
-                           represent = s3_string_represent),
+                           represent = s3_string_represent,
+                           ),
                      inv_item_id(name="recv_inv_item_id",
                                  label = T("Receiving Inventory"),
                                  ondelete = "RESTRICT",
@@ -1711,12 +1716,12 @@ $.filterOptionsS3({
                            represent = s3_string_represent,
                            ),
                      # original donating org
-                     organisation_id(name = "supply_org_id",
+                     organisation_id("supply_org_id",
                                      label = T("Supplier/Donor"),
                                      ondelete = "SET NULL",
                                      ),
                      # which org owns this item
-                     organisation_id(name = "owner_org_id",
+                     organisation_id("owner_org_id",
                                      label = T("Owned By (Organization/Branch)"),
                                      ondelete = "SET NULL",
                                      ),
@@ -2061,8 +2066,8 @@ $.filterOptionsS3({
             elif status == TRACK_STATUS_RETURNING:
                 tracktable.return_quantity.readable = True
                 tracktable.return_quantity.writable = True
-                tracktable.currency.readable = True
-                tracktable.pack_value.readable = True
+                tracktable.currency.readable = False
+                tracktable.pack_value.readable = False
 
         def prep(r):
             # Default to the Search tab in the S3LocationSelectorWidget if still-used
@@ -4071,44 +4076,49 @@ class S3InventoryAdjustModel(S3Model):
                         ondelete = "SET NULL"
                      ),
                      Field("old_quantity", "double", notnull=True,
-                           label = T("Original Quantity"),
                            default = 0,
-                           writable = False),
+                           label = T("Original Quantity"),
+                           writable = False,
+                           ),
                      Field("new_quantity", "double",
                            label = T("Revised Quantity"),
                            represent = self.qnty_adj_repr,
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("reason", "integer",
-                           label = T("Reason"),
-                           requires = IS_IN_SET(adjust_reason),
                            default = 1,
+                           label = T("Reason"),
                            represent = lambda opt: \
-                                       adjust_reason.get(opt, UNKNOWN_OPT),
-                           writable = False),
+                              adjust_reason.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(adjust_reason),
+                           writable = False,
+                           ),
                      Field("old_pack_value", "double",
+                           label = T("Original Value per Pack"),
                            readable = track_pack_values,
                            writable = track_pack_values,
-                           label = T("Original Value per Pack")),
+                           ),
                      Field("new_pack_value", "double",
+                           label = T("Revised Value per Pack"),
                            readable = track_pack_values,
                            writable = track_pack_values,
-                           label = T("Revised Value per Pack")),
+                           ),
                      s3_currency(readable = track_pack_values,
                                  writable = track_pack_values),
                      Field("old_status", "integer",
+                           default = 0,
                            label = T("Current Status"),
-                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            represent = lambda opt: \
                                        inv_item_status_opts.get(opt, UNKNOWN_OPT),
-                           default = 0,
-                           writable = False),
+                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
+                           writable = False,
+                           ),
                      Field("new_status", "integer",
+                           default = 0,
                            label = T("Revised Status"),
-                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            represent = lambda opt: \
                                        inv_item_status_opts.get(opt, UNKNOWN_OPT),
-                           default = 0,
+                           requires = IS_EMPTY_OR(IS_IN_SET(inv_item_status_opts)),
                            ),
                      s3_date("expiry_date",
                              label = T("Expiry Date")),
@@ -4118,16 +4128,17 @@ class S3InventoryAdjustModel(S3Model):
                            #widget = S3InvBinWidget("inv_adj_item")
                            ),
                      # Organisation that owned this item before
-                     organisation_id(name = "old_owner_org_id",
+                     organisation_id("old_owner_org_id",
                                      label = T("Current Owned By (Organization/Branch)"),
                                      ondelete = "SET NULL",
                                      writable = False,
                                      comment = None,
                                      ),
                      # Organisation that owns this item now
-                     organisation_id(name = "new_owner_org_id",
+                     organisation_id("new_owner_org_id",
                                      label = T("Transfer Ownership To (Organization/Branch)"),
-                                     ondelete = "SET NULL"),
+                                     ondelete = "SET NULL",
+                                     ),
                      adj_id(),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4153,7 +4164,7 @@ class S3InventoryAdjustModel(S3Model):
             title_update = T("Adjust Item Quantity"),
             label_list_button = T("List Items in Stock"),
             #label_delete_button = T("Remove Item from Stock"), # This should be forbidden - set qty to zero instead
-            msg_record_created = T("Item added to stock"),
+            msg_record_created = T("Item added to stock adjustment"),
             msg_record_modified = T("Item quantity adjusted"),
             #msg_record_deleted = T("Item removed from Stock"), # This should be forbidden - set qty to zero instead
             msg_list_empty = T("No items currently in stock"))
