@@ -830,28 +830,21 @@ class S3Config(Storage):
         """
             Which Currencies can the user select?
         """
-        currencies = self.fin.get("currencies")
-        if not currencies:
+        currencies = self.__lazy(self.fin, "currencies")
+        if currencies is None:
             T = current.T
             currencies = {
                 "EUR" : T("Euros"),
                 "GBP" : T("Great British Pounds"),
                 "USD" : T("United States Dollars"),
             }
-        elif callable(currencies):
-            currencies = currencies()
         return currencies
 
     def get_fin_currency_default(self):
         """
             What is the default Currency?
         """
-        currency_default = self.fin.get("currency_default")
-        if not currency_default:
-            currency_default = "USD"
-        elif callable(currency_default):
-            currency_default = currency_default()
-        return currency_default
+        return self.__lazy(self.fin, "currency_default", default="USD")
 
     # -------------------------------------------------------------------------
     # GIS (Map) Settings

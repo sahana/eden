@@ -283,93 +283,69 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Finance settings
-    def currencies():
+    #
+    def currencies(default):
+        """ RMS- and NS-specific currencies (lazy setting) """
+
+        # Currencies that are common for all NS
+        currencies = {"EUR" : T("Euros"),
+                      "CHF" : T("Swiss Francs"),
+                      "USD" : T("United States Dollars"),
+                      }
+
+        # NS-specific currencies
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
-            return {"AFN" : T("Afghani"),
-                    "EUR" : T("Euros"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
-        if root_org == AURC:
-            return {"AUD" : T("Australian Dollars"),
-                    "EUR" : T("Euros"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["AFN"] = T("Afghani")
+        elif root_org == AURC:
+            currencies["AUD"] = T("Australian Dollars")
         elif root_org == BRCS:
-            return {"BDT" : T("Taka"),
-                    "EUR" : T("Euros"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["BDT"] = T("Taka")
         elif root_org == HNRC:
-            return {"EUR" : T("Euros"),
-                    "HNL" : T("Honduran Lempira"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["HNL"] = T("Honduran Lempira")
         elif root_org == NRCS:
-            return {"EUR" : T("Euros"),
-                    "NPR" : T("Nepalese Rupee"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["NPR"] = T("Nepalese Rupee"),
         elif root_org == NZRC:
-            return {"EUR" : T("Euros"),
-                    "NZD" : T("New Zealand Dollars"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["NZD"] = T("New Zealand Dollars")
         elif root_org == PMI:
-            return {"EUR" : T("Euros"),
-                    "IDR" : T("Indonesian Rupiah"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["IDR"] = T("Indonesian Rupiah")
         elif root_org == PRC:
-            return {"EUR" : T("Euros"),
-                    "PHP" : T("Philippine Pesos"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["PHP"] = T("Philippine Pesos")
         elif root_org == VNRC:
-            return {"EUR" : T("Euros"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    "VND" : T("Vietnamese Dong"),
-                    }
+            currencies["VND"] = T("Vietnamese Dong")
         else:
-            return {"CAD" : T("Canadian Dollars"),
-                    "EUR" : T("Euros"),
-                    "GBP" : T("Great British Pounds"),
-                    "CHF" : T("Swiss Francs"),
-                    "USD" : T("United States Dollars"),
-                    }
+            currencies["GBP"] = T("Great British Pounds")
+            currencies["CAD"] = T("Canadian Dollars")
+        return currencies
+
     settings.fin.currencies = currencies
 
-    def currency_default():
+    def currency_default(default):
+        """ NS-specific default currencies (lazy setting) """
+        
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
-            return "AFN"
-        if root_org == AURC:
-            return "AUD"
+            default = "AFN"
+        elif root_org == AURC:
+            default = "AUD"
         elif root_org == BRCS:
-            return "BDT"
+            default = "BDT"
         elif root_org == HNRC:
-            return "HNL"
+            default = "HNL"
         elif root_org == NRCS:
-            return "NPR"
+            default = "NPR"
         elif root_org == NZRC:
-            return "NZD"
+            default = "NZD"
         elif root_org == PMI:
-            return "IDR"
+            default = "IDR"
         elif root_org == PRC:
-            return "PHP"
+            default = "PHP"
         elif root_org == VNRC:
-            return "VND"
-        else:
-            return "USD"
+            default = "VND"
+        #else:
+            #default = "USD"
+        return default
+
     settings.fin.currency_default = currency_default
 
     # -----------------------------------------------------------------------------
