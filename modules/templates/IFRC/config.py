@@ -1935,41 +1935,24 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
 
-        s3db = current.s3db
-
-        # Limit "To Office/Warehouse/Facility" to updateable (like From)
-        table = s3db.inv_send
-        from gluon import IS_EMPTY_OR
-        from s3 import IS_ONE_OF
-        table.to_site_id.requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(current.db,
-                                                  "org_site.site_id",
-                                                  table.site_id.represent,
-                                                  instance_types = current.auth.org_site_types,
-                                                  not_filterby = "obsolete",
-                                                  not_filter_opts = (True,),
-                                                  sort=True,
-                                                  updateable = True,
-                                                  ))
-
-        s3db.configure("inv_send",
-                       list_fields = ["id",
-                                      "send_ref",
-                                      "req_ref",
-                                      #"sender_id",
-                                      "site_id",
-                                      "date",
-                                      "recipient_id",
-                                      "delivery_date",
-                                      "to_site_id",
-                                      "status",
-                                      #"driver_name",
-                                      #"driver_phone",
-                                      #"vehicle_plate_no",
-                                      #"time_out",
-                                      "comments",
-                                      ],
-                       )
+        current.s3db.configure("inv_send",
+                               list_fields = ["id",
+                                              "send_ref",
+                                              "req_ref",
+                                              #"sender_id",
+                                              "site_id",
+                                              "date",
+                                              "recipient_id",
+                                              "delivery_date",
+                                              "to_site_id",
+                                              "status",
+                                              #"driver_name",
+                                              #"driver_phone",
+                                              #"vehicle_plate_no",
+                                              #"time_out",
+                                              "comments",
+                                              ],
+                               )
 
     settings.customise_inv_send_resource = customise_inv_send_resource
 

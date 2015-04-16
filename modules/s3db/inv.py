@@ -1025,6 +1025,7 @@ class S3InventoryTrackingModel(S3Model):
         send_type_opts.update(self.inv_item_status_opts)
         send_type_opts.update(settings.get_inv_send_types())
 
+        site_types = auth.org_site_types
         tablename = "inv_send"
         define_table(tablename,
                      send_ref(),
@@ -1036,7 +1037,7 @@ class S3InventoryTrackingModel(S3Model):
                      super_link("site_id", "org_site",
                                 default = user.site_id if is_logged_in() else None,
                                 empty = False,
-                                instance_types = auth.org_site_types,
+                                instance_types = site_types,
                                 label = T("From %(site)s") % dict(site=SITE_LABEL),
                                 not_filterby = "obsolete",
                                 not_filter_opts = (True,),
@@ -1062,9 +1063,8 @@ class S3InventoryTrackingModel(S3Model):
                            represent = org_site_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
-                                                  lambda id, row: \
-                                                    org_site_represent(id, row,
-                                                                       show_link=False),
+                                                  org_site_represent,
+                                                  instance_types = site_types,
                                                   sort=True,
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = (True,),
