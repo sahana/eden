@@ -1553,6 +1553,7 @@ class S3OptionsMenu(object):
             IMPORT = "Import Project Locations"
         hazards = lambda i: settings.get_project_hazards()
         indicators = lambda i: settings.get_project_indicators()
+        programmes = lambda i: settings.get_project_programmes()
         sectors = lambda i: settings.get_project_sectors()
         stats = lambda i: settings.has_module("stats")
         themes = lambda i: settings.get_project_themes()
@@ -1562,6 +1563,10 @@ class S3OptionsMenu(object):
         if settings.get_project_mode_3w():
             if community:
                 menu(
+                     M("Progams", f="programme",
+                       check=programmes)(
+                        M("Create", m="create"),
+                     ),
                      M("Projects", f="project")(
                         M("Create", m="create"),
                      ),
@@ -1569,11 +1574,15 @@ class S3OptionsMenu(object):
                         # Better created from tab (otherwise Activity Type filter won't work)
                         #M("Create", m="create"),
                         M("Map", m="map"),
-                        M("List Community Contacts", f="location_contact"),
+                        M("Community Contacts", f="location_contact"),
                      ),
                     )
             else:
                 menu(
+                     M("Progams", f="programme",
+                       check=programmes)(
+                        M("Create", m="create"),
+                     ),
                      M("Projects", f="project")(
                         M("Create", m="create"),
                         M("Map", f="location", m="map"),
