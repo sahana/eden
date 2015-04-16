@@ -272,6 +272,8 @@ def config(settings):
     #
     # Enable the use of Organisation Groups
     settings.org.groups = "Network"
+    # Represent Organisation Group affiliation in team references
+    settings.org.group_team_represent = True
     # Make Services Hierarchical
     settings.org.services_hierarchical = True
     # Set the label for Sites

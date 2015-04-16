@@ -1919,7 +1919,7 @@ class S3GroupModel(S3Model):
             title = T("Create Group")
             tooltip = T("Create a new Group")
 
-        represent = S3Represent(lookup=tablename)
+        represent = pr_GroupRepresent()
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    sortby = "name",
                                    comment = S3AddResourceLink(#c="pr",
@@ -4734,6 +4734,99 @@ class pr_PersonRepresent(S3Represent):
                                                  multiple,
                                                  default,
                                                  none)
+
+# =============================================================================
+class pr_GroupRepresent(S3Represent):
+    """ Representation of person groups """
+
+    def __init__(self):
+        """ Constructor """
+
+        super(pr_GroupRepresent, self).__init__("pr_group",
+                                                fields = ["name"],
+                                                )
+
+        self.show_org_groups = current.deployment_settings \
+                                      .get_org_group_team_represent()
+        self.org_groups = {}
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+
+        table = self.table
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = db(query).select(table.id,
+                                table.name,
+                                limitby=(0, count),
+                                )
+        self.queries += 1
+
+        if self.show_org_groups:
+            # Look up all org_groups linked to these groups (second query
+            # because it's a m2m link but the returned rows must not contain
+            # duplicates)
+            s3db = current.s3db
+            ltable = s3db.org_group_team
+            gtable = s3db.org_group
+
+            left = gtable.on(ltable.org_group_id == gtable.id)
+            group_id = ltable.group_id
+
+            if count == 1:
+                query = (group_id == values[0])
+            else:
+                query = group_id.belongs(values)
+            query &= (ltable.deleted != True)
+
+            org_group_name = gtable.name
+            links = db(query).select(group_id,
+                                     org_group_name,
+                                     left=left,
+                                     )
+            self.queries += 1
+
+            groups = self.org_groups
+            for link in links:
+                group = link[group_id]
+                name = link[org_group_name]
+                if name:
+                    if group not in groups:
+                        groups[group] = [name]
+                    else:
+                        groups[group].append(name)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        representation = "%s" % row.name
+
+        if self.show_org_groups:
+            # Append the org_group names in parantheses
+            names = self.org_groups.get(row.id)
+            if names:
+                representation = "%s (%s)" % (representation, ", ".join(names))
+
+        return representation
 
 # =============================================================================
 def pr_person_phone_represent(id, show_link=True):

@@ -2788,6 +2788,13 @@ class S3Config(Storage):
         """
         return self.org.get("groups", False)
 
+    def get_org_group_team_represent(self):
+        """
+            Whether to represent org_group affiliation in team
+            references (pr_group_id)
+        """
+        return self.org.get("group_team_represent", False)
+
     def get_org_regions(self):
         """
             Whether to support Organisation Regions or not
