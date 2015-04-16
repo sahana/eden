@@ -178,41 +178,71 @@ class S3DashBoardMenuLayout(S3NavigationItem):
     @staticmethod
     def layout(item):
 
-        T = current.T
-
-        if item.components:
-            items = item.render_components()
+        # Manage flags: hide any disabled/unauthorized items
+        logged_in = current.auth.s3_logged_in()
+        if logged_in:
+            if not item.authorized:
+                enabled = visible = False
+            elif item.enabled is None or item.enabled:
+                enabled = visible = True
         else:
-            items = None
+            enabled = visible = True
 
-        if item.parent is None:
-            #return items
-        #elif item.parent.parent is None:
-            if items:
-                if item.attr._id is not None:
-                    _id = item.attr._id
-                else:
-                    _id = "sub-dashboard"
-                return UL(items, _id=_id)
-            else:
-                return ""
-        else:
+        if enabled and visible:
+            T = current.T
+
             if item.components:
-                return LI(A(H2(item.label),
-                          UL(items),
-                          IMG(_src=URL(c="static", f="themes",
-                                       args=["IFRC", "img", item.opts.image]),
-                              _alt=T(item.opts.title)),
-                          _href=item.url()))
-            elif item.opts.text:
-                return LI(A(H2(item.label),
-                          P(T(item.opts.text)),
-                          IMG(_src=URL(c="static", f="themes",
-                                       args=["IFRC", "img", item.opts.image]),
-                              _alt=item.opts.image),
-                          _href=item.url()))
+                items = item.render_components()
+                if item.parent is None and logged_in:
+                    # Count number of active children and adjust submenu width
+                    accessible = item.get_all(authorized=True)
+                    active = len([submenu for submenu in accessible
+                                          if submenu.enabled in (None, True)])
+                    if active:
+                        # total width - borders / number of visible submenus
+                        style = "width:%spx;" % (1022.0 - active) / active
+                        for submenu in items:
+                            # Override CSS
+                            submenu["_style"] = style
             else:
-                return LI(A(item.label, _href=item.url()))
+                items = None
+
+            if item.parent is None:
+                #return items
+            #elif item.parent.parent is None:
+                if items:
+                    if item.attr._id is not None:
+                        _id = item.attr._id
+                    else:
+                        _id = "sub-dashboard"
+                    return UL(items, _id=_id)
+                else:
+                    return ""
+            else:
+                if item.components:
+                    return LI(A(H2(item.label),
+                                UL(items),
+                                IMG(_src=URL(c="static", f="themes",
+                                             args=["IFRC", "img", item.opts.image]),
+                                    _alt=T(item.opts.title),
+                                    ),
+                                _href=item.url(),
+                                ),
+                              )
+                elif item.opts.text:
+                    return LI(A(H2(item.label),
+                                P(T(item.opts.text)),
+                                IMG(_src=URL(c="static", f="themes",
+                                             args=["IFRC", "img", item.opts.image]),
+                                    _alt=item.opts.image,
+                                    ),
+                                _href=item.url(),
+                                ),
+                              )
+                else:
+                    return LI(A(item.label, _href=item.url()))
+        else:
+            return None
 
 # -----------------------------------------------------------------------------
 # Shortcut
