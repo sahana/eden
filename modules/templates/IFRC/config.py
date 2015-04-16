@@ -3209,6 +3209,24 @@ def config(settings):
         else:
             programme = None
 
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == HNRC:
+            # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
+            HFA = None
+            # @ToDo: Add 'Business Line' (when extending to Zone office)
+            # Done in a more structured way instead 
+            objectives = None
+            outputs = None
+        else:
+            HFA = "drr.hfa"
+            objectives = "objectives"
+            outputs = S3SQLInlineComponent(
+                "output",
+                label = T("Outputs"),
+                fields = ["name", "status"],
+            )
+        
         crud_form = S3SQLCustomForm(
             "organisation_id",
             "name",
@@ -3220,16 +3238,11 @@ def config(settings):
             programme,
             #S3SQLInlineComponent(
             #    "location",
-            #    label = T("Countries"),
+            #    label = T("Locations"),
             #    fields = ["location_id"],
             #),
             # Outputs
-            S3SQLInlineComponent(
-                "output",
-                label = T("Outputs"),
-                #comment = "Bob",
-                fields = ["name", "status"],
-            ),
+            outputs,
             S3SQLInlineLink(
                 "hazard",
                 label = T("Hazards"),
@@ -3266,8 +3279,8 @@ def config(settings):
      'tooltip':'project_theme_help_fields(id,name)'
     })'''
             ),
-            "drr.hfa",
-            "objectives",
+            HFA,
+            objectives,
             "human_resource_id",
             # Disabled since we need organisation_id filtering to either organisation_type_id == RC or NOT
             # & also hiding Branches from RCs
@@ -3551,6 +3564,8 @@ def config(settings):
         field.requires = field.requires.other
 
         s3db.req_req.site_id.label = T("Deliver To")
+        # @ToDo: Hide Drivers list_field
+        #table.drivers.readable = False
 
         return attr
 

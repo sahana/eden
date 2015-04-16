@@ -77,8 +77,8 @@ def project():
             htable.person_id.comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (T("Person"),
                                                              T("Select the person assigned to this role for this project."),
-                                                            )
-                                          )
+                                                             )
+                                           )
 
             if not component or component_name == "activity":
                 # Filter Themes/Activity Types based on Sector
@@ -197,7 +197,7 @@ def project():
                     s3db.pr_PersonRepresent(show_link=True)
 
                 # These values are defined in hrm_type_opts
-                human_resource_id = component.table.human_resource_id
+                human_resource_id = r.table.human_resource_id
                 filter_opts = None
                 if hr_group:
                     crud_strings = s3.crud_strings

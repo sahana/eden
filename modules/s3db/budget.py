@@ -1252,9 +1252,7 @@ class S3BudgetBundleModel(S3Model):
 class S3BudgetAllocationModel(S3Model):
     """
         Model for Budget Allocation
-
-        @status: experimental, not for production use
-    """
+   """
 
     names = ("budget_allocation",
              "budget_cost_item",

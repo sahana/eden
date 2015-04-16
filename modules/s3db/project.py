@@ -1575,8 +1575,17 @@ class S3ProjectAnnualBudgetModel(S3Model):
                           Field("amount", "double", notnull=True,
                                 default = 0.00,
                                 label = T("Amount"),
+                                #label = T("Amount Budgeted"),
                                 requires = IS_FLOAT_AMOUNT(),
                                 ),
+                          #Field("amount_spent", "double", notnull=True,
+                          #      default = 0.00,
+                          #      label = T("Amount Spent"),
+                          #      requires = IS_FLOAT_AMOUNT(),
+                          #      # Enable in templates as-required
+                          #      readable = False,
+                          #      writable = False,
+                          #      ),
                           s3_currency(required=True),
                           *s3_meta_fields())
 
@@ -1597,11 +1606,10 @@ class S3ProjectAnnualBudgetModel(S3Model):
         )
 
         self.configure(tablename,
-                       list_fields=["id",
-                                    "year",
-                                    "amount",
-                                    "currency",
-                                    ]
+                       list_fields = ["year",
+                                      "amount",
+                                      "currency",
+                                      ],
                        )
 
         # Pass names back to global scope (s3.*)
@@ -3141,7 +3149,7 @@ class S3ProjectLocationModel(S3Model):
             filter_widgets.append(S3OptionsFilter(programme_id,
                                                   hidden=True,
                                                   ))
-            rappend((T("Programme"), programme_id))
+            rappend((T("Program"), programme_id))
 
         filter_widgets.extend((
             # This is only suitable for deployments with a few projects
@@ -5743,21 +5751,21 @@ class S3ProjectProgrammeModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Programme"),
-            #title_display = T("Programme"),
-            #title_list = T("Programmes"),
-            #title_update = T("Edit Programme"),
-            #title_upload = T("Import Programmes"),
-            #label_list_button = T("List Programmes"),
-            #msg_record_created = T("Programme created"),
-            #msg_record_modified = T("Programme updated"),
-            #msg_record_deleted = T("Programme deleted"),
-            #msg_list_empty = T("No Programmes found")
+            label_create = T("Create Program"),
+            #title_display = T("Program"),
+            #title_list = T("Programs"),
+            #title_update = T("Edit Program"),
+            #title_upload = T("Import Programs"),
+            #label_list_button = T("List Programs"),
+            #msg_record_created = T("Program created"),
+            #msg_record_modified = T("Program updated"),
+            #msg_record_deleted = T("Program deleted"),
+            #msg_list_empty = T("No Programs found")
         )
 
         represent = S3Represent(lookup=tablename)
         programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
-                            label = T("Programme"),
+                            label = T("Program"),
                             ondelete = "CASCADE",
                             represent = represent,
                             requires = IS_EMPTY_OR(
