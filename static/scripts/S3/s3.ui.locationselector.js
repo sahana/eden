@@ -318,16 +318,22 @@
                 // @todo: reverseLx?
                 formRow.show();
             } else {
-                // Other formstyle:
+                // Other formstyle
+
+                // Tuple themes: hide the label row
+                $(selector + '__row1').hide();
+
                 // Hide the main row & move out the Error
-                $(selector + '__row1').hide(); // Tuple themes
                 formRow.hide().after(errorWrapper);
+
+                // Re-insert the map icon and wrapper after the last
+                // location selector row (which may vary depending on config)
+                mapIconRow.detach();
+                var lastRow = formRow.siblings('[id^="' + fieldname + '"][id$="__row"]');
                 if (reverseLx) {
-                    L0Row.after(mapWrapper)
-                         .after(mapIconRow);
+                    lastRow.after(mapWrapper).after(mapIconRow);
                 } else {
-                    postcodeRow.after(mapWrapper)
-                               .after(mapIconRow);
+                    lastRow.after(mapWrapper).after(mapIconRow);
                 }
             }
 
