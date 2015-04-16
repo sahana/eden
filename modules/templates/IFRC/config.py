@@ -322,7 +322,7 @@ def config(settings):
 
     def currency_default(default):
         """ NS-specific default currencies (lazy setting) """
-        
+
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
             default = "AFN"
@@ -1935,24 +1935,41 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
 
-        current.s3db.configure("inv_send",
-                               list_fields = ["id",
-                                              "send_ref",
-                                              "req_ref",
-                                              #"sender_id",
-                                              "site_id",
-                                              "date",
-                                              "recipient_id",
-                                              "delivery_date",
-                                              "to_site_id",
-                                              "status",
-                                              #"driver_name",
-                                              #"driver_phone",
-                                              #"vehicle_plate_no",
-                                              #"time_out",
-                                              "comments",
-                                              ],
-                               )
+        s3db = current.s3db
+
+        # Limit "To Office/Warehouse/Facility" to updateable (like From)
+        table = s3db.inv_send
+        from gluon import IS_EMPTY_OR
+        from s3 import IS_ONE_OF
+        table.to_site_id.requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(current.db,
+                                                  "org_site.site_id",
+                                                  table.site_id.represent,
+                                                  instance_types = current.auth.org_site_types,
+                                                  not_filterby = "obsolete",
+                                                  not_filter_opts = (True,),
+                                                  sort=True,
+                                                  updateable = True,
+                                                  ))
+
+        s3db.configure("inv_send",
+                       list_fields = ["id",
+                                      "send_ref",
+                                      "req_ref",
+                                      #"sender_id",
+                                      "site_id",
+                                      "date",
+                                      "recipient_id",
+                                      "delivery_date",
+                                      "to_site_id",
+                                      "status",
+                                      #"driver_name",
+                                      #"driver_phone",
+                                      #"vehicle_plate_no",
+                                      #"time_out",
+                                      "comments",
+                                      ],
+                       )
 
     settings.customise_inv_send_resource = customise_inv_send_resource
 
@@ -2158,10 +2175,10 @@ def config(settings):
                                              ),
                             ]
                        )
-        
+
 
     settings.customise_org_facility_resource = customise_org_facility_resource
-    
+
     # -----------------------------------------------------------------------------
     def customise_org_office_controller(**attr):
 
@@ -3521,7 +3538,7 @@ def config(settings):
     def customise_req_req_controller(**attr):
 
         s3db = current.s3db
-        
+
         # Request is mandatory
         field = s3db.req_commit.req_id
         field.requires = field.requires.other
