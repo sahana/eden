@@ -2149,18 +2149,40 @@ def config(settings):
         if root_org != HNRC:
             return
         settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
+        # Simplify Form
         s3db = current.s3db
         table = s3db.org_facility
-        # Hide Opening Times, Postcode, Code, Type, Website
         table.code.readable = table.code.writable = False
         table.opening_times.readable = table.opening_times.writable = False
         table.website.readable = table.website.writable = False
-        # @ToDo: Fix
         field = s3db.org_site_facility_type.facility_type_id
         field.readable = field.writable = False
-        # Why isn't Lx being translated
-        # If creating Org from here, then simplify form
-        # Facility Search Fields: simplify
+        # Simplify Search Fields
+        from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+        text_fields = ["name",
+                       #"code",
+                       "comments",
+                       "organisation_id$name",
+                       "organisation_id$acronym",
+                       ]
+        for level in levels:
+            lfield = "location_id$%s" % level
+            text_fields.append(lfield)
+
+        s3db.configure("org_facility",
+                       filter_widgets = [
+                            S3TextFilter(text_fields,
+                                         label = T("Search"),
+                                         ),
+                            S3OptionsFilter("organisation_id"),
+                            S3LocationFilter("location_id",
+                                             levels = levels,
+                                             ),
+                            ]
+                       )
+        
 
     settings.customise_org_facility_resource = customise_org_facility_resource
     
@@ -3487,12 +3509,13 @@ def config(settings):
                                 #3: T("Reject"),
                                 #4: T("Surplus")
                                 }
-    settings.inv.recv_type = {#11: T("Internal Shipment"), In Shipment Types
-                              32: T("Donation"),
-                              34: T("Purchase"),
-                              36: T("Consignment"), # Borrowed
-                              37: T("In Transit"),  # Loaning warehouse space to another agency
-                              }
+    settings.inv.recv_types = {#0: current.messages["NONE"], In Shipment Types
+                               #11: T("Internal Shipment"), In Shipment Types
+                               32: T("Donation"),
+                               34: T("Purchase"),
+                               36: T("Consignment"), # Borrowed
+                               37: T("In Transit"),  # Loaning warehouse space to another agency
+                               }
 
 
     # -----------------------------------------------------------------------------

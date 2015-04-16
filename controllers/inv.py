@@ -304,8 +304,26 @@ def warehouse():
                 except:
                     pass
 
-            elif component_name == "recv" or \
-                 component_name == "send":
+            elif component_name == "recv":
+                # Filter out items which are already in this inventory
+                s3db.inv_prep(r)
+                
+                # Configure which fields in inv_recv are readable/writable
+                # depending on status
+                recvtable = s3db.inv_recv
+                if r.component_id:
+                    record = db(recvtable.id == r.component_id).select(recvtable.status,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                    set_recv_attr(record.status)
+                else:
+                    set_recv_attr(s3db.inv_ship_status["IN_PROCESS"])
+                    recvtable.recv_ref.readable = False
+                    if r.method and r.method != "read":
+                        # Don't want to see in Create forms
+                        recvtable.status.readable = False
+
+            elif component_name == "send":
                 # Filter out items which are already in this inventory
                 s3db.inv_prep(r)
 
@@ -574,10 +592,10 @@ def track_movement():
     table = s3db.inv_track_item
 
     s3db.configure("inv_track_item",
-                   create=False,
-                   listadd=False,
-                   editable=False,
-                   deletable=False,
+                   create = False,
+                   deletable = False,
+                   editable = False,
+                   listadd = False,
                    )
 
     def prep(r):
@@ -849,6 +867,31 @@ def send_cancel():
                  args = [send_id]))
 
 # =============================================================================
+def set_recv_attr(status):
+    """
+        Set field attributes for inv_recv table
+    """
+
+    recvtable = s3db.inv_recv
+    ship_status = s3db.inv_ship_status
+    recvtable.sender_id.readable = recvtable.sender_id.writable = False
+    recvtable.grn_status.readable = recvtable.grn_status.writable = False
+    recvtable.cert_status.readable = recvtable.cert_status.writable = False
+    recvtable.eta.readable = False
+    recvtable.req_ref.writable = True
+    if status == ship_status["IN_PROCESS"]:
+        recvtable.send_ref.writable = True
+        recvtable.recv_ref.readable = False
+        recvtable.sender_id.readable = False
+    else:
+        # Make all fields writable False
+        for field in recvtable.fields:
+            recvtable[field].writable = False
+    if status == ship_status["SENT"]:
+        recvtable.date.writable = True
+        recvtable.recipient_id.readable = recvtable.recipient_id.writable = True
+        recvtable.comments.writable = True
+
 def recv():
     """ RESTful CRUD controller """
 
@@ -882,29 +925,6 @@ def recv():
     SHIP_STATUS_SENT = status["SENT"]
     SHIP_STATUS_RECEIVED = status["RECEIVED"]
     SHIP_STATUS_CANCEL = status["CANCEL"]
-
-    def set_recv_attr(status):
-        recvtable.sender_id.readable = False
-        recvtable.sender_id.writable = False
-        recvtable.grn_status.readable = False
-        recvtable.grn_status.writable = False
-        recvtable.cert_status.readable = False
-        recvtable.cert_status.writable = False
-        recvtable.eta.readable = False
-        recvtable.req_ref.writable = True
-        if status == SHIP_STATUS_IN_PROCESS:
-            recvtable.send_ref.writable = True
-            recvtable.recv_ref.readable = False
-            recvtable.sender_id.readable = False
-        else:
-            # Make all fields writable False
-            for field in recvtable.fields:
-                recvtable[field].writable = False
-        if status == SHIP_STATUS_SENT:
-            recvtable.date.writable = True
-            recvtable.recipient_id.readable = True
-            recvtable.recipient_id.writable = True
-            recvtable.comments.writable = True
 
     status = s3db.inv_tracking_status
     TRACK_STATUS_UNKNOWN    = status["UNKNOWN"]

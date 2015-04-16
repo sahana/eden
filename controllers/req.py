@@ -320,7 +320,7 @@ def req_controller(template = False):
                     # Hide fields which don't make sense in a Create form
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
-                    s3.req_create_form_mods()
+                    s3db.req_create_form_mods()
 
                     if type and settings.get_req_inline_forms():
                         # Inline Forms
@@ -732,8 +732,11 @@ def req_item():
 
             list_fields = s3db.get_config("req_req_item", "list_fields")
             list_fields.insert(1, "req_id$site_id")
-            list_fields.insert(1, "req_id$site_id$location_id$L4")
-            list_fields.insert(1, "req_id$site_id$location_id$L3")
+            levels = gis.get_relevant_hierarchy_levels()
+            levels.reverse()
+            for level in levels:
+                lfield = "req_id$site_id$location_id$%s" % level
+                list_fields.insert(1, lfield)
             s3db.configure("req_req_item",
                            insertable = False,
                            list_fields = list_fields,

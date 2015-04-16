@@ -4776,6 +4776,7 @@ class S3LocationSelector(S3Selector):
             @ToDo: Country-specific Translations of Labels
         """
 
+        T = current.T
         table = current.s3db.gis_hierarchy
 
         fields = [table[level] for level in levels if level != "L0"]
@@ -4811,14 +4812,14 @@ class S3LocationSelector(S3Selector):
                     for level in levels:
                         if level == "L0":
                             continue
-                        labels[level] = d[int(level[1:])] = row[level]
+                        labels[level] = d[int(level[1:])] = s3_unicode(T(row[level]))
         else:
             row = rows.first()
             d = compact["d"] = {}
             for level in levels:
                 if level == "L0":
                     continue
-                d[int(level[1:])] = row[level]
+                d[int(level[1:])] = s3_unicode(T(row[level]))
 
         return labels, compact
 

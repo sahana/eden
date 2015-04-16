@@ -627,6 +627,7 @@ class S3RequestModel(S3Model):
         table.transit_status.readable = table.transit_status.writable = False
         table.fulfil_status.readable = table.fulfil_status.writable = False
         table.cancel.readable = table.cancel.writable = False
+        table.closed.readable = table.closed.writable = False
         table.date_recv.readable = table.date_recv.writable = False
         table.recv_by_id.readable = table.recv_by_id.writable = False
 
@@ -1637,12 +1638,12 @@ class S3RequestItemModel(S3Model):
                            ),
                      Field("pack_value", "double",
                            label = T("Estimated Value per Pack"),
-                           readable=track_pack_values,
-                           writable=track_pack_values,
+                           readable = track_pack_values,
+                           writable = track_pack_values,
                            ),
                      # @ToDo: Move this into a Currency Widget for the pack_value field
-                     s3_currency(readable=track_pack_values,
-                                 writable=track_pack_values),
+                     s3_currency(readable = track_pack_values,
+                                 writable = track_pack_values),
                      self.org_site_id,
                      Field("quantity_commit", "double",
                            default = 0,
@@ -1658,13 +1659,15 @@ class S3RequestItemModel(S3Model):
                            default = 0,
                            requires = IS_FLOAT_IN_RANGE(minimum=0, maximum=999999),
                            readable = show_qty_transit,
-                           writable = show_qty_transit and quantities_writable),
+                           writable = show_qty_transit and quantities_writable,
+                           ),
                      Field("quantity_fulfil", "double",
                            label = T("Quantity Fulfilled"),
                            represent = self.req_qnty_fulfil_represent,
                            default = 0,
                            requires = IS_FLOAT_IN_RANGE(minimum=0, maximum=999999),
-                           writable = quantities_writable),
+                           writable = quantities_writable,
+                           ),
                      Field.Method("pack_quantity",
                                   self.supply_item_pack_quantity(tablename=tablename)),
                      s3_comments(),
@@ -1675,9 +1678,8 @@ class S3RequestItemModel(S3Model):
         table.site_id.label = T("Requested From")
 
         # CRUD strings
-        ADD_REQUEST_ITEM = T("Add Item to Request")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_REQUEST_ITEM,
+            label_create = T("Add Item to Request"),
             title_display = T("Request Item Details"),
             title_list = T("Items in Request"),
             title_update = T("Edit Item in Request"),
@@ -1690,18 +1692,18 @@ class S3RequestItemModel(S3Model):
 
         # Reusable Field
         req_item_id = S3ReusableField("req_item_id", "reference %s" % tablename,
+                                      label = T("Request Item"),
+                                      ondelete = "CASCADE",
+                                      represent = self.req_item_represent,
                                       requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
                                                               "req_req_item.id",
                                                               self.req_item_represent,
                                                               orderby="req_req_item.id",
                                                               sort=True)),
-                                      represent = self.req_item_represent,
-                                      label = T("Request Item"),
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Request Item"),
                                                                       T("Select Items from the Request"))),
-                                      ondelete = "CASCADE",
                                       script = '''
 $.filterOptionsS3({
  'trigger':'req_item_id',
