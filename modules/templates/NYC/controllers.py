@@ -609,9 +609,51 @@ class PersonalDashboard(S3Method):
                           }
                 add_widget(widget)
 
+            # CMS Content
+            from gluon.html import A, DIV, H2, TAG
+            item = None
+            title = T("Dashboard")
+            if current.deployment_settings.has_module("cms"):
+                name = "Dashboard"
+                ctable = s3db.cms_post
+                query = (ctable.name == name) & (ctable.deleted != True)
+                row = db(query).select(ctable.id,
+                                       ctable.title,
+                                       ctable.body,
+                                       limitby=(0, 1)).first()
+                get_vars = {"page": name,
+                            "url": URL(args="dashboard", vars={}),
+                            }
+                if row:
+                    title = row.title
+                    if is_admin:
+                        item = DIV(XML(row.body),
+                                   DIV(A(T("Edit"),
+                                         _href=URL(c="cms", f="post",
+                                                   args=[row.id, "update"],
+                                                   vars=get_vars,
+                                                   ),
+                                         _class="action-btn",
+                                         ),
+                                       _class="cms-edit",
+                                       ),
+                                   )
+                    else:
+                        item = DIV(XML(row.body))
+                elif is_admin:
+                    item = DIV(DIV(A(T("Edit"),
+                                     _href=URL(c="cms", f="post",
+                                               args="create",
+                                               vars=get_vars,
+                                               ),
+                                     _class="action-btn",
+                                     ),
+                                   _class="cms-edit",
+                                   )
+                               )
+
             # Rheader
             if r.representation == "html":
-                from gluon.html import A, DIV, H2, TAG
                 profile_header = DIV(DIV(DIV(A(T("Personal Profile"),
                                                _href = URL(c="default", f="person"),
                                                _class = "action-btn",
@@ -619,11 +661,20 @@ class PersonalDashboard(S3Method):
                                              _class="dashboard-links right",
                                              _style="padding:0.5rem 0;"
                                              ),
-                                         H2(T("Dashboard")),
+                                         H2(title),
                                          _class="medium-6 columns end",
                                          ),
                                      _class="row",
                                      )
+                if item:
+                    # Append CMS content
+                    profile_header = TAG[""](profile_header,
+                                             DIV(DIV(item,
+                                                     _class="medium-12 columns",
+                                                     ),
+                                                 _class="row",
+                                                 ),
+                                             )
             else:
                 profile_header = None
 

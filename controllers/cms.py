@@ -134,13 +134,15 @@ def post():
                     field.readable = field.writable = False
 
                 page = get_vars.get("page", None)
+                url = get_vars.get("url") # custom redirect?
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False
                     _crud = s3.crud_strings[tablename]
                     _crud.label_create = T("New Page")
                     _crud.title_update = T("Edit Page")
-                    url = URL(c="default", f="index", vars={"page": page})
+                    if not url:
+                        url = URL(c="default", f="index", vars={"page": page})
                     s3db.configure(tablename,
                                    create_next = url,
                                    update_next = url,
@@ -172,20 +174,23 @@ def post():
 
                         #table.title.readable = table.title.writable = False
                         table.replies.readable = table.replies.writable = False
-                        url = URL(c=_module, f=resource)
+                        if not url:
+                            url = URL(c=_module, f=resource)
                     elif resource:
                         # We're creating/updating text for a Resource Summary page
                         table.name.default = "%s Summary Page Header" % resource
                         table.title.readable = table.title.writable = False
                         table.replies.readable = table.replies.writable = False
-                        url = URL(c=_module, f=resource, args="summary")
+                        if not url:
+                            url = URL(c=_module, f=resource, args="summary")
                     else:
                         # We're creating/updating a Module home page
                         table.name.default = "%s Home Page" % _module
                         _crud = s3.crud_strings[tablename]
                         _crud.label_create = T("New Page")
                         _crud.title_update = T("Edit Page")
-                        url = URL(c=_module, f="index")
+                        if not url:
+                            url = URL(c=_module, f="index")
 
                     s3db.configure(tablename,
                                    create_next = url,
