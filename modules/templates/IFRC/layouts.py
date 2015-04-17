@@ -200,7 +200,7 @@ class S3DashBoardMenuLayout(S3NavigationItem):
                                           if submenu.enabled in (None, True)])
                     if active:
                         # total width - borders / number of visible submenus
-                        style = "width:%spx;" % (1022.0 - active) / active
+                        style = "width:%spx;" % ((1022.0 - active) / active)
                         for submenu in items:
                             # Override CSS
                             submenu["_style"] = style
