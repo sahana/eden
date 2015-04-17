@@ -2441,7 +2441,7 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      Field("code", length=64,
                            label = T("Code"),
-                           )
+                           ),
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \

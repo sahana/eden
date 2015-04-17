@@ -3192,7 +3192,7 @@ def config(settings):
             HFA = None
             # @ToDo: Add 'Business Line' (when extending to Zone office)
             settings.project.details_tab = True
-            # Done in a more structured way instead 
+            # Done in a more structured way instead
             objectives = None
             outputs = None
             settings.project.goals = True
@@ -3206,7 +3206,7 @@ def config(settings):
                 label = T("Outputs"),
                 fields = ["name", "status"],
             )
-        
+
         crud_form = S3SQLCustomForm(
             "organisation_id",
             "name",
