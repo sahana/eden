@@ -73,6 +73,7 @@ class OutreachAreaModel(S3Model):
                      self.gis_location_id(
                         widget = S3LocationSelector(points = False,
                                                     polygons = True,
+                                                    feature_required = True,
                                                     ),
                      ),
                      # Only included to set realm entity:
