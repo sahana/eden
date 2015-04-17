@@ -3208,9 +3208,13 @@ def config(settings):
             # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
             HFA = None
             # @ToDo: Add 'Business Line' (when extending to Zone office)
+            settings.project.details_tab = True
             # Done in a more structured way instead 
             objectives = None
             outputs = None
+            settings.project.goals = True
+            settings.project.outcomes = True
+            settings.project.outputs = True
         else:
             HFA = "drr.hfa"
             objectives = "objectives"
