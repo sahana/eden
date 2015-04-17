@@ -176,6 +176,7 @@ class OutreachHouseholdModel(S3Model):
     names = ("po_household",
              "po_household_id",
              "po_household_dwelling",
+             "po_age_group",
              "po_household_member",
              "po_household_followup",
              "po_household_social",
@@ -336,6 +337,19 @@ class OutreachHouseholdModel(S3Model):
                      household_id(),
                      self.pr_person_id(),
                      s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Household Member Age Groups (under 18,18-30,30-55,56-75,75+)
+        #
+        age_groups = ("<18", "18-30", "30-55", "56-75", "75+")
+        tablename = "po_age_group"
+        define_table(tablename,
+                     self.pr_person_id(),
+                     Field("age_group",
+                           label = T("Age Group"),
+                           requires = IS_EMPTY_OR(IS_IN_SET(age_groups)),
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

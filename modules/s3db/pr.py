@@ -752,6 +752,7 @@ class S3PersonModel(S3Model):
                                                             ),
                                     requires = IS_PERSON_GENDER(pr_gender_opts,
                                                                 sort=True,
+                                                                zero=None,
                                                                 ),
                                     )
 
