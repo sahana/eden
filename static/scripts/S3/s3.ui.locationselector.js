@@ -329,7 +329,7 @@
                 // Re-insert the map icon and wrapper after the last
                 // location selector row (which may vary depending on config)
                 mapIconRow.detach();
-                var lastRow = formRow.siblings('[id^="' + fieldname + '"][id$="__row"]');
+                var lastRow = formRow.siblings('[id^="' + fieldname + '"][id$="__row"]').last();
                 if (reverseLx) {
                     lastRow.after(mapWrapper).after(mapIconRow);
                 } else {
