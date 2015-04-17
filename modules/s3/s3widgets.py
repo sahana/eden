@@ -5963,12 +5963,15 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
                 level = location.level
                 if level:
-                    # Which levels of Hierarchy are we using?
+                    # Accept all levels above and including the lowest selectable level
                     levels = self.levels
-                    if level not in levels:
+                    for i in xrange(5,-1,-1):
+                        if "L%s" % i in levels:
+                            accepted_levels = set("L%s" % l for l in xrange(i,-1,-1))
+                            break
+                    if level not in accepted_levels:
                         return (values, msg or \
                                         current.T("Location is of incorrect level!"))
-
             # Do not update (indicate by specific = None)
             values["specific"] = None
 
