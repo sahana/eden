@@ -54,7 +54,8 @@ Bangladesh,Volunteer Super Editor,bd_super@example.com,eden,"vol_super",Banglade
 Cambodia,Volunteer Data Entry,kh_dataentry@example.com,eden,"vol_data_entry",Cambodian Red Cross Society,km
 Cambodia,Volunteer Editor,kh_editor@example.com,eden,"vol_editor",Cambodian Red Cross Society,km
 Cambodia,Volunteer Super Editor,kh_super@example.com,eden,"vol_super",Cambodian Red Cross Society,km
-Honduras,Project Manager,hn_project_manager@example.com,eden,"project_super",Honduran Red Cross,es
+Honduras,Project Coordinator,hn_project_manager@example.com,eden,"hn_project_manager",Honduran Red Cross,es
+Honduras,Project Officer,hn_project_officer@example.com,eden,"project_reader",Honduran Red Cross,es
 Honduras,Warehouse Assistant,hn_inv@example.com,eden,"inv_data_entry",Honduran Red Cross,es
 Honduras,Warehouse Manager,hn_wh_manager@example.com,eden,"hn_wh_manager",Honduran Red Cross,es
 Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN",Honduran Red Cross,es

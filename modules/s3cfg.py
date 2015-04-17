@@ -3065,6 +3065,18 @@ class S3Config(Storage):
         """
         return self.project.get("community", False)
 
+    def get_project_details_tab(self):
+        """
+            Group Tabs on Projects into a single 'Details' page
+        """
+        return self.project.get("details_tab", False)
+
+    def get_project_goals(self):
+        """
+            Use Goals in Projects
+        """
+        return self.project.get("goals", False)
+
     def get_project_hazards(self):
         """
             Use Hazards in 3W Projects
@@ -3089,6 +3101,18 @@ class S3Config(Storage):
             Use Milestones in Projects & Tasks
         """
         return self.project.get("milestones", False)
+
+    def get_project_outcomes(self):
+        """
+            Use Outcomes in Projects
+        """
+        return self.project.get("outcomes", False)
+
+    def get_project_outputs(self):
+        """
+            Use Outputs in Projects
+        """
+        return self.project.get("outputs", "inline")
 
     def get_project_task_tag(self):
         """

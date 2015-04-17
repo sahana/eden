@@ -38,10 +38,11 @@ __all__ = ("S3ProjectModel",
            "S3ProjectFrameworkModel",
            "S3ProjectHazardModel",
            "S3ProjectHRModel",
-           "S3ProjectIndicatorModel",
+           #"S3ProjectIndicatorModel",
            "S3ProjectLocationModel",
            "S3ProjectOrganisationModel",
-           "S3ProjectOutputModel",
+           "S3ProjectPlanningModel",
+           "S3ProjectProgrammeModel",
            "S3ProjectSectorModel",
            "S3ProjectStatusModel",
            "S3ProjectThemeModel",
@@ -49,11 +50,11 @@ __all__ = ("S3ProjectModel",
            "S3ProjectDRRPPModel",
            "S3ProjectTaskModel",
            "S3ProjectTaskHRMModel",
-           "S3ProjectProgrammeModel",
            "S3ProjectTaskIReportModel",
            "project_ActivityRepresent",
            "project_activity_year_options",
            "project_ckeditor",
+           "project_Details",
            "project_rheader",
            "project_task_controller",
            "project_theme_help_fields",
@@ -366,12 +367,16 @@ class S3ProjectModel(S3Model):
                    action = self.hrm_AssignMethod(component="human_resource"))
 
         set_method("project", "project",
-                   method = "timeline",
-                   action = self.project_timeline)
+                   method = "details",
+                   action = project_Details)
 
         set_method("project", "project",
                    method = "map",
                    action = self.project_map)
+
+        set_method("project", "project",
+                   method = "timeline",
+                   action = self.project_timeline)
 
         # Components
         add_components(tablename,
@@ -385,10 +390,16 @@ class S3ProjectModel(S3Model):
                                                 "key": "activity_type_id",
                                                 "actuate": "link",
                                                 },
+                       # Goals
+                       project_goal = "project_id",
                        # Indicators
+                       project_indicator = "project_id",
                        project_indicator_data = "project_id",
+                       #project_indicator_data = "project_id",
                        # Milestones
                        project_milestone = "project_id",
+                       # Outcomes
+                       project_outcome = "project_id",
                        # Outputs
                        project_output = "project_id",
                        # Tasks
@@ -2710,6 +2721,7 @@ class S3ProjectIndicatorModel(S3Model):
     """
         Project Indicator Model
         - depends on Stats module
+        Unused...instead use ProjectPlanningModel since Indicators are not reused across Projects
     """
 
     names = ("project_indicator",
@@ -2795,8 +2807,7 @@ class S3ProjectIndicatorModel(S3Model):
                                                             title=ADD_INDICATOR),
                                 ),
                      #self.gis_location_id(),
-                     s3_date("date",
-                             empty = False,
+                     s3_date(empty = False,
                              #label = T("Start Date"),
                              ),
                      #s3_date("end_date",
@@ -3597,44 +3608,190 @@ class S3ProjectOrganisationModel(S3Model):
                 item.method = item.METHOD.UPDATE
 
 # =============================================================================
-class S3ProjectOutputModel(S3Model):
+class S3ProjectPlanningModel(S3Model):
     """
-        Project Output Model
+        Project Planning Model
+            Goals (Objectives)
+                Outcomes
+                    Outputs
     """
 
-    names = ("project_output",)
+    names = ("project_goal",
+             #"project_goal_id",
+             "project_goal_represent",
+             "project_outcome",
+             #"project_outcome_id",
+             "project_outcome_represent",
+             "project_output",
+             #"project_output_id",
+             "project_output_represent",
+             "project_indicator",
+             #"project_indicator_id",
+             "project_indicator_represent",
+             )
 
     def model(self):
 
         T = current.T
         db = current.db
+        settings = current.deployment_settings
 
         NONE = current.messages["NONE"]
+
+        use_goals = settings.get_project_goals()
+        use_outcomes = settings.get_project_outcomes()
+        use_outputs = settings.get_project_outputs()
+        inline = use_outputs == "inline"
+
+        project_id = self.project_project_id
+
+        # ---------------------------------------------------------------------
+        # Goals / Objectives
+        #
+        tablename = "project_goal"
+        self.define_table(tablename,
+                          project_id(),
+                          Field("code",
+                                label = T("Code"),
+                                represent = lambda v: v or NONE,
+                                ),
+                          Field("name",
+                                label = T("Description"),
+                                represent = lambda v: v or NONE,
+                                ),
+                          #Field("status",
+                          #      label = T("Status"),
+                          #      represent = lambda v: v or NONE,
+                          #      ),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Goal"),
+            title_display = T("Goal"),
+            title_list = T("Goals"),
+            title_update = T("Edit Goal"),
+            label_list_button = T("List Goals"),
+            msg_record_created = T("Goal added"),
+            msg_record_modified = T("Goal updated"),
+            msg_record_deleted = T("Goal removed"),
+            msg_list_empty = T("No goals defined")
+        )
+
+        self.configure(tablename,
+                       deduplicate = self.project_goal_deduplicate,
+                       )
+
+        # Reusable Field
+        goal_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        goal_id = S3ReusableField("goal_id", "reference %s" % tablename,
+                                  label = T("Goal"),
+                                  ondelete = "CASCADE",
+                                  represent = goal_represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "project_goal.id",
+                                                          goal_represent,
+                                                          sort = True,
+                                                          )
+                                                ),
+                                  sortby = "name",
+                                  #comment = S3AddResourceLink(c="project", f="goal"),
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Outcomes
+        #
+        tablename = "project_outcome"
+        self.define_table(tablename,
+                          project_id(),
+                          goal_id(readable = use_goals,
+                                  writable = use_goals,
+                                  ),
+                          Field("code",
+                                label = T("Code"),
+                                represent = lambda v: v or NONE,
+                                ),
+                          Field("name",
+                                label = T("Description"),
+                                represent = lambda v: v or NONE,
+                                ),
+                          #Field("status",
+                          #      label = T("Status"),
+                          #      represent = lambda v: v or NONE,
+                          #      ),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Outcome"),
+            title_display = T("Outcome"),
+            title_list = T("Outcomes"),
+            title_update = T("Edit Outcome"),
+            label_list_button = T("List Outcomes"),
+            msg_record_created = T("Outcome added"),
+            msg_record_modified = T("Outcome updated"),
+            msg_record_deleted = T("Outcome removed"),
+            msg_list_empty = T("No outcomes defined")
+        )
+
+        self.configure(tablename,
+                       deduplicate = self.project_outcome_deduplicate,
+                       )
+
+        # Reusable Field
+        outcome_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        outcome_id = S3ReusableField("outcome_id", "reference %s" % tablename,
+                                     label = T("Outcome"),
+                                     ondelete = "CASCADE",
+                                     represent = outcome_represent,
+                                     requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "project_outcome.id",
+                                                              outcome_represent,
+                                                              sort = True,
+                                                              )
+                                                    ),
+                                     sortby = "name",
+                                     #comment = S3AddResourceLink(c="project", f="outcome"),
+                                     )
 
         # ---------------------------------------------------------------------
         # Outputs
         #
         tablename = "project_output"
         self.define_table(tablename,
-                          self.project_project_id(
+                          project_id(
                             # Override requires so that update access to the projects isn't required
                             requires = IS_ONE_OF(db, "project_project.id",
                                                  self.project_project_represent
                                                  )
                             ),
+                          goal_id(readable = use_goals and not use_outcomes,
+                                  writable = use_goals and not use_outcomes,
+                                  ),
+                          outcome_id(readable = use_outcomes,
+                                     writable = use_outcomes,
+                                     ),
+                          Field("code",
+                                label = T("Code"),
+                                represent = lambda v: v or NONE,
+                                readable = not inline,
+                                writable = not inline,
+                                ),
                           Field("name",
-                                label = T("Output"),
+                                label = T("Output") if inline else T("Description"),
                                 represent = lambda v: v or NONE,
                                 ),
                           Field("status",
                                 label = T("Status"),
                                 represent = lambda v: v or NONE,
+                                readable = inline,
+                                writable = inline,
                                 ),
                           *s3_meta_fields())
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = T("New Output"),
+            label_create = T("Add Output"),
             title_display = T("Output"),
             title_list = T("Outputs"),
             title_update = T("Edit Output"),
@@ -3642,15 +3799,183 @@ class S3ProjectOutputModel(S3Model):
             msg_record_created = T("Output added"),
             msg_record_modified = T("Output updated"),
             msg_record_deleted = T("Output removed"),
-            msg_list_empty = T("No outputs found")
+            msg_list_empty = T("No outputs defined")
         )
 
         self.configure(tablename,
                        deduplicate = self.project_output_deduplicate,
                        )
 
+        # Reusable Field
+        output_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        output_id = S3ReusableField("output_id", "reference %s" % tablename,
+                                    label = T("Output"),
+                                    ondelete = "CASCADE",
+                                    represent = output_represent,
+                                    requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "project_output.id",
+                                                              output_represent,
+                                                              sort = True,
+                                                              )
+                                                    ),
+                                    sortby = "name",
+                                    #comment = S3AddResourceLink(c="project", f="output"),
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Indicators
+        #
+        tablename = "project_indicator"
+        self.define_table(tablename,
+                          project_id(),
+                          goal_id(readable = use_goals and not use_outcomes and not use_outputs,
+                                  writable = use_goals and not use_outcomes and not use_outputs,
+                                  ),
+                          outcome_id(readable = use_outcomes and not use_outputs,
+                                     writable = use_outcomes and not use_outputs,
+                                     ),
+                          output_id(readable = use_outputs,
+                                    writable = use_outputs,
+                                    ),
+                          Field("code",
+                                label = T("Code"),
+                                represent = lambda v: v or NONE,
+                                ),
+                          Field("name",
+                                label = T("Description"),
+                                represent = lambda v: v or NONE,
+                                ),
+                          #Field("status",
+                          #      label = T("Status"),
+                          #      represent = lambda v: v or NONE,
+                          #      ),
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Indicator"),
+            title_display = T("Indicator"),
+            title_list = T("Indicators"),
+            title_update = T("Edit Indicator"),
+            label_list_button = T("List Indicators"),
+            msg_record_created = T("Indicator added"),
+            msg_record_modified = T("Indicator updated"),
+            msg_record_deleted = T("Indicator removed"),
+            msg_list_empty = T("No indicators defined")
+        )
+
+        self.configure(tablename,
+                       deduplicate = self.project_indicator_deduplicate,
+                       )
+
+        # Reusable Field
+        indicator_represent = S3Represent(lookup=tablename, fields=("code", "name"))
+        indicator_id = S3ReusableField("indicator_id", "reference %s" % tablename,
+                                       label = T("Indicator"),
+                                       ondelete = "CASCADE",
+                                       represent = indicator_represent,
+                                       requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "project_indicator.id",
+                                                                  indicator_represent,
+                                                                  sort = True,
+                                                                 )
+                                                        ),
+                                       sortby = "name",
+                                       #comment = S3AddResourceLink(c="project", f="indicator"),
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Indicator Data
+        #
+        tablename = "project_indicator_data"
+        self.define_table(tablename,
+                          project_id(
+                            # Override requires so that update access to the projects isn't required
+                            requires = IS_ONE_OF(db, "project_project.id",
+                                                 self.project_project_represent
+                                                 )
+                            ),
+                          indicator_id(),
+                          s3_date(empty = False,
+                                  ),
+                          Field("target_value", "integer",
+                                 label = T("Target Value"),
+                                 represent = lambda v: IS_INT_AMOUNT.represent(v),
+                                 requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                 ),
+                           Field("value", "integer",
+                                 label = T("Actual Value"),
+                                 represent = lambda v: IS_INT_AMOUNT.represent(v),
+                                 requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                                 ),
+                          # @ToDo: Computed field for Percentage
+                          *s3_meta_fields())
+
+        # CRUD Strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Indicator Data"),
+            title_display = T("Indicator Data"),
+            title_list = T("Indicator Data"),
+            title_update = T("Edit Indicator Data"),
+            label_list_button = T("List Indicator Data"),
+            msg_record_created = T("Indicator Data added"),
+            msg_record_modified = T("Indicator Data updated"),
+            msg_record_deleted = T("Indicator Data removed"),
+            msg_list_empty = T("No indicator data defined")
+        )
+
         # Pass names back to global scope (s3.*)
-        return dict()
+        return dict(#project_goal_id = goal_id,
+                    project_goal_represent = goal_represent,
+                    #project_outcome_id = outcome_id,
+                    project_outcome_represent = outcome_represent,
+                    #project_output_id = output_id,
+                    project_output_represent = output_represent,
+                    #project_indicator_id = indicator_id,
+                    project_indicator_represent = indicator_represent,
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_goal_deduplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        name = data.get("name")
+        if name:
+            table = item.table
+            query = (table.name == name)
+            project_id = data.get("project_id")
+            if project_id:
+                query &= ((table.project_id == project_id) | \
+                          (table.project_id == None))
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_outcome_deduplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        name = data.get("name")
+        if name:
+            table = item.table
+            query = (table.name == name)
+            project_id = data.get("project_id")
+            if project_id:
+                query &= ((table.project_id == project_id) | \
+                          (table.project_id == None))
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3672,6 +3997,214 @@ class S3ProjectOutputModel(S3Model):
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_output_onaccept(form):
+
+        settings = current.deployment_settings
+        if settings.get_project_outcomes() and \
+           settings.get_project_goals():
+            form_vars = form.vars
+            outcome_id = form_vars.get("outcome_id")
+            if outcome_id:
+                # Populate the Goal from the Outcome
+                db = current.db
+                s3db = current.s3db
+                table = s3db.project_outcome
+                outcome = db(table.id == outcome_id).select(table.goal_id,
+                                                            limitby=(0, 1)
+                                                            ).first()
+                if outcome:
+                    table = s3db.project_output
+                    db(table.id == form_vars.id).update(goal_id = outcome.goal_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_indicator_deduplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        name = data.get("name")
+        if name:
+            table = item.table
+            query = (table.name == name)
+            project_id = data.get("project_id")
+            if project_id:
+                query &= ((table.project_id == project_id) | \
+                          (table.project_id == None))
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_indicator_onaccept(form):
+
+        settings = current.deployment_settings
+        if settings.get_project_outputs() and \
+           (settings.get_project_outcomes() or \
+            settings.get_project_goals()):
+            form_vars = form.vars
+            output_id = form_vars.get("output_id")
+            if output_id:
+                # Populate the Goal &/or Outcome from the Output
+                db = current.db
+                s3db = current.s3db
+                table = s3db.project_output
+                output = db(table.id == output_id).select(table.goal_id,
+                                                          table.outcome_id,
+                                                          limitby=(0, 1)
+                                                          ).first()
+                if output:
+                    table = s3db.project_indicator
+                    db(table.id == form_vars.id).update(goal_id = output.goal_id,
+                                                        outcome_id = output.outcome_id,
+                                                        )
+        elif settings.get_project_outcomes() and \
+             settings.get_project_goals():
+            form_vars = form.vars
+            outcome_id = form_vars.get("outcome_id")
+            if outcome_id:
+                # Populate the Goal from the Outcome
+                db = current.db
+                s3db = current.s3db
+                table = s3db.project_outcome
+                outcome = db(table.id == outcome_id).select(table.goal_id,
+                                                            limitby=(0, 1)
+                                                            ).first()
+                if outcome:
+                    table = s3db.project_indicator
+                    db(table.id == form_vars.id).update(goal_id = outcome.goal_id)
+
+# =============================================================================
+class S3ProjectProgrammeModel(S3Model):
+    """
+        Project Programme Model
+    """
+
+    names = ("project_programme",
+             "project_programme_id",
+             "project_programme_project",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        NONE = current.messages["NONE"]
+
+        # ---------------------------------------------------------------------
+        # Project Programmes
+        #
+        tablename = "project_programme"
+        define_table(tablename,
+                     self.org_organisation_id(),
+                     Field("name",
+                           label = T("Title"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
+                           requires = IS_NOT_EMPTY()
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Program"),
+            title_display = T("Program"),
+            title_list = T("Programs"),
+            title_update = T("Edit Program"),
+            title_upload = T("Import Programs"),
+            label_list_button = T("List Programs"),
+            msg_record_created = T("Program created"),
+            msg_record_modified = T("Program updated"),
+            msg_record_deleted = T("Program deleted"),
+            msg_list_empty = T("No Programs found")
+        )
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
+                            label = T("Program"),
+                            ondelete = "CASCADE",
+                            represent = represent,
+                            requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "project_programme.id",
+                                                      represent,
+                                                      updateable = True,
+                                                      )),
+                            sortby = "name",
+                            comment = S3AddResourceLink(c="project",
+                                                        f="programme",
+                                                        ),
+                       )
+
+        self.configure(tablename,
+                       deduplicate = self.programme_duplicate,
+                       )
+
+        self.add_components(tablename,
+                            project_project = {"link": "project_programme_project",
+                                               "joinby": "programme_id",
+                                               "key": "project_id",
+                                               "actuate": "link",
+                                               "autocomplete": "name",
+                                               "autodelete": False,
+                                               })
+
+        # ---------------------------------------------------------------------
+        # Project Programmes <=> Projects
+        #
+        tablename = "project_programme_project"
+        define_table(tablename,
+                     programme_id(),
+                     self.project_project_id(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"project_programme_id": programme_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names if module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False)
+
+        return {"project_programme_id": lambda **attr: dummy("programme_id"),
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def programme_duplicate(item):
+        """ Import item update-detection """
+
+        data = item.data
+        name = data.get("name")
+        if name:
+            table = item.table
+            query = (table.name.lower() == name.lower())
+            org = data.get("organisation_id")
+            if org:
+                query &= (table.organisation_id == org)
+
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
 
 # =============================================================================
 class S3ProjectSectorModel(S3Model):
@@ -5714,129 +6247,6 @@ class S3ProjectTaskHRMModel(S3Model):
         return dict()
 
 # =============================================================================
-class S3ProjectProgrammeModel(S3Model):
-    """
-        Project Programme Model
-    """
-
-    names = ("project_programme",
-             "project_programme_id",
-             "project_programme_project",
-             )
-
-    def model(self):
-
-        T = current.T
-        db = current.db
-
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
-
-        # ---------------------------------------------------------------------
-        # Project Programmes
-        #
-        tablename = "project_programme"
-        define_table(tablename,
-                     Field("name",
-                           label = T("Title"),
-                           requires = IS_NOT_EMPTY()
-                           ),
-                     #Field("acronym"
-                     #      ),
-                     #Field("description", "text",
-                     #      label = T("Description"),
-                     #      ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Program"),
-            #title_display = T("Program"),
-            #title_list = T("Programs"),
-            #title_update = T("Edit Program"),
-            #title_upload = T("Import Programs"),
-            #label_list_button = T("List Programs"),
-            #msg_record_created = T("Program created"),
-            #msg_record_modified = T("Program updated"),
-            #msg_record_deleted = T("Program deleted"),
-            #msg_list_empty = T("No Programs found")
-        )
-
-        represent = S3Represent(lookup=tablename)
-        programme_id = S3ReusableField("programme_id", "reference %s" % tablename,
-                            label = T("Program"),
-                            ondelete = "CASCADE",
-                            represent = represent,
-                            requires = IS_EMPTY_OR(
-                                            IS_ONE_OF(db, "project_programme.id",
-                                                      represent,
-                                                      updateable = True,
-                                                      )),
-                            sortby = "name",
-                            comment = S3AddResourceLink(c="project",
-                                                        f="programme",
-                                                        ),
-                       )
-
-        self.configure(tablename,
-                       deduplicate = self.programme_duplicate,
-                       )
-
-        self.add_components(tablename,
-                            project_project = {"link": "project_programme_project",
-                                               "joinby": "programme_id",
-                                               "key": "project_id",
-                                               "actuate": "link",
-                                               "autocomplete": "name",
-                                               "autodelete": False,
-                                               })
-
-        # ---------------------------------------------------------------------
-        # Project Programmes <=> Projects
-        #
-        tablename = "project_programme_project"
-        define_table(tablename,
-                     programme_id(),
-                     self.project_project_id(),
-                     *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {"project_programme_id": programme_id,
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def defaults():
-        """ Safe defaults for names if module is disabled """
-
-        dummy = S3ReusableField("dummy_id", "integer",
-                                readable = False,
-                                writable = False)
-
-        return {"project_programme_id": lambda **attr: dummy("programme_id"),
-                }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def programme_duplicate(item):
-        """ Import item update-detection """
-
-        name = item.data.get("name")
-        if name:
-            table = item.table
-            query = (table.name.lower() == name.lower())
-
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
-
-# =============================================================================
 class S3ProjectTaskIReportModel(S3Model):
     """
         Project Task IReport Model
@@ -6515,6 +6925,7 @@ def project_rheader(r):
     if resourcename == "project":
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
+        details_tab = settings.get_project_details_tab()
 
         # Tabs
         #ADMIN = current.session.s3.system_roles.ADMIN
@@ -6524,18 +6935,26 @@ def project_rheader(r):
 
         tabs = [(T("Basic Details"), None)]
         append = tabs.append
-        if settings.get_project_multiple_organisations():
+        if settings.get_project_goals():
+            append((T("Goals"), "goal"))
+        if settings.get_project_outcomes():
+            append((T("Outcomes"), "outcome"))
+        outputs = settings.get_project_outputs()
+        if outputs and outputs != "inline":
+            append((T("Outputs"), "output"))
+        if settings.get_project_indicators():
+            append((T("Indicators"), "indicator"))
+            append((T("Indicator Data"), "indicator_data"))
+        if settings.get_project_multiple_organisations() and not details_tab:
             append((T("Organizations"), "organisation"))
-        if settings.get_project_community():
+        if settings.get_project_community() and not details_tab:
             append((T("Communities"), "location"))
-        elif not mode_task:
+        elif not mode_task and not details_tab:
             append((T("Locations"), "location"))
         if settings.get_project_theme_percentages():
             append((T("Themes"), "theme"))
-        if mode_3w:
+        if mode_3w and not details_tab:
             append((T("Beneficiaries"), "beneficiary"))
-        if settings.get_project_indicators():
-            append((T("Indicators"), "indicator_data"))
         if settings.get_project_milestones():
             append((T("Milestones"), "milestone"))
         if settings.get_project_activities():
@@ -6546,6 +6965,8 @@ def project_rheader(r):
             append((T("Calendar"), "timeline"))
         if settings.get_project_multiple_budgets():
             append((T("Annual Budgets"), "annual_budget"))
+        if details_tab:
+            append((T("Details"), "details"))
         if mode_3w:
             append((T("Documents"), "document"))
         else:
@@ -7345,5 +7766,136 @@ def project_task_list_layout(list_id, item_id, resource, rfields, record,
                )
 
     return item
+
+# =============================================================================
+class project_Details(S3Method):
+    """
+        Custom profile page with multiple DataTables:
+            * Organisations
+            * Locations
+            * Beneficiaries
+            * Documents
+            * Staff
+    """
+
+    def __init__(self, form=None):
+        """
+            Constructor
+
+            @param form: widget config to inject at the top of the page,
+                         or a callable to produce such a widget config
+        """
+
+        self.form = form
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "project" and \
+           r.id and \
+           not r.component and \
+           r.representation in ("html", "aadata"):
+
+            T = current.T
+            s3db = current.s3db
+            settings = current.deployment_settings
+
+            def dt_row_actions(component):
+                return lambda r, list_id: [
+                    {"label": T("Open"),
+                     "url": r.url(component=component,
+                                  component_id="[id]",
+                                  method="update.popup",
+                                  vars={"refresh": list_id}),
+                     "_class": "action-btn edit s3_modal",
+                     },
+                    {"label": T("Delete"),
+                     "_ajaxurl": r.url(component=component,
+                                       component_id="[id]",
+                                       method="delete.json",
+                                       ),
+                     "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                     },
+                ]
+
+            profile_widgets = []
+            form = self.form
+            if form:
+                if callable(form):
+                    form = form(r)
+                if form is not None:
+                    profile_widgets.append(form)
+            if settings.get_project_multiple_organisations():
+                orgs_widget = dict(label = "Organizations",
+                                   label_create = "Add Organization",
+                                   type = "datatable",
+                                   actions = dt_row_actions("organisation"),
+                                   tablename = "project_organisation",
+                                   context = "project",
+                                   create_controller = "project",
+                                   create_function = "project",
+                                   create_component = "organisation",
+                                   pagesize = None, # all records
+                                   )
+                profile_widgets.append(orgs_widget)
+            if settings.get_project_community():
+                locations_widget = dict(label = "Communities",
+                                        label_create = "Add Community",
+                                        type = "datatable",
+                                        actions = dt_row_actions("location"),
+                                        tablename = "project_location",
+                                        context = "project",
+                                        create_controller = "project",
+                                        create_function = "project",
+                                        create_component = "location",
+                                        pagesize = None, # all records
+                                        )
+                profile_widgets.append(locations_widget)
+            if settings.get_project_mode_3w():
+                beneficiaries_widget = dict(label = "Beneficiaries",
+                                            label_create = "Add Beneficiaries",
+                                            type = "datatable",
+                                            actions = dt_row_actions("beneficiary"),
+                                            tablename = "project_beneficiary",
+                                            context = "project",
+                                            create_controller = "project",
+                                            create_function = "project",
+                                            create_component = "beneficiary",
+                                            pagesize = None, # all records
+                                            )
+                profile_widgets.append(beneficiaries_widget)
+
+            if r.representation == "html":
+                response = current.response
+                # Maintain normal rheader for consistency
+                profile_header = TAG[""](H2(response.s3.crud_strings["project_project"].title_display),
+                                         DIV(project_rheader(r), _id="rheader"),
+                                         )
+            else:
+                profile_header = None
+
+            tablename = r.tablename
+            s3db.configure(tablename,
+                           profile_cols = 1,
+                           profile_header = profile_header,
+                           profile_widgets = profile_widgets,
+                           )
+
+            profile = S3Profile()
+            profile.tablename = tablename
+            profile.request = r
+            output = profile.profile(r, **attr)
+            if r.representation == "html":
+                output["title"] = response.title = T("Details")
+            return output
+
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

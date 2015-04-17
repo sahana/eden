@@ -2441,9 +2441,11 @@ class S3HRSkillModel(S3Model):
         define_table(tablename,
                      Field("code", length=64,
                            label = T("Code"),
-                           ),
+                           )
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
+                           represent = lambda v: T(v) if v is not None \
+                                                      else NONE,
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -2477,7 +2479,7 @@ class S3HRSkillModel(S3Model):
                               _title="%s|%s" % (T("Course"),
                                                 AUTOCOMPLETE_HELP))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         course_id = S3ReusableField("course_id", "reference %s" % tablename,
                                     label = T("Course"),
                                     ondelete = "RESTRICT",
