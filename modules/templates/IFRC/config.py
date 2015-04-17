@@ -2693,6 +2693,10 @@ def config(settings):
                     table = s3db.pr_person_details
                     for field in ("religion",):
                         table[field].writable = table[field].readable = False
+                elif r.component_name == "physical_description":
+                    # Hide unwanted fields
+                    field = r.component.table.ethnicity
+                    field.readable = field.writable = False
 
             elif vnrc:
                 controller = r.controller
