@@ -2639,7 +2639,7 @@ class S3Config(Storage):
             Item Statuses which can also be Sent Shipment Types
         """
         T = current.T
-        return self.inv.get("item_status", {0: current.messages["NONE"],
+        return self.inv.get("item_status", {0: current.messages["NONE"], # Only Items with this Status can be allocated to shipments
                                             1: T("Dump"),
                                             2: T("Sale"),
                                             3: T("Reject"),
@@ -3065,6 +3065,12 @@ class S3Config(Storage):
         """
         return self.project.get("community", False)
 
+    def get_project_community_volunteers(self):
+        """
+            Manage Community Volunteers in Projects
+        """
+        return self.project.get("community_volunteers", False)
+
     def get_project_details_tab(self):
         """
             Group Tabs on Projects into a single 'Details' page
@@ -3287,7 +3293,7 @@ class S3Config(Storage):
 
     def get_req_pack_values(self):
         """
-            Do we show pack values in requests?
+            Do we show pack values in Requests?
         """
         return self.req.get("pack_values", True)
 

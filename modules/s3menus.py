@@ -1551,6 +1551,7 @@ class S3OptionsMenu(object):
             IMPORT = "Import Project Communities"
         else:
             IMPORT = "Import Project Locations"
+        community_volunteers = lambda i: settings.get_project_community_volunteers()
         hazards = lambda i: settings.get_project_hazards()
         #indicators = lambda i: settings.get_project_indicators()
         programmes = lambda i: settings.get_project_programmes()
@@ -1575,6 +1576,8 @@ class S3OptionsMenu(object):
                         #M("Create", m="create"),
                         M("Map", m="map"),
                         M("Community Contacts", f="location_contact"),
+                        M("Community Volunteers", f="volunteer",
+                          check=community_volunteers),
                      ),
                     )
             else:

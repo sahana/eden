@@ -655,6 +655,11 @@ class S3HRModel(S3Model):
                                             "fkey": "person_id",
                                             "pkey": "person_id",
                                             },
+                        # Projects
+                        project_project = {"link": "project_human_resource",
+                                           "joinby": "human_resource_id",
+                                           "key": "project_id",
+                                           },
                         # Application for Deployment (RDRT)
                         deploy_application = "human_resource_id",
                         # Availability
@@ -776,6 +781,7 @@ class S3HRModel(S3Model):
                   context = {#"location": location_context,
                              "organisation": "organisation_id",
                              "person": "person_id",
+                             "project": "project.id",
                              "site": "site_id",
                              },
                   create_next = hrm_url,

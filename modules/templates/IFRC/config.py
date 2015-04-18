@@ -170,6 +170,9 @@ def config(settings):
             if not otype or otype.name != "Red Cross / Red Crescent":
                 use_user_organisation = True
 
+        elif tablename == "req_req":
+            use_user_organisation = True
+
         elif tablename == "hrm_training":
             # Inherit realm entity from the related HR record
             htable = s3db.hrm_human_resource
@@ -1968,8 +1971,15 @@ def config(settings):
                 settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
         if root_org != NRCS:
             # Only Nepal RC use Warehouse Types
-            field = current.s3db.inv_warehouse.warehouse_type_id
+            s3db = current.s3db
+            field = s3db.inv_warehouse.warehouse_type_id
             field.readable = field.writable = False
+            list_fields = s3db.get_config("inv_warehouse", "list_fields")
+            try:
+                list_fields.remove("warehouse_type_id")
+            except:
+                # Already removed
+                pass
 
     settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
@@ -3192,10 +3202,11 @@ def config(settings):
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         if root_org == HNRC:
-            # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
             HFA = None
+            # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
             # @ToDo: Add 'Business Line' (when extending to Zone office)
             settings.project.details_tab = True
+            settings.project.community_volunteers = True
             # Done in a more structured way instead
             objectives = None
             outputs = None
@@ -3524,6 +3535,8 @@ def config(settings):
     # Should Requests ask whether Transportation is required?
     settings.req.ask_transport = True
     settings.req.pack_values = False
+    # Disable Request Matching as we don't wwant users making requests to see what stock is available
+    settings.req.prompt_match = False
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC
 
@@ -3539,7 +3552,7 @@ def config(settings):
     settings.customise_req_commit_controller = customise_req_commit_controller
 
     # -----------------------------------------------------------------------------
-    def customise_req_req_controller(**attr):
+    def customise_req_req_resource(r, tablename):
 
         s3db = current.s3db
 
@@ -3547,13 +3560,19 @@ def config(settings):
         field = s3db.req_commit.req_id
         field.requires = field.requires.other
 
-        s3db.req_req.site_id.label = T("Deliver To")
-        # @ToDo: Hide Drivers list_field
-        #table.drivers.readable = False
+        table = s3db.req_req
+        table.req_ref.represent = lambda v, show_link=True, pdf=True: \
+                s3db.req_ref_represent(v, show_link, pdf)
+        table.site_id.label = T("Deliver To")
+        # Hide Drivers list_field
+        list_fields = s3db.get_config("req_req", "list_fields")
+        try:
+            list_fields.remove((T("Drivers"), "drivers"))
+        except:
+            # Already removed
+            pass
 
-        return attr
-
-    settings.customise_req_req_controller = customise_req_req_controller
+    settings.customise_req_req_resource = customise_req_req_resource
 
     # -----------------------------------------------------------------------------
     def customise_vulnerability_data_resource(r, tablename):

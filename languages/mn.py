@@ -3161,7 +3161,6 @@
 'Owned By (Organization/Branch)': 'Эзэмшигч (Байгууллага / салбар)',
 'Owned Records': 'Эзэмшиж буй бүртгэл',
 'Owned Resources': 'Эзэмшиж буй нөөц',
-'Owning organization': 'Эзэмшиж буй байгууллагууд',
 'Owning Organization': 'Эзэмшиж буй байгууллага',
 'paid': 'төлсөн',
 'PDF File': 'PDF-файл',

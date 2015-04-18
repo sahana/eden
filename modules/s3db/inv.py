@@ -218,7 +218,7 @@ class S3WarehouseModel(S3Model):
                         ),
                      warehouse_type_id(),
                      self.gis_location_id(),
-                     Field("phone1", label = T("Phone 1"),
+                     Field("phone1", label = T("Phone"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(s3_phone_requires)
                            ),
@@ -478,9 +478,9 @@ class S3InventoryModel(S3Model):
                                 label = T("Bin"),
                                 represent = lambda v: v or NONE,
                                 ),
-                          # @ToDo: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
+                          # e.g.: Allow items to be marked as 'still on the shelf but allocated to an outgoing shipment'
                           Field("status", "integer",
-                                default = 0,
+                                default = 0, # Only Items with this Status can be allocated to Outgoing Shipments
                                 label = T("Status"),
                                 represent = lambda opt: \
                                     inv_item_status_opts.get(opt, UNKNOWN_OPT),
@@ -580,52 +580,56 @@ $.filterOptionsS3({
         # Filter widgets
         filter_widgets = [
             S3TextFilter(["item_id$name",
+                          "item_id$code",
+                          "item_id$brand_id",
+                          "item_id$model",
+                          "item_id$comments",
                           "item_pack_id$name",
-                         ],
-                         label=T("Item name"),
-                         comment=T("Search for items with this text in the name."),
-                        ),
+                          ],
+                          label=T("Search"),
+                          #comment=T("Search for items with this text in the name."),
+                          ),
             S3OptionsFilter("site_id",
-                            label=T("Facility"),
+                            #label=T("Facility"),
                             cols = 2,
                             hidden = True,
-                           ),
+                            ),
             S3OptionsFilter("status",
-                            label=T("Status"),
+                            #label=T("Status"),
                             cols = 2,
                             hidden = True,
-                           ),
+                            ),
             S3RangeFilter("quantity",
                           label=T("Quantity range"),
                           comment=T("Include only items where quantity is in this range."),
                           ge=10,
                           hidden = True,
-                         ),
+                          ),
             S3DateFilter("purchase_date",
-                         label=T("Purchase Date"),
+                         #label=T("Purchase Date"),
                          comment=T("Include only items purchased within the specified dates."),
                          hidden = True,
-                        ),
-            S3DateFilter("other_date",
-                         label=T("Expiry Date"),
+                         ),
+            S3DateFilter("expiry_date",
+                         #label=T("Expiry Date"),
                          comment=T("Include only items that expire within the specified dates."),
                          hidden = True,
-                        ),
+                         ),
             S3OptionsFilter("owner_org_id",
-                            label=T("Owning organization"),
+                            label=T("Owning Organization"),
                             comment=T("Search for items by owning organization."),
                             represent="%(name)s",
                             cols=2,
                             hidden = True,
-                           ),
+                            ),
             S3OptionsFilter("supply_org_id",
                             label=T("Donating Organization"),
                             comment=T("Search for items by donating organization."),
                             represent="%(name)s",
                             cols=2,
                             hidden = True,
-                           ),
-        ]
+                            ),
+            ]
 
         # Report options
         if track_pack_values:
@@ -1022,7 +1026,8 @@ class S3InventoryTrackingModel(S3Model):
         # Send (Outgoing / Dispatch / etc)
         #
         send_type_opts = settings.get_inv_shipment_types()
-        send_type_opts.update(self.inv_item_status_opts)
+        # @ToDo: When is this actually wanted?
+        #send_type_opts.update(self.inv_item_status_opts)
         send_type_opts.update(settings.get_inv_send_types())
 
         site_types = auth.org_site_types
@@ -1997,6 +2002,7 @@ $.filterOptionsS3({
         s3db = current.s3db
         sendtable = s3db.inv_send
         tracktable = s3db.inv_track_item
+        iitable = s3db.inv_inv_item
 
         request = current.request
         response = current.response
@@ -2011,13 +2017,12 @@ $.filterOptionsS3({
         send_inv_item_id = vars.send_inv_item_id
         if send_inv_item_id:
             if not vars.item_pack_id:
-                iitable = s3db.inv_inv_item
                 vars.item_pack_id = db(iitable.id == send_inv_item_id).select(iitable.item_pack_id,
                                                                               limitby=(0, 1)
                                                                               ).first().item_pack_id
-            s3db.inv_track_item.quantity.requires = QUANTITY_INV_ITEM(db,
-                                                                      send_inv_item_id,
-                                                                      vars.item_pack_id)
+            tracktable.quantity.requires = QUANTITY_INV_ITEM(db,
+                                                             send_inv_item_id,
+                                                             vars.item_pack_id)
 
         def set_send_attr(status):
             sendtable.send_ref.writable = False
@@ -2044,13 +2049,13 @@ $.filterOptionsS3({
             tracktable.supply_org_id.readable = False
             tracktable.adj_item_id.readable = False
             if status == TRACK_STATUS_PREPARING:
-                # show some fields
+                # Show some fields
                 tracktable.send_inv_item_id.writable = True
                 tracktable.item_pack_id.writable = True
                 tracktable.quantity.writable = True
                 #tracktable.req_quantity.readable = True
                 tracktable.comments.writable = True
-                # hide some fields
+                # Hide some fields
                 tracktable.currency.readable = False
                 tracktable.pack_value.readable = False
                 tracktable.item_source_no.readable = False
@@ -2093,8 +2098,7 @@ $.filterOptionsS3({
                 record = r.record
                 values = current.deployment_settings.get_inv_track_pack_values()
                 if status in (SHIP_STATUS_RECEIVED, SHIP_STATUS_CANCEL):
-                    list_fields = ["id",
-                                   "status",
+                    list_fields = ["status",
                                    "item_id",
                                    "item_pack_id",
                                    "bin",
@@ -2107,11 +2111,10 @@ $.filterOptionsS3({
                                    "comments",
                                    ]
                     if values:
-                        list_fields.insert(7, "pack_value")
-                        list_fields.insert(7, "currency")
+                        list_fields.insert(6, "pack_value")
+                        list_fields.insert(6, "currency")
                 elif status == SHIP_STATUS_RETURNING:
-                    list_fields = ["id",
-                                   "status",
+                    list_fields = ["status",
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
@@ -2122,11 +2125,10 @@ $.filterOptionsS3({
                                    "inv_item_status",
                                    ]
                     if values:
-                        list_fields.insert(5, "pack_value")
-                        list_fields.insert(5, "currency")
+                        list_fields.insert(4, "pack_value")
+                        list_fields.insert(4, "currency")
                 else:
-                    list_fields = ["id",
-                                   "status",
+                    list_fields = ["status",
                                    "item_id",
                                    "item_pack_id",
                                    "quantity",
@@ -2136,15 +2138,15 @@ $.filterOptionsS3({
                                    "inv_item_status",
                                    ]
                     if values:
-                        list_fields.insert(6, "pack_value")
-                        list_fields.insert(6, "currency")
+                        list_fields.insert(5, "pack_value")
+                        list_fields.insert(5, "currency")
                     if record.req_ref and r.interactive:
                         s3db.configure("inv_track_item",
                                        extra_fields = ["req_item_id"])
                         tracktable.quantity_needed = \
                             Field.Method("quantity_needed",
                                          cls.inv_track_item_quantity_needed)
-                        list_fields.insert(4, (T("Quantity Needed"),
+                        list_fields.insert(3, (T("Quantity Needed"),
                                                "quantity_needed"))
 
                 s3db.configure("inv_track_item", list_fields=list_fields)
@@ -2156,17 +2158,21 @@ $.filterOptionsS3({
                         return False
                     if method == "delete":
                         return s3.inv_track_item_deleting(r.component_id)
+                
+                # Filter out Items which have Quantity 0, are Expired or in Bad condition
+                query = (iitable.quantity != 0) & \
+                        (iitable.expiry_date >= r.now) & \
+                        (iitable.status == 0)
                 if record.get("site_id"):
                     # Restrict to items from this facility only
-                    tracktable.send_inv_item_id.requires = IS_ONE_OF(db, "inv_inv_item.id",
-                                                                     s3db.inv_item_represent,
-                                                                     filterby = "site_id",
-                                                                     filter_opts = (record.site_id,),
-                                                                     not_filterby = "quantity",
-                                                                     not_filter_opts = (0,),
-                                                                     orderby = "inv_inv_item.id",
-                                                                     sort = True,
-                                                                     )
+                    query &= (iitable.site_id == record.site_id)
+                tracktable.send_inv_item_id.requires = IS_ONE_OF(db(query), "inv_inv_item.id",
+                                                                 s3db.inv_item_represent,
+                                                                 not_filterby = "quantity",
+                                                                 not_filter_opts = (0,),
+                                                                 orderby = "inv_inv_item.id",
+                                                                 sort = True,
+                                                                 )
                 # Hide the values that will be copied from the inv_inv_item record
                 if r.component_id:
                     track_record = db(tracktable.id == r.component_id).select(tracktable.req_item_id,

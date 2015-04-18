@@ -5767,7 +5767,7 @@
 'Owned Records': 'Broj zapisa u vlasništvu',
 'Owned Resources': 'Posjedovani resursi',
 'Ownership': 'Vlasništvo',
-'Owning organization': 'Vlasnička organizacija',
+'Owning Organization': 'Vlasnička organizacija',
 'Pacific Islands Framework for Action on Climate Change. Applicable to projects in Pacific countries only': 'Okvir pacifičkih ostrva za akcije o klimatskim promjenama. Primjenjivo samo na projekte u pacifičkim zemljama',
 'Pack': 'Paket',
 'pack of 10': 'Paket od 10',

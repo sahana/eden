@@ -973,10 +973,32 @@ def indicator():
 
     return s3_rest_controller()
 
-#def indicator_data():
-#    """ RESTful CRUD controller """
-#
+def indicator_data():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# =============================================================================
+# Community Volunteers
+# =============================================================================
+#def human_resource():
+#    """ RESTful controller for Project <> Staff Assignments """
 #    return s3_rest_controller()
+
+def person():
+    """ RESTful controller for Community Volunteers """
+
+    # @ToDo: Filter
+
+    return s3db.vol_person_controller()
+
+def volunteer():
+    """ RESTful controller for Community Volunteers """
+
+    # @ToDo: Filter
+    #s3.filter = FS("type") == 2
+
+    return s3db.vol_volunteer_controller()
 
 # =============================================================================
 # Comments

@@ -264,7 +264,8 @@ def req_controller(template = False):
                     table.purpose.label = T("What the Items will be used for")
                 table.site_id.label = T("Deliver To")
                 table.request_for_id.label = T("Deliver To")
-                table.requester_id.label = T("Site Contact")
+                # Keep consistency, don't change
+                #table.requester_id.label = T("Site Contact")
                 table.recv_by_id.label = T("Delivered To")
 
             elif type == 3: # Person

@@ -1090,13 +1090,11 @@ $.filterOptionsS3({
         """
 
         db = current.db
-        auth = current.auth
 
         vars = form.vars
         item_id = vars.id
         catalog_id = vars.catalog_id
         catalog_item_id = None
-
 
         citable = db.supply_catalog_item
         query = (citable.item_id == item_id) & \
@@ -1118,7 +1116,7 @@ $.filterOptionsS3({
                             item_category_id = vars.item_category_id,
                             item_id = item_id
                             )
-        #auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
+        #current.auth.s3_set_record_owner(citable, catalog_item_id, force_update=True)
 
         # Update UM
         um = vars.um or db.supply_item.um.default

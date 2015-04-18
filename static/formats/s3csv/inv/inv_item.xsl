@@ -360,8 +360,8 @@
         </xsl:variable>
         <xsl:variable name="pack" select="col[@field='Pack']"/>
         <xsl:variable name="pack_quantity" select="col[@field='Pack Quantity']"/>
-        <xsl:variable name="item_tuid" select="concat('supply_item/',$item, '/', $um, '/', $model)"/>
-        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/',$item, '/', $um, '/', $model)"/>
+        <xsl:variable name="item_tuid" select="concat('supply_item/', $item, '/', $um, '/', $model)"/>
+        <xsl:variable name="pack_tuid" select="concat('supply_item_pack/', $item, '/', $um, '/', $model)"/>
 
         <resource name="supply_item">
             <xsl:attribute name="tuid">

@@ -70,6 +70,7 @@ class S3RequestModel(S3Model):
              "req_inline_form",
              "req_create_form_mods",
              "req_prep",
+             "req_ref_represent",
              "req_tabs",
              "req_priority_opts",
              )
@@ -589,6 +590,7 @@ class S3RequestModel(S3Model):
                     req_priority_represent = self.req_priority_represent,
                     req_req_id = req_id,
                     req_req_ref = req_ref,
+                    req_ref_represent = self.req_ref_represent,
                     req_status_opts = req_status_opts,
                     req_type_opts = req_type_opts,
                     req_tabs = self.req_tabs,
@@ -874,7 +876,7 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def req_represent(id, row=None, show_link=True):
+    def req_represent(id, row=None, show_link=True, pdf=False):
         """
             Represent a Request
         """
@@ -903,11 +905,17 @@ $.filterOptionsS3({
             return current.messages.UNKNOWN_OPT
 
         if show_link:
+            if pdf:
+                args = [id, "form"]
+                _title = current.T("Open PDF")
+            else:
+                args = [id]
+                _title = current.T("Go to Request")
             return A(req,
                      _href = URL(c = "req",
                                  f = "req",
-                                 args = [id]),
-                     _title = current.T("Go to Request"))
+                                 args = args),
+                     _title = _title)
         else:
             return req
 

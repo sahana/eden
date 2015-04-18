@@ -2618,6 +2618,7 @@ class S3ProjectHRModel(S3Model):
     def model(self):
 
         T = current.T
+        settings = current.deployment_settings
 
         status_opts = {1: T("Assigned"),
                        #2: T("Standing By"),
@@ -2625,6 +2626,8 @@ class S3ProjectHRModel(S3Model):
                        4: T("Left"),
                        #5: T("Unable to activate"),
                        }
+
+        community_volunteers = settings.get_project_community_volunteers()
 
         # ---------------------------------------------------------------------
         # Projects <> Human Resources
@@ -2636,6 +2639,10 @@ class S3ProjectHRModel(S3Model):
                           self.project_project_id(empty = False,
                                                   ondelete = "CASCADE",
                                                   ),
+                          self.project_location_id(ondelete = "CASCADE",
+                                                   readable = community_volunteers,
+                                                   writable = community_volunteers,
+                                                   ),
                           self.hrm_human_resource_id(empty = False,
                                                      ondelete = "CASCADE",
                                                      ),
@@ -2660,7 +2667,7 @@ class S3ProjectHRModel(S3Model):
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this project"))
 
-        if current.deployment_settings.has_module("budget"):
+        if settings.has_module("budget"):
             crud_form = S3SQLCustomForm("project_id",
                                         "human_resource_id",
                                         "status",
@@ -6967,14 +6974,16 @@ def project_rheader(r):
             append((T("Annual Budgets"), "annual_budget"))
         if details_tab:
             append((T("Details"), "details"))
-        if mode_3w:
-            append((T("Documents"), "document"))
         else:
-            append((attachments_label, "document"))
+            if mode_3w:
+                append((T("Documents"), "document"))
+            else:
+                append((attachments_label, "document"))
         if settings.get_hrm_show_staff():
             STAFF = settings.get_hrm_staff_label()
-            #append((STAFF, "human_resource", dict(group="staff")))
-            append((STAFF, "human_resource"))
+            if not details_tab:
+                #append((STAFF, "human_resource", dict(group="staff")))
+                append((STAFF, "human_resource"))
             if current.auth.s3_has_permission("create", "project_human_resource"):
                 append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
         #if settings.has_module("vol"):
@@ -7845,18 +7854,23 @@ class project_Details(S3Method):
                                    )
                 profile_widgets.append(orgs_widget)
             if settings.get_project_community():
-                locations_widget = dict(label = "Communities",
-                                        label_create = "Add Community",
-                                        type = "datatable",
-                                        actions = dt_row_actions("location"),
-                                        tablename = "project_location",
-                                        context = "project",
-                                        create_controller = "project",
-                                        create_function = "project",
-                                        create_component = "location",
-                                        pagesize = None, # all records
-                                        )
-                profile_widgets.append(locations_widget)
+                label = "Communities"
+                label_create = "Add Community"
+            else:
+                label = "Locations"
+                label_create = "Add Location"
+            locations_widget = dict(label = label,
+                                    label_create = label_create,
+                                    type = "datatable",
+                                    actions = dt_row_actions("location"),
+                                    tablename = "project_location",
+                                    context = "project",
+                                    create_controller = "project",
+                                    create_function = "project",
+                                    create_component = "location",
+                                    pagesize = None, # all records
+                                    )
+            profile_widgets.append(locations_widget)
             if settings.get_project_mode_3w():
                 beneficiaries_widget = dict(label = "Beneficiaries",
                                             label_create = "Add Beneficiaries",
@@ -7870,6 +7884,37 @@ class project_Details(S3Method):
                                             pagesize = None, # all records
                                             )
                 profile_widgets.append(beneficiaries_widget)
+                label = T("Documents")
+            else:
+                label = attachments_label
+            docs_widget = dict(label = label,
+                               label_create = "Add Document",
+                               type = "datatable",
+                               actions = dt_row_actions("document"),
+                               tablename = "doc_document",
+                               # @ToDo: Fix Filter
+                               #context = "project",
+                               context = ("~.doc_id", "doc_id"),
+                               create_controller = "project",
+                               create_function = "project",
+                               create_component = "document",
+                               pagesize = None, # all records
+                               )
+            profile_widgets.append(docs_widget)
+            if settings.get_hrm_show_staff():
+                STAFF = settings.get_hrm_staff_label()
+                hr_widget = dict(label = STAFF,
+                                 label_create = "Add %s" % STAFF,
+                                 type = "datatable",
+                                 actions = dt_row_actions("human_resource"),
+                                 tablename = "hrm_human_resource",
+                                 context = "project",
+                                 create_controller = "project",
+                                 create_function = "project",
+                                 create_component = "human_resource",
+                                 pagesize = None, # all records
+                                 )
+                profile_widgets.append(hr_widget)
 
             if r.representation == "html":
                 response = current.response

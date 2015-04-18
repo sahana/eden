@@ -736,4 +736,79 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    ),
                )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project():
+        """ PROJECT / Project Tracking & Management """
+
+        root_org = current.auth.root_org_name()
+        def community_volunteers(i):
+            if root_org == "Honduran Red Cross":
+                return True
+            else:
+                return False
+
+        menu = M(c="project")(
+             M("Programs", f="programme")(
+                M("Create", m="create"),
+             ),
+             M("Projects", f="project")(
+                M("Create", m="create"),
+             ),
+             M("Communities", f="location")(
+                # Better created from tab (otherwise Activity Type filter won't work)
+                #M("Create", m="create"),
+                M("Map", m="map"),
+                M("Community Contacts", f="location_contact"),
+                M("Community Volunteers", f="volunteer",
+                  check=community_volunteers),
+             ),
+            M("Reports", f="location", m="report")(
+                M("3W", f="location", m="report"),
+                M("Beneficiaries", f="beneficiary", m="report"),
+                #M("Indicators", f="indicator", m="report",
+                #  check=indicators,
+                #  ),
+                #M("Indicators over Time", f="indicator", m="timeplot",
+                #  check=indicators,
+                #  ),
+                M("Funding", f="organisation", m="report"),
+             ),
+             M("Import", f="project", m="import", p="create")(
+                M("Import Projects", m="import", p="create"),
+                M("Import Project Organizations", f="organisation",
+                  m="import", p="create"),
+                M("Import Project Communities", f="location",
+                  m="import", p="create"),
+             ),
+             M("Partner Organizations",  f="partners")(
+                M("Create", m="create"),
+                M("Import", m="import", p="create"),
+             ),
+             M("Activity Types", f="activity_type")(
+                M("Create", m="create"),
+             ),
+             M("Beneficiary Types", f="beneficiary_type")(
+                M("Create", m="create"),
+             ),
+             M("Demographics", f="demographic")(
+                M("Create", m="create"),
+             ),
+             M("Hazards", f="hazard")(
+                M("Create", m="create"),
+             ),
+             #M("Indicators", f="indicator",
+             #  check=indicators)(
+             #   M("Create", m="create"),
+             #),
+             M("Sectors", f="sector")(
+                M("Create", m="create"),
+             ),
+             M("Themes", f="theme")(
+                M("Create", m="create"),
+             ),
+            )
+
+        return menu
+
 # END =========================================================================

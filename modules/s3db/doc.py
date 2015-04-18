@@ -214,7 +214,7 @@ class S3DocumentLibrary(S3Model):
 
         # Reusable field
         represent = doc_DocumentRepresent(lookup = tablename,
-                                          fields = ["name", "file", "url"],
+                                          fields = ("name", "file", "url"),
                                           labels = "%(name)s",
                                           show_link = True)
 
