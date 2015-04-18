@@ -3123,11 +3123,14 @@ def config(settings):
     # Uncomment this to enable Hazards in 3W projects
     settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
-    settings.project.indicators = True
+    # Just HNRC
+    #settings.project.indicators = True
     # Uncomment this to use multiple Budgets per project
     settings.project.multiple_budgets = True
     # Uncomment this to use multiple Organisations per project
     settings.project.multiple_organisations = True
+    # Uncomment this to enable Programmes in projects
+    settings.project.programmes = True
     # Uncomment this to enable Themes in 3W projects
     settings.project.themes = True
     # Uncomment this to customise
@@ -3140,8 +3143,6 @@ def config(settings):
         #5: T("Supplier"),
         9: T("Partner National Society"),
     }
-    # Uncomment this to enable Programmes in projects
-    settings.project.programmes = True
 
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
@@ -3211,6 +3212,7 @@ def config(settings):
             objectives = None
             outputs = None
             settings.project.goals = True
+            settings.project.indicators = True
             settings.project.outcomes = True
             settings.project.outputs = True
         else:
