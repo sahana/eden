@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    Sahana Eden Volunteers Management 
+    Sahana Eden Volunteers Management
     (Extends modules/eden/hrm.py)
 
     @copyright: 2012-15 (c) Sahana Software Foundation
@@ -187,7 +187,7 @@ class S3VolunteerAwardModel(S3Model):
                                                           represent,
                                                           filterby="organisation_id",
                                                           filter_opts=filter_opts)),
-                                   represent = represent, 
+                                   represent = represent,
                                    comment = comment
                                    )
 
@@ -275,7 +275,7 @@ class S3VolunteerClusterModel(S3Model):
                                                             IS_ONE_OF(db,
                                                                       "vol_cluster_type.id",
                                                                       represent)),
-                                              represent = represent, 
+                                              represent = represent,
                                               comment = comment
                                               )
 
@@ -652,7 +652,7 @@ def vol_service_record(r, **attr):
                                     r,
                                     str(hours)
                                     ))
-            
+
         if total > 0:
             programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
 

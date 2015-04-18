@@ -2158,7 +2158,7 @@ $.filterOptionsS3({
                         return False
                     if method == "delete":
                         return s3.inv_track_item_deleting(r.component_id)
-                
+
                 # Filter out Items which have Quantity 0, are Expired or in Bad condition
                 query = (iitable.quantity != 0) & \
                         (iitable.expiry_date >= r.now) & \

@@ -1891,6 +1891,8 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         # Resource configuration
         configure(tablename,
+                  context = {"project": "project_id",
+                             },
                   deduplicate = self.project_beneficiary_deduplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
@@ -3207,6 +3209,8 @@ class S3ProjectLocationModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  context = {"project": "project_id",
+                             },
                   create_next = URL(c="project", f="location",
                                     args=["[id]", "beneficiary"]),
                   deduplicate = self.project_location_deduplicate,
@@ -3500,6 +3504,8 @@ class S3ProjectOrganisationModel(S3Model):
 
         # Resource Configuration
         self.configure(tablename,
+                       context = {"project": "project_id",
+                                  },
                        deduplicate = self.project_organisation_deduplicate,
                        onaccept = self.project_organisation_onaccept,
                        ondelete = self.project_organisation_ondelete,

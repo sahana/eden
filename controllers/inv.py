@@ -307,7 +307,7 @@ def warehouse():
             elif component_name == "recv":
                 # Filter out items which are already in this inventory
                 s3db.inv_prep(r)
-                
+
                 # Configure which fields in inv_recv are readable/writable
                 # depending on status
                 recvtable = s3db.inv_recv
