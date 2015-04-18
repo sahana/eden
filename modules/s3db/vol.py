@@ -913,6 +913,7 @@ def vol_person_controller():
         - includes components relevant to HRM
     """
 
+    db = current.db
     get_vars = current.request.get_vars
     resourcename = "person"
     response = current.response
