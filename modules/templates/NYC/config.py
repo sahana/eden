@@ -55,9 +55,6 @@ def config(settings):
     settings.gis.postcode_selector = False
     # Enable this to change the label for 'Postcode'
     #settings.ui.label_postcode = "ZIP Code"
-    # Uncomment to disable responsive behavior of datatables
-    # - Disabled until tested
-    settings.ui.datatables_responsive = False
     # Custom icon classes
     settings.ui.custom_icons = {
         "alert": "icon-alert",

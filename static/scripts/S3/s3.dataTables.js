@@ -286,10 +286,10 @@
         if (tableConfig['bulkActions']) {
             $('.bulkcheckbox').unbind('click.bulkSelect')
                               .on('click.bulkSelect', function(event) {
-                                  
+
                 var id = this.id.substr(6),
                     rows = selectedRows[t];
-                    
+
                 var posn = inList(id, rows);
                 if (posn == -1) {
                     rows.push(id);
@@ -355,7 +355,7 @@
             // are stored in the hidden fields
             $(aHiddenFieldsID[t][0]).val(selectionMode[t]);
             $(aHiddenFieldsID[t][1]).val(selectedRows[t].join(','));
-            
+
             // Add the bulk action controls to the dataTable
             $('.dataTable-action').remove();
             $(bulk_action_controls).insertBefore('#bulk_select_options');
@@ -667,7 +667,7 @@
 
             if (!ajax) {
                 var requestEnd = requestStart + requestLength;
-            
+
                 // Prevent the Ajax lookup of the last page if we already know
                 // that there are no more records than we have in the cache.
                 if (cacheLastJson && cacheLastJson.hasOwnProperty('recordsFiltered')) {
@@ -683,7 +683,7 @@
                 } else if (cacheLower < 0 || requestStart < cacheLower || requestEnd > cacheUpper) {
                     // outside cached data - need to make a request
                     ajax = true;
-                } else if (cacheLastRequest && 
+                } else if (cacheLastRequest &&
                         (JSON.stringify(request.order)   !== JSON.stringify(cacheLastRequest.order) ||
                          JSON.stringify(request.columns) !== JSON.stringify(cacheLastRequest.columns) ||
                          JSON.stringify(request.search)  !== JSON.stringify(cacheLastRequest.search))) {
@@ -805,7 +805,7 @@
                 var json = $.extend(true, {}, cacheLastJson);
 
                 // Update the echo for each response
-                json.draw = request.draw; 
+                json.draw = request.draw;
 
                 // Remove the records up to the start of the current page
                 json.data.splice(0, requestStart - cacheLower);
@@ -996,7 +996,7 @@
             'pageLength': pageLength, // formerly iDisplayLength
             'pagingType': tableConfig['pagingType'], // formerly sPaginationType
             'processing': processing, // formerly bProcessing
-            'responsive': true,
+            //'responsive': $(selector).hasClass('responsive'), // redundant, responsive-class alone should be enough
             'searchDelay': 450,
             'searching': tableConfig['searching'] == 'true', // formerly bFilter
             'serverSide': serverSide, // formerly bServerSide
@@ -1288,11 +1288,11 @@
                                  .on('click.datatable', function() {
 
             var tableid = dt.attr('id');
-              
+
             var oSetting = dt.dataTableSettings[t],
                 url = $(this).data('url'),
                 extension = $(this).data('extension');
-                
+
             if (oSetting) {
                 var arguments = 'id=' + tableid,
                     serverFilterArgs = $('#' + tableid + '_dataTable_filter');
