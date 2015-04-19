@@ -1483,7 +1483,9 @@ def config(settings):
         if r.controller == "vol":
             T = current.T
             root_org = current.auth.root_org_name()
-            if root_org == NRCS:
+            if root_org in (HNRC, VNRC):
+                settings.hrm.use_certificates = False
+            elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Programme Volunteer"),
                          "GOVERNANCE": T("Governance Volunteer"),

@@ -38,20 +38,36 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         T = current.T
+        auth = current.auth
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        has_role = auth.s3_has_role
+        root_org = current.auth.root_org_name()
+        system_roles = current.session.s3.system_roles
+        ADMIN = system_roles.ADMIN
+        ORG_ADMIN = system_roles.ORG_ADMIN
+
+        use_certs = lambda i: current.deployment_settings.get_hrm_use_certificates()
+
+        def hrm(item):
+
+            return root_org != "Honduran Red Cross" or \
+                   has_role(ORG_ADMIN)
 
         def outreach(item):
 
-            root_org = current.auth.root_org_name()
             return root_org == "New Zealand Red Cross" or \
-                   root_org is None and current.auth.s3_has_role(ADMIN)
+                   root_org is None and has_role(ADMIN)
+
+        def vol(item):
+
+            return root_org != "Honduran Red Cross" or \
+                   has_role(ORG_ADMIN)
 
         return [
             homepage("gis")(
             ),
             homepage("hrm", "org", name=T("Staff"),
-                     vars=dict(group="staff"))(
+                     vars=dict(group="staff"), check=hrm)(
                 MM("Staff", c="hrm", f="staff", m="summary"),
                 MM("Teams", c="hrm", f="group"),
                 MM("National Societies", c="org", f="organisation",
@@ -61,9 +77,9 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Skill List", c="hrm", f="skill"),
                 MM("Training Events", c="hrm", f="training_event"),
                 MM("Training Courses", c="hrm", f="course"),
-                MM("Certificate List", c="hrm", f="certificate"),
+                MM("Certificate List", c="hrm", f="certificate", check=use_certs),
             ),
-            homepage("vol", name=T("Volunteers"))(
+            homepage("vol", name=T("Volunteers"), check=vol)(
                 MM("Volunteers", c="vol", f="volunteer", m="summary"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
@@ -71,7 +87,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Skill List", c="vol", f="skill"),
                 MM("Training Events", c="vol", f="training_event"),
                 MM("Training Courses", c="vol", f="course"),
-                MM("Certificate List", c="vol", f="certificate"),
+                MM("Certificate List", c="vol", f="certificate", check=use_certs),
             ),
             homepage("member")(
                 MM("Members", c="member", f="membership", m="summary"),
@@ -97,7 +113,7 @@ class S3MainMenu(default.S3MainMenu):
             homepage("project")(
                 MM("Projects", c="project", f="project"),
                 MM("Communities", c="project", f="location"),
-                MM("Outreach", c="po", f="index", check = outreach),
+                MM("Outreach", c="po", f="index", check=outreach),
             ),
             homepage("vulnerability")(
                 MM("Map", c="vulnerability", f="index"),
@@ -297,27 +313,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def hrm():
         """ HRM Human Resource Management """
 
-        session = current.session
+        has_role = current.auth.s3_has_role
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
+        settings = current.deployment_settings
 
         if "hrm" not in s3:
             current.s3db.hrm_vars()
         hrm_vars = s3.hrm
 
-        SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
+        SECTORS = "Clusters" if settings.get_ui_label_cluster() \
                              else "Sectors"
 
         manager_mode = lambda i: hrm_vars.mode is None
         personal_mode = lambda i: hrm_vars.mode is not None
         is_org_admin = lambda i: hrm_vars.orgs and True or \
-                                 ADMIN in s3.roles
-        is_super_editor = lambda i: current.auth.s3_has_role("staff_super") or \
-                                    current.auth.s3_has_role("vol_super")
+                                 has_role(ADMIN)
+        is_super_editor = lambda i: has_role("staff_super") or \
+                                    has_role("vol_super")
 
         staff = {"group": "staff"}
 
-        is_not_vnrc = lambda i: current.auth.root_org_name() != "Viet Nam Red Cross"
+        use_certs = lambda i: settings.get_hrm_use_certificates()
 
         return M()(
                     M("Staff", c="hrm", f=("staff", "person"), m="summary",
@@ -383,7 +400,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", c="hrm", f="certificate",
-                      check=[manager_mode, is_not_vnrc])(
+                      check=[manager_mode, use_certs])(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                         #M("Skill Equivalence", f="certificate_skill"),
@@ -426,30 +443,33 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ Volunteer Management """
 
         auth = current.auth
+        has_role = auth.s3_has_role
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
+        root_org = auth.root_org_name()
 
         # Custom conditions for the check-hook, as lambdas in order
         # to have them checked only immediately before rendering:
         manager_mode = lambda i: s3.hrm.mode is None
         personal_mode = lambda i: s3.hrm.mode is not None
         is_org_admin = lambda i: s3.hrm.orgs and True or \
-                                 ADMIN in s3.roles
-        is_super_editor = lambda i: auth.s3_has_role("vol_super") or \
-                                    auth.s3_has_role("staff_super")
+                                 has_role(ADMIN)
+        is_super_editor = lambda i: has_role("vol_super") or \
+                                    has_role("staff_super")
 
         settings = current.deployment_settings
+        use_certs = lambda i: settings.get_hrm_use_certificates()
         show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
 
-        not_vnrc = lambda i: auth.root_org_name() != "Viet Nam Red Cross"
-        skills_menu = lambda i: auth.root_org_name() in ("Afghan Red Crescent Society",
-                                                         "Indonesian Red Cross Society (Palang Merah Indonesia)",
-                                                         "Viet Nam Red Cross",
-                                                         )
+        not_vnrc = lambda i: root_org != "Viet Nam Red Cross"
+        skills_menu = lambda i: root_org in ("Afghan Red Crescent Society",
+                                             "Indonesian Red Cross Society (Palang Merah Indonesia)",
+                                             "Viet Nam Red Cross",
+                                             )
 
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
@@ -497,7 +517,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Course Certificates", f="course_certificate"),
                     ),
                     M("Certificate Catalog", f="certificate",
-                      check=manager_mode)(
+                      check=[manager_mode, use_certs])(
                         M("Create", m="create"),
                         #M("Skill Equivalence", f="certificate_skill"),
                     ),
