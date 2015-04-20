@@ -2154,7 +2154,7 @@
 'Outcomes, Impact, Challenges': 'नतिजा, प्रभाव, चुनौतीहरू',
 'Output': 'नतिजा',
 'Output added': 'नतिजा संचित गरियो',
-'Output removed': 'नतिजा हटाइयो',
+'Output deleted': 'नतिजा हटाइयो',
 'Output updated': 'नतिजा परिमार्जन गरियो',
 'Outputs': 'नतिजाहरू',
 'Outreach Staff': 'बाहिर खटाइएको कर्मचारी',

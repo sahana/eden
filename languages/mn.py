@@ -3148,7 +3148,7 @@
 'Outgoing SMS Handler': 'Гарах SMS буюу товч мэдээлэл эрхлэгч',
 'Output': 'Гаралт',
 'Output added': 'Гаралт нэмэгдсэн',
-'Output removed': 'Гаралтыг устгасан',
+'Output deleted': 'Гаралтыг устгасан',
 'Output updated': 'Гаралт шинэчлэгдсэн',
 'Outputs': 'Гаралтууд',
 'Over 60': '60-аас дээш',

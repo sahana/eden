@@ -5751,7 +5751,7 @@
 'Outgoing SMS Handler': 'Upravljač izlaznog SMS',
 'Output': 'Izlaz',
 'Output added': 'Izlaz dodan',
-'Output removed': 'Izlaz uklonjen',
+'Output deleted': 'Izlaz uklonjen',
 'Output updated': 'Izlaz ažuriran',
 'Outputs': 'Izlazi',
 'oval': 'ovalno',

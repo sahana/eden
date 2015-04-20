@@ -3277,10 +3277,8 @@ def config(settings):
             settings.project.multiple_budgets = False
             settings.project.budget_monitoring = True
             # Require start/end dates
-            start_date_requires = table.start_date.requires
-            start_date_requires = start_date_requires.other
-            end_date_requires = table.end_date.requires
-            end_date_requires = end_date_requires.other
+            table.start_date.requires = table.start_date.requires.other
+            table.end_date.requires = table.end_date.requires.other
             budget = S3SQLInlineComponent(
                 "budget",
                 label = T("Budget"),

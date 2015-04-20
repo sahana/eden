@@ -26,6 +26,7 @@
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
 """
+from reportlab.lib.validators import Percentage
 
 __all__ = ("S3BudgetModel",
            "S3BudgetKitModel",
@@ -1470,6 +1471,7 @@ class S3BudgetMonitoringModel(S3Model):
                                       # Normally set at Budget level
                                       writable = False,
                                       ),
+                          Field.Method("percentage", self.budget_monitoring_percentage),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1487,8 +1489,60 @@ class S3BudgetMonitoringModel(S3Model):
         #    msg_list_empty = T("No Monitoring Data currently registered in this Budget"),
         #)
 
+        self.configure(tablename,
+                       list_fields = ["end_date",
+                                      "planned",
+                                      "value",
+                                      (T("Percentage"), "percentage"),
+                                      "comments",
+                                      ],
+                       )
+
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_monitoring_percentage(row):
+        """
+            Virtual Field to show the percentage used of the Budget
+        """
+
+        if hasattr(row, "budget_monitoring"):
+            row = row.budget_monitoring
+        if hasattr(row, "planned"):
+            planned = row.planned
+            if planned == 0.0:
+                # Can't divide by Zero
+                return current.messages["NONE"]
+        else:
+            planned = None
+        if hasattr(row, "value"):
+            actual = row.value
+        else:
+            actual = None
+
+        if planned is not None and actual is not None:
+            percentage = actual / planned * 100
+            return "%s %%" % "{0:.2f}".format(percentage)
+
+        if hasattr(row, "id"):
+            # Reload the record
+            s3_debug("Reload")
+            table = current.s3db.budget_monitoring
+            r = current.db(table.id == row.id).select(table.planned,
+                                                      table.value,
+                                                      limitby=(0, 1)
+                                                      ).first()
+            if r:
+                planned = r.planned
+                if planned == 0.0:
+                    # Can't divide by Zero
+                    return current.messages["NONE"]
+                percentage = r.value / planned * 100
+                return "%s %%" % percentage
+
+        return current.messages["NONE"]
 
 # =============================================================================
 class budget_CostItemRepresent(S3Represent):

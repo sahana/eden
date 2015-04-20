@@ -2062,7 +2062,7 @@
 'Outcomes, Impact, Challenges': 'نتیجه، تاثیر، رقابتونه',
 'Output': 'محصول',
 'Output added': 'محصول اضافه شوی',
-'Output removed': 'محصول له منځه تللی',
+'Output deleted': 'محصول له منځه تللی',
 'Output updated': 'محصول ننی شوی',
 'Outputs': 'محصولونه',
 'Outreach Staff': 'توسعه د کارمندانو',

@@ -2065,7 +2065,7 @@
 'Outcomes, Impact, Challenges': 'نتیجه، فشردن، چالش ها',
 'Output': 'نتیجه',
 'Output added': 'نتیجه اضافه گردید',
-'Output removed': 'نتیجه حذف گردید',
+'Output deleted': 'نتیجه حذف گردید',
 'Output updated': 'نتیجه تجدید گردید',
 'Outputs': 'نتایج',
 'Outreach Staff': 'کارمند برتر',

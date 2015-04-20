@@ -3695,14 +3695,14 @@ class S3ProjectPlanningModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Goal"),
+            label_create = T("Add Goal"),
             title_display = T("Goal"),
             title_list = T("Goals"),
             title_update = T("Edit Goal"),
             label_list_button = T("List Goals"),
             msg_record_created = T("Goal added"),
             msg_record_modified = T("Goal updated"),
-            msg_record_deleted = T("Goal removed"),
+            msg_record_deleted = T("Goal deleted"),
             msg_list_empty = T("No goals defined")
         )
 
@@ -3751,14 +3751,14 @@ class S3ProjectPlanningModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Outcome"),
+            label_create = T("Add Outcome"),
             title_display = T("Outcome"),
             title_list = T("Outcomes"),
             title_update = T("Edit Outcome"),
             label_list_button = T("List Outcomes"),
             msg_record_created = T("Outcome added"),
             msg_record_modified = T("Outcome updated"),
-            msg_record_deleted = T("Outcome removed"),
+            msg_record_deleted = T("Outcome deleted"),
             msg_list_empty = T("No outcomes defined")
         )
 
@@ -3826,7 +3826,7 @@ class S3ProjectPlanningModel(S3Model):
             label_list_button = T("List Outputs"),
             msg_record_created = T("Output added"),
             msg_record_modified = T("Output updated"),
-            msg_record_deleted = T("Output removed"),
+            msg_record_deleted = T("Output deleted"),
             msg_list_empty = T("No outputs defined")
         )
 
@@ -3888,7 +3888,7 @@ class S3ProjectPlanningModel(S3Model):
             label_list_button = T("List Indicators"),
             msg_record_created = T("Indicator added"),
             msg_record_modified = T("Indicator updated"),
-            msg_record_deleted = T("Indicator removed"),
+            msg_record_deleted = T("Indicator deleted"),
             msg_list_empty = T("No indicators defined")
         )
 
@@ -3936,7 +3936,8 @@ class S3ProjectPlanningModel(S3Model):
                             represent = lambda v: IS_INT_AMOUNT.represent(v),
                             requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                             ),
-                     # @ToDo: Computed field for Percentage
+                     Field.Method("percentage", self.project_indicator_percentage),
+                     s3_comments(),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -3951,6 +3952,16 @@ class S3ProjectPlanningModel(S3Model):
             msg_record_deleted = T("Indicator Data removed"),
             msg_list_empty = T("No indicator data defined")
         )
+
+        self.configure(tablename,
+                       list_fields = ["indicator_id",
+                                      "date",
+                                      "target_value",
+                                      "value",
+                                      (T("Percentage"), "percentage"),
+                                      "comments",
+                                      ],
+                       )
 
         # Pass names back to global scope (s3.*)
         return dict(#project_goal_id = goal_id,
@@ -4107,6 +4118,49 @@ class S3ProjectPlanningModel(S3Model):
                 if outcome:
                     table = s3db.project_indicator
                     db(table.id == form_vars.id).update(goal_id = outcome.goal_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_indicator_percentage(row):
+        """
+            Virtual Field to show the percentage completion of the Indicator
+        """
+
+        if hasattr(row, "project_indicator_data"):
+            row = row.project_indicator_data
+        if hasattr(row, "target_value"):
+            planned = row.target_value
+            if planned == 0.0:
+                # Can't divide by Zero
+                return current.messages["NONE"]
+        else:
+            planned = None
+        if hasattr(row, "value"):
+            actual = row.value
+        else:
+            actual = None
+
+        if planned is not None and actual is not None:
+            percentage = actual / planned * 100
+            return "%s %%" % "{0:.2f}".format(percentage)
+
+        if hasattr(row, "id"):
+            # Reload the record
+            s3_debug("Reload")
+            table = current.s3db.project_indicator_data
+            r = current.db(table.id == row.id).select(table.target_value,
+                                                      table.value,
+                                                      limitby=(0, 1)
+                                                      ).first()
+            if r:
+                planned = r.target_value
+                if planned == 0.0:
+                    # Can't divide by Zero
+                    return current.messages["NONE"]
+                percentage = r.value / planned * 100
+                return "%s %%" % percentage
+
+        return current.messages["NONE"]
 
 # =============================================================================
 class S3ProjectProgrammeModel(S3Model):
