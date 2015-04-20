@@ -93,7 +93,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Members", c="member", f="membership", m="summary"),
             ),
             homepage("inv", "supply", "req")(
-                MM("Warehouses", c="inv", f="warehouse"),
+                MM("Warehouses", c="inv", f="warehouse", m="summary"),
                 MM("Received Shipments", c="inv", f="recv"),
                 MM("Sent Shipments", c="inv", f="send"),
                 MM("Items", c="supply", f="item"),
@@ -111,7 +111,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Disaster Assessments", c="survey", f="series"),
             ),
             homepage("project")(
-                MM("Projects", c="project", f="project"),
+                MM("Projects", c="project", f="project", m="summary"),
                 MM("Communities", c="project", f="location"),
                 MM("Outreach", c="po", f="index", check=outreach),
             ),
@@ -199,7 +199,7 @@ class S3MainMenu(default.S3MainMenu):
                    image = "graphic_members.png",
                    title = "Members",
                    text = "Add new and manage existing members."),
-                DB("Warehouses", c="inv", f="index",
+                DB("Warehouses", c="inv", f="warehouse", m="summary",
                    image = "graphic_warehouse.png",
                    title = "Warehouses",
                    text = "Stocks and relief items."),
@@ -211,7 +211,7 @@ class S3MainMenu(default.S3MainMenu):
                    image = "graphic_assessments.png",
                    title = "Assessments",
                    text = "Design, deploy & analyze surveys."),
-                DB("Projects", c="project", f="index",
+                DB("Projects", c="project", f="project", m="summary",
                    image = "graphic_tools.png",
                    title = "Projects",
                    text = "Tracking and analysis of Projects and Activities.")
@@ -617,7 +617,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(
                     #M("Home", f="index"),
-                    M("Warehouses", c="inv", f="warehouse")(
+                    M("Warehouses", c="inv", f="warehouse", m="summary")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
@@ -772,7 +772,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
              M("Programs", f="programme")(
                 M("Create", m="create"),
              ),
-             M("Projects", f="project")(
+             M("Projects", f="project", m="summary")(
                 M("Create", m="create"),
              ),
              M("Communities", f="location")(

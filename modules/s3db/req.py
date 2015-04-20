@@ -514,7 +514,9 @@ class S3RequestModel(S3Model):
                        filter_widgets = filter_widgets,
                        onaccept = self.req_onaccept,
                        ondelete = self.req_req_ondelete,
-                       listadd = False,
+                       # Why was this set? Should be consistent with other resources
+                       # Can add this to be specific templates/views which need this if-required
+                       #listadd = False,
                        list_fields = list_fields,
                        orderby = "req_req.date desc",
                        report_options = Storage(

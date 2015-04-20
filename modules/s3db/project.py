@@ -3184,10 +3184,10 @@ class S3ProjectLocationModel(S3Model):
 
         filter_widgets.extend((
             # This is only suitable for deployments with a few projects
-            #S3OptionsFilter("project_id",
-            #                label = T("Project"),
-            #                hidden = True,
-            #                ),
+            S3OptionsFilter("project_id",
+                            label = T("Project"),
+                            hidden = True,
+                            ),
             S3OptionsFilter("project_id$theme_project.theme_id",
                             label = T("Theme"),
                             options = lambda: \
@@ -7981,7 +7981,7 @@ class project_Details(S3Method):
             if settings.get_hrm_show_staff():
                 STAFF = settings.get_hrm_staff_label()
                 hr_widget = dict(label = STAFF,
-                                 label_create = "Add %s" % STAFF,
+                                 label_create = "Add %(staff)s" % dict(staff=STAFF),
                                  type = "datatable",
                                  actions = dt_row_actions("human_resource"),
                                  tablename = "hrm_human_resource",

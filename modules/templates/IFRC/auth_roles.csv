@@ -666,6 +666,7 @@ hn_project_manager,"Honduras Project Coordinator",,,,"project_hazard",,READ,,,,,
 hn_project_manager,"Honduras Project Coordinator",,,,"project_activity_type",,READ,,,,,
 hn_project_manager,"Honduras Project Coordinator",,,,"project_beneficiary_type",,READ,,,,,
 hn_project_manager,"Honduras Project Coordinator",,org,,,,"READ|CREATE|UPDATE",,,,,
+hn_project_manager,"Honduras Project Coordinator",,,,"org_organisation",any,"READ",,,,,"Used to add Partner NS to Projects"
 hn_project_manager,"Honduras Project Coordinator",,,,"org_organisation",,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
 hn_project_manager,"Honduras Project Coordinator",,pr,,,,READ,,,,,
 hn_project_manager,"Honduras Project Coordinator",,hrm,hr_search,,,READ,,,,,

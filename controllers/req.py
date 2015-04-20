@@ -454,7 +454,8 @@ $.filterOptionsS3({
                             "comments",
                         )
                     s3db.configure("req_commit",
-                                   crud_form = crud_form)
+                                   crud_form = crud_form,
+                                   )
                     # Redirect to the Items tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -491,7 +492,8 @@ $.filterOptionsS3({
                             "comments",
                         )
                     s3db.configure("req_commit",
-                                   crud_form = crud_form)
+                                   crud_form = crud_form,
+                                   )
                     # Redirect to the Skills tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -657,7 +659,8 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
     s3.postp = postp
 
     return s3_rest_controller("req", "req",
-                              rheader = s3db.req_rheader)
+                              rheader = s3db.req_rheader,
+                              )
 
 # =============================================================================
 def requester_represent(id, show_link=True):
