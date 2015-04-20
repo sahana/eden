@@ -144,6 +144,7 @@ class S3ProjectModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         set_method = self.set_method
+        super_link = self.super_link
 
         # ---------------------------------------------------------------------
         # Projects
@@ -154,7 +155,8 @@ class S3ProjectModel(S3Model):
 
         tablename = "project_project"
         define_table(tablename,
-                     self.super_link("doc_id", "doc_entity"),
+                     super_link("doc_id", "doc_entity"),
+                     super_link("budget_entity_id", "budget_entity"),
                      # multi_orgs deployments use the separate project_organisation table
                      # - although Lead Org is still cached here to avoid the need for a virtual field to lookup
                      self.org_organisation_id(
@@ -341,7 +343,7 @@ class S3ProjectModel(S3Model):
                         totals=True
                     )
                   ),
-                  super_entity = "doc_entity",
+                  super_entity = ("doc_entity", "budget_entity"),
                   update_realm = True,
                   )
 
@@ -420,19 +422,6 @@ class S3ProjectModel(S3Model):
                        project_annual_budget = "project_id",
                        # Beneficiaries
                        project_beneficiary = "project_id",
-                       # Budgets
-                       #budget_project = "project_id",
-                       budget_budget = {"link": "budget_project",
-                                        "joinby": "project_id",
-                                        "key": "budget_id",
-                                        "actuate": "replace",
-                                        "multiple": False,
-                                        },
-                       #budget_monitoring = {"link": "budget_project",
-                       #                     "joinby": "project_id",
-                       #                     "key": "budget_id",
-                       #                     "actuate": "hide",
-                       #                     },
                        # Hazards
                        project_hazard = {"link": "project_hazard_project",
                                          "joinby": "project_id",
@@ -7003,8 +6992,7 @@ def project_rheader(r):
         if record.calendar:
             append((T("Calendar"), "timeline"))
         if settings.get_project_budget_monitoring():
-            #append((T("Budget Monitoring"), "budget_monitoring"))
-            append((T("Budget Monitoring"), "budget"))
+            append((T("Budget Monitoring"), "monitoring"))
         elif settings.get_project_multiple_budgets():
             append((T("Annual Budgets"), "annual_budget"))
         if details_tab:

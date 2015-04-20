@@ -1493,7 +1493,7 @@ def config(settings):
                 settings.hrm.use_certificates = False
             elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
-                types = {"PROGRAMME": T("Programme Volunteer"),
+                types = {"PROGRAMME": T("Program Volunteer"),
                          "GOVERNANCE": T("Governance Volunteer"),
                          }
                 field = current.s3db.vol_details.volunteer_type
@@ -3044,7 +3044,7 @@ def config(settings):
                 elif component_name == "membership":
                     field = s3db.member_membership.fee_exemption
                     field.readable = field.writable = True
-                    PROGRAMMES = T("Programmes")
+                    PROGRAMMES = T("Programs")
                     from s3 import S3SQLCustomForm, S3SQLInlineLink
                     crud_form = S3SQLCustomForm("organisation_id",
                                                 "code",
@@ -3160,38 +3160,64 @@ def config(settings):
 
         db = current.db
         s3db = current.s3db
-        form_vars = form.vars
-        project_id = form_vars.id
-        btable = s3db.budget_budget
-        ltable = s3db.project_budget
-        query = (ltable.project_id == project_id) & \
-                (ltable.budget_id == btable.id)
-        budget = db(query).select(btable.id, # Needed for update_record
-                                  btable.total_budget,
-                                  btable.monitoring_frequency,
-                                  limitby=(0, 1)
-                                  ).first()
-        if not budget:
-            return
-        monitoring_frequency = budget.monitoring_frequency
-        if not monitoring_frequency:
-            return
-        total_budget = budget.total_budget
+        project_id = form.vars.id
+        # Read Budget Entity ID, Start Date and End Date
         ptable = s3db.project_project
-        project = db(ptable.id == project_id).select(ptable.name,
+        project = db(ptable.id == project_id).select(ptable.budget_entity_id,
+                                                     ptable.name,
                                                      ptable.start_date,
                                                      ptable.end_date,
                                                      limitby=(0, 1)
                                                      ).first()
         if not project:
             return
-        budget.update_record(name = project.name)
+
+        # Copy Project Name to Budget Name
+        budget_entity_id = project.budget_entity_id
+        btable = s3db.budget_budget
+        query = (btable.budget_entity_id == budget_entity_id)
+        budget = db(query).select(btable.id, # Needed for update_record
+                                  # If we want to provide smoothed default expected values
+                                  #btable.total_budget,
+                                  btable.currency,
+                                  # Assume Monthly
+                                  #btable.monitoring_frequency,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not budget:
+            return
+        try:
+            budget.update_record(name = project.name)
+        except:
+            # unique=True violation
+            budget.update_record(name = "Budget for %s" % project.name)
+
+        # Create Monitoring Data entries
+        # Assume Monthly
+        #monitoring_frequency = budget.monitoring_frequency
+        #if not monitoring_frequency:
+        #    return
+        #total_budget = budget.total_budget
+        currency = budget.currency
         start_date = project.start_date
         end_date = project.end_date
         if not start_date or not end_date:
             return
-            
-        # @ToDo: Add entries
+        # Create entries for the 1st of every month between start_date and end_date
+        from dateutil import rrule
+        dates = list(rrule.rrule(rrule.MONTHLY, bymonthday=1, dtstart=start_date, until=end_date))
+        mtable = s3db.budget_monitoring
+        for d in dates:
+            mtable.insert(budget_entity_id = budget_entity_id,
+                          # @ToDo: This needs to be modified whenever entries are manually edited
+                          # Set/update this in budget_monitoring_onaccept
+                          # - also check here that we don't exceed overall budget
+                          start_date = start_date,
+                          end_date = d,
+                          currency = currency,
+                          )
+            # Start date relates to previous entry
+            start_date = d
 
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
@@ -3249,12 +3275,21 @@ def config(settings):
             settings.project.outputs = True
             # Use Budget module instead of ProjectAnnualBudget
             settings.project.multiple_budgets = False
+            settings.project.budget_monitoring = True
+            # Require start/end dates
+            start_date_requires = table.start_date.requires
+            start_date_requires = start_date_requires.other
+            end_date_requires = table.end_date.requires
+            end_date_requires = end_date_requires.other
             budget = S3SQLInlineComponent(
                 "budget",
                 label = T("Budget"),
-                link = False,
+                #link = False,
                 multiple = False,
-                fields = ["total_budget", "monitoring_frequency"],
+                fields = ["total_budget",
+                          "currency",
+                          #"monitoring_frequency",
+                          ],
             )
             btable = s3db.budget_budget
             # Need to provide a name
@@ -3273,7 +3308,6 @@ def config(settings):
             budget = None
             postprocess = None
 
-        s3db = current.s3db
         if settings.get_project_programmes():
             # Inject inline link for programmes including AddResourceLink
             #from s3layouts import S3AddResourceLink
@@ -3283,7 +3317,7 @@ def config(settings):
                             "parent": "programme_project",
                             }
             programme = S3SQLInlineLink("programme",
-                                        label = T("Programme"),
+                                        label = T("Program"),
                                         field = "programme_id",
                                         multiple = False,
                                         comment = comment,
@@ -3398,7 +3432,7 @@ def config(settings):
             #"budget",
             #"currency",
             "comments",
-            #postprocess = postprocess,
+            postprocess = postprocess,
         )
 
         s3db.configure(tablename,
