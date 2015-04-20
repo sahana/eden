@@ -177,6 +177,8 @@ class S3BudgetModel(S3Model):
                                         },
                        # Allocations
                        budget_allocation = "budget_id",
+                       # Monitoring
+                       budget_monitoring = "budget_id",
                        )
 
         # Configuration
@@ -1788,7 +1790,7 @@ def budget_budget_totals(budget_id):
 
     left = [stable.on(linktable.staff_id == stable.id),
             ltable.on(linktable.location_id == ltable.id),
-           ]
+            ]
     query = (linktable.budget_id == budget_id)
     rows = db(query).select(linktable.quantity,
                             linktable.months,

@@ -3152,6 +3152,47 @@ def config(settings):
         9: T("Partner National Society"),
     }
 
+    # -------------------------------------------------------------------------
+    def project_project_postprocess(form):
+        """
+            When using Project Monitoring (i.e. HNRC) then create the entries
+        """
+
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+        project_id = form_vars.id
+        btable = s3db.budget_budget
+        ltable = s3db.project_budget
+        query = (ltable.project_id == project_id) & \
+                (ltable.budget_id == btable.id)
+        budget = db(query).select(btable.id, # Needed for update_record
+                                  btable.total_budget,
+                                  btable.monitoring_frequency,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not budget:
+            return
+        monitoring_frequency = budget.monitoring_frequency
+        if not monitoring_frequency:
+            return
+        total_budget = budget.total_budget
+        ptable = s3db.project_project
+        project = db(ptable.id == project_id).select(ptable.name,
+                                                     ptable.start_date,
+                                                     ptable.end_date,
+                                                     limitby=(0, 1)
+                                                     ).first()
+        if not project:
+            return
+        budget.update_record(name = project.name)
+        start_date = project.start_date
+        end_date = project.end_date
+        if not start_date or not end_date:
+            return
+            
+        # @ToDo: Add entries
+
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
@@ -3211,8 +3252,16 @@ def config(settings):
             budget = S3SQLInlineComponent(
                 "budget",
                 label = T("Budget"),
+                link = False,
+                multiple = False,
                 fields = ["total_budget", "monitoring_frequency"],
             )
+            btable = s3db.budget_budget
+            # Need to provide a name
+            import random, string
+            btable.name.default = "".join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
+            btable.monitoring_frequency.default = 3 # Monthly
+            postprocess = project_project_postprocess
         else:
             HFA = "drr.hfa"
             objectives = "objectives"
@@ -3222,11 +3271,12 @@ def config(settings):
                 fields = ["name", "status"],
             )
             budget = None
+            postprocess = None
 
         s3db = current.s3db
         if settings.get_project_programmes():
             # Inject inline link for programmes including AddResourceLink
-            from s3layouts import S3AddResourceLink
+            #from s3layouts import S3AddResourceLink
             comment = s3db.project_programme_id.attr.comment
             comment.vars = {"caller": "link_defaultprogramme",
                             "prefix": "project",
@@ -3348,6 +3398,7 @@ def config(settings):
             #"budget",
             #"currency",
             "comments",
+            #postprocess = postprocess,
         )
 
         s3db.configure(tablename,

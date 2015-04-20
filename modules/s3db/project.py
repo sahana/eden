@@ -421,10 +421,11 @@ class S3ProjectModel(S3Model):
                        # Beneficiaries
                        project_beneficiary = "project_id",
                        # Budgets
+                       #budget_project = "project_id",
                        budget_budget = {"link": "budget_project",
                                         "joinby": "project_id",
                                         "key": "budget_id",
-                                        "actuate": "hide",
+                                        "actuate": "replace",
                                         "multiple": False,
                                         },
                        #budget_monitoring = {"link": "budget_project",
@@ -7002,7 +7003,8 @@ def project_rheader(r):
         if record.calendar:
             append((T("Calendar"), "timeline"))
         if settings.get_project_budget_monitoring():
-            append((T("Budget Monitoring"), "budget_monitoring"))
+            #append((T("Budget Monitoring"), "budget_monitoring"))
+            append((T("Budget Monitoring"), "budget"))
         elif settings.get_project_multiple_budgets():
             append((T("Annual Budgets"), "annual_budget"))
         if details_tab:
@@ -7028,7 +7030,7 @@ def project_rheader(r):
                           ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
-    elif resourcename in ["location", "demographic_data"]:
+    elif resourcename in ("location", "demographic_data"):
         tabs = [(T("Details"), None),
                 (T("Beneficiaries"), "beneficiary"),
                 (T("Demographics"), "demographic_data/"),
