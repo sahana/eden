@@ -609,7 +609,7 @@ $.filterOptionsS3({
                     req_item_inv_item_btn = dict(url = URL(c = "req",
                                                            f = "req_item_inv_item",
                                                            args = ["[id]"]
-                                                          ),
+                                                           ),
                                                  _class = "action-btn",
                                                  label = str(T("Request from Facility")),
                                                  )

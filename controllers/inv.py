@@ -281,11 +281,12 @@ def warehouse():
         RESTful CRUD controller
     """
 
+    request_args = request.args
     if "viewing" in get_vars:
         viewing = get_vars.viewing
         tn, id = viewing.split(".", 1)
         if tn == "inv_warehouse":
-            request.args.insert(0, id)
+            request_args.insert(0, id)
 
     # CRUD pre-process
     def prep(r):
@@ -393,6 +394,13 @@ def warehouse():
         resourcename = "warehouse"
     csv_stylesheet = "%s.xsl" % resourcename
 
+    if len(request_args) > 1 and request_args[1] in ("req", "send", "recv"):
+        # Sends/Receives should break out of Component Tabs
+        # To allow access to action buttons in inv_recv rheader
+        native = True
+    else:
+        native = False
+
     output = s3_rest_controller(module, resourcename,
                                 #hide_filter = {"inv_item": False,
                                 #               "_default": True,
@@ -404,6 +412,7 @@ def warehouse():
                                 #]
                                 csv_stylesheet = csv_stylesheet,
                                 csv_template = resourcename,
+                                native = native,
                                 rheader = s3db.inv_rheader,
                                 )
     return output
