@@ -3953,6 +3953,18 @@ class S3ProjectPlanningModel(S3Model):
             msg_list_empty = T("No indicator data defined")
         )
 
+        report_options = {"rows": ["indicator_id", "date"],
+                          "cols": ["indicator_id", "date"],
+                          "fact": [(T("Target Value"), "avg(target_value)"),
+                                   (T("Actual Value"), "avg(value)"),
+                                   ],
+                          "defaults": {"rows": "indicator_id",
+                                       "cols": "date",
+                                       "fact": "avg(value)",
+                                       "totals": False,
+                                       },
+                          }
+
         self.configure(tablename,
                        list_fields = ["indicator_id",
                                       "date",
@@ -3961,6 +3973,7 @@ class S3ProjectPlanningModel(S3Model):
                                       (T("Percentage"), "percentage"),
                                       "comments",
                                       ],
+                       report_options = report_options,
                        )
 
         # Pass names back to global scope (s3.*)
