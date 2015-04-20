@@ -295,6 +295,7 @@ def project():
 
         if r.interactive:
 
+            component_name = r.component_name
             if not r.component:
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
@@ -306,12 +307,21 @@ def project():
                                       read_url=read_url,
                                       update_url=update_url)
 
-            elif r.component_name == "beneficiary":
+            elif component_name == "beneficiary":
                 # Set the minimum end_date to the same as the start_date
                 s3.jquery_ready.append(
 '''S3.start_end_date('project_beneficiary_date','project_beneficiary_end_date')''')
 
-            if r.component_name == "task" and r.component_id:
+            elif component_name == "indicator_data" and r.record and \
+                 isinstance(output, dict):
+                report_link = A(current.T("Show Report"),
+                                _href=r.url(method="report"),
+                                _class="action-btn",
+                                )
+                showadd_btn = output.get("showadd_btn", "")
+                output["showadd_btn"] = TAG[""](showadd_btn, report_link)
+
+            elif component_name == "task" and r.component_id:
                 # Put Comments in rfooter
                 s3db.project_ckeditor()
                 s3.rfooter = LOAD("project", "comments.load",
