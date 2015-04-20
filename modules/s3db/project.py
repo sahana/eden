@@ -132,6 +132,7 @@ class S3ProjectModel(S3Model):
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
         mode_drr = settings.get_project_mode_drr()
+        budget_monitoring = settings.get_project_budget_monitoring()
         multi_budgets = settings.get_project_multiple_budgets()
         multi_orgs = settings.get_project_multiple_organisations()
         programmes = settings.get_project_programmes()
@@ -208,15 +209,16 @@ class S3ProjectModel(S3Model):
                                                            T("URL to a Google Calendar to display on the project timeline."))),
                            ),
                      # multi_budgets deployments handle on the Budgets Tab
+                     # buget_monitoring deployments handle as inline component
                      Field("budget", "double",
                            label = T("Budget"),
                            represent = lambda v: \
                             IS_FLOAT_AMOUNT.represent(v, precision=2),
-                           readable = False if multi_budgets else True,
-                           writable = False if multi_budgets else True,
+                           readable = False if (multi_budgets or budget_monitoring) else True,
+                           writable = False if (multi_budgets or budget_monitoring) else True,
                            ),
-                     s3_currency(readable = False if multi_budgets else True,
-                                 writable = False if multi_budgets else True,
+                     s3_currency(readable = False if (multi_budgets or budget_monitoring) else True,
+                                 writable = False if (multi_budgets or budget_monitoring) else True,
                                  ),
                      Field("objectives", "text",
                            label = T("Objectives"),
@@ -287,8 +289,12 @@ class S3ProjectModel(S3Model):
         append((T("Themes"), "theme.name"))
         if multi_orgs:
             append((T("Total Funding Amount"), "total_organisation_amount"))
-        if multi_budgets:
+        if budget_monitoring:
+            append((T("Total Budget"), "budget.total_budget"))
+        elif multi_budgets:
             append((T("Total Annual Budget"), "total_annual_budget"))
+        else:
+            append((T("Total Budget"), "budget"))
         list_fields += ["start_date",
                         "end_date",
                         "location.location_id",
@@ -414,6 +420,18 @@ class S3ProjectModel(S3Model):
                        project_annual_budget = "project_id",
                        # Beneficiaries
                        project_beneficiary = "project_id",
+                       # Budgets
+                       budget_budget = {"link": "budget_project",
+                                        "joinby": "project_id",
+                                        "key": "budget_id",
+                                        "actuate": "hide",
+                                        "multiple": False,
+                                        },
+                       #budget_monitoring = {"link": "budget_project",
+                       #                     "joinby": "project_id",
+                       #                     "key": "budget_id",
+                       #                     "actuate": "hide",
+                       #                     },
                        # Hazards
                        project_hazard = {"link": "project_hazard_project",
                                          "joinby": "project_id",
@@ -554,12 +572,13 @@ class S3ProjectModel(S3Model):
         """
 
         settings = current.deployment_settings
+
         if settings.get_project_multiple_organisations():
             # Create/update project_organisation record from the organisation_id
             # (Not in form.vars if added via component tab)
-            vars = form.vars
-            id = vars.id
-            organisation_id = vars.organisation_id or \
+            form_vars = form.vars
+            id = form_vars.id
+            organisation_id = form_vars.organisation_id or \
                               current.request.post_vars.organisation_id
             if organisation_id:
                 lead_role = settings.get_project_organisation_lead_role()
@@ -695,7 +714,7 @@ class S3ProjectModel(S3Model):
         pltable = s3db.project_location
         ltable = s3db.gis_location
 
-        vars = current.request.get_vars
+        #get_vars = current.request.get_vars
 
         themes = db(ttable.deleted == False).select(ttable.id,
                                                     ttable.name,
@@ -708,8 +727,8 @@ class S3ProjectModel(S3Model):
                 (ptable.id == pltable.project_id) & \
                 (ltable.id == pltable.location_id)
 
-        #if "theme_id" in vars:
-        #    query = query & (tptable.id.belongs(vars.theme_id))
+        #if "theme_id" in get_vars:
+        #    query = query & (tptable.id.belongs(get_vars.theme_id))
         projects = db(query).select()
         for project in projects:
             # Only show those projects which are only within 1 country
@@ -1558,6 +1577,8 @@ class S3ProjectAnnualBudgetModel(S3Model):
         Project Budget Model
 
         This model holds the annual budget entries for projects
+
+        @ToDo: Replace with Budget module
     """
 
     names = ("project_annual_budget",)
@@ -3651,6 +3672,10 @@ class S3ProjectPlanningModel(S3Model):
 
         NONE = current.messages["NONE"]
 
+        configure = self.configure
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
         use_goals = settings.get_project_goals()
         use_outcomes = settings.get_project_outcomes()
         use_outputs = settings.get_project_outputs()
@@ -3662,24 +3687,24 @@ class S3ProjectPlanningModel(S3Model):
         # Goals / Objectives
         #
         tablename = "project_goal"
-        self.define_table(tablename,
-                          project_id(),
-                          Field("code",
-                                label = T("Code"),
-                                represent = lambda v: v or NONE,
-                                ),
-                          Field("name",
-                                label = T("Description"),
-                                represent = lambda v: v or NONE,
-                                ),
-                          #Field("status",
-                          #      label = T("Status"),
-                          #      represent = lambda v: v or NONE,
-                          #      ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     project_id(),
+                     Field("code",
+                           label = T("Code"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("name",
+                           label = T("Description"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     #Field("status",
+                     #      label = T("Status"),
+                     #      represent = lambda v: v or NONE,
+                     #      ),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Create Goal"),
             title_display = T("Goal"),
             title_list = T("Goals"),
@@ -3691,9 +3716,9 @@ class S3ProjectPlanningModel(S3Model):
             msg_list_empty = T("No goals defined")
         )
 
-        self.configure(tablename,
-                       deduplicate = self.project_goal_deduplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.project_goal_deduplicate,
+                  )
 
         # Reusable Field
         goal_represent = S3Represent(lookup=tablename, fields=("code", "name"))
@@ -3715,27 +3740,27 @@ class S3ProjectPlanningModel(S3Model):
         # Outcomes
         #
         tablename = "project_outcome"
-        self.define_table(tablename,
-                          project_id(),
-                          goal_id(readable = use_goals,
-                                  writable = use_goals,
-                                  ),
-                          Field("code",
-                                label = T("Code"),
-                                represent = lambda v: v or NONE,
-                                ),
-                          Field("name",
-                                label = T("Description"),
-                                represent = lambda v: v or NONE,
-                                ),
-                          #Field("status",
-                          #      label = T("Status"),
-                          #      represent = lambda v: v or NONE,
-                          #      ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     project_id(),
+                     goal_id(readable = use_goals,
+                             writable = use_goals,
+                             ),
+                     Field("code",
+                           label = T("Code"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("name",
+                           label = T("Description"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     #Field("status",
+                     #      label = T("Status"),
+                     #      represent = lambda v: v or NONE,
+                     #      ),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Create Outcome"),
             title_display = T("Outcome"),
             title_list = T("Outcomes"),
@@ -3747,9 +3772,9 @@ class S3ProjectPlanningModel(S3Model):
             msg_list_empty = T("No outcomes defined")
         )
 
-        self.configure(tablename,
-                       deduplicate = self.project_outcome_deduplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.project_outcome_deduplicate,
+                  )
 
         # Reusable Field
         outcome_represent = S3Represent(lookup=tablename, fields=("code", "name"))
@@ -3771,39 +3796,39 @@ class S3ProjectPlanningModel(S3Model):
         # Outputs
         #
         tablename = "project_output"
-        self.define_table(tablename,
-                          project_id(
-                            # Override requires so that update access to the projects isn't required
-                            requires = IS_ONE_OF(db, "project_project.id",
-                                                 self.project_project_represent
-                                                 )
-                            ),
-                          goal_id(readable = use_goals and not use_outcomes,
-                                  writable = use_goals and not use_outcomes,
-                                  ),
-                          outcome_id(readable = use_outcomes,
-                                     writable = use_outcomes,
-                                     ),
-                          Field("code",
-                                label = T("Code"),
-                                represent = lambda v: v or NONE,
-                                readable = not inline,
-                                writable = not inline,
+        define_table(tablename,
+                     project_id(
+                       # Override requires so that update access to the projects isn't required
+                       requires = IS_ONE_OF(db, "project_project.id",
+                                            self.project_project_represent
+                                            )
+                       ),
+                     goal_id(readable = use_goals and not use_outcomes,
+                             writable = use_goals and not use_outcomes,
+                             ),
+                     outcome_id(readable = use_outcomes,
+                                writable = use_outcomes,
                                 ),
-                          Field("name",
-                                label = T("Output") if inline else T("Description"),
-                                represent = lambda v: v or NONE,
-                                ),
-                          Field("status",
-                                label = T("Status"),
-                                represent = lambda v: v or NONE,
-                                readable = inline,
-                                writable = inline,
-                                ),
-                          *s3_meta_fields())
+                     Field("code",
+                           label = T("Code"),
+                           represent = lambda v: v or NONE,
+                           readable = not inline,
+                           writable = not inline,
+                           ),
+                     Field("name",
+                           label = T("Output") if inline else T("Description"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("status",
+                           label = T("Status"),
+                           represent = lambda v: v or NONE,
+                           readable = inline,
+                           writable = inline,
+                           ),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Add Output"),
             title_display = T("Output"),
             title_list = T("Outputs"),
@@ -3815,9 +3840,9 @@ class S3ProjectPlanningModel(S3Model):
             msg_list_empty = T("No outputs defined")
         )
 
-        self.configure(tablename,
-                       deduplicate = self.project_output_deduplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.project_output_deduplicate,
+                  )
 
         # Reusable Field
         output_represent = S3Represent(lookup=tablename, fields=("code", "name"))
@@ -3839,33 +3864,33 @@ class S3ProjectPlanningModel(S3Model):
         # Indicators
         #
         tablename = "project_indicator"
-        self.define_table(tablename,
-                          project_id(),
-                          goal_id(readable = use_goals and not use_outcomes and not use_outputs,
-                                  writable = use_goals and not use_outcomes and not use_outputs,
-                                  ),
-                          outcome_id(readable = use_outcomes and not use_outputs,
-                                     writable = use_outcomes and not use_outputs,
-                                     ),
-                          output_id(readable = use_outputs,
-                                    writable = use_outputs,
-                                    ),
-                          Field("code",
-                                label = T("Code"),
-                                represent = lambda v: v or NONE,
+        define_table(tablename,
+                     project_id(),
+                     goal_id(readable = use_goals and not use_outcomes and not use_outputs,
+                             writable = use_goals and not use_outcomes and not use_outputs,
+                             ),
+                     outcome_id(readable = use_outcomes and not use_outputs,
+                                writable = use_outcomes and not use_outputs,
                                 ),
-                          Field("name",
-                                label = T("Description"),
-                                represent = lambda v: v or NONE,
-                                ),
-                          #Field("status",
-                          #      label = T("Status"),
-                          #      represent = lambda v: v or NONE,
-                          #      ),
-                          *s3_meta_fields())
+                     output_id(readable = use_outputs,
+                               writable = use_outputs,
+                               ),
+                     Field("code",
+                           label = T("Code"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     Field("name",
+                           label = T("Description"),
+                           represent = lambda v: v or NONE,
+                           ),
+                     #Field("status",
+                     #      label = T("Status"),
+                     #      represent = lambda v: v or NONE,
+                     #      ),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Add Indicator"),
             title_display = T("Indicator"),
             title_list = T("Indicators"),
@@ -3877,9 +3902,9 @@ class S3ProjectPlanningModel(S3Model):
             msg_list_empty = T("No indicators defined")
         )
 
-        self.configure(tablename,
-                       deduplicate = self.project_indicator_deduplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.project_indicator_deduplicate,
+                  )
 
         # Reusable Field
         indicator_represent = S3Represent(lookup=tablename, fields=("code", "name"))
@@ -3901,31 +3926,31 @@ class S3ProjectPlanningModel(S3Model):
         # Indicator Data
         #
         tablename = "project_indicator_data"
-        self.define_table(tablename,
-                          project_id(
-                            # Override requires so that update access to the projects isn't required
-                            requires = IS_ONE_OF(db, "project_project.id",
-                                                 self.project_project_represent
-                                                 )
+        define_table(tablename,
+                     project_id(
+                        # Override requires so that update access to the projects isn't required
+                        requires = IS_ONE_OF(db, "project_project.id",
+                                             self.project_project_represent
+                                             )
+                       ),
+                     indicator_id(),
+                     s3_date(empty = False,
+                             ),
+                     Field("target_value", "integer",
+                           label = T("Target Value"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                             ),
-                          indicator_id(),
-                          s3_date(empty = False,
-                                  ),
-                          Field("target_value", "integer",
-                                 label = T("Target Value"),
-                                 represent = lambda v: IS_INT_AMOUNT.represent(v),
-                                 requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                 ),
-                           Field("value", "integer",
-                                 label = T("Actual Value"),
-                                 represent = lambda v: IS_INT_AMOUNT.represent(v),
-                                 requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
-                                 ),
-                          # @ToDo: Computed field for Percentage
-                          *s3_meta_fields())
+                      Field("value", "integer",
+                            label = T("Actual Value"),
+                            represent = lambda v: IS_INT_AMOUNT.represent(v),
+                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                            ),
+                     # @ToDo: Computed field for Percentage
+                     *s3_meta_fields())
 
         # CRUD Strings
-        current.response.s3.crud_strings[tablename] = Storage(
+        crud_strings[tablename] = Storage(
             label_create = T("Add Indicator Data"),
             title_display = T("Indicator Data"),
             title_list = T("Indicator Data"),
@@ -6976,7 +7001,9 @@ def project_rheader(r):
             append((T("Tasks"), "task"))
         if record.calendar:
             append((T("Calendar"), "timeline"))
-        if settings.get_project_multiple_budgets():
+        if settings.get_project_budget_monitoring():
+            append((T("Budget Monitoring"), "budget_monitoring"))
+        elif settings.get_project_multiple_budgets():
             append((T("Annual Budgets"), "annual_budget"))
         if details_tab:
             append((T("Details"), "details"))

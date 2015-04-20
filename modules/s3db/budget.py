@@ -31,6 +31,8 @@ __all__ = ("S3BudgetModel",
            "S3BudgetKitModel",
            "S3BudgetBundleModel",
            "S3BudgetAllocationModel",
+           "S3BudgetMonitoringModel",
+           "S3BudgetProjectModel",
            "budget_rheader",
            "budget_CostItemRepresent",
            )
@@ -58,19 +60,27 @@ class S3BudgetModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
         configure = self.configure
         define_table = self.define_table
         add_components = self.add_components
+        messages = current.messages
+        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
-
-        db = current.db
 
         status_opts = {1: T("Draft"),
                        2: T("Approved"),
                        3: T("Rejected"),
                        }
+
+        monitoring_opts = {1: messages["NONE"],
+                           #2: T("Annually"),
+                           3: T("Monthly"),
+                           #3: T("Weekly"),
+                           #3: T("Daily"),
+                           }
 
         # ---------------------------------------------------------------------
         # Budgets
@@ -96,14 +106,21 @@ class S3BudgetModel(S3Model):
                            label = T("Total Recurring Costs"),
                            writable = False,
                            ),
-                     Field("total_volume", "double",
+                     Field("total_budget", "double",
                            default = 0.0,
-                           label = T("Total Volume"),
+                           label = T("Total Budget"),
+                           ),
+                     Field("monitoring_frequency", "integer",
+                           default = 1,
+                           label = T("Monitoring Frequency"),
+                           represent = lambda opt: \
+                            monitoring_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_IN_SET(monitoring_opts),
                            ),
                      Field("status", "integer",
                            default = 1,
                            represent = lambda opt: \
-                            status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                            status_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(status_opts),
                            ),
                      s3_comments(),
@@ -353,6 +370,7 @@ class S3BudgetModel(S3Model):
         tablename = "budget_budget_staff"
         define_table(tablename,
                      budget_budget_id(),
+                     # @ToDo: Remove this link?
                      self.project_project_id(),
                      budget_location_id(),
                      budget_staff_id(),
@@ -1319,7 +1337,7 @@ class S3BudgetAllocationModel(S3Model):
                        deduplicate = self.budget_allocation_duplicate,
                        timeplot_options = {
                             "defaults": {
-                                "baseline": "budget_id$total_volume",
+                                "baseline": "budget_id$total_budget",
                                 "fact": "cumulate(unit_cost,daily_cost,days)",
                                 "slots": "",
                                 "start": "",
@@ -1373,6 +1391,86 @@ class S3BudgetAllocationModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+# =============================================================================
+class S3BudgetMonitoringModel(S3Model):
+    """
+        Budget Monitoring Model
+
+        Allow Monitoring spend on a Budget
+
+        @ToDo: Allow this to be broken down by Activity Type (VNRC) or Theme
+    """
+
+    names = ("budget_monitoring",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Monitoring of a Budget
+        #
+        tablename = "budget_monitoring"
+        self.define_table(tablename,
+                          self.budget_budget_id(empty = False,
+                                                ondelete = "CASCADE",
+                                                ),
+                          # Populated Automatically
+                          # Used for Timeplot &, in future, to ease changing the monitoring frequency
+                          s3_date("start_date",
+                                  readable = False,
+                                  writable = False,
+                                  ),
+                          s3_date("end_date",
+                                  label = T("Date"),
+                                  ),
+                          Field("planned", "double", notnull=True,
+                                default = 0.00,
+                                label = T("Planned Spend"),
+                                requires = IS_FLOAT_AMOUNT(),
+                                ),
+                          Field("value", "double", notnull=True,
+                                default = 0.00,
+                                #label = T("Amount Spent"),
+                                label = T("Actual Spend"),
+                                requires = IS_FLOAT_AMOUNT(),
+                                ),
+                          s3_currency(required=True),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
+
+# =============================================================================
+class S3BudgetProjectModel(S3Model):
+    """
+        Project Budget Model
+
+        Link between Projects & Budgets
+
+        @ToDo: Deprecate S3ProjectAnnualBudgetModel
+    """
+
+    names = ("budget_project",)
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Link between Projects <> Budgets
+        #
+        tablename = "budget_project"
+        self.define_table(tablename,
+                          self.budget_budget_id(empty = False,
+                                                ondelete = "CASCADE",
+                                                ),
+                          self.project_project_id(empty = False,
+                                                  ondelete = "CASCADE",
+                                                  ),
+                          *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return dict()
 
 # =============================================================================
 class budget_CostItemRepresent(S3Represent):
@@ -1767,7 +1865,7 @@ def budget_rheader(r):
                
         rheader_fields = [["name"],
                           ["description"],
-                          ["total_volume"],
+                          ["total_budget"],
                           ["total_onetime_costs"],
                           ["total_recurring_costs"],
                           ]

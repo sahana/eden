@@ -3053,6 +3053,12 @@ class S3Config(Storage):
         """
         return self.project.get("activity_filter_year", False)
 
+    def get_project_budget_monitoring(self):
+        """
+            Whether to Monitor Project Budgets
+        """
+        return self.project.get("budget_monitoring", False)
+
     def get_project_codes(self):
         """
             Use Codes in Projects

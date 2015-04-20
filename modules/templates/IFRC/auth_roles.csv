@@ -657,6 +657,7 @@ PO_READER,"Outreach Reader",,,,"po_organisation_household",,READ,,,,,
 PO_READER,"Outreach Reader",,,,"org_organisation",,READ,,,,,
 PO_READER,"Outreach Reader",,,,"pr_person",,READ,,,,,
 hn_user,"Honduras User",,req,,,,"CREATE","READ|CREATE|UPDATE|DELETE",,,,
+hn_project_manager,"Honduras Project Coordinator",,budget,,,,"READ|CREATE|UPDATE|DELETE",,,,,
 hn_project_manager,"Honduras Project Coordinator",,project,,,,"READ|CREATE|UPDATE|DELETE",,,,,
 hn_project_manager,"Honduras Project Coordinator",,project,location,"pr_person",,"READ|CREATE|UPDATE",,,,,"Community Contacts"
 hn_project_manager,"Honduras Project Coordinator",,,,"org_sector",,READ,,,,,

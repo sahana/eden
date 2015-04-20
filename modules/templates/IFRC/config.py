@@ -507,7 +507,7 @@ def config(settings):
                 name_nice = T("Staff"),
                 #description = "Human Resources Management",
                 restricted = True,
-                module_type = 2,
+                #module_type = 2,
             )),
         ("vol", Storage(
                 name_nice = T("Volunteers"),
@@ -557,6 +557,12 @@ def config(settings):
                 #description = "Tracking of Projects, Activities and Tasks",
                 restricted = True,
                 #module_type = 2
+            )),
+        ("budget", Storage(
+                name_nice = T("Budgets"),
+                #description = "Tracking of Budgets",
+                restricted = True,
+                #module_type = None
             )),
         ("survey", Storage(
                 name_nice = T("Assessments"),
@@ -3184,6 +3190,39 @@ def config(settings):
 
         # Custom Crud Form
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == HNRC:
+            HFA = None
+            # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
+            # @ToDo: Add 'Business Line' (when extending to Zone office)
+            settings.project.details_tab = True
+            settings.project.community_volunteers = True
+            # Done in a more structured way instead
+            objectives = None
+            outputs = None
+            settings.project.goals = True
+            settings.project.indicators = True
+            settings.project.outcomes = True
+            settings.project.outputs = True
+            # Use Budget module instead of ProjectAnnualBudget
+            settings.project.multiple_budgets = False
+            budget = S3SQLInlineComponent(
+                "budget",
+                label = T("Budget"),
+                fields = ["total_budget", "monitoring_frequency"],
+            )
+        else:
+            HFA = "drr.hfa"
+            objectives = "objectives"
+            outputs = S3SQLInlineComponent(
+                "output",
+                label = T("Outputs"),
+                fields = ["name", "status"],
+            )
+            budget = None
+
         s3db = current.s3db
         if settings.get_project_programmes():
             # Inject inline link for programmes including AddResourceLink
@@ -3202,39 +3241,16 @@ def config(settings):
         else:
             programme = None
 
-        # Special cases for different NS
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            HFA = None
-            # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
-            # @ToDo: Add 'Business Line' (when extending to Zone office)
-            settings.project.details_tab = True
-            settings.project.community_volunteers = True
-            # Done in a more structured way instead
-            objectives = None
-            outputs = None
-            settings.project.goals = True
-            settings.project.indicators = True
-            settings.project.outcomes = True
-            settings.project.outputs = True
-        else:
-            HFA = "drr.hfa"
-            objectives = "objectives"
-            outputs = S3SQLInlineComponent(
-                "output",
-                label = T("Outputs"),
-                fields = ["name", "status"],
-            )
-
         crud_form = S3SQLCustomForm(
             "organisation_id",
+            programme,
             "name",
             "code",
             "description",
             "status_id",
             "start_date",
             "end_date",
-            programme,
+            budget,
             #S3SQLInlineComponent(
             #    "location",
             #    label = T("Locations"),

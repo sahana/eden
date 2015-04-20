@@ -1283,7 +1283,7 @@ class S3ColorPickerWidget(FormWidget):
 # =============================================================================
 class S3DateWidget(FormWidget):
     """
-        Standard Date widget, but with a modified yearRange to support Birth dates
+        Standard Date widget
     """
 
     def __init__(self,
@@ -1302,7 +1302,7 @@ class S3DateWidget(FormWidget):
             @param past: how many months into the past the date can be set to
             @param future: how many months into the future the date can be set to
             @param start_field: "selector" for start date field
-            @paran default_interval: x months from start date
+            @param default_interval: x months from start date
             @param default_explicit: bool for explicit default
         """
 
