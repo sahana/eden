@@ -3271,9 +3271,11 @@ class S3FacilityModel(S3Model):
         # Facilities (generic)
         #
         if settings.get_org_facility_code_unique():
-            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "org_facility.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "org_facility.code"),
+                                         ])
         else:
-            code_requires = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
         tablename = "org_facility"
         define_table(tablename,
@@ -3990,9 +3992,12 @@ class S3OfficeModel(S3Model):
         # Offices
         #
         if settings.get_org_office_code_unique():
-            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "org_office.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "org_office.code"),
+                                         ])
         else:
-            code_requires = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
+
         tablename = "org_office"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),

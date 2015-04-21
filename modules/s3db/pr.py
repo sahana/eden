@@ -4673,7 +4673,7 @@ class pr_PersonEntityRepresent(S3Represent):
                                    instance_type_nice)
 
         elif "name" in item:
-            pe_str = "%s%s" % (item["name"],
+            pe_str = "%s%s" % (s3_unicode(item["name"]),
                                instance_type_nice)
         else:
             pe_str = "[%s]%s" % (label,

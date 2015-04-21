@@ -1496,10 +1496,65 @@ class S3BudgetMonitoringModel(S3Model):
                                       (T("Percentage"), "percentage"),
                                       "comments",
                                       ],
+                       onaccept = self.budget_monitoring_onaccept,
+                       onvalidation = self.budget_monitoring_onvalidation,
                        )
 
         # Pass names back to global scope (s3.*)
         return dict()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_monitoring_onaccept(form):
+        """
+            Handle Updates of entries to reset the hidden start_date
+        """
+
+        # @ToDo
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def budget_monitoring_onvalidation(form):
+        """
+            Don't allow total Planned to exceed Total Budget
+        """
+
+        db = current.db
+        s3db = current.s3db
+        mtable = s3db.budget_monitoring
+
+        # Find the Budget
+        record_id  = form.record_id
+        record = db(mtable.id == record_id).select(mtable.budget_entity_id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+        if not record:
+            s3_debug("Cannot find Budget Monitoring record (no record for this ID), so can't check whether Total Budget is exceeded")
+            return
+        budget_entity_id = record.budget_entity_id
+
+        # Read the Total Budget
+        btable = s3db.budget_budget
+        query = (btable.budget_entity_id == budget_entity_id)
+        budget = db(query).select(btable.total_budget,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not budget:
+            s3_debug("Cannot find Budget record (no record for this super_key), so can't check whether Total Budget is exceeded")
+            return
+
+        # Read the total Planned
+        query = (mtable.budget_entity_id == budget_entity_id)
+        records = db(query).select(mtable.planned)
+        planned = 0
+        for r in records:
+            planned += r.planned
+
+        # Check if we're over
+        if planned > budget.total_budget:
+            form.errors.planned = current.T("Total Budget of %s would be exceeded") % \
+                budget.total_budget
 
     # -------------------------------------------------------------------------
     @staticmethod

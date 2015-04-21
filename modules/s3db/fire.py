@@ -197,7 +197,9 @@ class S3FireStationModel(S3Model):
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
                            ),
-                     Field("code", unique=True, length=64,
+                     Field("code", length=10,
+                           # @ToDo: code_requires based on deployment_setting
+                           unique=True, 
                            label = T("Code"),
                            ),
                      Field("facility_type", "integer",

@@ -75,7 +75,6 @@ class S3ShelterModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
-
         settings = current.deployment_settings
 
         configure = self.configure
@@ -267,10 +266,10 @@ class S3ShelterModel(S3Model):
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
                      super_link("site_id", "org_site"),
-                     #Field("code",
-                     #      length=10,           # Mayon compatibility
-                     #      notnull=True,
-                     #      unique=True, label=T("Code")),
+                     # @ToDo: code_requires
+                     #Field("code", length=10, # Mayon compatibility
+                     #      label=T("Code")
+                     #      ),
                      Field("name", notnull=True,
                            length=64,            # Mayon compatibility
                            label = T("Shelter Name"),

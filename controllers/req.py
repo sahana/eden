@@ -552,7 +552,7 @@ $.filterOptionsS3({
                                            # _class="action-btn"))
                         # output["buttons"]["delete_btn"] = delete_btn
                 if not template and settings.get_req_use_commit():
-                    # This is appropriate to all
+                    # This is appropriate to both Items and People
                     s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "commit_all"]),
@@ -593,27 +593,45 @@ $.filterOptionsS3({
                              label = str(T("Copy"))
                             )
                         )
+                # @ToDo: Find a way to do a Send from this view without using commits?
+                # e.g. using the auth_user.site_id
                 if not template:
-                    s3.actions.append(
-                            dict(url = URL(c="req", f="req",
-                                           args=["[id]", "commit_all", "send"]),
-                                 _class = "action-btn send-btn dispatch",
-                                 label = str(T("Send"))
+                    if settings.get_req_use_commit():
+                        s3.actions.append(
+                                dict(url = URL(c="req", f="req",
+                                               args=["[id]", "commit_all", "send"]),
+                                     _class = "action-btn send-btn dispatch",
+                                     label = str(T("Send"))
+                                    )
                                 )
-                            )
-                    s3.jquery_ready.append(
-'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to commit to this request and send a shipment?"))
+                        confirm = T("Are you sure you want to commit to this request and send a shipment?")
+                        s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                    elif auth.user and auth.user.site_id:
+                        s3.actions.append(
+                                dict(url = URL(c="req", f="send_req",
+                                               args=["[id]"],
+                                               vars=dict(site_id=auth.user.site_id)
+                                               ),
+                                     _class = "action-btn send-btn dispatch",
+                                     label = str(T("Send"))
+                                    )
+                                )
+                        confirm = T("Are you sure you want to send a shipment for this request?")
+                        s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                        
             else:
                 s3_action_buttons(r)
-                if r.component.name == "req_item" and settings.get_req_prompt_match():
-                    req_item_inv_item_btn = dict(url = URL(c = "req",
-                                                           f = "req_item_inv_item",
-                                                           args = ["[id]"]
-                                                           ),
-                                                 _class = "action-btn",
-                                                 label = str(T("Request from Facility")),
-                                                 )
-                    s3.actions.append(req_item_inv_item_btn)
+                if r.component.name == "req_item" and \
+                   settings.get_req_prompt_match():
+                    s3.actions.append(
+                            dict(url = URL(c = "req",
+                                           f = "req_item_inv_item",
+                                           args = ["[id]"]
+                                           ),
+                                 _class = "action-btn",
+                                 label = str(T("Request from Facility")),
+                                 )
+                        )
                 if r.component.name == "commit":
                     if "form" in output:
                         id = r.record.id
@@ -1339,14 +1357,6 @@ def send_req():
 
     req_id = request.args[0]
     site_id = request.vars.get("site_id", None)
-    site_name = s3db.org_site_represent(site_id, show_link=False)
-
-    ritable = s3db.req_req_item
-    iitable = s3db.inv_inv_item
-    sendtable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-    siptable = s3db.supply_item_pack
-
     table = s3db.req_req
     r_req = db(table.id == req_id).select(table.req_ref,
                                           table.requester_id,
@@ -1362,6 +1372,14 @@ def send_req():
         session.error = T("You do not have permission to send this shipment.")
         redirect(URL(c="req", f="req",
                      args = [req_id]))
+
+    site_name = s3db.org_site_represent(site_id, show_link=False)
+
+    ritable = s3db.req_req_item
+    iitable = s3db.inv_inv_item
+    sendtable = s3db.inv_send
+    tracktable = s3db.inv_track_item
+    siptable = s3db.supply_item_pack
 
     # Create a new send record
     code = s3db.supply_get_shipping_code("WB",
@@ -1393,7 +1411,7 @@ def send_req():
                                  sip_quantity_field
                                  )
 
-    # Loop through each request item and find matched in the site inventory
+    # Loop through each request item and find matches in the site inventory
     IN_PROCESS = s3db.inv_tracking_status["IN_PROCESS"]
     insert = tracktable.insert
     inv_remove = s3db.inv_remove

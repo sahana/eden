@@ -195,9 +195,11 @@ class S3WarehouseModel(S3Model):
         #
 
         if settings.get_inv_warehouse_code_unique():
-            code_unique = IS_EMPTY_OR(IS_NOT_IN_DB(db, "inv_warehouse.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "inv_warehouse.code"),
+                                         ])
         else:
-            code_unique = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
         tablename = "inv_warehouse"
         define_table(tablename,
@@ -211,7 +213,7 @@ class S3WarehouseModel(S3Model):
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),
                            represent = lambda v: v or NONE,
-                           requires = code_unique,
+                           requires = code_requires,
                            ),
                      organisation_id(
                         requires = self.org_organisation_requires(updateable=True),

@@ -3104,6 +3104,17 @@ def config(settings):
             return s3db.hrm_rheader(r)
 
     # -----------------------------------------------------------------------------
+    def customise_supply_item_category_resource(r, tablename):
+
+        root_org = current.auth.root_org_name()
+        if root_org == HNRC:
+            # Not using Assets Module
+            field = current.s3db.supply_item_category.can_be_asset
+            field.readable = field.writable = False
+        
+    settings.customise_supply_item_category_resource = customise_supply_item_category_resource
+
+    # -----------------------------------------------------------------------------
     def customise_survey_series_controller(**attr):
 
         # Organisation needs to be an NS/Branch
@@ -3632,7 +3643,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Request Management
     # Uncomment to disable Inline Forms in Requests module
-    #settings.req.inline_forms = False
+    settings.req.inline_forms = False
     settings.req.req_type = ["Stock"]
     settings.req.use_commit = False
     # Should Requests ask whether Transportation is required?

@@ -7083,6 +7083,9 @@ def project_rheader(r):
                           ["organisation_id"],
                           ["start_date", "end_date"]
                           ]
+        # @ToDo: Either get S3ResourceHeader to support selectors or else rewrite manually
+        #if settings.get_project_budget_monitoring():
+        #    rheader_fields.append(["budget.total_budget"])
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     elif resourcename in ("location", "demographic_data"):
