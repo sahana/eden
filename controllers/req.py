@@ -350,10 +350,13 @@ def req_controller(template = False):
                     # Tell the client to request per-feature markers
                     s3db.configure("req_req", marker_fn=marker_fn)
 
-            # Prevent Items from being added to closed or cancelled requests
-            if r.record and (r.record.closed or r.record.cancel):
-                s3db.configure("req_req_item",
-                               insertable = False)
+            if r.record:
+                # @ToDo: Prevent deletion of Requests which have had items sent
+                if r.record.closed or r.record.cancel:
+                    # Prevent Items from being added to closed or cancelled requests
+                    s3db.configure("req_req_item",
+                                   insertable = False,
+                                   )
 
         elif r.representation == "plain":
             # Map Popups
@@ -477,19 +480,19 @@ $.filterOptionsS3({
                     # Custom Form
                     s3forms = s3base.s3forms
                     crud_form = s3forms.S3SQLCustomForm(
-                            "site_id",
-                            "date",
-                            "date_available",
-                            "committer_id",
-                            s3forms.S3SQLInlineComponent(
-                                "commit_skill",
-                                label = T("Skills"),
-                                fields = ["quantity",
-                                          "skill_id",
-                                          "comments"
-                                          ]
-                            ),
-                            "comments",
+                        "site_id",
+                        "date",
+                        "date_available",
+                        "committer_id",
+                        s3forms.S3SQLInlineComponent(
+                            "commit_skill",
+                            label = T("Skills"),
+                            fields = ["quantity",
+                                      "skill_id",
+                                      "comments"
+                                      ]
+                        ),
+                        "comments",
                         )
                     s3db.configure("req_commit",
                                    crud_form = crud_form,
@@ -586,15 +589,16 @@ $.filterOptionsS3({
                 #         restrict = restrict
                 #        )
                 #    )
-                s3.actions.append(
+                if settings.get_req_copyable():
+                    s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "copy_all"]),
-                             _class = "action-btn send-btn copy_all",
+                             _class = "action-btn copy_all",
                              label = str(T("Copy"))
                             )
                         )
-                # @ToDo: Find a way to do a Send from this view without using commits?
-                # e.g. using the auth_user.site_id
+                    confirm = T("Are you sure you want to create a new request as a copy of this one?")
+                    s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
                 if not template:
                     if settings.get_req_use_commit():
                         s3.actions.append(

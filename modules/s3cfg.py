@@ -3251,6 +3251,12 @@ class S3Config(Storage):
     def get_req_type_hrm_label(self):
         return current.T(self.req.get("type_hrm_label", "People"))
 
+    def get_req_copyable(self):
+        """
+            Provide a Copy button for Requests?
+        """
+        return self.req.get("copyable", False)
+
     def get_req_recurring(self):
         """
             Do we allow creation of recurring requests?
