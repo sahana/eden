@@ -1379,21 +1379,6 @@ def send_req():
     tracktable = s3db.inv_track_item
     siptable = s3db.supply_item_pack
 
-    # Create a new send record
-    code = s3db.supply_get_shipping_code("WB",
-                                         site_id,
-                                         s3db.inv_send.send_ref
-                                         )
-    send_id = sendtable.insert(send_ref = code,
-                               req_ref = r_req.req_ref,
-                               sender_id = auth.s3_logged_in_person(),
-                               site_id = site_id,
-                               date = request.utcnow,
-                               recipient_id = r_req.requester_id,
-                               to_site_id = r_req.site_id,
-                               status = s3db.inv_ship_status["IN_PROCESS"],
-                               )
-
     # Get the items for this request that have not been fulfilled (in transit)
     sip_id_field = siptable.id
     sip_quantity_field = siptable.quantity
@@ -1409,7 +1394,34 @@ def send_req():
                                  sip_quantity_field
                                  )
 
+    if not req_items:
+        # Can't use site_name as gluon/languages.py def translate has a str() which can give a Unicode error
+        #site_name = s3db.org_site_represent(site_id, show_link=False)
+        session.warning = \
+            T("This request has no items outstanding!")
+
+        # Redirect to view the list of items in the Request
+        redirect(URL(c="req", f="req",
+                     args=[req_id, "req_item"])
+                 )
+
+    # Create a new send record
+    code = s3db.supply_get_shipping_code("WB",
+                                         site_id,
+                                         s3db.inv_send.send_ref
+                                         )
+    send_id = sendtable.insert(send_ref = code,
+                               req_ref = r_req.req_ref,
+                               sender_id = auth.s3_logged_in_person(),
+                               site_id = site_id,
+                               date = request.utcnow,
+                               recipient_id = r_req.requester_id,
+                               to_site_id = r_req.site_id,
+                               status = s3db.inv_ship_status["IN_PROCESS"],
+                               )
+
     # Loop through each request item and find matches in the site inventory
+    # - don't match items which are expired or in bad condition
     IN_PROCESS = s3db.inv_tracking_status["IN_PROCESS"]
     insert = tracktable.insert
     inv_remove = s3db.inv_remove
@@ -1433,7 +1445,9 @@ def send_req():
     bquery = (ii_quantity_field > 0) & \
              (iitable.site_id == site_id) & \
              (iitable.deleted == False) & \
-             (iitable.item_pack_id == sip_id_field)
+             (iitable.item_pack_id == sip_id_field) & \
+             ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
+             (iitable.status == 0)
     orderby = ii_expiry_field | ii_purchase_field
 
     no_match = True
@@ -1536,14 +1550,14 @@ def send_req():
                    )
 
     if no_match:
-        # Can't use site_name as gluon/languages.py def translate has a str() which can give a Unicode error
+        # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
         #site_name = s3db.org_site_represent(site_id, show_link=False)
         session.warning = \
             T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
 
     # Redirect to view the list of items in the Send
-    redirect(URL(c = "inv", f = "send",
-                 args = [send_id, "track_item"])
+    redirect(URL(c="inv", f="send",
+                 args=[send_id, "track_item"])
              )
 
 # =============================================================================

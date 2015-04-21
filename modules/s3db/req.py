@@ -1392,9 +1392,10 @@ $.filterOptionsS3({
                 s3.no_sspag = True # pag won't work
 
             if no_match:
-                current.response.warning = \
-                    T("%(site)s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!") % \
-                        dict(site=site_name)
+                # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
+                #site_name = s3db.org_site_represent(site_id, show_link=False)
+                session.warning = \
+                    T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
         else:
             output["items"] = s3.crud_strings.req_req_item.msg_list_empty
 

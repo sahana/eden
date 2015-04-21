@@ -2144,7 +2144,8 @@ $.filterOptionsS3({
                         list_fields.insert(5, "currency")
                     if record.req_ref and r.interactive:
                         s3db.configure("inv_track_item",
-                                       extra_fields = ["req_item_id"])
+                                       extra_fields = ["req_item_id"],
+                                       )
                         tracktable.quantity_needed = \
                             Field.Method("quantity_needed",
                                          cls.inv_track_item_quantity_needed)
@@ -2162,16 +2163,16 @@ $.filterOptionsS3({
                         return s3.inv_track_item_deleting(r.component_id)
 
                 # Filter out Items which have Quantity 0, are Expired or in Bad condition
-                query = (iitable.quantity != 0) & \
-                        (iitable.expiry_date >= r.now) & \
+                query = (iitable.quantity > 0) & \
+                        ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
                         (iitable.status == 0)
                 if record.get("site_id"):
                     # Restrict to items from this facility only
                     query &= (iitable.site_id == record.site_id)
                 tracktable.send_inv_item_id.requires = IS_ONE_OF(db(query), "inv_inv_item.id",
                                                                  s3db.inv_item_represent,
-                                                                 not_filterby = "quantity",
-                                                                 not_filter_opts = (0,),
+                                                                 #not_filterby = "quantity",
+                                                                 #not_filter_opts = (0,),
                                                                  orderby = "inv_inv_item.id",
                                                                  sort = True,
                                                                  )
