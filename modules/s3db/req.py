@@ -1332,7 +1332,7 @@ $.filterOptionsS3({
                      TH(table.quantity_fulfil.label),
                      # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
                      #TH(T("Quantity in %s's Warehouse") % site_name),
-                     TH(T("Quantity in this Warehouse"),
+                     TH(T("Quantity in this Warehouse")),
                      TH(T("Match?"))
                      )
             if use_commit:
