@@ -1373,8 +1373,6 @@ def send_req():
         redirect(URL(c="req", f="req",
                      args = [req_id]))
 
-    site_name = s3db.org_site_represent(site_id, show_link=False)
-
     ritable = s3db.req_req_item
     iitable = s3db.inv_inv_item
     sendtable = s3db.inv_send
@@ -1538,9 +1536,10 @@ def send_req():
                    )
 
     if no_match:
+        # Can't use site_name as gluon/languages.py def translate has a str() which can give a Unicode error
+        #site_name = s3db.org_site_represent(site_id, show_link=False)
         session.warning = \
-            T("%(site)s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!") % \
-                dict(site=site_name)
+            T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
 
     # Redirect to view the list of items in the Send
     redirect(URL(c = "inv", f = "send",
