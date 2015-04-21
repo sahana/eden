@@ -1446,7 +1446,7 @@ def send_req():
              (iitable.site_id == site_id) & \
              (iitable.deleted == False) & \
              (iitable.item_pack_id == sip_id_field) & \
-             ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
+             ((iitable.expiry_date >= request.now) | ((iitable.expiry_date == None))) & \
              (iitable.status == 0)
     orderby = ii_expiry_field | ii_purchase_field
 
