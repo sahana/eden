@@ -1268,7 +1268,7 @@ $.filterOptionsS3({
 
         stable = s3db.org_site
         ltable = s3db.gis_location
-        query = (stable.id == site_id ) & \
+        query = (stable.id == site_id) & \
                 (stable.location_id == ltable.id)
         location_r = db(query).select(ltable.lat,
                                       ltable.lon,
@@ -1283,8 +1283,10 @@ $.filterOptionsS3({
             distance = current.gis.greatCircleDistance(location_r.lat,
                                                        location_r.lon,
                                                        req_location_r.lat,
-                                                       req_location_r.lon,)
-            output["rheader"][0].append(TR(TH(T("Distance from %s:") % site_name),
+                                                       req_location_r.lon)
+            output["rheader"][0].append(TR(TH(# Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
+                                              #T("Distance from %s:") % site_name),
+                                              T("Distance from Site")),
                                            TD(T("%.1f km") % distance)
                                            ))
         except:
@@ -1328,14 +1330,17 @@ $.filterOptionsS3({
                      TH(table.item_pack_id.label),
                      TH(table.quantity_transit.label),
                      TH(table.quantity_fulfil.label),
-                     TH(T("Quantity in %s's Warehouse") % site_name),
+                     # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
+                     #TH(T("Quantity in %s's Warehouse") % site_name),
+                     TH(T("Quantity in this Warehouse"),
                      TH(T("Match?"))
                      )
             if use_commit:
                 row.insert(3, TH(table.quantity_commit.label))
             items = TABLE(THEAD(row),
-                          _id = "list",
-                          _class = "dataTable display")
+                          _id="list",
+                          _class="dataTable display",
+                          )
 
             supply_item_represent = table.item_id.represent
             item_pack_represent = table.item_pack_id.represent
@@ -1351,11 +1356,11 @@ $.filterOptionsS3({
                 if inv_quantity != NONE:
                     no_match = False
                     if inv_quantity < req_item.quantity:
-                        status = SPAN(T("Partial"), _class = "req_status_partial")
+                        status = SPAN(T("Partial"), _class="req_status_partial")
                     else:
-                        status = SPAN(T("YES"), _class = "req_status_complete")
+                        status = SPAN(T("YES"), _class="req_status_complete")
                 else:
-                    status = SPAN(T("NO"), _class = "req_status_none"),
+                    status = SPAN(T("NO"), _class="req_status_none"),
 
                 if use_commit:
                     items.append(TR(#A(req_item.id),
@@ -1393,7 +1398,6 @@ $.filterOptionsS3({
 
             if no_match:
                 # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
-                #site_name = s3db.org_site_represent(site_id, show_link=False)
                 session.warning = \
                     T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
         else:
@@ -3582,8 +3586,9 @@ def req_rheader(r, check_page=False):
 
                 site_id = request.vars.site_id
                 if site_id and not is_template:
-                    site_name = s3db.org_site_represent(site_id, show_link=False)
-                    commit_btn = A(T("Send from %s") % site_name,
+                    commit_btn = A(# Web2Py has a str() in gluon/languages.py in translate()
+                                   #T("Send from %s") % site_name,
+                                   T("Send from this Site"),
                                    _href = URL(c = "req",
                                                f = "send_req",
                                                args = [r.id],
