@@ -1761,10 +1761,10 @@ $.filterOptionsS3({
                                   self.inv_track_item_total_value),
                      Field.Method("pack_quantity",
                                   self.supply_item_pack_quantity(tablename=tablename)),
-                     #Field.Method("total_volume",
-                     #             self.inv_track_item_total_volume),
-                     #Field.Method("total_weight",
-                     #             self.inv_track_item_total_weight),
+                     Field.Method("total_volume",
+                                  self.inv_track_item_total_volume),
+                     Field.Method("total_weight",
+                                  self.inv_track_item_total_weight),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -1808,12 +1808,14 @@ $.filterOptionsS3({
                   list_fields = ["id",
                                  "status",
                                  "item_id",
-                                 (T("Weight (kg)"), "item_id$weight"),
-                                 (T("Volume (m3)"), "item_id$volume"),
+                                 #(T("Weight (kg)"), "item_id$weight"),
+                                 #(T("Volume (m3)"), "item_id$volume"),
                                  "item_pack_id",
                                  "send_id",
                                  "recv_id",
                                  "quantity",
+                                 (T("Total Weight (kg)"), "total_weight"),
+                                 (T("Total Volume (m3)"), "total_volume"),
                                  "currency",
                                  "pack_value",
                                  "bin",
@@ -1859,8 +1861,13 @@ $.filterOptionsS3({
         if hasattr(row, "inv_track_item"):
             row = row.inv_track_item
         try:
-            # @ToDo: Lookup supply_item_id
-            v = row.quantity * row.volume
+            # Lookup Volume of each item
+            table = current.s3db.supply_item
+            item = current.db(table.id == row.item_id).select(table.volume,
+                                                              limitby=(0, 1)
+                                                              ).first()
+            # Return the total volume
+            v = row.quantity * item.volume
             return v
         except:
             # not available
@@ -1874,8 +1881,13 @@ $.filterOptionsS3({
         if hasattr(row, "inv_track_item"):
             row = row.inv_track_item
         try:
-            # @ToDo: Lookup supply_item_id
-            v = row.quantity * row.weight
+            # Lookup Weight of each item
+            table = current.s3db.supply_item
+            item = current.db(table.id == row.item_id).select(table.weight,
+                                                              limitby=(0, 1)
+                                                              ).first()
+            # Return the total weight
+            v = row.quantity * item.weight
             return v
         except:
             # not available
