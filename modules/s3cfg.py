@@ -2594,7 +2594,7 @@ class S3Config(Storage):
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")
         if not label:
-            if self.get_inv_shipment_name() == "order"
+            if self.get_inv_shipment_name() == "order":
                 label = "Orders"
             else:
                 label = "Receive"

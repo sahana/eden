@@ -1996,6 +1996,8 @@ def config(settings):
             settings.inv.direct_stock_edits = False
             if root_org == HNRC:
                 settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
+                settings.inv.recv_tab_label = "Received/Incoming Shipments"
+                settings.inv.send_tab_label = "Sent Shipments"
         if root_org != NRCS:
             # Only Nepal RC use Warehouse Types
             s3db = current.s3db
