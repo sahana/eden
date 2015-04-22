@@ -2589,7 +2589,19 @@ class S3Config(Storage):
         return self.inv.get("collapse_tabs", True)
 
     def get_inv_facility_label(self):
-        return self.inv.get("facility_label", current.T("Warehouse"))
+        return self.inv.get("facility_label", "Warehouse")
+
+    def get_inv_recv_tab_label(self):
+        label = self.inv.get("recv_tab_label")
+        if not label:
+            if self.get_inv_shipment_name() == "order"
+                label = "Orders"
+            else:
+                label = "Receive"
+        return label
+
+    def get_inv_send_tab_label(self):
+        return self.inv.get("send_tab_label", "Send")
 
     def get_inv_direct_stock_edits(self):
         """

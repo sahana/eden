@@ -427,7 +427,7 @@ class S3InventoryModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         settings = current.deployment_settings
-        WAREHOUSE = settings.get_inv_facility_label()
+        WAREHOUSE = T(settings.get_inv_facility_label())
         track_pack_values = settings.get_inv_track_pack_values()
 
         inv_source_type = {0: None,
@@ -2628,7 +2628,7 @@ $.filterOptionsS3({
         table.date.readable = True
         table.site_id.readable = True
         track_table.recv_quantity.readable = True
-        table.site_id.label = T("By %(site)s") % dict(site=current.deployment_settings.get_inv_facility_label())
+        table.site_id.label = T("By %(site)s") % dict(site=T(current.deployment_settings.get_inv_facility_label()))
         table.site_id.represent = current.s3db.org_site_represent
 
         record = table[r.id]
@@ -2668,14 +2668,15 @@ $.filterOptionsS3({
             Generate a PDF of a Donation certificate
         """
 
+        T = current.T
         db = current.db
         table = db.inv_recv
         table.date.readable = True
         table.type.readable = False
         field = table.site_id
         field.readable = True
-        field.label = current.T("By %(site)s") % \
-            dict(site=current.deployment_settings.get_inv_facility_label())
+        field.label = T("By %(site)s") % \
+            dict(site=T(current.deployment_settings.get_inv_facility_label()))
         field.represent = current.s3db.org_site_represent
 
         record = table[r.id]
@@ -3299,14 +3300,12 @@ def inv_tabs(r):
                 show_collapse = False
 
             if show_inv:
-                if settings.get_inv_shipment_name() == "order":
-                    recv_tab = T("Orders")
-                else:
-                    recv_tab = T("Receive")
+                recv_label = settings.get_inv_recv_tab_label()
+                send_label = settings.get_inv_send_tab_label()
                 inv_tabs = [(T("Stock"), "inv_item"),
                             #(T("Incoming"), "incoming/"),
-                            (recv_tab, "recv"),
-                            (T("Send"), "send"),
+                            (T(recv_label), "recv"),
+                            (T(send_label), "send"),
                             ]
                 if settings.has_module("proc"):
                     inv_tabs.append((T("Planned Procurements"), "plan"))
@@ -4026,7 +4025,7 @@ class S3InventoryAdjustModel(S3Model):
                                        ),
                      # This is a reference, not a super-link, so we can override
                      Field("site_id", self.org_site,
-                           label = current.deployment_settings.get_inv_facility_label(),
+                           label = T(current.deployment_settings.get_inv_facility_label()),
                            ondelete = "SET NULL",
                            default = auth.user.site_id if auth.is_logged_in() else None,
                            requires = IS_ONE_OF(db, "org_site.site_id",

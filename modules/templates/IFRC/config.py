@@ -1495,7 +1495,12 @@ def config(settings):
         if r.controller == "vol":
             T = current.T
             root_org = current.auth.root_org_name()
-            if root_org in (HNRC, VNRC):
+            if root_org == HNRC:
+                settings.hrm.use_certificates = False
+                current.s3db.hrm_human_resource.status.requires = {1: T("Active"),
+                                                                   2: T("Inactive"),
+                                                                   }
+            elif root_org == VNRC:
                 settings.hrm.use_certificates = False
             elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
@@ -1787,6 +1792,14 @@ def config(settings):
                     required = False,
                     branches = False,
                     )
+
+        root_org = current.auth.root_org_name()
+        if root_org == HNRC:
+            # Don't show RDRT in the list
+            table.type.requires = IS_IN_SET({1: T("Staff"),
+                                             2: T("Volunteer"),
+                                             3: T("Both")
+                                             })
 
         # Custom prep
         standard_prep = s3.prep

@@ -4890,6 +4890,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != name or not wkt:
                 fixup_required = True
 
@@ -5027,6 +5028,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != name or not wkt:
                 fixup_required = True
 
@@ -5194,6 +5196,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != name or not wkt:
                 fixup_required = True
 
@@ -5395,6 +5398,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != L4_name or L5 != name or not wkt:
                 fixup_required = True
 
@@ -5619,6 +5623,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             inherited = True
             lat = Lx_lat
             lon = Lx_lon
+            wkt = None
         elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != L4_name or L5 != L5_name or not wkt:
             fixup_required = True
 

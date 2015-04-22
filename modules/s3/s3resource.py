@@ -4390,7 +4390,8 @@ class S3ResourceFilter(object):
 
         tablenames = ("gis_location",
                       "gis_feature_query",
-                      "gis_layer_shapefile")
+                      "gis_layer_shapefile",
+                      )
 
         POLYGON = "POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))"
 
