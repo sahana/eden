@@ -3767,16 +3767,17 @@ def req_match(rheader=None):
                      label = str(T("Commit")),
                      )
                 )
-        actions.append(
-                dict(url = URL(c = "req",
-                               f = "send_req",
-                               args = ["[id]"],
-                               vars = {"site_id": site_id}
-                               ),
-                     _class = "action-btn dispatch",
-                     label = str(T("Send")),
-                     )
-                )
+        # Better to force people to go through the Check process
+        #actions.append(
+        #        dict(url = URL(c = "req",
+        #                       f = "send_req",
+        #                       args = ["[id]"],
+        #                       vars = {"site_id": site_id}
+        #                       ),
+        #             _class = "action-btn dispatch",
+        #             label = str(T("Send")),
+        #             )
+        #        )
 
     s3.actions = actions
 

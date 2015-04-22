@@ -611,6 +611,7 @@ $.filterOptionsS3({
                         confirm = T("Are you sure you want to commit to this request and send a shipment?")
                         s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
                     elif auth.user and auth.user.site_id:
+                        # @ToDo: Better to force users to go through the Check process (req_check)
                         s3.actions.append(
                                 dict(url = URL(c="req", f="send_req",
                                                args=["[id]"],
