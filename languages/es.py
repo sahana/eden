@@ -6454,7 +6454,7 @@
 'Themes': 'Temas',
 'There are errors': 'Hay errores',
 'There are insufficient items in the Inventory to send this shipment': 'Hay elementos insuficientes en el Inventario para enviar este envío.',
-'There are more than %(max)s results, please input more characters.': 'Hay más de% (max) s resultados, por favor, de entrada más caracteres.',
+'There are more than %(max)s results, please input more characters.': 'Hay más de %(max)s resultados, por favor, de entrada más caracteres.',
 'There are multiple records at this location': 'Hay varios registros en esta ubicación',
 'There are not sufficient items in the Inventory to send this shipment': 'No hay elementos suficientes en el inventario para realizar este envío',
 'There are not sufficient items in the store to send this shipment': 'No hay elementos suficientes en la tienda para realizar este envío',
