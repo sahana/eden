@@ -663,6 +663,7 @@ $.filterOptionsS3({
                            "item_id$code",
                            "item_id$item_category_id",
                            "quantity",
+                           "expiry_date",
                            "owner_org_id",
                            "pack_value",
                            (T("Total Value"), "total_value"),
@@ -1712,7 +1713,8 @@ $.filterOptionsS3({
                            represent = s3_string_represent,
                            readable = False,
                            writable = False,
-                           widget = S3InvBinWidget("inv_track_item"),
+                           # Nice idea but not working properly
+                           #widget = S3InvBinWidget("inv_track_item"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % \
                                                 (T("Bin"),

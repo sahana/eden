@@ -1946,6 +1946,35 @@ def config(settings):
     settings.customise_hrm_training_event_controller = customise_hrm_training_event_controller
 
     # -----------------------------------------------------------------------------
+    def customise_inv_home():
+        """
+            Homepage for the Inventory module
+        """
+
+        from gluon import URL
+        from s3 import s3_redirect_default
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == HNRC:
+            auth = current.auth
+            if auth.user and auth.user.site_id and \
+               not auth.s3_has_role(current.session.s3.system_roles.ORG_ADMIN):
+                # Redirect to this Warehouse
+                table = current.s3db.inv_warehouse
+                wh = current.db(table.site_id == auth.user.site_id).select(table.id,
+                                                                           limitby=(0, 1)
+                                                                           ).first()
+                if wh:
+                    s3_redirect_default(URL(c="inv", f="warehouse",
+                                            args=[wh.id, "inv_item"]))
+
+        # Redirect to Warehouse Summary Page
+        s3_redirect_default(URL(c="inv", f="warehouse", args="summary"))
+
+    settings.customise_inv_home = customise_inv_home
+
+    # -----------------------------------------------------------------------------
     def customise_inv_inv_item_resource(r, tablename):
 
         # Special cases for different NS

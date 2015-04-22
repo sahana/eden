@@ -1396,8 +1396,10 @@ $.filterOptionsS3({
 
             if no_match:
                 # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
-                current.session.warning = \
-                    T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
+                current.response.warning = \
+                    T("This site has no items exactly matching this request. Use Alternative Items if wishing to use other items to fulfill this request!")
+                    #T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
+                s3.rfooter = None
         else:
             output["items"] = s3.crud_strings.req_req_item.msg_list_empty
 
@@ -3792,7 +3794,8 @@ def req_match(rheader=None):
 
     s3.filter = (s3db.req_req.site_id != site_id)
     s3db.configure("req_req",
-                   insertable = False)
+                   insertable = False,
+                   )
 
     # Pre-process
     def prep(r):

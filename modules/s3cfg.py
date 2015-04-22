@@ -289,6 +289,21 @@ class S3Config(Storage):
         else:
             return attr
 
+    def customise_home(self, module, alt_function):
+        """
+            Allow use of a Customised module Home page
+            Fallback to cms_index if not configured
+            Fallback to an alt_function if defined in the controller
+        """
+        from s3 import s3_debug
+        s3_debug("s3cfg")
+        customise = self.get("customise_%s_home" % module)
+        s3_debug(customise)
+        if customise:
+            return customise()
+        else:
+            return current.s3db.cms_index(module, alt_function=alt_function)
+
     def customise_resource(self, tablename):
         """
             Get customisation callback for a resource

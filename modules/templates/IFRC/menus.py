@@ -53,17 +53,22 @@ class S3MainMenu(default.S3MainMenu):
         use_certs = lambda i: current.deployment_settings.get_hrm_use_certificates()
 
         def hrm(item):
-
             return root_org != "Honduran Red Cross" or \
                    has_role(ORG_ADMIN)
 
-        def outreach(item):
+        def multi_warehouse(i):
+            if root_org == "Honduran Red Cross" and \
+               not has_role(ORG_ADMIN):
+                # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
+                return False
+            else:
+                return True
 
+        def outreach(item):
             return root_org == "New Zealand Red Cross" or \
                    root_org is None and has_role(ADMIN)
 
         def vol(item):
-
             return root_org != "Honduran Red Cross" or \
                    has_role(ORG_ADMIN)
 
@@ -97,15 +102,15 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Members", c="member", f="membership", m="summary"),
             ),
             homepage("inv", "supply", "req")(
-                MM("Warehouses", c="inv", f="warehouse", m="summary"),
-                MM(inv_recv_list, c="inv", f="recv"),
-                MM("Sent Shipments", c="inv", f="send"),
+                MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
+                MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
+                MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
                 MM("Items", c="supply", f="item"),
                 MM("Catalogs", c="supply", f="catalog"),
                 #MM("Item Categories", c="supply", f="item_category"),
                 M("Suppliers", c="inv", f="supplier")(),
                 M("Facilities", c="inv", f="facility")(),
-                M("Requests", c="req", f="req")(),
+                M("Requests", c="req", f="req", check=multi_warehouse)(),
                 #M("Commitments", f="commit")(),
             ),
             homepage("asset")(
@@ -604,7 +609,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def inv():
         """ INV / Inventory """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        auth = current.auth
+        system_roles = current.session.s3.system_roles
+        ADMIN = system_roles.ADMIN
+        ORG_ADMIN = system_roles.ORG_ADMIN
 
         s3db = current.s3db
         s3db.inv_recv_crud_strings()
@@ -612,7 +620,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         settings = current.deployment_settings
         #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
-        root_org = current.auth.root_org_name()
+        root_org = auth.root_org_name()
         def use_adjust(i):
             if root_org in ("Australian Red Cross", "Honduran Red Cross"):
                 # Australian & Honduran RC use proper Logistics workflow
@@ -626,6 +634,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #        return False
         #    else:
         #        return True
+        def multi_warehouse(i):
+            if root_org == "Honduran Red Cross" and \
+               not auth.s3_has_role(ORG_ADMIN):
+                # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
+                return False
+            else:
+                return True
         def use_kits(i):
             if root_org == "Honduran Red Cross":
                 # Honduran RC use Kits
@@ -642,7 +657,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(
                     #M("Home", f="index"),
-                    M("Warehouses", c="inv", f="warehouse", m="summary")(
+                    M("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse)(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
@@ -665,10 +680,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         # M("Summary of Releases", c="inv", f="track_item",
                         #  vars=dict(report="rel")),
                     ),
-                    M(inv_recv_list, c="inv", f="recv")(
+                    M(inv_recv_list, c="inv", f="recv", check=multi_warehouse)(
                         M("Create", m="create"),
                     ),
-                    M("Sent Shipments", c="inv", f="send")(
+                    M("Sent Shipments", c="inv", f="send", check=multi_warehouse)(
                         M("Create", m="create"),
                         M("Search Shipped Items", f="track_item"),
                     ),
@@ -706,7 +721,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Requests", c="req", f="req")(
+                    M("Requests", c="req", f="req", check=multi_warehouse)(
                         M("Create", m="create"),
                         M("Requested Items", f="req_item"),
                     ),

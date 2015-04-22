@@ -17,7 +17,7 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    return s3db.cms_index(module, alt_function="index_alt")
+    return settings.customise_home(module, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -25,8 +25,8 @@ def index_alt():
         Module homepage for non-Admin users when no CMS content found
     """
 
-    # Just redirect to the list of Warehouses
-    s3_redirect_default(URL(f="warehouse"))
+    # Just redirect to the Warehouse Summary View
+    s3_redirect_default(URL(f="warehouse", args="summary"))
 
 # -----------------------------------------------------------------------------
 def index2():
@@ -959,7 +959,7 @@ def recv():
         tracktable.adj_item_id.readable = False
         tracktable.recv_quantity.readable = True
         if status == TRACK_STATUS_PREPARING:
-            # show some fields
+            # Show some fields
             tracktable.item_source_no.writable = True
             tracktable.item_id.writable = True
             tracktable.item_pack_id.writable = True
@@ -973,9 +973,9 @@ def recv():
             tracktable.inv_item_status.writable = True
             tracktable.comments.writable = True
             tracktable.recv_quantity.readable = False
-            # hide some fields
+            # Hide some fields
             tracktable.send_inv_item_id.readable = False
-            # change some labels - NO - use consistent labels
+            # Change some labels - NO - use consistent labels
             #tracktable.quantity.label = T("Quantity Delivered")
             tracktable.recv_bin.label = T("Bin")
         elif status == TRACK_STATUS_TRANSIT:
