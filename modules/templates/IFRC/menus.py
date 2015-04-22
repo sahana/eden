@@ -46,6 +46,10 @@ class S3MainMenu(default.S3MainMenu):
         ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
 
+        s3db = current.s3db
+        s3db.inv_recv_crud_strings()
+        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
+
         use_certs = lambda i: current.deployment_settings.get_hrm_use_certificates()
 
         def hrm(item):
@@ -94,11 +98,13 @@ class S3MainMenu(default.S3MainMenu):
             ),
             homepage("inv", "supply", "req")(
                 MM("Warehouses", c="inv", f="warehouse", m="summary"),
-                MM("Received Shipments", c="inv", f="recv"),
+                MM(inv_recv_list, c="inv", f="recv"),
                 MM("Sent Shipments", c="inv", f="send"),
                 MM("Items", c="supply", f="item"),
-                MM("Item Catalogs", c="supply", f="catalog"),
-                MM("Item Categories", c="supply", f="item_category"),
+                MM("Catalogs", c="supply", f="catalog"),
+                #MM("Item Categories", c="supply", f="item_category"),
+                M("Suppliers", c="inv", f="supplier")(),
+                M("Facilities", c="inv", f="facility")(),
                 M("Requests", c="req", f="req")(),
                 #M("Commitments", f="commit")(),
             ),

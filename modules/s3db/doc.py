@@ -94,6 +94,7 @@ class S3DocumentLibrary(S3Model):
                                org_office=T("Office"),
                                org_facility=T("Facility"),
                                org_group=T("Organization Group"),
+                               req_req=T("Request"),
                                # @ToDo: Deprecate
                                stats_people=T("People"),
                                vulnerability_document=T("Vulnerability Document"),

@@ -458,6 +458,12 @@ def supplier():
     # Remove sector (not relevant)
     filter_widgets.pop(1)
 
+    # Open record in this controller after creation
+    s3db.configure("org_organisation",
+                   create_next = URL(c="inv", f="supplier",
+                                     args = ["[id]", "read"]),
+                   )
+
     return s3db.org_organisation_controller()
 
 # =============================================================================
@@ -1705,6 +1711,12 @@ def kit():
 
 # -----------------------------------------------------------------------------
 def facility():
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="inv", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
     return s3db.org_facility_controller()
 
 # -----------------------------------------------------------------------------

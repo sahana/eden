@@ -18,7 +18,7 @@
          @ToDo: Add support for Sites to auth.s3_import_prep
          - meanwhile, can add these via hrm/person.xsl
          Facility Type...........s3db[tablename]
-         Site....................org_site.name
+         Office..................org_site.name
 
     *********************************************************************** -->
     <xsl:output method="xml"/>

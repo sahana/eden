@@ -159,7 +159,7 @@ def config(settings):
                 # Fall back to default get_realm_entity function
 
         use_user_organisation = False
-        use_user_root_organisation = False
+        #use_user_root_organisation = False
         # Suppliers & Partners are owned by the user's organisation
         if realm_entity == 0 and tablename == "org_organisation":
             ottable = s3db.org_organisation_type
@@ -171,8 +171,9 @@ def config(settings):
             if not otype or otype.name != "Red Cross / Red Crescent":
                 use_user_organisation = True
 
-        elif tablename == "req_req":
-            use_user_root_organisation = True
+        # Facilities & Requisitions are owned by the user's organisation
+        elif tablename in ("org_facility", "req_req"):
+            use_user_organisation = True
 
         elif tablename == "hrm_training":
             # Inherit realm entity from the related HR record
@@ -208,9 +209,9 @@ def config(settings):
                 # @ToDo - this might cause issues if the user's org is different from the realm that gave them permissions to create the Org
                 realm_entity = s3db.pr_get_pe_id("org_organisation",
                                                  user.organisation_id)
-            elif use_user_root_organisation:
-                realm_entity = s3db.pr_get_pe_id("org_organisation",
-                                                 auth.root_org())
+            #elif use_user_root_organisation:
+            #    realm_entity = s3db.pr_get_pe_id("org_organisation",
+            #                                     auth.root_org())
         return realm_entity
 
     settings.auth.realm_entity = ifrc_realm_entity

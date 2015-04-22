@@ -5705,7 +5705,8 @@ def org_facility_controller():
                     field.readable = field.writable = False
                     # Stay within Facility tab
                     s3db.configure("asset_asset",
-                                   create_next = None)
+                                   create_next = None,
+                                   )
 
             elif r.id:
                 table = r.table

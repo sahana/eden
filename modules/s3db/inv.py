@@ -1326,7 +1326,7 @@ class S3InventoryTrackingModel(S3Model):
                            label = T("Shipment Type"),
                            default = 0,
                            ),
-                     organisation_id(label = T("Organization/Supplier")
+                     organisation_id(label = T("Organization/Supplier"),
                                      ),
                      # This is a reference, not a super-link, so we can override
                      Field("from_site_id", "reference org_site",
@@ -1761,6 +1761,10 @@ $.filterOptionsS3({
                                   self.inv_track_item_total_value),
                      Field.Method("pack_quantity",
                                   self.supply_item_pack_quantity(tablename=tablename)),
+                     #Field.Method("total_volume",
+                     #             self.inv_track_item_total_volume),
+                     #Field.Method("total_weight",
+                     #             self.inv_track_item_total_weight),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -1842,6 +1846,36 @@ $.filterOptionsS3({
             row = row.inv_track_item
         try:
             v = row.quantity * row.pack_value
+            return v
+        except:
+            # not available
+            return current.messages["NONE"]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_track_item_total_volume(row):
+        """ Total volume of a track item """
+
+        if hasattr(row, "inv_track_item"):
+            row = row.inv_track_item
+        try:
+            # @ToDo: Lookup supply_item_id
+            v = row.quantity * row.volume
+            return v
+        except:
+            # not available
+            return current.messages["NONE"]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_track_item_total_weight(row):
+        """ Total weight of a track item """
+
+        if hasattr(row, "inv_track_item"):
+            row = row.inv_track_item
+        try:
+            # @ToDo: Lookup supply_item_id
+            v = row.quantity * row.weight
             return v
         except:
             # not available
@@ -3786,7 +3820,14 @@ def inv_recv_rheader(r):
 
             recv_id = record.id
             site_id = record.site_id
-            org_id = s3db.org_site[site_id].organisation_id
+            stable = s3db.org_site
+            site = current.db(stable.site_id == site_id).select(stable.organisation_id,
+                                                                limitby=(0, 1)
+                                                                ).first()
+            try:
+                org_id = site.organisation_id
+            except:
+                org_id = None
             logo = s3db.org_organisation_logo(org_id)
             rData = TABLE(TR(TD(T(current.deployment_settings.get_inv_recv_form_name()),
                                 _colspan=2, _class="pdf_title"),
