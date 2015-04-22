@@ -3736,6 +3736,12 @@ def req_match(rheader=None):
     else:
         return output
 
+    # Ensure any custom settings are applied
+    customise = settings.get("customise_%s_resource" % tablename)
+    if customise:
+        # NB THis could cause problems if attributes of r which aren't in request are used :/
+        customise(request, tablename)
+
     table = s3db[tablename]
     row = current.db(table.id == record_id).select(table.site_id,
                                                    limitby=(0, 1)).first()
@@ -3744,13 +3750,13 @@ def req_match(rheader=None):
     else:
         return output
 
-    actions = [dict(url = URL(c = "req",
-                              f = "req",
-                              args = ["[id]", "check"],
-                              vars = {"site_id": site_id}
-                              ),
-                    _class = "action-btn",
-                    label = str(T("Check")),
+    actions = [dict(url=URL(c="req",
+                            f="req",
+                            args=["[id]", "check"],
+                            vars={"site_id": site_id}
+                            ),
+                    _class="action-btn",
+                    label=s3_unicode(T("Check")),
                     )
                ]
 
@@ -3758,24 +3764,24 @@ def req_match(rheader=None):
         # @ToDo: restrict to those which we've not already committed/sent?
         if settings.get_req_use_commit():
             actions.append(
-                dict(url = URL(c = "req",
-                               f = "commit_req",
-                               args = ["[id]"],
-                               vars = {"site_id": site_id}
-                               ),
-                     _class = "action-btn",
-                     label = str(T("Commit")),
+                dict(url=URL(c="req",
+                             f="commit_req",
+                             args=["[id]"],
+                             vars={"site_id": site_id}
+                             ),
+                     _class="action-btn",
+                     label=s3_unicode(T("Commit")),
                      )
                 )
         # Better to force people to go through the Check process
         #actions.append(
-        #        dict(url = URL(c = "req",
-        #                       f = "send_req",
-        #                       args = ["[id]"],
-        #                       vars = {"site_id": site_id}
-        #                       ),
-        #             _class = "action-btn dispatch",
-        #             label = str(T("Send")),
+        #        dict(url=URL(c="req",
+        #                     f="send_req",
+        #                     args=["[id]"],
+        #                     vars={"site_id": site_id}
+        #                     ),
+        #             _class="action-btn dispatch",
+        #             label=s3_unicode(T("Send")),
         #             )
         #        )
 
@@ -3813,7 +3819,8 @@ def req_match(rheader=None):
     s3.postp = postp
 
     output = current.rest_controller("req", "req",
-                                     rheader = rheader)
+                                     rheader=rheader,
+                                     )
     return output
 
 # =============================================================================
