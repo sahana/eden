@@ -2968,20 +2968,24 @@ $.filterOptionsS3({
                         source_type = 1 # Donation
                     else:
                         source_type = 2 # Procured
-                inv_item_id = inv_item_table.insert(site_id = recv_site_id,
-                                                    item_id = record.item_id,
-                                                    item_pack_id = record.item_pack_id,
-                                                    currency = record.currency,
-                                                    pack_value = record.pack_value,
-                                                    expiry_date = record.expiry_date,
-                                                    bin = record.recv_bin,
-                                                    owner_org_id = record.owner_org_id,
-                                                    supply_org_id = record.supply_org_id,
-                                                    quantity = record.recv_quantity,
-                                                    item_source_no = record.item_source_no,
-                                                    source_type = source_type,
-                                                    status = record.inv_item_status,
-                                                    )
+                inv_item = dict(site_id = recv_site_id,
+                                item_id = record.item_id,
+                                item_pack_id = record.item_pack_id,
+                                currency = record.currency,
+                                pack_value = record.pack_value,
+                                expiry_date = record.expiry_date,
+                                bin = record.recv_bin,
+                                owner_org_id = record.owner_org_id,
+                                supply_org_id = record.supply_org_id,
+                                quantity = record.recv_quantity,
+                                item_source_no = record.item_source_no,
+                                source_type = source_type,
+                                status = record.inv_item_status,
+                                )
+                realm_entity = current.auth.get_realm_entity(inv_item_table, inv_item)
+                inv_item.update(realm_entity=realm_entity)
+                inv_item_id = inv_item_table.insert(**inv_item)
+
             # If this item is linked to a request, then update the quantity fulfil
             if use_req and record.req_item_id:
                 req_item = db(ritable.id == record.req_item_id).select(ritable.quantity_fulfil,

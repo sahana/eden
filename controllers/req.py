@@ -1383,7 +1383,7 @@ def send_req():
     tracktable = s3db.inv_track_item
     siptable = s3db.supply_item_pack
 
-    # Get the items for this request that have not been fulfilled (in transit)
+    # Get the items for this request that have not been fulfilled or in transit
     sip_id_field = siptable.id
     sip_quantity_field = siptable.quantity
     query = (ritable.req_id == req_id) & \
@@ -1445,6 +1445,7 @@ def send_req():
                 iitable.owner_org_id,
                 iitable.supply_org_id,
                 sip_quantity_field,
+                iitable.item_source_no,
                 ]
     bquery = (ii_quantity_field > 0) & \
              (iitable.site_id == site_id) & \
@@ -1465,7 +1466,7 @@ def send_req():
                                      orderby=orderby)
 
         if len(inv_items) == 0:
-            break;
+            continue
         no_match = False
         one_match = len(inv_items) == 1
         # Get the Quantity Needed
@@ -1526,6 +1527,7 @@ def send_req():
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
+                   item_source_no = iitem.item_source_no,
                    #comments = comment,
                    )
         # 2nd pass
@@ -1550,6 +1552,7 @@ def send_req():
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
+                   item_source_no = iitem.item_source_no,
                    #comments = comment,
                    )
 

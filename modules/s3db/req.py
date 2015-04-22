@@ -1294,9 +1294,7 @@ $.filterOptionsS3({
 
         output["subtitle"] = T("Request Items")
 
-        use_commit = current.deployment_settings.get_req_use_commit()
-
-        # Get req_items & inv_items from this site
+        # Read req_items
         table = s3db.req_req_item
         query = (table.req_id == r.id ) & \
                 (table.deleted == False )
@@ -1307,24 +1305,28 @@ $.filterOptionsS3({
                                      table.quantity_commit,
                                      table.quantity_transit,
                                      table.quantity_fulfil)
-        itable = s3db.inv_inv_item
-        query = (itable.site_id == site_id ) & \
-                (itable.deleted == False )
-        inv_items_dict = {}
-        inv_items = db(query).select(itable.item_id,
-                                     itable.quantity,
-                                     itable.item_pack_id,
-                                     # VF
-                                     #itable.pack_quantity,
-                                     )
-        for item in inv_items:
-            item_id = item.item_id
-            if item_id in inv_items_dict:
-                inv_items_dict[item_id] += item.quantity * item.pack_quantity()
-            else:
-                inv_items_dict[item_id] = item.quantity * item.pack_quantity()
 
         if len(req_items):
+            # Get inv_items from this site which haven't expired and are in good condition
+            iitable = s3db.inv_inv_item
+            query = (iitable.site_id == site_id) & \
+                    (iitable.deleted == False) & \
+                    ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
+                    (iitable.status == 0)
+            inv_items_dict = {}
+            inv_items = db(query).select(iitable.item_id,
+                                         iitable.quantity,
+                                         iitable.item_pack_id,
+                                         # VF
+                                         #iitable.pack_quantity,
+                                         )
+            for item in inv_items:
+                item_id = item.item_id
+                if item_id in inv_items_dict:
+                    inv_items_dict[item_id] += item.quantity * item.pack_quantity()
+                else:
+                    inv_items_dict[item_id] = item.quantity * item.pack_quantity()
+
             row = TR(TH(table.item_id.label),
                      TH(table.quantity.label),
                      TH(table.item_pack_id.label),
@@ -1335,6 +1337,7 @@ $.filterOptionsS3({
                      TH(T("Quantity in this Warehouse")),
                      TH(T("Match?"))
                      )
+            use_commit = current.deployment_settings.get_req_use_commit()
             if use_commit:
                 row.insert(3, TH(table.quantity_commit.label))
             items = TABLE(THEAD(row),

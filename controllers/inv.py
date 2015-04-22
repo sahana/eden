@@ -899,6 +899,7 @@ def set_recv_attr(status):
         recvtable.recipient_id.readable = recvtable.recipient_id.writable = True
         recvtable.comments.writable = True
 
+# -----------------------------------------------------------------------------
 def recv():
     """ RESTful CRUD controller """
 
@@ -1246,9 +1247,9 @@ def recv_process():
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
         row = Storage(track_item)
-        s3.inv_track_item_onaccept(Storage(vars=Storage(id=row.id),
-                                           record = row,
-                                           ))
+        s3db.inv_track_item_onaccept(Storage(vars=Storage(id=row.id),
+                                             record = row,
+                                             ))
 
     session.confirmation = T("Shipment Items Received")
     redirect(URL(c="inv", f="recv",
