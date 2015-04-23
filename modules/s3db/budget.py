@@ -1525,7 +1525,7 @@ class S3BudgetMonitoringModel(S3Model):
         mtable = s3db.budget_monitoring
 
         # Find the Budget
-        record_id  = form.record_id
+        record_id = form.record_id
         record = db(mtable.id == record_id).select(mtable.budget_entity_id,
                                                    limitby=(0, 1)
                                                    ).first()
@@ -1545,11 +1545,15 @@ class S3BudgetMonitoringModel(S3Model):
             return
 
         # Read the total Planned
-        query = (mtable.budget_entity_id == budget_entity_id)
+        query = (mtable.budget_entity_id == budget_entity_id) & \
+                (mtable.deleted == False) & \
+                (mtable.id != record_id)
         records = db(query).select(mtable.planned)
         planned = 0
         for r in records:
             planned += r.planned
+        # Add what we're trying to add
+        planned += form.vars.planned
 
         # Check if we're over
         if planned > budget.total_budget:

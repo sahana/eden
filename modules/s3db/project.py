@@ -27,6 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import division
+
 __all__ = ("S3ProjectModel",
            "S3ProjectActivityModel",
            "S3ProjectActivityTypeModel",
@@ -4159,7 +4161,6 @@ class S3ProjectPlanningModel(S3Model):
 
         if hasattr(row, "id"):
             # Reload the record
-            s3_debug("Reload")
             table = current.s3db.project_indicator_data
             r = current.db(table.id == row.id).select(table.target_value,
                                                       table.value,
@@ -4171,7 +4172,7 @@ class S3ProjectPlanningModel(S3Model):
                     # Can't divide by Zero
                     return current.messages["NONE"]
                 percentage = r.value / planned * 100
-                return "%s %%" % percentage
+                return "%s %%" % "{0:.2f}".format(percentage)
 
         return current.messages["NONE"]
 
