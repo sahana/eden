@@ -1362,7 +1362,7 @@
 "updated": "güncellendi",
 "using default": "varsayılanı kullan",
 "Search by skills" : "Becerilerine göre ara",
-"Staff and Volunteers Combined" : "Personel ve Gönüllüler Birlikte",
+"Staff & Volunteers (Combined)" : "Personel & Gönüllüler (Birlikte)",
 "Search training participants" : " Eğitime katılanlar arasında ara",
 "Search members" : "Üye ara",
 "Import Participants List" : "Katılımcı listesini içe aktar",
@@ -1375,7 +1375,6 @@
 "Clear" : "Temizle",
 "Skill" : "Beceri" ,
 "Competency" : " Yetkinlik",
-"Create" : "Yeni Oluştur",
 "Home Address" : "Ev Adresi",
 "Project Name" : "Proje Adı",
 "Lead Implementer" : "Baş Uygulayıcı",
@@ -1395,10 +1394,13 @@
 "Search shipped items": "Gönderilmiş mallar arasında ara",
 "Suppliers" : "Tedarikçiler",
 "Training Course Catalog" : "Eğitim Programı Ders Kataloğu",
-"Search training participants" : " Eğitime katılanlar arasında ara",
-"Import Participants List" : "Katılımcı listesini içe aktar",
+"Search Training Participants" : " Eğitime Katılanlar Arasında Ara",
+"Import Participant List" : "Katılımcı Listesini İçe Aktar",
 "Staff Report" : "Personel Raporu",
 "Expring Staff Contracts" : " Bitmekte olan Personel Sözleşmeleri",
+"Table" : "Tablo",
+"Import File" :"Dosyayı Aktar",
+"Download Template" : "Şablonu İndir",
 
 
 }
