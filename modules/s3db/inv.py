@@ -2908,7 +2908,6 @@ $.filterOptionsS3({
         quantity = form_vars.quantity
         max_kits = None
         # @ToDo: Save the results for the onaccept
-        #items = {}
 
         # Loop through each supply_item in the kit
         for record in rows:

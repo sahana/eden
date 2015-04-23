@@ -626,6 +626,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ INV / Inventory """
 
         auth = current.auth
+        has_role = auth.s3_has_role
         system_roles = current.session.s3.system_roles
         ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
