@@ -1175,7 +1175,7 @@ class S3OptionsMenu(object):
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item")(
                         M("Adjust Stock Levels", f="adj", check=use_adjust),
-                        M("Kitting", f="kit"),
+                        M("Kitting", f="kitting"),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(

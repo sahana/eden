@@ -1708,8 +1708,9 @@ def send_item_json():
     return output
 
 # -----------------------------------------------------------------------------
-def kit():
-    return s3_rest_controller()
+def kitting():
+    return s3_rest_controller(rheader = s3db.inv_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def facility():
