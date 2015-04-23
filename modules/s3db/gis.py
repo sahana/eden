@@ -1020,7 +1020,8 @@ class S3LocationModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and \
            resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % \
+                    dict(max=MAX_SEARCH_RESULTS)))
                 ], separators=SEPARATORS)
 
         elif loc_select:

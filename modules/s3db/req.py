@@ -3739,8 +3739,11 @@ def req_match(rheader=None):
     # Ensure any custom settings are applied
     customise = settings.get("customise_%s_resource" % tablename)
     if customise:
-        # NB THis could cause problems if attributes of r which aren't in request are used :/
-        customise(request, tablename)
+        try:
+            customise(request, tablename)
+        except:
+            s3_debug("customise_%s_resource is using attributes of r which aren't in request" % tablename)
+            pass
 
     table = s3db[tablename]
     row = current.db(table.id == record_id).select(table.site_id,

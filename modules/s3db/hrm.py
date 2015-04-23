@@ -1027,9 +1027,10 @@ class S3HRModel(S3Model):
         limit = int(_vars.limit or 0)
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ], separators=SEPARATORS)
+            output = [
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % \
+                    dict(max=MAX_SEARCH_RESULTS)))
+                ]
         else:
             fields = ["id",
                       "person_id$first_name",
@@ -1058,8 +1059,8 @@ class S3HRModel(S3Model):
                                    limit=limit,
                                    orderby=orderby)["rows"]
 
-            items = []
-            iappend = items.append
+            output = []
+            iappend = output.append
             for row in rows:
                 name = Storage(first_name=row["pr_person.first_name"],
                                middle_name=row["pr_person.middle_name"],
@@ -1075,10 +1076,9 @@ class S3HRModel(S3Model):
                 if job_title:
                     item["job"] = job_title
                 iappend(item)
-            output = json.dumps(items, separators=SEPARATORS)
 
         response.headers["Content-Type"] = "application/json"
-        return output
+        return json.dumps(output, separators=SEPARATORS)
 
     # -------------------------------------------------------------------------
     @staticmethod

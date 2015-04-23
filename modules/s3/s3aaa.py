@@ -2933,15 +2933,19 @@ $.filterOptionsS3({
         """
 
         db = current.db
-        s3db = current.s3db
-        deployment_settings = current.deployment_settings
 
         approver = None
-        organisation_id = None
+        organisation_id = user.get("organisation_id")
 
-        # Check for Domain: Whitelist or specific Approver
-        table = s3db.auth_organisation
-        if "email" in user and user["email"] and "@" in user["email"]:
+        table = current.s3db.auth_organisation
+        if organisation_id:
+            # Check for an Organisation-specific Approver
+            query = (table.organisation_id == organisation_id) & \
+                    (table.deleted == False)
+            record = db(query).select(table.approver,
+                                      limitby=(0, 1)).first()
+        elif "email" in user and user["email"] and "@" in user["email"]:
+            # Check for Domain: Whitelist or specific Approver
             domain = user.email.split("@", 1)[-1]
             query = (table.domain == domain) & \
                     (table.deleted == False)
@@ -2952,22 +2956,13 @@ $.filterOptionsS3({
             record = None
 
         if record:
-            organisation_id = record.organisation_id
+            if not organisation_id:
+                organisation_id = record.organisation_id
             approver = record.approver
-        elif deployment_settings.get_auth_registration_requests_organisation():
-            # Check for an Organisation-specific Approver
-            organisation_id = user.get("organisation_id", None)
-            if organisation_id:
-                query = (table.organisation_id == organisation_id) & \
-                        (table.deleted == False)
-                record = db(query).select(table.approver,
-                                          limitby=(0, 1)).first()
-                if record and record.approver:
-                    approver = record.approver
 
         if not approver:
             # Default Approver
-            approver = deployment_settings.get_mail_approver()
+            approver = current.deployment_settings.get_mail_approver()
             if "@" not in approver:
                 # Must be the UUID of a Group
                 utable = db.auth_user
