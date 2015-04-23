@@ -3753,8 +3753,7 @@ def req_match(rheader=None):
     else:
         return output
 
-    actions = [dict(url=URL(c="req",
-                            f="req",
+    actions = [dict(url=URL(c="req", f="req",
                             args=["[id]", "check"],
                             vars={"site_id": site_id}
                             ),
@@ -3767,24 +3766,22 @@ def req_match(rheader=None):
         # @ToDo: restrict to those which we've not already committed/sent?
         if settings.get_req_use_commit():
             actions.append(
-                dict(url=URL(c="req",
-                             f="commit_req",
+                dict(url=URL(c="req", f="commit_req",
                              args=["[id]"],
                              vars={"site_id": site_id}
                              ),
                      _class="action-btn",
-                     label=s3_unicode(T("Commit")),
+                     label=s3_unicode(T("Commit")).encode("utf8"),
                      )
                 )
         # Better to force people to go through the Check process
         #actions.append(
-        #        dict(url=URL(c="req",
-        #                     f="send_req",
+        #        dict(url=URL(c="req", f="send_req",
         #                     args=["[id]"],
         #                     vars={"site_id": site_id}
         #                     ),
         #             _class="action-btn dispatch",
-        #             label=s3_unicode(T("Send")),
+        #             label=s3_unicode(T("Send")).encode("utf8"),
         #             )
         #        )
 

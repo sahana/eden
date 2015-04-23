@@ -783,7 +783,7 @@ $.filterOptionsS3({
                    ):
         """
             Check that the required_total can be removed from the inv_record
-            if their is insufficient stock then set up the total to being
+            if there is insufficient stock then set up the total to being
             what is in stock otherwise set it to be the required total.
             If the update flag is true then remove it from stock.
 
@@ -1541,8 +1541,8 @@ class S3InventoryTrackingModel(S3Model):
                    action = self.inv_timeline)
 
         # ---------------------------------------------------------------------
-        # Kits
-        # - actual Kits in stock
+        # Kittings
+        # - process for creating Kits from component items
         #
         tablename = "inv_kit"
         define_table(tablename,
@@ -1587,6 +1587,7 @@ class S3InventoryTrackingModel(S3Model):
                                            _title="%s|%s" % (T("Kit"),
                                                              T("Type the name of an existing catalog kit"))),
                              ),
+                     item_pack_id(),
                      Field("quantity", "double",
                            label = T("Quantity"),
                            represent = lambda v, row=None: \
@@ -1609,26 +1610,26 @@ class S3InventoryTrackingModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Kit"),
-            title_display = T("Kit Details"),
-            title_list = T("Kits"),
-            title_update = T("Kit"),
-            label_list_button = T("List Kits"),
-            label_delete_button = T("Delete Kit"),
-            msg_record_created = T("Kit Created"),
-            msg_record_modified = T("Kit updated"),
-            msg_record_deleted = T("Kit canceled"),
-            msg_list_empty = T("No Kits"))
+            label_create = T("Create Kitting"),
+            title_display = T("Kitting Details"),
+            title_list = T("Kittings"),
+            title_update = T("Kitting"),
+            label_list_button = T("List Kittings"),
+            label_delete_button = T("Delete Kitting"),
+            msg_record_created = T("Kitting completed"),
+            msg_record_modified = T("Kitting updated"),
+            msg_record_deleted = T("Kitting canceled"),
+            msg_list_empty = T("No Kittings"))
 
         # Resource configuration
         configure(tablename,
+                  create_onaccept = self.inv_kit_onaccept,
                   list_fields = ["site_id",
                                  "req_ref",
                                  "quantity",
                                  "date",
                                  "repacked_id",
                                  ],
-                  onaccept = self.inv_kit_onaccept,
                   onvalidation = self.inv_kit_onvalidate,
                   )
 
@@ -1724,12 +1725,12 @@ $.filterOptionsS3({
                            label = self.inv_itn_label,
                            represent = s3_string_represent,
                            ),
-                     # original donating org
+                     # Organisation which originally supplied/donated item(s)
                      organisation_id("supply_org_id",
                                      label = T("Supplier/Donor"),
                                      ondelete = "SET NULL",
                                      ),
-                     # which org owns this item
+                     # Organisation that owns item(s)
                      organisation_id("owner_org_id",
                                      label = T("Owned By (Organization/Branch)"),
                                      ondelete = "SET NULL",
@@ -2348,7 +2349,7 @@ $.filterOptionsS3({
 
         s3.prep = prep
         output = current.rest_controller("inv", "send",
-                                         rheader=inv_send_rheader,
+                                         rheader = inv_send_rheader,
                                          )
         return output
 
@@ -2696,7 +2697,7 @@ $.filterOptionsS3({
                         pdf_hide_comments=True,
                         pdf_componentname = "track_item",
                         **attr
-                       )
+                        )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2826,39 +2827,65 @@ $.filterOptionsS3({
         """
 
         form_vars = form.vars
+        item_id = form_vars.item_id
+        item_pack_id = form_vars.item_pack_id
+        quantity = form_vars.quantity
+        site_id = form_vars.site_id
 
         db = current.db
         s3db = current.s3db
         ktable = s3db.supply_kit_item
         ptable = db.supply_item_pack
-        invtable = s3db.inv_inv_item
-
-        # The Facility at which we're building these kits
-        squery = (invtable.site_id == form_vars.site_id)
+        iitable = s3db.inv_inv_item
 
         # Get contents of this kit
-        query = (ktable.parent_item_id == form_vars.item_id)
+        query = (ktable.parent_item_id == item_id)
         rows = db(query).select(ktable.item_id,
                                 ktable.quantity,
-                                ktable.item_pack_id)
+                                ktable.item_pack_id,
+                                )
 
-        quantity = form_vars.quantity
+        # How many kits are we building?
+        p_id_field = ptable.id
+        p_qty_field = ptable.quantity
+        pack_qty = db(p_id_field == item_pack_id).select(p_qty_field,
+                                                         limitby=(0, 1)
+                                                         ).first().quantity
+        quantity = quantity * pack_qty
+
         max_kits = None
-        # @ToDo: Save the results for the onaccept
-        #items = {}
+
+        ii_pack_field = iitable.item_pack_id
+        ii_qty_field = iitable.quantity
+        ii_expiry_field = iitable.expiry_date
+
+        # Base Query: The Facility at which we're building these kits
+        # Filter out Stock which is in Bad condition or Expired
+        squery = (iitable.site_id == site_id) & \
+                 (iitable.deleted == False) & \
+                 ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
+                 (iitable.status == 0)
 
         # Loop through each supply_item in the kit
         for record in rows:
             # How much of this supply_item is required per kit?
-            one_kit = record.quantity * ptable[record.item_pack_id].quantity
+            pack_qty = db(p_id_field == record.item_pack_id).select(p_qty_field,
+                                                                    limitby=(0, 1)
+                                                                    ).first().quantity
+            one_kit = record.quantity * pack_qty
 
             # How much of this supply_item do we have in stock?
             stock_amount = 0
-            query = squery & (invtable.item_id == record.item_id)
-            wh_items = db(query).select(invtable.quantity,
-                                        invtable.item_pack_id)
+            query = squery & (iitable.item_id == record.item_id)
+            wh_items = db(query).select(#iitable.id,
+                                        ii_qty_field,
+                                        ii_pack_field,
+                                        )
             for wh_item in wh_items:
-                amount = wh_item.quantity * ptable[wh_item.item_pack_id].quantity
+                pack_qty = db(p_id_field == wh_item.item_pack_id).select(p_qty_field,
+                                                                         limitby=(0, 1)
+                                                                         ).first().quantity
+                amount = wh_item.quantity * pack_qty
                 stock_amount += amount
 
             # How many Kits can we create based on this item?
@@ -2867,11 +2894,11 @@ $.filterOptionsS3({
                 # 1st run so this item starts the list
                 max_kits = kits
             else:
-                # Reduce the total possible if less than for previous item
+                # Reduce the total possible if less than for previous items
                 if kits < max_kits:
                     max_kits = kits
 
-        # @ToDo: Save the results for the onaccept
+        # @ToDo: Save the results for the onaccept?
 
         if max_kits < quantity:
             form.errors.quantity = current.T("You can only make %d kit(s) with the available stock") % \
@@ -2889,58 +2916,119 @@ $.filterOptionsS3({
         """
 
         form_vars = form.vars
+        item_id = form_vars.item_id
+        item_pack_id = form_vars.item_pack_id
+        quantity = form_vars.quantity
+        site_id = form_vars.site_id
 
         db = current.db
         s3db = current.s3db
         ktable = s3db.supply_kit_item
         ptable = db.supply_item_pack
-        invtable = s3db.inv_inv_item
-
-        # The Facility at which we're building these kits
-        squery = (invtable.site_id == form_vars.site_id)
+        iitable = s3db.inv_inv_item
+        inv_remove = s3db.inv_remove
 
         # Get contents of this kit
-        query = (ktable.parent_item_id == form_vars.item_id)
+        query = (ktable.parent_item_id == item_id)
         rows = db(query).select(ktable.item_id,
                                 ktable.quantity,
-                                ktable.item_pack_id)
+                                ktable.item_pack_id,
+                                )
 
-        quantity = form_vars.quantity
-        max_kits = None
-        # @ToDo: Save the results for the onaccept
+        # How many kits are we building?
+        p_id_field = ptable.id
+        p_qty_field = ptable.quantity
+        pack_qty = db(p_id_field == item_pack_id).select(p_qty_field,
+                                                         limitby=(0, 1)
+                                                         ).first().quantity
+        quantity = quantity * pack_qty
+
+        ii_id_field = iitable.id
+        ii_pack_field = iitable.item_pack_id
+        ii_qty_field = iitable.quantity
+        ii_expiry_field = iitable.expiry_date
+        ii_purchase_field = iitable.purchase_date
+
+        # Match Stock based on oldest expiry date or purchase date
+        orderby = ii_expiry_field | ii_purchase_field
+
+        # We set expiry date of the kit to the oldest expiry date of the components
+        expiry_date = None
+
+        # Base Query: The Facility at which we're building these kits
+        # Filter out Stock which is in Bad condition or Expired
+        squery = (iitable.site_id == site_id) & \
+                 (iitable.deleted == False) & \
+                 ((ii_expiry_field >= current.request.now) | ((ii_expiry_field == None))) & \
+                 (iitable.status == 0)
 
         # Loop through each supply_item in the kit
         for record in rows:
             # How much of this supply_item is required per kit?
-            one_kit = record.quantity * ptable[record.item_pack_id].quantity
+            pack_qty = db(p_id_field == record.item_pack_id).select(p_qty_field,
+                                                                    limitby=(0, 1)
+                                                                    ).first().quantity
+            one_kit = record.quantity * pack_qty
 
-            # How much of this supply_item do we have in stock?
-            stock_amount = 0
-            query = squery & (invtable.item_id == record.item_id)
-            wh_items = db(query).select(invtable.quantity,
-                                        invtable.item_pack_id)
+            # How much is required for all Kits?
+            required = one_kit * quantity
+
+            # List of what we have available in stock
+            query = squery & (iitable.item_id == record.item_id)
+
+            wh_items = db(query).select(ii_id_field,
+                                        ii_qty_field,
+                                        ii_expiry_field,
+                                        ii_purchase_field, # Included just for orderby on Postgres
+                                        ii_pack_field,
+                                        orderby = orderby,
+                                        )
             for wh_item in wh_items:
-                amount = wh_item.quantity * ptable[wh_item.item_pack_id].quantity
-                stock_amount += amount
+                # Get the pack_qty
+                pack_qty = db(p_id_field == wh_item.item_pack_id).select(p_qty_field,
+                                                                         limitby=(0, 1)
+                                                                         ).first().quantity
+                # How many of this item can we use for these kits?
+                amount = wh_item.quantity * pack_qty
+                # How many of this item will we use for the kits?
+                if amount > required:
+                    # Use only what is required
+                    amount = required
+                #else:
+                #    # We use all
+    
+                if wh_item.expiry_date:
+                    if expiry_date is None:
+                        # No expiry date set so this item starts the list
+                        expiry_date = wh_item.expiry_date
+                    else:
+                        # Shorten the expiry date if less than for previous items
+                        if wh_item.expiry_date < expiry_date:
+                            expiry_date = wh_item.expiry_date
 
-            # How many Kits can we create based on this item?
-            kits = stock_amount / one_kit
-            if max_kits is None:
-                # 1st run so this item starts the list
-                max_kits = kits
-            else:
-                # Reduce the total possible if less than for previous item
-                if kits < max_kits:
-                    max_kits = kits
+                # @ToDo: Record which components are to be used for the kits
+                # Store results in a table?
 
-        if kits > max_kits:
-            current.session.error = current.T("You can only make %d kit(s) with the available stock") % \
-                                    int(max_kits)
-            return
+                # Remove from stock
+                inv_remove(wh_item, amount)
+
+                # Update how much is still required
+                required -= amount
+
+                if not required:
+                    # No more required: move on to the next component
+                    break
 
         # Add Kits to Stock
-
-        # Reduce Stock of components
+        # @ToDo: Keep track of Donor? Owner?
+        # @ToDo: Update Pack Value
+        new_id = iitable.insert(site_id = site_id,
+                                item_id = item_id,
+                                item_pack_id = item_pack_id,
+                                quantity = quantity,
+                                expiry_date = expiry_date,
+                                )
+        s3db.update_super(iitable, dict(id=new_id))
 
     # -------------------------------------------------------------------------
     @staticmethod

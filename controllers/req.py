@@ -594,7 +594,7 @@ $.filterOptionsS3({
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "copy_all"]),
                              _class = "action-btn copy_all",
-                             label = str(T("Copy"))
+                             label = s3_unicode(T("Copy")).encode("utf8")
                             )
                         )
                     confirm = T("Are you sure you want to create a new request as a copy of this one?")
@@ -602,28 +602,33 @@ $.filterOptionsS3({
                 if not template:
                     if settings.get_req_use_commit():
                         s3.actions.append(
-                                dict(url = URL(c="req", f="req",
-                                               args=["[id]", "commit_all", "send"]),
-                                     _class = "action-btn send-btn dispatch",
-                                     label = str(T("Send"))
-                                    )
+                                dict(url=URL(c="req", f="req",
+                                             args=["[id]", "commit_all", "send"]),
+                                     _class="action-btn send-btn dispatch",
+                                     label=s3_unicode(T("Send")).encode("utf8")
+                                     )
                                 )
                         confirm = T("Are you sure you want to commit to this request and send a shipment?")
                         s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
                     elif auth.user and auth.user.site_id:
-                        # @ToDo: Better to force users to go through the Check process (req_check)
                         s3.actions.append(
-                                dict(url = URL(c="req", f="send_req",
-                                               args=["[id]"],
-                                               vars=dict(site_id=auth.user.site_id)
-                                               ),
-                                     _class = "action-btn send-btn dispatch",
-                                     label = str(T("Send"))
-                                    )
+                                     # Better to force users to go through the Check process
+                                dict(#url=URL(c="req", f="send_req",
+                                     #        args=["[id]"],
+                                     #        vars=dict(site_id=auth.user.site_id)
+                                     #        ),
+                                     url=URL(c="req", f="req",
+                                             args=["[id]", "check"],
+                                             vars={"site_id": auth.user.site_id}
+                                             ),
+                                     _class="action-btn send-btn dispatch",
+                                     #label=s3_unicode(T("Send")).encode("utf8")
+                                     label=s3_unicode(T("Check")).encode("utf8"),
+                                     )
                                 )
                         confirm = T("Are you sure you want to send a shipment for this request?")
                         s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
-                        
+
             else:
                 s3_action_buttons(r)
                 if r.component.name == "req_item" and \
@@ -634,7 +639,7 @@ $.filterOptionsS3({
                                            args = ["[id]"]
                                            ),
                                  _class = "action-btn",
-                                 label = str(T("Request from Facility")),
+                                 label = s3_unicode(T("Request from Facility")).encode("utf8"),
                                  )
                         )
                 if r.component.name == "commit":
@@ -657,7 +662,7 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
                                           dict(url = URL(c="req", f="send_commit",
                                                          args = ["[id]"]),
                                                _class = "action-btn send-btn",
-                                               label = str(T("Prepare Shipment"))
+                                               label = s3_unicode(T("Prepare Shipment")).encode("utf8")
                                               )
                                        )
                             s3.jquery_ready.append(

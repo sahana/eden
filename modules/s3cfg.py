@@ -295,10 +295,7 @@ class S3Config(Storage):
             Fallback to cms_index if not configured
             Fallback to an alt_function if defined in the controller
         """
-        from s3 import s3_debug
-        s3_debug("s3cfg")
         customise = self.get("customise_%s_home" % module)
-        s3_debug(customise)
         if customise:
             return customise()
         else:

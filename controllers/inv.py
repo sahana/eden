@@ -301,7 +301,8 @@ def warehouse():
                 try:
                     list_fields.remove("site_id")
                     s3db.configure("inv_inv_item",
-                                   list_fields = list_fields)
+                                   list_fields = list_fields,
+                                   )
                 except:
                     pass
 
@@ -350,7 +351,8 @@ def warehouse():
                 field.readable = field.writable = False
                 # Stay within Warehouse tab
                 s3db.configure("asset_asset",
-                               create_next = None)
+                               create_next = None,
+                               )
 
         elif r.id:
             r.table.obsolete.readable = r.table.obsolete.writable = True
