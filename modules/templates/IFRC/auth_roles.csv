@@ -688,6 +688,8 @@ hn_user,"Honduras User",,pr,,,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,
 hn_user,"Honduras User",,,,"pr_person",,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,
 hn_user,"Honduras User",,req,,,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,
 hn_user,"Honduras User",,,,"req_req",,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,
+hn_user,"Honduras User",,supply,,,,"READ",,,,,
+hn_user,"Honduras User",,,,supply_catalog,,"READ",,,,,
 hn_project_manager,"Honduras Project Coordinator",,budget,,,,"READ|CREATE|UPDATE|DELETE",,,,,
 hn_project_manager,"Honduras Project Coordinator",,project,,,any,"READ",,,,,# Need to have access to unfiltered Orgs lists
 hn_project_manager,"Honduras Project Coordinator",,project,,,,"READ|CREATE|UPDATE|DELETE",,,,,

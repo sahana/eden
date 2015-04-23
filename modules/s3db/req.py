@@ -3759,7 +3759,7 @@ def req_match(rheader=None):
                             vars={"site_id": site_id}
                             ),
                     _class="action-btn",
-                    label=s3_unicode(T("Check")),
+                    label=s3_unicode(T("Check")).encode("utf8"),
                     )
                ]
 

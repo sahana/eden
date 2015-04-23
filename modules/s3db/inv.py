@@ -2348,7 +2348,8 @@ $.filterOptionsS3({
 
         s3.prep = prep
         output = current.rest_controller("inv", "send",
-                                         rheader = inv_send_rheader)
+                                         rheader=inv_send_rheader,
+                                         )
         return output
 
     # -------------------------------------------------------------------------
@@ -2824,25 +2825,25 @@ $.filterOptionsS3({
             Check that we have sufficient inv_item in stock to build the kits
         """
 
-        vars = form.vars
+        form_vars = form.vars
 
         db = current.db
         s3db = current.s3db
         ktable = s3db.supply_kit_item
         ptable = db.supply_item_pack
-        invtable = db.inv_inv_item
+        invtable = s3db.inv_inv_item
 
         # The Facility at which we're building these kits
-        squery = (invtable.site_id == vars.site_id)
+        squery = (invtable.site_id == form_vars.site_id)
 
         # Get contents of this kit
-        query = (ktable.parent_item_id == vars.item_id)
+        query = (ktable.parent_item_id == form_vars.item_id)
         rows = db(query).select(ktable.item_id,
                                 ktable.quantity,
                                 ktable.item_pack_id)
 
-        quantity = vars.quantity
-        max_kits = 0
+        quantity = form_vars.quantity
+        max_kits = None
         # @ToDo: Save the results for the onaccept
         #items = {}
 
@@ -2860,32 +2861,87 @@ $.filterOptionsS3({
                 amount = wh_item.quantity * ptable[wh_item.item_pack_id].quantity
                 stock_amount += amount
 
-            # How many Kits can we create?
+            # How many Kits can we create based on this item?
             kits = stock_amount / one_kit
-            if kits > max_kits:
+            if max_kits is None:
+                # 1st run so this item starts the list
                 max_kits = kits
+            else:
+                # Reduce the total possible if less than for previous item
+                if kits < max_kits:
+                    max_kits = kits
 
-            # @ToDo: Save the results for the onaccept
+        # @ToDo: Save the results for the onaccept
 
         if max_kits < quantity:
             form.errors.quantity = current.T("You can only make %d kit(s) with the available stock") % \
                                         int(max_kits)
 
-        return
-
     # -------------------------------------------------------------------------
     @staticmethod
     def inv_kit_onaccept(form):
         """
-            Reduce the Inventory stocks by the amounts used to make the kits
+            Adjust the Inventory stocks
+                reduce the components & increase the kits
             - pick items which have an earlier expiry_date where they have them
             - provide a pick list to ensure that the right stock items are used
               to build the kits: inv_kit_item
         """
 
-        # @ToDo
+        form_vars = form.vars
 
-        return
+        db = current.db
+        s3db = current.s3db
+        ktable = s3db.supply_kit_item
+        ptable = db.supply_item_pack
+        invtable = s3db.inv_inv_item
+
+        # The Facility at which we're building these kits
+        squery = (invtable.site_id == form_vars.site_id)
+
+        # Get contents of this kit
+        query = (ktable.parent_item_id == form_vars.item_id)
+        rows = db(query).select(ktable.item_id,
+                                ktable.quantity,
+                                ktable.item_pack_id)
+
+        quantity = form_vars.quantity
+        max_kits = None
+        # @ToDo: Save the results for the onaccept
+        #items = {}
+
+        # Loop through each supply_item in the kit
+        for record in rows:
+            # How much of this supply_item is required per kit?
+            one_kit = record.quantity * ptable[record.item_pack_id].quantity
+
+            # How much of this supply_item do we have in stock?
+            stock_amount = 0
+            query = squery & (invtable.item_id == record.item_id)
+            wh_items = db(query).select(invtable.quantity,
+                                        invtable.item_pack_id)
+            for wh_item in wh_items:
+                amount = wh_item.quantity * ptable[wh_item.item_pack_id].quantity
+                stock_amount += amount
+
+            # How many Kits can we create based on this item?
+            kits = stock_amount / one_kit
+            if max_kits is None:
+                # 1st run so this item starts the list
+                max_kits = kits
+            else:
+                # Reduce the total possible if less than for previous item
+                if kits < max_kits:
+                    max_kits = kits
+
+        if kits > max_kits:
+            current.session.error = current.T("You can only make %d kit(s) with the available stock") % \
+                                    int(max_kits)
+            return
+
+        # Add Kits to Stock
+
+        # Reduce Stock of components
 
     # -------------------------------------------------------------------------
     @staticmethod

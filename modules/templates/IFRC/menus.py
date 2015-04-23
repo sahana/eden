@@ -56,9 +56,25 @@ class S3MainMenu(default.S3MainMenu):
             return root_org != "Honduran Red Cross" or \
                    has_role(ORG_ADMIN)
 
+        def inv(item):
+            return root_org != "Honduran Red Cross" or \
+                   has_role("hn_wh_manager") or \
+                   has_role("hn_national_wh_manager") or \
+                   has_role(ORG_ADMIN)
+
+        def basic_warehouse(i):
+            if root_org == "Honduran Red Cross"  and \
+               not (has_role("hn_national_wh_manager") or \
+                    has_role(ORG_ADMIN)):
+                # Hide menu entries which user shouldn't need access to
+                return False
+            else:
+                return True
+
         def multi_warehouse(i):
             if root_org == "Honduran Red Cross" and \
-               not has_role(ORG_ADMIN):
+               not (has_role("hn_national_wh_manager") or \
+                    has_role(ORG_ADMIN)):
                 # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
                 return False
             else:
@@ -101,16 +117,16 @@ class S3MainMenu(default.S3MainMenu):
             homepage("member")(
                 MM("Members", c="member", f="membership", m="summary"),
             ),
-            homepage("inv", "supply", "req")(
+            homepage("inv", "supply", "req", check=inv)(
                 MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
                 MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
                 MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
-                MM("Items", c="supply", f="item"),
-                MM("Catalogs", c="supply", f="catalog"),
+                MM("Items", c="supply", f="item", check=basic_warehouse),
+                MM("Catalogs", c="supply", f="catalog", check=basic_warehouse),
                 #MM("Item Categories", c="supply", f="item_category"),
-                M("Suppliers", c="inv", f="supplier")(),
-                M("Facilities", c="inv", f="facility")(),
-                M("Requests", c="req", f="req", check=multi_warehouse)(),
+                M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(),
+                M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
+                M("Requests", c="req", f="req")(),
                 #M("Commitments", f="commit")(),
             ),
             homepage("asset")(
@@ -634,10 +650,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #        return False
         #    else:
         #        return True
+        def basic_warehouse(i):
+            if root_org == "Honduran Red Cross"  and \
+               not (has_role("hn_national_wh_manager") or \
+                    has_role(ORG_ADMIN)):
+                # Hide menu entries which user shouldn't need access to
+                return False
+            else:
+                return True
         def multi_warehouse(i):
-            if root_org == "Honduran Red Cross" and \
-               not auth.s3_has_role(ORG_ADMIN):
+            if root_org == "Honduran Red Cross"  and \
+               not (has_role("hn_national_wh_manager") or \
+                    has_role(ORG_ADMIN)):
                 # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
+                # & other things that HNRC
                 return False
             else:
                 return True
@@ -687,7 +713,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Search Shipped Items", f="track_item"),
                     ),
-                    M("Items", c="supply", f="item", m="summary")(
+                    M("Items", c="supply", f="item", m="summary", check=basic_warehouse)(
                         M("Create", m="create"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
@@ -699,18 +725,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #  restrict=[ADMIN])(
                     #    M("Create", m="create"),
                     #),
-                    M("Catalogs", c="supply", f="catalog")(
+                    M("Catalogs", c="supply", f="catalog", check=basic_warehouse)(
                         M("Create", m="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Suppliers", c="inv", f="supplier")(
+                    M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Facilities", c="inv", f="facility")(
+                    M("Facilities", c="inv", f="facility", check=basic_warehouse)(
                         M("Create", m="create", t="org_facility"),
                     ),
                     M("Facility Types", c="inv", f="facility_type",
@@ -721,7 +747,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Requests", c="req", f="req", check=multi_warehouse)(
+                    M("Requests", c="req", f="req")(
                         M("Create", m="create"),
                         M("Requested Items", f="req_item"),
                     ),

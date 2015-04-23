@@ -131,8 +131,14 @@
             }
         })
         .data('ui-autocomplete')._renderItem = function(ul, item) {
+            if (item.label) {
+                // No Match or Too Many Results
+                var label = item.label;
+            } else {
+               var label = item[fieldname];
+            }
             return $('<li>').data('item.autocomplete', item)
-                            .append('<a>' + item[fieldname] + '</a>')
+                            .append('<a>' + label + '</a>')
                             .appendTo(ul);
         };
         dummy_input.blur(function() {
