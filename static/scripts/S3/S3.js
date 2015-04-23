@@ -1332,9 +1332,10 @@ S3.openPopup = function(url, center) {
         $(triggerSelector).each(function() {
             var trigger = $(this),
                 $scope;
+            /* ACs & list_add forms have this field hidden (unhiding of list_add during validation errors happens later)
             if (!trigger.is(':visible')) {
                 return;
-            }
+            } */
             if (settings.scope == 'row') {
                 $scope = trigger.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {

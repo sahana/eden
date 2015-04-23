@@ -1608,7 +1608,8 @@ class S3InventoryTrackingModel(S3Model):
                      Field("quantity", "double",
                            label = T("Quantity"),
                            represent = lambda v, row=None: \
-                            IS_FLOAT_AMOUNT.represent(v, precision=2)
+                            IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           requires = IS_FLOAT_IN_RANGE(minimum=1),
                            ),
                      s3_date(comment = DIV(_class="tooltip",
                                            _title="%s|%s" % \
