@@ -350,8 +350,9 @@ div.form-container form fieldset input.errorfield {
     background-color: #dc032e;
 }
 
-/* Required Field indicator */
+/* Red indicators */
 .error,
+.expired,
 .req,
 .req_key {
     color: #dc032e;

@@ -1236,9 +1236,9 @@ def s3_date(name="date", **attr):
                     else:
                         max = now.replace(year=future_year)
                 requires = IS_DATE_IN_RANGE(
-                        format=date_format,
-                        maximum=max,
-                        error_message=T("Date must be %(max)s or earlier!")
+                    format=date_format,
+                    maximum=max,
+                    error_message=T("Date must be %(max)s or earlier!")
                     )
             elif future is None:
                 if past < current_month:
@@ -1254,9 +1254,9 @@ def s3_date(name="date", **attr):
                     else:
                         min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
-                        format=date_format,
-                        minimum=min,
-                        error_message=T("Date must be %(min)s or later!")
+                    format=date_format,
+                    minimum=min,
+                    error_message=T("Date must be %(min)s or later!")
                     )
             else:
                 future_month = now.month + future
@@ -1285,10 +1285,10 @@ def s3_date(name="date", **attr):
                     else:
                         min = now.replace(year=current_year - past_years)
                 requires = IS_DATE_IN_RANGE(
-                        format=date_format,
-                        maximum=max,
-                        minimum=min,
-                        error_message=T("Date must be between %(min)s and %(max)s!")
+                    format=date_format,
+                    maximum=max,
+                    minimum=min,
+                    error_message=T("Date must be between %(min)s and %(max)s!")
                     )
         if "empty" in attr:
             if attr["empty"] is False:

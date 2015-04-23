@@ -45,6 +45,7 @@ __all__ = ("S3WarehouseModel",
            "inv_InvItemRepresent",
            )
 
+import datetime
 import itertools
 
 from gluon import *
@@ -495,6 +496,7 @@ class S3InventoryModel(S3Model):
                                   ),
                           s3_date("expiry_date",
                                   label = T("Expiry Date"),
+                                  represent = self.inv_expiry_date_represent,
                                   ),
                           Field("pack_value", "double",
                                 label = T("Value per Pack"),
@@ -716,6 +718,20 @@ $.filterOptionsS3({
                     inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_expiry_date_represent(date):
+        """
+            Show Expired Dates in Red
+        """
+
+        dtstr = S3DateTime.date_represent(date, utc=True)
+
+        if date and datetime.datetime(date.year, date.month, date.day) < current.request.now:
+            return SPAN(dtstr, _class="expired")
+        else:
+            return dtstr
 
     # -------------------------------------------------------------------------
     @staticmethod

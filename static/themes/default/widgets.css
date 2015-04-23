@@ -553,8 +553,9 @@ ul.ui-autocomplete {
     overflow: auto;
 }
 
-/* Required Field indicator */
+/* Red indicators */
 .error,
+.expired,
 .req,
 .req_key {
     color: red;
