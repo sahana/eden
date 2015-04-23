@@ -2728,18 +2728,19 @@ class GIS(object):
             if len(layers) > 1:
                 layers.exclude(lambda row: row["gis_layer_feature.style_default"] == False)
             if len(layers) == 1:
-                marker = layers.first()
+                layer = layers.first()
             else:
                 # Can't differentiate
-                marker = None
+                layer = None
 
-            if marker:
-                _marker = marker["gis_marker"]
-                marker = dict(image=_marker.image,
-                              height=_marker.height,
-                              width=_marker.width,
-                              gps_marker=marker["gis_style"].gps_marker
-                              )
+            if layer:
+                _marker = layer["gis_marker"]
+                if _marker.image:
+                    marker = dict(image=_marker.image,
+                                  height=_marker.height,
+                                  width=_marker.width,
+                                  gps_marker=layer["gis_style"].gps_marker
+                                  )
 
         if not marker:
             # Default

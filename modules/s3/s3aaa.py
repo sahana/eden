@@ -6924,6 +6924,8 @@ class S3Audit(object):
 class S3RoleManager(S3Method):
     """ REST Method to manage ACLs (Role Manager UI for administrators) """
 
+    # @ToDo: Support settings.L10n.translate_org_organisation
+
     # Controllers to hide from the permissions matrix
     HIDE_CONTROLLER = ("admin", "default")
 
