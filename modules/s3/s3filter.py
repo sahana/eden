@@ -1716,7 +1716,7 @@ class S3OptionsFilter(S3FilterWidget):
             numeric = rfield.ftype in ("integer", "id") or \
                       rfield.ftype[:9] == "reference"
             for _val in values:
-                if numeric:
+                if numeric and _val is not None:
                     try:
                         val = int(_val)
                     except ValueError:

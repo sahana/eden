@@ -479,7 +479,7 @@
                 rows.append('td')
                     .attr('class', 'pt-row-total')
                     .text(function(d) {
-                        return d[2];
+                        return d[2][0];
                     });
             }
             return rows;
@@ -495,7 +495,7 @@
         _renderCell: function(data, index, labels) {
 
             var column = d3.select(this),
-                items = data.items;
+                items = data.items[0];
 
             var value = column.append('div')
                               .attr('class', 'pt-cell-value');
@@ -512,7 +512,7 @@
                 value.text(items);
             }
 
-            var keys = data.keys;
+            var keys = data.keys[0];
             if (items && keys && keys.length) {
                 $(column.node()).data('records', keys);
                 column.append('div')
@@ -553,7 +553,7 @@
                   .enter()
                   .append('td')
                   .attr('class', 'pt-col-total')
-                  .text(function(col) { return col[2]; });
+                  .text(function(col) { return col[2][0]; });
 
             // Grand total
             footer.append('td')
@@ -766,14 +766,14 @@
             var items = [], total = 0;
             for (var i=0; i<data.length; i++) {
                 var item = data[i];
-                if (!item[1] && item[2] >= 0) {
+                if (!item[1] && item[2][0] >= 0) {
                     items.push({
                         index: item[0],
                         label: item[4],
-                        value: item[2],
+                        value: item[2][0],
                         key: item[3]
                     });
-                    total += item[2];
+                    total += item[2][0];
                 }
             }
 
@@ -877,7 +877,7 @@
                 if (!item[1]) {
                     items.push({
                         label: item[4],
-                        value: item[2],
+                        value: item[2][0],
                         filterIndex: item[0],
                         filterKey: item[3]
                     });
@@ -993,7 +993,7 @@
                 cdim = data.cols;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ri][ci]['value'];
+                    return cells[ri][ci]['values'][0];
                 };
                 rowsSelector = selectors[0];
                 colsSelector = selectors[1];
@@ -1002,7 +1002,7 @@
                 cdim = data.rows;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ci][ri]['value'];
+                    return cells[ci][ri]['values'][0];
                 };
                 rowsSelector = selectors[1];
                 colsSelector = selectors[0];
@@ -1213,11 +1213,11 @@
                 for (var i=0; i<yAxis.length; i++) {
                     item = getData(null, i);
                     if (xIndex === null) {
-                        value = item[2];
+                        value = item[2][0];
                     } else {
-                        value = getData(xIndex, i).value;
+                        value = getData(xIndex, i).values[0];
                     }
-                    if (!item[1] && item[2] >= 0) {
+                    if (!item[1] && item[2][0] >= 0) {
                         items.push({
                             filterIndex: item[0],
                             filterKey: item[3],
@@ -1234,15 +1234,15 @@
             var xHeaders = [], total = 0;
             for (var i=0; i<xAxis.length; i++) {
                 var item = getData(i, null);
-                if (!item[1] && item[2] >= 0) {
+                if (!item[1] && item[2][0] >= 0) {
                     xHeaders.push({
                         position: i,
                         filterIndex: item[0],
                         filterKey: item[3],
                         label: item[4],
-                        value: item[2]
+                        value: item[2][0]
                     });
-                    total += item[2];
+                    total += item[2][0];
                 }
             }
 
@@ -1487,11 +1487,11 @@
                         }
                         if (xIndex !== null) {
                             var xFilter = filterExpression(xSelector, xIndex, xKey);
-                            filters.push([xFilter, xKey]);
+                            filters.push([xFilter, xKey || 'None']);
                         }
                         if (yIndex !== null) {
                             var yFilter = filterExpression(ySelector, yIndex, yKey);
-                            filters.push([yFilter, yKey]);
+                            filters.push([yFilter, yKey || 'None']);
                         }
                         pt._chartExplore(filters);
                     });

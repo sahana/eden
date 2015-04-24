@@ -307,8 +307,8 @@ class S3ProjectModel(S3Model):
         report_fields = list_fields
         report_col_default = "location.location_id"
         report_fact_fields = [(field, "count") for field in report_fields]
-        report_fact_default = "project.organisation_id"
-        #report_fact_default = "theme.name"
+        report_fact_default = "count(organisation_id)"
+        #report_fact_default = "count(theme.name)"
 
         configure(tablename,
                   context = {"location": "location.location_id",
@@ -341,7 +341,6 @@ class S3ProjectModel(S3Model):
                         rows="hazard.name",
                         cols=report_col_default,
                         fact=report_fact_default,
-                        aggregate="count",
                         totals=True
                     )
                   ),
@@ -3215,7 +3214,6 @@ class S3ProjectLocationModel(S3Model):
                                  defaults=Storage(rows="location_id$%s" % levels[0], # Highest-level of Hierarchy
                                                   cols="project_id",
                                                   fact="list(activity_type.activity_type_id)",
-                                                  aggregate="list",
                                                   totals=True,
                                                   ),
                                  )
