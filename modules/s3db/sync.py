@@ -276,7 +276,7 @@ class SyncDataModel(S3Model):
                        sync_task="repository_id",
                        sync_log="repository_id",
                        #sync_conflict="repository_id",
-                       
+
                        **{# Scheduler Jobs
                           S3Task.TASK_TABLENAME: {"name": "job",
                                                   "joinby": "repository_id",
@@ -435,7 +435,7 @@ class SyncDataModel(S3Model):
         add_components(tablename,
                        sync_resource_filter="task_id",
                       )
-                      
+
         # -------------------------------------------------------------------------
         # Filters
         # -------------------------------------------------------------------------
@@ -459,7 +459,7 @@ class SyncDataModel(S3Model):
                                  "filter_string"],
                   onaccept = onaccept,
                   ondelete = onaccept)
-                             
+
         # -------------------------------------------------------------------------
         # Job
         # -------------------------------------------------------------------------
@@ -714,7 +714,7 @@ class SyncDataModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        
+
         ttable = s3db.sync_task
         ftable = s3db.sync_resource_filter
 
@@ -745,7 +745,7 @@ class SyncDataModel(S3Model):
                 task_id = row.task_id
             if task_id:
                 db(ttable.id == task_id).update(last_push=None)
-                
+
         return
 
 # =============================================================================

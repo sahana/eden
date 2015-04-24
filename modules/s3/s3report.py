@@ -1817,8 +1817,8 @@ class S3PivotTable(object):
                         okeys = None
 
                         # Build a lookup table for field values if counting
-                        keys = []
                         if method in ("count", "list"):
+                            keys = []
                             for record_id in cell["records"]:
                                 record = self.records[record_id]
                                 try:
@@ -1856,7 +1856,7 @@ class S3PivotTable(object):
                                 okeys = keys
 
                         ocell["items"].append(items)
-                        ocell["keys"].append(keys)
+                        ocell["keys"].append(okeys)
 
                     orow.append(ocell)
 
@@ -1885,11 +1885,15 @@ class S3PivotTable(object):
         if report_options:
             fact_options  = report_options.get("fact")
 
+        # @todo: lookup report title before constructing from fact labels
+
         fact_data = []
+        fact_labels = []
         for fact in facts:
             rfield = rfields[fact.selector]
             fact_label = str(fact.get_label(rfield, fact_options))
             fact_data.append((fact.selector, fact.method, fact_label))
+            fact_labels.append(fact_label)
 
         get_label = S3PivotTableFact._get_field_label
         if rows_dim:
@@ -1906,8 +1910,8 @@ class S3PivotTable(object):
                   "none": str(current.messages["NONE"]),
                   "per": str(T("per")),
                   "breakdown": str(T("Breakdown")),
-                  # @todo: deprecate (moved into "facts"):
-                  "layer": fact_data[0][2],
+                  # @todo: use report title:
+                  "layer": " / ".join(fact_labels),
                   "rows": rows_label,
                   "cols": cols_label,
                   }
@@ -1967,9 +1971,11 @@ class S3PivotTable(object):
             # Get the representation method
             has_fk = f is not None and s3_has_foreign_key(f)
             if has_fk:
-                represent = lambda v: s3_unicode(f.represent(v))
+                represent = lambda v, f=f: s3_unicode(f.represent(v))
             else:
-                represent = lambda v: s3_unicode(self._represent_method(field)(v))
+                m = self._represent_method(selector)
+                represent = lambda v, m=m: s3_unicode(m(v))
+
             represents[selector] = (has_fk, represent)
 
         return represents

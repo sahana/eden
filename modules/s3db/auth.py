@@ -118,7 +118,7 @@ class S3AuthUserOptions(S3Model):
                                 label = T("OpenStreetMap OAuth Consumer Secret"),
                                 ),
                           *s3_meta_fields())
-                          
+
         return {}
 
 # =============================================================================

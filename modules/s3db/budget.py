@@ -437,7 +437,7 @@ class S3BudgetModel(S3Model):
                     budget_location_id = lambda **attr: dummy("location_id"),
                     budget_staff_id = lambda **attr: dummy("staff_id"),
                     )
-                   
+
     # -------------------------------------------------------------------------
     @staticmethod
     def budget_budget_onaccept(form):
@@ -451,7 +451,7 @@ class S3BudgetModel(S3Model):
            return
         budget_budget_totals(budget_entity_id)
         return
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def budget_staff_onaccept(form):
@@ -543,7 +543,7 @@ class S3BudgetKitModel(S3Model):
              "budget_kit_id",
              "budget_item_id",
              )
-    
+
     def model(self):
 
         T = current.T
@@ -553,11 +553,11 @@ class S3BudgetKitModel(S3Model):
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
-        
+
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
-        
+
         db = current.db
-        
+
         # ---------------------------------------------------------------------
         # Kits
         #
@@ -612,7 +612,7 @@ class S3BudgetKitModel(S3Model):
 
         # Represent
         budget_kit_represent = S3Represent(lookup=tablename, fields=["code"])
-                             
+
         # Reusable Field
         budget_kit_id = S3ReusableField("kit_id", "reference %s" % tablename,
             ondelete = "RESTRICT",
@@ -651,7 +651,7 @@ class S3BudgetKitModel(S3Model):
         budget_cost_type_opts = {1: T("One-time"),
                                  2: T("Recurring"),
                                 }
-                                
+
         budget_category_type_opts = {1: T("Consumable"),
                                      2: T("Satellite"),
                                      3: "HF",
@@ -672,7 +672,7 @@ class S3BudgetKitModel(S3Model):
                                      18: T("Miscellaneous"),
                                      19: T("Running Cost"),
                                      }
-            
+
         tablename = "budget_item"
         define_table(tablename,
                      Field("category_type", "integer", notnull=True,
@@ -827,12 +827,12 @@ class S3BudgetKitModel(S3Model):
         """
         db = current.db
         s3db = current.s3db
-        
+
         try:
             item_id = form.vars.id
         except:
             return
-            
+
         # Update totals of all kits with this item
         linktable = s3db.budget_kit_item
         kit_id = linktable.kit_id
@@ -927,7 +927,7 @@ class S3BudgetBundleModel(S3Model):
         crud_strings = s3.crud_strings
 
         db = current.db
-        
+
         # ---------------------------------------------------------------------
         # Bundles
         #
@@ -1055,7 +1055,7 @@ class S3BudgetBundleModel(S3Model):
                   onaccept = self.budget_bundle_kit_onaccept,
                   ondelete = self.budget_bundle_kit_ondelete,
                   )
-        
+
         # ---------------------------------------------------------------------
         # Bundle<>Item Many2Many
         #
@@ -1079,7 +1079,7 @@ class S3BudgetBundleModel(S3Model):
                            label = T("Megabytes per Month"),
                            ),
                      *s3_meta_fields())
-                     
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Add Item"),
@@ -1308,7 +1308,7 @@ class S3BudgetAllocationModel(S3Model):
 
         T = current.T
         super_link = self.super_link
-  
+
         # ---------------------------------------------------------------------
         # Budget allocatable (super-entity for resource assignments that
         # can be linked to a budget)
@@ -1836,7 +1836,7 @@ def budget_kit_totals(kit_id):
 
         quantity = item.quantity
         item_costs = costs[item.item_id]
-        
+
         total_unit_cost += item_costs["unit_cost"] * quantity
         total_monthly_cost += item_costs["monthly_cost"] * quantity
         total_minute_cost += item_costs["minute_cost"] * quantity
@@ -1869,7 +1869,7 @@ def budget_bundle_totals(bundle_id):
 
     s3db = current.s3db
     db = current.db
-    
+
     total_unit_cost = 0
     total_monthly_cost = 0
 
@@ -1961,7 +1961,7 @@ def budget_budget_totals(budget_entity_id):
     # Calculate staff costs
     stable = s3db.budget_staff
     ltable = s3db.budget_location
-    
+
     linktable = s3db.budget_budget_staff
 
     left = [stable.on(linktable.staff_id == stable.id),
@@ -1992,7 +1992,7 @@ def budget_budget_totals(budget_entity_id):
 
     # Calculate bundle costs
     btable = s3db.budget_bundle
-    
+
     linktable = s3db.budget_budget_bundle
 
     left = [btable.on(linktable.bundle_id == btable.id)]
@@ -2033,14 +2033,14 @@ def budget_rheader(r):
 
         tpvars = dict(r.get_vars)
         tpvars["component"] = "allocation"
-        
+
         tabs = [(T("Basic Details"), None),
                 (T("Staff"), "staff"),
                 (T("Bundles"), "bundle"),
                 (T("Allocation"), "allocation"),
                 (T("Report"), "timeplot", tpvars),
                 ]
-               
+
         rheader_fields = [["name"],
                           ["description"],
                           ["total_budget"],
@@ -2048,7 +2048,7 @@ def budget_rheader(r):
                           ["total_recurring_costs"],
                           ]
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
-        
+
     elif resourcename == "bundle":
 
         tabs = [(T("Basic Details"), None),
@@ -2077,5 +2077,5 @@ def budget_rheader(r):
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
     return rheader
-    
+
 # END =========================================================================

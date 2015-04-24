@@ -495,28 +495,39 @@
         _renderCell: function(data, index, labels) {
 
             var column = d3.select(this),
-                items = data.items[0];
+                items = data.items,
+                keys = data.keys,
+                layer,
+                layer_keys;
 
-            var value = column.append('div')
-                              .attr('class', 'pt-cell-value');
-            if (items === null) {
-                value.text(labels.none);
-            } else if ($.isArray(items)) {
-                value.append('ul')
-                     .selectAll('li')
-                     .data(items)
-                     .enter()
-                     .append('li')
-                     .html(function(d) { return d; });
-            } else {
-                value.text(items);
-            }
+            for (var i=0, len=items.length; i<len; i++) {
+                layer = items[i];
 
-            var keys = data.keys[0];
-            if (items && keys && keys.length) {
-                $(column.node()).data('records', keys);
-                column.append('div')
-                      .attr('class', 'pt-cell-zoom');
+                var value = column.append('div')
+                                  .attr('class', 'pt-cell-value');
+                if (layer === null) {
+                    value.text(labels.none);
+                } else if ($.isArray(layer)) {
+                    value.append('ul')
+                         .selectAll('li')
+                         .data(layer)
+                         .enter()
+                         .append('li')
+                         .html(function(d) { return d; });
+                } else {
+                    value.text(layer);
+                }
+                layer_keys = data.keys[i];
+                if (items && layer_keys && layer_keys.length) {
+                    $(value.node()).data('keys', layer_keys)
+                                   .data('fact', i);
+                    value.append('div')
+                         .attr('class', 'pt-cell-zoom');
+                }
+                if (len - i > 1) {
+                    value.append('span')
+                         .text(' / ');
+                }
             }
         },
 
@@ -1931,24 +1942,26 @@
             $(widgetID + ' div.pt-table div.pt-cell-zoom').click(function(event) {
 
                 var zoom = $(event.currentTarget);
-                var cell = zoom.closest('td'); //parent();
-
+                var cell = zoom.closest('.pt-cell-value'); //parent();
                 var values = cell.find('.pt-cell-records');
+
                 if (values.length > 0) {
                     values.remove();
                     zoom.removeClass('opened');
                 } else {
-                    var keys = cell.data('records');
+                    var keys = cell.data('keys'),
+                        fact = cell.data('fact');
+                    var selector = data.facts[fact][0];
+                    var lookup = data.lookups[selector];
 
                     values = $('<div/>').addClass('pt-cell-records');
 
                     var list = $('<ul/>');
                     for (var i=0; i < keys.length; i++) {
-                        list.append('<li>' + data.lookup[keys[i]] + '</li>');
+                        list.append('<li>' + lookup[keys[i]] + '</li>');
                     }
                     values.append(list);
-                    cell.append(values);
-                    zoom.addClass('opened');
+                    zoom.addClass('opened').after(values);
                 }
             });
 

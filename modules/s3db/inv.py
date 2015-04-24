@@ -639,7 +639,7 @@ $.filterOptionsS3({
         if track_pack_values:
             rows = ["item_id", "item_id$item_category_id", "currency"]
             cols = ["site_id", "owner_org_id", "supply_org_id", "currency"]
-            fact = ["quantity", (T("Total Value"), "total_value"),]
+            fact = ["quantity", (T("Total Value"), "total_value")]
         else:
             rows = ["item_id", "item_id$item_category_id"]
             cols = ["site_id", "owner_org_id", "supply_org_id"]
@@ -3086,7 +3086,7 @@ $.filterOptionsS3({
                     amount = required
                 #else:
                 #    # We use all
-    
+
                 if wh_item.expiry_date:
                     if expiry_date is None:
                         # No expiry date set so this item starts the list

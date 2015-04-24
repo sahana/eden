@@ -245,7 +245,7 @@ class S3ChannelModel(S3Model):
 
             CLI API for shell scripts & to be called by S3Method
         """
-    
+
         db = current.db
         s3db = current.s3db
         table = s3db.table(tablename)
@@ -681,7 +681,7 @@ class S3EmailModel(S3ChannelModel):
 
         # ---------------------------------------------------------------------
         return dict()
-        
+
 # =============================================================================
 class S3FacebookModel(S3ChannelModel):
     """
@@ -1131,7 +1131,7 @@ class S3ParsingModel(S3Model):
 
             CLI API for shell scripts & to be called by S3Method
         """
-    
+
         db = current.db
         s3db = current.s3db
         table = s3db.msg_parser
@@ -1740,7 +1740,7 @@ class S3TwitterModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      Field("twitter_account"),
-                     Field("consumer_key", "password", 
+                     Field("consumer_key", "password",
                            widget = password_widget,
                            ),
                      Field("consumer_secret", "password",

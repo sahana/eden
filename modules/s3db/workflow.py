@@ -2,7 +2,7 @@
 
 """
    S3 Workflow Engine Data Model
-   
+
    @copyright: 2012-2015 (c) Sahana Software Foundation
    @license: MIT
 
@@ -59,7 +59,7 @@ class S3WorkflowStatusModel(S3Model):
         we_types = Storage(project_task = T("Project Task"),
                           )
 
-        tablename = "workflow_entity" 
+        tablename = "workflow_entity"
         s3db.super_entity(tablename, "workflow_id",
                           we_types,
                           )
@@ -88,5 +88,5 @@ class S3WorkflowStatusModel(S3Model):
                      )
 
         return Storage()
-        
+
 # END =========================================================================

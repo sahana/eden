@@ -466,7 +466,7 @@ class S3IRSModel(S3Model):
                                   "autodelete": False,
                                  },
                       )
-                      
+
         ireport_id = S3ReusableField("ireport_id", "reference %s" % tablename,
                                      requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db,
@@ -1190,7 +1190,7 @@ class S3IRSResponseModel(S3Model):
             return int((current.request.utcnow - row.datetime) / 60)
         else:
             return 0
-            
+
 # =============================================================================
 def irs_rheader(r, tabs=[]):
     """ Resource component page header """
