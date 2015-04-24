@@ -521,7 +521,11 @@ class S3ProjectModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_current_indicator_status(row):
-        """ Summary of Current Indicator Status """
+        """
+            Summary of Current Indicator Status
+
+            @ToDo: Make this configurable
+        """
 
         if hasattr(row, "project_project"):
             row = row.project_project
@@ -3690,6 +3694,9 @@ class S3ProjectPlanningModel(S3Model):
             Goals (Objectives)
                 Outcomes
                     Outputs
+                        Indicators
+        This module currently assumes values for the month
+        @ToDo: deployment_setting to use cumulative?
     """
 
     names = ("project_goal",

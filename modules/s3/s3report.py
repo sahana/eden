@@ -1817,8 +1817,8 @@ class S3PivotTable(object):
                         okeys = None
 
                         # Build a lookup table for field values if counting
+                        keys = []
                         if method in ("count", "list"):
-                            keys = []
                             for record_id in cell["records"]:
                                 record = self.records[record_id]
                                 try:
