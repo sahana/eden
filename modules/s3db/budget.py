@@ -1454,6 +1454,7 @@ class S3BudgetMonitoringModel(S3Model):
                                   writable = False,
                                   ),
                           s3_date("end_date",
+                                  empty = False,
                                   label = T("Date"),
                                   ),
                           Field("planned", "double", notnull=True,
@@ -1514,8 +1515,50 @@ class S3BudgetMonitoringModel(S3Model):
             Handle Updates of entries to reset the hidden start_date
         """
 
-        # @ToDo
-        return
+        db = current.db
+        table = current.s3db.budget_monitoring
+
+        # Read the Budget Monitoring record
+        record_id = form.vars.id
+        record = db(table.id == record_id).select(table.budget_entity_id,
+                                                  table.start_date,
+                                                  table.end_date,
+                                                  limitby=(0, 1)
+                                                  ).first()
+        if not record:
+            s3_debug("Cannot find Budget Monitoring record (no record for this ID), so can't update start_date")
+            return
+        budget_entity_id = record.budget_entity_id
+        start_date = record.start_date
+        end_date = record.end_date
+
+        # Locate the immediately preceding record
+        query = (table.budget_entity_id == budget_entity_id)  & \
+                (table.deleted == False) & \
+                (table.end_date < end_date)
+        max_field = table.end_date.max()
+        record = db(query).select(max_field,
+                                  limitby=(0, 1),
+                                  orderby=max_field,
+                                  ).first()
+        if record and record[max_field] != start_date:
+            # Update this record's start_date
+            db(table.id == record_id).update(start_date = record[max_field])
+
+        # Locate the immediately succeeding record
+        query = (table.budget_entity_id == budget_entity_id)  & \
+                (table.deleted == False) & \
+                (table.end_date > end_date)
+        min_field = table.end_date.min()
+        record = db(query).select(table.id,
+                                  table.start_date,
+                                  min_field, # Needed for orderby on Postgres
+                                  limitby=(0, 1),
+                                  orderby=min_field,
+                                  ).first()
+        if record and record["budget_monitoring.start_date"] != end_date:
+            # Update that record's start_date
+            db(table.id == record["budget_monitoring.id"]).update(start_date = end_date)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -538,7 +538,7 @@ class S3ProjectModel(S3Model):
         query = (table.deleted != True) & \
                 (table.project_id == project_id)
         rows = current.db(query).select(table.indicator_id,
-                                        table.date,
+                                        table.end_date,
                                         table.target_value, # Needed for Field.Method() to avoid extra DB call
                                         table.value,        # Needed for Field.Method() to avoid extra DB call
                                         )
@@ -547,13 +547,13 @@ class S3ProjectModel(S3Model):
             indicator_id = row.indicator_id
             if indicator_id in indicators:
                 old_date = indicators[indicator_id]["date"]
-                new_date = row.date
+                new_date = row.end_date
                 if datetime.datetime(old_date.year, new_date.month, new_date.day) > datetime.datetime(old_date.year, old_date.month, old_date.day):
                     # This is more current so replace with this
                     indicators[indicator_id].update(date=new_date,
                                                     percentage=row.percentage())
             else:
-                indicators[indicator_id] = {"date": row.date,
+                indicators[indicator_id] = {"date": row.end_date,
                                             "percentage": row.percentage(),
                                             }
         len_indicators = len(indicators)
@@ -3695,7 +3695,7 @@ class S3ProjectPlanningModel(S3Model):
                 Outcomes
                     Outputs
                         Indicators
-        This module currently assumes values for the month
+        This module currently assumes discrete values for each period
         @ToDo: deployment_setting to use cumulative?
     """
 
@@ -3711,6 +3711,7 @@ class S3ProjectPlanningModel(S3Model):
              "project_indicator",
              #"project_indicator_id",
              "project_indicator_represent",
+             "project_indicator_data",
              )
 
     def model(self):
@@ -3985,20 +3986,28 @@ class S3ProjectPlanningModel(S3Model):
                         requires = IS_ONE_OF(db, "project_project.id",
                                              self.project_project_represent
                                              )
-                       ),
+                        ),
                      indicator_id(),
-                     s3_date(empty = False,
+                     # Populated Automatically
+                     # Used for Timeplot &, in future, to ease changing the monitoring frequency
+                     s3_date("start_date",
+                             readable = False,
+                             writable = False,
+                             ),
+                     s3_date("end_date",
+                             empty = False,
+                             label = T("Date"),
                              ),
                      Field("target_value", "integer",
                            label = T("Target Value"),
                            represent = lambda v: IS_INT_AMOUNT.represent(v),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
                            ),
-                      Field("value", "integer",
-                            label = T("Actual Value"),
-                            represent = lambda v: IS_INT_AMOUNT.represent(v),
-                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
-                            ),
+                     Field("value", "integer",
+                           label = T("Actual Value"),
+                           represent = lambda v: IS_INT_AMOUNT.represent(v),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                           ),
                      Field.Method("percentage", self.project_indicator_percentage),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4016,15 +4025,15 @@ class S3ProjectPlanningModel(S3Model):
             msg_list_empty = T("No indicator data defined")
         )
 
-        report_options = {"rows": ["indicator_id", "date"],
-                          "cols": ["indicator_id", "date"],
+        report_options = {"rows": ["indicator_id", "end_date"],
+                          "cols": ["indicator_id", "end_date"],
                           "fact": [(T("Target Value"), "avg(target_value)"),
                                    (T("Actual Value"), "avg(value)"),
                                    # Not working
                                    #(T("Percentage"), "avg(percentage)"),
                                    ],
                           "defaults": {"rows": "indicator_id",
-                                       "cols": "date",
+                                       "cols": "end_date",
                                        #"fact": "avg(percentage)",
                                        "fact": "avg(value)",
                                        "totals": False,
@@ -4033,12 +4042,13 @@ class S3ProjectPlanningModel(S3Model):
 
         self.configure(tablename,
                        list_fields = ["indicator_id",
-                                      "date",
+                                      "end_date",
                                       "target_value",
                                       "value",
                                       (T("Percentage"), "percentage"),
                                       "comments",
                                       ],
+                       onaccept = self.project_indicator_data_onaccept,
                        report_options = report_options,
                        )
 
@@ -4161,6 +4171,9 @@ class S3ProjectPlanningModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def project_indicator_onaccept(form):
+        """
+            Update all ancestor fields from immediate parent
+        """
 
         settings = current.deployment_settings
         if settings.get_project_outputs() and \
@@ -4172,11 +4185,11 @@ class S3ProjectPlanningModel(S3Model):
                 # Populate the Goal &/or Outcome from the Output
                 db = current.db
                 s3db = current.s3db
-                table = s3db.project_output
-                output = db(table.id == output_id).select(table.goal_id,
-                                                          table.outcome_id,
-                                                          limitby=(0, 1)
-                                                          ).first()
+                otable = s3db.project_output
+                output = db(otable.id == output_id).select(otable.goal_id,
+                                                           otable.outcome_id,
+                                                           limitby=(0, 1)
+                                                           ).first()
                 if output:
                     table = s3db.project_indicator
                     db(table.id == form_vars.id).update(goal_id = output.goal_id,
@@ -4190,13 +4203,66 @@ class S3ProjectPlanningModel(S3Model):
                 # Populate the Goal from the Outcome
                 db = current.db
                 s3db = current.s3db
-                table = s3db.project_outcome
-                outcome = db(table.id == outcome_id).select(table.goal_id,
-                                                            limitby=(0, 1)
-                                                            ).first()
+                otable = s3db.project_outcome
+                outcome = db(otable.id == outcome_id).select(otable.goal_id,
+                                                             limitby=(0, 1)
+                                                             ).first()
                 if outcome:
                     table = s3db.project_indicator
                     db(table.id == form_vars.id).update(goal_id = outcome.goal_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_indicator_data_onaccept(form):
+        """
+            Handle Updates of entries to reset the hidden start_date
+        """
+
+        db = current.db
+        table = current.s3db.project_indicator_data
+        record_id = form.vars.id
+
+        # Read the Indicator Data record
+        record = db(table.id == record_id).select(table.indicator_id,
+                                                  table.start_date,
+                                                  table.end_date,
+                                                  limitby=(0, 1)
+                                                  ).first()
+        if not record:
+            s3_debug("Cannot find Project Indicator Data record (no record for this ID), so can't update start_date")
+            return
+        s3_debug(record)
+        indicator_id = record.indicator_id
+        start_date = record.start_date
+        end_date = record.end_date
+
+        # Locate the immediately preceding record
+        query = (table.indicator_id == indicator_id)  & \
+                (table.deleted == False) & \
+                (table.end_date < end_date)
+        max_field = table.end_date.max()
+        record = db(query).select(max_field,
+                                  limitby=(0, 1),
+                                  orderby=max_field,
+                                  ).first()
+        if record and record[max_field] != start_date:
+            # Update this record's start_date
+            db(table.id == record_id).update(start_date = record[max_field])
+
+        # Locate the immediately succeeding record
+        query = (table.indicator_id == indicator_id)  & \
+                (table.deleted == False) & \
+                (table.end_date > end_date)
+        min_field = table.end_date.min()
+        record = db(query).select(table.id,
+                                  table.start_date,
+                                  min_field, # Needed for orderby on Postgres
+                                  limitby=(0, 1),
+                                  orderby=min_field,
+                                  ).first()
+        if record and record["project_indicator_data.start_date"] != end_date:
+            # Update that record's start_date
+            db(table.id == record["project_indicator_data.id"]).update(start_date = end_date)
 
     # -------------------------------------------------------------------------
     @staticmethod
