@@ -68,7 +68,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3dal import Expression, Field, Row, Rows, Table
-from s3data import S3DataTable, S3DataList, S3PivotTable
+from s3data import S3DataTable, S3DataList
 from s3datetime import s3_format_datetime
 from s3fields import S3Represent, s3_all_meta_field_names
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
@@ -1248,25 +1248,6 @@ class S3Resource(object):
                         layout=layout)
 
         return dl, numrows, data["ids"]
-
-    # -------------------------------------------------------------------------
-    def pivottable(self, rows, cols, layers, strict=True):
-        """
-            Generate a pivot table of this resource.
-
-            @param rows: field selector for the rows dimension
-            @param cols: field selector for the columns dimension
-            @param layers: list of tuples (field selector, method) for
-                           the aggregation layers
-            @param strict: filter out dimension values which don't match
-                           the resource filter
-
-            @return: an S3PivotTable instance
-
-            Supported methods: see S3PivotTable
-        """
-
-        return S3PivotTable(self, rows, cols, layers, strict=strict)
 
     # -------------------------------------------------------------------------
     def json(self,
