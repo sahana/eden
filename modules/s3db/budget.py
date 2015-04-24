@@ -1459,12 +1459,16 @@ class S3BudgetMonitoringModel(S3Model):
                           Field("planned", "double", notnull=True,
                                 default = 0.00,
                                 label = T("Planned Spend"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
                                 requires = IS_FLOAT_AMOUNT(),
                                 ),
                           Field("value", "double", notnull=True,
                                 default = 0.00,
                                 #label = T("Amount Spent"),
                                 label = T("Actual Spend"),
+                                represent = lambda v: \
+                                    IS_FLOAT_AMOUNT.represent(v, precision=2),
                                 requires = IS_FLOAT_AMOUNT(),
                                 ),
                           s3_currency(required = True,
