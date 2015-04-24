@@ -173,12 +173,16 @@ class S3MainMenu(default.S3MainMenu):
         ORG_ADMIN = system_roles.ORG_ADMIN
 
         def hrm(item):
-
             return root_org != "Honduran Red Cross" or \
                    has_role(ORG_ADMIN)
 
-        def vol(item):
+        def inv(item):
+            return root_org != "Honduran Red Cross" or \
+                   has_role("hn_wh_manager") or \
+                   has_role("hn_national_wh_manager") or \
+                   has_role(ORG_ADMIN)
 
+        def vol(item):
             return root_org != "Honduran Red Cross" or \
                    has_role(ORG_ADMIN)
 
@@ -246,6 +250,7 @@ class S3MainMenu(default.S3MainMenu):
                    title = "Members",
                    text = "Add new and manage existing members."),
                 DB("Warehouses", c="inv", f="warehouse", m="summary",
+                   check = inv,
                    image = "graphic_warehouse.png",
                    title = "Warehouses",
                    text = "Stocks and relief items."),

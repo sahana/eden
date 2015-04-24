@@ -6572,6 +6572,7 @@
 'Total Annual Budget': 'Presupuesto Anual Total',
 'Total Beds': 'Camas Totales',
 'Total Beneficiaries': 'Beneficiarios Totales',
+'Total Budget': 'Presupuesto Total',
 'Total Cost per Megabyte': 'Coste Total por Megabyte',
 'Total Cost per Minute': 'Coste Total por Minuto',
 'Total Cost': 'Coste Total',

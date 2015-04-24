@@ -3356,6 +3356,8 @@ def config(settings):
             btable.name.default = "".join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
             btable.monitoring_frequency.default = 3 # Monthly
             postprocess = project_project_postprocess
+            list_fields = s3db.get_config("project_project", "list_fields")
+            list_fields.append((T("Current Indicator Status"), "current_indicator_status"))
         else:
             HFA = "drr.hfa"
             objectives = "objectives"

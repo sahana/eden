@@ -232,10 +232,14 @@ class S3ProjectModel(S3Model):
                            ),
                      self.hrm_human_resource_id(label = T("Contact Person"),
                                                 ),
-                     Field.Method("total_organisation_amount",
-                                   self.project_total_organisation_amount),
+                     #Field.Method("current_budget_status",
+                     #              self.project_current_budget_status),
+                     Field.Method("current_indicator_status",
+                                   self.project_current_indicator_status),
                      Field.Method("total_annual_budget",
                                    self.project_total_annual_budget),
+                     Field.Method("total_organisation_amount",
+                                   self.project_total_organisation_amount),
                      s3_comments(comment=DIV(_class="tooltip",
                                              _title="%s|%s" % (T("Comments"),
                                                                T("Outcomes, Impact, Challenges")))),
@@ -284,7 +288,7 @@ class S3ProjectModel(S3Model):
         if mode_3w:
             append((T("Locations"), "location.location_id"))
         if programmes:
-            append((T("Programme"), "programme.name"))
+            append((T("Program"), "programme.name"))
         if use_sectors:
             append((T("Sectors"), "sector.name"))
         if mode_drr:
@@ -517,28 +521,56 @@ class S3ProjectModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def project_total_organisation_amount(row):
-        """ Total of project_organisation amounts for project"""
+    def project_current_indicator_status(row):
+        """ Summary of Current Indicator Status """
 
-        if not current.deployment_settings.get_project_multiple_organisations():
-            return 0
-        if "project_project" in row:
-            project_id = row["project_project.id"]
-        elif "id" in row:
+        if hasattr(row, "project_project"):
+            row = row.project_project
+        if hasattr(row, "id"):
             project_id = row["id"]
         else:
-            return 0
+            return current.messages["NONE"]
 
-        table = current.s3db.project_organisation
+        table = current.s3db.project_indicator_data
         query = (table.deleted != True) & \
                 (table.project_id == project_id)
-        sum_field = table.amount.sum()
-        return current.db(query).select(sum_field).first()[sum_field]
+        rows = current.db(query).select(table.indicator_id,
+                                        table.date,
+                                        table.target_value, # Needed for Field.Method() to avoid extra DB call
+                                        table.value,        # Needed for Field.Method() to avoid extra DB call
+                                        )
+        indicators = {}
+        for row in rows:
+            indicator_id = row.indicator_id
+            if indicator_id in indicators:
+                old_date = indicators[indicator_id]["date"]
+                new_date = row.date
+                if datetime.datetime(old_date.year, new_date.month, new_date.day) > datetime.datetime(old_date.year, old_date.month, old_date.day):
+                    # This is more current so replace with this
+                    indicators[indicator_id].update(date=new_date,
+                                                    percentage=row.percentage())
+            else:
+                indicators[indicator_id] = {"date": row.date,
+                                            "percentage": row.percentage(),
+                                            }
+        len_indicators = len(indicators)
+        if not len_indicators:
+            # Can't divide by Zero
+            return 0
+
+        NONE = current.messages["NONE"]
+        percentages = 0
+        for indicator_id in indicators:
+            percentage = indicators[indicator_id]["percentage"]
+            if percentage != NONE:
+                percentages += float(percentage[:-1])
+
+        return percentages / len_indicators
 
     # -------------------------------------------------------------------------
     @staticmethod
     def project_total_annual_budget(row):
-        """ Total of all annual budgets for project"""
+        """ Total of all annual budgets for project """
 
         if not current.deployment_settings.get_project_multiple_budgets():
             return 0
@@ -555,6 +587,26 @@ class S3ProjectModel(S3Model):
         sum_field = table.amount.sum()
         return current.db(query).select(sum_field).first()[sum_field] or \
                current.messages["NONE"]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_total_organisation_amount(row):
+        """ Total of project_organisation amounts for project """
+
+        if not current.deployment_settings.get_project_multiple_organisations():
+            return 0
+        if "project_project" in row:
+            project_id = row["project_project.id"]
+        elif "id" in row:
+            project_id = row["id"]
+        else:
+            return 0
+
+        table = current.s3db.project_organisation
+        query = (table.deleted != True) & \
+                (table.project_id == project_id)
+        sum_field = table.amount.sum()
+        return current.db(query).select(sum_field).first()[sum_field]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3685,9 +3737,10 @@ class S3ProjectPlanningModel(S3Model):
                            label = T("Code"),
                            represent = lambda v: v or NONE,
                            ),
-                     Field("name",
+                     Field("name", "text",
                            label = T("Description"),
                            represent = lambda v: v or NONE,
+                           widget = s3_comments_widget,
                            ),
                      #Field("status",
                      #      label = T("Status"),
@@ -3741,9 +3794,10 @@ class S3ProjectPlanningModel(S3Model):
                            label = T("Code"),
                            represent = lambda v: v or NONE,
                            ),
-                     Field("name",
+                     Field("name", "text",
                            label = T("Description"),
                            represent = lambda v: v or NONE,
+                           widget = s3_comments_widget,
                            ),
                      #Field("status",
                      #      label = T("Status"),
@@ -3807,9 +3861,10 @@ class S3ProjectPlanningModel(S3Model):
                            readable = not inline,
                            writable = not inline,
                            ),
-                     Field("name",
+                     Field("name", "text",
                            label = T("Output") if inline else T("Description"),
                            represent = lambda v: v or NONE,
+                           widget = s3_comments_widget,
                            ),
                      Field("status",
                            label = T("Status"),
@@ -3871,9 +3926,10 @@ class S3ProjectPlanningModel(S3Model):
                            label = T("Code"),
                            represent = lambda v: v or NONE,
                            ),
-                     Field("name",
+                     Field("name", "text",
                            label = T("Description"),
                            represent = lambda v: v or NONE,
+                           widget = s3_comments_widget,
                            ),
                      #Field("status",
                      #      label = T("Status"),
@@ -4168,11 +4224,15 @@ class S3ProjectPlanningModel(S3Model):
                                                       ).first()
             if r:
                 planned = r.target_value
-                if planned == 0.0:
-                    # Can't divide by Zero
-                    return current.messages["NONE"]
-                percentage = r.value / planned * 100
-                return "%s %%" % "{0:.2f}".format(percentage)
+                value = r.value
+                if planned and value:
+                    if planned == 0.0:
+                        # Can't divide by Zero
+                        return current.messages["NONE"]
+                    percentage = value / planned * 100
+                    return "%s %%" % "{0:.2f}".format(percentage)
+                else:
+                    return "0.00 %"
 
         return current.messages["NONE"]
 
