@@ -4029,8 +4029,15 @@ class S3ProjectPlanningModel(S3Model):
                           "cols": ["indicator_id", "end_date"],
                           "fact": [(T("Target Value"), "avg(target_value)"),
                                    (T("Actual Value"), "avg(value)"),
-                                   # Not working
+                                   # Not working (because percentage-Method returns a string
+                                   # not a number, so no average calculation possible),
+                                   # list(avg) may do it, though.
                                    #(T("Percentage"), "avg(percentage)"),
+                                   (T("Percentage"), "list(percentage)"),
+                                   (T("Comparison"), [(T("Target Value"), "avg(target_value)"),
+                                                      (T("Actual Value"), "avg(value)"),
+                                                      ],
+                                    ),
                                    ],
                           "defaults": {"rows": "indicator_id",
                                        "cols": "end_date",
@@ -4256,9 +4263,10 @@ class S3ProjectPlanningModel(S3Model):
         min_field = table.end_date.min()
         record = db(query).select(table.id,
                                   table.start_date,
-                                  min_field, # Needed for orderby on Postgres
+                                  #min_field, # Needed for orderby on Postgres?? => would require GROUPBY
                                   limitby=(0, 1),
-                                  orderby=min_field,
+                                  #orderby=min_field, # ?? why?
+                                  orderby=table.end_date, # Regular orderby + limitby good enough, no?
                                   ).first()
         if record and record["project_indicator_data.start_date"] != end_date:
             # Update that record's start_date
