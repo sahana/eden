@@ -6041,7 +6041,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         address = values.get("address")
         postcode = values.get("postcode")
         parent = values.get("parent")
-        gis_feature_type = 3 if wkt else 1
+        gis_feature_type = values.get("gis_feature_type")
 
         if location_id == 0:
             # Create new location
@@ -6057,8 +6057,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                               addr_street=address,
                               addr_postcode=postcode,
                               parent=parent,
-                              gis_feature_type=gis_feature_type,
                               )
+            if gis_feature_type:
+                feature.gis_feature_type = gis_feature_type
             location_id = table.insert(**feature)
             feature.id = location_id
             current.gis.update_location_tree(feature)
@@ -6078,8 +6079,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     feature.lon = lon
                     feature.wkt = wkt
                     feature.inherited = False
-                    feature.gis_feature_type = gis_feature_type
 
+                if gis_feature_type:
+                    feature.gis_feature_type = gis_feature_type
                 db(table.id == location_id).update(**feature)
                 feature.id = location_id
                 current.gis.update_location_tree(feature)
