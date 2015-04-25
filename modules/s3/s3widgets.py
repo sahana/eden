@@ -5991,6 +5991,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 errors = form.errors
                 error = "\n".join(errors[fn] for fn in errors)
                 return (values, error)
+            elif feature:
+                # Required because gis_location_onvalidation updates form
+                # vars, and without these updates, wkt would get lost in
+                # update_location_tree :/
+                values.update(feature)
 
         # Success
         return (values, None)
@@ -6036,6 +6041,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         address = values.get("address")
         postcode = values.get("postcode")
         parent = values.get("parent")
+        gis_feature_type = 3 if wkt else 1
 
         if location_id == 0:
             # Create new location
@@ -6051,6 +6057,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                               addr_street=address,
                               addr_postcode=postcode,
                               parent=parent,
+                              gis_feature_type=gis_feature_type,
                               )
             location_id = table.insert(**feature)
             feature.id = location_id
@@ -6071,6 +6078,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     feature.lon = lon
                     feature.wkt = wkt
                     feature.inherited = False
+                    feature.gis_feature_type = gis_feature_type
 
                 db(table.id == location_id).update(**feature)
                 feature.id = location_id
