@@ -90,6 +90,8 @@ def config(settings):
     # The key 0 implies not realm restricted
     # The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
     #settings.auth.registration_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
+    # Define which entity types to use as realm entities in role manager
+    #settings.auth.realm_entity_types = ("org_organisation",)
     # Uncomment to activate entity role manager tabs for OrgAdmins
     #settings.auth.entity_role_manager = True
     # Define modules for entity role manager

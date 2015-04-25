@@ -177,6 +177,8 @@ class S3PersonEntity(S3Model):
                            org_office = T("Office"),
                            pr_person = T("Person"),
                            pr_group = T("Group"),
+                           po_area = T("Recovery Outreach Area"),
+                           po_household = T("Household"),
                            )
 
         pr_pentity_represent = pr_PersonEntityRepresent()

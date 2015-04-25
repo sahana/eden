@@ -5414,13 +5414,19 @@ class S3Permission(object):
             return False
 
     # -------------------------------------------------------------------------
-    def owner_query(self, table, user, use_realm=True, no_realm=[]):
+    def owner_query(self,
+                    table,
+                    user,
+                    use_realm=True,
+                    realm=None,
+                    no_realm=None):
         """
             Returns a query to select the records in table owned by user
 
             @param table: the table
             @param user: the current auth.user (None for not authenticated)
             @param use_realm: use realms
+            @param realm: limit owner access to these realms
             @param no_realm: don't include these entities in role realms
             @return: a web2py Query instance, or None if no query can be
                       constructed
@@ -5429,6 +5435,11 @@ class S3Permission(object):
         OUSR = "owned_by_user"
         OGRP = "owned_by_group"
         OENT = "realm_entity"
+
+        if realm is None:
+            realm = []
+        if no_realm is None:
+            no_realm = []
 
         query = None
         if user is None:
@@ -5449,6 +5460,14 @@ class S3Permission(object):
             if OUSR in table.fields:
                 user_id = user.id
                 query = (table[OUSR] == user_id)
+                if use_realm:
+                    # Limit owner access to permitted realms
+                    if realm:
+                        realm_query = self.realm_query(table, realm)
+                        if realm_query:
+                            query &= realm_query
+                    else:
+                        query = None
 
             if not current.deployment_settings.get_security_strict_ownership():
 
@@ -6039,7 +6058,12 @@ class S3Permission(object):
         if check_owner_acls:
 
             use_realm = "ANY" not in oacls
-            owner_query = self.owner_query(table, user, use_realm=use_realm, no_realm=no_realm)
+            owner_query = self.owner_query(table,
+                                           user,
+                                           use_realm=use_realm,
+                                           realm=oacls,
+                                           no_realm=no_realm,
+                                           )
 
             if owner_query is not None:
                 _debug("==> permitted for owned records (limit to realms=%s)" % use_realm)

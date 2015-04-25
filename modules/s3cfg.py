@@ -550,6 +550,17 @@ class S3Config(Storage):
         """ Which tables record approval is required for """
         return self.auth.get("record_approval_required_for", [])
 
+    def get_auth_realm_entity_types(self):
+        """ Which entity types to use as realm entities in role manager """
+
+        default = ("org_group",
+                   "org_organisation",
+                   "org_office",
+                   "inv_warehouse",
+                   "pr_group",
+                   )
+        return self.__lazy(self.auth, "realm_entity_types", default=default)
+
     def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """
         return self.auth.get("realm_entity")
