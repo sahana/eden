@@ -141,8 +141,23 @@ def project():
                 # Filter Activity Type based on Sector
                 set_activity_type_requires("project_activity_activity_type", sector_ids)
 
+            elif component_name == "goal":
+                if r.method != "update":
+                    ctable = r.component.table
+                    field = ctable.weighting
+                    field.readable = field.writable = False
+                    ctable.current_status.readable = False
+                    ctable.overall_status.readable = False
+
             elif component_name == "outcome":
+                if r.method != "update":
+                    ctable = r.component.table
+                    field = ctable.weighting
+                    field.readable = field.writable = False
+                    ctable.current_status.readable = False
+                    ctable.overall_status.readable = False
                 if settings.get_project_goals():
+                    #ctable = 
                     # Filter to just those for this Project & make mandatory
                     r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
                                                                    s3db.project_goal_represent,
@@ -150,8 +165,20 @@ def project():
                                                                    filterby="project_id",
                                                                    filter_opts=[r.id],
                                                                    )
+                    # Not working for embedded create form
+                    #if r.method == "create":
+                    field = r.component.table.weighting
+                    field.readable = field.writable = False
+                    r.component.table.current_status.readable = False
+                    r.component.table.overall_status.readable = False
 
             elif component_name == "output":
+                if r.method != "update":
+                    ctable = r.component.table
+                    field = ctable.weighting
+                    field.readable = field.writable = False
+                    ctable.current_status.readable = False
+                    ctable.overall_status.readable = False
                 if settings.get_project_outcomes():
                     # Filter to just those for this Project & make mandatory
                     r.component.table.outcome_id.requires = IS_ONE_OF(db, "project_outcome.id",
@@ -162,6 +189,12 @@ def project():
                                                                       )
 
             elif component_name == "indicator":
+                if r.method != "update":
+                    ctable = r.component.table
+                    field = ctable.weighting
+                    field.readable = field.writable = False
+                    ctable.current_status.readable = False
+                    ctable.overall_status.readable = False
                 if settings.get_project_outputs():
                     # Filter to just those for this Project & make mandatory
                     r.component.table.output_id.requires = IS_ONE_OF(db, "project_output.id",
