@@ -4144,8 +4144,15 @@ class S3ProjectPlanningModel(S3Model):
                           "cols": ["indicator_id", "end_date"],
                           "fact": [(T("Target Value"), "avg(target_value)"),
                                    (T("Actual Value"), "avg(value)"),
-                                   # Not working
+                                   # Not working (because percentage-Method returns a string
+                                   # not a number, so no average calculation possible),
+                                   # list(avg) may do it, though.
                                    #(T("Percentage"), "avg(percentage)"),
+                                   (T("Percentage"), "list(percentage)"),
+                                   (T("Comparison"), [(T("Target Value"), "avg(target_value)"),
+                                                      (T("Actual Value"), "avg(value)"),
+                                                      ],
+                                    ),
                                    ],
                           "defaults": {"rows": "indicator_id",
                                        "cols": "end_date",

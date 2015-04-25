@@ -228,6 +228,17 @@ def project():
                                                                     filterby="project_id",
                                                                     filter_opts=[r.id],
                                                                     )
+                # Have a filter for indicator in indicator data report
+                #if r.method == "report":
+                #    from s3 import S3OptionsFilter
+                #    filter_widgets = [S3OptionsFilter("indicator_id",
+                #                                      label = T("Indicator"),
+                #                                      ),
+                #                      ]
+                #else:
+                #    filter_widgets = None
+                #r.component.configure(filter_widgets = filter_widgets)
+
             elif component_name == "task":
                 if not auth.s3_has_role("STAFF"):
                     # Hide fields which are meant for staff members
@@ -366,7 +377,10 @@ def project():
 
     return s3_rest_controller(module, "project",
                               csv_template = "project",
-                              hide_filter = {None: False, "_default": True},
+                              hide_filter = {None: False,
+                                             #"indicator_data": False,
+                                             "_default": True,
+                                             },
                               rheader = s3db.project_rheader,
                               )
 

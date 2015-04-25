@@ -888,18 +888,39 @@ class S3ReportForm(object):
         prefix = resource.prefix_selector
 
         layer_opts = []
-        for layer in layers:
+        for option in layers:
 
-            # Parse option
-            if type(layer) is tuple:
-                label, s = layer
+            if isinstance(option, tuple):
+                title, layer = option
             else:
-                label, s = None, layer
-            match = layer_pattern.match(s)
-            if match is not None:
-                s, m = match.group(2), match.group(1)
+                title, layer = None, option
+
+            try:
+                facts = S3PivotTableFact.parse(layer)
+            except SyntaxError:
+                continue
+
+            if len(facts) > 1:
+                # Multi-fact layer
+                labels = []
+                expressions = []
+                for fact in facts:
+                    if not title:
+                        rfield = resource.resolve_selector(fact.selector)
+                        labels.append(fact.get_label(rfield, layers))
+                    expressions.append("%s(%s)" % (fact.method, fact.selector))
+                if not title:
+                    title = " / ".join(labels)
+                layer_opts.append((",".join(expressions), title))
+                continue
             else:
-                m = None
+                fact = facts[0]
+
+            label = fact.label or title
+            if fact.default_method:
+                s, m = fact.selector, None
+            else:
+                s, m = fact.selector, fact.method
 
             # Resolve the selector
             selector = prefix(s)
@@ -1148,6 +1169,11 @@ class S3PivotTableFact(object):
             @param fact: the fact expression
         """
 
+        if isinstance(fact, tuple):
+            label, fact = fact
+        else:
+            label = None
+
         if isinstance(fact, list):
             facts = []
             for f in fact:
@@ -1155,11 +1181,6 @@ class S3PivotTableFact(object):
             if not facts:
                 raise SyntaxError("Invalid fact expression: %s" % fact)
             return facts
-
-        if isinstance(fact, tuple):
-            label, fact = fact
-        else:
-            label = None
 
         # Parse the fact
         other = None
@@ -1274,13 +1295,15 @@ class S3PivotTableFact(object):
             # Already set
             return label
 
+
         if fact_options:
             # Lookup the label from the fact options
+            prefix = rfield.resource.prefix_selector
             for fact_option in fact_options:
                 facts = self.parse(fact_option)
                 for fact in facts:
                     if fact.method == self.method and \
-                       fact.selector == self.selector:
+                       prefix(fact.selector) == prefix(self.selector):
                         label = fact.label
                         break
                 if label:

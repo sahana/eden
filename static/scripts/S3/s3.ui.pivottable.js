@@ -725,9 +725,9 @@
                 }
             } else if (chartType == 'barchart') {
                 if (chartAxis == 'rows') {
-                    this._renderBarChart(data.rows, rowsTitle, rows_selector);
+                    this._renderBarChart(data.rows, data.facts, rowsTitle, rows_selector);
                 } else {
-                    this._renderBarChart(data.cols, colsTitle, cols_selector);
+                    this._renderBarChart(data.cols, data.facts, colsTitle, cols_selector);
                 }
             } else if (chartType == 'breakdown') {
                 if (chartAxis == 'rows') {
@@ -870,7 +870,7 @@
          * @param {string} title - the chart title
          * @param {string} selector - the field selector for the axis (for filtering)
          */
-        _renderBarChart: function(data, title, selector) {
+        _renderBarChart: function(data, facts, title, selector) {
 
             var chart = this.chart;
             if (!chart) {
@@ -882,17 +882,25 @@
 
             // Prepare the data items
             var items = [],
-                truncateLabel = this._truncateLabel;
-            for (var i=0; i<data.length; i++) {
-                var item = data[i];
-                if (!item[1]) {
-                    items.push({
+                truncateLabel = this._truncateLabel,
+                series,
+                set,
+                item;
+
+            for (var i=0; i < facts.length; i++) {
+                series = {key: facts[i][2]};
+                set = [];
+                for (var j=0; j < data.length; j++) {
+                    item = data[j];
+                    set.push({
                         label: item[4],
-                        value: item[2][0],
+                        value: item[2][i],
                         filterIndex: item[0],
                         filterKey: item[3]
                     });
                 }
+                series.values = set;
+                items.push(series);
             }
 
             // Set the height of the chart container
@@ -924,16 +932,29 @@
             nv.addGraph(function() {
 
                 // Define the chart
-                var reportChart = nv.models.discreteBarChart()
-                                           .x(function(d) { return d.label })
-                                           .y(function(d) { return d.value })
+                var reportChart, dispatch;
+                if (items.length > 1) {
+                    reportChart = nv.models.multiBarChart()
+                                           .x(function(d) { return d.label; })
+                                           .y(function(d) { return d.value; })
+                                           .staggerLabels(true)
+                                           .tooltips(true)
+                                           .tooltipContent(tooltipContent)
+                                           .showControls(false);
+                    dispatch = reportChart.multibar;
+                } else {
+                    reportChart = nv.models.discreteBarChart()
+                                           .x(function(d) { return d.label; })
+                                           .y(function(d) { return d.value; })
                                            .staggerLabels(true)
                                            .tooltips(true)
                                            .tooltipContent(tooltipContent)
                                            .showValues(true);
+                    reportChart.valueFormat(valueFormat);
+                    dispatch = reportChart.discretebar;
+                }
 
                 // Set value and tick formatters
-                reportChart.valueFormat(valueFormat);
                 reportChart.yAxis
                            .tickFormat(valueFormat);
                 reportChart.xAxis
@@ -945,14 +966,14 @@
                 d3.select($(chart).get(0))
                   .append('svg')
                   .attr('class', 'nv')
-                  .datum([{key: "reportChart", values: items}])
+                  .datum(items)
                   .transition().duration(500)
                   .call(reportChart);
 
                 // Event handlers
                 if (pt.options.exploreChart && selector) {
                     // Click on a bar forwards to a filtered view
-                    reportChart.discretebar.dispatch.on('elementClick', function(e) {
+                    dispatch.dispatch.on('elementClick', function(e) {
                         var filterKey = e.point.filterKey;
                         if (filterKey === null) {
                             filterKey = 'None';
