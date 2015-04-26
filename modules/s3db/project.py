@@ -7905,7 +7905,7 @@ def project_rheader(r):
                           ["start_date", "end_date"]
                           ]
         if indicators:
-            rheader.fields.append(["current_status_by_indicators", "overall_status_by_indicators"])
+            rheader_fields.append(["current_status_by_indicators", "overall_status_by_indicators"])
         # @ToDo: Either get S3ResourceHeader to support selectors or else rewrite manually
         #if settings.get_project_budget_monitoring():
         #    rheader_fields.append(["budget.total_budget"])
