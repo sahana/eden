@@ -1536,12 +1536,40 @@ class S3LocationHierarchyModel(S3Model):
         )
 
         self.configure(tablename,
+                       deduplicate = self.gis_hierarchy_deduplicate,
                        onvalidation = self.gis_hierarchy_onvalidation,
                        )
 
         # Pass names back to global scope (s3.*)
         return dict(gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_hierarchy_deduplicate(item):
+        """
+          This callback will be called when importing Hierarchy records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the item method to update
+
+        """
+
+        location_id = item.data.get("location_id")
+        if not location_id:
+            return
+
+        # Match by location_id
+        table = item.table
+        query = (table.location_id == location_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
