@@ -52,6 +52,7 @@ class OutreachAreaModel(S3Model):
         auth = current.auth
 
         define_table = self.define_table
+        super_link = self.super_link
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
@@ -65,7 +66,8 @@ class OutreachAreaModel(S3Model):
         #
         tablename = "po_area"
         define_table(tablename,
-                     self.super_link("doc_id", "doc_entity"),
+                     super_link("doc_id", "doc_entity"),
+                     super_link("pe_id", "pr_pentity"),
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
@@ -148,7 +150,9 @@ class OutreachAreaModel(S3Model):
                                                 "ajax_init": True}],
                                    },
                                   ),
-                       super_entity = "doc_entity",
+                       super_entity = ("doc_entity", "pr_pentity"),
+                       onaccept = self.area_onaccept,
+                       ondelete = self.area_ondelete,
                        )
 
         # ---------------------------------------------------------------------
@@ -169,6 +173,84 @@ class OutreachAreaModel(S3Model):
 
         return {"po_area_id": lambda **attr: dummy("area_id"),
                 }
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def area_onaccept(cls, form):
+        """ Onaccept actions for po_area """
+
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+        cls.area_update_affiliations(record_id)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def area_ondelete(cls, row):
+        """ Ondelete actions for po_area """
+
+        try:
+            record_id = row.id
+        except AttributeError:
+            return
+        cls.area_update_affiliations(record_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def area_update_affiliations(record_id):
+        """
+            Update affiliations for an area
+
+            @param record: the area record
+        """
+
+        ROLE = "Areas"
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.po_area
+        row = db(table.id == record_id).select(table.pe_id,
+                                               table.deleted,
+                                               table.deleted_fk,
+                                               table.organisation_id,
+                                               limitby=(0, 1),
+                                               ).first()
+        if not row:
+            return
+
+        # Get the organisation_id
+        if row.deleted:
+            try:
+                fk = json.loads(row.deleted_fk)
+                organisation_id = fk["organisation_id"]
+            except ValueError:
+                organisation_id = None
+        else:
+            organisation_id = row.organisation_id
+
+        # Get the PE ids
+        area_pe_id = row.pe_id
+        organisation_pe_id = s3db.pr_get_pe_id("org_organisation",
+                                               organisation_id,
+                                               )
+
+        # Remove obsolete affiliations
+        rtable = s3db.pr_role
+        atable = s3db.pr_affiliation
+        query = (atable.pe_id == row.pe_id) & \
+                (atable.deleted != True) & \
+                (atable.role_id == rtable.id) & \
+                (rtable.role == ROLE) & \
+                (rtable.pe_id != organisation_pe_id)
+        rows = db(query).select(rtable.pe_id)
+        for row in rows:
+            s3db.pr_remove_affiliation(row.pe_id, area_pe_id, role=ROLE)
+
+        # Add current affiliation
+        from pr import OU
+        s3db.pr_add_affiliation(organisation_pe_id, area_pe_id, role=ROLE, role_type=OU)
 
 # =============================================================================
 class OutreachHouseholdModel(S3Model):

@@ -857,6 +857,17 @@ def config(settings):
 
     settings.hrm.use_code = hrm_use_code
 
+    def auth_realm_entity_types(default):
+        """ Which entity types to use as realm entities in role manager """
+
+        auth = current.auth
+        if auth.s3_has_role(auth.get_system_roles().ADMIN) or \
+           current.auth.root_org_name() == NZRC:
+            return list(default) + ["po_area"]
+        return default
+
+    settings.auth.realm_entity_types = auth_realm_entity_types
+
     # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
 
@@ -3161,7 +3172,7 @@ def config(settings):
             # Not using Assets Module
             field = current.s3db.supply_item_category.can_be_asset
             field.readable = field.writable = False
-        
+
     settings.customise_supply_item_category_resource = customise_supply_item_category_resource
 
     # -----------------------------------------------------------------------------
