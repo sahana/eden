@@ -5488,21 +5488,24 @@ class S3Permission(object):
                     else:
                         public = q
 
-                if query is not None and public is not None:
-                    query |= public
+                if public is not None:
+                    if query is not None:
+                        query |= public
+                    else:
+                        query = public
 
             # Group ownerships
             if OGRP in table.fields:
                 any_entity = []
                 g = None
                 for group_id in user.realms:
-                    realm = user.realms[group_id]
-                    if realm is None or not use_realm:
+                    role_realm = user.realms[group_id]
+                    if role_realm is None or not use_realm:
                         any_entity.append(group_id)
                         continue
-                    realm = [e for e in realm if e not in no_realm]
-                    if realm:
-                        q = (table[OGRP] == group_id) & (table[OENT].belongs(realm))
+                    role_realm = [e for e in role_realm if e not in no_realm]
+                    if role_realm:
+                        q = (table[OGRP] == group_id) & (table[OENT].belongs(role_realm))
                         if g is None:
                             g = q
                         else:
