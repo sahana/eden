@@ -276,8 +276,8 @@
                             id: this.treeID + '-select-all',
                             text: opts.selectAllText,
                             li_attr: {
-                                rel: 'bulk',
-                                class: 's3-hierarchy-action-node'
+                                'rel': 'bulk',
+                                'class': 's3-hierarchy-action-node'
                             }
                         }, "first"
                     );
@@ -507,8 +507,8 @@
                             id: nodeID + '-select-all',
                             text: this.options.selectAllText,
                             li_attr: {
-                                rel: 'bulk',
-                                class: 's3-hierarchy-action-node'
+                                'rel': 'bulk',
+                                'class': 's3-hierarchy-action-node'
                             }
                         }, "first"
                     );

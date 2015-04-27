@@ -685,7 +685,7 @@
 
             this._collectLx();
 
-            var data = this.data;
+            var data = this.data,
                 parent;
             for (var level = 5; level > -1; level--) {
                 parent = data['L' + level];
