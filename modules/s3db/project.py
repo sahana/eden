@@ -234,28 +234,39 @@ class S3ProjectModel(S3Model):
                      self.hrm_human_resource_id(label = T("Contact Person"),
                                                 ),
                      Field("current_status_by_indicators", "float",
-                           label = T("Current Status by Indicators"),
+                           default = 0.0,
+                           label = T("Current Indicators Status"),
                            represent = project_status_represent,
                            readable = use_indicators,
                            writable = False,
                            ),
                      Field("overall_status_by_indicators", "float",
-                           label = T("Overall Status by Indicators"),
+                           default = 0.0,
+                           label = T("Overall Indicators Status"),
                            represent = project_status_represent,
                            readable = use_indicators,
                            writable = False,
                            ),
-                     #Field.Method("current_status_by_budget",
-                     #              self.project_current_status_by_budget),
-                     #Field.Method("overall_status_by_budget",
-                     #             self.project_overall_status_by_budget),
+                     #Field("current_status_by_budget", "float",
+                     #      label = T("Current Budget Status"),
+                     #      represent = project_status_represent,
+                     #      readable = use_indicators,
+                     #      writable = False,
+                     #      ),
+                     #Field("overall_status_by_budget", "float",
+                     #      label = T("Overall Budget Status"),
+                     #      represent = project_status_represent,
+                     #      readable = use_indicators,
+                     #      writable = False,
+                     #      ),
                      Field.Method("total_annual_budget",
                                   self.project_total_annual_budget),
                      Field.Method("total_organisation_amount",
                                   self.project_total_organisation_amount),
                      s3_comments(comment=DIV(_class="tooltip",
                                              _title="%s|%s" % (T("Comments"),
-                                                               T("Outcomes, Impact, Challenges")))),
+                                                               T("Outcomes, Impact, Challenges"))),
+                                 ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -4149,8 +4160,8 @@ class S3ProjectPlanningModel(S3Model):
                                    # list(avg) may do it, though.
                                    #(T("Percentage"), "avg(percentage)"),
                                    (T("Percentage"), "list(percentage)"),
-                                   (T("Comparison"), [(T("Target Value"), "avg(target_value)"),
-                                                      (T("Actual Value"), "avg(value)"),
+                                   (T("Comparison"), [(T("Actual Value"), "avg(value)"),
+                                                      (T("Target Value"), "avg(target_value)"),
                                                       ],
                                     ),
                                    ],
@@ -7830,6 +7841,7 @@ def project_rheader(r):
         mode_3w = settings.get_project_mode_3w()
         mode_task = settings.get_project_mode_task()
         details_tab = settings.get_project_details_tab()
+        indicators = settings.get_project_indicators()
 
         # Tabs
         #ADMIN = current.session.s3.system_roles.ADMIN
@@ -7846,7 +7858,7 @@ def project_rheader(r):
         outputs = settings.get_project_outputs()
         if outputs and outputs != "inline":
             append((T("Outputs"), "output"))
-        if settings.get_project_indicators():
+        if indicators:
             append((T("Indicators"), "indicator"))
             append((T("Indicator Data"), "indicator_data"))
         if settings.get_project_multiple_organisations() and not details_tab:
@@ -7892,6 +7904,8 @@ def project_rheader(r):
                           ["organisation_id"],
                           ["start_date", "end_date"]
                           ]
+        if indicators:
+            rheader_fields.append(["current_status_by_indicators", "overall_status_by_indicators"])
         # @ToDo: Either get S3ResourceHeader to support selectors or else rewrite manually
         #if settings.get_project_budget_monitoring():
         #    rheader_fields.append(["budget.total_budget"])
