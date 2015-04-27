@@ -405,10 +405,18 @@ def config(settings):
                        filter_widgets = filter_widgets,
                        )
 
-        field = s3db.org_facility.main_facility
+        # Customize fields
+        table = s3db.org_facility
+
+        # Main facility flag visible and in custom crud form
+        field = table.main_facility
         field.readable = field.writable = True
         crud_form = s3db.get_config(tablename, "crud_form")
         crud_form.insert(-2, "main_facility")
+
+        # "Obsolete" labeled as "inactive"
+        field = table.obsolete
+        field.label = T("inactive")
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
@@ -893,8 +901,9 @@ def config(settings):
             if r.interactive and isinstance(output, dict):
                 if "rheader" in output:
                     # Custom Tabs
+                    INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
                     tabs = [(T("Basic Details"), None),
-                            (T("Contacts"), "human_resource"),
+                            (INDIVIDUALS, "human_resource"),
                             (T("Facilities"), "facility"),
                             #(T("Projects"), "project"),
                             #(T("Assets"), "asset"),
@@ -1111,6 +1120,7 @@ def config(settings):
     settings.pr.contacts_tabs = ("private",)
 
     POC = T("Org PoC")
+    POC_HELP = T("Main point of contact for organization")
 
     # -------------------------------------------------------------------------
     # Persons
@@ -1170,6 +1180,8 @@ def config(settings):
                     field = htable.org_contact
                     field.readable = field.writable = True
                     field.label = POC
+                    from gluon import DIV
+                    field.comment = DIV(_class="tooltip", _title="%s|%s" % (POC, POC_HELP))
 
                     # Profile popups: defaults for organisation and site
                     if r.method in ("create", "update"):
@@ -1520,7 +1532,7 @@ $.filterOptionsS3({
     # Uncomment to disable the 'Send Message' action button
     settings.hrm.compose_button = False
     # Uncomment to change the label for 'Staff'
-    settings.hrm.staff_label = "Contacts"
+    settings.hrm.staff_label = "Individuals"
     # Uncomment to allow Staff & Volunteers to be registered without an email address
     settings.hrm.email_required = False
     # Uncomment to allow Staff & Volunteers to be registered without an Organisation
@@ -1593,6 +1605,7 @@ $.filterOptionsS3({
             if r.interactive or r.representation == "aadata":
                 if not r.component:
                     from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
+                    from gluon import DIV
                     filter_widgets = [
                         S3TextFilter(["person_id$first_name",
                                       "person_id$middle_name",
@@ -1606,10 +1619,14 @@ $.filterOptionsS3({
                                         #hidden = True,
                                         ),
                         S3OptionsFilter("org_contact",
-                                        label = T("Organization Contacts"),
+                                        label = T("Organizational Point of Contact (PoC)"),
                                         cols = 1,
                                         size = None,
-                                        options = {True: ""}),
+                                        options = {True: ""},
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (POC, POC_HELP),
+                                                      ),
+                                        ),
                         S3OptionsFilter("group_membership.group_id$org_group_team.org_group_id",
                                         label = T("Network"),
                                         #filter = True,
@@ -1679,6 +1696,8 @@ $.filterOptionsS3({
         field = s3db.hrm_human_resource.org_contact
         field.readable = field.writable = True
         field.label = POC
+        from gluon import DIV
+        field.comment = DIV(_class="tooltip", _title="%s|%s" % (POC, POC_HELP))
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm("person_id",

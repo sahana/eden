@@ -43,12 +43,18 @@ class S3MainMenu(default.S3MainMenu):
 
         AUTHENTICATED = current.session.s3.system_roles.AUTHENTICATED
 
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
         return [
             MM("Dashboard", c="default", f="index",
                args=["dashboard"],
                restrict=[AUTHENTICATED],
                ),
-            MM("Contacts", c="hrm", f="staff", t="hrm_human_resource")(
+            MM("Contacts", link=False, restrict=[AUTHENTICATED])(
+                MM("Networks", c="org", f="group"),
+                MM("Groups", c="hrm", f="group"),
+                MM("Organizations", c="org", f="organisation"),
+                MM(INDIVIDUALS, c="hrm", f="staff"),
             ),
             MM("Facilities", c="org", f="facility", m="summary",
                restrict=[AUTHENTICATED])(
@@ -187,22 +193,24 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = s3.system_roles.ADMIN
         AUTHENTICATED = s3.system_roles.AUTHENTICATED
 
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
         return M()(
-                    M("Contacts", c="hrm", f="staff", t="hrm_human_resource")(
-                        M("View"),
+                    M("Networks", c="org", f="group")(
+                        M("Search"),
+                        M("Create", m="create"),
+                    ),
+                    M("Groups", c="hrm", f="group")(
+                        M("Search"),
                         M("Create", m="create"),
                     ),
                     M("Organizations", c="org", f="organisation")(
-                        M("View"),
+                        M("Search"),
                         M("Create", m="create",
                           restrict=[AUTHENTICATED]),
                     ),
-                    M("Groups", c="hrm", f="group")(
-                        M("View"),
-                        M("Create", m="create"),
-                    ),
-                    M("Networks", c="org", f="group")(
-                        M("View"),
+                    M(INDIVIDUALS, c="hrm", f="staff", t="hrm_human_resource")(
+                        M("Search"),
                         M("Create", m="create"),
                     ),
                     M("Your Personal Profile", c="default", f="person",

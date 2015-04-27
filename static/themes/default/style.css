@@ -235,6 +235,9 @@ textarea {
 .filter-form .ui-multiselect {
   max-width: 60%;
 }
+.filter-form table.s3-groupedopts-widget {
+  display: inline-block;
+}
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
