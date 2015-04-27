@@ -250,6 +250,10 @@
                         return -1;
                     } else if (bRel == 'bulk') {
                         return 1;
+                    } else if (aRel == 'none') {
+                        return -1;
+                    } else if (bRel == 'none') {
+                        return 1;
                     } else {
                         return sorted;
                     }
@@ -314,7 +318,10 @@
                     return; // skip bulk nodes
                 }
                 if (id && (!leafonly || inst.is_leaf(this))) {
-                    var record_id = parseInt(id.split('-').pop());
+                    var record_id = id.split('-').pop();
+                    if (record_id != 'None') {
+                        record_id = parseInt(record_id);
+                    }
                     if (record_id) {
                         new_selected.push(record_id);
                         selected_ids.push(id);

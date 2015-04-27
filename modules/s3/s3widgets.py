@@ -6342,6 +6342,7 @@ class S3HierarchyWidget(FormWidget):
                  bulk_select = False,
                  filter = None,
                  columns = None,
+                 none = None,
                  ):
         """
             Constructor
@@ -6363,6 +6364,8 @@ class S3HierarchyWidget(FormWidget):
             @param bulk_select: provide option to select/deselect all nodes
             @param filter: filter query for the lookup table
             @param columns: set the columns width class for Foundation forms
+            @param none: label for an option that delivers "None" as value
+                         (useful for HierarchyFilters with explicit none-selection)
         """
 
         self.lookup = lookup
@@ -6375,6 +6378,8 @@ class S3HierarchyWidget(FormWidget):
 
         self.columns = columns
         self.bulk_select = bulk_select
+
+        self.none = none
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attr):
@@ -6454,7 +6459,9 @@ class S3HierarchyWidget(FormWidget):
                            _class = "s3-hierarchy-input",
                            requires = self.parse),
                      DIV(header,
-                         DIV(h.html("%s-tree" % widget_id),
+                         DIV(h.html("%s-tree" % widget_id,
+                                    none=self.none,
+                                    ),
                              _class = "s3-hierarchy-tree",
                              ),
                          _class = "s3-hierarchy-wrapper",

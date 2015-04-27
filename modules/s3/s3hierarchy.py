@@ -1261,6 +1261,7 @@ class S3Hierarchy(object):
              root=None,
              represent=None,
              hidden=True,
+             none=None,
              _class=None):
         """
             Render this hierarchy as nested unsorted list
@@ -1286,6 +1287,14 @@ class S3Hierarchy(object):
                     _style="display:none" if hidden else None)
         if _class:
             output.add_class(_class)
+        if none:
+            if none is True:
+                none = current.messages["NONE"]
+            output.insert(0, LI(none,
+                                _id="%s-None" % widget_id,
+                                _rel = "none",
+                                _class = "s3-hierarchy-node s3-hierarchy-none",
+                                ))
         return output
 
     # -------------------------------------------------------------------------

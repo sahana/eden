@@ -1923,6 +1923,7 @@ class S3HierarchyFilter(S3FilterWidget):
                               cascade = opts.get("cascade", False),
                               bulk_select = bulk_select,
                               filter = opts.get("filter"),
+                              none = opts.get("none"),
                               )
 
         # Render the widget

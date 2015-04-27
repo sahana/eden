@@ -1268,6 +1268,7 @@ def deploy_member_filter(status=False):
             widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
                                                 lookup="org_region",
                                                 hidden=True,
+                                                none=T("No Region"),
                                                 ))
         else:
             widgets.insert(1, S3OptionsFilter("organisation_id$region_id",
