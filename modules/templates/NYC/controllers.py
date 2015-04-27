@@ -654,27 +654,34 @@ class PersonalDashboard(S3Method):
 
             # Rheader
             if r.representation == "html":
-                profile_header = DIV(DIV(DIV(A(T("Personal Profile"),
-                                               _href = URL(c="default", f="person"),
-                                               _class = "action-btn",
-                                               ),
-                                             _class="dashboard-links right",
-                                             _style="padding:0.5rem 0;"
-                                             ),
-                                         H2(title),
-                                         _class="medium-6 columns end",
-                                         ),
-                                     _class="row",
-                                     )
-                if item:
-                    # Append CMS content
-                    profile_header = TAG[""](profile_header,
-                                             DIV(DIV(item,
-                                                     _class="medium-12 columns",
-                                                     ),
-                                                 _class="row",
+                # Dashboard title
+                profile_header = TAG[""](DIV(DIV(H2(title),
+                                                 _class="medium-6 columns end",
                                                  ),
+                                             _class="row",
                                              )
+                                         )
+                # CMS content
+                if item:
+                    profile_header.append(DIV(DIV(item,
+                                                  _class="medium-12 columns",
+                                                  ),
+                                              _class="row",
+                                              ))
+                # Dashboard links
+                dashboard_links = DIV(A(T("Personal Profile"),
+                                        _href = URL(c="default", f="person"),
+                                        _class = "action-btn",
+                                        ),
+                                      _class="dashboard-links",
+                                      _style="padding:0.5rem 0;"
+                                      )
+
+                profile_header.append(DIV(DIV(dashboard_links,
+                                              _class="medium-12 columns",
+                                              ),
+                                          _class="row",
+                                          ))
             else:
                 profile_header = None
 

@@ -619,7 +619,7 @@ def person():
         form = auth.profile(next = next,
                             onaccept = onaccept)
 
-        return dict(title = T("User Profile"),
+        return dict(title = s3.crud_strings["pr_person"]["title_display"],
                     rheader = rheader,
                     form = form,
                     )

@@ -5139,7 +5139,9 @@ class pr_Contacts(S3Method):
         # Custom View
         response.view = "pr/contacts.html"
 
-        return {"contents": contents, "title": T("Contacts")}
+        title = self.crud_string(r.tablename, "title_display")
+
+        return {"contents": contents, "title": title}
 
     # -------------------------------------------------------------------------
     @staticmethod
