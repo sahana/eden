@@ -2321,15 +2321,16 @@ def survey_serieslist_dataTable_post(r):
         Replace the Action Buttons
     """
 
-    #S3CRUD.action_buttons(r)
-    current.response.s3.actions = [
-                   dict(label=current.messages.UPDATE,
-                        _class="action-btn edit",
-                        url=URL(c="survey", f="series",
-                                args=["[id]", "summary"]
-                                )
-                        ),
-                  ]
+    current.response.s3.actions = [{"label": str(current.messages.UPDATE),
+                                    "_class": "action-btn edit",
+                                    "url": URL(c="survey",
+                                               f="series",
+                                               args=["[id]",
+                                                     "summary",
+                                                     ],
+                                               ),
+                                    },
+                                   ]
 
 # =============================================================================
 def survey_series_rheader(r):
@@ -2957,14 +2958,18 @@ def survey_answerlist_dataTable_post(r):
         Replace Action Buttons
     """
 
-    #S3CRUD.action_buttons(r)
-    current.response.s3.actions = [
-                    dict(label=current.messages["UPDATE"],
-                         _class="action-btn edit",
-                         url=URL(c="survey", f="series",
-                                 args=[r.id, "complete", "[id]", "update"])
-                         ),
-                    ]
+    current.response.s3.actions = [{"label": str(current.messages.UPDATE),
+                                    "_class": "action-btn edit",
+                                    "url": URL(c="survey",
+                                               f="series",
+                                               args=[r.id,
+                                                     "complete",
+                                                     "[id]",
+                                                     "update",
+                                                     ],
+                                               ),
+                                    },
+                                   ]
 
 # =============================================================================
 def survey_answer_list_represent(value):
