@@ -1332,10 +1332,15 @@ S3.openPopup = function(url, center) {
         $(triggerSelector).each(function() {
             var trigger = $(this),
                 $scope;
-            /* ACs & list_add forms have this field hidden (unhiding of list_add during validation errors happens later)
-            if (!trigger.is(':visible')) {
+            // Hidden inline rows must not trigger an initial update
+            // @note: check visibility of the row not of the trigger, e.g.
+            //        AutoComplete triggers are always hidden!
+            // @note: must check for CSS explicitly, not just visibility because
+            //        the entire form could be hidden (e.g. list-add)
+            var inlineRow = trigger.closest('.inline-form');
+            if (inlineRow.length && (inlineRow.hasClass('empty-row') || inlineRow.css('display') == 'none')) {
                 return;
-            } */
+            }
             if (settings.scope == 'row') {
                 $scope = trigger.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {
