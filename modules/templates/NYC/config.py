@@ -576,9 +576,24 @@ def config(settings):
     def customise_org_organisation_resource(r, tablename):
 
         from gluon.html import DIV, INPUT
-        from s3 import s3_comments_widget, S3LocationSelector, S3MultiSelectWidget, S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent, S3SQLInlineComponentMultiSelectWidget
+        from s3 import s3_comments_widget, \
+                       S3LocationSelector, \
+                       S3MultiSelectWidget, \
+                       S3SQLCustomForm, \
+                       S3SQLInlineLink, \
+                       S3SQLInlineComponent, \
+                       S3SQLInlineComponentMultiSelectWidget
 
         s3db = current.s3db
+
+        # Filtered component to access phone number and email
+        s3db.add_components("org_organisation",
+                            org_facility = {"name": "main_facility",
+                                            "joinby": "organisation_id",
+                                            "filterby": "main_facility",
+                                            "filterfor": True,
+                                            },
+                            )
 
         if r.tablename == "org_organisation":
             if r.id:
@@ -829,16 +844,16 @@ def config(settings):
             list_fields = ["name",
                            (T("Type"), "organisation_organisation_type.organisation_type_id"),
                            (T("Date Registered"), "created_on"),
-                           "phone",
-                           (T("Email"), "email.value"),
+                           (T("Phone #"), "main_facility.phone1"),
+                           (T("Email"), "main_facility.email"),
                            "website",
                            ]
         else:
             list_fields = ["name",
                            (T("Type"), "organisation_organisation_type.organisation_type_id"),
                            (T("Services"), "service.name"),
-                           "phone",
-                           (T("Email"), "email.value"),
+                           (T("Phone #"), "main_facility.phone1"),
+                           (T("Email"), "main_facility.email"),
                            "website",
                            ]
 
