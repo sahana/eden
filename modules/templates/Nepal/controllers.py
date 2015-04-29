@@ -3,7 +3,7 @@
 from gluon import *
 from s3 import S3CustomController
 
-THEME = "CERT"
+THEME = "Nepal"
 
 # =============================================================================
 class index(S3CustomController):
@@ -40,11 +40,11 @@ class index(S3CustomController):
                                "label": T("Create"),
                                }]
                   },
-                 {"title": T("Trainings"),
+                 {"title": T("Shelters"),
                   "icon": "book",
-                  "description": T("Catalog of Training Courses which your Volunteers can attend."),
-                  "module": "vol",
-                  "function": "course",
+                  "description": T("List of Shelters."),
+                  "module": "cr",
+                  "function": "shelter",
                   "buttons": [{"args": "summary",
                                "icon": "list",
                                "label": T("View"),
@@ -54,11 +54,11 @@ class index(S3CustomController):
                                "label": T("Create"),
                                }]
                   },
-                 {"title": T("Certificates"),
+                 {"title": T("Hospitals"),
                   "icon": "certificate",
-                  "description": T("Catalog of Certificates which your Volunteers can get."),
-                  "module": "vol",
-                  "function": "certificate",
+                  "description": T("List of Hospitals."),
+                  "module": "hms",
+                  "function": "hospital",
                   "buttons": [{"args": "summary",
                                "icon": "list",
                                "label": T("View"),
@@ -68,21 +68,19 @@ class index(S3CustomController):
                                "label": T("Create"),
                                }]
                   },
-                 {"title": T("Messaging"),
+                 {"title": T("Requests"),
                   "icon": "envelope-alt",
-                  "description": T("Send Email, SMS and Twitter messages to your Volunteers."),
-                  "module": "msg",
-                  "function": "Index",
+                  "description": T("Requests for goods or services."),
+                  "module": "req",
+                  "function": "req",
                   "args": None,
-                  "buttons": [{"function": "inbox",
-                               "args": None,
-                               "icon": "inbox",
-                               "label": T("Inbox"),
+                  "buttons": [{"args": "summary",
+                               "icon": "list",
+                               "label": T("View"),
                                },
-                              {"function": "compose",
-                               "args": None,
+                              {"args": "create",
                                "icon": "plus-sign",
-                               "label": T("Compose"),
+                               "label": T("Create"),
                                }]
                   },
                  ]
