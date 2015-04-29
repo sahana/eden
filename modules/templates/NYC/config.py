@@ -1212,6 +1212,13 @@ def config(settings):
                     htable = s3db.hrm_human_resource
                     organisation_id = htable.organisation_id
 
+                    # Allow multiple HR records
+                    s3db.configure("hrm_human_resource",
+                                   deletable = True,
+                                   editable = True,
+                                   insertable = True,
+                                   )
+
                     # Site ID uses drop-down not autocomplete
                     site_id = htable.site_id
                     site_id.widget = None
@@ -1317,8 +1324,9 @@ $.filterOptionsS3({
                                         "human_resource",
                                         name = "human_resource",
                                         label = "",
-                                        multiple = False,
+                                        multiple = True,
                                         fields = hr_fields,
+                                        explicit_add = T("Add another Organization"),
                                         ),
                                    S3SQLInlineComponent(
                                         "contact",
