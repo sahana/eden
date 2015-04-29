@@ -1140,6 +1140,41 @@ def config(settings):
     POC_HELP = T("Main point of contact for organization")
 
     # -------------------------------------------------------------------------
+    def profile_rheader(r, tabs=None):
+        """
+            Custom rheader for personal profile
+
+            @param r: the S3Request
+            @param tabs: the rheader tabs as defined by the controller
+        """
+
+        if r.representation != "html":
+            return None
+
+        from gluon import DIV, H4, A
+        from s3 import s3_rheader_resource, s3_rheader_tabs, s3_avatar_represent
+
+        tablename, record = s3_rheader_resource(r)
+        if record:
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+
+            if tablename == "pr_person":
+
+                # @todo: this could be enhanced with the profile picture
+                #        since this is shown in the public profile under
+                #        "Contacts"
+                rheader = DIV(H4(s3_fullname(record), _class="subheader"),
+                              rheader_tabs,
+                              )
+                return rheader
+
+        return None
+
+    # -------------------------------------------------------------------------
     # Persons
     def customise_pr_person_controller(**attr):
         """
@@ -1166,6 +1201,9 @@ def config(settings):
             #    image_field.requires = None
 
             if r.interactive or r.representation == "aadata":
+
+                if r.controller == "default" and r.record:
+                    s3.pr_rheader = profile_rheader
 
                 if not r.component:
 
