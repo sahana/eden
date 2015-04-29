@@ -1133,8 +1133,10 @@ def config(settings):
     # Doesn't yet work (form fails to submit)
     #settings.pr.select_existing = False
     settings.pr.show_emergency_contacts = False
+    # Uncomment to hide the Address tab in person details
+    settings.pr.use_address = False
     # Only show Private Contacts Tab (Public is done via Basic Details tab)
-    settings.pr.contacts_tabs = ("private",)
+    settings.pr.contacts_tabs = None #("private",)
 
     POC = T("Org PoC")
     POC_HELP = T("Main point of contact for organization")
@@ -1603,7 +1605,7 @@ $.filterOptionsS3({
     # Uncomment to enable the use of HR Education
     settings.hrm.use_education = False
     # Uncomment to disable the use of HR Skills
-    #settings.hrm.use_skills = False
+    settings.hrm.use_skills = False
     # Uncomment to disable the use of HR Trainings
     settings.hrm.use_trainings = False
     # Uncomment to disable the use of HR Description
@@ -1617,6 +1619,8 @@ $.filterOptionsS3({
     settings.hrm.use_id = False
     # Uncomment to disable the use of HR Address Tab
     settings.hrm.use_address = False
+    # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
+    settings.hrm.record_tab = False
 
     hrm_human_resource_list_fields = [
         "id",

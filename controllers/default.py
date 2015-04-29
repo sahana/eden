@@ -768,6 +768,11 @@ def person():
         return output
     s3.postp = postp
 
+    if settings.get_hrm_record_tab():
+        hr_tab = (T("Staff/Volunteer Record"), "human_resource")
+    else:
+        hr_tab = None
+
     if settings.get_hrm_staff_experience() == "experience":
         experience_tab = (T("Experience"), "experience")
     else:
@@ -787,6 +792,11 @@ def person():
         description_tab = (T("Description"), "physical_description")
     else:
         description_tab = None
+
+    if settings.get_pr_use_address():
+        address_tab = (T("Address"), "address")
+    else:
+        address_tab = None
 
     if settings.get_hrm_use_education():
         education_tab = (T("Education"), "education")
@@ -814,13 +824,19 @@ def person():
     else:
         trainings_tab = None
 
+    setting = settings.get_pr_contacts_tabs()
+    if setting:
+        contacts_tab = (T("Contacts"), "contacts")
+    else:
+        contacts_tab = None
+
     tabs = [(T("Person Details"), None),
             (T("User Account"), "user_profile"),
-            (T("Staff/Volunteer Record"), "human_resource"),
+            hr_tab,
             id_tab,
             description_tab,
-            (T("Address"), "address"),
-            (T("Contacts"), "contacts"),
+            address_tab,
+            contacts_tab,
             education_tab,
             trainings_tab,
             certificates_tab,

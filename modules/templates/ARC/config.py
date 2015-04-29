@@ -394,8 +394,8 @@ def config(settings):
     #settings.hrm.organisation_label = "National Society / Branch"
     # Uncomment to consolidate tabs into a single CV
     settings.hrm.cv_tab = True
-    # Uncomment to consolidate tabs into Staff Record
-    settings.hrm.record_tab = True
+    # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
+    settings.hrm.record_tab = "record"
 
     # Uncomment to do a search for duplicates in the new AddPersonWidget2
     settings.pr.lookup_duplicates = True

@@ -5703,7 +5703,7 @@ def hrm_rheader(r, tabs=[], profile=False):
             else:
                 group = "staff"
         use_cv = settings.get_hrm_cv_tab()
-        use_record = settings.get_hrm_record_tab()
+        record_tab = settings.get_hrm_record_tab()
         experience_tab = None
         service_record = ""
         tbl = TABLE(TR(TH(name,
@@ -5878,7 +5878,7 @@ def hrm_rheader(r, tabs=[], profile=False):
         else:
             skills_tab = None
 
-        if not use_record:
+        if record_tab != "record":
             teams = settings.get_hrm_teams()
             if teams:
                 teams_tab = (T(teams), "group_membership")
@@ -5897,16 +5897,22 @@ def hrm_rheader(r, tabs=[], profile=False):
         if use_cv:
             trainings_tab = (T("CV"), "cv")
 
-        if use_record:
+        hr_tab = None
+        if not record_tab:
+            record_method = None
+        elif record_tab == "record":
             record_method = "record"
         else:
+            # Default
             record_method = "human_resource"
 
         if profile:
             # Configure for personal mode
+            if record_method:
+                hr_tab = (T("Staff/Volunteer Record"), record_method)
             tabs = [(T("Person Details"), None),
                     (T("User Account"), "user"),
-                    (T("Staff/Volunteer Record"), record_method),
+                    hr_tab,
                     id_tab,
                     description_tab,
                     address_tab,
@@ -5943,13 +5949,15 @@ def hrm_rheader(r, tabs=[], profile=False):
                 tabs.append((T("Public Contacts"), "public_contacts"))
             if "private" in contacts_tabs:
                 tabs.append((T("Private Contacts"), "private_contacts"))
+            if record_method is not None:
+                hr_tab = (T("Positions"), "human_resource")
             tabs += [trainings_tab,
                      certificates_tab,
                      skills_tab,
                      credentials_tab,
                      experience_tab,
                      experience_tab2,
-                     (T("Positions"), "human_resource"),
+                     hr_tab,
                      teams_tab,
                      (T("Assets"), "asset"),
                      ]
@@ -5964,8 +5972,10 @@ def hrm_rheader(r, tabs=[], profile=False):
                     awards_tab = (T("Awards"), "award")
                 else:
                     awards_tab = None
+            if record_method:
+                hr_tab = (hr_record, record_method)
             tabs = [(T("Person Details"), None),
-                    (hr_record, record_method),
+                    hr_tab,
                     id_tab,
                     description_tab,
                     address_tab,

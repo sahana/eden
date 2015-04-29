@@ -496,6 +496,8 @@ def config(settings):
     #settings.pr.search_shows_hr_details = False
     # Uncomment to hide Emergency Contacts in Person Contacts page
     #settings.pr.show_emergency_contacts = False
+    # Uncomment to hide the Address tab in person details
+    #settings.pr.use_address = False
     # Show separate Public and Private Contacts Tabs
     #settings.pr.contacts_tabs = ("public", "private")
 
@@ -604,8 +606,8 @@ def config(settings):
     #settings.hrm.show_organisation = True
     # Uncomment to consolidate tabs into a single CV
     #settings.hrm.cv_tab = True
-    # Uncomment to consolidate tabs into Staff Record
-    #settings.hrm.record_tab = True
+    # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
+    #settings.hrm.record_tab = "record"
     # Uncomment to disable the use of Volunteer Awards
     #settings.hrm.use_awards = False
     # Uncomment to disable the use of HR Certificates

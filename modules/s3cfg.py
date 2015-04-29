@@ -2522,11 +2522,16 @@ class S3Config(Storage):
 
     def get_hrm_record_tab(self):
         """
-            Whether Human Resources should consolidate tabs into 1x CV page:
-            * Staff Record
-            * Group Membership
+            Whether or not to show the HR record as tab, and with which
+            method:
+
+                True = show the default tab (human_resource)
+                "record" = consolidate tabs into 1x CV page:
+                            * Staff Record
+                            * Group Membership
+                False = do not show the tab (e.g. when HR record is inline)
         """
-        return self.hrm.get("record_tab", False)
+        return self.hrm.get("record_tab", True)
 
     def get_hrm_use_awards(self):
         """
@@ -2576,7 +2581,10 @@ class S3Config(Storage):
         """
             Whether Human Resources should show address tab
         """
-        return self.hrm.get("use_address", True)
+        use_address = self.hrm.get("use_address", None)
+        # Fall back to PR setting if not specified
+        if use_address is None:
+            return self.get_pr_use_address()
 
     def get_hrm_use_skills(self):
         """
@@ -3028,6 +3036,12 @@ class S3Config(Storage):
         """
         return self.pr.get("search_shows_hr_details", True)
 
+    def get_pr_use_address(self):
+        """
+            Whether or not to show an address tab in person details
+        """
+        return self.pr.get("use_address", True)
+
     def get_pr_show_emergency_contacts(self):
         """
             Show emergency contacts as well as standard contacts in Person Contacts page
@@ -3038,7 +3052,10 @@ class S3Config(Storage):
         """
             Which tabs to show for contacts: all, public &/or private
         """
-        return self.pr.get("contacts_tabs", ("all",))
+        contacts_tabs = self.pr.get("contacts_tabs", ("all",))
+        if not contacts_tabs:
+            return () # iterable expected
+        return contacts_tabs
 
     # -------------------------------------------------------------------------
     # Proc
