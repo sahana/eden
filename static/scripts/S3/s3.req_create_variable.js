@@ -3,7 +3,7 @@
 */
 
 $(document).ready(function() {
-    
+
     var span = '<span class="req"> *</span>';
 
     function idescape(input) {
@@ -128,7 +128,7 @@ $(document).ready(function() {
             if ($('#req_req_comments').val() == i18n.req_other_msg) {
                 // Default help still showing
                 // Requests of type 'Other' need this field to be mandatory
-                $('#req_req_comments').after('<div id="type__error" class="error" style="display: block;">i18n.req_details_mandatory</div>');
+                $('#req_req_comments').after('<div id="type__error" class="error" style="display: block;">' + i18n.req_details_mandatory + '</div>');
                 // Reset the Navigation protection
                 S3SetNavigateAwayConfirm();
                 // Move focus to this field

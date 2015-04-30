@@ -1,0 +1,31 @@
+{{extend "layout.html"}}
+<div id='home'>
+    <div class='row home-top' style='margin-top:20px;'>
+        <div class='large-12 columns end'>
+            <div id='intro' class='callout panel'>
+                <span class='mohalogo'></span>
+                <div id='homepage-title'>
+                    <h2>{{=T("National Emergency Operation Center")}}</h2>
+                    <h2 class='subtitle'><small>{{=settings.get_system_name()}}</small></h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id='home_menu' class='row'>
+    {{for menu in menus:}}
+    <div class='large-3 columns panel'>
+        <a href='{{=URL(c=menu["module"], f=menu["function"], args=menu.get("args",None))}}'>
+        <h2><i class='icon-{{=menu["icon"]}} menu'></i></h2>
+        <h2>{{=menu["title"]}}</h2>
+        </a>
+        <div class='menu_buttons'>
+        {{for button in menu["buttons"]:}} 
+        <a href='{{=URL(c=button.get("controller", menu["module"]), f=button.get("function", menu["function"]), args=button["args"])}}' class='button small secondary {{=button["args"]}}'>
+            <i class='icon-{{=button["icon"]}}'></i> {{=button["label"]}}</a>
+        {{pass}}
+        </div>
+        <p>{{=menu["description"]}}</p>
+    </div>
+    {{pass}}
+    </div>
+</div>

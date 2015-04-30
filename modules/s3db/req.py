@@ -872,7 +872,9 @@ $.filterOptionsS3({
             if default_type:
                 T = current.T
                 req_submit_button = {1:T("Save and add Items"),
-                                     3:T("Save and add People")}
+                                     3:T("Save and add People"),
+                                     9:T("Save"),
+                                     }
                 current.response.s3.crud.submit_button = req_submit_button[default_type]
 
         return

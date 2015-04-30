@@ -1649,6 +1649,7 @@ class S3PivotTable(object):
         ocells = []
 
         lookups = {}
+        facts = self.facts
 
         if not self.empty:
 
@@ -1661,7 +1662,6 @@ class S3PivotTable(object):
 
             # Get the layers (fact.selector, fact.method),
             # => used as keys to access the pivot data
-            facts = self.facts
             layers = [fact.layer for fact in facts]
             least = facts[0].method == "min"
 
@@ -1944,11 +1944,7 @@ class S3PivotTable(object):
                   "cols": ocols,
                   "facts": fact_data,
                   "cells": ocells,
-                  # @todo: deprecate (moved into "facts"):
-                  "method": method,
                   "lookups": lookups,
-                  # @todo: deprecate (replaced by "lookups"):
-                  "lookup": lookup if lookup else None,
                   "total": self._totals(self.totals, [fact]),
                   "nodata": None if not self.empty else str(T("No data available")),
                   "labels": labels,
