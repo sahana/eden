@@ -1,0 +1,24 @@
+.mohalogo:before {
+    content: url(img/mohalogo.png);
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+}
+#intro {
+    padding: 0.5rem 0 1rem 0;
+    margin-bottom: 1.5rem !important;
+    border: 1px solid silver;
+    text-align: left;
+}
+#homepage-title {
+    display: inline-block;
+}
+#homepage-title h2 {
+    text-align: left;
+    padding-left: 0.5rem;
+}
+#homepage-title h2 small {
+    line-height: inherit;
+}
+#poweredby {
+    font-size:0.9rem;
+}

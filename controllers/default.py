@@ -117,6 +117,7 @@ def index():
         except (ImportError, AttributeError):
             # No Custom Page available, continue with the default
             # @ToDo: cache this result in session
+            import sys
             current.log.warning("Custom homepage cannot be loaded",
                                 sys.exc_info()[1])
         else:
