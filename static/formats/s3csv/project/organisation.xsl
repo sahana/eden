@@ -8,6 +8,7 @@
 
          CSV column...........Format..........Content
 
+         Programme............string..........Programme Name
          Project..............string..........Project Name
          Organisation.........string..........Organisation Name
          Organisation Type....string..........Organisation Type
@@ -46,6 +47,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisations',
                                                                    col[@field='Organisation'])[1])]">
                 <xsl:call-template name="Organisation"/>
+            </xsl:for-each>
+
+            <!-- Programmes -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('programmes',
+                                                                   col[@field='Programme'])[1])]">
+                <xsl:call-template name="Programme"/>
             </xsl:for-each>
 
             <!-- Projects -->
@@ -156,7 +163,21 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="Programme">
+        <xsl:variable name="ProgrammeName" select="col[@field='Programme']/text()"/>
+
+        <resource name="project_programme">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('Programme:', $ProgrammeName)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$ProgrammeName"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Project">
+        <xsl:variable name="ProgrammeName" select="col[@field='Programme']/text()"/>
         <xsl:variable name="ProjectName" select="col[@field='Project']/text()"/>
 
         <resource name="project_project">
@@ -164,6 +185,13 @@
                 <xsl:value-of select="concat('Project:', $ProjectName)"/>
             </xsl:attribute>
             <data field="name"><xsl:value-of select="$ProjectName"/></data>
+            <xsl:if test="$ProgrammeName!=''">
+                <reference field="programme_id" resource="project_programme">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Programme:', $ProgrammeName)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
         </resource>
 
     </xsl:template>
