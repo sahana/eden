@@ -126,6 +126,152 @@ def config(settings):
     settings.project.activities = True
     settings.project.sectors = True
 
+    settings.event.incident_impact_tab = True
+
+    # -------------------------------------------------------------------------
+    def customise_event_incident_controller(**attr):
+
+        db = current.db
+        s3db = current.s3db
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            resource = r.resource
+
+            if r.method in ("report", "summary"):
+
+                indicators = ("Death Total",
+                              "Injured Total",
+                              "Missing Total",
+                              "Fully Damaged Cemented House",
+                              "Partially Damaged Cemented House",
+                              )
+                report_facts = [(T("Number of Incidents"), "count(id)"),
+                                ]
+
+                ptable = s3db.stats_parameter
+                query = ptable.name.belongs(indicators)
+                rows = db(query).select(ptable.parameter_id,
+                                        ptable.name,
+                                        )
+                for row in rows:
+                    name = row.name
+                    parameter_id = row.parameter_id
+                    component_name = "impact_%s" % "_".join([s.lower() for s in name.split()])
+                    s3db.add_components("event_incident",
+                                        stats_impact={"name": component_name,
+                                                      "link": "event_event_impact",
+                                                      "joinby": "incident_id",
+                                                      "key": "impact_id",
+                                                      "filterby": "parameter_id",
+                                                      "filterfor": parameter_id,
+                                                      },
+                                        )
+                    report_facts.append((T(name), "sum(%s.value)" % component_name))
+
+                report_axis = ["event_id",
+                               "incident_type_id",
+                               ]
+                default_axis = None
+                levels = current.gis.get_relevant_hierarchy_levels()
+                for level in levels:
+                    lfield = "location_id$%s" % level
+                    if not default_axis:
+                        default_axis = lfield
+                    report_axis.append(lfield)
+                if not default_axis:
+                    default_axis = "event_id"
+
+                report_options = {
+                        "rows": report_axis,
+                        "cols": report_axis,
+                        "fact": report_facts,
+                        "defaults": {
+                            "rows": default_axis,
+                            "cols": "incident_type_id",
+                            "fact": "count(id)",
+                        }
+                    }
+                resource.configure(report_options=report_options)
+
+
+            if r.interactive or r.representation in "aadata":
+
+                if not r.component:
+                    table = resource.table
+
+                    # Show event_id
+                    field = table.event_id
+                    field.readable = field.writable = True
+
+                    # List fields
+                    list_fields = ["event_id",
+                                   "name",
+                                   "incident_type_id",
+                                   "location_id",
+                                   "zero_hour",
+                                   "exercise",
+                                   "closed",
+                                   "comments",
+                                   ]
+
+                    # Filter widgets
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, S3LocationFilter
+                    filter_widgets = [S3TextFilter(field=["name",
+                                                          "comments",
+                                                          ]),
+                                      S3OptionsFilter(field="event_id",
+                                                      ),
+                                      S3OptionsFilter(field="incident_type_id",
+                                                      ),
+                                      S3DateFilter(field="zero_hour",
+                                                   ),
+                                      S3LocationFilter(field="location_id",
+                                                       ),
+                                      ]
+
+                    # Update table configuration
+                    resource.configure(filter_widgets=filter_widgets,
+                                       list_fields=list_fields,
+                                       )
+
+                elif r.component_name == "task":
+                    # Custom Form
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                    crud_fields = ["name",
+                                   "description",
+                                   "priority",
+                                   "pe_id",
+                                   "date_due",
+                                   "status",
+                                   ]
+                    crud_form = S3SQLCustomForm(*crud_fields)
+                    list_fields = ["priority",
+                                   "name",
+                                   "description",
+                                   "pe_id",
+                                   "status",
+                                   "date_due",
+                                   ]
+                    r.component.configure(crud_form=crud_form,
+                                          list_fields=list_fields,
+                                          copyable=False,
+                                          )
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_event_incident_controller = customise_event_incident_controller
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py

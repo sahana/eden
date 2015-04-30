@@ -27,7 +27,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Incidents", c="event", f="incident", m="summary")(
                 MM("Events", f="event"),
                 MM("Incidents", f="incident", m="summary"),
-                MM("Incident Reports", f="incident_report"),
+                #MM("Incident Reports", f="incident_report"),
             ),
             homepage("org")(
                 MM("Organizations", c="org", f="organisation"),
@@ -80,6 +80,35 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                 M("Sectors", f="sector", check=sectors)(
                     M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event():
+        """ EVENT / Event Module """
+
+        return M()(
+                    #M("Scenarios", c="scenario", f="scenario")(
+                    #    M("Create", m="create"),
+                    #    M("Import", m="import", p="create"),
+                    #),
+                    M("Events", c="event", f="event")(
+                        M("Create", m="create"),
+                    ),
+                    M("Incidents", c="event", f="incident", m="summary")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Incident Reports", c="event", f="incident_report", m="summary")(
+                    #    M("Create", m="create"),
+                    #),
+                    M("Event Types", c="event", f="event_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    M("Incident Types", c="event", f="incident_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                     ),
                 )
 

@@ -2298,6 +2298,12 @@ class S3Config(Storage):
         """
         return self.event.get("incident_types_hierarchical", False)
 
+    def get_event_incident_impact_tab(self):
+        """
+            Whether to show the impact tab for incidents
+        """
+        return self.event.get("incident_impact_tab", False)
+
     # -------------------------------------------------------------------------
     # Evacuees
     #
