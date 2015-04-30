@@ -24,21 +24,28 @@ class S3MainMenu(default.S3MainMenu):
         sysname = current.deployment_settings.get_system_name_short()
         return [
             homepage("gis"),
-            MM("Incidents", c="event", f="incident_report"),
-            homepage("org"),
-            MM("Activities", c="project", f="activity", m="summary"),
-            MM("Facilities", link=False)(
+            MM("Incidents", c="event", f="incident", m="summary")(
+                MM("Events", f="event"),
+                MM("Incidents", f="incident", m="summary"),
+                MM("Incident Reports", f="incident_report"),
+            ),
+            homepage("org")(
+                MM("Organizations", c="org", f="organisation"),
+                MM("Offices", c="org", f="office"),
+                MM("Staff", c="hrm", f="staff", m="summary"),
+                MM("Facilities", c="org", f="facility", m="summary"),
+            ),
+            MM("Activities", c="project", f="activity", m="summary")(
+                MM("Projects", c="project", f="project"),
+                MM("Activities", c="project", f="activity", m="summary"),
+            ),
+            MM("More", link=False, restrict=AUTHENTICATED)(
                 homepage("inv"),
                 homepage("cr"),
                 MM("Hospitals", c="hms", f="hospital"),
-                MM("Other Facilities", c="org", f="facility", m="summary"),
-            ),
-            MM("Manage", link=False, restrict=AUTHENTICATED)(
-                MM("Events", c="event", f="event"),
-                MM("Requests", c="req", f="req"),
+                MM("Assets", c="asset", f="asset"),
                 MM("Inventory", c="inv", f="inv_item"),
-                MM("Staff", c="hrm", f="staff", m="summary"),
-                MM("Projects", c="project", f="project"),
+                MM("Requests", c="req", f="req"),
             ),
         ]
 

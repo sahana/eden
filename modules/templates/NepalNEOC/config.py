@@ -209,12 +209,12 @@ def config(settings):
         #  restricted = True,
         #  module_type = 10,
         #)),
-        #("doc", Storage(
-        #    name_nice = T("Documents"),
-        #    #description = "A library of digital resources, such as photos, documents and reports",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("doc", Storage(
+           name_nice = T("Documents"),
+           #description = "A library of digital resources, such as photos, documents and reports",
+           restricted = True,
+           module_type = 10,
+        )),
         #("msg", Storage(
         #    name_nice = T("Messaging"),
         #    #description = "Sends & Receives Alerts via Email & SMS",
@@ -235,12 +235,12 @@ def config(settings):
            restricted = True,
            module_type = 4
         )),
-        #("asset", Storage(
-        #    name_nice = T("Assets"),
-        #    #description = "Recording and Assigning Assets",
-        #    restricted = True,
-        #    module_type = 5,
-        #)),
+        ("asset", Storage(
+           name_nice = T("Assets"),
+           #description = "Recording and Assigning Assets",
+           restricted = True,
+           module_type = 5,
+        )),
         # Vehicle depends on Assets
         #("vehicle", Storage(
         #    name_nice = T("Vehicles"),
