@@ -11,20 +11,58 @@ class index(S3CustomController):
 
     def __call__(self):
 
-        response = current.response
-        response.s3.stylesheets.append("../themes/CERT/homepage.css")
-        title = current.deployment_settings.get_system_name()
-        response.title = title
+        output = {}
 
         T = current.T
+        response = current.response
+        s3 = response.s3
+        s3.stylesheets.append("../themes/CERT/homepage.css")
+        settings = current.deployment_settings
+        output["title"] = response.title = settings.get_system_name()
 
-        # Check logged in and permissions
-        #auth = current.auth
-        #roles = current.session.s3.roles
-        #system_roles = auth.get_system_roles()
-        #ADMIN = system_roles.ADMIN
-        #AUTHENTICATED = system_roles.AUTHENTICATED
-        #has_role = auth.s3_has_role
+        # Allow editing of page content from browser using CMS module
+        if settings.has_module("cms"):
+            system_roles = current.auth.get_system_roles()
+            ADMIN = system_roles.ADMIN in current.session.s3.roles
+            s3db = current.s3db
+            table = s3db.cms_post
+            ltable = s3db.cms_post_module
+            module = "default"
+            resource = "index"
+            query = (ltable.module == module) & \
+                    ((ltable.resource == None) | \
+                     (ltable.resource == resource)) & \
+                    (ltable.post_id == table.id) & \
+                    (table.deleted != True)
+            item = current.db(query).select(table.body,
+                                            table.id,
+                                            limitby=(0, 1)).first()
+            if item:
+                if ADMIN:
+                    item = DIV(XML(item.body),
+                               BR(),
+                               A(T("Edit"),
+                                 _href=URL(c="cms", f="post",
+                                           args=[item.id, "update"]),
+                                 _class="action-btn"))
+                else:
+                    item = DIV(XML(item.body))
+            elif ADMIN:
+                if s3.crud.formstyle == "bootstrap":
+                    _class = "btn"
+                else:
+                    _class = "action-btn"
+                item = A(T("Edit"),
+                         _href=URL(c="cms", f="post", args="create",
+                                   vars={"module": module,
+                                         "resource": resource
+                                         }),
+                         _class="%s cms-edit" % _class)
+            else:
+                item = ""
+        else:
+            item = ""
+        output["item"] = item
 
         menus = [{"title": T("Volunteers"),
                   "icon": "user",
@@ -84,10 +122,9 @@ class index(S3CustomController):
                                }]
                   },
                  ]
+        output["menus"] = menus
 
         self._view(THEME, "index.html")
-        return dict(title = title,
-                    menus = menus,
-                    )
+        return output
 
 # END =========================================================================

@@ -22,7 +22,7 @@ def config(settings):
 
     T = current.T
 
-    #settings.base.system_name = T("Sahana Skeleton")
+    settings.base.system_name = T("Nepal Sahana Disaster Management Platform")
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
@@ -38,7 +38,7 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -203,12 +203,12 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        #("cms", Storage(
-        #  name_nice = T("Content Management"),
-        #  #description = "Content Management System",
-        #  restricted = True,
-        #  module_type = 10,
-        #)),
+        ("cms", Storage(
+          name_nice = T("Content Management"),
+          #description = "Content Management System",
+          restricted = True,
+          module_type = 10,
+        )),
         #("doc", Storage(
         #    name_nice = T("Documents"),
         #    #description = "A library of digital resources, such as photos, documents and reports",
