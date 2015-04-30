@@ -26,7 +26,7 @@ def config(settings):
     settings.base.system_name_short = T("NEOC Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("Nepal", "default/users")
+    settings.base.prepopulate = ("NepalNEOC", "default/users")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "NepalNEOC"
