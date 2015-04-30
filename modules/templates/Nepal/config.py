@@ -35,7 +35,7 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
@@ -125,6 +125,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Simple Requests
     settings.req.req_type = ("Other",)
+    # Uncomment to disable the Commit step in the workflow & simply move direct to Ship
+    settings.req.use_commit = False
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -269,6 +271,12 @@ def config(settings):
         ("hms", Storage(
             name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
+            restricted = True,
+            module_type = 10
+        )),
+        ("patient", Storage(
+            name_nice = T("Patient Tracking"),
+            #description = "Tracking of Patients",
             restricted = True,
             module_type = 10
         )),
