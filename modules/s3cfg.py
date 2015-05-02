@@ -2790,6 +2790,12 @@ class S3Config(Storage):
         """
         return self.org.get("autocomplete", False)
 
+    def get_org_sector(self):
+        """
+            Whether to use an Organization Sector field 
+        """
+        return self.org.get("sector", False)
+
     def get_org_branches(self):
         """
             Whether to support Organisation Branches or not

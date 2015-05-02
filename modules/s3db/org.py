@@ -397,6 +397,15 @@ class S3OrganisationModel(S3Model):
                        "comments",
                        ]
 
+        use_sector = settings.get_org_sector()
+        if use_sector:
+            form_fields.insert(3, S3SQLInlineLink("sector",
+                                                  columns = 4,
+                                                  label = T("Sectors"),
+                                                  field = "sector_id",
+                                                  ),
+                               )
+
         if settings.get_org_summary():
             # Include Summary fields in form
             position = form_fields.index("year")
@@ -437,6 +446,8 @@ class S3OrganisationModel(S3Model):
                        "acronym",
                        "comments",
                        ]
+        if use_sector:
+            text_fields += ["sector.name", "sector.abrv"]
 
         if settings.get_L10n_translate_org_organisation():
             text_fields.extend(("name.name_l10n",
@@ -490,26 +501,60 @@ class S3OrganisationModel(S3Model):
                                           widgets = org_widgets,
                                           )
 
-        filter_widgets = [
-            S3TextFilter(text_fields,
-                         label = T("Search"),
-                         comment = text_comment,
-                         #_class = "filter-search",
-                         ),
-            # NB Order is important here - gets popped in asset & inv controllers & IFRC template
-            type_filter,
-            # NB Order is important here - gets popped in asset & inv controllers & IFRC template
-            S3OptionsFilter("sector_organisation.sector_id",
-                            options = lambda: \
-                                get_s3_filter_opts("org_sector",
-                                                   location_filter=True,
-                                                   none=True,
-                                                   translate=True),
-                            ),
-            S3OptionsFilter("country",
-                            #label = T("Home Country"),
-                            ),
-            ]
+        list_fields = ["id",
+                       "name",
+                       "acronym",
+                       "organisation_organisation_type.organisation_type_id",
+                       "website"
+                       ]
+
+        if use_sector:
+            list_fields.insert(4,"sector_organisation.sector_id")
+
+        filter_widgets = [S3TextFilter(text_fields,
+                                       label = T("Search"),
+                                       comment = text_comment,
+                                       #_class = "filter-search",
+                                       ),
+                          ]
+        append = filter_widgets.append
+
+        # Don't add Type or Sector Filters for Supplier organizations in the asset and inv controllers
+        if current.request.function != "supplier":
+            append(type_filter) 
+            if use_sector:
+                append(S3OptionsFilter("sector_organisation.sector_id",
+                                       options = lambda: \
+                                           get_s3_filter_opts("org_sector",
+                                                              location_filter=True,
+                                                              none=True,
+                                                              translate=True),
+                                       )
+                       )
+
+        append(S3OptionsFilter("country",
+                               #label = T("Home Country"),
+                                ),
+               ) 
+
+        report_fields = ["organisation_organisation_type.organisation_type_id",
+                         "country",
+                         ]
+        if use_sector:
+            report_fields.insert(1, "sector_organisation.sector_id")
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = ["count(id)",
+                                         "list(name)",
+                                         ],
+                                 defaults=Storage(rows = "country",
+                                                  cols = "organisation_organisation_type.organisation_type_id",
+                                                  fact = "count(id)",
+                                                  totals = True,
+                                                  chart = "spectrum:cols",
+                                                  #table = "collapse",
+                                                  ),
+                                 )
 
         location_context = settings.get_org_organisation_location_context()
 
@@ -520,17 +565,13 @@ class S3OrganisationModel(S3Model):
                   crud_form = crud_form,
                   deduplicate = self.organisation_duplicate,
                   filter_widgets = filter_widgets,
-                  list_fields = ["id",
-                                 "name",
-                                 "acronym",
-                                 "organisation_organisation_type.organisation_type_id",
-                                 "website"
-                                 ],
+                  list_fields = list_fields,
                   list_layout = org_organisation_list_layout,
                   list_orderby = "org_organisation.name",
                   onaccept = self.org_organisation_onaccept,
                   ondelete = self.org_organisation_ondelete,
                   referenced_by = [(utablename, "organisation_id")],
+                  report_options = report_options,
                   super_entity = "pr_pentity",
                   )
 
@@ -3361,9 +3402,6 @@ class S3FacilityModel(S3Model):
             msg_record_deleted = T("Facility deleted"),
             msg_list_empty = T("No Facilities currently registered"))
 
-        # Which levels of Hierarchy are we using?
-        levels = current.gis.get_relevant_hierarchy_levels()
-
         text_fields = ["name",
                        "code",
                        "comments",
@@ -3376,6 +3414,8 @@ class S3FacilityModel(S3Model):
                          "organisation_id",
                          ]
 
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
         for level in levels:
             lfield = "location_id$%s" % level
             report_fields.append(lfield)
@@ -3482,6 +3522,7 @@ class S3FacilityModel(S3Model):
                                cols = "site_facility_type.facility_type_id",
                                fact = "count(id)",
                                totals = True,
+                               chart = "barchart:rows",
                                ),
             )
 
@@ -4109,9 +4150,6 @@ class S3OfficeModel(S3Model):
                                          #hidden = True,
                                          )
 
-        # Which levels of Hierarchy are we using?
-        levels = current.gis.get_relevant_hierarchy_levels()
-
         text_fields = ["name",
                        "code",
                        "comments",
@@ -4119,16 +4157,19 @@ class S3OfficeModel(S3Model):
                        "organisation_id$acronym",
                        ]
 
-        list_fields = ["id",
-                       "name",
-                       "organisation_id", # Filtered in Component views
-                       "office_type_id",
-                       ]
+        report_fields = ["name",
+                         "organisation_id", # Filtered in Component views
+                         "office_type_id",
+                         ]
 
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
         for level in levels:
             lfield = "location_id$%s" % level
+            report_fields.append(lfield)
             text_fields.append(lfield)
 
+        list_fields = list(report_fields)
         list_fields += [(T("Address"), "location_id$addr_street"),
                         "phone1",
                         "email",
@@ -4150,6 +4191,21 @@ class S3OfficeModel(S3Model):
                                  #hidden = True,
                                  ),
                 ]
+
+        report_options = Storage(
+            rows = report_fields,
+            cols = report_fields,
+            fact = ["count(id)",
+                    "list(name)",
+                    ],
+            defaults = Storage(rows = lfield, # Lowest-level of hierarchy
+                               cols = "office_type_id",
+                               fact = "count(id)",
+                               totals = True,
+                               chart = "spectrum:rows",
+                               ),
+            )
+
 
         configure(tablename,
                   context = {"location": "location_id",
@@ -4177,6 +4233,7 @@ class S3OfficeModel(S3Model):
                                       "recv",
                                       "address",
                                       ),
+                  report_options = report_options,
                   super_entity = ("doc_entity", "pr_pentity", "org_site"),
                   update_realm = True,
                   )
@@ -4430,7 +4487,7 @@ def org_organisation_logo(id,
                    _height=60,
                    )
         return logo
-    return DIV() # no logo so return an empty div
+    return ""
 
 # =============================================================================
 def org_parents(organisation_id, path=[]):
