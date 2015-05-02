@@ -742,6 +742,8 @@ def vol_volunteer_controller():
             list_fields.append((T("Trainings"),"person_id$training.course_id"))
         if settings.get_hrm_use_certificates():
             list_fields.append((T("Certificates"),"person_id$certification.certificate_id"))
+        if r.representation == "xls":
+            list_fields.append("person_id$comments")
 
         # Volunteer Programme and Active-status
         report_options = get_config("report_options")
@@ -1148,7 +1150,7 @@ def vol_person_controller():
 
             resource = r.resource
             if mode is not None:
-                r.resource.build_query(id=s3_logged_in_person())
+                r.resource.build_query(id=current.auth.s3_logged_in_person())
             elif r.method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors

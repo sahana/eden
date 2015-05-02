@@ -5174,7 +5174,7 @@ def hrm_human_resource_onaccept(form):
             ltable.insert(human_resource_id=id,
                           job_title_id=job_title_id,
                           main=True,
-                          start_date=request.utcnow,
+                          date=request.utcnow,
                           )
 
     data = Storage()

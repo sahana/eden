@@ -1050,6 +1050,8 @@ class S3InventoryTrackingModel(S3Model):
         #send_type_opts.update(self.inv_item_status_opts)
         send_type_opts.update(settings.get_inv_send_types())
 
+        ADD_FACILITY = T("Create Facility")
+
         site_types = auth.org_site_types
         tablename = "inv_send"
         define_table(tablename,
@@ -1094,6 +1096,10 @@ class S3InventoryTrackingModel(S3Model):
                                                   not_filterby = "obsolete",
                                                   not_filter_opts = (True,),
                                                   )),
+                           comment = S3AddResourceLink(c="org",
+                                                       f="facility",
+                                                       label=ADD_FACILITY,
+                                                       title=ADD_FACILITY)
                            ),
                      organisation_id(
                         label = T("To Organization"),
@@ -1183,6 +1189,8 @@ class S3InventoryTrackingModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        levels = current.gis.get_relevant_hierarchy_levels()
+
         # Filter Widgets
         filter_widgets = [
             S3TextFilter(["sender_id$first_name",
@@ -1194,7 +1202,7 @@ class S3InventoryTrackingModel(S3Model):
                           "recipient_id$first_name",
                           "recipient_id$middle_name",
                           "recipient_id$last_name",
-                         ],
+                         ] + ["to_site_id$location_id$%s" % level for level in levels],
                          label = T("Search"),
                          comment = T("Search for an item by text."),
                         ),
@@ -1204,6 +1212,9 @@ class S3InventoryTrackingModel(S3Model):
                             cols = 2,
                             hidden = True,
                            ),
+            S3LocationFilter("to_site_id$location_id",
+                             levels=levels,
+                             ),
             S3TextFilter("type",
                          label = T("Shipment Type"),
                          hidden = True,
@@ -1875,6 +1886,12 @@ $.filterOptionsS3({
                          label = T("Search"),
                          #comment = recv_search_comment,
                          ),
+            S3OptionsFilter("send_id$site_id"),
+            S3LocationFilter("send_id$to_site_id$location_id",
+                             #hidden=True,
+                             label=T("Sent to Location"),
+                             levels=levels,
+                             ),
             S3DateFilter("send_id$date",
                          label = T("Sent date"),
                          hidden = True,
@@ -2142,7 +2159,8 @@ $.filterOptionsS3({
         s3 = response.s3
 
         # Limit site_id to sites the user has permissions for
-        error_msg = T("You do not have permission for any facility to send a shipment.")
+        error_msg = T("You do not have permission for any %s to send a shipment.") % \
+            current.deployment_settings.get_inv_facility_label()
         current.auth.permitted_facilities(table=sendtable, error_msg=error_msg)
 
         # Set Validator for checking against the number of items in the warehouse
@@ -2534,7 +2552,7 @@ $.filterOptionsS3({
                                 site_id = send_record.to_site_id,
                                 comments = send_record.comments,
                                 status = SHIP_STATUS_SENT,
-                                type = 1, # 1:"Another Inventory"
+                                type = 11, # 11:"Another Inventory"
                                 )
 
         # Change the status for all track items in this shipment to In transit

@@ -3511,6 +3511,11 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Supply
     #
+    def get_supply_autocomplete(self):
+        """
+            Whether supply fields should use an Autocomplete instead of a dropdown
+        """
+        return self.supply.get("autocomplete", False)
     def get_supply_catalog_default(self):
         return self.inv.get("catalog_default", "Default")
 

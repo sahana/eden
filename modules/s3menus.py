@@ -1196,6 +1196,8 @@ class S3OptionsMenu(object):
                           vars=dict(report="inc")),
                         M("Summary of Releases", c="inv", f="track_item",
                           vars=dict(report="rel")),
+                        M("Distribution Report", c="inv", f="track_item",
+                          vars=dict(report="dist")),
                     ),
                     M(inv_recv_list, c="inv", f="recv", translate=False)( # Already T()
                         M("Create", m="create"),
@@ -1468,13 +1470,9 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Import", m="import"),
                     ),
-                    M("Resource Inventory", f="resource")(
+                    M("Resources", f="resource")(
                         M("Create", m="create"),
-                        M("Import", m="import")
-                    ),
-                    M("Resources", f="resource", m="summary")(
-                        M("Create", m="create"),
-                        M("Import", m="import")
+                        M("Import", m="import"),
                     ),
                     M("Organization Types", f="organisation_type",
                       restrict=[ADMIN])(

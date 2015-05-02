@@ -323,7 +323,7 @@ class S3OrganisationModel(S3Model):
                            label = T("Name"),
                            ),
                      # http://hxl.humanitarianresponse.info/#abbreviation
-                     Field("acronym", length=16,
+                     Field("acronym", length=20,
                            label = T("Acronym"),
                            represent = lambda val: val or "",
                            comment = DIV(_class="tooltip",
@@ -2119,11 +2119,11 @@ class S3OrganisationResourceModel(S3Model):
         crud_strings[tablename] = Storage(
             label_create = T("Create Resource"),
             title_display = T("Resource Details"),
-            title_list = T("Resource Inventory"),
+            title_list = T("Resources"),
             title_update = T("Edit Resource"),
             title_map = T("Map of Resources"),
             title_upload = T("Import Resources"),
-            label_list_button = T("Resource Inventory"),
+            label_list_button = T("Resources"),
             label_delete_button = T("Delete Resource"),
             msg_record_created = T("Resource added"),
             msg_record_modified = T("Resource updated"),

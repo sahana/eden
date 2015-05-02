@@ -676,7 +676,7 @@ class S3ResourceField(object):
         # Fall back to the field label
         if label is None:
             fname = self.fname
-            if fname in ["L1", "L2", "L3", "L3", "L4", "L5"]:
+            if fname in ("L1", "L2", "L3", "L3", "L4", "L5"):
                 try:
                     label = current.gis.get_location_hierarchy(fname)
                 except:

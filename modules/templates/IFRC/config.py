@@ -540,6 +540,7 @@ def config(settings):
     #                           36: T("Consignment"), # Borrowed
     #                           37: T("In Transit"),  # Loaning warehouse space to another agency
     #                           }
+    settings.supply.autocomplete = True
 
     # -----------------------------------------------------------------------------
     # Request Management

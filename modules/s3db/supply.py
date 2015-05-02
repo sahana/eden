@@ -425,6 +425,10 @@ $.filterOptionsS3({
         supply_item_represent = supply_ItemRepresent(show_link=True)
 
         # Reusable Field
+        if settings.get_supply_autocomplete():
+            default_widget =  S3AutocompleteWidget("supply", "item")
+        else:
+            default_widget = None
         supply_item_id = S3ReusableField("item_id",
             "reference %s" % tablename, # 'item_id' for backwards-compatibility
             label = T("Item"),
@@ -434,7 +438,7 @@ $.filterOptionsS3({
                                  supply_item_represent,
                                  sort=True),
             sortby = "name",
-            widget = S3AutocompleteWidget("supply", "item"),
+            widget = default_widget,
             comment=S3AddResourceLink(c="supply",
                                       f="item",
                                       label=ADD_ITEM,

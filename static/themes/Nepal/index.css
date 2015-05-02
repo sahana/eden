@@ -1,0 +1,48 @@
+@charset "UTF-8";
+
+/* Index page specific */
+
+
+div#content h1 {
+    margin-top: 10px;
+    font-size: 2rem;
+}
+
+#index-page {
+    margin-top: 10px;
+    max-width: 980px;
+}
+
+.default h1 {
+    text-align: center;
+}
+.default  {
+    margin: 0 auto;
+}
+
+div#index-page h2 {
+    text-align: center;
+    font-size: 1.5rem;
+}
+div#index-page.default h2 {
+    font-size: 2rem;
+}
+
+div#index-page h1,
+div#index-page h2 {
+    font-weight: inherit;
+    background: None;
+    padding: 0;
+}
+
+#index-menu h2 i {
+    font-size: 4rem;
+}
+
+#index-menu li {
+    text-align: center;
+}
+
+#index-menu p {
+    margin-bottom: 0;
+}

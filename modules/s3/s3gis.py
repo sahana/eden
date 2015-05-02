@@ -1527,6 +1527,7 @@ class GIS(object):
         db = current.db
         s3db = current.s3db
         table = s3db.gis_hierarchy
+        ltable = s3db.gis_location
 
         fields = (table.uuid,
                   table.L1,
@@ -1536,7 +1537,15 @@ class GIS(object):
                   table.L5,
                   )
 
-        query = (table.uuid == "SITE_DEFAULT")
+        countries = current.deployment_settings.get_gis_countries() 
+        if len(countries) == 1:
+            #If the site is only configed for one country, use the hierarchy for that country
+            query = (table.location_id == ltable.id) & \
+                    (ltable.level == "L0") & \
+                    (ltable.name == self.get_country(countries[0],key_type="code"))
+        else:
+            query = (table.uuid == "SITE_DEFAULT")
+
         if not location:
             config = GIS.get_config()
             location = config.region_location_id
