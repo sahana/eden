@@ -108,6 +108,7 @@ def config(settings):
                                 inv_adj_item = "adj_id",
                                 req_req_item = "req_id",
                                 po_household = "area_id",
+                                po_organisation_household = "household_id",
                                 )
 
         # Default Foreign Keys (ordered by priority)
