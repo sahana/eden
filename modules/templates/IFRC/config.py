@@ -203,6 +203,19 @@ def config(settings):
         elif tablename == "pr_group":
             use_user_organisation = True
 
+        elif tablename == "pr_address":
+            # Organisation addresses (PO module) inherit the realm entity
+            # from the organisation
+            atable = s3db.pr_address
+            otable = s3db.org_organisation
+            left = [otable.on(otable.pe_id == atable.pe_id)]
+            org = db(atable.id == row.id).select(otable.pe_id,
+                                                 otable.realm_entity,
+                                                 left=left,
+                                                 limitby=(0, 1)).first()
+            if org and org.pe_id:
+                realm_entity = org.realm_entity
+
         auth = current.auth
         user = auth.user
         if user:
