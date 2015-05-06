@@ -1401,7 +1401,7 @@
 "Table" : "Tablo",
 "Import File" :"Dosyayı Aktar",
 "Download Template" : "Şablonu İndir",
-"Expiring Contract Staff Report": "Sözleşmesi bitecek olan personel raporu",
+"Expiring Staff Contracts Report": "Sözleşmesi bitecek olan personel raporu",
 "Items":"Malzeme Türleri",
 "Catalogs":"Kataloglar",
 "Create Catalog":"Katalog Ekle",
