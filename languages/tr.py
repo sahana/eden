@@ -1419,9 +1419,12 @@
 "Volume (m3)" : "Hacim (m3)",
 "Asset Number" : "Demirbaş Numarası",
 "Assigned To" : "İlgili kişi",
-"Condition" : "Fiziksel durumu",
+"Condition" : "Fiziksel Durumu",
 "Search Shipped Items":"Gönderiler Arasında Ara",
 "Create Item" : "Malzeme Ekle",
 "Catalog":"Katalog",
-"Item Categories":"Malzeme Türü Kategorileri"
+"Item Categories":"Malzeme Türü Kategorileri",
+"Create Asset":"Varlık Ekle",
+"Item":"Malzeme Türü",
+"Category":"Kategori"
 }
