@@ -1412,13 +1412,16 @@
 "Kit?":"Derleme Malzeme mi?",
 "Model/Type" : "Model/ Tip",
 "Year of Manufacture" : "Üretim yılı",
-"Weight" : "Ağırlık",
-"Length" : "Boy",
-"Width" : "En",
-"Height" : "Yükseklik",
-"Volume" : "Hacim",
+"Weight (kg)" : "Ağırlık (kg)",
+"Length (m)" : "Boy (m)",
+"Width (m)" : "En (m)",
+"Height (m)" : "Yükseklik (m)",
+"Volume (m3)" : "Hacim (m3)",
 "Asset Number" : "Demirbaş Numarası",
 "Assigned To" : "İlgili kişi",
 "Condition" : "Fiziksel durumu",
-"Search Shipped Items":"Gönderiler Arasında Ara"
+"Search Shipped Items":"Gönderiler Arasında Ara",
+"Create Item" : "Malzeme Ekle",
+"Catalog":"Katalog",
+"Item Categories":"Malzeme Türü Kategorileri"
 }
