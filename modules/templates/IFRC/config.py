@@ -92,10 +92,15 @@ def config(settings):
         PID = "person_id"
 
         # Owner Entity Foreign Key
-        realm_entity_fks = dict(pr_contact = EID,
+        realm_entity_fks = dict(pr_contact = [("org_organisation", EID),
+                                              ("po_household", EID),
+                                              ("pr_person", EID),
+                                              ],
                                 pr_contact_emergency = EID,
                                 pr_physical_description = EID,
-                                pr_address = EID,
+                                pr_address = [("org_organisation", EID),
+                                              ("pr_person", EID),
+                                              ],
                                 pr_image = EID,
                                 pr_identity = PID,
                                 pr_education = PID,
@@ -108,11 +113,12 @@ def config(settings):
                                 inv_adj_item = "adj_id",
                                 req_req_item = "req_id",
                                 po_household = "area_id",
-                                po_organisation_household = "household_id",
+                                po_organisation_area = "area_id",
                                 )
 
         # Default Foreign Keys (ordered by priority)
-        default_fks = ("catalog_id",
+        default_fks = ("household_id",
+                       "catalog_id",
                        "project_id",
                        "project_location_id",
                        )
@@ -136,28 +142,38 @@ def config(settings):
         # Check if there is a FK to inherit the realm_entity
         realm_entity = 0
         fk = realm_entity_fks.get(tablename, None)
-        fks = [fk]
+        fks = [fk] if not isinstance(fk, list) else list(fk)
         fks.extend(default_fks)
         for default_fk in fks:
-            if default_fk in table.fields:
-                fk = default_fk
-                # Inherit realm_entity from parent record
-                if fk == EID:
-                    ftable = s3db.pr_person
-                    query = (ftable[EID] == row[EID])
+            if isinstance(default_fk, tuple):
+                instance_type, fk = default_fk
+            else:
+                instance_type, fk = None, default_fk
+            if fk not in table.fields:
+                continue
+
+            # Inherit realm_entity from parent record
+            if fk == EID:
+                if instance_type:
+                    ftable = s3db.table(instance_type)
+                    if not ftable:
+                        continue
                 else:
-                    ftablename = table[fk].type[10:] # reference tablename
-                    ftable = s3db[ftablename]
-                    query = (table.id == row.id) & \
-                            (table[fk] == ftable.id)
-                record = db(query).select(ftable.realm_entity,
-                                          limitby=(0, 1)).first()
-                if record:
-                    realm_entity = record.realm_entity
-                    break
-                #else:
-                # Continue to loop through the rest of the default_fks
-                # Fall back to default get_realm_entity function
+                    ftable = s3db.pr_person
+                query = (ftable[EID] == row[EID])
+            else:
+                ftablename = table[fk].type[10:] # reference tablename
+                ftable = s3db[ftablename]
+                query = (table.id == row.id) & \
+                        (table[fk] == ftable.id)
+            record = db(query).select(ftable.realm_entity,
+                                        limitby=(0, 1)).first()
+            if record:
+                realm_entity = record.realm_entity
+                break
+            #else:
+            # Continue to loop through the rest of the default_fks
+            # Fall back to default get_realm_entity function
 
         use_user_organisation = False
         #use_user_root_organisation = False
@@ -202,19 +218,6 @@ def config(settings):
         #elif tablename in ("pr_group",):
         elif tablename == "pr_group":
             use_user_organisation = True
-
-        elif tablename == "pr_address":
-            # Organisation addresses (PO module) inherit the realm entity
-            # from the organisation
-            atable = s3db.pr_address
-            otable = s3db.org_organisation
-            left = [otable.on(otable.pe_id == atable.pe_id)]
-            org = db(atable.id == row.id).select(otable.pe_id,
-                                                 otable.realm_entity,
-                                                 left=left,
-                                                 limitby=(0, 1)).first()
-            if org and org.pe_id:
-                realm_entity = org.realm_entity
 
         auth = current.auth
         user = auth.user
