@@ -114,7 +114,19 @@ def area():
     """ RESTful Controller for Area Model """
 
     def prep(r):
-        if r.component_name == "organisation":
+        component_name = r.component_name
+        if component_name == "household":
+            # Set the Starting Location to be that of the Area
+            area_location = r.record.location_id
+            if area_location:
+                gtable = s3db.gis_location
+                record = db(gtable.id == area_location).select(gtable.parent,
+                                                               limitby=(0, 1)
+                                                               ).first()
+                if record:
+                    s3db.po_household.location_id.default = record.parent
+
+        elif component_name == "organisation":
             # Filter to just referral agencies
             otable = s3db.org_organisation
             rtable = s3db.po_referral_organisation
@@ -133,6 +145,7 @@ def area():
                                     left=left,
                                     error_message=T("Agency is required")
                                     )
+        
         return True
     s3.prep = prep
 
