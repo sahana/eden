@@ -1420,4 +1420,5 @@
 "Asset Number" : "Demirbaş Numarası",
 "Assigned To" : "İlgili kişi",
 "Condition" : "Fiziksel durumu",
+"Search Shipped Items":"Gönderiler Arasında Ara"
 }
