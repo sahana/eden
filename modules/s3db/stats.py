@@ -1211,7 +1211,8 @@ def stats_demographic_data_controller():
         rheader = None
 
     output = current.rest_controller("stats", "demographic_data",
-                                     rheader=rheader)
+                                     rheader = rheader,
+                                     )
 
     return output
 
@@ -1328,10 +1329,11 @@ class S3StatsImpactModel(S3Model):
         # Reusable Field
         impact_id = S3ReusableField("impact_id", "reference %s" % tablename,
                                      label = T("Impact"),
+                                     ondelete = "CASCADE",
+                                     represent = S3Represent(lookup=tablename),
                                      requires = IS_EMPTY_OR(
                                         IS_ONE_OF_EMPTY(db, "stats_impact.id")),
-                                     represent = S3Represent(lookup=tablename),
-                                     ondelete = "CASCADE")
+                                     )
 
         configure(tablename,
                   filter_widgets = filter_widgets,

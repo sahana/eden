@@ -1814,7 +1814,7 @@ class S3EventImpactModel(S3Model):
 
         # Table configuration
         self.configure(tablename,
-                       onaccept=self.event_impact_onaccept,
+                       onaccept = self.event_impact_onaccept,
                        )
 
         # Pass names back to global scope (s3.*)

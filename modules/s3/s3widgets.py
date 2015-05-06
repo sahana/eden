@@ -4318,7 +4318,9 @@ class S3LocationSelector(S3Selector):
                  labels = True,
                  placeholders = False,
                  error_message = None,
-                 represent = None):
+                 represent = None,
+                 prevent_duplicate_addresses = False,
+                 ):
         """
             Constructor
 
@@ -4350,19 +4352,20 @@ class S3LocationSelector(S3Selector):
             @param placeholders: show placeholder text in inputs
             @param error_message: default error message for server-side validation
             @param represent: an S3Represent instance that can represent non-DB rows
+            @param prevent_duplicate_addresses: do a check for duplicate addresses & prevent
+                                                creation of record if a dupe is found
         """
 
         self._initlx = True
         self._levels = levels
         self._required_levels = required_levels
-
         self._load_levels = None
 
         self.hide_lx = hide_lx
         self.reverse_lx = reverse_lx
-
         self.show_address = show_address
         self.show_postcode = show_postcode
+        self.prevent_duplicate_addresses = prevent_duplicate_addresses
 
         if show_latlon is None:
             show_latlon = current.deployment_settings.get_gis_latlon_selector()
@@ -5919,6 +5922,17 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 # Permission to create?
                 if not current.auth.s3_has_permission("create", table):
                     return (values, current.auth.messages.access_denied)
+
+                # Check for duplicate address
+                if self.prevent_duplicate_addresses:
+                    query = (table.addr_street == address) & \
+                            (table.parent == parent) & \
+                            (table.deleted != True)
+                    duplicate = current.db(query).select(table.id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+                    if duplicate:
+                        return (values, current.T("Duplicate Address"))
 
                 # Schedule for onvalidation
                 feature = Storage(addr_street=address,

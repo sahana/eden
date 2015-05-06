@@ -275,6 +275,7 @@ class OutreachHouseholdModel(S3Model):
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Household
@@ -285,11 +286,18 @@ class OutreachHouseholdModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      self.po_area_id(),
                      # @todo: inherit Lx from area and hide Lx (in area prep)
-                     self.gis_location_id(label=T("Address")),
+                     self.gis_location_id(
+                        label = T("Address"),
+                        widget = S3LocationSelector(show_address=True,
+                                                    show_map=settings.get_gis_map_selector(),
+                                                    show_postcode=settings.get_gis_postcode_selector(),
+                                                    prevent_duplicate_addresses = True,
+                                                    ),
+                        ),
                      s3_date("date_visited",
-                             default="now",
-                             empty=False,
-                             label=T("Date visited"),
+                             default = "now",
+                             empty = False,
+                             label = T("Date visited"),
                              ),
                      Field("followup", "boolean",
                            default = False,
