@@ -354,8 +354,8 @@
          *
          * @param {number} level - the Lx level (0..5)
          * @param {number} id - the record ID of the selected Lx location
-         * @param {bool} refresh - whether this called before user input
-         *                         (in which case we do want to prevent geocoding)
+         * @param {bool} refresh - whether this is called before user input
+         *                         (in which case we want to prevent geocoding)
          */
         _lxSelect: function(level, id, refresh) {
 
