@@ -10,6 +10,7 @@ except:
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
+from ...s3 import s3_URLise
 
 def config(settings):
     """
@@ -394,11 +395,10 @@ def config(settings):
 
         record_id = record["cms_post.id"]
         item_class = "thumbnail"
-
         raw = record._row
         series = record["cms_post.series_id"]
-        date = record["cms_post.date"]
-        body = record["cms_post.body"]
+        date = record["cms_post.date"]        
+        body = XML(raw["cms_post.body"])
         title = record["cms_post.title"]
         
         db = current.db
