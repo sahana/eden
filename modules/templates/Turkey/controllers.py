@@ -19,7 +19,7 @@ class index(S3CustomController):
         s3db = current.s3db
         layout = s3.render_posts
         list_id = "news_datalist"
-        limit = 4
+        limit = 10
         list_fields = ["series_id",
                        "date",
                        "title",                     
