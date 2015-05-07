@@ -258,7 +258,7 @@ def page():
     # Post-process
     def postp(r, output):
         if r.record and not r.transformable():
-            output = {"item": r.record.body}
+            output = {"item": s3base.S3XMLContents(r.record.body)()}
             current.menu.options = None
             response.view = s3base.S3CRUD._view(r, "cms/page.html")
             if r.record.replies:

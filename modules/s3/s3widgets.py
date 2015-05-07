@@ -76,6 +76,7 @@ __all__ = ("S3ACLWidget",
            "s3_comments_widget",
            "s3_richtext_widget",
            "search_ac",
+           "S3XMLContents",
            "ICON",
            )
 
@@ -7709,6 +7710,76 @@ def search_ac(r, **attr):
 
     current.response.headers["Content-Type"] = "application/json"
     return json.dumps(output, separators=SEPARATORS)
+
+# =============================================================================
+class S3XMLContents(object):
+    """
+        Renderer for db-stored XML contents (e.g. CMS)
+
+        Replaces {{page}} expressions inside the contents with local URLs.
+
+        {{page}}                 - gives the URL of the current page
+        {{name:example}}         - gives the URL of the current page with
+                                   a query ?name=example (can add any number
+                                   of query variables)
+        {{c:org,f:organisation}} - c and f tokens override controller and
+                                   function of the current page, in this
+                                   example like /org/organisation
+
+        @note: does not check permissions for the result URLs
+    """
+
+    def __init__(self, contents):
+        """
+            Constructor
+
+            @param contents: the contents (string)
+        """
+
+        self.contents = contents
+
+    # -------------------------------------------------------------------------
+    def link(self, match):
+        """
+            Replace {{}} expressions with local URLs, with the ability to
+            override controller, function and URL query variables.Called
+            from re.sub.
+
+            @param match: the re match object
+        """
+
+        # Parse the expression
+        parameters = {}
+        tokens = match.group(1).split(",")
+        for token in tokens:
+            if not token:
+                continue
+            elif ":" in token:
+                key, value = token.split(":")
+            else:
+                key, value = token, None
+            if not value:
+                continue
+            parameters[key.strip()] = value.strip()
+
+        # Construct the URL
+        request = current.request
+        c = parameters.pop("c", request.controller)
+        f = parameters.pop("f", request.function)
+
+        return URL(c=c, f=f, vars=parameters, host=True)
+
+    # -------------------------------------------------------------------------
+    def __call__(self):
+        """ Render the output """
+
+        return re.sub(r"\{\{(.+?)\}\}", self.link, self.contents)
+
+    # -------------------------------------------------------------------------
+    def xml(self):
+        """ Render the output as XML object (to suppress XML escaping) """
+
+        return XML(self())
 
 # =============================================================================
 class ICON(I):

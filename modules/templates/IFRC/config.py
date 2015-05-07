@@ -409,6 +409,7 @@ def config(settings):
     #
     # Uncomment this to hide CMS from module index pages
     settings.cms.hide_index = True
+    settings.cms.richtext = True
 
     # -----------------------------------------------------------------------------
     # Messaging

@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ContentModel",
+__all__ = ("S3ContentModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
            "S3ContentOrgGroupModel",
@@ -37,7 +37,9 @@ __all__ = ["S3ContentModel",
            "cms_customise_post_fields",
            "cms_post_list_layout",
            "S3CMS",
-           ]
+           )
+
+import re
 
 try:
     import json # try stdlib (Python 2.6)
