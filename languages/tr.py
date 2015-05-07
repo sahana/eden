@@ -1361,7 +1361,7 @@
 "unlimited": "sınırsız",
 "updated": "güncellendi",
 "using default": "varsayılanı kullan",
-"Search by Skills" : "Becerilere göre ara",
+"Search by skills" : "Becerilere göre ara",
 "Staff & Volunteers (Combined)" : "Personel & Gönüllüler (Birlikte)",
 "Search training participants" : " Eğitime katılanlar arasında ara",
 "Search Members" : "Üye ara",
@@ -1381,7 +1381,7 @@
 "Themes" : " Program konusu",
 "Warehouse Type" : "Depo Türü",
 "Warehouse Stock" : "Depo Stokları",
-"Adjust stock levels" : "Stok seviyelerini ayarla",
+"Adjust Stock Levels" : "Stok Seviyelerini Ayarla",
 "Kitting" : "Ayırma/düzenleme",
 "Expiration Report" : "Son Kullanma Tarihi Raporu",
 "Monetization Report" : "Nakdi Stok Raporu",
@@ -1426,5 +1426,8 @@
 "Item Categories":"Malzeme Türü Kategorileri",
 "Create Asset":"Varlık Ekle",
 "Item":"Malzeme Türü",
-"Category":"Kategori"
+"Category":"Kategori",
+"Fullscreen Map":"Tam Ekran Harita",
+"View Fullscreen Map":"Haritayı Tam Ekran Görüntüle",
+"Configuration":"Konfigürasyon"
 }
