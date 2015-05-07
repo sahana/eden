@@ -39,8 +39,6 @@ __all__ = ("S3ContentModel",
            "S3CMS",
            )
 
-import re
-
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:

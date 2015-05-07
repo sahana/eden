@@ -82,6 +82,7 @@ __all__ = ("S3ACLWidget",
 
 import datetime
 import os
+import re
 
 try:
     import json # try stdlib (Python 2.6)
