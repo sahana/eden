@@ -342,9 +342,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def admin(self):
         """ ADMIN menu """
 
+        # Standard Admin Menu
         menu = super(S3OptionsMenu, self).admin()
-        gis_item = M("Map Settings", c="gis", f="config")
-        menu.append(gis_item)
+
+        # Additional Items
+        menu(M("Map Settings", c="gis", f="config"),
+             M("Content Management", c="cms", f="index"),
+             )
 
         return menu
 
