@@ -430,6 +430,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # CMS
+    # Uncomment this to hide CMS from module index pages
+    #settings.cms.hide_index = True
     # Uncomment to use Bookmarks in Newsfeed
     #settings.cms.bookmarks = True
     # Uncomment to use have Filter form in Newsfeed be open by default

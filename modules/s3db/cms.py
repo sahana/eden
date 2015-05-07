@@ -964,7 +964,7 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
     response.title = page_name
 
     item = None
-    if settings.has_module("cms"):
+    if settings.has_module("cms") and not settings.get_cms_hide_index(module):
         db = current.db
         table = current.s3db.cms_post
         ltable = db.cms_post_module

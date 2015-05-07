@@ -2241,6 +2241,22 @@ class S3Config(Storage):
         """
         return self.cms.get("show_titles", False)
 
+    def get_cms_hide_index(self, module):
+        """
+            Whether to hide CMS from module index pages, can be configured
+            either as boolean, or as dict per module (with "_default" to
+            define the default behavior).
+        """
+
+        hide = self.cms.get("hide_index", {})
+        if isinstance(hide, dict):
+            for m in (module, "_default"):
+                if m in hide:
+                    return hide[m]
+            return False
+        else:
+            return hide
+
     # -------------------------------------------------------------------------
     # Shelters
     #

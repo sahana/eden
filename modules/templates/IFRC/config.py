@@ -385,6 +385,32 @@ def config(settings):
     settings.search.filter_manager = False
 
     # -----------------------------------------------------------------------------
+    # Default Summary
+    settings.ui.summary = ({"common": True,
+                            "name": "add",
+                            "widgets": [{"method": "create"}],
+                            },
+                           {"name": "table",
+                            "label": "Table",
+                            "widgets": [{"method": "datatable"}],
+                            },
+                           {"name": "charts",
+                            "label": "Report",
+                            "widgets": [{"method": "report", "ajax_init": True}],
+                            },
+                           {"name": "map",
+                            "label": "Map",
+                            "widgets": [{"method": "map", "ajax_init": True}],
+                            },
+                           )
+
+    # -----------------------------------------------------------------------------
+    # Content Management
+    #
+    # Uncomment this to hide CMS from module index pages
+    settings.cms.hide_index = True
+
+    # -----------------------------------------------------------------------------
     # Messaging
     # Parser
     settings.msg.parser = "IFRC"
