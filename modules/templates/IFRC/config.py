@@ -2419,8 +2419,6 @@ def config(settings):
                                 filter_widgets = resource.get_config("filter_widgets")
                                 # Remove type (always 'RC')
                                 filter_widgets.pop(1)
-                                # Remove sector (not relevant)
-                                filter_widgets.pop(1)
 
                                 # Modify CRUD Strings
                                 s3.crud_strings.org_organisation = Storage(

@@ -507,6 +507,8 @@ def config(settings):
     # Organisations
     # Uncomment to use an Autocomplete for Organisation lookup fields
     #settings.org.autocomplete = True
+    # Enable the Organisation Sector field
+    #settings.org.sector = True
     # Enable the use of Organisation Branches
     #settings.org.branches = True
     # Show branches as tree rather than as table
