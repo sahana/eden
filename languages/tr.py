@@ -1429,5 +1429,6 @@
 "Category":"Kategori",
 "Fullscreen Map":"Tam Ekran Harita",
 "View Fullscreen Map":"Haritayı Tam Ekran Görüntüle",
-"Configuration":"Konfigürasyon"
+"Configuration":"Konfigürasyon",
+"Received/Incoming Shipments":"Teslim Alınan/Gelen Gönderiler"
 }
