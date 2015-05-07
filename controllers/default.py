@@ -1011,24 +1011,24 @@ def about():
         item = H2(T("About"))
 
     # Technical Support Details
-    import sys
-    import subprocess
+    import platform
     import string
+    import subprocess
 
-    python_version = sys.version
-    web2py_version = open(apath("../VERSION"), "r").read()[8:]
     sahana_version = open(os.path.join(request.folder, "VERSION"), "r").read()
+    web2py_version = open(apath("../VERSION"), "r").read()[8:]
+    python_version = platform.python_version()
+    os_version = platform.platform()
 
     # Database
-    sqlite = mysql = pgsql = ""
     if db_string.find("sqlite") != -1:
         try:
             import sqlite3
             sqlite_version = sqlite3.version
         except:
             sqlite_version = T("Unknown")
-        sqlite = TR(TD("SQLite"),
-                    TD(sqlite_version))
+        database = TR(TD("SQLite"),
+                      TD(sqlite_version))
 
     elif db_string.find("mysql") != -1:
         try:
@@ -1050,11 +1050,11 @@ def about():
             cur.execute("SELECT VERSION()")
             mysql_version = cur.fetchone()
 
-        mysql = TAG[""](TR(TD("MySQL"),
-                           TD(mysql_version)),
-                        TR(TD("MySQLdb python driver"),
-                           TD(mysqldb_version)),
-                        )
+        database = TAG[""](TR(TD("MySQL"),
+                              TD(mysql_version)),
+                           TR(TD("MySQLdb python driver"),
+                              TD(mysqldb_version)),
+                           )
 
     else:
         # Postgres
@@ -1078,57 +1078,94 @@ def about():
             cur.execute("SELECT version()")
             pgsql_version = cur.fetchone()
 
-        pgsql = TAG[""](TR(TD("PostgreSQL"),
-                           TD(pgsql_version)),
-                        TR(TD("psycopg2 python driver"),
-                           TD(psycopg_version)),
-                        )
+        database = TAG[""](TR(TD("PostgreSQL"),
+                              TD(pgsql_version)),
+                              TR(TD("psycopg2 python driver"),
+                                 TD(psycopg_version)),
+                              )
 
     # Libraries
-    # @ToDo: Add more: Shapely, xlrd, etc
+    try:
+        from lxml import etree
+        lxml_version = ".".join([str(i) for i in etree.LXML_VERSION])
+    except:
+        lxml_version = T("Not installed or incorrectly configured.")
     try:
         import reportlab
         reportlab_version = reportlab.Version
     except:
         reportlab_version = T("Not installed or incorrectly configured.")
     try:
+        import shapely
+        shapely_version = shapely.__version__
+    except:
+        shapely_version = T("Not installed or incorrectly configured.")
+    try:
+        import xlrd
+        xlrd_version = xlrd.__VERSION__
+    except:
+        xlrd_version = T("Not installed or incorrectly configured.")
+    try:
         import xlwt
         xlwt_version = xlwt.__VERSION__
     except:
         xlwt_version = T("Not installed or incorrectly configured.")
 
-    details = DIV(TABLE(THEAD(TR(TH(T("Core Components"),
-                                    _class="sorting_disabled"),
-                                 TH(T("Version"),
-                                    _class="sorting_disabled"),
-                                 )),
-                        TBODY(TR(TD(deployment_settings.get_system_name_short()),
+    details = DIV(TABLE(THEAD(),
+                        TBODY(TR(TD(STRONG(T("Configuration"))),
+                                 TD(),
+                                 _class="odd",
+                                 ),
+                              TR(TD(T("Public URL")),
+                                 TD(settings.get_base_public_url()),
+                                 ),
+                              TR(TD(STRONG(T("Core Components"))),
+                                 TD(STRONG(T("Version"))),
+                                 _class="odd",
+                                 ),
+                              TR(TD(settings.get_system_name_short()),
                                  TD(sahana_version),
-                                 _class="odd"),
+                                 ),
                               TR(TD(T("Web Server")),
                                  TD(request.env.server_software),
+                                 _class="odd",
                                  ),
                               TR(TD("Web2Py"),
                                  TD(web2py_version),
-                                 _class="odd"),
+                                 ),
                               TR(TD("Python"),
                                  TD(python_version),
+                                 _class="odd",
+                                 ),
+                              TR(TD("Operating System"),
+                                 TD(os_version),
                                  ),
                               TR(TD(STRONG(T("Database"))),
                                  TD(),
-                                 _class="odd"),
-                              sqlite,
-                              mysql,
-                              pgsql,
+                                 _class="odd",
+                                 ),
+                              database,
                               TR(TD(STRONG(T("Other Components"))),
                                  TD(),
-                                 _class="odd"),
+                                 _class="odd",
+                                 ),
+                              TR(TD("lxml"),
+                                 TD(lxml_version),
+                                 ),
                               TR(TD("ReportLab"),
                                  TD(reportlab_version),
+                                 _class="odd",
+                                 ),
+                              TR(TD("Shapely"),
+                                 TD(shapely_version),
+                                 ),
+                              TR(TD("xlrd"),
+                                 TD(xlrd_version),
+                                 _class="odd",
                                  ),
                               TR(TD("xlwt"),
                                  TD(xlwt_version),
-                                 _class="odd"),
+                                 ),
                         _class="dataTable display"),
                   _class="table-container")
                   )
