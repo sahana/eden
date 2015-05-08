@@ -995,7 +995,6 @@ class S3OptionsMenu(object):
                     M(settings.get_hrm_staff_label(), f="staff", m="summary",
                       check=manager_mode)(
                         M("Create", m="create"),
-                        M("Search by Skills", f="competency"),
                         M("Search by Skills", f="competency", check=skills),
                         M("Import", f="person", m="import",
                           vars={"group":"staff"}, p="create"),
