@@ -7771,16 +7771,10 @@ class S3XMLContents(object):
         return URL(c=c, f=f, vars=parameters, host=True)
 
     # -------------------------------------------------------------------------
-    def __call__(self):
+    def xml(self):
         """ Render the output """
 
         return re.sub(r"\{\{(.+?)\}\}", self.link, self.contents)
-
-    # -------------------------------------------------------------------------
-    def xml(self):
-        """ Render the output as XML object (to suppress XML escaping) """
-
-        return XML(self())
 
 # =============================================================================
 class ICON(I):

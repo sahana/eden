@@ -209,4 +209,65 @@ $('#single-col').css('padding', 0)'''
 
         return dict(map=map)
 
+# =============================================================================
+def deploy_index():
+    """
+        Custom module homepage for deploy (=RDRT), renders the CMS page
+        with the name given in the URL query variable "name" (defaults
+        to "RDRT")
+    """
+
+    response = current.response
+
+    DEFAULT_PAGE = "RDRT"
+
+    def prep(r):
+        row = r.record
+        if not row:
+            # Find the CMS page
+            name = r.get_vars.get("name", DEFAULT_PAGE)
+            table = r.resource.table
+            query = (table.name == name) & (table.deleted != True)
+            row = current.db(query).select(table.id,
+                                           table.title,
+                                           table.body,
+                                           limitby=(0, 1)).first()
+        if row:
+            # Render the page
+            from s3 import S3XMLContents
+            return {"bypass": True,
+                    "output": {"title": row.title,
+                               "contents": S3XMLContents(row.body),
+                               },
+                    }
+        else:
+            if name != DEFAULT_PAGE:
+                # Error - CMS page not found
+                r.error(404, current.T("Page not found"), next=URL(vars={}))
+            else:
+                # No CMS contents for module homepage found at all
+                # => redirect to default page (preserving all errors)
+                from s3 import s3_redirect_default
+                s3_redirect_default(URL(f="mission", args="summary", vars={}))
+    response.s3.prep = prep
+    output = current.rest_controller("cms", "post")
+
+    # Custom view
+    view = path.join(current.request.folder,
+                     "modules",
+                     "templates",
+                     "IFRC",
+                     "views",
+                     "deploy",
+                     "index.html",
+                     )
+    try:
+        # Pass view as file not str to work in compiled mode
+        response.view = open(view, "rb")
+    except IOError:
+        from gluon.http import HTTP
+        raise HTTP(404, "Unable to open Custom View: %s" % view)
+
+    return output
+
 # END =========================================================================

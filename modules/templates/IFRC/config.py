@@ -11,6 +11,7 @@ except:
 
 from gluon import current
 from gluon.storage import Storage
+from controllers import deploy_index
 
 def config(settings):
     """
@@ -470,6 +471,7 @@ def config(settings):
 
     # RDRT
     settings.deploy.hr_label = "Member"
+    settings.customise_deploy_home = deploy_index
     # Enable the use of Organisation Regions
     settings.org.regions = True
     # Make Organisation Regions Hierarchical
