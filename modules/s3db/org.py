@@ -5369,6 +5369,18 @@ def org_organisation_controller():
             list_fields = s3db.get_config(r.tablename,
                                           "list_fields") or []
             s3db.configure(r.tablename, list_fields=list_fields + ["pe_id"])
+        elif r.representation == "xls" and r.component_name == "branch":
+            # Improve XLS export of Branches
+            table = s3db.org_organisation_branch
+            table.organisation_id.represent = \
+                org_OrganisationRepresent(acronym=False)
+            table.branch_id.represent = org_OrganisationRepresent(parent=False)
+            s3db.configure("org_organisation_branch",
+                           list_fields = ["organisation_id",
+                                          "branch_id",
+                                          (T("SubBranch"), "branch_id$branch.branch_id"),
+                                          ],
+                           )
         elif r.interactive or r.representation == "aadata":
             gis = current.gis
             r.table.country.default = gis.get_default_country("code")

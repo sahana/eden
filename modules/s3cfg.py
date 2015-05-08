@@ -659,7 +659,7 @@ class S3Config(Storage):
         """
             System Name (Short Version) - for the UI & Messaging
         """
-        return self.base.get("system_name_short", "Sahana Eden")
+        return self.base.get("system_name_short", "Sahana")
 
     def get_base_debug(self):
         """

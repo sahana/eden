@@ -28,13 +28,13 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3VolunteerModel",
+__all__ = ("S3VolunteerModel",
            "S3VolunteerAwardModel",
            "S3VolunteerClusterModel",
            "vol_service_record",
            "vol_person_controller",
            "vol_volunteer_controller",
-           ]
+           )
 
 try:
     # Python 2.7
