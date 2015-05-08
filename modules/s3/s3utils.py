@@ -1389,7 +1389,10 @@ def s3_get_extension(request=None):
         extension = ext.lower() or extension
     else:
         ext = None
-        for arg in request.args[::-1]:
+        #for arg in request.args[::-1]:
+        # Workaround for web2py > 2.10.4-stable:
+        # Slicing in gluon.storage.List broken (upstream fix pending)
+        for arg in list(request.args)[::-1]:
             if "." in arg:
                 ext = arg.rsplit(".", 1)[1].lower()
                 break
