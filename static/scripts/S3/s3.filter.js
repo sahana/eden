@@ -65,7 +65,7 @@ S3.search = {};
 
         // Temporarily disable auto-submit
         form.data('noAutoSubmit', 1);
- 
+
         form.find('.text-filter').each(function() {
             $(this).val('');
         });
@@ -73,11 +73,11 @@ S3.search = {};
             $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
                 $this.val('');
-                if ($this.hasClass('groupedopts-filter-widget') && 
+                if ($this.hasClass('groupedopts-filter-widget') &&
                     $this.groupedopts('instance')) {
                     $this.groupedopts('refresh');
                 } else
-                if ($this.hasClass('multiselect-filter-widget') && 
+                if ($this.hasClass('multiselect-filter-widget') &&
                     $this.multiselect('instance')) {
                     $this.multiselect('refresh');
                 }
@@ -469,7 +469,7 @@ S3.search = {};
                         $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') && 
+                    if ($this.hasClass('multiselect-filter-widget') &&
                         $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
@@ -556,11 +556,11 @@ S3.search = {};
                         toggleAdvanced(form);
                     }
                     $this.val(values);
-                    if ($this.hasClass('groupedopts-filter-widget') && 
+                    if ($this.hasClass('groupedopts-filter-widget') &&
                         $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') && 
+                    if ($this.hasClass('multiselect-filter-widget') &&
                         $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
@@ -787,11 +787,11 @@ S3.search = {};
                         }
 
                         // Refresh UI widgets
-                        if (widget.hasClass('groupedopts-filter-widget') && 
+                        if (widget.hasClass('groupedopts-filter-widget') &&
                             widget.groupedopts('instance')) {
                             widget.groupedopts('refresh');
                         } else
-                        if (widget.hasClass('multiselect-filter-widget') && 
+                        if (widget.hasClass('multiselect-filter-widget') &&
                             widget.multiselect('instance')) {
                             widget.multiselect('refresh');
                         }
@@ -863,7 +863,7 @@ S3.search = {};
      *                       last filter-submit, reload page if required
      */
     var updatePendingTargets = function(form) {
-        
+
         var url = $('#' + form).find('input.filter-submit-url[type="hidden"]')
                                .first().val(),
             targets = pendingTargets[form],
@@ -918,7 +918,7 @@ S3.search = {};
             } else if (t.hasClass('dataTable')) {
                 var dt = t.dataTable();
                 // Refresh Data
-                dt.reloadAjax(target_data['ajaxurl']);
+                t.DataTable().ajax.url(dt_ajaxurl[target_id]).load();
                 updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                     $(this).val(target_data['ajaxurl']);
@@ -1150,7 +1150,7 @@ S3.search = {};
             }
         }
     };
-    
+
     /**
      * Initialise Map for an S3Map page
      * - in global scope as called from callback to Map Loader
@@ -1308,7 +1308,7 @@ S3.search = {};
                                     }
                                     // @ToDo: Read the options for subsequent levels
                                 }
-                            }                            
+                            }
                         }
                     } else {
                         for (i in _values) {
@@ -1381,13 +1381,13 @@ S3.search = {};
                     }
                 }
                 select.html(_options);
-                if (select.hasClass('groupedopts-filter-widget') && 
+                if (select.hasClass('groupedopts-filter-widget') &&
                     select.groupedopts('instance')) {
                     try {
                         select.groupedopts('refresh');
                     } catch(e) { }
                 } else
-                if (select.hasClass('multiselect-filter-widget') && 
+                if (select.hasClass('multiselect-filter-widget') &&
                     select.multiselect('instance')) {
                     select.multiselect('refresh');
                 }
@@ -1482,6 +1482,9 @@ S3.search = {};
                 } else if (t.hasClass('tp-container')) {
                     // TimePlots do not need page reload
                     needs_reload = false;
+                } else if (t.hasClass('ts-container')) {
+                    // Timesheets do not need page reload
+                    needs_reload = false;
                 } else {
                     // all other targets need page reload
                     if (visible) {
@@ -1515,7 +1518,7 @@ S3.search = {};
 //                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable();
-                    dt.reloadAjax(dt_ajaxurl[target_id]);
+                    t.DataTable().ajax.url(dt_ajaxurl[target_id]).load();
                     updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                         $(this).val(dt_ajaxurl[target_id]);
@@ -1538,7 +1541,7 @@ S3.search = {};
     var toggleAdvanced = function(form) {
 
         var $form = $(form), hidden;
-        
+
         $form.find('.advanced').each(function() {
             var widget = $(this);
             // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
@@ -1548,7 +1551,7 @@ S3.search = {};
                 widget.removeClass('hide')
                         .show()
                         .find(selectors).each( function() {
-                            selector = $(this)
+                            selector = $(this);
                             // Mark them as Active
                             selector.addClass('active');
                             // Refresh the contents
@@ -1572,7 +1575,7 @@ S3.search = {};
                 hidden = false;
             }
         });
-        
+
         var $btn = $($form.find('.filter-advanced-label'));
         if (hidden) {
             // Change label to label_off
@@ -1581,7 +1584,7 @@ S3.search = {};
             // Change label to label_on
             $btn.text($btn.data('on')).siblings().toggle();
         }
-        
+
     };
 
     /**
@@ -1739,7 +1742,7 @@ S3.search = {};
          * refresh: re-draw contents
          */
         refresh: function() {
-            
+
             var id = this.id,
                 el = this.element.val(''),
                 options = this.options;
@@ -1799,14 +1802,14 @@ S3.search = {};
             if (options.deleteTooltip) {
                 this.delete_btn.attr('title', options.deleteTooltip);
             }
-            
+
             // Throbber
             if (this.throbber) {
                 this.throbber.remove();
             }
             this.throbber = $('<div class="inline-throbber" id="fm-throbber-' + id + '">')
                             .css({'float': 'left'});
-            
+
             // ACCEPT button for create-dialog
             if (this.accept_btn) {
                 this.accept_btn.remove();
@@ -1845,7 +1848,7 @@ S3.search = {};
             // Hide selector and buttons
             var el = this.element.hide(),
                 fm = this;
-                
+
             this._hideCRUDButtons();
 
             // Show accept/cancel
@@ -1895,13 +1898,13 @@ S3.search = {};
             var el = this.element,
                 fm = this,
                 title = this.input.val();
-                
+
             if (!$(this.input).hasClass('changed') || !title) {
                 return;
             } else {
                 $(this.input).removeClass('changed');
             }
-            
+
             // Hide accept/cancel
             this.accept_btn.hide();
             this.cancel_btn.hide();
@@ -1914,7 +1917,7 @@ S3.search = {};
                 title: title,
                 query: S3.search.getCurrentFilters($(el).closest('form')),
                 url: this._getFilterURL()
-            }
+            };
 
             // Ajax-save
             $.ajaxS3({
@@ -1950,7 +1953,7 @@ S3.search = {};
                 opts = this.options;
 
             var id = $(el).val();
-            
+
             if (!id || opts.confirmUpdate && !confirm(opts.confirmUpdate)) {
                 return;
             }
@@ -1966,7 +1969,7 @@ S3.search = {};
                 id: id,
                 query: S3.search.getCurrentFilters($(el).closest('form')),
                 url: this._getFilterURL()
-            }
+            };
 
             // Ajax-update current filter
             $.ajaxS3({
@@ -2056,7 +2059,7 @@ S3.search = {};
             // Show selector and buttons
             var el = this.element.show(),
                 opts = this.options;
-            
+
             // Disable selector if no filters
             var options = $(el).find('option');
             if (options.length == 1 && options.first().hasClass('filter-manager-prompt')) {
@@ -2102,7 +2105,7 @@ S3.search = {};
          * _showCRUDButtons: show (unhide) load/save/delete buttons
          */
         _showCRUDButtons: function() {
-            
+
             var opts = this.options;
 
             this._hideCRUDButtons();
@@ -2124,12 +2127,12 @@ S3.search = {};
                 }
             }
         },
-        
+
         /**
          * _hideCRUDButtons: hide load/save/delete buttons
          */
         _hideCRUDButtons: function() {
-            
+
             this.create_btn.hide();
             this.load_btn.hide();
             this.delete_btn.hide();
@@ -2140,7 +2143,7 @@ S3.search = {};
          * _getFilterURL: get the page URL of the filter form
          */
         _getFilterURL: function() {
-            
+
             var url = $(this.element).closest('form')
                                      .find('input.filter-submit-url[type="hidden"]');
             if (url.length) {
@@ -2154,16 +2157,16 @@ S3.search = {};
          * _bindEvents: bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
-            
+
             var fm = this;
-            
+
             // @todo: don't bind create if readOnly
             this.create_btn.click(function() {
                 fm._newFilter();
             });
             this.accept_btn.click(function() {
                 fm._accept();
-            })
+            });
             this.cancel_btn.click(function() {
                 fm._cancel();
             });
