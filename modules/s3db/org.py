@@ -5378,7 +5378,8 @@ def org_organisation_controller():
             s3db.configure("org_organisation_branch",
                            list_fields = ["organisation_id",
                                           "branch_id",
-                                          (T("SubBranch"), "branch_id$branch.branch_id"),
+                                          # Not working - makes for an empty export:
+                                          #(T("SubBranch"), "branch_id$branch.branch_id"),
                                           ],
                            )
         elif r.interactive or r.representation == "aadata":

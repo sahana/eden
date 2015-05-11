@@ -870,7 +870,7 @@ class S3SurveyQuestionModel(S3Model):
 
         tablename = "survey_question"
         define_table(tablename,
-                     Field("name", length=200,
+                     Field("name", length=400,
                            notnull = True,
                            represent = self.qstn_name_represent,
                            ),
