@@ -179,6 +179,7 @@ class S3XLS(S3Codec):
             headers = data_source[0]
             types = data_source[1]
             rows = data_source[2:]
+            lfields = list_fields
         else:
             (title, types, lfields, headers, rows) = self.extractResource(data_source,
                                                                           list_fields)
