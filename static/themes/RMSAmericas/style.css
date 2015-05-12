@@ -1,0 +1,42 @@
+/* Menu Logo */
+.S3menulogo {
+  background: url(img/logo_small.png) left top no-repeat;
+  text-shadow: none;
+  padding: none;
+  margin-left: 5px;
+  margin-top: 2px;
+  width: 70px;
+  height: 40px;
+  display: none;
+}
+
+.org-logo {
+    vertical-align: top;
+    display: inline-block;
+    padding: 0.5rem;
+}
+.org-logo:before {
+    content: url(img/logo_small.png);
+}
+body {
+    background-color: #FAF9F5;
+}
+.system-title {
+    display: inline-block;
+}
+.system-name {
+    margin-bottom: 0;
+}
+.system-acronym {
+    font-weight: bold;
+}
+.org-name {
+    margin-bottom: 0.125rem;
+}
+.personal-menu {
+    padding: 1.0rem 0.5rem;
+    margin-bottom: 0.125rem;
+}
+.main-content {
+    background-color: white;
+}
