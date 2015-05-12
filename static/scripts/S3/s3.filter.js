@@ -916,12 +916,17 @@ S3.search = {};
                 t.datalist('ajaxReload', target_data['queries']);
 //                 dlAjaxReload(target_id, target_data['queries']);
             } else if (t.hasClass('dataTable')) {
-                var dt = t.dataTable();
                 // Refresh Data
-                t.DataTable().ajax.url(dt_ajaxurl[target_id]).load();
+                var dt = t.dataTable(),
+                    dtAjax = t.DataTable().ajax,
+                    dtAjaxURL = target_data['ajaxurl'];
+                // Use legacy Ajax format (required by back-end)
+                $.fn.dataTable.ext.legacy.ajax = true;
+                dtAjax.url(dtAjaxURL);
+                dtAjax.reload(null, true);
                 updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                    $(this).val(target_data['ajaxurl']);
+                    $(this).val(dtAjaxURL);
                 });
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
@@ -1517,11 +1522,16 @@ S3.search = {};
                     t.datalist('ajaxReload', queries);
 //                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
-                    var dt = t.dataTable();
-                    t.DataTable().ajax.url(dt_ajaxurl[target_id]).load();
+                    var dt = t.dataTable(),
+                        dtAjax = t.DataTable().ajax,
+                        dtAjaxURL = dt_ajaxurl[target_id];
+                    // Use legacy Ajax format (required by back-end)
+                    $.fn.dataTable.ext.legacy.ajax = true;
+                    dtAjax.url(dtAjaxURL);
+                    dtAjax.reload(null, true);
                     updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                        $(this).val(dt_ajaxurl[target_id]);
+                        $(this).val(dtAjaxURL);
                     });
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
