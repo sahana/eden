@@ -603,12 +603,12 @@ class S3HierarchyTests(unittest.TestCase):
                 assertTrue(hcol in row)
                 label = row[hcol]
                 # The row should belong to this branch
-                if label is not None and next_level:
+                if label != "" and next_level:
                     assertEqual(label[:6], "Type 1")
                 else:
-                    # Levels below the last level must be None
+                    # Levels below the last level must be empty
                     next_level = False
-                    assertEqual(label, None)
+                    assertEqual(label, "")
 
             assertTrue("test_hierarchy.category" in row)
             assertFalse("test_hierarchy.name" in row)
