@@ -24,8 +24,12 @@
     margin-bottom: 0.5rem;
 }
 .personal-menu {
-    padding: 1.0rem 0.5rem 0 0;
+    clear: right;
+    padding-top: 0.5rem;
     margin-bottom: 0.125rem;
+    li a {
+        padding: 0 0.375rem;
+    }
 }
 .language-selector {
     display: block;
@@ -44,4 +48,12 @@
 }
 .home-map {
     border: 1px solid #999999;
+}
+.username {
+    color: #666666;
+    padding: 0.5rem 0.5rem 0 0;
+    font-size: 0.7rem;
+    i.icon {
+        padding-left: 0.2rem;
+    }
 }
