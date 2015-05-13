@@ -1254,9 +1254,7 @@ class S3PivotTableFact(object):
             return
         resource = rfield.resource
 
-        fields = list(fact_options)
-        if not fields:
-            fields = []
+        fields = list(fact_options) if fact_options else []
 
         list_fields = resource.get_config("list_fields")
         if list_fields:
@@ -1904,9 +1902,11 @@ class S3PivotTable(object):
                 ocells.append(orow)
 
         # Lookup labels
-        report_options = resource.get_config("report_options", None)
+        report_options = resource.get_config("report_options", {})
         if report_options:
-            fact_options  = report_options.get("fact")
+            fact_options = report_options.get("fact")
+        else:
+            fact_options = ()
 
         # @todo: lookup report title before constructing from fact labels
 
