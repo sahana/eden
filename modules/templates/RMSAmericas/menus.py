@@ -31,7 +31,7 @@ class S3MainMenu(default.S3MainMenu):
         current.menu.about = cls.menu_about()
         current.menu.org = cls.menu_org()
 
-        # @todo:
+        # @todo: restore?
         #current.menu.dashboard = cls.menu_dashboard()
 
         return main_menu
@@ -161,123 +161,123 @@ class S3MainMenu(default.S3MainMenu):
         ]
 
     # -------------------------------------------------------------------------
-    # @todo: restore for homepage?
+    # @todo: restore? (at least for homepage? => needs re-design then)
     #
     #@classmethod
     #def menu_dashboard(cls):
-        #""" Dashboard Menu (at bottom of page) """
+    #    """ Dashboard Menu (at bottom of page) """
 
-        #DB = S3DashBoardMenuLayout
-        #auth = current.auth
-        #request = current.request
-        #controller = request.controller
+    #    DB = S3DashBoardMenuLayout
+    #    auth = current.auth
+    #    request = current.request
+    #    controller = request.controller
 
-        #has_role = auth.s3_has_role
-        #root_org = auth.root_org_name()
-        #system_roles = current.session.s3.system_roles
-        ##ADMIN = system_roles.ADMIN
-        #ORG_ADMIN = system_roles.ORG_ADMIN
+    #    has_role = auth.s3_has_role
+    #    root_org = auth.root_org_name()
+    #    system_roles = current.session.s3.system_roles
+    #    #ADMIN = system_roles.ADMIN
+    #    ORG_ADMIN = system_roles.ORG_ADMIN
 
-        #def hrm(item):
-            #return root_org != "Honduran Red Cross" or \
-                   #has_role(ORG_ADMIN)
+    #    def hrm(item):
+    #        return root_org != "Honduran Red Cross" or \
+    #               has_role(ORG_ADMIN)
 
-        #def inv(item):
-            #return root_org != "Honduran Red Cross" or \
-                   #has_role("hn_wh_manager") or \
-                   #has_role("hn_national_wh_manager") or \
-                   #has_role(ORG_ADMIN)
+    #    def inv(item):
+    #        return root_org != "Honduran Red Cross" or \
+    #               has_role("hn_wh_manager") or \
+    #               has_role("hn_national_wh_manager") or \
+    #               has_role(ORG_ADMIN)
 
-        #def vol(item):
-            #return root_org != "Honduran Red Cross" or \
-                   #has_role(ORG_ADMIN)
+    #    def vol(item):
+    #        return root_org != "Honduran Red Cross" or \
+    #               has_role(ORG_ADMIN)
 
-        #if controller == "vol":
-            #dashboard = DB()(
-                #DB("Volunteers",
-                   #c="vol",
-                   #image = "graphic_staff_wide.png",
-                   #title = "Volunteers")(
-                   #DB("Manage Volunteer Data", f="volunteer", m="summary"),
-                   #DB("Manage Teams Data", f="group"),
-                #),
-                #DB("Catalogs",
-                   #c="hrm",
-                   #image="graphic_catalogue.png",
-                   #title="Catalogs")(
-                   #DB("Certificates", f="certificate"),
-                   #DB("Training Courses", f="course"),
-                   ##DB("Skills", f="skill"),
-                   #DB("Job Titles", f="job_title")
-                #))
-        #elif controller in ("hrm", "org"):
-            #dashboard = DB()(
-                #DB("Staff",
-                   #c="hrm",
-                   #image = "graphic_staff_wide.png",
-                   #title = "Staff")(
-                   #DB("Manage Staff Data", f="staff", m="summary"),
-                   #DB("Manage Teams Data", f="group"),
-                #),
-                #DB("Offices",
-                   #c="org",
-                   #image = "graphic_office.png",
-                   #title = "Offices")(
-                   #DB("Manage Offices Data", f="office"),
-                   #DB("Manage National Society Data", f="organisation",
-                      #vars=red_cross_filter
-                      #),
-                #),
-                #DB("Catalogs",
-                   #c="hrm",
-                   #image="graphic_catalogue.png",
-                   #title="Catalogs")(
-                   #DB("Certificates", f="certificate"),
-                   #DB("Training Courses", f="course"),
-                   ##DB("Skills", f="skill"),
-                   #DB("Job Titles", f="job_title")
-                #))
+    #    if controller == "vol":
+    #        dashboard = DB()(
+    #            DB("Volunteers",
+    #               c="vol",
+    #               image = "graphic_staff_wide.png",
+    #               title = "Volunteers")(
+    #               DB("Manage Volunteer Data", f="volunteer", m="summary"),
+    #               DB("Manage Teams Data", f="group"),
+    #            ),
+    #            DB("Catalogs",
+    #               c="hrm",
+    #               image="graphic_catalogue.png",
+    #               title="Catalogs")(
+    #               DB("Certificates", f="certificate"),
+    #               DB("Training Courses", f="course"),
+    #               #DB("Skills", f="skill"),
+    #               DB("Job Titles", f="job_title")
+    #            ))
+    #    elif controller in ("hrm", "org"):
+    #        dashboard = DB()(
+    #            DB("Staff",
+    #               c="hrm",
+    #               image = "graphic_staff_wide.png",
+    #               title = "Staff")(
+    #               DB("Manage Staff Data", f="staff", m="summary"),
+    #               DB("Manage Teams Data", f="group"),
+    #            ),
+    #            DB("Offices",
+    #               c="org",
+    #               image = "graphic_office.png",
+    #               title = "Offices")(
+    #               DB("Manage Offices Data", f="office"),
+    #               DB("Manage National Society Data", f="organisation",
+    #                  vars=red_cross_filter
+    #                  ),
+    #            ),
+    #            DB("Catalogs",
+    #               c="hrm",
+    #               image="graphic_catalogue.png",
+    #               title="Catalogs")(
+    #               DB("Certificates", f="certificate"),
+    #               DB("Training Courses", f="course"),
+    #               #DB("Skills", f="skill"),
+    #               DB("Job Titles", f="job_title")
+    #            ))
 
-        #elif controller == "default" and request.function == "index":
+    #    elif controller == "default" and request.function == "index":
 
-            #dashboard = DB(_id="dashboard")(
-                #DB("Staff", c="hrm", f="staff", m="summary",
-                   #check = hrm,
-                   #image = "graphic_staff.png",
-                   #title = "Staff",
-                   #text = "Add new and manage existing staff."),
-                #DB("Volunteers", c="vol", f="volunteer", m="summary",
-                   #check = vol,
-                   #image = "graphic_volunteers.png",
-                   #title = "Volunteers",
-                   #text = "Add new and manage existing volunteers."),
-                #DB("Members", c="member", f="membership", m="summary",
-                   #image = "graphic_members.png",
-                   #title = "Members",
-                   #text = "Add new and manage existing members."),
-                #DB("Warehouses", c="inv", f="warehouse", m="summary",
-                   #check = inv,
-                   #image = "graphic_warehouse.png",
-                   #title = "Warehouses",
-                   #text = "Stocks and relief items."),
-                #DB("Assets", c="asset", f="index",
-                   #image = "graphic_assets.png",
-                   #title = "Assets",
-                   #text = "Manage office inventories and assets."),
-                #DB("Assessments", c="survey", f="index",
-                   #image = "graphic_assessments.png",
-                   #title = "Assessments",
-                   #text = "Design, deploy & analyze surveys."),
-                #DB("Projects", c="project", f="project", m="summary",
-                   #image = "graphic_tools.png",
-                   #title = "Projects",
-                   #text = "Tracking and analysis of Projects and Activities.")
-            #)
+    #        dashboard = DB(_id="dashboard")(
+    #            DB("Staff", c="hrm", f="staff", m="summary",
+    #               check = hrm,
+    #               image = "graphic_staff.png",
+    #               title = "Staff",
+    #               text = "Add new and manage existing staff."),
+    #            DB("Volunteers", c="vol", f="volunteer", m="summary",
+    #               check = vol,
+    #               image = "graphic_volunteers.png",
+    #               title = "Volunteers",
+    #               text = "Add new and manage existing volunteers."),
+    #            DB("Members", c="member", f="membership", m="summary",
+    #               image = "graphic_members.png",
+    #               title = "Members",
+    #               text = "Add new and manage existing members."),
+    #            DB("Warehouses", c="inv", f="warehouse", m="summary",
+    #               check = inv,
+    #               image = "graphic_warehouse.png",
+    #               title = "Warehouses",
+    #               text = "Stocks and relief items."),
+    #            DB("Assets", c="asset", f="index",
+    #               image = "graphic_assets.png",
+    #               title = "Assets",
+    #               text = "Manage office inventories and assets."),
+    #            DB("Assessments", c="survey", f="index",
+    #               image = "graphic_assessments.png",
+    #               title = "Assessments",
+    #               text = "Design, deploy & analyze surveys."),
+    #            DB("Projects", c="project", f="project", m="summary",
+    #               image = "graphic_tools.png",
+    #               title = "Projects",
+    #               text = "Tracking and analysis of Projects and Activities.")
+    #        )
 
-        #else:
-            #dashboard = None
+    #    else:
+    #        dashboard = None
 
-        #return dashboard
+    #    return dashboard
 
     # -------------------------------------------------------------------------
     @classmethod

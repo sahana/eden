@@ -35,10 +35,13 @@
 .sub-nav.about-menu {
     margin-left: 0;
 }
-/* Comment these two for a white header and free top bar: */
-/*.main-title {
-    background-color: #FEFAF0;
+#dashboard > li {
+    display: inline-block;
 }
-.main-navigation {
-    background-color: #4D4D4D;
-}*/
+.home-map,
+.home-cms {
+    margin: 1rem 0;
+}
+.home-map {
+    border: 1px solid #999999;
+}

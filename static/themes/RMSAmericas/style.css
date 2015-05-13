@@ -44,8 +44,13 @@ meta.foundation-data-attribute-namespace {
   width: 100%;
 }
 
+/* line 8, ../scss/custom/_page.scss */
+.map_home {
+  margin: 0;
+}
+
 /* Alerts */
-/* line 10, ../scss/custom/_page.scss */
+/* line 13, ../scss/custom/_page.scss */
 .alert.alert-error,
 .alert.alert-info,
 .alert.alert-warning,
@@ -63,7 +68,7 @@ meta.foundation-data-attribute-namespace {
 }
 
 /* Red indicators */
-/* line 26, ../scss/custom/_page.scss */
+/* line 29, ../scss/custom/_page.scss */
 .error,
 .expired,
 .req,
@@ -73,7 +78,7 @@ meta.foundation-data-attribute-namespace {
 }
 
 /* Sections */
-/* line 35, ../scss/custom/_page.scss */
+/* line 38, ../scss/custom/_page.scss */
 .form-container form,
 #datalist-filter-form,
 #datatable-filter-form,
@@ -83,7 +88,7 @@ meta.foundation-data-attribute-namespace {
   border: 1px solid #CCC;
 }
 
-/* line 43, ../scss/custom/_page.scss */
+/* line 46, ../scss/custom/_page.scss */
 .widget-container #list-btn-add {
   margin-bottom: 0;
   position: relative;
@@ -91,33 +96,33 @@ meta.foundation-data-attribute-namespace {
 }
 
 /* Links should ALWAYS be unvisited */
-/* line 52, ../scss/custom/_page.scss */
+/* line 55, ../scss/custom/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 57, ../scss/custom/_page.scss */
+/* line 60, ../scss/custom/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 61, ../scss/custom/_page.scss */
+/* line 64, ../scss/custom/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 66, ../scss/custom/_page.scss */
+/* line 69, ../scss/custom/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.3em;
   font-weight: bolder;
 }
-/* line 71, ../scss/custom/_page.scss */
+/* line 74, ../scss/custom/_page.scss */
 #content h2 {
   margin-top: 10px;
 }
-/* line 74, ../scss/custom/_page.scss */
+/* line 77, ../scss/custom/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
@@ -519,30 +524,38 @@ div.tabs span.tab_other a:hover {
   background-color: #006A71;
 }
 
+/* Full screen map button */
+/* line 46, ../scss/custom/_buttons.scss */
+.map_home .gis_fullscreen_map-btn {
+  font-weight: normal;
+  font-size: 0.8rem;
+  padding: 0.2rem;
+}
+
 /* Action buttons in datatables */
-/* line 48, ../scss/custom/_buttons.scss */
+/* line 55, ../scss/custom/_buttons.scss */
 .dataTable .action-btn,
 .dataTable .selected-action {
   color: #ffffff;
 }
-/* line 52, ../scss/custom/_buttons.scss */
+/* line 59, ../scss/custom/_buttons.scss */
 .dataTable .delete-btn,
 .dataTable .delete-btn-ajax {
   color: #ffffff;
 }
-/* line 56, ../scss/custom/_buttons.scss */
+/* line 63, ../scss/custom/_buttons.scss */
 .dataTable td.actions {
   white-space: nowrap;
 }
 
-/* line 61, ../scss/custom/_buttons.scss */
+/* line 68, ../scss/custom/_buttons.scss */
 .action-btn.profile-add-btn {
   float: right;
   margin: 0.5rem 0.5rem;
 }
 
 /* Caret */
-/* line 67, ../scss/custom/_buttons.scss */
+/* line 74, ../scss/custom/_buttons.scss */
 .caret {
   display: inline-block;
   width: 0;
@@ -559,7 +572,7 @@ div.tabs span.tab_other a:hover {
 #footer {
   text-align: right;
   padding-top: 20px;
-  border-top: #fff 1px solid;
+  border-top: #f0f0f0 1px solid;
   margin-top: 20px;
   margin-bottom: 1rem;
 }
@@ -1056,10 +1069,18 @@ h4.profile-sub-header {
   margin-left: 0;
 }
 
-/* Comment these two for a white header and free top bar: */
-/*.main-title {
-    background-color: #FEFAF0;
+/* line 38, ../scss/custom/_misc.scss */
+#dashboard > li {
+  display: inline-block;
 }
-.main-navigation {
-    background-color: #4D4D4D;
-}*/
+
+/* line 41, ../scss/custom/_misc.scss */
+.home-map,
+.home-cms {
+  margin: 1rem 0;
+}
+
+/* line 45, ../scss/custom/_misc.scss */
+.home-map {
+  border: 1px solid #999999;
+}

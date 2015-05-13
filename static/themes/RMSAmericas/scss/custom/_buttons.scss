@@ -42,6 +42,13 @@
     background-color: $primary-color;
 }
 
+/* Full screen map button */
+.map_home .gis_fullscreen_map-btn {
+    font-weight: normal;
+    font-size: 0.8rem;
+    padding: 0.2rem;
+}
+
 /* Action buttons in datatables */
 .dataTable {
     // need to override datatables CSS as that has more specific selectors
