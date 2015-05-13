@@ -73,8 +73,9 @@
       {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
       <div class="org-logo">{{=org_menu[1]}}</div>
       <div class="system-title">
-       <h4 class="system-name"><span class="system-acronym">RMS</span> {{=T("Resource Management System")}}</h4>
-       <h6 class="org-name subheader hide-for-small">{{=org_menu[0]}}</h6>
+       <h5 class="system-name hide-for-small"><span class="system-acronym">RMS</span> {{=T("Resource Management System")}}</h5>
+       <h5 class="system-name show-for-small-only"><span class="system-acronym">RMS</span></h5>
+       <h6 class="org-name subheader">{{=org_menu[0]}}</h6>
       </div>
      </a>
     </div>

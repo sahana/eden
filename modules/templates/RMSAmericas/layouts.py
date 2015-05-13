@@ -158,7 +158,7 @@ class S3PersonalMenuLayout(S3NavigationItem):
 
     @staticmethod
     def layout(item):
-        
+
         if item.parent is None:
             # The menu
             items = item.render_components()
@@ -182,7 +182,7 @@ class S3AboutMenuLayout(S3NavigationItem):
 
     @staticmethod
     def layout(item):
-        
+
         if item.parent is None:
             # The menu
             items = item.render_components()
@@ -225,7 +225,7 @@ class S3LanguageMenuLayout(S3NavigationItem):
                                     # @ToDo T:
                                     _title="Language Selection",
                                     _onchange="S3.reloadWithQueryStringVars({'_language':$(this).val()});")
-                form = FORM(select, _class="language-selector",
+                form = FORM(select, _class="language-selector right",
                                     _name="_language",
                                     _action="",
                                     _method="get")
@@ -285,17 +285,17 @@ class S3OrgMenuLayout(S3NavigationItem):
                                                      cache = s3db.cache,
                                                      ).first()
             if l10n:
-                if l10n.acronym_l10n and False:
-                    name = _name = l10n.acronym_l10n
-                else:
-                    name = _name = l10n.name_l10n
+                #if l10n.acronym_l10n:
+                    #name = _name = l10n.acronym_l10n
+                #else:
+                name = _name = l10n.name_l10n
 
             if record:
                 if not l10n:
-                    if record.acronym and False:
-                        name = _name = record.acronym
-                    else:
-                        name = _name = record.name
+                    #if record.acronym:
+                        #name = _name = record.acronym
+                    #else:
+                    name = _name = record.name
 
                 if record.logo:
                     size = (60, None)

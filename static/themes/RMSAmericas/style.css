@@ -763,7 +763,7 @@ h4.profile-sub-header {
     margin-bottom: 0.5rem;
 }
 .personal-menu {
-    padding: 1.0rem 0.5rem;
+    padding: 1.0rem 0.5rem 0 0;
     margin-bottom: 0.125rem;
 }
 .language-selector {
@@ -773,4 +773,11 @@ h4.profile-sub-header {
 }
 .sub-nav.about-menu {
     margin-left: 0;
+}
+/* Comment these two for a white header and free top bar: */
+.main-title {
+    background-color: #FEFAF0;
+}
+.main-navigation {
+    background-color: #4D4D4D;
 }
